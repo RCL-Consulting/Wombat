@@ -33,7 +33,7 @@
                                 Management
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Assessment Categories</a></li>
+                                <li><a class="dropdown-item" asp-controller="AssessmentCategories" asp-action="Index">Assessment Categories</a></li>
                                 <li><a class="dropdown-item" href="#">Assessor Management</a></li>
                                 <li><a class="dropdown-item" href="#">Trainee Management</a></li>
                             </ul>
@@ -57,6 +57,7 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

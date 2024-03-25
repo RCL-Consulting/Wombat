@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wombat.Data;
 
@@ -11,9 +12,11 @@ using Wombat.Data;
 namespace Wombat.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240324082508_ModifyAssessmentTables")]
+    partial class ModifyAssessmentTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,9 +170,6 @@ namespace Wombat.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AssessmentCategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("AssessorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -185,8 +185,6 @@ namespace Wombat.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssessmentCategoryId");
 
                     b.ToTable("Assessments");
                 });
@@ -339,17 +337,6 @@ namespace Wombat.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Wombat.Data.Assessment", b =>
-                {
-                    b.HasOne("Wombat.Data.AssessmentCategory", "AssessmentCategory")
-                        .WithMany()
-                        .HasForeignKey("AssessmentCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssessmentCategory");
                 });
 #pragma warning restore 612, 618
         }
