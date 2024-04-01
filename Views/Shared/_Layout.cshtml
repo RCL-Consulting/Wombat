@@ -31,16 +31,19 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="" asp-action="">My Assessments</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Management
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="AssessmentCategories" asp-action="Index">Assessment Categories</a></li>
-                                <li><a class="dropdown-item" href="#">Assessor Management</a></li>
-                                <li><a class="dropdown-item" href="#">Trainee Management</a></li>
-                            </ul>
-                        </li>
+                        @if (User.IsInRole(Roles.Administrator))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Management
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="AssessmentCategories" asp-action="Index">Assessment Categories</a></li>
+                                    <li><a class="dropdown-item" href="#">Assessor Management</a></li>
+                                    <li><a class="dropdown-item" href="#">Trainee Management</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

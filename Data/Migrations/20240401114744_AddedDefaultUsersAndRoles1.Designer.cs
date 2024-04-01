@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wombat.Data;
 
@@ -11,9 +12,11 @@ using Wombat.Data;
 namespace Wombat.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240401114744_AddedDefaultUsersAndRoles1")]
+    partial class AddedDefaultUsersAndRoles1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -326,39 +329,35 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "825585fc-737b-448e-b46d-c1b7cc569c5a",
+                            ConcurrencyStamp = "a0a1eb71-1eff-4cf5-a3ee-f177f5ebd02b",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
-                            EmailConfirmed = true,
+                            EmailConfirmed = false,
                             LockoutEnabled = false,
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
-                            NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPZWOpuwmdBVrQI3CBjY0huQpM33i/v9JsvqXNb518lCW66Hkb8IjVCRYGS7UdRn+A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAQtJg/H98uJgS0Gp6c90ELc5fsjnwW2L3FSVnezd09FbYSf5FXhH4oK3AqlpvUXiQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "475b4ebf-5527-42f5-acd5-a8a403e5a382",
+                            SecurityStamp = "848d61cd-5139-40d9-a811-75d0e3545493",
                             Surname = "Admin",
-                            TwoFactorEnabled = false,
-                            UserName = "admin@localhost.com"
+                            TwoFactorEnabled = false
                         },
                         new
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "decda88c-26b8-4f48-9083-6341d628b5c1",
+                            ConcurrencyStamp = "d3898e47-f97c-4587-aa0d-ecf662a7deec",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "user@localhost.com",
-                            EmailConfirmed = true,
+                            EmailConfirmed = false,
                             LockoutEnabled = false,
                             Name = "System",
                             NormalizedEmail = "USER@LOCALHOST.COM",
-                            NormalizedUserName = "USER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECv4Z40b1IM8q4BI7+M7uHxbDzIgXBxukg11SuL1SCE8WslVQ+Oc5gTH4RqDc/s89Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENj5vbfq/5oXzeiMC6JP6kIZSYR0GETNKjTs9Rt4TeV6HgEbmrm7nIVKIMltbf6syw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0861f3c5-8315-4bfc-b89e-12f6e6cbc09e",
+                            SecurityStamp = "25a75105-e93f-42cc-ab14-c793f3ba5e78",
                             Surname = "User",
-                            TwoFactorEnabled = false,
-                            UserName = "user@localhost.com"
+                            TwoFactorEnabled = false
                         });
                 });
 

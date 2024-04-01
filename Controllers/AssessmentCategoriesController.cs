@@ -3,42 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Constants;
+using Wombat.Contracts;
 using Wombat.Data;
 using Wombat.Models;
+using Wombat.Repositories;
 
 namespace Wombat.Controllers
 {
+    [Authorize(Roles = Roles.Administrator)]
     public class AssessmentCategoriesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAssessmentCategoryRepository assessmentCategoryRepository;
         private readonly IMapper mapper;
 
-        public AssessmentCategoriesController(ApplicationDbContext context, IMapper mapper)
+        public AssessmentCategoriesController(IAssessmentCategoryRepository assessmentCategoryRepository, IMapper mapper)
         {
-            _context = context;
+            this.assessmentCategoryRepository=assessmentCategoryRepository;
             this.mapper=mapper;
         }
 
         // GET: AssessmentCategories
         public async Task<IActionResult> Index()
         {
-            var categories = mapper.Map<List<AssessmentCategoryVM>>(await _context.AssessmentCategories.ToListAsync());
+            var categories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
             return View(categories);
         }
 
         // GET: AssessmentCategories/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var assessmentCategory = await _context.AssessmentCategories
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
             if (assessmentCategory == null)
             {
                 return NotFound();
@@ -64,8 +63,7 @@ namespace Wombat.Controllers
             if (ModelState.IsValid)
             {
                 var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
-                _context.Add(assessmentCategory);
-                await _context.SaveChangesAsync();
+                await assessmentCategoryRepository.AddAsync(assessmentCategory);
                 return RedirectToAction(nameof(Index));
             }
             return View(assessmentCategoryVM);
@@ -74,12 +72,7 @@ namespace Wombat.Controllers
         // GET: AssessmentCategories/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var assessmentCategory = await _context.AssessmentCategories.FindAsync(id);
+            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
             if (assessmentCategory == null)
             {
                 return NotFound();
@@ -105,13 +98,12 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    var assessmentCategory = mapper.Map<AssessmentCategoryVM>(assessmentCategoryVM);
-                    _context.Update(assessmentCategory);
-                    await _context.SaveChangesAsync();
+                    var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
+                    await assessmentCategoryRepository.UpdateAsync(assessmentCategory);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AssessmentCategoryExists(assessmentCategoryVM.Id))
+                    if (!await assessmentCategoryRepository.Exists(assessmentCategoryVM.Id))
                     {
                         return NotFound();
                     }
@@ -125,42 +117,13 @@ namespace Wombat.Controllers
             return View(assessmentCategoryVM);
         }
 
-        // GET: AssessmentCategories/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var assessmentCategory = await _context.AssessmentCategories
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (assessmentCategory == null)
-            {
-                return NotFound();
-            }
-
-            return View(assessmentCategory);
-        }
-
         // POST: AssessmentCategories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var assessmentCategory = await _context.AssessmentCategories.FindAsync(id);
-            if (assessmentCategory != null)
-            {
-                _context.AssessmentCategories.Remove(assessmentCategory);
-            }
-
-            await _context.SaveChangesAsync();
+            await assessmentCategoryRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool AssessmentCategoryExists(int id)
-        {
-            return _context.AssessmentCategories.Any(e => e.Id == id);
         }
     }
 }
