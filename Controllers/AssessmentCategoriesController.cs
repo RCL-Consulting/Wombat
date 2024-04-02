@@ -62,7 +62,7 @@ namespace Wombat.Controllers
         {
             if (ModelState.IsValid)
             {
-                var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
+                var assessmentCategory = mapper.Map<Category>(assessmentCategoryVM);
                 await assessmentCategoryRepository.AddAsync(assessmentCategory);
                 return RedirectToAction(nameof(Index));
             }
@@ -98,7 +98,7 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
+                    var assessmentCategory = mapper.Map<Category>(assessmentCategoryVM);
                     await assessmentCategoryRepository.UpdateAsync(assessmentCategory);
                 }
                 catch (DbUpdateConcurrencyException)

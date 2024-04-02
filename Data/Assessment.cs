@@ -9,7 +9,7 @@ namespace Wombat.Data
         public string AssessorId { get; set; }
 
         [ForeignKey("AssessmentCategoryId")]
-        public AssessmentCategory AssessmentCategory { get; set; }
+        public Category AssessmentCategory { get; set; }
         public int AssessmentCategoryId { get; set; }
     }
 }

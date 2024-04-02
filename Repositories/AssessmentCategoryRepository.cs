@@ -3,7 +3,7 @@ using Wombat.Data;
 
 namespace Wombat.Repositories
 {
-    public class AssessmentCategoryRepository : GenericRepository<AssessmentCategory>, IAssessmentCategoryRepository
+    public class AssessmentCategoryRepository : GenericRepository<Category>, IAssessmentCategoryRepository
     {
         public AssessmentCategoryRepository(ApplicationDbContext context) : base(context)
         {

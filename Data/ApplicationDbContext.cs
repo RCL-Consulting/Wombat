@@ -18,7 +18,7 @@ namespace Wombat.Data
             builder.ApplyConfiguration(new UserRoleSeedConfiguration());
         }
 
-        public DbSet<AssessmentCategory> AssessmentCategories { get; set; }
+        public DbSet<Category> AssessmentCategories { get; set; }
         public DbSet<Assessment> Assessments { get; set; }
     }
 }
