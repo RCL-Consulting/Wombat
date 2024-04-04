@@ -20,5 +20,10 @@ namespace Wombat.Data
 
         public DbSet<Category> AssessmentCategories { get; set; }
         public DbSet<Assessment> Assessments { get; set; }
+
+        public DbSet<EnumCriterion> EnumCriteria{ get; set; }
+        public DbSet<EnumOption> EnumOptions { get; set; }
+
+        public DbSet<TextCriterion> TextCriteria { get; set; }
     }
 }
