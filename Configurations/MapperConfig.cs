@@ -9,6 +9,8 @@ namespace Wombat.Configurations
         public MapperConfig()
         {
             CreateMap<Category, AssessmentCategoryVM>().ReverseMap();
+            CreateMap<TextCriterion, TextCriterionVM>().ReverseMap();
+            CreateMap<EnumCriterion, EnumCriterionVM>().ReverseMap();
         }
     }
 }

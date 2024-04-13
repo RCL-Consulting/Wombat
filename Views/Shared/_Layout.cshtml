@@ -39,6 +39,8 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" asp-controller="AssessmentCategories" asp-action="Index">Assessment Categories</a></li>
+                                    <li><a class="dropdown-item" asp-controller="EnumCriteria" asp-action="Index">Enum criteria</a></li>
+                                    <li><a class="dropdown-item" asp-controller="TextCriteria" asp-action="Index">Text criteria</a></li>
                                     <li><a class="dropdown-item" href="#">Assessor Management</a></li>
                                     <li><a class="dropdown-item" href="#">Trainee Management</a></li>
                                 </ul>
@@ -66,6 +68,12 @@
     <script src="~/lib/sweetalert/sweetalert.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
+    <script>
+        <script>
+            $(function () {
+                $('.table').DataTable();
+            });
+    </script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Wombat.Models.AssessmentCategoryVM>
+﻿@model IEnumerable<EnumCriterionVM>
 
 @{
     ViewData["Title"] = "Index";
@@ -13,7 +13,7 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayNameFor(model => model.Description)
             </th>
             <th></th>
         </tr>
@@ -22,7 +22,7 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
                 <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
@@ -41,7 +41,7 @@
 @section Scripts {
     <script>
         $(function () {
-            
+
             $('.deleteBtn').click(function (e) {
                 swal({
                     title: "Are you sure?",
