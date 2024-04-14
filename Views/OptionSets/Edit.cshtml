@@ -1,0 +1,94 @@
+﻿@model Wombat.Models.OptionSetVM
+
+@{
+    ViewData["Title"] = "Edit Option Set";
+}
+
+<h1>Edit Option Set</h1>
+
+<hr/>
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <br />
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="DisplayRank" /> @Html.DisplayNameFor(model => model.DisplayRank)
+                </label>
+            </div>
+            <br />
+
+            <div class="form-group col-md-12">
+                @{var Counter = 0;}
+                @if(Model.Options != null)
+                @foreach (var item in Model.Options)
+                {
+                    <div id="inputFormRow">
+                        <div class="input-group">
+                            <input type="hidden" asp-for="@Model.Options[Counter].Id" />
+                            <input class="form-control" style="width: 10%" asp-for="@Model.Options[Counter].Rank">
+                            <input class="form-control" style="width: 90%" asp-for="@Model.Options[Counter].Description">                          
+                        </div>
+                    </div>
+                    <br/>
+                    Counter++;
+                }
+                <div id="newRow" class="col-md-12">
+                    <input type="hidden" id="totalLans" value="@Counter" />
+                </div>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+                <button id="addRow" type="button" class="btn btn-info">Add Option</button> &nbsp;
+                <input type="submit" value="Save Changes" class="btn btn-warning" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+
+        $("#addRow").click(function () {
+
+            var rowCount = parseInt($("#totalLans").val());
+            rowCount++;
+            $("#totalLans").val(rowCount);
+            var html = '';
+            html += '<div id="inputFormRow">';
+            html += '<div class="input-group">';
+
+            //change id attribute to name attribute and modify the name
+            html += '<input type="number" style="width: 10%" type="text" value="' + (rowCount - 1) + '" name="Options[' + (rowCount - 1) + '].Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>';
+            html += '<input style="width: 75%"type="text" name="Options[' + (rowCount - 1) + '].Description" class="form-control m-input" placeholder="Option Text" autocomplete="off" required>';
+            html += '<div style="width: 15%" class="input-group-append">';
+            html += '<button style="width: 100%" id="removeRow" type="button" class="btn btn-danger">Remove</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '<br/>';
+            html += '</div>';
+            $('#newRow').append(html);
+
+        });
+
+        $(document).on('click', '#removeRow', function () {
+            var rowCount = parseInt($("#totalLans").val());
+            rowCount--;
+            $("#totalLans").val(rowCount);
+            $(this).closest('#inputFormRow').remove();
+        });
+
+    </script>
+}
+
+

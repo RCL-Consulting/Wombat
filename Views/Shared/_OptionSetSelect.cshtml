@@ -1,0 +1,12 @@
+﻿@model IEnumerable<OptionSetVM>
+
+<select class="form-control">
+    <option value="">Select an OptionSet</option>
+    @if(Model!=null)
+    {
+        foreach (var item in Model)
+        {
+            <option value="@item.Id">@item.Description</option>
+        }
+    }
+</select>

@@ -4,12 +4,15 @@ namespace Wombat.Data
 {
     public class Assessment: BaseEntity
     {
-        public string TraineeId { get; set; }
+        public Assessment()
+        {
+            Description = "";
+        }
 
-        public string AssessorId { get; set; }
+        public string Description { get; set; }
 
         [ForeignKey("AssessmentCategoryId")]
-        public Category AssessmentCategory { get; set; }
+        public AssessmentCategory? AssessmentCategory { get; set; }
         public int AssessmentCategoryId { get; set; }
     }
 }

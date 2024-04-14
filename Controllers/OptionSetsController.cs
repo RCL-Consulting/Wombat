@@ -9,86 +9,93 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Contracts;
 using Wombat.Data;
 using Wombat.Models;
-using Wombat.Repositories;
 
 namespace Wombat.Controllers
 {
-    public class EnumCriteriaController : Controller
+    public class OptionSetsController : Controller
     {
-        private readonly IEnumCriteriaRepository enumCriteriaRepository;
+        private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public EnumCriteriaController( IEnumCriteriaRepository enumCriteriaRepository,
-                                       IMapper mapper )
+        public OptionSetsController(IOptionSetRepository optionSetRepository,
+                                       IMapper mapper)
         {
-            this.enumCriteriaRepository=enumCriteriaRepository;
+            this.optionSetRepository=optionSetRepository;
             this.mapper=mapper;
         }
 
-        // GET: EnumCriteria
+        // GET: OptionSets
         public async Task<IActionResult> Index()
         {
-            var model = mapper.Map<List<OptionCriterionVM>>(await enumCriteriaRepository.GetAllAsync());
-            return View(model);
+            var optionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+            return View(optionSets);
         }
 
-        // GET: EnumCriteria/Details/5
+        // GET: OptionSets/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            var enumCriterion = await enumCriteriaRepository.GetAsync(id);
-            if (enumCriterion == null)
+            var optionSet = await optionSetRepository.GetAsync(id);
+            if (optionSet == null)
             {
                 return NotFound();
             }
 
-            var enumCriterionRepositoryVM = mapper.Map<OptionCriterionVM>(enumCriterion);
-            return View(enumCriterionRepositoryVM);
+            var optionSetVM = mapper.Map<OptionSetVM>(optionSet);
+            return View(optionSetVM);
         }
 
-        // GET: EnumCriteria/Create
+        // GET: OptionSets/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: EnumCriteria/Create
+        // POST: OptionSets/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(OptionCriterionVM enumCriterionVM)
+        public async Task<IActionResult> Create(OptionSetVM optionSetVM)
         {
             if (ModelState.IsValid)
             {
-                var enumCriterion = mapper.Map<OptionCriterion>(enumCriterionVM);
-                await enumCriteriaRepository.AddAsync(enumCriterion);
+                var optionSet = mapper.Map<OptionSet>(optionSetVM);
+
+                if (optionSet.Options!=null)
+                {
+                    foreach (var option in optionSet.Options)
+                    {
+                        option.OptionSet = optionSet;
+                    }
+                }
+
+                await optionSetRepository.AddAsync(optionSet);
                 return RedirectToAction(nameof(Index));
             }
-            return View(enumCriterionVM);
+            return View(optionSetVM);
         }
 
-        // GET: EnumCriteria/Edit/5
+        // GET: OptionSets/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            var enumCriterion = await enumCriteriaRepository.GetAsync(id);
-            if (enumCriterion == null)
+            var optionSet = await optionSetRepository.GetAsync(id);
+            if (optionSet == null)
             {
                 return NotFound();
             }
 
-            var model = mapper.Map<OptionCriterionVM>(enumCriterion);
-            return View(model);
+            var optionSetVM = mapper.Map<OptionSetVM>(optionSet);
+            return View(optionSetVM);
         }
 
-        // POST: EnumCriteria/Edit/5
+        // POST: OptionSets/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, OptionCriterionVM enumCriterionVM)
+        public async Task<IActionResult> Edit(int id, OptionSetVM optionSetVM)
         {
-
-            if (id != enumCriterionVM.Id)
+            if (id != optionSetVM.Id)
             {
                 return NotFound();
             }
@@ -97,12 +104,12 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    var enumCriterion = mapper.Map<OptionCriterion>(enumCriterionVM);
-                    await enumCriteriaRepository.UpdateAsync(enumCriterion);
+                    var optionSet = mapper.Map<OptionSet>(optionSetVM);
+                    await optionSetRepository.UpdateAsync(optionSet);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await enumCriteriaRepository.Exists(enumCriterionVM.Id))
+                    if (!await optionSetRepository.Exists(optionSetVM.Id))
                     {
                         return NotFound();
                     }
@@ -113,14 +120,15 @@ namespace Wombat.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(enumCriterionVM);
+            return View(optionSetVM);
         }
 
+        // POST: OptionSets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await enumCriteriaRepository.DeleteAsync(id);
+            await optionSetRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }

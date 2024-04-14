@@ -2,7 +2,7 @@
 
 namespace Wombat.Contracts
 {
-    public interface IAssessmentCategoryRepository: IGenericRepository<Category>
+    public interface IAssessmentCategoryRepository: IGenericRepository<AssessmentCategory>
     {
     }
 }

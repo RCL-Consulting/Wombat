@@ -19,11 +19,15 @@ namespace Wombat.Controllers
     public class AssessmentCategoriesController : Controller
     {
         private readonly IAssessmentCategoryRepository assessmentCategoryRepository;
+        private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public AssessmentCategoriesController(IAssessmentCategoryRepository assessmentCategoryRepository, IMapper mapper)
+        public AssessmentCategoriesController( IAssessmentCategoryRepository assessmentCategoryRepository,
+                                               IOptionSetRepository optionSetRepository, 
+                                               IMapper mapper)
         {
             this.assessmentCategoryRepository=assessmentCategoryRepository;
+            this.optionSetRepository=optionSetRepository;
             this.mapper=mapper;
         }
 
@@ -48,9 +52,12 @@ namespace Wombat.Controllers
         }
 
         // GET: AssessmentCategories/Create
-        public IActionResult Create()
+        public async Task<IActionResult> CreateAsync()
         {
-            return View();
+            var assessmentCategoryVM = new AssessmentCategoryVM();
+            assessmentCategoryVM.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+
+            return View(assessmentCategoryVM);
         }
 
         // POST: AssessmentCategories/Create
@@ -62,7 +69,7 @@ namespace Wombat.Controllers
         {
             if (ModelState.IsValid)
             {
-                var assessmentCategory = mapper.Map<Category>(assessmentCategoryVM);
+                var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
                 await assessmentCategoryRepository.AddAsync(assessmentCategory);
                 return RedirectToAction(nameof(Index));
             }
@@ -98,7 +105,7 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    var assessmentCategory = mapper.Map<Category>(assessmentCategoryVM);
+                    var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
                     await assessmentCategoryRepository.UpdateAsync(assessmentCategory);
                 }
                 catch (DbUpdateConcurrencyException)

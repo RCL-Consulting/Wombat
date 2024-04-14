@@ -6,7 +6,7 @@ namespace Wombat.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        private readonly ApplicationDbContext context;
+        protected readonly ApplicationDbContext context;
 
         public GenericRepository(ApplicationDbContext context)
         {
@@ -42,7 +42,7 @@ namespace Wombat.Repositories
             return await context.Set<T>().ToListAsync();
         }
 
-        public async Task<T?> GetAsync(int? id)
+        public virtual async Task<T?> GetAsync(int? id)
         {
             if (id == null)
             {

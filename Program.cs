@@ -23,7 +23,8 @@ builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAssessmentCategoryRepository, AssessmentCategoryRepository>();
 builder.Services.AddScoped<ITextCriteriaRepository, TextCriteriaRepository>();
-builder.Services.AddScoped<IEnumCriteriaRepository, EnumCriteriaRepository>();
+builder.Services.AddScoped<IEnumCriteriaRepository, OptionCriteriaRepository>();
+builder.Services.AddScoped<IOptionSetRepository, OptionSetRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Services.AddControllersWithViews();

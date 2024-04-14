@@ -16,6 +16,42 @@
             @Html.DisplayFor(model => model.Name)
         </dd>
     </dl>
+
+    <h5>Criteria</h5>
+    @foreach (var item in Model.OptionCriteria)
+    {
+        <div class="card">
+            <div class="card-header">
+                @item.Description
+            </div>
+            <div class="card-body">
+                <ul class="row list-unstyled">
+                    @if (item.OptionsSet!=null && item.OptionsSet.Options != null)
+                    {
+                        if(item.OptionsSet.DisplayRank)
+                        {
+                            @foreach (var option in item.OptionsSet.Options)
+                            {
+                                <li >
+                                    @Html.DisplayFor(modelItem => option.Rank) - @Html.DisplayFor(modelItem => option.Description)
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var option in item.OptionsSet.Options)
+                            {
+                                <li>
+                                    @Html.DisplayFor(modelItem => option.Description)
+                                </li>
+                            }
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+        <br/>
+    }
 </div>
 <br/>
 <div>

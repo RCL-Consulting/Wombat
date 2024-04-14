@@ -2,7 +2,7 @@
 
 namespace Wombat.Contracts
 {
-    public interface IEnumCriteriaRepository : IGenericRepository<EnumCriterion>
+    public interface IEnumCriteriaRepository : IGenericRepository<OptionCriterion>
     {
     }
 }
