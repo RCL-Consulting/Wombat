@@ -1,4 +1,4 @@
-﻿@model IEnumerable<OptionCriterionVM>
+﻿@model IEnumerable<AssessmentContextVM>
 
 @{
     ViewData["Title"] = "Index";
@@ -25,9 +25,9 @@
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
-                <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
-                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
+                    <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                    <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
             </td>
         </tr>
 }
@@ -35,7 +35,7 @@
 </table>
 
 <form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="categoryId" name="Id" />
+    <input type="hidden" id="optionSetId" name="Id" />
 </form>
 
 @section Scripts {
@@ -53,7 +53,7 @@
                     if (confirm) {
                         var btn = $(this);
                         var id = btn.data("id");
-                        $("#categoryId").val(id);
+                        $("#optionSetId").val(id);
                         $("#deleteForm").submit();
                     }
                 });

@@ -2,9 +2,9 @@
 
 namespace Wombat.Data
 {
-    public class Assessment: BaseEntity
+    public class AssessmentContext: BaseEntity
     {
-        public Assessment()
+        public AssessmentContext()
         {
             Description = "";
         }

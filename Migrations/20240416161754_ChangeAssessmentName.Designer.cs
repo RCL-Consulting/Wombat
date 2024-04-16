@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wombat.Data;
 
@@ -11,9 +12,11 @@ using Wombat.Data;
 namespace Wombat.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240416161754_ChangeAssessmentName")]
+    partial class ChangeAssessmentName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,7 +257,7 @@ namespace Wombat.Migrations
 
                     b.HasIndex("AssessmentCategoryId");
 
-                    b.ToTable("AssessmentContexts");
+                    b.ToTable("Assessments");
                 });
 
             modelBuilder.Entity("Wombat.Data.Option", b =>
@@ -695,7 +698,7 @@ namespace Wombat.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e7a1d997-433a-4de5-aacc-48bc8c54ba52",
+                            ConcurrencyStamp = "649ce986-ce19-484e-be56-dbaf2cd3daee",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -703,9 +706,9 @@ namespace Wombat.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJKz85xEgOekWpk86eddhsvN0JWYbsoYk4VAogf9uk1LftdkpMpqsFi5Xo/3c7n0PA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEogWsbfFfrFB5NVCaIoe7HPkSYaAANVyPQ+J0Isnz2uUhPrvFadhfiqwIPaTxshqA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6e1bf4d1-96f8-4785-9ebd-56d4c1897135",
+                            SecurityStamp = "a698602a-6272-49f6-be30-4810f6fa3a24",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -714,7 +717,7 @@ namespace Wombat.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f358f740-a26e-4016-89c5-69e27f84683a",
+                            ConcurrencyStamp = "52ac863d-409f-481b-a654-9c068377d0cc",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "user@localhost.com",
                             EmailConfirmed = true,
@@ -722,9 +725,9 @@ namespace Wombat.Migrations
                             Name = "System",
                             NormalizedEmail = "USER@LOCALHOST.COM",
                             NormalizedUserName = "USER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPt0O2ojBm+NKq11aGj5USrDCh3EJFkoiD/WjOLYj3dIrscArnRODO0F24TDPJD9oQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKL2yostPhir2oBNCaR5dt6Cd8roKjNyPSf/rLZmAuCiekfNX6HZSQscWFm26i4xeA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2950989d-ddd3-4717-a02e-1b5ffa2b49c1",
+                            SecurityStamp = "efddbd20-4e6a-4273-b922-9aafc43a18c9",
                             Surname = "User",
                             TwoFactorEnabled = false,
                             UserName = "user@localhost.com"

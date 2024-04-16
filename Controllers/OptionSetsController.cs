@@ -17,8 +17,8 @@ namespace Wombat.Controllers
         private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public OptionSetsController(IOptionSetRepository optionSetRepository,
-                                       IMapper mapper)
+        public OptionSetsController( IOptionSetRepository optionSetRepository,
+                                     IMapper mapper )
         {
             this.optionSetRepository=optionSetRepository;
             this.mapper=mapper;

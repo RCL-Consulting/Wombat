@@ -22,7 +22,7 @@ namespace Wombat.Data
         }
 
         public DbSet<AssessmentCategory> AssessmentCategories { get; set; }
-        public DbSet<Assessment> Assessments { get; set; }
+        public DbSet<AssessmentContext> AssessmentContexts { get; set; }
 
         public DbSet<OptionCriterion> OptionCriteria{ get; set; }
 
