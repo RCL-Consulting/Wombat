@@ -30,5 +30,8 @@ namespace Wombat.Data
 
         public DbSet<OptionSet> OptionSets{ get; set; }
         public DbSet<Option> Options { get; set; }
+
+        public DbSet<LoggedAssessment> LoggedAssessments { get; set; }
+        public DbSet<OptionCriterionResponse> OptionCriterionResponses { get; set; }
     }
 }

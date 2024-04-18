@@ -86,11 +86,11 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            var optionSetVM = mapper.Map<OptionSetVM>(assessmentContext);
-
             var assessmentCategories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
             ViewData["AssessmentCategory"] = new SelectList(assessmentCategories, "Id", "Name");
-            return View(assessmentContext);
+
+            var assessmentContextVM = mapper.Map<AssessmentContextVM>(assessmentContext);
+            return View(assessmentContextVM);
         }
 
         // POST: AssessmentContexts/Edit/5

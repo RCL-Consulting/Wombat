@@ -1,0 +1,56 @@
+﻿@model Wombat.Data.LoggedAssessment
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>LoggedAssessment</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="TraineeId" class="control-label"></label>
+                <select asp-for="TraineeId" class="form-control" asp-items="ViewBag.TraineeId"></select>
+                <span asp-validation-for="TraineeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AssessorId" class="control-label"></label>
+                <select asp-for="AssessorId" class="form-control" asp-items="ViewBag.AssessorId"></select>
+                <span asp-validation-for="AssessorId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AssessmentContextId" class="control-label"></label>
+                <select asp-for="AssessmentContextId" class="form-control" asp-items="ViewBag.AssessmentContextId"></select>
+                <span asp-validation-for="AssessmentContextId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AssessmentDate" class="control-label"></label>
+                <input asp-for="AssessmentDate" class="form-control" />
+                <span asp-validation-for="AssessmentDate" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="DateCreated" class="control-label"></label>
+                <input asp-for="DateCreated" class="form-control" />
+                <span asp-validation-for="DateCreated" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DateModified" class="control-label"></label>
+                <input asp-for="DateModified" class="form-control" />
+                <span asp-validation-for="DateModified" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
