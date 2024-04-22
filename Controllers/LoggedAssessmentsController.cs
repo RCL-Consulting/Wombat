@@ -12,6 +12,16 @@ using Wombat.Models;
 using Wombat.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Wombat.Constants;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Drawing.Layout;
+using PdfSharpCore;
+using MigraDocCore.DocumentObjectModel;
+using MigraDocCore.Rendering;
+using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
+using PdfSharpCore.Utils;
+using SixLabors.ImageSharp.PixelFormats;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Wombat.Controllers
 {
@@ -37,6 +47,7 @@ namespace Wombat.Controllers
         public async Task<IActionResult> Index()
         {
             var loggedAssessment = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAllAsync());
+            
             return View(loggedAssessment);
         }
 
@@ -51,31 +62,61 @@ namespace Wombat.Controllers
 
             var loggedAssessmentVM = mapper.Map<LoggedAssessmentVM>(loggedAssessment);
             return View(loggedAssessmentVM);
-
-            //var loggedAssessment = await _context.LoggedAssessments
-            //    .Include(l => l.AssessmentContext)
-            //    .Include(l => l.Assessor)
-            //    .Include(l => l.Trainee)
-            //    .FirstOrDefaultAsync(m => m.Id == id);
         }
 
-        public void AddViewData()
+        public async Task AddViewDataAsync()
         {
-            var assessmentContexts = mapper.Map<List<AssessmentContextVM>>(assessmentContextRepository.GetAllAsync().Result);
+            var assessmentContexts = mapper.Map<List<AssessmentContextVM>>(await assessmentContextRepository.GetAllAsync());
             ViewData["AssessmentContext"] = new SelectList(assessmentContexts, "Id", "Description");
 
-            var assessors = userManager.GetUsersInRoleAsync(Roles.Assessor).Result;
-            ViewData["Assessor"] = new SelectList(assessors, "Id", "UserName");
+            var assessors = await userManager.GetUsersInRoleAsync(Roles.Assessor);
+            ViewData["Assessor"] = new SelectList(assessors, "Id", "Email");
 
-            var trainees = userManager.GetUsersInRoleAsync(Roles.Trainee).Result;
-            ViewData["Trainee"] = new SelectList(trainees, "Id", "UserName");
+            var trainees = await userManager.GetUsersInRoleAsync(Roles.Trainee);
+            ViewData["Trainee"] = new SelectList(trainees, "Id", "Email");
         }
 
         // GET: LoggedAssessments/Create
         public async Task<IActionResult> Create()
         {
-            AddViewData();
-            return View();
+            await AddViewDataAsync();
+            var loggedAssessmentVM = new LoggedAssessmentVM();
+            loggedAssessmentVM.AssessmentDate = DateTime.Now;
+            return View(loggedAssessmentVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
+        {
+            loggedAssessmentVM.AssessmentContext = mapper.Map<AssessmentContextVM>(await assessmentContextRepository.GetAsync(loggedAssessmentVM.AssessmentContextId));
+            loggedAssessmentVM.Trainee = await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId);
+            loggedAssessmentVM.Assessor = await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId);
+
+            foreach ( var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentCategory.OptionCriteria)
+            {
+                var optionCriterionResponse = new OptionCriterionResponseVM();
+                optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+                optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
+                optionCriterionResponse.CriterionId = optionCriterion.Id;
+                loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
+            }
+            await AddViewDataAsync();
+            return View(loggedAssessmentVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitAssessment(LoggedAssessmentVM loggedAssessmentVM)
+        {
+            if (ModelState.IsValid)
+            {
+                var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
+                await loggedAssessmentRepository.AddAsync(loggedAssessment);
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(loggedAssessmentVM);
         }
 
         // POST: LoggedAssessments/Create
@@ -93,12 +134,13 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            AddViewData();
+            await AddViewDataAsync();
             return View(loggedAssessmentVM);
         }
 
         // GET: LoggedAssessments/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet]
+        public async Task<IActionResult> CreatePDF(int? id)
         {
             var loggedAssessment = await loggedAssessmentRepository.GetAsync(id);
             if (loggedAssessment == null)
@@ -106,47 +148,118 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            var loggedAssessmentVM = mapper.Map<LoggedAssessmentVM>(loggedAssessment);
+            string Path = "c:/Junk/docx/";
+            string Name = loggedAssessment.Trainee.Id;
 
-            AddViewData();
-            return View(loggedAssessmentVM);
-        }
+            var imagePath = @"c:\Junk\docx\logo.jpg";
+            var pdfPath = Path + Name + ".pdf";
 
-        // POST: LoggedAssessments/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit( int id, LoggedAssessmentVM loggedAssessmentVM )
-        {
-            if (id != loggedAssessmentVM.Id)
+            // Create a new PDF document
+            var document = new Document();
+            var section = document.AddSection();
+
+            // Define table dimensions and column count
+            const int rowCount = 3;
+            const int columnCount = 2;
+
+            // Create a table
+            var table = section.AddTable();
+            table.Borders.Width = 0.75; // Set border width
+
+            // Add columns
+            table.AddColumn(Unit.FromCentimeter(7)); // Adjust column width as needed
+            table.AddColumn(Unit.FromCentimeter(10));
+
+            // Add headers
+            var Row = table.AddRow();
+            Row.Height = Unit.FromCentimeter(5);
+            var cell = Row.Cells[0];
+            cell.Format.Font.Bold = true;
+            cell.Borders.Right.Visible = false;
+            if (ImageSource.ImageSourceImpl == null)
             {
-                return NotFound();
+                ImageSource.ImageSourceImpl = new ImageSharpImageSource<Rgba32>();
+            }
+            var imageSource = ImageSource.FromFile(imagePath,100);
+            var paragraph = cell.AddParagraph();
+            var image = paragraph.AddImage(imageSource);
+            image.LockAspectRatio = true;
+            image.Width = Unit.FromCentimeter(5); // Adjust image width as needed
+            image.Height = Unit.FromCentimeter(5);
+            image.WrapFormat.Style = MigraDocCore.DocumentObjectModel.Shapes.WrapStyle.Through;
+
+            cell = Row.Cells[1];
+            cell.VerticalAlignment = MigraDocCore.DocumentObjectModel.Tables.VerticalAlignment.Center;
+            paragraph = cell.AddParagraph();
+            paragraph.Format.Alignment = ParagraphAlignment.Center;
+            paragraph.AddFormattedText("University of Pretoria\r\nDepartment of Paediatrics and Child Health\r\nSteve Biko Academic Hospital\r\nWork based assessment Feedback Form", TextFormat.Bold);
+
+            var Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Date");
+            Cells[1].AddParagraph(loggedAssessment.AssessmentDate.ToString("dd/MM/yyyy"));
+
+            Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Trainee");
+            Cells[1].AddParagraph(loggedAssessment.Trainee.Email);
+
+            Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Assessor");
+            Cells[1].AddParagraph(loggedAssessment.Assessor.Email);
+
+            Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Type of assessment");
+            Cells[1].AddParagraph(loggedAssessment.AssessmentContext.Description);
+
+            Cells = table.AddRow().Cells;
+            Cells[0].MergeRight = 1;
+
+            // Add content
+            foreach (var optionCriterionResponse in loggedAssessment.OptionCriterionResponses)
+            {
+                string Value = "";
+                if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
+                {
+                    Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
+                }
+                else
+                {
+                    Value = optionCriterionResponse.Option.Description;
+                }
+
+                Cells = table.AddRow().Cells;
+                Cells[0].AddParagraph(optionCriterionResponse.Criterion.Description);
+                Cells[1].AddParagraph(Value);
             }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
-                    await loggedAssessmentRepository.UpdateAsync(loggedAssessment);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!await loggedAssessmentRepository.Exists(loggedAssessmentVM.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
+            Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Comments");
+            Cells[1].AddParagraph(loggedAssessment.Comment);
 
-            AddViewData();
-            return View(loggedAssessmentVM);
+            // Render the PDF document
+            var pdfRenderer = new PdfDocumentRenderer(true);
+            pdfRenderer.Document = document;
+            pdfRenderer.RenderDocument();
+
+            // Save the PDF document to a file or stream
+            var pdfdoc = pdfRenderer.PdfDocument;
+            PdfSharpCore.Pdf.Security.PdfSecuritySettings securitySettings = pdfdoc.SecuritySettings;
+
+            securitySettings.OwnerPassword = "iowurhf3w74538q9475432qythiwl";
+
+            securitySettings.PermitAccessibilityExtractContent = false;
+            securitySettings.PermitAnnotations = false;
+            securitySettings.PermitAssembleDocument = false;
+            securitySettings.PermitExtractContent = false;
+            securitySettings.PermitFormsFill = false;
+            securitySettings.PermitFullQualityPrint = false;
+            securitySettings.PermitModifyDocument = false;
+            securitySettings.PermitPrint = true;
+
+            pdfdoc.Save(pdfPath);
+
+            // Return the PDF file
+            var pdfBytes = await System.IO.File.ReadAllBytesAsync(pdfPath);
+            return File(pdfBytes, "application/pdf", pdfPath);
         }
 
         // POST: LoggedAssessments/Delete/5

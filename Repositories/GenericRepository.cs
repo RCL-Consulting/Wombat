@@ -37,7 +37,7 @@ namespace Wombat.Repositories
             return entity != null;
         }
 
-        public async Task<List<T>> GetAllAsync()
+        public virtual async Task<List<T>?> GetAllAsync()
         {
             return await context.Set<T>().ToListAsync();
         }

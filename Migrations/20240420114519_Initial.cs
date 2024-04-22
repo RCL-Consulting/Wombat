@@ -119,7 +119,7 @@ namespace Wombat.Migrations
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -140,7 +140,7 @@ namespace Wombat.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -160,7 +160,7 @@ namespace Wombat.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -178,13 +178,13 @@ namespace Wombat.Migrations
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_AspNetUserRoles_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -204,7 +204,7 @@ namespace Wombat.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -226,7 +226,7 @@ namespace Wombat.Migrations
                         column: x => x.AssessmentCategoryId,
                         principalTable: "AssessmentCategories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -250,13 +250,13 @@ namespace Wombat.Migrations
                         column: x => x.AssessmentCategoryId,
                         principalTable: "AssessmentCategories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_OptionCriteria_OptionSets_OptionSetId",
                         column: x => x.OptionSetId,
                         principalTable: "OptionSets",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -279,7 +279,7 @@ namespace Wombat.Migrations
                         column: x => x.OptionSetId,
                         principalTable: "OptionSets",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -297,13 +297,13 @@ namespace Wombat.Migrations
                         column: x => x.CategoriesId,
                         principalTable: "AssessmentCategories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_AssessmentCategoryTextCriterion_TextCriteria_TextCriteriaId",
                         column: x => x.TextCriteriaId,
                         principalTable: "TextCriteria",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -315,6 +315,7 @@ namespace Wombat.Migrations
                     TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssessmentContextId = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -348,11 +349,10 @@ namespace Wombat.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    LoggedOptionId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OptionId = table.Column<int>(type: "int", nullable: false),
                     OptionCriterionId = table.Column<int>(type: "int", nullable: false),
                     AssessmentId = table.Column<int>(type: "int", nullable: false),
-                    LoggedAssessmentId = table.Column<int>(type: "int", nullable: false),
+                    LoggedAssessmentId = table.Column<int>(type: "int", nullable: true),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -364,8 +364,7 @@ namespace Wombat.Migrations
                         name: "FK_OptionCriterionResponses_LoggedAssessments_LoggedAssessmentId",
                         column: x => x.LoggedAssessmentId,
                         principalTable: "LoggedAssessments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_OptionCriterionResponses_OptionCriteria_OptionCriterionId",
                         column: x => x.OptionCriterionId,
@@ -395,8 +394,9 @@ namespace Wombat.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "931976b0-4163-40c3-983d-7ce452c4f025", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "user@localhost.com", true, false, null, "System", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAEK/u8lkdEqUr5ps0j0L1Jq8dkxNNH7cBZKo26aEF1JYCis/WXavpGpVZhm6hfPM4cw==", null, false, "d63f1927-c9bd-464e-bf86-07675d9da3fc", "User", false, "user@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "646155f5-d824-4604-a5ea-44c2e55c22bc", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAECTc1mW4oW4XjzDY1yj+WBfMVVPsQVxMvsXoDY1OiESCg2GY7WLDeoIZAmRFvBlYuw==", null, false, "b3be7050-5ebf-42a1-9429-4ebe727a7ab5", "Admin", false, "admin@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "b56cc21b-5706-4443-b3f5-b8a552761355", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEAv3WRapfPj5kO09x31UquJYZUuHpIF1aJ//myB4MDeeYI1aBjxfjnw+9KXQhofx3g==", null, false, "c6991d8c-9cb1-4726-8cb2-efd9450822cd", "Trainee", false, "trainee@localhost.com" },
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "06a213ed-005c-4edd-ac12-b639b6c83b0a", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEMNWyjPsnhkT1E5BZ1K2URj2OWLWSLhg5/OY7d5BoO+P45qJj9G/S20OkkGjBF59SQ==", null, false, "33bcf595-e514-4f7c-addf-a5000c1f63f8", "Assessor", false, "assessor@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "91513e2b-bef6-4ed1-8359-872b5225bd11", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEK7SpQhbscH4JsRAeQOftp0Ed6/xwQvhnwecQ056suqm6AS6zQuv3JonjP46knOt/g==", null, false, "33926269-2b28-482a-aa94-637bf3bafb9f", "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -416,6 +416,7 @@ namespace Wombat.Migrations
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
+                    { "3FAA94D6-23C2-4365-9951-796673F48402", "19A3D40C-9852-43B9-9BEC-B2552FA715F7" },
                     { "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", "409696F3-CA82-4381-A734-38A5EF6AA445" },
                     { "8DDBAFD6-4044-4AF0-BED8-D77B16F75404", "D68AC189-5BB6-4511-B96F-0F8BD55569AC" }
                 });

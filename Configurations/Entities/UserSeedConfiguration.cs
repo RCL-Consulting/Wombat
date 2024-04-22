@@ -27,12 +27,24 @@ namespace Wombat.Configurations.Entities
                 new WombatUser
                 {
                     Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
-                    Email = "user@localhost.com",
-                    NormalizedEmail = "USER@LOCALHOST.COM",
-                    UserName = "user@localhost.com",
-                    NormalizedUserName = "USER@LOCALHOST.COM",
+                    Email = "assessor@localhost.com",
+                    NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
+                    UserName = "assessor@localhost.com",
+                    NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "User",
+                    Surname = "Assessor",
+                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
+                    EmailConfirmed = true,
+                },
+                new WombatUser
+                {
+                    Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
+                    Email = "trainee@localhost.com",
+                    NormalizedEmail = "TRAINEE@LOCALHOST.COM",
+                    UserName = "trainee@localhost.com",
+                    NormalizedUserName = "TRAINEE@LOCALHOST.COM",
+                    Name = "System",
+                    Surname = "Trainee",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                 }

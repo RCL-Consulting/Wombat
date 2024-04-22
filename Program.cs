@@ -27,6 +27,7 @@ builder.Services.AddScoped<ITextCriteriaRepository, TextCriteriaRepository>();
 builder.Services.AddScoped<IEnumCriteriaRepository, OptionCriteriaRepository>();
 builder.Services.AddScoped<IOptionSetRepository, OptionSetRepository>();
 builder.Services.AddScoped<ILoggedAssessmentRepository, LoggedAssessmentRepository>();
+builder.Services.AddScoped<IOptionCriterionResponseRepository, OptionCriterionResponseRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Services.AddControllersWithViews();

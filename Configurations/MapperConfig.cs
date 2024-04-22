@@ -15,6 +15,8 @@ namespace Wombat.Configurations
             CreateMap<Option, OptionVM>().ReverseMap();
             CreateMap<AssessmentContext, AssessmentContextVM>().ReverseMap();
             CreateMap<LoggedAssessment, LoggedAssessmentVM>().ReverseMap();
+            CreateMap<OptionCriterionResponse, OptionCriterionResponseVM>().ReverseMap();
+            CreateMap<WombatUser, WombatUserVM>().ReverseMap();
         }
     }
 }

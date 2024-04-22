@@ -1,16 +1,21 @@
-﻿namespace Wombat.Data
+﻿using Wombat.Data;
+
+namespace Wombat.Models
 {
-    public class OptionCriterionResponse: BaseEntity
+    public class OptionCriterionResponseVM
     {
-        public OptionCriterionResponse()
+        public OptionCriterionResponseVM()
         {
             Comment = "";
         }
-        public int OptionId { get; set; }
+
+        public int Id { get; set; }
+
         public Option? Option { get; set; }
+        public int OptionId { get; set; }
 
         public int CriterionId { get; set; }
-        public OptionCriterion? Criterion { get; set; }
+        public OptionCriterionVM? Criterion { get; set; }
 
         public int AssessmentId { get; set; }
         public LoggedAssessment? Assessment { get; set; }

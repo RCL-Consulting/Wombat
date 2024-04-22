@@ -1,4 +1,4 @@
-﻿@model Wombat.Data.LoggedAssessment
+﻿@model LoggedAssessmentVM
 
 @{
     ViewData["Title"] = "Details";
@@ -14,19 +14,19 @@
             @Html.DisplayNameFor(model => model.Trainee)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Trainee.Id)
+            @Html.DisplayFor(model => model.Trainee.Email)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Assessor)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Assessor.Id)
+            @Html.DisplayFor(model => model.Assessor.Email)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.AssessmentContext)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AssessmentContext.Id)
+            @Html.DisplayFor(model => model.AssessmentContext.Description)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.AssessmentDate)
@@ -34,21 +34,49 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.AssessmentDate)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DateCreated)
+    </dl>
+
+    @foreach (var optionCriterionResponse in Model.OptionCriterionResponses)
+    {
+        var Value = "";
+        @if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
+        {
+            Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
+        }
+        else
+        {
+            Value = optionCriterionResponse.Option.Description;
+        }
+        <div class="card">
+            <div class="card-header">
+                @optionCriterionResponse.Criterion.Description
+            </div>
+            <div class="card-body">
+                @Value
+                <dl class="row">
+                    <dt class="col-sm-2">
+                        Comment:
+                    </dt>
+                    <dd class="col-sm-10">
+                        @optionCriterionResponse.Comment
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        <br/>
+    }
+
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Comment):
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DateCreated)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DateModified)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DateModified)
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Comment)
         </dd>
     </dl>
+    
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
 </div>

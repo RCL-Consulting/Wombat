@@ -1,0 +1,4 @@
+Install-Package DocX
+Install-Package PdfSharpCore
+
+ManifestBasedResourceGroveler.HandleResourceStreamMissing(String fileName)
