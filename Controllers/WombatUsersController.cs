@@ -10,26 +10,45 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Constants;
 using Wombat.Data;
 using Wombat.Models;
+using Wombat.Repositories;
 
 namespace Wombat.Controllers
 {
     public class WombatUsersController : Controller
     {
         private readonly UserManager<WombatUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
         private readonly IMapper mapper;
 
         public WombatUsersController( UserManager<WombatUser> userManager,
+                                      RoleManager<IdentityRole> roleManager,
                                       IMapper mapper )
         {
             this.userManager=userManager;
+            this.roleManager=roleManager;
             this.mapper=mapper;
+        }
+
+        public async Task<List<WombatUserVM>> GetVMWithRoles( List<WombatUser> users)
+        {
+            List<WombatUserVM> VMList = new List<WombatUserVM>();
+            foreach (var user in users)
+            {
+                var roles = await userManager.GetRolesAsync(user);
+                var VM = mapper.Map<WombatUserVM>(user);
+                VM.Roles = roles;
+                VMList.Add(VM);
+            }
+            
+            return VMList;
         }
 
         // GET: WombatUsers
         public async Task<IActionResult> Index()
         {
-            var users = mapper.Map<List<WombatUserVM>>(await userManager.Users.ToListAsync());
-            return View(users);
+            var users = await userManager.Users.ToListAsync();
+            var usersVM = await GetVMWithRoles(users);
+            return View(usersVM);
         }
 
         // GET: WombatUsers/Details/5
@@ -83,19 +102,11 @@ namespace Wombat.Controllers
 
                     var roles = await userManager.GetRolesAsync(user);
                     await userManager.RemoveFromRolesAsync(user, roles);
-                    if (wombatUserVM.Trainee)
-                        await userManager.AddToRoleAsync(user, Roles.Trainee);
-                    else
+                    foreach (var role in wombatUserVM.Roles)
                     {
-                        if (wombatUserVM.Assessor)
-                            await userManager.AddToRoleAsync(user, Roles.Assessor);
-                        if (wombatUserVM.Administrator)
-                            await userManager.AddToRoleAsync(user, Roles.Administrator);
-                        if (wombatUserVM.Coordinator)
-                            await userManager.AddToRoleAsync(user, Roles.Coordinator);
-                    }  
+                        await userManager.AddToRoleAsync(user, role);
+                    }
                     
-                    await userManager.AddToRoleAsync(user, "NewRole");
                     await userManager.UpdateAsync(user);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -114,7 +125,19 @@ namespace Wombat.Controllers
             return View(wombatUserVM);
         }
 
-        
+        public async Task AddViewDataAsync()
+        {
+            var roles = await roleManager.Roles.ToListAsync();
+            var roleNames = new List<string>();
+
+            foreach (var role in roles)
+            {
+                roleNames.Add(role.Name);
+            }
+
+            ViewData["Roles"] = new SelectList(roleNames);
+        }
+
         private bool WombatUserVMExists(string id)
         {
             return userManager.Users.Any(e => e.Id == id);

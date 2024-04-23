@@ -27,6 +27,12 @@ namespace Wombat.Configurations.Entities
                     Id = "3FAA94D6-23C2-4365-9951-796673F48402",
                     Name = Roles.Trainee,
                     NormalizedName = Roles.Trainee.ToUpper()
+                },
+                new IdentityRole
+                {
+                    Id = "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8",
+                    Name = Roles.Unassigned,
+                    NormalizedName = Roles.Unassigned.ToUpper()
                 }
             );
         }

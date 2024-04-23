@@ -16,20 +16,18 @@ namespace Wombat.Models
             return Result;
         }
 
-        public string Role() 
+        public string RolesToString()
         {
             string Result = "";
-            if (Assessor) Result = AddRole(Roles.Assessor, Result);
-            if (Administrator) Result = AddRole(Roles.Administrator, Result);
-            if (Coordinator) Result = AddRole(Roles.Coordinator, Result);
-            if (Trainee) Result = AddRole(Roles.Trainee, Result);
+            foreach (var role in Roles)
+            {
+                if (Result == "") Result = role;
+                else Result = Result + ", " + role;
+            }
             return Result;
         }
 
-        public bool Assessor { get; set; }
-        public bool Administrator { get; set; }
-        public bool Coordinator { get; set; }
-        public bool Trainee { get; set; }
+        public IList<string> Roles;
 
     }
 }
