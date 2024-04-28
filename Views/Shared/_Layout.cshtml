@@ -25,12 +25,18 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="" asp-action="">Log Assessment</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="" asp-action="">My Assessments</a>
-                        </li>
+                        @if (User.IsInRole(Roles.Assessor))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="CreateFromList">Log Assessment</a>
+                            </li>
+                        }
+                        @if (User.IsInRole(Roles.Assessor) || User.IsInRole(Roles.Trainee))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="MyAssessments">My Assessments</a>
+                            </li>
+                        }
                         @if (User.IsInRole(Roles.Administrator))
                         {
                             <li class="nav-item dropdown">
@@ -42,10 +48,7 @@
                                     <li><a class="dropdown-item" asp-controller="AssessmentContexts" asp-action="Index">Assessment Contexts</a></li>
                                     <li><a class="dropdown-item" asp-controller="LoggedAssessments" asp-action="Index">Assessments</a></li>
                                     <li><a class="dropdown-item" asp-controller="WombatUsers" asp-action="Index">Users</a></li>
-                                    <li><a class="dropdown-item" asp-controller="TextCriteria" asp-action="Index">Text criteria</a></li>
                                     <li><a class="dropdown-item" asp-controller="OptionSets" asp-action="Index">Option Sets</a></li>
-                                    <li><a class="dropdown-item" href="#">Assessor Management</a></li>
-                                    <li><a class="dropdown-item" href="#">Trainee Management</a></li>
                                 </ul>
                             </li>
                         }

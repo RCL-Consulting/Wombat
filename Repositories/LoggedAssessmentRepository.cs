@@ -52,5 +52,41 @@ namespace Wombat.Repositories
             }
             return assessments;
         }
+
+        public async Task<List<LoggedAssessment>?> GetAssessmntsbyTraineeAsync(string id)
+        {
+            var assessments = await context.LoggedAssessments
+                .Where(x => x.TraineeId == id)
+                .ToListAsync();
+
+            if (assessments != null)
+            {
+                foreach (var assessment in assessments)
+                {
+                    assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
+                    assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
+                    assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                }
+            }
+            return assessments;
+        }
+
+        public async Task<List<LoggedAssessment>?> GetAssessmntsbyAssessorAsync(string id)
+        {
+            var assessments = await context.LoggedAssessments
+                .Where(x => x.AssessorId == id)
+                .ToListAsync();
+
+            if (assessments != null)
+            {
+                foreach (var assessment in assessments)
+                {
+                    assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
+                    assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
+                    assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                }
+            }
+            return assessments;
+        }
     }
 }

@@ -9,23 +9,46 @@
 <h4>WombatUserVM</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-12">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+
+            <dl class="row">
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Email)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Email)
+                </dd>
+                <dt class="col-sm-2">
+                    Roles
+                </dt>
+                <dd class="col-sm-10">
+                    <div>
+                        @Html.EditorFor(model => model.Roles)
+                    </div>
+                    @* @foreach (var role in Model.Roles)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="@role.Key" name="@role.Key" value="@role.Value" @(role.Value ? "checked" : "")>
+                            <label class="form-check-label" for="@role.Key">
+                                @role.Key
+                            </label>
+                        </div>
+                    } *@
+                </dd>
+                
+            </dl>
+            <br/>
+           
             <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" readonly/>
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+                <input type="submit" value="Save Changes" class="btn btn-warning" />
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+
 

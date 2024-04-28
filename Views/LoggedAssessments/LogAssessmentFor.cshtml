@@ -1,0 +1,49 @@
+﻿@model LoggedAssessmentVM
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>LoggedAssessment</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Trainee)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Trainee.Email)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Assessor)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Assessor.Email)
+            </dd>
+        </dl>
+        <form asp-action="StartAssessment">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="TraineeId" />
+            <input type="hidden" asp-for="AssessorId" />
+    
+            <div class="form-group">
+                <label asp-for="AssessmentContextId" class="control-label"></label>
+                <select asp-for="AssessmentContextId" class ="form-control" asp-items="ViewBag.AssessmentContext"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AssessmentDate" class="control-label"></label>
+                <input asp-for="AssessmentDate" class="form-control" />
+                <span asp-validation-for="AssessmentDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+                <input type="submit" value="Create" class="btn btn-primary" /> 
+            </div>
+        </form>
+    </div>
+</div>
+
+

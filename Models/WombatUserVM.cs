@@ -5,6 +5,12 @@ namespace Wombat.Models
 {
     public class WombatUserVM
     {
+        public WombatUserVM()
+        {
+            Roles = new List<CheckBoxListItem>();
+            Email = "";
+        }
+
         public string Id { get; set; }
         public string Email { get; set; }
 
@@ -21,13 +27,12 @@ namespace Wombat.Models
             string Result = "";
             foreach (var role in Roles)
             {
-                if (Result == "") Result = role;
-                else Result = Result + ", " + role;
+                if(role.IsChecked) Result = AddRole(role.Display, Result);
             }
             return Result;
         }
 
-        public IList<string> Roles;
+        public List<CheckBoxListItem> Roles { get; set; }
 
     }
 }

@@ -22,6 +22,7 @@ using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
 using PdfSharpCore.Utils;
 using SixLabors.ImageSharp.PixelFormats;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Security.Claims;
 
 namespace Wombat.Controllers
 {
@@ -30,16 +31,19 @@ namespace Wombat.Controllers
         private readonly UserManager<WombatUser> userManager;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
         private readonly IAssessmentContextRepository assessmentContextRepository;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IMapper mapper;
 
         public LoggedAssessmentsController( UserManager<WombatUser> userManager, 
                                             ILoggedAssessmentRepository loggedAssessmentRepository,
                                             IAssessmentContextRepository assessmentContextRepository,
+                                            IHttpContextAccessor httpContextAccessor,
                                             IMapper mapper )
         {
             this.userManager=userManager;
             this.loggedAssessmentRepository=loggedAssessmentRepository;
             this.assessmentContextRepository=assessmentContextRepository;
+            this.httpContextAccessor=httpContextAccessor;
             this.mapper=mapper;
         }
 
@@ -47,8 +51,41 @@ namespace Wombat.Controllers
         public async Task<IActionResult> Index()
         {
             var loggedAssessment = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAllAsync());
-            
+
             return View(loggedAssessment);
+            
+        }
+
+        public async Task<IActionResult> MyAssessments()
+        {
+            if(httpContextAccessor.HttpContext==null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+
+            var roles = await userManager.GetRolesAsync(user);
+            if(roles.Contains(Roles.Trainee))
+            {
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmntsbyTraineeAsync(userId));
+                return View(loggedAssessments);
+            }
+            else if (roles.Contains(Roles.Assessor))
+            {
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmntsbyAssessorAsync(userId));
+                return View(loggedAssessments);
+            }
+            else
+                return NotFound();
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> CreateFromList()
+        {
+            var trainees = mapper.Map<List<WombatUserVM>>(await userManager.GetUsersInRoleAsync(Roles.Trainee));
+
+            return View(trainees);
         }
 
         // GET: LoggedAssessments/Details/5
@@ -81,6 +118,31 @@ namespace Wombat.Controllers
         {
             await AddViewDataAsync();
             var loggedAssessmentVM = new LoggedAssessmentVM();
+            loggedAssessmentVM.AssessmentDate = DateTime.Now;
+            return View(loggedAssessmentVM);
+        }
+
+        public async Task<IActionResult> LogAssessmentFor(string? id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await AddViewDataAsync();
+            var loggedAssessmentVM = new LoggedAssessmentVM();
+            loggedAssessmentVM.TraineeId = id;
+            loggedAssessmentVM.Trainee = user;
+
+            if (httpContextAccessor.HttpContext!=null)
+            {
+                loggedAssessmentVM.AssessorId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+                loggedAssessmentVM.Assessor = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+            }
+            else
+                return NotFound();           
+
             loggedAssessmentVM.AssessmentDate = DateTime.Now;
             return View(loggedAssessmentVM);
         }

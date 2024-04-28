@@ -6,9 +6,6 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
@@ -32,11 +29,39 @@
                     @item.RolesToString()
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                    <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<form id="deleteForm" asp-action="Delete">
+    <input type="hidden" id="categoryId" name="Id" />
+</form>
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            $('.deleteBtn').click(function (e) {
+                swal({
+                    title: "Are you sure?",
+                    text: "Are you sure you want to delete this record?",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true
+                }).then((confirm) => {
+                    if (confirm) {
+                        var btn = $(this);
+                        var id = btn.data("id");
+                        $("#categoryId").val(id);
+                        $("#deleteForm").submit();
+                    }
+                });
+            });
+        });
+    </script>
+}
