@@ -1,28 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Wombat.Data;
-using Wombat.Contracts;
-using AutoMapper;
-using Wombat.Models;
-using Wombat.Repositories;
-using Microsoft.AspNetCore.Identity;
-using Wombat.Constants;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Drawing.Layout;
-using PdfSharpCore;
 using MigraDocCore.DocumentObjectModel;
-using MigraDocCore.Rendering;
 using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
+using MigraDocCore.Rendering;
 using PdfSharpCore.Utils;
 using SixLabors.ImageSharp.PixelFormats;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Security.Claims;
+using Wombat.Application.Contracts;
+using Wombat.Common.Constants;
+using Wombat.Data;
+using Wombat.Common.Models;
 
 namespace Wombat.Controllers
 {
@@ -32,18 +21,21 @@ namespace Wombat.Controllers
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
         private readonly IAssessmentContextRepository assessmentContextRepository;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IEmailSender emailSender;
         private readonly IMapper mapper;
 
-        public LoggedAssessmentsController( UserManager<WombatUser> userManager, 
+        public LoggedAssessmentsController(UserManager<WombatUser> userManager,
                                             ILoggedAssessmentRepository loggedAssessmentRepository,
                                             IAssessmentContextRepository assessmentContextRepository,
                                             IHttpContextAccessor httpContextAccessor,
-                                            IMapper mapper )
+                                            IEmailSender emailSender,
+                                            IMapper mapper)
         {
             this.userManager=userManager;
             this.loggedAssessmentRepository=loggedAssessmentRepository;
             this.assessmentContextRepository=assessmentContextRepository;
             this.httpContextAccessor=httpContextAccessor;
+            this.emailSender=emailSender;
             this.mapper=mapper;
         }
 
@@ -53,19 +45,19 @@ namespace Wombat.Controllers
             var loggedAssessment = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAllAsync());
 
             return View(loggedAssessment);
-            
+
         }
 
         public async Task<IActionResult> MyAssessments()
         {
-            if(httpContextAccessor.HttpContext==null)
+            if (httpContextAccessor.HttpContext==null)
                 return NotFound();
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
             var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
 
             var roles = await userManager.GetRolesAsync(user);
-            if(roles.Contains(Roles.Trainee))
+            if (roles.Contains(Roles.Trainee))
             {
                 var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmntsbyTraineeAsync(userId));
                 return View(loggedAssessments);
@@ -133,15 +125,15 @@ namespace Wombat.Controllers
             await AddViewDataAsync();
             var loggedAssessmentVM = new LoggedAssessmentVM();
             loggedAssessmentVM.TraineeId = id;
-            loggedAssessmentVM.Trainee = user;
+            loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(user);
 
             if (httpContextAccessor.HttpContext!=null)
             {
                 loggedAssessmentVM.AssessorId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-                loggedAssessmentVM.Assessor = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+                loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.GetUserAsync(httpContextAccessor.HttpContext.User));
             }
             else
-                return NotFound();           
+                return NotFound();
 
             loggedAssessmentVM.AssessmentDate = DateTime.Now;
             return View(loggedAssessmentVM);
@@ -152,10 +144,10 @@ namespace Wombat.Controllers
         public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
         {
             loggedAssessmentVM.AssessmentContext = mapper.Map<AssessmentContextVM>(await assessmentContextRepository.GetAsync(loggedAssessmentVM.AssessmentContextId));
-            loggedAssessmentVM.Trainee = await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId);
-            loggedAssessmentVM.Assessor = await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId);
+            loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId));
+            loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId));
 
-            foreach ( var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentCategory.OptionCriteria)
+            foreach (var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentCategory.OptionCriteria)
             {
                 var optionCriterionResponse = new OptionCriterionResponseVM();
                 optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
@@ -175,6 +167,11 @@ namespace Wombat.Controllers
             {
                 var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
                 await loggedAssessmentRepository.AddAsync(loggedAssessment);
+
+                var user = await userManager.FindByIdAsync(loggedAssessment.TraineeId);
+
+                await emailSender.SendEmailAsync(user.Email, "Assessment Submitted", "Your assessment has been submitted.");
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -186,7 +183,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create( LoggedAssessmentVM loggedAssessmentVM )
+        public async Task<IActionResult> Create(LoggedAssessmentVM loggedAssessmentVM)
         {
             if (ModelState.IsValid)
             {
@@ -220,10 +217,6 @@ namespace Wombat.Controllers
             var document = new Document();
             var section = document.AddSection();
 
-            // Define table dimensions and column count
-            const int rowCount = 3;
-            const int columnCount = 2;
-
             // Create a table
             var table = section.AddTable();
             table.Borders.Width = 0.75; // Set border width
@@ -242,7 +235,7 @@ namespace Wombat.Controllers
             {
                 ImageSource.ImageSourceImpl = new ImageSharpImageSource<Rgba32>();
             }
-            var imageSource = ImageSource.FromFile(imagePath,100);
+            var imageSource = ImageSource.FromFile(imagePath, 100);
             var paragraph = cell.AddParagraph();
             var image = paragraph.AddImage(imageSource);
             image.LockAspectRatio = true;

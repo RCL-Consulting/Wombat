@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Constants;
-using Wombat.Contracts;
+using Wombat.Application.Contracts;
+using Wombat.Common.Constants;
 using Wombat.Data;
-using Wombat.Models;
-using Wombat.Repositories;
+using Wombat.Common.Models;
 
 namespace Wombat.Controllers
 {
@@ -21,8 +15,8 @@ namespace Wombat.Controllers
         private readonly ITextCriteriaRepository textCriteriaRepository;
         private readonly IMapper mapper;
 
-        public TextCriteriaController( ITextCriteriaRepository textCriteriaRepository,
-                                       IMapper mapper )
+        public TextCriteriaController(ITextCriteriaRepository textCriteriaRepository,
+                                       IMapper mapper)
         {
             this.textCriteriaRepository=textCriteriaRepository;
             this.mapper=mapper;
@@ -96,11 +90,18 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
+            var textCriterion = await textCriteriaRepository.GetAsync(id);
+
+            if (textCriterion==null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var textCriterion = mapper.Map<TextCriterion>(textCriterionVM);
+                    mapper.Map(textCriterionVM, textCriterion);
                     await textCriteriaRepository.UpdateAsync(textCriterion);
                 }
                 catch (DbUpdateConcurrencyException)

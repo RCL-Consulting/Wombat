@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Constants;
-using Wombat.Contracts;
+using Wombat.Application.Contracts;
+using Wombat.Common.Constants;
 using Wombat.Data;
-using Wombat.Models;
-using Wombat.Repositories;
+using Wombat.Common.Models;
 
 namespace Wombat.Controllers
 {
@@ -22,8 +16,8 @@ namespace Wombat.Controllers
         private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public AssessmentCategoriesController( IAssessmentCategoryRepository assessmentCategoryRepository,
-                                               IOptionSetRepository optionSetRepository, 
+        public AssessmentCategoriesController(IAssessmentCategoryRepository assessmentCategoryRepository,
+                                               IOptionSetRepository optionSetRepository,
                                                IMapper mapper)
         {
             this.assessmentCategoryRepository=assessmentCategoryRepository;
@@ -101,11 +95,18 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
+            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
+
+            if (assessmentCategory==null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
+                    mapper.Map(assessmentCategoryVM, assessmentCategory);
                     await assessmentCategoryRepository.UpdateAsync(assessmentCategory);
                 }
                 catch (DbUpdateConcurrencyException)

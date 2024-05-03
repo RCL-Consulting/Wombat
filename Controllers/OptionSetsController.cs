@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Contracts;
+using Wombat.Application.Contracts;
 using Wombat.Data;
-using Wombat.Models;
+using Wombat.Common.Models;
 
 namespace Wombat.Controllers
 {
@@ -17,8 +12,8 @@ namespace Wombat.Controllers
         private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public OptionSetsController( IOptionSetRepository optionSetRepository,
-                                     IMapper mapper )
+        public OptionSetsController(IOptionSetRepository optionSetRepository,
+                                     IMapper mapper)
         {
             this.optionSetRepository=optionSetRepository;
             this.mapper=mapper;
@@ -100,11 +95,18 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
+            var optionSet = await optionSetRepository.GetAsync(id);
+
+            if (optionSet==null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var optionSet = mapper.Map<OptionSet>(optionSetVM);
+                    mapper.Map(optionSetVM, optionSet);
                     await optionSetRepository.UpdateAsync(optionSet);
                 }
                 catch (DbUpdateConcurrencyException)

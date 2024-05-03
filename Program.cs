@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Configurations;
-using Wombat.Contracts;
+using Serilog;
+using Wombat.Application.Configurations;
+using Wombat.Application.Contracts;
 using Wombat.Data;
-using Wombat.Repositories;
+using Wombat.Application.Repositories;
 using Wombat.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,9 +32,15 @@ builder.Services.AddScoped<ILoggedAssessmentRepository, LoggedAssessmentReposito
 builder.Services.AddScoped<IOptionCriterionResponseRepository, OptionCriterionResponseRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.WriteTo.Console()
+    .ReadFrom.Configuration(ctx.Configuration));
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

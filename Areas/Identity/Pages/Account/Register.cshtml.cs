@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Wombat.Constants;
+using Wombat.Common.Constants;
 using Wombat.Data;
 
 namespace Wombat.Areas.Identity.Pages.Account
