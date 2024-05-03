@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wombat.Application\Wombat.Application.csproj" />
-    <ProjectReference Include="..\Wombat.Data\Wombat.Data.csproj" />
   </ItemGroup>
 
 </Project>
