@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34714.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Web", "Wombat.Web.csproj", "{28AD0BF4-0DBF-4115-86D3-C6FE43F2FBC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Web", "Wombat.Web\Wombat.Web.csproj", "{28AD0BF4-0DBF-4115-86D3-C6FE43F2FBC0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Application", "..\Wombat.Application\Wombat.Application.csproj", "{D69C5394-8603-4A4F-85A8-2523D8D0C6A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Application", "Wombat.Application\Wombat.Application.csproj", "{D69C5394-8603-4A4F-85A8-2523D8D0C6A1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Common", "..\Wombat.Common\Wombat.Common.csproj", "{D44FB212-963F-44D9-8F64-52EBE03188CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Common", "Wombat.Common\Wombat.Common.csproj", "{D44FB212-963F-44D9-8F64-52EBE03188CA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Data", "..\Wombat.Data\Wombat.Data.csproj", "{6AE49A1B-4DE0-4436-B819-D81D9A5430DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wombat.Data", "Wombat.Data\Wombat.Data.csproj", "{6AE49A1B-4DE0-4436-B819-D81D9A5430DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -12,6 +12,7 @@ using Wombat.Application.Contracts;
 using Wombat.Common.Constants;
 using Wombat.Data;
 using Wombat.Common.Models;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Wombat.Controllers
 {
@@ -22,6 +23,7 @@ namespace Wombat.Controllers
         private readonly IAssessmentContextRepository assessmentContextRepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEmailSender emailSender;
+        private readonly IWebHostEnvironment webHostEnvironment;
         private readonly IMapper mapper;
 
         public LoggedAssessmentsController(UserManager<WombatUser> userManager,
@@ -29,6 +31,7 @@ namespace Wombat.Controllers
                                             IAssessmentContextRepository assessmentContextRepository,
                                             IHttpContextAccessor httpContextAccessor,
                                             IEmailSender emailSender,
+                                            IWebHostEnvironment webHostEnvironment,
                                             IMapper mapper)
         {
             this.userManager=userManager;
@@ -36,6 +39,7 @@ namespace Wombat.Controllers
             this.assessmentContextRepository=assessmentContextRepository;
             this.httpContextAccessor=httpContextAccessor;
             this.emailSender=emailSender;
+            this.webHostEnvironment=webHostEnvironment;
             this.mapper=mapper;
         }
 
@@ -207,11 +211,10 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            string Path = "c:/Junk/docx/";
             string Name = loggedAssessment.Trainee.Id;
 
-            var imagePath = @"c:\Junk\docx\logo.jpg";
-            var pdfPath = Path + Name + ".pdf";
+            var imagePath = Path.Combine(webHostEnvironment.WebRootPath, "pdf", "logo.jpg");
+            var pdfPath = Path.Combine(webHostEnvironment.WebRootPath, "pdf", Name+".pdf");
 
             // Create a new PDF document
             var document = new Document();
