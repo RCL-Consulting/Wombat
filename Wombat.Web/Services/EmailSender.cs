@@ -39,7 +39,7 @@ namespace Wombat.Services
             string connectionString = Environment.GetEnvironmentVariable("COMMUNICATION_SERVICES_CONNECTION_STRING");
             EmailClient emailClient = new EmailClient(connectionString);
 
-            var sender = "donotreply@wombatweb20240504122946.azurewebsites.net";
+            var sender = "donotreply@98e0c7bc-2212-48f8-8427-5aa4f7ced394.azurecomm.net";
 
             try
             {
