@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Data;
 using Wombat.Common.Models;
+using Wombat.Application.Repositories;
 
 namespace Wombat.Controllers
 {
@@ -144,6 +145,23 @@ namespace Wombat.Controllers
         private bool WombatUserVMExists(string id)
         {
             return userManager.Users.Any(e => e.Id == id);
+        }
+
+        // POST: AssessmentCategories/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                var roles = await userManager.GetRolesAsync(user);
+                await userManager.RemoveFromRolesAsync(user, roles);
+
+                await userManager.DeleteAsync(user);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

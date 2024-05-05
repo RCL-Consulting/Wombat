@@ -155,7 +155,8 @@ namespace Wombat.Controllers
             {
                 var optionCriterionResponse = new OptionCriterionResponseVM();
                 optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-                optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
+                if (optionCriterion.OptionsSet.Options.Count>0)
+                    optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
                 optionCriterionResponse.CriterionId = optionCriterion.Id;
                 loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
             }
