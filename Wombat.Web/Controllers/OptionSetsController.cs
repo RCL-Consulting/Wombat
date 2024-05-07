@@ -4,9 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Contracts;
 using Wombat.Data;
 using Wombat.Common.Models;
+using Microsoft.AspNetCore.Authorization;
+using Wombat.Common.Constants;
 
 namespace Wombat.Controllers
 {
+    [Authorize(Roles = Roles.Administrator)]
     public class OptionSetsController : Controller
     {
         private readonly IOptionSetRepository optionSetRepository;

@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Data;
 using Wombat.Common.Models;
 using Wombat.Application.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Wombat.Common.Constants;
 
 namespace Wombat.Controllers
 {
+    [Authorize(Roles = Roles.Administrator)]
     public class WombatUsersController : Controller
     {
         private readonly UserManager<WombatUser> userManager;

@@ -13,9 +13,11 @@ using Wombat.Common.Constants;
 using Wombat.Data;
 using Wombat.Common.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Wombat.Controllers
 {
+    [Authorize]
     public class LoggedAssessmentsController : Controller
     {
         private readonly UserManager<WombatUser> userManager;
@@ -43,15 +45,6 @@ namespace Wombat.Controllers
             this.mapper=mapper;
         }
 
-        // GET: LoggedAssessments
-        public async Task<IActionResult> Index()
-        {
-            var loggedAssessment = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAllAsync());
-
-            return View(loggedAssessment);
-
-        }
-
         public async Task<IActionResult> MyAssessments()
         {
             if (httpContextAccessor.HttpContext==null)
@@ -77,6 +70,7 @@ namespace Wombat.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = Roles.Assessor)]
         public async Task<IActionResult> CreateFromList()
         {
             var trainees = mapper.Map<List<WombatUserVM>>(await userManager.GetUsersInRoleAsync(Roles.Trainee));
@@ -109,6 +103,7 @@ namespace Wombat.Controllers
             ViewData["Trainee"] = new SelectList(trainees, "Id", "Email");
         }
 
+        [Authorize(Roles = Roles.Assessor)]
         // GET: LoggedAssessments/Create
         public async Task<IActionResult> Create()
         {
@@ -118,6 +113,7 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
+        [Authorize(Roles = Roles.Assessor)]
         public async Task<IActionResult> LogAssessmentFor(string? id)
         {
             var user = await userManager.FindByIdAsync(id);
@@ -169,6 +165,7 @@ namespace Wombat.Controllers
             }
         }
 
+        [Authorize(Roles = Roles.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
@@ -178,6 +175,7 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
+        [Authorize(Roles = Roles.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitAssessment(LoggedAssessmentVM loggedAssessmentVM)
@@ -212,6 +210,7 @@ namespace Wombat.Controllers
         // POST: LoggedAssessments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = Roles.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LoggedAssessmentVM loggedAssessmentVM)
@@ -347,13 +346,5 @@ namespace Wombat.Controllers
             return File(pdfBytes, "application/pdf", pdfPath);
         }
 
-        // POST: LoggedAssessments/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            await loggedAssessmentRepository.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
-        }
     }
 }
