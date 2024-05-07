@@ -32,12 +32,12 @@
                                 if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
                                 {
                                     var Rank = optionCriterionResponse.Criterion.OptionsSet.Options[j].Rank;
-                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio">
+                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id==optionCriterionResponse.OptionId ? "checked" : "")>
                                     <label name="OptionCriterionResponses[@i].OptionId" class="radio">@Rank - @Description</label>
                                 }
                                 else
                                 {
-                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio">
+                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id==optionCriterionResponse.OptionId ? "checked" : "")>
                                     <label name="OptionCriterionResponses[@i].OptionId" class="radio">@Description</label>
                                 }
                                 <br />
@@ -46,7 +46,7 @@
                         <br />
                         <div class="form-group">
                             <label class="control-label">Comments:</label>
-                            <textarea name="OptionCriterionResponses[@i].Comment" class="form-control"></textarea>
+                            <textarea class="form-control" data-val="true" name="OptionCriterionResponses[@i].Comment" id="OptionCriterionResponses[@i].Comment">@optionCriterionResponse.Comment</textarea>
                         </div>
                         <br />
                     </div>

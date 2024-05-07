@@ -143,23 +143,37 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
+        public async Task PopulateAssessment(LoggedAssessmentVM loggedAssessmentVM)
         {
             loggedAssessmentVM.AssessmentContext = mapper.Map<AssessmentContextVM>(await assessmentContextRepository.GetAsync(loggedAssessmentVM.AssessmentContextId));
             loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId));
             loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId));
-
+            
             foreach (var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentCategory.OptionCriteria)
             {
-                var optionCriterionResponse = new OptionCriterionResponseVM();
-                optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-                if (optionCriterion.OptionsSet.Options.Count>0)
-                    optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
-                optionCriterionResponse.CriterionId = optionCriterion.Id;
-                loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
+                var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
+                if (optionCriterionResponse == null)
+                {
+                    optionCriterionResponse = new OptionCriterionResponseVM();
+                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+                    if (optionCriterion.OptionsSet.Options.Count>0)
+                        optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
+                    optionCriterionResponse.CriterionId = optionCriterion.Id;
+                    loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
+                }
+                else
+                {
+                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+                    optionCriterionResponse.Option = optionCriterion.OptionsSet.Options.FirstOrDefault(x => x.Id == optionCriterionResponse.OptionId);
+                }
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
+        {
+            await PopulateAssessment(loggedAssessmentVM);
             await AddViewDataAsync();
             return View(loggedAssessmentVM);
         }
@@ -170,6 +184,17 @@ namespace Wombat.Controllers
         {
             if (ModelState.IsValid)
             {
+                if(loggedAssessmentVM.Comment==null)
+                {
+                    loggedAssessmentVM.Comment = "";
+                }
+                foreach(var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
+                {
+                    if (optionCriterionResponse.Comment==null)
+                    {
+                        optionCriterionResponse.Comment = "";
+                    }
+                }
                 var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
                 await loggedAssessmentRepository.AddAsync(loggedAssessment);
 
@@ -180,6 +205,7 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            await PopulateAssessment(loggedAssessmentVM);
             return View(loggedAssessmentVM);
         }
 

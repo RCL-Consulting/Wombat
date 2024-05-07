@@ -23,7 +23,7 @@
 
         public List<OptionCriterionResponseVM> OptionCriterionResponses { get; set; }
 
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
 
         public DateTime AssessmentDate { get; set; }
     }

@@ -2,6 +2,11 @@
 {
     public class LoggedAssessment: BaseEntity
     {
+        public LoggedAssessment()
+        {
+            Comment = "";
+        }
+
         public string TraineeId { get; set; }
         public WombatUser? Trainee { get; set; }
 

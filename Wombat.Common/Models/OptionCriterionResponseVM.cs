@@ -18,6 +18,6 @@
         public int AssessmentId { get; set; }
         public LoggedAssessmentVM? Assessment { get; set; }
 
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
     }
 }
