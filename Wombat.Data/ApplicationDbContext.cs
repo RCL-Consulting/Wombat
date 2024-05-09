@@ -37,8 +37,6 @@ namespace Wombat.Data
 
         public DbSet<OptionCriterion> OptionCriteria{ get; set; }
 
-        public DbSet<TextCriterion> TextCriteria { get; set; }
-
         public DbSet<OptionSet> OptionSets{ get; set; }
         public DbSet<Option> Options { get; set; }
 

@@ -8,6 +8,7 @@ namespace Wombat.Data.Configurations.Entities
         public void Configure(EntityTypeBuilder<Option> builder)
         {
             builder.HasData(
+               
                 new Option
                 {
                     Id = 10,

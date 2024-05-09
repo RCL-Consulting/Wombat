@@ -10,7 +10,7 @@
         public int Id { get; set; }
 
         public OptionVM? Option { get; set; }
-        public int OptionId { get; set; }
+        public int? OptionId { get; set; }
 
         public int CriterionId { get; set; }
         public OptionCriterionVM? Criterion { get; set; }

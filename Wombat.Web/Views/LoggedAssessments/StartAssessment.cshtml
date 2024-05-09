@@ -24,9 +24,9 @@
                     </div>
                     <div class="card-body">
                         <div id="RadioButtonGroup">
+                            <input type="hidden" id="OptionCriterionResponses[@i].CriterionId" name="OptionCriterionResponses[@i].CriterionId" value="@optionCriterionResponse.Criterion.Id" />
                             @for (int j = 0; j < optionCriterionResponse.Criterion.OptionsSet.Options.Count; j++)
                             {
-                                <input type="hidden" id="OptionCriterionResponses[@i].CriterionId" name="OptionCriterionResponses[@i].CriterionId" value="@optionCriterionResponse.Criterion.Id" />
                                 var Description = optionCriterionResponse.Criterion.OptionsSet.Options[j].Description;
                                 var Id = optionCriterionResponse.Criterion.OptionsSet.Options[j].Id;
                                 if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)

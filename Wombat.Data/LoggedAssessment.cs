@@ -1,4 +1,7 @@
-﻿namespace Wombat.Data
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Wombat.Data
 {
     public class LoggedAssessment: BaseEntity
     {
@@ -8,12 +11,21 @@
         }
 
         public string TraineeId { get; set; }
+
+        [ForeignKey("TraineeId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public WombatUser? Trainee { get; set; }
 
         public string AssessorId { get; set; }
+
+        [ForeignKey("AssessorId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public WombatUser? Assessor { get; set; }
 
         public int AssessmentContextId { get; set; }
+
+        [ForeignKey("AssessmentContextId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentContext? AssessmentContext { get; set; }
 
         public List<OptionCriterionResponse>? OptionCriterionResponses { get; set; }

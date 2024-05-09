@@ -11,6 +11,12 @@ namespace Wombat.Data.Configurations.Entities
             builder.HasData(
                 new OptionSet
                 {
+                    Id = 1,
+                    Description = "Text",
+                    DisplayRank=false
+                },
+                new OptionSet
+                {
                     Id = 3,
                     Description = "Hospital locations",
                     DisplayRank=false

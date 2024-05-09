@@ -188,6 +188,9 @@ namespace Wombat.Controllers
                 }
                 foreach(var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
                 {
+                    if(optionCriterionResponse.OptionId==0)
+                        optionCriterionResponse.OptionId = null;
+                    
                     if (optionCriterionResponse.Comment==null)
                     {
                         optionCriterionResponse.Comment = "";
@@ -200,7 +203,7 @@ namespace Wombat.Controllers
 
                 await emailSender.SendEmailAsync(user.Email, "Assessment Submitted", "Your assessment has been submitted.");
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(MyAssessments));
             }
 
             await PopulateAssessment(loggedAssessmentVM);
