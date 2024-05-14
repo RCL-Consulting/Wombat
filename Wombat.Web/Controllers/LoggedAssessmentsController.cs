@@ -304,14 +304,19 @@ namespace Wombat.Controllers
             foreach (var optionCriterionResponse in loggedAssessment.OptionCriterionResponses)
             {
                 string Value = "";
-                if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
+                if (optionCriterionResponse.Option!=null)
                 {
-                    Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
+                    if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
+                    {
+                        Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
+                    }
+                    else
+                    {
+                        Value = optionCriterionResponse.Option.Description;
+                    }
                 }
                 else
-                {
-                    Value = optionCriterionResponse.Option.Description;
-                }
+                    Value = optionCriterionResponse.Comment; 
 
                 Cells = table.AddRow().Cells;
                 Cells[0].AddParagraph(optionCriterionResponse.Criterion.Description);
