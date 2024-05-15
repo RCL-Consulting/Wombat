@@ -145,7 +145,7 @@ namespace Wombat.Controllers
             loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId));
             loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId));
             
-            foreach (var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentCategory.OptionCriteria)
+            foreach (var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentTemplate.OptionCriteria)
             {
                 var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
                 if (optionCriterionResponse == null)

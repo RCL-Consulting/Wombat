@@ -12,8 +12,8 @@ using Wombat.Data;
 namespace Wombat.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240509154020_Initial")]
-    partial class Initial
+    [Migration("20240515164541_ChangedTable")]
+    partial class ChangedTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -205,7 +205,35 @@ namespace Wombat.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Wombat.Data.AssessmentCategory", b =>
+            modelBuilder.Entity("Wombat.Data.AssessmentContext", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AssessmentTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssessmentTemplateId");
+
+                    b.ToTable("AssessmentContexts");
+                });
+
+            modelBuilder.Entity("Wombat.Data.AssessmentTemplate", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,35 +253,7 @@ namespace Wombat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AssessmentCategories");
-                });
-
-            modelBuilder.Entity("Wombat.Data.AssessmentContext", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AssessmentCategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssessmentCategoryId");
-
-                    b.ToTable("AssessmentContexts");
+                    b.ToTable("AssessmentTemplates");
                 });
 
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>
@@ -538,7 +538,7 @@ namespace Wombat.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AssessmentCategoryId")
+                    b.Property<int>("AssessmentTemplateId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("DateCreated")
@@ -559,7 +559,7 @@ namespace Wombat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssessmentCategoryId");
+                    b.HasIndex("AssessmentTemplateId");
 
                     b.HasIndex("OptionSetId");
 
@@ -760,7 +760,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fe6d6bfa-5483-4880-89ef-465237016f65",
+                            ConcurrencyStamp = "50ac9168-9393-445a-a755-d9844bcd28e8",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -768,9 +768,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIptNo+VeoPs8LGMeL5GOPECvprL5tM6JeEeHB+ehdPDjUElVOvVvVxM0cmns87H+Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEArugqglp8YjJLyW38WQk8QOb0sBiIbh/ke3njgHm9RBijfA8Vg8luLtPTRWyR4gTQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f584a843-f382-4f1f-ba40-8fec858f5e22",
+                            SecurityStamp = "da93a81e-7274-4d77-b619-0d9d96ef1027",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -779,7 +779,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6e764706-e117-4c95-a9a2-e1591eae301a",
+                            ConcurrencyStamp = "39b4b340-5d0f-4807-9077-0b77980b1543",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "assessor@localhost.com",
                             EmailConfirmed = true,
@@ -787,9 +787,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFHFXjTFq19L4FWKC+ymG6pfkwcwq4BOy8jCqXw4grOCqUbT9uSMtCEYwRon+bAUwQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA5YqfnzsCFxKAR4TGxp2QFNt5gPEK/Sf2gxz4ozlueTUBF7zMtjNdBgzn8/j9qKPw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "969c9a82-5553-4094-ac64-bda427c3b133",
+                            SecurityStamp = "2881a754-d206-47cc-b9ba-bb868fa3830a",
                             Surname = "Assessor",
                             TwoFactorEnabled = false,
                             UserName = "assessor@localhost.com"
@@ -798,7 +798,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a49f7e54-e362-492a-b759-c82326b2d2b5",
+                            ConcurrencyStamp = "7f9eaac9-32ae-4d81-a126-a7bfa6746ba7",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "trainee@localhost.com",
                             EmailConfirmed = true,
@@ -806,9 +806,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "TRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "TRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEETLEmCl4f3BwaiPLW6YHAPPnsdGJ9CR8UkzaT4SfxgZ0waqso2fzILYfDuEavG8BQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHg287hdN+J/Ky8TLmjv2ZNEQfLJHTSCRtOiAuPLspoF1G2W89LZLd6XioFtccOxMA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "fb56cb32-5239-4db9-ac46-8853597f0180",
+                            SecurityStamp = "ab58a55c-2a3c-44a8-84ce-ecd4d4672367",
                             Surname = "Trainee",
                             TwoFactorEnabled = false,
                             UserName = "trainee@localhost.com"
@@ -868,13 +868,13 @@ namespace Wombat.Data.Migrations
 
             modelBuilder.Entity("Wombat.Data.AssessmentContext", b =>
                 {
-                    b.HasOne("Wombat.Data.AssessmentCategory", "AssessmentCategory")
+                    b.HasOne("Wombat.Data.AssessmentTemplate", "AssessmentTemplate")
                         .WithMany()
-                        .HasForeignKey("AssessmentCategoryId")
+                        .HasForeignKey("AssessmentTemplateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AssessmentCategory");
+                    b.Navigation("AssessmentTemplate");
                 });
 
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>
@@ -917,9 +917,9 @@ namespace Wombat.Data.Migrations
 
             modelBuilder.Entity("Wombat.Data.OptionCriterion", b =>
                 {
-                    b.HasOne("Wombat.Data.AssessmentCategory", "AssessmentCategory")
+                    b.HasOne("Wombat.Data.AssessmentTemplate", "AssessmentTemplate")
                         .WithMany("OptionCriteria")
-                        .HasForeignKey("AssessmentCategoryId")
+                        .HasForeignKey("AssessmentTemplateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -929,7 +929,7 @@ namespace Wombat.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AssessmentCategory");
+                    b.Navigation("AssessmentTemplate");
 
                     b.Navigation("OptionsSet");
                 });
@@ -960,7 +960,7 @@ namespace Wombat.Data.Migrations
                     b.Navigation("Option");
                 });
 
-            modelBuilder.Entity("Wombat.Data.AssessmentCategory", b =>
+            modelBuilder.Entity("Wombat.Data.AssessmentTemplate", b =>
                 {
                     b.Navigation("OptionCriteria");
                 });

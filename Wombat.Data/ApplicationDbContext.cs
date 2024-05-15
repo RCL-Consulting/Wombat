@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Common.Models;
 using Wombat.Data.Configurations.Entities;
 
 namespace Wombat.Data
@@ -32,7 +33,7 @@ namespace Wombat.Data
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        public DbSet<AssessmentCategory> AssessmentCategories { get; set; }
+        public DbSet<AssessmentTemplate> AssessmentTemplates { get; set; }
         public DbSet<AssessmentContext> AssessmentContexts { get; set; }
 
         public DbSet<OptionCriterion> OptionCriteria{ get; set; }

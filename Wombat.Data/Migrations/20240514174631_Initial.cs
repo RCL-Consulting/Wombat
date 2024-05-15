@@ -56,7 +56,7 @@ namespace Wombat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AssessmentCategories",
+                name: "AssessmentTemplates",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -67,7 +67,7 @@ namespace Wombat.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AssessmentCategories", x => x.Id);
+                    table.PrimaryKey("PK_AssessmentTemplates", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -199,7 +199,7 @@ namespace Wombat.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssessmentCategoryId = table.Column<int>(type: "int", nullable: false),
+                    AssessmentTemplateId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -207,9 +207,9 @@ namespace Wombat.Data.Migrations
                 {
                     table.PrimaryKey("PK_AssessmentContexts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AssessmentContexts_AssessmentCategories_AssessmentCategoryId",
-                        column: x => x.AssessmentCategoryId,
-                        principalTable: "AssessmentCategories",
+                        name: "FK_AssessmentContexts_AssessmentTemplates_AssessmentTemplateId",
+                        column: x => x.AssessmentTemplateId,
+                        principalTable: "AssessmentTemplates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -222,7 +222,7 @@ namespace Wombat.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OptionSetId = table.Column<int>(type: "int", nullable: false),
-                    AssessmentCategoryId = table.Column<int>(type: "int", nullable: false),
+                    AssessmentTemplateId = table.Column<int>(type: "int", nullable: false),
                     Rank = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -231,9 +231,9 @@ namespace Wombat.Data.Migrations
                 {
                     table.PrimaryKey("PK_OptionCriteria", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OptionCriteria_AssessmentCategories_AssessmentCategoryId",
-                        column: x => x.AssessmentCategoryId,
-                        principalTable: "AssessmentCategories",
+                        name: "FK_OptionCriteria_AssessmentTemplates_AssessmentTemplateId",
+                        column: x => x.AssessmentTemplateId,
+                        principalTable: "AssessmentTemplates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -356,9 +356,9 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "a49f7e54-e362-492a-b759-c82326b2d2b5", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEETLEmCl4f3BwaiPLW6YHAPPnsdGJ9CR8UkzaT4SfxgZ0waqso2fzILYfDuEavG8BQ==", null, false, "fb56cb32-5239-4db9-ac46-8853597f0180", "Trainee", false, "trainee@localhost.com" },
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "6e764706-e117-4c95-a9a2-e1591eae301a", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEFHFXjTFq19L4FWKC+ymG6pfkwcwq4BOy8jCqXw4grOCqUbT9uSMtCEYwRon+bAUwQ==", null, false, "969c9a82-5553-4094-ac64-bda427c3b133", "Assessor", false, "assessor@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "fe6d6bfa-5483-4880-89ef-465237016f65", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEIptNo+VeoPs8LGMeL5GOPECvprL5tM6JeEeHB+ehdPDjUElVOvVvVxM0cmns87H+Q==", null, false, "f584a843-f382-4f1f-ba40-8fec858f5e22", "Admin", false, "admin@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "42fa96f5-a733-4e46-9266-cf17680609f2", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJaV7yXY06ZE7dvvBo6RDfLOLhuwIeeDF6468e9p8Q4dOw+uha3sRTdQcfGe/B9L/A==", null, false, "279ea27a-5732-42dc-a93f-eb8ac1be5de6", "Trainee", false, "trainee@localhost.com" },
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "79d857d2-35f4-422b-be17-5cd1dc050e7b", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEIvH+eNJ6mnchdoFXeRsFO/JniikP3NMb4exhYPORLpuJVUVHsQfqBwtfH/SRj4XFg==", null, false, "663a078b-90eb-4241-915a-29bcd24f07c8", "Assessor", false, "assessor@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "961561d6-04d5-455e-9731-b8b8b3334522", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEI7jamR2T8bimOSSK7NFLKEs6Cv62VyVVkbJltbmR1jyC8eDahuqrUbAh5RBFHzPfA==", null, false, "a040f234-53c7-49f4-b799-f66b66c3d7bd", "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -453,9 +453,9 @@ namespace Wombat.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AssessmentContexts_AssessmentCategoryId",
+                name: "IX_AssessmentContexts_AssessmentTemplateId",
                 table: "AssessmentContexts",
-                column: "AssessmentCategoryId");
+                column: "AssessmentTemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_AssessmentContextId",
@@ -473,9 +473,9 @@ namespace Wombat.Data.Migrations
                 column: "TraineeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OptionCriteria_AssessmentCategoryId",
+                name: "IX_OptionCriteria_AssessmentTemplateId",
                 table: "OptionCriteria",
-                column: "AssessmentCategoryId");
+                column: "AssessmentTemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OptionCriteria_OptionSetId",
@@ -546,7 +546,7 @@ namespace Wombat.Data.Migrations
                 name: "OptionSets");
 
             migrationBuilder.DropTable(
-                name: "AssessmentCategories");
+                name: "AssessmentTemplates");
         }
     }
 }

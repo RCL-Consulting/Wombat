@@ -5,12 +5,12 @@ namespace Wombat.Application.Repositories
 {
     public class AssessmentContextRepository : GenericRepository<AssessmentContext>, IAssessmentContextRepository
     {
-        private readonly IAssessmentCategoryRepository assessmentCategoryRepository;
+        private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
 
         public AssessmentContextRepository( ApplicationDbContext context,
-                                            IAssessmentCategoryRepository assessmentCategoryRepository) : base(context)
+                                            IAssessmentTemplateRepository assessmentTemplateRepository) : base(context)
         {
-            this.assessmentCategoryRepository=assessmentCategoryRepository;
+            this.assessmentTemplateRepository=assessmentTemplateRepository;
         }
 
 
@@ -25,7 +25,7 @@ namespace Wombat.Application.Repositories
 
             if (assessmentContext!=null)
             {
-                assessmentContext.AssessmentCategory = await assessmentCategoryRepository.GetAsync(assessmentContext.AssessmentCategoryId);
+                assessmentContext.AssessmentTemplate = await assessmentTemplateRepository.GetAsync(assessmentContext.AssessmentTemplateId);
 
                 return assessmentContext;
             }

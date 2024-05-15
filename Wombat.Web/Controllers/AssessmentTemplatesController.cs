@@ -6,98 +6,99 @@ using Wombat.Application.Contracts;
 using Wombat.Common.Constants;
 using Wombat.Data;
 using Wombat.Common.Models;
+using Wombat.Application.Repositories;
 
 namespace Wombat.Controllers
 {
     [Authorize(Roles = Roles.Administrator)]
-    public class AssessmentCategoriesController : Controller
+    public class AssessmentTemplatesController : Controller
     {
-        private readonly IAssessmentCategoryRepository assessmentCategoryRepository;
+        private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
         private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
 
-        public AssessmentCategoriesController(IAssessmentCategoryRepository assessmentCategoryRepository,
+        public AssessmentTemplatesController(IAssessmentTemplateRepository assessmentTemplateRepository,
                                                IOptionSetRepository optionSetRepository,
                                                IMapper mapper)
         {
-            this.assessmentCategoryRepository=assessmentCategoryRepository;
+            this.assessmentTemplateRepository=assessmentTemplateRepository;
             this.optionSetRepository=optionSetRepository;
             this.mapper=mapper;
         }
 
-        // GET: AssessmentCategories
+        // GET: AssessmentTemplates
         public async Task<IActionResult> Index()
         {
-            var categories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
-            return View(categories);
+            var templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
+            return View(templates);
         }
 
-        // GET: AssessmentCategories/Details/5
+        // GET: AssessmentTemplates/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
-            if (assessmentCategory == null)
+            var assessmentTemplate = await assessmentTemplateRepository.GetAsync(id);
+            if (assessmentTemplate == null)
             {
                 return NotFound();
             }
 
-            var assessmentCategoryVM = mapper.Map<AssessmentCategoryVM>(assessmentCategory);
-            return View(assessmentCategoryVM);
+            var assessmentTemplateVM = mapper.Map<AssessmentTemplateVM>(assessmentTemplate);
+            return View(assessmentTemplateVM);
         }
 
-        // GET: AssessmentCategories/Create
+        // GET: AssessmentTemplates/Create
         public async Task<IActionResult> CreateAsync()
         {
-            var assessmentCategoryVM = new AssessmentCategoryVM();
-            assessmentCategoryVM.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+            var assessmentTemplateVM = new AssessmentTemplateVM();
+            assessmentTemplateVM.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
 
-            return View(assessmentCategoryVM);
+            return View(assessmentTemplateVM);
         }
 
-        // POST: AssessmentCategories/Create
+        // POST: AssessmentTemplates/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AssessmentCategoryVM assessmentCategoryVM)
+        public async Task<IActionResult> Create(AssessmentTemplateVM assessmentTemplateVM)
         {
             if (ModelState.IsValid)
             {
-                var assessmentCategory = mapper.Map<AssessmentCategory>(assessmentCategoryVM);
-                await assessmentCategoryRepository.AddAsync(assessmentCategory);
+                var assessmentTemplate = mapper.Map<AssessmentTemplate>(assessmentTemplateVM);
+                await assessmentTemplateRepository.AddAsync(assessmentTemplate);
                 return RedirectToAction(nameof(Index));
             }
-            return View(assessmentCategoryVM);
+            return View(assessmentTemplateVM);
         }
 
-        // GET: AssessmentCategories/Edit/5
+        // GET: AssessmentTemplates/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
-            if (assessmentCategory == null)
+            var assessmentTemplate = await assessmentTemplateRepository.GetAsync(id);
+            if (assessmentTemplate == null)
             {
                 return NotFound();
             }
 
-            var assessmentCategoryVM = mapper.Map<AssessmentCategoryVM>(assessmentCategory);
-            return View(assessmentCategoryVM);
+            var assessmentTemplateVM = mapper.Map<AssessmentTemplateVM>(assessmentTemplate);
+            return View(assessmentTemplateVM);
         }
 
-        // POST: AssessmentCategories/Edit/5
+        // POST: AssessmentTemplates/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, AssessmentCategoryVM assessmentCategoryVM)
+        public async Task<IActionResult> Edit(int id, AssessmentTemplateVM assessmentTemplateVM)
         {
-            if (id != assessmentCategoryVM.Id)
+            if (id != assessmentTemplateVM.Id)
             {
                 return NotFound();
             }
 
-            var assessmentCategory = await assessmentCategoryRepository.GetAsync(id);
+            var assessmentTemplate = await assessmentTemplateRepository.GetAsync(id);
 
-            if (assessmentCategory==null)
+            if (assessmentTemplate==null)
             {
                 return NotFound();
             }
@@ -106,12 +107,12 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    mapper.Map(assessmentCategoryVM, assessmentCategory);
-                    await assessmentCategoryRepository.UpdateAsync(assessmentCategory);
+                    mapper.Map(assessmentTemplateVM, assessmentTemplate);
+                    await assessmentTemplateRepository.UpdateAsync(assessmentTemplate);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await assessmentCategoryRepository.Exists(assessmentCategoryVM.Id))
+                    if (!await assessmentTemplateRepository.Exists(assessmentTemplateVM.Id))
                     {
                         return NotFound();
                     }
@@ -122,15 +123,15 @@ namespace Wombat.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(assessmentCategoryVM);
+            return View(assessmentTemplateVM);
         }
 
-        // POST: AssessmentCategories/Delete/5
+        // POST: AssessmentTemplates/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await assessmentCategoryRepository.DeleteAsync(id);
+            await assessmentTemplateRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }

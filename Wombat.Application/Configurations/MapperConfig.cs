@@ -8,7 +8,7 @@ namespace Wombat.Application.Configurations
     {
         public MapperConfig()
         {
-            CreateMap<AssessmentCategory, AssessmentCategoryVM>().ReverseMap();
+            CreateMap<AssessmentTemplate, AssessmentTemplateVM>().ReverseMap();
             CreateMap<OptionCriterion, OptionCriterionVM>().ReverseMap();
             CreateMap<OptionSet, OptionSetVM>().ReverseMap();
             CreateMap<Option, OptionVM>().ReverseMap();

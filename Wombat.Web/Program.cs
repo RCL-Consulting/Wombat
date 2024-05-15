@@ -23,7 +23,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25, "no-reply@rcl.co.za"));
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IAssessmentCategoryRepository, AssessmentCategoryRepository>();
+builder.Services.AddScoped<IAssessmentTemplateRepository, AssessmentTemplateRepository>();
 builder.Services.AddScoped<IAssessmentContextRepository, AssessmentContextRepository>();
 builder.Services.AddScoped<IEnumCriteriaRepository, OptionCriteriaRepository>();
 builder.Services.AddScoped<IOptionSetRepository, OptionSetRepository>();

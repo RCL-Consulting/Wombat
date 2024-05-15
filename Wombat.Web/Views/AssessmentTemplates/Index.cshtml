@@ -1,4 +1,4 @@
-﻿@model IEnumerable<AssessmentCategoryVM>
+﻿@model IEnumerable<AssessmentTemplateVM>
 
 @{
     ViewData["Title"] = "Index";
@@ -40,7 +40,7 @@
 </div>
 
 <form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="categoryId" name="Id" />
+    <input type="hidden" id="templateId" name="Id" />
 </form>
 
 @section Scripts {
@@ -58,7 +58,7 @@
                     if (confirm) {
                         var btn = $(this);
                         var id = btn.data("id");
-                        $("#categoryId").val(id);
+                        $("#templateId").val(id);
                         $("#deleteForm").submit();
                     }
                 });

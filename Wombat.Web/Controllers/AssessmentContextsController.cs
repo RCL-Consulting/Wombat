@@ -7,6 +7,7 @@ using Wombat.Data;
 using Wombat.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Common.Constants;
+using Wombat.Application.Repositories;
 
 namespace Wombat.Controllers
 {
@@ -14,15 +15,15 @@ namespace Wombat.Controllers
     public class AssessmentContextsController : Controller
     {
         private readonly IAssessmentContextRepository assessmentContextRepository;
-        private readonly IAssessmentCategoryRepository assessmentCategoryRepository;
+        private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
         private readonly IMapper mapper;
 
         public AssessmentContextsController(IAssessmentContextRepository assessmentContextRepository,
-                                             IAssessmentCategoryRepository assessmentCategoryRepository,
+                                             IAssessmentTemplateRepository assessmentTemplateRepository,
                                              IMapper mapper)
         {
             this.assessmentContextRepository=assessmentContextRepository;
-            this.assessmentCategoryRepository=assessmentCategoryRepository;
+            this.assessmentTemplateRepository=assessmentTemplateRepository;
             this.mapper=mapper;
         }
 
@@ -49,8 +50,8 @@ namespace Wombat.Controllers
         // GET: AssessmentContexts/Create
         public async Task<IActionResult> Create()
         {
-            var assessmentCategories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
-            ViewData["AssessmentCategory"] = new SelectList(assessmentCategories, "Id", "Name");
+            var assessmentTemplates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
+            ViewData["AssessmentTemplate"] = new SelectList(assessmentTemplates, "Id", "Name");
             return View();
         }
 
@@ -69,8 +70,8 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var assessmentCategories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
-            ViewData["AssessmentCategory"] = new SelectList(assessmentCategories, "Id", "Name");
+            var assessmentTemplates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
+            ViewData["AssessmentTemplate"] = new SelectList(assessmentTemplates, "Id", "Name");
             return View(assessmentContextVM);
         }
 
@@ -83,8 +84,8 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            var assessmentCategories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
-            ViewData["AssessmentCategory"] = new SelectList(assessmentCategories, "Id", "Name");
+            var assessmentTemplates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
+            ViewData["AssessmentTemplate"] = new SelectList(assessmentTemplates, "Id", "Name");
 
             var assessmentContextVM = mapper.Map<AssessmentContextVM>(assessmentContext);
             return View(assessmentContextVM);
@@ -130,8 +131,8 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var assessmentCategories = mapper.Map<List<AssessmentCategoryVM>>(await assessmentCategoryRepository.GetAllAsync());
-            ViewData["AssessmentCategory"] = new SelectList(assessmentCategories, "Id", "Name");
+            var assessmentTemplates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
+            ViewData["AssessmentTemplate"] = new SelectList(assessmentTemplates, "Id", "Name");
             return View(assessmentContextVM);
         }
 

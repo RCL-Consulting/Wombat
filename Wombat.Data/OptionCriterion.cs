@@ -17,11 +17,11 @@ namespace Wombat.Data
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public OptionSet? OptionsSet { get; set; }
 
-        public int AssessmentCategoryId { get; set; }
+        public int AssessmentTemplateId { get; set; }
 
-        [ForeignKey("AssessmentCategoryId")]
+        [ForeignKey("AssessmentTemplateId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
-        public AssessmentCategory? AssessmentCategory { get; set; }
+        public AssessmentTemplate? AssessmentTemplate { get; set; }
 
         public int Rank { get; set; }
     }
