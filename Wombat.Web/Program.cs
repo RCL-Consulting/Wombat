@@ -24,7 +24,7 @@ builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAssessmentTemplateRepository, AssessmentTemplateRepository>();
-builder.Services.AddScoped<IAssessmentContextRepository, AssessmentContextRepository>();
+builder.Services.AddScoped<IEPARepository, EPARepository>();
 builder.Services.AddScoped<IEnumCriteriaRepository, OptionCriteriaRepository>();
 builder.Services.AddScoped<IOptionSetRepository, OptionSetRepository>();
 builder.Services.AddScoped<ILoggedAssessmentRepository, LoggedAssessmentRepository>();

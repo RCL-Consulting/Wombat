@@ -7,7 +7,7 @@
             OptionCriterionResponses = new List<OptionCriterionResponseVM>();
             TraineeId = "";
             AssessorId = "";
-            AssessmentContextId = 0;
+            EPAId = 0;
             Comment = "";
         }
 
@@ -18,8 +18,8 @@
         public string AssessorId { get; set; }
         public WombatUserVM? Assessor { get; set; }
 
-        public int AssessmentContextId { get; set; }
-        public AssessmentContextVM? AssessmentContext { get; set; }
+        public int EPAId { get; set; }
+        public EPAVM? EPA { get; set; }
 
         public List<OptionCriterionResponseVM> OptionCriterionResponses { get; set; }
 

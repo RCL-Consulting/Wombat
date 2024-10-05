@@ -17,5 +17,7 @@ namespace Wombat.Common.Models
         public List<OptionCriterionVM> OptionCriteria { get; set; }
 
         public List<OptionSetVM>? OptionSets { get; set; }
+
+        public EPAVM? EPAVM { get; set; }
     }
 }

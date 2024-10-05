@@ -8,16 +8,16 @@ namespace Wombat.Application.Repositories
     public class LoggedAssessmentRepository : GenericRepository<LoggedAssessment>, ILoggedAssessmentRepository
     {
         private readonly UserManager<WombatUser> userManager;
-        private readonly IAssessmentContextRepository assessmentContextRepository;
+        private readonly IEPARepository EPARepository;
         private readonly IOptionCriterionResponseRepository optionCriterionResponse;
 
         public LoggedAssessmentRepository( ApplicationDbContext context,
                                            UserManager<WombatUser> userManager,
-                                           IAssessmentContextRepository assessmentContextRepository,
+                                           IEPARepository EPA,
                                            IOptionCriterionResponseRepository optionCriterionResponse) : base(context)
         {
             this.userManager=userManager;
-            this.assessmentContextRepository=assessmentContextRepository;
+            this.EPARepository=EPA;
             this.optionCriterionResponse=optionCriterionResponse;
         }
 
@@ -29,7 +29,7 @@ namespace Wombat.Application.Repositories
             {
                 assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
                 assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
-                assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
 
                 assessment.OptionCriterionResponses = await optionCriterionResponse.GetByAssessmentIdAsync(assessment.Id);
             }
@@ -47,7 +47,7 @@ namespace Wombat.Application.Repositories
                 {
                     assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
                     assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
-                    assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                    assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
                 }
             }
             return assessments;
@@ -65,7 +65,7 @@ namespace Wombat.Application.Repositories
                 {
                     assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
                     assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
-                    assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                    assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
                 }
             }
             return assessments;
@@ -83,7 +83,7 @@ namespace Wombat.Application.Repositories
                 {
                     assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
                     assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
-                    assessment.AssessmentContext = await assessmentContextRepository.GetAsync(assessment.AssessmentContextId);
+                    assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
                 }
             }
             return assessments;

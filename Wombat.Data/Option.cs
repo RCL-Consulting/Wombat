@@ -15,7 +15,7 @@ namespace Wombat.Data
         public int OptionSetId { get; set; }
 
         [ForeignKey("OptionSetId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public OptionSet? OptionSet { get; set; }
 
     }

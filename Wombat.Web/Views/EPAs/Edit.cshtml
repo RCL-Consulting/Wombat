@@ -1,16 +1,24 @@
-﻿@model AssessmentContextVM
+﻿@model EPAVM
 
 @{
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit Assessment Contexts</h1>
+<h1>Edit EPAs</h1>
 
 <hr />
 <div class="row">
     <div class="col-md-12">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <br/>
+
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
                 <input asp-for="Description" class="form-control" />
@@ -18,12 +26,12 @@
             </div>
             <br/>
             
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="AssessmentTemplate" class="control-label"></label>
                 <select asp-for="AssessmentTemplate" class="form-select" asp-items="ViewBag.AssessmentTemplate"></select>
                 <span asp-validation-for="AssessmentTemplate" class="text-danger"></span>
             </div>
-            <br />
+            <br /> *@
             <input type="hidden" asp-for="Id" />
 
             <div class="form-group">

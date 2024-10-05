@@ -56,18 +56,19 @@ namespace Wombat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AssessmentTemplates",
+                name: "EPAs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AssessmentTemplates", x => x.Id);
+                    table.PrimaryKey("PK_EPAs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -84,6 +85,21 @@ namespace Wombat.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OptionSets", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Specialities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Specialities", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -193,23 +209,105 @@ namespace Wombat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AssessmentContexts",
+                name: "AssessmentTemplates",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssessmentTemplateId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EPAId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AssessmentContexts", x => x.Id);
+                    table.PrimaryKey("PK_AssessmentTemplates", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AssessmentContexts_AssessmentTemplates_AssessmentTemplateId",
-                        column: x => x.AssessmentTemplateId,
-                        principalTable: "AssessmentTemplates",
+                        name: "FK_AssessmentTemplates_EPAs_EPAId",
+                        column: x => x.EPAId,
+                        principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LoggedAssessments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EPAId = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LoggedAssessments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LoggedAssessments_AspNetUsers_AssessorId",
+                        column: x => x.AssessorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_LoggedAssessments_AspNetUsers_TraineeId",
+                        column: x => x.TraineeId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_LoggedAssessments_EPAs_EPAId",
+                        column: x => x.EPAId,
+                        principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Options",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Rank = table.Column<int>(type: "int", nullable: false),
+                    OptionSetId = table.Column<int>(type: "int", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Options", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Options_OptionSets_OptionSetId",
+                        column: x => x.OptionSetId,
+                        principalTable: "OptionSets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubSpecialities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SpecialityId = table.Column<int>(type: "int", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubSpecialities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubSpecialities_Specialities_SpecialityId",
+                        column: x => x.SpecialityId,
+                        principalTable: "Specialities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -240,66 +338,6 @@ namespace Wombat.Data.Migrations
                         name: "FK_OptionCriteria_OptionSets_OptionSetId",
                         column: x => x.OptionSetId,
                         principalTable: "OptionSets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Options",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Rank = table.Column<int>(type: "int", nullable: false),
-                    OptionSetId = table.Column<int>(type: "int", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Options", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Options_OptionSets_OptionSetId",
-                        column: x => x.OptionSetId,
-                        principalTable: "OptionSets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "LoggedAssessments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AssessmentContextId = table.Column<int>(type: "int", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_LoggedAssessments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_LoggedAssessments_AspNetUsers_AssessorId",
-                        column: x => x.AssessorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_LoggedAssessments_AspNetUsers_TraineeId",
-                        column: x => x.TraineeId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_LoggedAssessments_AssessmentContexts_AssessmentContextId",
-                        column: x => x.AssessmentContextId,
-                        principalTable: "AssessmentContexts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -356,9 +394,9 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "42fa96f5-a733-4e46-9266-cf17680609f2", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJaV7yXY06ZE7dvvBo6RDfLOLhuwIeeDF6468e9p8Q4dOw+uha3sRTdQcfGe/B9L/A==", null, false, "279ea27a-5732-42dc-a93f-eb8ac1be5de6", "Trainee", false, "trainee@localhost.com" },
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "79d857d2-35f4-422b-be17-5cd1dc050e7b", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEIvH+eNJ6mnchdoFXeRsFO/JniikP3NMb4exhYPORLpuJVUVHsQfqBwtfH/SRj4XFg==", null, false, "663a078b-90eb-4241-915a-29bcd24f07c8", "Assessor", false, "assessor@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "961561d6-04d5-455e-9731-b8b8b3334522", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEI7jamR2T8bimOSSK7NFLKEs6Cv62VyVVkbJltbmR1jyC8eDahuqrUbAh5RBFHzPfA==", null, false, "a040f234-53c7-49f4-b799-f66b66c3d7bd", "Admin", false, "admin@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "d5205226-282c-4a73-b538-f176b3b096a9", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEKDbhtTFP15f5NjmfwcPib2v6IQGnJu7dBJdrCrEv7Ox7UdZOFEQOJIYPqZQo0zbfA==", null, false, "eb54c48c-37e8-42a9-945b-7317bc4c658f", "Trainee", false, "trainee@localhost.com" },
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "0eeace9d-510f-4ef4-a50c-a2fbc86ac401", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEOW3ylzQr/WWcvEDiYs9cwyKx38CWwvb1KeMt6sk1qmDhkAO5lYGY67a3aNw7Whm6w==", null, false, "adef23fe-beeb-411a-b87e-34ab31884136", "Assessor", false, "assessor@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "7cfd1991-f9b5-44a7-8512-73cca149abc1", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJYXPqGQyn67espaRUkvYbBOKI4k6r/wQVJMNBdDXfhqGz9o8r+pqO2eimg6VvgnzA==", null, false, "02ff9362-34d4-49f4-8a83-122882ce56c2", "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -453,19 +491,19 @@ namespace Wombat.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AssessmentContexts_AssessmentTemplateId",
-                table: "AssessmentContexts",
-                column: "AssessmentTemplateId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LoggedAssessments_AssessmentContextId",
-                table: "LoggedAssessments",
-                column: "AssessmentContextId");
+                name: "IX_AssessmentTemplates_EPAId",
+                table: "AssessmentTemplates",
+                column: "EPAId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_AssessorId",
                 table: "LoggedAssessments",
                 column: "AssessorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LoggedAssessments_EPAId",
+                table: "LoggedAssessments",
+                column: "EPAId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_TraineeId",
@@ -501,6 +539,11 @@ namespace Wombat.Data.Migrations
                 name: "IX_Options_OptionSetId",
                 table: "Options",
                 column: "OptionSetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubSpecialities_SpecialityId",
+                table: "SubSpecialities",
+                column: "SpecialityId");
         }
 
         /// <inheritdoc />
@@ -525,6 +568,9 @@ namespace Wombat.Data.Migrations
                 name: "OptionCriterionResponses");
 
             migrationBuilder.DropTable(
+                name: "SubSpecialities");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -537,16 +583,19 @@ namespace Wombat.Data.Migrations
                 name: "Options");
 
             migrationBuilder.DropTable(
+                name: "Specialities");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "AssessmentContexts");
+                name: "AssessmentTemplates");
 
             migrationBuilder.DropTable(
                 name: "OptionSets");
 
             migrationBuilder.DropTable(
-                name: "AssessmentTemplates");
+                name: "EPAs");
         }
     }
 }

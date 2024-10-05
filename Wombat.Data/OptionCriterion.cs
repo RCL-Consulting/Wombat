@@ -20,7 +20,7 @@ namespace Wombat.Data
         public int AssessmentTemplateId { get; set; }
 
         [ForeignKey("AssessmentTemplateId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public AssessmentTemplate? AssessmentTemplate { get; set; }
 
         public int Rank { get; set; }

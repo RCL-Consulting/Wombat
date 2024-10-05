@@ -22,7 +22,7 @@ namespace Wombat.Controllers
     {
         private readonly UserManager<WombatUser> userManager;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
-        private readonly IAssessmentContextRepository assessmentContextRepository;
+        private readonly IEPARepository EPARepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEmailSender emailSender;
         private readonly IWebHostEnvironment webHostEnvironment;
@@ -30,7 +30,7 @@ namespace Wombat.Controllers
 
         public LoggedAssessmentsController(UserManager<WombatUser> userManager,
                                             ILoggedAssessmentRepository loggedAssessmentRepository,
-                                            IAssessmentContextRepository assessmentContextRepository,
+                                            IEPARepository EPARepository,
                                             IHttpContextAccessor httpContextAccessor,
                                             IEmailSender emailSender,
                                             IWebHostEnvironment webHostEnvironment,
@@ -38,7 +38,7 @@ namespace Wombat.Controllers
         {
             this.userManager=userManager;
             this.loggedAssessmentRepository=loggedAssessmentRepository;
-            this.assessmentContextRepository=assessmentContextRepository;
+            this.EPARepository = EPARepository;
             this.httpContextAccessor=httpContextAccessor;
             this.emailSender=emailSender;
             this.webHostEnvironment=webHostEnvironment;
@@ -93,8 +93,8 @@ namespace Wombat.Controllers
 
         public async Task AddViewDataAsync()
         {
-            var assessmentContexts = mapper.Map<List<AssessmentContextVM>>(await assessmentContextRepository.GetAllAsync());
-            ViewData["AssessmentContext"] = new SelectList(assessmentContexts, "Id", "Description");
+            var EPAs = mapper.Map<List<EPAVM>>(await EPARepository.GetAllAsync());
+            ViewData["EPA"] = new SelectList(EPAs, "Id", "Description");
 
             var assessors = await userManager.GetUsersInRoleAsync(Roles.Assessor);
             ViewData["Assessor"] = new SelectList(assessors, "Id", "Email");
@@ -141,28 +141,28 @@ namespace Wombat.Controllers
 
         public async Task PopulateAssessment(LoggedAssessmentVM loggedAssessmentVM)
         {
-            loggedAssessmentVM.AssessmentContext = mapper.Map<AssessmentContextVM>(await assessmentContextRepository.GetAsync(loggedAssessmentVM.AssessmentContextId));
+            loggedAssessmentVM.EPA = mapper.Map<EPAVM>(await EPARepository.GetAsync(loggedAssessmentVM.EPAId));
             loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId));
             loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId));
             
-            foreach (var optionCriterion in loggedAssessmentVM.AssessmentContext.AssessmentTemplate.OptionCriteria)
-            {
-                var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
-                if (optionCriterionResponse == null)
-                {
-                    optionCriterionResponse = new OptionCriterionResponseVM();
-                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-                    if (optionCriterion.OptionsSet.Options.Count>0)
-                        optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
-                    optionCriterionResponse.CriterionId = optionCriterion.Id;
-                    loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
-                }
-                else
-                {
-                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-                    optionCriterionResponse.Option = optionCriterion.OptionsSet.Options.FirstOrDefault(x => x.Id == optionCriterionResponse.OptionId);
-                }
-            }
+            //foreach (var optionCriterion in loggedAssessmentVM.EPA.AssessmentTemplate.OptionCriteria)
+            //{
+            //    var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
+            //    if (optionCriterionResponse == null)
+            //    {
+            //        optionCriterionResponse = new OptionCriterionResponseVM();
+            //        optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+            //        if (optionCriterion.OptionsSet.Options.Count>0)
+            //            optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
+            //        optionCriterionResponse.CriterionId = optionCriterion.Id;
+            //        loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
+            //    }
+            //    else
+            //    {
+            //        optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+            //        optionCriterionResponse.Option = optionCriterion.OptionsSet.Options.FirstOrDefault(x => x.Id == optionCriterionResponse.OptionId);
+            //    }
+            //}
         }
 
         [Authorize(Roles = Roles.Assessor)]
@@ -295,7 +295,7 @@ namespace Wombat.Controllers
 
             Cells = table.AddRow().Cells;
             Cells[0].AddParagraph("Type of assessment");
-            Cells[1].AddParagraph(loggedAssessment.AssessmentContext.Description);
+            Cells[1].AddParagraph(loggedAssessment.EPA.Description);
 
             Cells = table.AddRow().Cells;
             Cells[0].MergeRight = 1;

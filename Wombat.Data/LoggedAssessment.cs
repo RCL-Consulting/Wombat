@@ -22,11 +22,11 @@ namespace Wombat.Data
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public WombatUser? Assessor { get; set; }
 
-        public int AssessmentContextId { get; set; }
+        public int EPAId { get; set; }
 
-        [ForeignKey("AssessmentContextId")]
+        [ForeignKey("EPAId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
-        public AssessmentContext? AssessmentContext { get; set; }
+        public EPA? EPA { get; set; }
 
         public List<OptionCriterionResponse>? OptionCriterionResponses { get; set; }
 

@@ -1,4 +1,7 @@
-﻿namespace Wombat.Data
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Wombat.Data
 {
     public class AssessmentTemplate : BaseEntity
     {
@@ -11,5 +14,11 @@
             this.OptionCriteria = new List<OptionCriterion>();
             Name = "";
         }
+
+        public int? EPAId { get; set; }
+
+        [ForeignKey("EPAId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public EPA? EPA { get; set; }
     }
 }
