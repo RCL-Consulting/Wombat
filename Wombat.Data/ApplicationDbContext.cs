@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Wombat.Common.Models;
 using Wombat.Data.Configurations.Entities;
+using Wombat.Data.EPA;
 
 namespace Wombat.Data
 {
@@ -37,9 +38,15 @@ namespace Wombat.Data
         public DbSet<AssessmentContext> AssessmentContexts { get; set; }
 
         public DbSet<OptionCriterion> OptionCriteria{ get; set; }
-
         public DbSet<OptionSet> OptionSets{ get; set; }
         public DbSet<Option> Options { get; set; }
+
+        public DbSet<CoreCompetency> CoreCompetencies { get; set; }
+        public DbSet<Competency> Competencies { get; set; }
+        public DbSet<Milestone> Milestonens { get; set; }
+
+        public DbSet<Speciality> Specialities { get; set; }
+        public DbSet<SubSpeciality> SubSpecialities { get; set; }
 
         public DbSet<LoggedAssessment> LoggedAssessments { get; set; }
         public DbSet<OptionCriterionResponse> OptionCriterionResponses { get; set; }
