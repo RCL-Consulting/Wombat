@@ -15,7 +15,6 @@ namespace Wombat.Data
         }
 
         public string Name { get; set; }
-
         public List<SubSpeciality> SubSpecialities { get; set; }
     }
 }

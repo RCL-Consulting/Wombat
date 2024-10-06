@@ -19,6 +19,7 @@ namespace Wombat.Data
             builder.ApplyConfiguration(new UserRoleSeedConfiguration());
             builder.ApplyConfiguration(new OptionConfiguration());
             builder.ApplyConfiguration(new OptionSetConfiguration());
+            builder.ApplyConfiguration(new SpecialityConfiguration());
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

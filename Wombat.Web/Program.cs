@@ -29,6 +29,8 @@ builder.Services.AddScoped<IEnumCriteriaRepository, OptionCriteriaRepository>();
 builder.Services.AddScoped<IOptionSetRepository, OptionSetRepository>();
 builder.Services.AddScoped<ILoggedAssessmentRepository, LoggedAssessmentRepository>();
 builder.Services.AddScoped<IOptionCriterionResponseRepository, OptionCriterionResponseRepository>();
+builder.Services.AddScoped<ISpecialityRepository, SpecialityRepository>();
+builder.Services.AddScoped<ISubSpecialityRepository, SubSpecialityRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Host.UseSerilog((ctx, lc) =>

@@ -1,0 +1,10 @@
+﻿@model SubSpecialityVM
+<div class="form-group row">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <label asp-for="Name" class="col-sm-2 col-form-label font-weight-bold"></label>
+    <div class="col-md-10">
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <span asp-validation-for="Name" class="text-danger"></span>
+</div>
+

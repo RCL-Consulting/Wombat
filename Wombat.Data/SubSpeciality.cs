@@ -19,7 +19,7 @@ namespace Wombat.Data
         public int SpecialityId { get; set; }
 
         [ForeignKey("SpecialityId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public Speciality? Speciality { get; set; }
 
     }
