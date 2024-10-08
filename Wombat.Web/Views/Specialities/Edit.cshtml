@@ -8,7 +8,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -18,11 +18,56 @@
             <input type="hidden" asp-for="Id" />
             <br />
 
+            <h4>Subspecialities</h4>
+
+            @* <div id="subspecialitiesContainer">
+                @Html.EditorFor(model => model.SubSpecialities)
+            </div>
+            <br /> *@
+
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
                 @* <button id="addRow" type="button" class="btn btn-info">Add Option</button> &nbsp; *@
+                @* <input type="button" value="Add subspeciality" class="btn btn-info" id="btnAdd" />&nbsp; *@
                 <input type="submit" value="Save Changes" class="btn btn-warning" />
             </div>
         </form>
     </div>
 </div>
+
+@* @section Scripts {
+
+    <script type="text/javascript">
+        $("#btnAdd").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/Specialities/AddSubSpeciality',
+                success: function (partialView) {
+                    $('#subspecialitiesContainer').html(partialView);
+                }
+            });
+        });
+
+        //
+        $(document).on('click', '#btnDelete', function () {
+            var form = $('#form').serialize();
+            //var DisplayId = $(this).closest('#inputFormRow').data('DisplayId');
+            var parentDiv = $(this).closest('#inputFormRow');
+
+            // Get the child div with ID "DisplayID"
+            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            console.log(DisplayId);
+            $.ajax({
+                async: true,
+                data: form + '&displayId=' + DisplayId,
+                type: "POST",
+                url: '/Specialities/DeleteSubSpeciality',
+                success: function (partialView) {
+                    $('#subspecialitiesContainer').html(partialView);
+                }
+            });
+        });
+    </script>
+} *@

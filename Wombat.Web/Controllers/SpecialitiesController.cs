@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MigraDocCore.DocumentObjectModel.Tables;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
@@ -94,9 +95,18 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddSubSpeciality(SpecialityVM specialityVM)
+        public async Task<IActionResult> DeleteSubSpeciality(SpecialityVM specialityVM, int id)
+        {
+            specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == id);
+            return PartialView("SubSpeciality", specialityVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddSubSpeciality( SpecialityVM specialityVM )
         {
             var Item = new SubSpecialityVM();
+            Item.DisplayId = SubSpecialityVM.NextDisplayId++;
             Item.Speciality = specialityVM;
             specialityVM.SubSpecialities?.Add(Item);
             return PartialView("SubSpeciality", specialityVM);

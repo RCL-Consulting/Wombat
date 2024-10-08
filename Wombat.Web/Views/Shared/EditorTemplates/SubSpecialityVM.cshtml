@@ -1,10 +1,16 @@
 ﻿@model SubSpecialityVM
-<div class="form-group row">
+
+<div class="form-group row" id="inputFormRow">
+    <div id="DisplayId" value=@Model.DisplayId></div>
+    <input type="hidden" asp-for="DisplayId" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <label asp-for="Name" class="col-sm-2 col-form-label font-weight-bold"></label>
-    <div class="col-md-10">
+    <div class="col-md-8">
         <input asp-for="Name" class="form-control" />
     </div>
+
+    <button type="button" class="btn btn-danger col-sm-2" id="btnDelete"><i class="far fa-trash-alt"></i></button>
     <span asp-validation-for="Name" class="text-danger"></span>
+
 </div>
 
