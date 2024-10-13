@@ -15,6 +15,23 @@
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Name)
+
+        <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.SubSpecialities)
+        </dt>
+        <dd class="col-sm-10">
+            <ul class="row list-unstyled">
+                    @if (Model.SubSpecialities != null)
+                    {
+                        foreach (var item in Model.SubSpecialities)
+                        {
+                        <li class="col-sm-10">
+                                @Html.DisplayFor(modelItem => item.Name)
+                        </li>
+                        }
+                    }
+            </ul>
+        </dd>
     </dl>
 </div>
 <div>

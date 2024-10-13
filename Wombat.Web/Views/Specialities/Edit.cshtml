@@ -7,7 +7,7 @@
 <h1>Edit Speciality</h1>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-12">
         <form asp-action="Edit" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
@@ -18,12 +18,17 @@
             <input type="hidden" asp-for="Id" />
             <br />
 
-            <h4>Subspecialities</h4>
+            <hr />
+            <h5>
+                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
+                &nbsp;
+                Subspecialities
+            </h5>
+            <hr />
 
-            @* <div id="subspecialitiesContainer">
+            <div id="subspecialitiesContainer">
                 @Html.EditorFor(model => model.SubSpecialities)
             </div>
-            <br /> *@
 
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
@@ -35,7 +40,7 @@
     </div>
 </div>
 
-@* @section Scripts {
+@section Scripts {
 
     <script type="text/javascript">
         $("#btnAdd").on('click', function () {
@@ -50,24 +55,20 @@
             });
         });
 
-        //
         $(document).on('click', '#btnDelete', function () {
-            var form = $('#form').serialize();
-            //var DisplayId = $(this).closest('#inputFormRow').data('DisplayId');
-            var parentDiv = $(this).closest('#inputFormRow');
-
-            // Get the child div with ID "DisplayID"
-            var DisplayId = parentDiv.find('#DisplayId').attr('value');
-            console.log(DisplayId);
-            $.ajax({
-                async: true,
-                data: form + '&displayId=' + DisplayId,
-                type: "POST",
-                url: '/Specialities/DeleteSubSpeciality',
-                success: function (partialView) {
-                    $('#subspecialitiesContainer').html(partialView);
-                }
-            });
+             var form = $('#form').serialize();
+             var parentDiv = $(this).closest('#inputFormRow');
+             var DisplayId = parentDiv.find('#DisplayId').attr('value');
+             console.log(DisplayId);
+             $.ajax({
+                 async: true,
+                 data: form + '&displayId=' + DisplayId,
+                 type: "POST",
+                 url: '/Specialities/DeleteSubSpeciality',
+                 success: function (partialView) {
+                     $('#subspecialitiesContainer').html(partialView);
+                 }
+             });
         });
     </script>
-} *@
+}

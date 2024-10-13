@@ -18,6 +18,9 @@ namespace Wombat.Application.Configurations
             CreateMap<WombatUser, WombatUserVM>().ReverseMap();
             CreateMap<Speciality, SpecialityVM>().ReverseMap();
             CreateMap<SubSpeciality, SubSpecialityVM>().ReverseMap();
+            CreateMap<Speciality, SpecialitySelectVM>().ReverseMap();
+            CreateMap<SubSpeciality, SubSpecialitySelectVM>().ReverseMap();
+            CreateMap<Institution, InstitutionVM>().ReverseMap();
         }
     }
 }

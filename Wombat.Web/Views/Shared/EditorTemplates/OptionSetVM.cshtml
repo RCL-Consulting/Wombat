@@ -1,0 +1,13 @@
+﻿@model SoptionSetVM
+
+<div class="input-group col-md-12" id="inputFormRow">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input style="width: 10%" asp-for="Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>
+    <input style="width: 80%" asp-for="Description" class="form-control" placeholder="Option name" />
+    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
+    <span asp-validation-for="Name" class="text-danger"></span>
+    <br />
+</div>
+

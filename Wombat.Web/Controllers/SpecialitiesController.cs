@@ -66,12 +66,18 @@ namespace Wombat.Controllers
             {
                 var speciality = mapper.Map<Speciality>(specialityVM);
 
-                if (speciality.SubSpecialities != null)
+                if (speciality.SubSpecialities == null)
+                    speciality.SubSpecialities = new List<SubSpeciality>();
+
+                var General = new SubSpeciality();
+                General.Name = "General";
+                General.Speciality = speciality;
+                General.CanEditAndDelete = false;
+                speciality.SubSpecialities.Insert(0, General);
+
+                foreach (var item in speciality.SubSpecialities)
                 {
-                    foreach (var item in speciality.SubSpecialities)
-                    {
-                        item.Speciality = speciality;
-                    }
+                    item.Speciality = speciality;
                 }
 
                 await specialityRepository.AddAsync(speciality);
@@ -95,15 +101,21 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteSubSpeciality(SpecialityVM specialityVM, int id)
+        public IActionResult DeleteSubSpeciality(SpecialityVM specialityVM, int displayId)
         {
-            specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == id);
+            ViewData.ModelState.Clear();//CanDeleteFromList
+            var Item = specialityVM.SubSpecialities?.FirstOrDefault(s => s.DisplayId == displayId);
+            if (Item != null && Item.CanEditAndDelete)
+            {
+                Item.CanEditAndDelete = false;
+                specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == displayId);
+            }
             return PartialView("SubSpeciality", specialityVM);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddSubSpeciality( SpecialityVM specialityVM )
+        public IActionResult AddSubSpeciality(SpecialityVM specialityVM)
         {
             var Item = new SubSpecialityVM();
             Item.DisplayId = SubSpecialityVM.NextDisplayId++;

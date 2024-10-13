@@ -34,6 +34,7 @@ namespace Wombat.Data
             return base.SaveChangesAsync(cancellationToken);
         }
 
+        public DbSet<Institution> Institutions { get; set; }
         public DbSet<AssessmentTemplate> AssessmentTemplates { get; set; }
         public DbSet<EPA> EPAs { get; set; }
 

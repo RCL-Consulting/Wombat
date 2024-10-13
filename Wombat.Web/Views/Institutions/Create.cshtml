@@ -1,0 +1,60 @@
+﻿@model InstitutionVM
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Institution</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <br/>
+
+            <div class ="form-group">
+                <label for="Logo" class="control-label">Upload Logo</label>
+                <input class="form-control" type="file" id="Logo" name="logoFile" accept="image/*" onchange="previewLogo(event)" />
+            </div>
+            <br />
+
+            <div>
+                <img id="logoPreview" src="" alt="Logo Preview" style="display: none; height: 200px; width: auto;" />
+            </div>
+            <br/>
+
+            <div class="form-group">
+                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewLogo(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById("logoPreview");
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result; // Set the source of the preview image
+                    preview.style.display = "block"; // Show the preview
+                };
+                reader.readAsDataURL(file); // Convert the file to a data URL
+            } else {
+                preview.src = ""; // Clear the preview if no file is selected
+                preview.style.display = "none"; // Hide the preview
+            }
+        }
+    </script>
+}

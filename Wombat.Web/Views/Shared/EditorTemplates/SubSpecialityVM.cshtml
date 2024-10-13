@@ -1,16 +1,27 @@
 ﻿@model SubSpecialityVM
 
-<div class="form-group row" id="inputFormRow">
+<div class="input-group col-md-12" id="inputFormRow">
     <div id="DisplayId" value=@Model.DisplayId></div>
     <input type="hidden" asp-for="DisplayId" />
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CanEditAndDelete" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <label asp-for="Name" class="col-sm-2 col-form-label font-weight-bold"></label>
-    <div class="col-md-8">
-        <input asp-for="Name" class="form-control" />
-    </div>
 
-    <button type="button" class="btn btn-danger col-sm-2" id="btnDelete"><i class="far fa-trash-alt"></i></button>
+    @if (Model.CanEditAndDelete)
+    {
+        <input style="width: 90%" asp-for="Name" class="form-control" placeholder="Subspeciality name" />
+    }
+    else
+    {
+        <input style="width: 90%" asp-for="Name" class="form-control" placeholder="Subspeciality name" readonly />
+    }
+
+    @if (Model.CanEditAndDelete)
+    {
+        <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
+    }
+    
     <span asp-validation-for="Name" class="text-danger"></span>
-
+    <br/>
 </div>
 

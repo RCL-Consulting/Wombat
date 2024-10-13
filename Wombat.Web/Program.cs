@@ -31,6 +31,7 @@ builder.Services.AddScoped<ILoggedAssessmentRepository, LoggedAssessmentReposito
 builder.Services.AddScoped<IOptionCriterionResponseRepository, OptionCriterionResponseRepository>();
 builder.Services.AddScoped<ISpecialityRepository, SpecialityRepository>();
 builder.Services.AddScoped<ISubSpecialityRepository, SubSpecialityRepository>();
+builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Host.UseSerilog((ctx, lc) =>

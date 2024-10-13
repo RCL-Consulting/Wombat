@@ -8,21 +8,14 @@ using System.Threading.Tasks;
 
 namespace Wombat.Data
 {
-    public class SubSpeciality : BaseEntity
+    public class Institution : BaseEntity
     {
-        public SubSpeciality()
+        public Institution()
         {
             Name = "";
         }
         public string Name { get; set; }
 
-        public bool CanEditAndDelete { get; set; } = true;
-
-        public int SpecialityId { get; set; }
-
-        [ForeignKey("SpecialityId")]
-        [DeleteBehavior(DeleteBehavior.Cascade)]
-        public Speciality? Speciality { get; set; }
-
+        public byte[] Logo { get; set; }
     }
 }

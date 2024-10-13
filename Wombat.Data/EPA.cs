@@ -17,5 +17,11 @@ namespace Wombat.Data
         public string Name { get; set; }
 
         public List<AssessmentTemplate> Templates { get; set; }
+
+        public int SubSpecialityId { get; set; }
+
+        [ForeignKey("SubSpecialityId")]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public SubSpeciality? SubSpeciality { get; set; }
     }
 }

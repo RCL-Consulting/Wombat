@@ -19,7 +19,10 @@
                         @Html.DisplayNameFor(model => model.Name)
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.Description)
+                        @Html.DisplayNameFor(model => model.SubSpeciality.Speciality)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.SubSpeciality)
                     </th>
                     <th></th>
                 </tr>
@@ -32,7 +35,10 @@
                             @Html.DisplayFor(modelItem => item.Name)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Description)
+                            @Html.DisplayFor(modelItem => item.SubSpeciality.Speciality.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.SubSpeciality.Name)
                         </td>
                         <td>
                             <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>

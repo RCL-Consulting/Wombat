@@ -16,14 +16,20 @@ namespace Wombat.Controllers
     {
         private readonly IEPARepository EPARepository;
         private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
+        private readonly ISpecialityRepository specialityRepository;
+        private readonly ISubSpecialityRepository subSpecialityRepository;
         private readonly IMapper mapper;
 
         public EPAsController( IEPARepository EPARepository,
                                IAssessmentTemplateRepository assessmentTemplateRepository,
+                               ISpecialityRepository specialityRepository,
+                               ISubSpecialityRepository subSpecialityRepository,
                                IMapper mapper )
         {
             this.EPARepository = EPARepository;
             this.assessmentTemplateRepository = assessmentTemplateRepository;
+            this.specialityRepository = specialityRepository;
+            this.subSpecialityRepository = subSpecialityRepository;
             this.mapper = mapper;
         }
 
@@ -52,7 +58,23 @@ namespace Wombat.Controllers
         {
             var Templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
             ViewBag.Templates = Templates;
-            return View();
+
+            var model = new EPAVM
+            {
+                Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync()),
+                SubSpecialities = new List<SubSpecialitySelectVM>()
+            };
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> GetSubOptions(int mainOptionId)
+        {
+            var speciality = await specialityRepository.GetAsync(mainOptionId);
+
+            var subSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(speciality?.SubSpecialities);
+
+            return Json(subSpecialities);
         }
 
         // POST: EPAs/Create
@@ -72,6 +94,31 @@ namespace Wombat.Controllers
 
             var Templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
             ViewBag.Templates = Templates;
+
+            EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
+            var speciality = await specialityRepository.GetAsync(EPAVM.SpecialityId);
+            if(speciality != null)
+            {
+                EPAVM.SubSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(speciality?.SubSpecialities);
+            }
+            else
+            {
+                EPAVM.SubSpecialities = new List<SubSpecialitySelectVM>();
+            }
+            //
+
+            //var subSpeciality = await subSpecialityRepository.GetAsync(EPAVM.SubSpecialityId);
+            //if(subSpeciality != null)
+            //{
+            //    var speciality = await specialityRepository.GetAsync(subSpeciality?.SpecialityId);
+
+            //    EPAVM.SubSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(speciality?.SubSpecialities);
+            //}
+            //else
+            //EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
+            //    SubSpecialities = new List<SubSpecialitySelectVM>()
+            //};
+
             return View(EPAVM);
         }
 
