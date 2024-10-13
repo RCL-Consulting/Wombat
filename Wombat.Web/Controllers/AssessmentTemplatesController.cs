@@ -26,6 +26,30 @@ namespace Wombat.Controllers
             this.mapper=mapper;
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteCriterion(AssessmentTemplateVM assessmentTemplateVM, int displayId)
+        {
+            ViewData.ModelState.Clear();//CanDeleteFromList
+            var Item = assessmentTemplateVM.OptionCriteria?.FirstOrDefault(s => s.DisplayId == displayId);
+            if (Item != null && Item.CanEditAndDelete)
+            {
+                assessmentTemplateVM.OptionCriteria?.RemoveAll(s => s.DisplayId == displayId);
+            }
+            return PartialView("AssessmentTemplate", assessmentTemplateVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddCriterion(AssessmentTemplateVM assessmentTemplateVM)
+        {
+            var Item = new OptionCriterionVM();
+            Item.DisplayId = OptionCriterionVM.NextDisplayId++;
+            Item.Rank = assessmentTemplateVM.OptionCriteria.Count;
+            assessmentTemplateVM.OptionCriteria?.Add(Item);
+            return PartialView("AssessmentTemplate", assessmentTemplateVM);
+        }
+
         // GET: AssessmentTemplates
         public async Task<IActionResult> Index()
         {
@@ -50,7 +74,7 @@ namespace Wombat.Controllers
         public async Task<IActionResult> CreateAsync()
         {
             var assessmentTemplateVM = new AssessmentTemplateVM();
-            assessmentTemplateVM.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+            OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
 
             return View(assessmentTemplateVM);
         }
@@ -79,6 +103,8 @@ namespace Wombat.Controllers
             {
                 return NotFound();
             }
+
+            OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
 
             var assessmentTemplateVM = mapper.Map<AssessmentTemplateVM>(assessmentTemplate);
             return View(assessmentTemplateVM);

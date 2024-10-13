@@ -107,7 +107,6 @@ namespace Wombat.Controllers
             var Item = specialityVM.SubSpecialities?.FirstOrDefault(s => s.DisplayId == displayId);
             if (Item != null && Item.CanEditAndDelete)
             {
-                Item.CanEditAndDelete = false;
                 specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == displayId);
             }
             return PartialView("SubSpeciality", specialityVM);

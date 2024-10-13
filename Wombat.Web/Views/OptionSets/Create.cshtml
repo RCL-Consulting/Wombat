@@ -9,7 +9,7 @@
 <hr />
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Create">
+        <form asp-action="Create" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Description" class="control-label">Set Description</label>
@@ -26,28 +26,62 @@
             <br/>
 
             <h4>
-                @* <a id="addRow" class="btn btn-success" asp-action="Create"><i class="fas fa-plus"></i> Create New</a>&nbsp; *@
-                <button type="button" class="btn btn-success" id="addRow"><i class="fas fa-plus"></i>Create New</button>
+                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
                 Response options
             </h4>
             <hr />
-            <div class="form-group col-md-12">
+            <div id="collectionContainer">               
+                @Html.EditorFor(model=>model.Options)
+            </div>
+            @* <div class="form-group col-md-12">
                 <div id="newRow" class="col-md-12">
                     <input type="hidden" id="totalLans" value="0" />
                 </div>
-            </div>
+            </div> *@
             <br />
 
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                @* <button id="addRow" type="button" class="btn btn-info"> Create New</button> &nbsp; *@
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts 
+@section Scripts {
+
+    <script type="text/javascript">
+        $("#btnAdd").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/OptionSets/AddOption',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
+        });
+
+        $(document).on('click', '#btnDelete', function () {
+             var form = $('#form').serialize();
+             var parentDiv = $(this).closest('#inputFormRow');
+             var DisplayId = parentDiv.find('#DisplayId').attr('value');
+             console.log(DisplayId);
+             $.ajax({
+                 async: true,
+                 data: form + '&displayId=' + DisplayId,
+                 type: "POST",
+                 url: '/OptionSets/DeleteOption',
+                 success: function (partialView) {
+                     $('#collectionContainer').html(partialView);
+                 }
+             });
+        });
+    </script>
+}
+
+@* @section Scripts 
 {
     <script>
 
@@ -82,5 +116,5 @@
 
     </script>
 }
-
+ *@
 

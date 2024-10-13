@@ -8,6 +8,7 @@ using Wombat.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Common.Constants;
 using Wombat.Application.Repositories;
+using Wombat.Data.Migrations;
 
 namespace Wombat.Controllers
 {
@@ -105,19 +106,6 @@ namespace Wombat.Controllers
             {
                 EPAVM.SubSpecialities = new List<SubSpecialitySelectVM>();
             }
-            //
-
-            //var subSpeciality = await subSpecialityRepository.GetAsync(EPAVM.SubSpecialityId);
-            //if(subSpeciality != null)
-            //{
-            //    var speciality = await specialityRepository.GetAsync(subSpeciality?.SpecialityId);
-
-            //    EPAVM.SubSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(speciality?.SubSpecialities);
-            //}
-            //else
-            //EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
-            //    SubSpecialities = new List<SubSpecialitySelectVM>()
-            //};
 
             return View(EPAVM);
         }
@@ -135,6 +123,10 @@ namespace Wombat.Controllers
             ViewBag.Templates = Templates;
 
             var EPAVM = mapper.Map<EPAVM>(EPA);
+
+            EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
+            EPAVM.SubSpecialities = new List<SubSpecialitySelectVM>();
+
             return View(EPAVM);
         }
 

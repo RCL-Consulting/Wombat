@@ -9,7 +9,7 @@
 <hr />
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -18,6 +18,18 @@
             </div>
             <input type="hidden" asp-for="Id" />
             <br/>
+
+            <h4>
+                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
+                Assessment Questions
+            </h4>
+            <hr />
+
+            <div id="collectionContainer">
+                @Html.EditorFor(model => model.OptionCriteria)
+            </div>
+            <br />
+
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
                 <input type="submit" value="Save Changes" class="btn btn-warning" />
@@ -26,7 +38,37 @@
     </div>
 </div>
 
-<div>
-    
-</div>
+@section Scripts {
+
+    <script type="text/javascript">
+        $("#btnAdd").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/AssessmentTemplates/AddCriterion',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
+        });
+
+        $(document).on('click', '#btnDelete', function () {
+            var form = $('#form').serialize();
+            var parentDiv = $(this).closest('#inputFormRow');
+            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            console.log(DisplayId);
+            $.ajax({
+                async: true,
+                data: form + '&displayId=' + DisplayId,
+                type: "POST",
+                url: '/AssessmentTemplates/DeleteCriterion',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
+        });
+    </script>
+}
+
 

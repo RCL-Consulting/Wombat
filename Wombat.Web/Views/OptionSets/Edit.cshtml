@@ -9,7 +9,7 @@
 <hr/>
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -25,70 +25,52 @@
             </div>
             <br />
 
-            <div class="form-group col-md-12">
-                @{var Counter = 0;}
-                @if(Model.Options != null)
-                @foreach (var item in Model.Options)
-                {
-                    <div id="inputFormRow">
-                        <div class="input-group">
-                            <input type="hidden" asp-for="@Model.Options[Counter].Id" />
-                            <input class="form-control" style="width: 10%" asp-for="@Model.Options[Counter].Rank">
-                            <input class="form-control" style="width: 90%" asp-for="@Model.Options[Counter].Description">                          
-                        </div>
-                    </div>
-                    <br/>
-                    Counter++;
-                }
-                <div id="newRow" class="col-md-12">
-                    <input type="hidden" id="totalLans" value="@Counter" />
-                </div>
+            <h4>
+                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
+                Response options
+            </h4>
+            <hr />
+            <div id="collectionContainer">
+                @Html.EditorFor(model => model.Options)
             </div>
-            <br />
 
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <button id="addRow" type="button" class="btn btn-info">Add Option</button> &nbsp;
                 <input type="submit" value="Save Changes" class="btn btn-warning" />
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts
-{
-    <script>
+@section Scripts {
 
-        $("#addRow").click(function () {
-
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount++;
-            $("#totalLans").val(rowCount);
-            var html = '';
-            html += '<div id="inputFormRow">';
-            html += '<div class="input-group">';
-
-            //change id attribute to name attribute and modify the name
-            html += '<input type="number" style="width: 10%" type="text" value="' + (rowCount - 1) + '" name="Options[' + (rowCount - 1) + '].Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>';
-            html += '<input style="width: 75%"type="text" name="Options[' + (rowCount - 1) + '].Description" class="form-control m-input" placeholder="Option Text" autocomplete="off" required>';
-            html += '<div style="width: 15%" class="input-group-append">';
-            html += '<button style="width: 100%" id="removeRow" type="button" class="btn btn-danger">Remove</button>';
-            html += '</div>';
-            html += '</div>';
-            html += '<br/>';
-            html += '</div>';
-            $('#newRow').append(html);
-
+    <script type="text/javascript">
+        $("#btnAdd").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/OptionSets/AddOption',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
         });
 
-        $(document).on('click', '#removeRow', function () {
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount--;
-            $("#totalLans").val(rowCount);
-            $(this).closest('#inputFormRow').remove();
+        $(document).on('click', '#btnDelete', function () {
+             var form = $('#form').serialize();
+             var parentDiv = $(this).closest('#inputFormRow');
+             var DisplayId = parentDiv.find('#DisplayId').attr('value');
+             console.log(DisplayId);
+             $.ajax({
+                 async: true,
+                 data: form + '&displayId=' + DisplayId,
+                 type: "POST",
+                 url: '/OptionSets/DeleteOption',
+                 success: function (partialView) {
+                     $('#collectionContainer').html(partialView);
+                 }
+             });
         });
-
     </script>
 }
-
-

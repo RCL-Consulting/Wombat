@@ -1,12 +1,11 @@
 ﻿namespace Wombat.Common.Models
 {
-    public class OptionVM
+    public class OptionVM : Collection
     {
         public OptionVM()
         {
             Description = "";
         }
-        public int Id { get; set; }
         public string Description { get; set; }
         public int Rank { get; set; }
     }

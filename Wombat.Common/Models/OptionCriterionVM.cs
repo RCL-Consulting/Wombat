@@ -2,14 +2,13 @@
 
 namespace Wombat.Common.Models
 {
-    public class OptionCriterionVM 
+    public class OptionCriterionVM :Collection
     {
         public OptionCriterionVM()
         {
             Description = "";
         }
 
-        public int Id { get; set; }
 
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; }
@@ -19,6 +18,6 @@ namespace Wombat.Common.Models
 
         public int Rank { get; set; }
 
-        
+        public static List<OptionSetVM> OptionsSets = new List<OptionSetVM>();
     }
 }

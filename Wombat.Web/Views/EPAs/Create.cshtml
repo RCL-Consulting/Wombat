@@ -13,6 +13,22 @@
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <br />
+
+            <h4>Certification Field</h4>
+            <hr />
             <div>
                 <label for="specialitySelect">Speciality</label>
                 <select asp-for="SpecialityId" class="form-control" id="specialitySelect" onchange="updateSubSpecialitySelect()">
@@ -35,22 +51,14 @@
                     }
                 </select>
                 <br/>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
+            </div>   
             <br/>
 
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <br/>          
-
+            <h4>
+                <button type="button" class="btn btn-success" id="addTemplateRow"><i class="fas fa-plus"></i> Add New</button>
+                Assessment templates for this EPA
+            </h4>
+            <hr />
             <div hidden id="TemplateContainer">
                 <div id="Templates">
                     <select id="myList">
@@ -72,8 +80,8 @@
 
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <button id="addTemplateRow" type="button" class="btn btn-info">Add Template</button> &nbsp;
-                <input type="submit" value="Create" class="btn btn-primary" />
+                @* <button id="addTemplateRow" type="button" class="btn btn-info">Add Template</button> &nbsp; *@
+                <input type="submit" value="Submit" class="btn btn-primary" />
             </div>
         </form>
     </div>
@@ -129,13 +137,10 @@
 
             //change id attribute to name attribute and modify the name
             html += newSelect.innerHTML;
-            html += '<div style="width: 15%" class="input-group-append">';
-            html += '<button style="width: 100%" id="removeRow" type="button" class="btn btn-danger">Remove</button>';
-            html += '</div>';
+            html += '<button style="width: 15%" type="button" class="btn btn-danger" id="removeRow"><i class="far fa-trash-alt"></i></button>';
             html += '</div>';
             html += '<br/>';
             html += '</div>';
-            //html = '<p>Testing</p>';
             $('#newRow').append(html);
 
         });

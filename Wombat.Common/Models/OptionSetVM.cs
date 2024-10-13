@@ -7,6 +7,7 @@ namespace Wombat.Common.Models
         public OptionSetVM()
         {
             Description = "";
+            Options = new List<OptionVM>();
         }
         public int Id { get; set; }
         public string Description { get; set; }

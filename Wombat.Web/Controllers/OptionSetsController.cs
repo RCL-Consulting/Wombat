@@ -29,6 +29,30 @@ namespace Wombat.Controllers
             return View(optionSets);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteOption(OptionSetVM optionSetVM, int displayId)
+        {
+            ViewData.ModelState.Clear();//CanDeleteFromList
+            var Item = optionSetVM.Options?.FirstOrDefault(s => s.DisplayId == displayId);
+            if (Item != null && Item.CanEditAndDelete)
+            {
+                optionSetVM.Options?.RemoveAll(s => s.DisplayId == displayId);
+            }
+            return PartialView("OptionSet", optionSetVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddOption(OptionSetVM optionSetVM)
+        {
+            var Item = new OptionVM();
+            Item.DisplayId = OptionVM.NextDisplayId++;
+            Item.Rank = optionSetVM.Options.Count;
+            optionSetVM.Options?.Add(Item);
+            return PartialView("OptionSet", optionSetVM);
+        }
+
         // GET: OptionSets/Details/5
         public async Task<IActionResult> Details(int? id)
         {

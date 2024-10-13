@@ -28,6 +28,57 @@
             
             <input type="hidden" asp-for="Id" />
 
+            <h4>Certification Field</h4>
+            <hr />
+            <div>
+                <label for="specialitySelect">Speciality</label>
+                <select asp-for="SpecialityId" class="form-control" id="specialitySelect" onchange="updateSubSpecialitySelect()">
+                    <option value="">-- Select a speciality --</option>
+                    @foreach (var option in Model.Specialities)
+                    {
+                        <option value="@option.Id">@option.Name</option>
+                    }
+                </select>
+            </div>
+            <br />
+
+            <div id="subSpecialityContainer">
+                <label for="secondSelect">Subspeciality</label>
+                <select asp-for="SubSpecialityId" id="secondSelect" class="form-control">
+                    <option value="">-- Select a subspeciality --</option>
+                    @foreach (var option in Model.SubSpecialities)
+                    {
+                        <option value="@option.Id">@option.Name</option>
+                    }
+                </select>
+                <br />
+            </div>
+            <br />
+
+            <h4>
+                <button type="button" class="btn btn-success" id="addTemplateRow"><i class="fas fa-plus"></i> Add New</button>
+                Assessment templates for this EPA
+            </h4>
+            <hr />
+            <div hidden id="TemplateContainer">
+                <div id="Templates">
+                    <select id="myList">
+                        <option value="">Select an Template</option>
+                        @foreach (var item in ViewBag.Templates)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group col-md-12">
+                <div id="newRow" class="col-md-12">
+                    <input type="hidden" id="totalLans" value="0" />
+                </div>
+            </div>
+            <br />
+
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
                 <input type="submit" value="Save Changes" class="btn btn-warning" />
@@ -36,4 +87,70 @@
     </div>
 </div>
 
+@section Scripts
+{
+    <script>
+        function updateSubSpecialitySelect() {
+            var mainSelect = document.getElementById("specialitySelect");
+            var subSpecialityContainer = document.getElementById("subSpecialityContainer");
+            var secondSelect = document.getElementById("secondSelect");
 
+            // Clear previous options
+            secondSelect.innerHTML = '';
+
+            if (mainSelect.value) {
+                // Show the second select
+                subSpecialityContainer.style.display = "block";
+
+                // Fetch sub-options via AJAX
+                fetch('@Url.Action("GetSubOptions", "EPAs")?mainOptionId=' + mainSelect.value)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function (subOption) {
+                            console.log(subOption.value);
+                            var newOption = document.createElement("option");
+                            newOption.value = subOption.id;
+                            newOption.textContent = subOption.name;
+                            secondSelect.appendChild(newOption);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching sub-options:', error));
+            }
+        }
+
+        $("#addTemplateRow").click(function () {
+
+            var rowCount = parseInt($("#totalLans").val());
+            rowCount++;
+            $("#totalLans").val(rowCount);
+
+            const masterSelect = document.getElementById("Templates");
+            var newSelect = masterSelect.cloneNode(true);
+            //newSelect.setAttribute('id', 'select' + rowCount );
+            newSelect.childNodes[1].setAttribute('name', 'Templates[' + (rowCount - 1) + '].Id');
+            newSelect.childNodes[1].setAttribute('class', 'form-control');
+            newSelect.childNodes[1].setAttribute('style', 'width: 20%');
+
+            var html = '';
+            html += '<div id="inputFormRow">';
+            html += '<div class="input-group">';
+
+            //change id attribute to name attribute and modify the name
+            html += newSelect.innerHTML;
+            html += '<button style="width: 15%" type="button" class="btn btn-danger" id="removeRow"><i class="far fa-trash-alt"></i></button>';
+            html += '</div>';
+            html += '<br/>';
+            html += '</div>';
+            $('#newRow').append(html);
+
+        });
+
+        $(document).on('click', '#removeRow', function () {
+            var rowCount = parseInt($("#totalLans").val());
+            rowCount--;
+            $("#totalLans").val(rowCount);
+            $(this).closest('#inputFormRow').remove();
+        });
+
+    </script>
+}
