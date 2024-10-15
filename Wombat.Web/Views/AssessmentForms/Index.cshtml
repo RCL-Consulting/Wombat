@@ -1,4 +1,4 @@
-﻿@model IEnumerable<AssessmentTemplateVM>
+﻿@model IEnumerable<AssessmentFormVM>
 
 @{
     ViewData["Title"] = "Index";
@@ -30,7 +30,10 @@
                         <td>
                             <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
                             <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                            <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
+                            @if(item.CanDelete)
+                            {
+                                <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
+                            }
                         </td>
                     </tr>
                 }
@@ -40,7 +43,7 @@
 </div>
 
 <form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="templateId" name="Id" />
+    <input type="hidden" id="FormId" name="Id" />
 </form>
 
 @section Scripts {
@@ -58,7 +61,7 @@
                     if (confirm) {
                         var btn = $(this);
                         var id = btn.data("id");
-                        $("#templateId").val(id);
+                        $("#FormId").val(id);
                         $("#deleteForm").submit();
                     }
                 });

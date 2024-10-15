@@ -202,7 +202,7 @@ namespace Wombat.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Wombat.Data.AssessmentTemplate", b =>
+            modelBuilder.Entity("Wombat.Data.AssessmentForm", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -210,14 +210,14 @@ namespace Wombat.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DateModified")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("EPAId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -225,9 +225,17 @@ namespace Wombat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EPAId");
+                    b.ToTable("AssessmentForms");
 
-                    b.ToTable("AssessmentTemplates");
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CanDelete = false,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Default Template"
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Data.EPA", b =>
@@ -260,6 +268,35 @@ namespace Wombat.Data.Migrations
                     b.HasIndex("SubSpecialityId");
 
                     b.ToTable("EPAs");
+                });
+
+            modelBuilder.Entity("Wombat.Data.EPAForm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EPAId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FormId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EPAId");
+
+                    b.HasIndex("FormId");
+
+                    b.ToTable("EPAForms");
                 });
 
             modelBuilder.Entity("Wombat.Data.Institution", b =>
@@ -304,7 +341,7 @@ namespace Wombat.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Comment")
+                    b.Property<string>("BadComment")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -317,6 +354,13 @@ namespace Wombat.Data.Migrations
                     b.Property<int>("EPAId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("FormId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GoodComment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TraineeId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -326,6 +370,8 @@ namespace Wombat.Data.Migrations
                     b.HasIndex("AssessorId");
 
                     b.HasIndex("EPAId");
+
+                    b.HasIndex("FormId");
 
                     b.HasIndex("TraineeId");
 
@@ -365,201 +411,48 @@ namespace Wombat.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 10,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Ward",
-                            OptionSetId = 3,
-                            Rank = 0
-                        },
-                        new
-                        {
-                            Id = 11,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Clinic",
-                            OptionSetId = 3,
-                            Rank = 1
-                        },
-                        new
-                        {
-                            Id = 12,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Intensive care unit",
-                            OptionSetId = 3,
-                            Rank = 2
-                        },
-                        new
-                        {
-                            Id = 13,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Other",
-                            OptionSetId = 3,
-                            Rank = 3
-                        },
-                        new
-                        {
-                            Id = 14,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Low",
-                            OptionSetId = 4,
-                            Rank = 0
-                        },
-                        new
-                        {
-                            Id = 15,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Moderate",
-                            OptionSetId = 4,
-                            Rank = 1
-                        },
-                        new
-                        {
-                            Id = 16,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "High",
-                            OptionSetId = 4,
-                            Rank = 2
-                        },
-                        new
-                        {
-                            Id = 17,
+                            Id = 1,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Not observed",
-                            OptionSetId = 5,
+                            OptionSetId = 2,
                             Rank = 0
                         },
                         new
                         {
-                            Id = 18,
+                            Id = 2,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Requires intervention",
-                            OptionSetId = 5,
+                            OptionSetId = 2,
                             Rank = 1
                         },
                         new
                         {
-                            Id = 19,
+                            Id = 3,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Room for improvement, still requires supervision",
-                            OptionSetId = 5,
+                            OptionSetId = 2,
                             Rank = 2
                         },
                         new
                         {
-                            Id = 20,
+                            Id = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Adequate - can do this unsupervised",
-                            OptionSetId = 5,
+                            OptionSetId = 2,
                             Rank = 3
                         },
                         new
                         {
-                            Id = 21,
+                            Id = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Good enough to train a junior colleague",
-                            OptionSetId = 5,
+                            OptionSetId = 2,
                             Rank = 4
-                        },
-                        new
-                        {
-                            Id = 22,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Topic selected",
-                            OptionSetId = 6,
-                            Rank = 0
-                        },
-                        new
-                        {
-                            Id = 23,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Protocol development for MMed review committee",
-                            OptionSetId = 6,
-                            Rank = 1
-                        },
-                        new
-                        {
-                            Id = 24,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Protocol reviews after MMed committee submission",
-                            OptionSetId = 6,
-                            Rank = 2
-                        },
-                        new
-                        {
-                            Id = 25,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Protocol submission for Ethics committee",
-                            OptionSetId = 6,
-                            Rank = 3
-                        },
-                        new
-                        {
-                            Id = 26,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Protocol reviews after Ethics committee submission",
-                            OptionSetId = 6,
-                            Rank = 4
-                        },
-                        new
-                        {
-                            Id = 27,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Data collection",
-                            OptionSetId = 6,
-                            Rank = 5
-                        },
-                        new
-                        {
-                            Id = 28,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Data analysis",
-                            OptionSetId = 6,
-                            Rank = 6
-                        },
-                        new
-                        {
-                            Id = 29,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Final write up",
-                            OptionSetId = 6,
-                            Rank = 7
-                        },
-                        new
-                        {
-                            Id = 30,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Satisfactory",
-                            OptionSetId = 7,
-                            Rank = 0
-                        },
-                        new
-                        {
-                            Id = 31,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Needs intervention",
-                            OptionSetId = 7,
-                            Rank = 1
                         });
                 });
 
@@ -571,7 +464,7 @@ namespace Wombat.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AssessmentTemplateId")
+                    b.Property<int>("AssessmentFormId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("DateCreated")
@@ -592,11 +485,43 @@ namespace Wombat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssessmentTemplateId");
+                    b.HasIndex("AssessmentFormId");
 
                     b.HasIndex("OptionSetId");
 
                     b.ToTable("OptionCriteria");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AssessmentFormId = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessment rating",
+                            OptionSetId = 2,
+                            Rank = 1000
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AssessmentFormId = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                            OptionSetId = 1,
+                            Rank = 1001
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AssessmentFormId = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
+                            OptionSetId = 1,
+                            Rank = 1002
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Data.OptionCriterionResponse", b =>
@@ -645,6 +570,12 @@ namespace Wombat.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -666,6 +597,8 @@ namespace Wombat.Data.Migrations
                         new
                         {
                             Id = 1,
+                            CanDelete = false,
+                            CanEdit = false,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Text",
@@ -673,43 +606,13 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 3,
+                            Id = 2,
+                            CanDelete = false,
+                            CanEdit = true,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Hospital locations",
-                            DisplayRank = false
-                        },
-                        new
-                        {
-                            Id = 4,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Difficulty level (3)",
+                            Description = "EPA scale",
                             DisplayRank = true
-                        },
-                        new
-                        {
-                            Id = 5,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Skill level (5)",
-                            DisplayRank = true
-                        },
-                        new
-                        {
-                            Id = 6,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Research progress",
-                            DisplayRank = false
-                        },
-                        new
-                        {
-                            Id = 7,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Research project progress",
-                            DisplayRank = false
                         });
                 });
 
@@ -856,7 +759,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4f3c063a-f8cf-4b47-bbbb-88fc6b06dd10",
+                            ConcurrencyStamp = "a7e38a9a-1125-4493-9eab-8bb3c5c16972",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -864,9 +767,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMFWotlUCtTomNP2Vz8M5rM5pAOV5E6QBC0OeaA1fAWCipVL+nrvXaVsQeYL7tIFjg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMl5jTW6LOw7iyNjBpZxCezk8uY1bpLcO7ltPVi0Z2UxAVTyQrL8bsepIRDIgVlO0g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ba6307bd-3afb-4b4d-943e-6592fd9954e5",
+                            SecurityStamp = "8d14daba-0966-4b9c-97c8-46fd8bc44869",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -875,7 +778,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a6b12f15-6cbf-44f5-8cdc-dcd8a069a70b",
+                            ConcurrencyStamp = "a5b2873f-d9b9-430b-9c92-650f7de5e8dd",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "assessor@localhost.com",
                             EmailConfirmed = true,
@@ -883,9 +786,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMfPXVd23wV/IETh6Voq4Xw1gm0g+Rfap6SMqiOK8r+Wft3I3FmyVQ5TrOQViKP1Qg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKxvrEiXIUOSxPSbT7PwcfZUH/4CW7ZOF6pLs3U1mtuiYVQgg3gQ++ih/J1Napib+g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "949af086-e454-4b7b-b897-0ed281d33860",
+                            SecurityStamp = "441a8a4e-78a4-464d-82a7-6e962779ac12",
                             Surname = "Assessor",
                             TwoFactorEnabled = false,
                             UserName = "assessor@localhost.com"
@@ -894,7 +797,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1ce88fc8-7017-47ad-983b-154914ac4130",
+                            ConcurrencyStamp = "e9c448d4-05d6-4af4-9cdb-c85d23831e65",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "trainee@localhost.com",
                             EmailConfirmed = true,
@@ -902,9 +805,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "TRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "TRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELZrxlRsJEyz2s7y5BcPOD6erzlJ988flNML3CjvrxM2SpmeX3wKRAuvOn4bOtaOgw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFkZzlVvlVOxf/V9FgFrp/r+AEWRQ4i8FNNXMmWhia8e4pyMDkWN+doOFqTvLddZug==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6691f577-6fdb-41ac-b1f9-8385b403276a",
+                            SecurityStamp = "5d6a42be-2c43-4172-b800-a2c40ee0569a",
                             Surname = "Trainee",
                             TwoFactorEnabled = false,
                             UserName = "trainee@localhost.com"
@@ -962,16 +865,6 @@ namespace Wombat.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Wombat.Data.AssessmentTemplate", b =>
-                {
-                    b.HasOne("Wombat.Data.EPA", "EPA")
-                        .WithMany("Templates")
-                        .HasForeignKey("EPAId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("EPA");
-                });
-
             modelBuilder.Entity("Wombat.Data.EPA", b =>
                 {
                     b.HasOne("Wombat.Data.SubSpeciality", "SubSpeciality")
@@ -981,6 +874,25 @@ namespace Wombat.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("SubSpeciality");
+                });
+
+            modelBuilder.Entity("Wombat.Data.EPAForm", b =>
+                {
+                    b.HasOne("Wombat.Data.EPA", "EPA")
+                        .WithMany("Forms")
+                        .HasForeignKey("EPAId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Wombat.Data.AssessmentForm", "Form")
+                        .WithMany("EPAs")
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EPA");
+
+                    b.Navigation("Form");
                 });
 
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>
@@ -997,6 +909,11 @@ namespace Wombat.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Wombat.Data.AssessmentForm", "Form")
+                        .WithMany()
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Wombat.Data.WombatUser", "Trainee")
                         .WithMany()
                         .HasForeignKey("TraineeId")
@@ -1006,6 +923,8 @@ namespace Wombat.Data.Migrations
                     b.Navigation("Assessor");
 
                     b.Navigation("EPA");
+
+                    b.Navigation("Form");
 
                     b.Navigation("Trainee");
                 });
@@ -1023,9 +942,9 @@ namespace Wombat.Data.Migrations
 
             modelBuilder.Entity("Wombat.Data.OptionCriterion", b =>
                 {
-                    b.HasOne("Wombat.Data.AssessmentTemplate", "AssessmentTemplate")
+                    b.HasOne("Wombat.Data.AssessmentForm", "AssessmentForm")
                         .WithMany("OptionCriteria")
-                        .HasForeignKey("AssessmentTemplateId")
+                        .HasForeignKey("AssessmentFormId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1035,7 +954,7 @@ namespace Wombat.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AssessmentTemplate");
+                    b.Navigation("AssessmentForm");
 
                     b.Navigation("OptionsSet");
                 });
@@ -1077,14 +996,16 @@ namespace Wombat.Data.Migrations
                     b.Navigation("Speciality");
                 });
 
-            modelBuilder.Entity("Wombat.Data.AssessmentTemplate", b =>
+            modelBuilder.Entity("Wombat.Data.AssessmentForm", b =>
                 {
+                    b.Navigation("EPAs");
+
                     b.Navigation("OptionCriteria");
                 });
 
             modelBuilder.Entity("Wombat.Data.EPA", b =>
                 {
-                    b.Navigation("Templates");
+                    b.Navigation("Forms");
                 });
 
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>

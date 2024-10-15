@@ -8,17 +8,16 @@ namespace Wombat.Application.Repositories
 {
     public class EPARepository : GenericRepository<EPA>, IEPARepository
     {
-        private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
+        private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly ISubSpecialityRepository subSpecialityRepository;
 
         public EPARepository( ApplicationDbContext context,
-                              IAssessmentTemplateRepository assessmentTemplateRepository,
+                              IAssessmentFormRepository assessmentFormRepository,
                               ISubSpecialityRepository subSpecialityRepository) : base(context)
         {
-            this.assessmentTemplateRepository = assessmentTemplateRepository;
+            this.assessmentFormRepository = assessmentFormRepository;
             this.subSpecialityRepository = subSpecialityRepository;
         }
-
 
         public override async Task<EPA?> GetAsync(int? id)
         {
@@ -27,20 +26,23 @@ namespace Wombat.Application.Repositories
                 return null;
             }
 
-            var EPA = await base.GetAsync(id);
+            var epa = await context.EPAs
+                .Include(s => s.Forms)
+                .ThenInclude(sc => sc.Form) // Load associated Courses
+                .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (EPA!=null)
+            if (epa != null)
             {
-                var Templates = context.Entry(EPA);
+                var Forms = context.Entry(epa);
 
-                Templates.Collection(e => e.Templates)
+                Forms.Collection(e => e.Forms)
                      .Query()
                      .Load();
 
-                EPA.SubSpeciality = await context.SubSpecialities.FindAsync(EPA.SubSpecialityId);
+                epa.SubSpeciality = await subSpecialityRepository.GetAsync(epa.SubSpecialityId);
 
-                return EPA;
-                //EPA.AssessmentTemplate = await assessmentTemplateRepository.GetAsync(EPA.AssessmentTemplateId);
+                return epa;
+                //EPA.AssessmentForm = await assessmentFormRepository.GetAsync(EPA.AssessmentFormId);
 
                 //return EPA;
             }
@@ -50,7 +52,10 @@ namespace Wombat.Application.Repositories
 
         public override async Task<List<EPA>?> GetAllAsync()
         {
-            var EPAs = await base.GetAllAsync();
+            var EPAs = await context.EPAs
+                .Include(s => s.Forms)
+                .ThenInclude(sc => sc.Form)
+                .ToListAsync();
 
             if (EPAs != null)
             {
@@ -61,5 +66,6 @@ namespace Wombat.Application.Repositories
             }
             return EPAs;
         }
+
     }
 }

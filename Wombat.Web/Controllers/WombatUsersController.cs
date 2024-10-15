@@ -150,7 +150,6 @@ namespace Wombat.Controllers
             return userManager.Users.Any(e => e.Id == id);
         }
 
-        // POST: AssessmentTemplates/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)

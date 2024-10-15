@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 using Wombat.Common.Models;
 using Wombat.Data.Configurations.Entities;
 
@@ -20,6 +21,21 @@ namespace Wombat.Data
             builder.ApplyConfiguration(new OptionConfiguration());
             builder.ApplyConfiguration(new OptionSetConfiguration());
             builder.ApplyConfiguration(new SpecialityConfiguration());
+            builder.ApplyConfiguration(new OptionCriterionConfiguration());
+            builder.ApplyConfiguration(new AssessmentFormConfiguration());
+
+            //builder.Entity<EPAForm>()
+            //.HasKey(sc => new { sc.EPAId, sc.FormId });
+
+            //builder.Entity<EPAForm>()
+            //    .HasOne(sc => sc.EPA)
+            //    .WithMany(s => s.Forms)
+            //    .HasForeignKey(sc => sc.EPAId);
+
+            //builder.Entity<EPAForm>()
+            //    .HasOne(sc => sc.Form)
+            //    .WithMany(c => c.EPAs)
+            //    .HasForeignKey(sc => sc.FormId);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -35,8 +51,9 @@ namespace Wombat.Data
         }
 
         public DbSet<Institution> Institutions { get; set; }
-        public DbSet<AssessmentTemplate> AssessmentTemplates { get; set; }
+        public DbSet<AssessmentForm> AssessmentForms { get; set; }
         public DbSet<EPA> EPAs { get; set; }
+        public DbSet<EPAForm> EPAForms { get; set; }
 
         public DbSet<OptionCriterion> OptionCriteria{ get; set; }
         public DbSet<OptionSet> OptionSets{ get; set; }

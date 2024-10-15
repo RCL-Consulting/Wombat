@@ -13,38 +13,17 @@ namespace Wombat.Data.Configurations.Entities
                 {
                     Id = 1,
                     Description = "Text",
-                    DisplayRank=false
+                    DisplayRank=false,
+                    CanDelete = false,
+                    CanEdit = false
                 },
                 new OptionSet
                 {
-                    Id = 3,
-                    Description = "Hospital locations",
-                    DisplayRank=false
-                },
-               new OptionSet
-               {
-                   Id = 4,
-                   Description = "Difficulty level (3)",
-                   DisplayRank=true
-               },
-               new OptionSet
-               {
-                   Id = 5,
-                   Description = "Skill level (5)",
-                   DisplayRank=true
-               },
-               new OptionSet
-               {
-                   Id = 6,
-                   Description = "Research progress",
-                   DisplayRank=false
-               },
-               new OptionSet
-               {
-                   Id = 7,
-                   Description = "Research project progress",
-                   DisplayRank=false
-               }
+                    Id = 2,
+                    Description = "EPA scale",
+                    DisplayRank = true,
+                    CanDelete = false
+                }
             );
         }
     }

@@ -8,7 +8,7 @@ namespace Wombat.Application.Configurations
     {
         public MapperConfig()
         {
-            CreateMap<AssessmentTemplate, AssessmentTemplateVM>().ReverseMap();
+            CreateMap<AssessmentForm, AssessmentFormVM>().ReverseMap();
             CreateMap<OptionCriterion, OptionCriterionVM>().ReverseMap();
             CreateMap<OptionSet, OptionSetVM>().ReverseMap();
             CreateMap<Option, OptionVM>().ReverseMap();
@@ -21,6 +21,7 @@ namespace Wombat.Application.Configurations
             CreateMap<Speciality, SpecialitySelectVM>().ReverseMap();
             CreateMap<SubSpeciality, SubSpecialitySelectVM>().ReverseMap();
             CreateMap<Institution, InstitutionVM>().ReverseMap();
+            CreateMap<EPAForm, EPAFormVM>().ReverseMap();
         }
     }
 }

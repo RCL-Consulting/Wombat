@@ -2,13 +2,15 @@
 
 namespace Wombat.Common.Models
 {
-    public class AssessmentTemplateVM: Collection
+    public class AssessmentFormVM
     {
-        public AssessmentTemplateVM()
+        public AssessmentFormVM()
         {
             Name = "";
             OptionCriteria = new List<OptionCriterionVM>();
         }
+
+        public int Id { get; set; }
 
         [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; }
@@ -17,6 +19,6 @@ namespace Wombat.Common.Models
 
         public EPAVM? EPAVM { get; set; }
 
-        public static List<AssessmentTemplateVM> Templates = new List<AssessmentTemplateVM>();
+        public bool CanDelete { get; set; } = true;
     }
 }

@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Create">
+        <form asp-action="Create" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
             <div class="form-group">
@@ -55,32 +55,18 @@
             <br/>
 
             <h4>
-                <button type="button" class="btn btn-success" id="addTemplateRow"><i class="fas fa-plus"></i> Add New</button>
-                Assessment templates for this EPA
+                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i> Add New</button>
+                Assessment Forms for this EPA
             </h4>
             <hr />
-            <div hidden id="TemplateContainer">
-                <div id="Templates">
-                    <select id="myList">
-                        <option value="">Select an Template</option>
-                        @foreach (var item in ViewBag.Templates)
-                        {
-                            <option value="@item.Id">@item.Name</option>
-                        }
-                    </select>
-                </div>
-            </div>
 
-            <div class="form-group col-md-12">
-                <div id="newRow" class="col-md-12">
-                    <input type="hidden" id="totalLans" value="0" />
-                </div>
+            <div id="collectionContainer">
+                @Html.EditorFor(model => model.Forms)
             </div>
             <br />
 
             <div class="form-group">
                 <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                @* <button id="addTemplateRow" type="button" class="btn btn-info">Add Template</button> &nbsp; *@
                 <input type="submit" value="Submit" class="btn btn-primary" />
             </div>
         </form>
@@ -89,7 +75,7 @@
 
 @section Scripts
 {
-    <script>
+    <script type="text/javascript">
         function updateSubSpecialitySelect() {
             var mainSelect = document.getElementById("specialitySelect");
             var subSpecialityContainer = document.getElementById("subSpecialityContainer");
@@ -118,39 +104,33 @@
             } 
         }
 
-        $("#addTemplateRow").click(function () {
-
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount++;
-            $("#totalLans").val(rowCount);
-
-            const masterSelect = document.getElementById("Templates");
-            var newSelect = masterSelect.cloneNode(true);
-            //newSelect.setAttribute('id', 'select' + rowCount );
-            newSelect.childNodes[1].setAttribute('name', 'Templates[' + (rowCount - 1) + '].Id');
-            newSelect.childNodes[1].setAttribute('class', 'form-control');
-            newSelect.childNodes[1].setAttribute('style', 'width: 20%');
-
-            var html = '';
-            html += '<div id="inputFormRow">';
-            html += '<div class="input-group">';
-
-            //change id attribute to name attribute and modify the name
-            html += newSelect.innerHTML;
-            html += '<button style="width: 15%" type="button" class="btn btn-danger" id="removeRow"><i class="far fa-trash-alt"></i></button>';
-            html += '</div>';
-            html += '<br/>';
-            html += '</div>';
-            $('#newRow').append(html);
-
+        $("#btnAdd").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/EPAs/AddForm',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
         });
 
-        $(document).on('click', '#removeRow', function () {
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount--;
-            $("#totalLans").val(rowCount);
-            $(this).closest('#inputFormRow').remove();
+        $(document).on('click', '#btnDelete', function () {
+            var form = $('#form').serialize();
+            var parentDiv = $(this).closest('#inputFormRow');
+            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            console.log(DisplayId);
+            $.ajax({
+                async: true,
+                data: form + '&displayId=' + DisplayId,
+                type: "POST",
+                url: '/EPAs/DeleteForm',
+                success: function (partialView) {
+                    $('#collectionContainer').html(partialView);
+                }
+            });
         });
-
+        
     </script>
 } 

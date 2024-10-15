@@ -8,7 +8,8 @@
             TraineeId = "";
             AssessorId = "";
             EPAId = 0;
-            Comment = "";
+            GoodComment = "";
+            BadComment = "";
         }
 
         public int Id { get; set; }
@@ -21,9 +22,13 @@
         public int EPAId { get; set; }
         public EPAVM? EPA { get; set; }
 
+        public int FormId { get; set; }
+        public AssessmentFormVM? Form { get; set; }
+
         public List<OptionCriterionResponseVM> OptionCriterionResponses { get; set; }
 
-        public string? Comment { get; set; }
+        public string? GoodComment { get; set; }
+        public string? BadComment { get; set; }
 
         public DateTime AssessmentDate { get; set; }
     }

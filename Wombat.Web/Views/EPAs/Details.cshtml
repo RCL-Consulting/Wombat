@@ -22,6 +22,37 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Description)
         </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Speciality)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Speciality.Name)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.SubSpeciality)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.SubSpeciality.Name)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Forms)
+        </dt>
+        <dd class="col-sm-10">
+            <ul class="row list-unstyled">
+                @if (Model.Forms != null)
+                {
+                    foreach (var item in Model.Forms)
+                    {
+                        <li>
+                            @Html.DisplayFor(modelItem => item.Form.Name)
+                        </li>
+                    }
+                }
+            </ul>
+        </dd>
     </dl>
 </div>
 <div>

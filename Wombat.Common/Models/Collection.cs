@@ -16,6 +16,10 @@ namespace Wombat.Common.Models
             {
                 _id = value;
                 DisplayId = _id;
+                if (DisplayId>= NextDisplayId)
+                {
+                    NextDisplayId = DisplayId + 1;
+                }
             }
         }
         public bool CanEditAndDelete { get; set; } = true;

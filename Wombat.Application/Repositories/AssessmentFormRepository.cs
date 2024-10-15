@@ -4,40 +4,40 @@ using Wombat.Data;
 
 namespace Wombat.Application.Repositories
 {
-    public class AssessmentTemplateRepository : GenericRepository<AssessmentTemplate>, IAssessmentTemplateRepository
+    public class AssessmentFormRepository : GenericRepository<AssessmentForm>, IAssessmentFormRepository
     {
         private readonly IOptionSetRepository optionSetRepository;
 
-        public AssessmentTemplateRepository( ApplicationDbContext context,
-                                             IOptionSetRepository optionSetRepository) : base(context)
+        public AssessmentFormRepository( ApplicationDbContext context,
+                                         IOptionSetRepository optionSetRepository ) : base(context)
         {
             this.optionSetRepository=optionSetRepository;
         }
 
-        public override async Task<AssessmentTemplate?> GetAsync(int? id)
+        public override async Task<AssessmentForm?> GetAsync(int? id)
         {
             if (id == null)
             {
                 return null;
             }
 
-            var assessmentTemplate = await base.GetAsync(id);
+            var assessmentForm = await base.GetAsync(id);
 
-            if (assessmentTemplate!=null)
+            if (assessmentForm != null)
             {
-                var OptionCriteria = context.Entry(assessmentTemplate);
+                var OptionCriteria = context.Entry(assessmentForm);
 
                 OptionCriteria.Collection(e => e.OptionCriteria)
                      .Query()
                      .OrderBy(c => c.Rank)
                      .Load();
 
-                foreach (var optionCriterion in assessmentTemplate.OptionCriteria)
+                foreach (var optionCriterion in assessmentForm.OptionCriteria)
                 {
                     optionCriterion.OptionsSet = await optionSetRepository.GetAsync(optionCriterion.OptionSetId);
                 }
 
-                return assessmentTemplate;
+                return assessmentForm;
             }
 
             return null;

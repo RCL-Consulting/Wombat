@@ -1,10 +1,10 @@
-﻿@model AssessmentTemplateVM
+﻿@model AssessmentFormVM
 
 @{
     ViewData["Title"] = "Create";
 }
 
-<h1>Create an Assessment Template</h1>
+<h1>Create an Assessment Form</h1>
 
 <hr />
 <div class="row">
@@ -48,7 +48,7 @@
                 async: true,
                 data: $('#form').serialize(),
                 type: "POST",
-                url: '/AssessmentTemplates/AddCriterion',
+                url: '/AssessmentForms/AddCriterion',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
                 }
@@ -64,7 +64,7 @@
                 async: true,
                 data: form + '&displayId=' + DisplayId,
                 type: "POST",
-                url: '/AssessmentTemplates/DeleteCriterion',
+                url: '/AssessmentForms/DeleteCriterion',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
                 }

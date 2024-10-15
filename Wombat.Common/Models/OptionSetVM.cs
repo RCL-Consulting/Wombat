@@ -17,5 +17,9 @@ namespace Wombat.Common.Models
 
         public List<OptionVM>? Options { get; set; }
 
+        public bool CanDelete { get; set; } = true;
+
+        public bool CanEdit { get; set; } = true;
+
     }
 }

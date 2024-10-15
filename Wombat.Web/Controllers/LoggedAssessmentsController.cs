@@ -14,6 +14,7 @@ using Wombat.Data;
 using Wombat.Common.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Authorization;
+using Wombat.Application.Repositories;
 
 namespace Wombat.Controllers
 {
@@ -22,6 +23,7 @@ namespace Wombat.Controllers
     {
         private readonly UserManager<WombatUser> userManager;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
+        private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly IEPARepository EPARepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEmailSender emailSender;
@@ -31,6 +33,7 @@ namespace Wombat.Controllers
         public LoggedAssessmentsController(UserManager<WombatUser> userManager,
                                             ILoggedAssessmentRepository loggedAssessmentRepository,
                                             IEPARepository EPARepository,
+                                            IAssessmentFormRepository assessmentFormRepository,
                                             IHttpContextAccessor httpContextAccessor,
                                             IEmailSender emailSender,
                                             IWebHostEnvironment webHostEnvironment,
@@ -39,6 +42,7 @@ namespace Wombat.Controllers
             this.userManager=userManager;
             this.loggedAssessmentRepository=loggedAssessmentRepository;
             this.EPARepository = EPARepository;
+            this.assessmentFormRepository = assessmentFormRepository;
             this.httpContextAccessor=httpContextAccessor;
             this.emailSender=emailSender;
             this.webHostEnvironment=webHostEnvironment;
@@ -113,6 +117,19 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
+        public async Task<IActionResult> GetSubOptions(int mainOptionId)
+        {
+            var epa = await EPARepository.GetAsync(mainOptionId);
+
+            List<SelectVM> subOptions = new List<SelectVM>();
+            foreach( var item in epa?.Forms)
+            {
+                subOptions.Add(new SelectVM { Id = item.FormId, Name = item.Form.Name });
+            }
+
+            return Json(subOptions);
+        }
+
         [Authorize(Roles = Roles.Assessor)]
         public async Task<IActionResult> LogAssessmentFor(string? id)
         {
@@ -135,6 +152,8 @@ namespace Wombat.Controllers
             else
                 return NotFound();
 
+            ViewData["EPAList"] = mapper.Map<List<EPAVM>>(await EPARepository.GetAllAsync());
+
             loggedAssessmentVM.AssessmentDate = DateTime.Now;
             return View(loggedAssessmentVM);
         }
@@ -144,25 +163,25 @@ namespace Wombat.Controllers
             loggedAssessmentVM.EPA = mapper.Map<EPAVM>(await EPARepository.GetAsync(loggedAssessmentVM.EPAId));
             loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.TraineeId));
             loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(loggedAssessmentVM.AssessorId));
-            
-            //foreach (var optionCriterion in loggedAssessmentVM.EPA.AssessmentTemplate.OptionCriteria)
-            //{
-            //    var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
-            //    if (optionCriterionResponse == null)
-            //    {
-            //        optionCriterionResponse = new OptionCriterionResponseVM();
-            //        optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-            //        if (optionCriterion.OptionsSet.Options.Count>0)
-            //            optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
-            //        optionCriterionResponse.CriterionId = optionCriterion.Id;
-            //        loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
-            //    }
-            //    else
-            //    {
-            //        optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
-            //        optionCriterionResponse.Option = optionCriterion.OptionsSet.Options.FirstOrDefault(x => x.Id == optionCriterionResponse.OptionId);
-            //    }
-            //}
+
+            foreach (var optionCriterion in loggedAssessmentVM.Form.OptionCriteria)
+            {
+                var optionCriterionResponse = loggedAssessmentVM.OptionCriterionResponses.FirstOrDefault(x => x.CriterionId == optionCriterion.Id);
+                if (optionCriterionResponse == null)
+                {
+                    optionCriterionResponse = new OptionCriterionResponseVM();
+                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+                    if (optionCriterion.OptionsSet.Options.Count > 0)
+                        optionCriterionResponse.OptionId = optionCriterion.OptionsSet.Options.First().Id;
+                    optionCriterionResponse.CriterionId = optionCriterion.Id;
+                    loggedAssessmentVM.OptionCriterionResponses.Add(optionCriterionResponse);
+                }
+                else
+                {
+                    optionCriterionResponse.Criterion = mapper.Map<OptionCriterionVM>(optionCriterion);
+                    optionCriterionResponse.Option = optionCriterion.OptionsSet.Options.FirstOrDefault(x => x.Id == optionCriterionResponse.OptionId);
+                }
+            }
         }
 
         [Authorize(Roles = Roles.Assessor)]
@@ -170,6 +189,8 @@ namespace Wombat.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
         {
+            loggedAssessmentVM.Form = mapper.Map<AssessmentFormVM>(await assessmentFormRepository.GetAsync(loggedAssessmentVM.FormId));
+
             await PopulateAssessment(loggedAssessmentVM);
             await AddViewDataAsync();
             return View(loggedAssessmentVM);
@@ -182,11 +203,15 @@ namespace Wombat.Controllers
         {
             if (ModelState.IsValid)
             {
-                if(loggedAssessmentVM.Comment==null)
+                if(loggedAssessmentVM.GoodComment==null)
                 {
-                    loggedAssessmentVM.Comment = "";
+                    loggedAssessmentVM.GoodComment = "";
                 }
-                foreach(var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
+                if (loggedAssessmentVM.BadComment == null)
+                {
+                    loggedAssessmentVM.BadComment = "";
+                }
+                foreach (var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
                 {
                     if(optionCriterionResponse.OptionId==0)
                         optionCriterionResponse.OptionId = null;
@@ -324,8 +349,12 @@ namespace Wombat.Controllers
             }
 
             Cells = table.AddRow().Cells;
-            Cells[0].AddParagraph("Comments");
-            Cells[1].AddParagraph(loggedAssessment.Comment);
+            Cells[0].AddParagraph("Good comments");
+            Cells[1].AddParagraph(loggedAssessment.GoodComment);
+
+            Cells = table.AddRow().Cells;
+            Cells[0].AddParagraph("Bad comments");
+            Cells[1].AddParagraph(loggedAssessment.BadComment);
 
             // Render the PDF document
             var pdfRenderer = new PdfDocumentRenderer(true);

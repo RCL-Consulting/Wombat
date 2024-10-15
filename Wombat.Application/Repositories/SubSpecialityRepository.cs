@@ -52,5 +52,23 @@ namespace Wombat.Application.Repositories
             }
             return subspecialities;
         }
+
+        public async Task<List<SubSpeciality>?> GetSubSpecialitiesBySpecialityAsync(int id)
+        {
+            var subSpecialites = await context.SubSpecialities
+                .Where(x => x.SpecialityId == id)
+                .ToListAsync();
+
+            if (subSpecialites != null)
+            {
+                foreach (var assessment in subSpecialites)
+                {
+                    //assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
+                    //assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
+                    //assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
+                }
+            }
+            return subSpecialites;
+        }
     }
 }

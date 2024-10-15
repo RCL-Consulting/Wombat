@@ -7,7 +7,8 @@ namespace Wombat.Data
     {
         public LoggedAssessment()
         {
-            Comment = "";
+            GoodComment = "";
+            BadComment = "";
         }
 
         public string TraineeId { get; set; }
@@ -28,9 +29,14 @@ namespace Wombat.Data
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public EPA? EPA { get; set; }
 
+        [ForeignKey("FormId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public AssessmentForm? Form { get; set; }
+
         public List<OptionCriterionResponse>? OptionCriterionResponses { get; set; }
 
-        public string Comment { get; set; }
+        public string GoodComment { get; set; }
+        public string BadComment { get; set; }
 
         public DateTime AssessmentDate { get; set; }
 

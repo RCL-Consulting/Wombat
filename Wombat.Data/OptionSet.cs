@@ -14,5 +14,12 @@
         public bool DisplayRank { get; set; }
 
         public List<Option> Options { get; set; }
+
+        public bool CanDelete { get; set; } = true;
+
+        public bool CanEdit { get; set; } = true;
+
+        public static int kTextId = 1;
+        public static int kEPAScaleId = 2;
     }
 }

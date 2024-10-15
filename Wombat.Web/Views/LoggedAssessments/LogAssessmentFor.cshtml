@@ -1,12 +1,11 @@
 ﻿@model LoggedAssessmentVM
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Loag an assessment";
 }
 
-<h1>Create</h1>
+<h1>Log an assessment</h1>
 
-<h4>LoggedAssessment</h4>
 <hr />
 <div class="row">
     <div class="col-md-12">
@@ -30,14 +29,39 @@
             <input type="hidden" asp-for="AssessorId" />
     
             <div class="form-group">
-                <label asp-for="EPAId" class="control-label"></label>
-                <select asp-for="EPAId" class="form-select" asp-items="ViewBag.AssessmentContext"></select>
+                <label class="control-label">Assessment EPA</label>
+                <select asp-for="EPAId" class="form-select" id="epaSelect" onchange="updateAssessmentSelect()">
+                    <option value="">-- Select an EPA --</option>
+                    @foreach (var option in (List<EPAVM>)ViewData["EPAList"])
+                    {
+                        <option value="@option.Id">@option.Name</option>
+                    }
+                </select>
             </div>
+            <br />
+
+            <div id="FormContainer">
+                <label for="secondSelect">Assessment Form</label>
+                <select asp-for="FormId" id="secondSelect" class="form-select">
+                    <option value="">-- Select a Form --</option>
+                    @if (ViewData["FormList"] != null)
+                    {
+                        foreach (var option in (List<EPAVM>)ViewData["FormList"])
+                        {
+                            <option value="@option.Id">@option.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <br />
+
             <div class="form-group">
                 <label asp-for="AssessmentDate" class="control-label"></label>
                 <input asp-for="AssessmentDate" class="form-control datepicker" type="text" />
                 <span asp-validation-for="AssessmentDate" class="text-danger"></span>
             </div>
+            <br />
+
             <div class="form-group">
                 <a asp-action="MyAssessments" class="btn btn-dark">Back to List</a> &nbsp;
                 <input type="submit" value="Create" class="btn btn-primary" /> 
@@ -45,5 +69,38 @@
         </form>
     </div>
 </div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        function updateAssessmentSelect() {
+            var mainSelect = document.getElementById("epaSelect");
+            var FormContainer = document.getElementById("FormContainer");
+            var secondSelect = document.getElementById("secondSelect");
+
+            // Clear previous options
+            secondSelect.innerHTML = '';
+
+            if (mainSelect.value) {
+                // Show the second select
+                FormContainer.style.display = "block";
+
+                // Fetch sub-options via AJAX
+                fetch('@Url.Action("GetSubOptions", "LoggedAssessments")?mainOptionId=' + mainSelect.value)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function (subOption) {
+                            console.log(subOption.value);
+                            var newOption = document.createElement("option");
+                            newOption.value = subOption.id;
+                            newOption.textContent = subOption.name;
+                            secondSelect.appendChild(newOption);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching sub-options:', error));
+            } 
+        }
+    </script>
+}
 
 

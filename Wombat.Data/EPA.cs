@@ -9,19 +9,18 @@ namespace Wombat.Data
         {
             Name = "";
             Description = "";
-            Templates = new List<AssessmentTemplate>();
         }
 
         public string Description { get; set; }
 
         public string Name { get; set; }
 
-        public List<AssessmentTemplate> Templates { get; set; }
-
         public int SubSpecialityId { get; set; }
 
         [ForeignKey("SubSpecialityId")]
         [DeleteBehavior(DeleteBehavior.Cascade)]
         public SubSpeciality? SubSpeciality { get; set; }
+
+        public ICollection<EPAForm> Forms { get; set; }
     }
 }

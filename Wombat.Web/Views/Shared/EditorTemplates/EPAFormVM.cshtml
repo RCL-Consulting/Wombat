@@ -1,0 +1,21 @@
+﻿@model EPAFormVM
+
+<div class="input-group col-md-12" id="inputFormRow">
+    <div id="DisplayId" value=@Model.DisplayId></div>
+    <input type="hidden" asp-for="DisplayId" />
+    <input type="hidden" asp-for="EPAId" />
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <select class="form-select" style="width: 90%" asp-for="FormId">
+        <option value="">-- Select Form --</option>
+        @foreach (var item in (List<AssessmentFormVM>)ViewData["Forms"])
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
+    <span asp-validation-for="Id" class="text-danger"></span>
+</div>
+<br />
+

@@ -3,22 +3,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Wombat.Data
 {
-    public class AssessmentTemplate : BaseEntity
+    public class AssessmentForm : BaseEntity
     {
         public string Name { get; set; }
 
         public List<OptionCriterion> OptionCriteria { get; set; }
 
-        public AssessmentTemplate()
+        public AssessmentForm()
         {
             this.OptionCriteria = new List<OptionCriterion>();
             Name = "";
         }
 
-        public int? EPAId { get; set; }
+        public ICollection<EPAForm> EPAs { get; set; }
 
-        [ForeignKey("EPAId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
-        public EPA? EPA { get; set; }
+        public bool CanDelete { get; set; } = true;
+
+        public const int kTemplateId = 1;
     }
 }

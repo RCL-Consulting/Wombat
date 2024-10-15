@@ -8,7 +8,6 @@ using Wombat.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Common.Constants;
 using Wombat.Application.Repositories;
-using Wombat.Data.Migrations;
 
 namespace Wombat.Controllers
 {
@@ -16,19 +15,19 @@ namespace Wombat.Controllers
     public class EPAsController: Controller
     {
         private readonly IEPARepository EPARepository;
-        private readonly IAssessmentTemplateRepository assessmentTemplateRepository;
+        private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly ISpecialityRepository specialityRepository;
         private readonly ISubSpecialityRepository subSpecialityRepository;
         private readonly IMapper mapper;
 
         public EPAsController( IEPARepository EPARepository,
-                               IAssessmentTemplateRepository assessmentTemplateRepository,
+                               IAssessmentFormRepository assessmentFormRepository,
                                ISpecialityRepository specialityRepository,
                                ISubSpecialityRepository subSpecialityRepository,
                                IMapper mapper )
         {
             this.EPARepository = EPARepository;
-            this.assessmentTemplateRepository = assessmentTemplateRepository;
+            this.assessmentFormRepository = assessmentFormRepository;
             this.specialityRepository = specialityRepository;
             this.subSpecialityRepository = subSpecialityRepository;
             this.mapper = mapper;
@@ -51,14 +50,17 @@ namespace Wombat.Controllers
             }
 
             var EPAVM = mapper.Map<EPAVM>(EPA);
+
+            EPAVM.Speciality = EPAVM.SubSpeciality.Speciality;
+
             return View(EPAVM);
         }
 
         // GET: EPAs/Create
         public async Task<IActionResult> Create()
         {
-            var Templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
-            ViewBag.Templates = Templates;
+            //var Forms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
+            //ViewBag.Forms = Forms;
 
             var model = new EPAVM
             {
@@ -66,6 +68,8 @@ namespace Wombat.Controllers
                 SubSpecialities = new List<SubSpecialitySelectVM>()
             };
 
+            EPAVM.AvailableForms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
+            ViewData["Forms"] = EPAVM.AvailableForms;
             return View(model);
         }
 
@@ -76,6 +80,32 @@ namespace Wombat.Controllers
             var subSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(speciality?.SubSpecialities);
 
             return Json(subSpecialities);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteForm(EPAVM epaVM, int displayId)
+        {
+            ViewData.ModelState.Clear();//CanDeleteFromList
+            var Item = epaVM.Forms?.FirstOrDefault(s => s.DisplayId == displayId);
+            if (Item != null)
+            {
+                epaVM.Forms?.RemoveAll(s => s.DisplayId == displayId);
+            }
+            ViewData["Forms"] = EPAVM.AvailableForms;
+            return PartialView("EPA", epaVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddForm(EPAVM epaVM)
+        {
+            var Item = new EPAFormVM();
+            Item.DisplayId = EPAFormVM.NextDisplayId++;
+            Item.EPAId = epaVM.Id;
+            epaVM.Forms?.Add(Item);
+            ViewData["Forms"] = EPAVM.AvailableForms;
+            return PartialView("EPA", epaVM);
         }
 
         // POST: EPAs/Create
@@ -92,9 +122,6 @@ namespace Wombat.Controllers
                 await EPARepository.AddAsync(EPAContext);
                 return RedirectToAction(nameof(Index));
             }
-
-            var Templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
-            ViewBag.Templates = Templates;
 
             EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
             var speciality = await specialityRepository.GetAsync(EPAVM.SpecialityId);
@@ -119,13 +146,22 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            var Templates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
-            ViewBag.Templates = Templates;
+            var Forms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
+            ViewBag.Forms = Forms;
 
             var EPAVM = mapper.Map<EPAVM>(EPA);
+            EPAVM.SpecialityId = EPA.SubSpeciality?.SpecialityId ?? 0;
 
             EPAVM.Specialities = mapper.Map<List<SpecialitySelectVM>>(await specialityRepository.GetAllAsync());
-            EPAVM.SubSpecialities = new List<SubSpecialitySelectVM>();
+            if(EPAVM.SpecialityId!=0)
+                EPAVM.SubSpecialities = mapper.Map<List<SubSpecialitySelectVM>>(await subSpecialityRepository.GetSubSpecialitiesBySpecialityAsync(EPAVM.SpecialityId));
+            else
+                EPAVM.SubSpecialities = new List<SubSpecialitySelectVM>();
+
+            EPAVM.Speciality = mapper.Map<SpecialityVM>(await specialityRepository.GetAsync(EPAVM.SpecialityId));
+
+            EPAVM.AvailableForms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
+            ViewData["Forms"] = EPAVM.AvailableForms;
 
             return View(EPAVM);
         }
@@ -170,8 +206,7 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var assessmentTemplates = mapper.Map<List<AssessmentTemplateVM>>(await assessmentTemplateRepository.GetAllAsync());
-            ViewData["AssessmentTemplate"] = new SelectList(assessmentTemplates, "Id", "Name");
+            ViewData["Forms"] = EPAVM.AvailableForms;
             return View(EPAVM);
         }
 
