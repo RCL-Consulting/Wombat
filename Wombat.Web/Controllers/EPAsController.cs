@@ -8,6 +8,8 @@ using Wombat.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Common.Constants;
 using Wombat.Application.Repositories;
+using Serilog.Context;
+using Newtonsoft.Json.Bson;
 
 namespace Wombat.Controllers
 {
@@ -19,8 +21,10 @@ namespace Wombat.Controllers
         private readonly ISpecialityRepository specialityRepository;
         private readonly ISubSpecialityRepository subSpecialityRepository;
         private readonly IMapper mapper;
+        //private readonly ApplicationDbContext Context;
 
-        public EPAsController( IEPARepository EPARepository,
+        public EPAsController( /*ApplicationDbContext Context,*/
+                               IEPARepository EPARepository,
                                IAssessmentFormRepository assessmentFormRepository,
                                ISpecialityRepository specialityRepository,
                                ISubSpecialityRepository subSpecialityRepository,
@@ -30,6 +34,7 @@ namespace Wombat.Controllers
             this.assessmentFormRepository = assessmentFormRepository;
             this.specialityRepository = specialityRepository;
             this.subSpecialityRepository = subSpecialityRepository;
+            //this.Context = Context;
             this.mapper = mapper;
         }
 
@@ -166,6 +171,45 @@ namespace Wombat.Controllers
             return View(EPAVM);
         }
 
+        void ManualMap(EPAVM EPAVM, EPA EPA)
+        {
+            EPA.Name = EPAVM.Name;
+            EPA.Description = EPAVM.Description;
+            EPA.SubSpecialityId = EPAVM.SubSpecialityId;
+
+            var itemsToCompare = EPA.Forms
+                .Where(existing => EPAVM.Forms.Any(newItem => newItem.Id == existing.Id))
+                .ToList();
+            foreach (var item in EPAVM.Forms)
+            {
+                var existing = EPA.Forms.FirstOrDefault(s => s.Id == item.Id);
+                if (existing != null)
+                {
+                    existing.FormId = item.FormId;
+                }
+            }
+
+            var itemsToRemove = EPA.Forms
+                .Where(existing => !EPAVM.Forms.Any(newItem => newItem.Id == existing.Id))
+                .ToList();
+            foreach (var item in itemsToRemove)
+            {
+                EPA.Forms.Remove(item);
+            }
+
+            foreach (var newItem in EPAVM.Forms)
+            {
+                if (!EPA.Forms.Any(existing => existing.Id == newItem.Id))
+                {
+                    EPA.Forms.Add( new EPAForm
+                    {
+                        EPAId = EPA.Id,
+                        FormId = newItem.FormId
+                    });
+                }
+            }
+        }
+
         // POST: EPAs/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -189,7 +233,7 @@ namespace Wombat.Controllers
             {
                 try
                 {
-                    mapper.Map(EPAVM, EPA);
+                    ManualMap(EPAVM, EPA);
                     await EPARepository.UpdateAsync(EPA);
                 }
                 catch (DbUpdateConcurrencyException)

@@ -7,6 +7,7 @@ using Wombat.Common.Models;
 using Wombat.Application.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Common.Constants;
+using Wombat.Application.Contracts;
 
 namespace Wombat.Controllers
 {
@@ -16,16 +17,19 @@ namespace Wombat.Controllers
         private readonly UserManager<WombatUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly ILogger<WombatUsersController> logger;
+        private readonly IInstitutionRepository institutionRepository;
         private readonly IMapper mapper;
 
-        public WombatUsersController(UserManager<WombatUser> userManager,
+        public WombatUsersController( UserManager<WombatUser> userManager,
                                       RoleManager<IdentityRole> roleManager,
                                       ILogger<WombatUsersController> logger,
+                                      IInstitutionRepository institutionRepository,
                                       IMapper mapper)
         {
             this.userManager=userManager;
             this.roleManager=roleManager;
             this.logger=logger;
+            this.institutionRepository = institutionRepository;
             this.mapper=mapper;
         }
 
@@ -44,6 +48,8 @@ namespace Wombat.Controllers
                 ListItem.IsChecked = userRoles.Contains(Name);
                 VM.Roles.Add(ListItem);
             }
+
+            VM.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));
             return VM;
         }
 
@@ -74,7 +80,7 @@ namespace Wombat.Controllers
                 return NotFound();
             }
 
-            var wombatUserVM = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(id));
+            var wombatUserVM = await GetVMWithRoles(await userManager.FindByIdAsync(id));
             if (wombatUserVM == null)
             {
                 return NotFound();

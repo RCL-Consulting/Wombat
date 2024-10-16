@@ -16,6 +16,8 @@ namespace Wombat.Data
         }
         public string Name { get; set; }
 
-        public byte[] Logo { get; set; }
+        public byte[]? Logo { get; set; }
+
+        public bool CanDelete { get; set; } = true;
     }
 }

@@ -4,9 +4,8 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<h1>Edit User Roles</h1>
 
-<h4>WombatUserVM</h4>
 <hr />
 <div class="row">
     <div class="col-md-12">
@@ -28,15 +27,6 @@
                     <div>
                         @Html.EditorFor(model => model.Roles)
                     </div>
-                    @* @foreach (var role in Model.Roles)
-                    {
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="@role.Key" name="@role.Key" value="@role.Value" @(role.Value ? "checked" : "")>
-                            <label class="form-check-label" for="@role.Key">
-                                @role.Key
-                            </label>
-                        </div>
-                    } *@
                 </dd>
                 
             </dl>

@@ -11,10 +11,10 @@ namespace Wombat.Data
     {
         public int EPAId { get; set; }
 
-        public required EPA EPA { get; set; }
+        public EPA? EPA { get; set; }
 
         public int FormId { get; set; }
 
-        public required AssessmentForm Form { get; set; }
+        public AssessmentForm? Form { get; set; }
     }
 }

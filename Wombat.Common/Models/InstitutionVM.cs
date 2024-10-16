@@ -13,9 +13,11 @@ namespace Wombat.Common.Models
             Name = "";
         }
 
-        public int Id { get; set; }
+        public int Id { get; set; } = 0;
         public string Name { get; set; }
         public byte[]? Logo { get; set; }
+
+        public bool CanDelete { get; set; } = true;
     }
 
 }

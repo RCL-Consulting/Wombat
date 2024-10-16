@@ -15,6 +15,7 @@ namespace Wombat.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.ApplyConfiguration(new InstitutionConfiguration());
             builder.ApplyConfiguration(new RoleSeedConfiguration());
             builder.ApplyConfiguration(new UserSeedConfiguration());
             builder.ApplyConfiguration(new UserRoleSeedConfiguration());
@@ -22,8 +23,8 @@ namespace Wombat.Data
             builder.ApplyConfiguration(new OptionSetConfiguration());
             builder.ApplyConfiguration(new SpecialityConfiguration());
             builder.ApplyConfiguration(new OptionCriterionConfiguration());
-            builder.ApplyConfiguration(new AssessmentFormConfiguration());
-
+            builder.ApplyConfiguration(new AssessmentFormConfiguration());//
+            
             //builder.Entity<EPAForm>()
             //.HasKey(sc => new { sc.EPAId, sc.FormId });
 

@@ -29,15 +29,16 @@ namespace Wombat.Application.Repositories
             var epa = await context.EPAs
                 .Include(s => s.Forms)
                 .ThenInclude(sc => sc.Form) // Load associated Courses
+                .AsTracking()
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (epa != null)
             {
                 var Forms = context.Entry(epa);
 
-                Forms.Collection(e => e.Forms)
-                     .Query()
-                     .Load();
+                //Forms.Collection(e => e.Forms)
+                //     .Query()
+                //     .Load();
 
                 epa.SubSpeciality = await subSpecialityRepository.GetAsync(epa.SubSpecialityId);
 
@@ -55,6 +56,7 @@ namespace Wombat.Application.Repositories
             var EPAs = await context.EPAs
                 .Include(s => s.Forms)
                 .ThenInclude(sc => sc.Form)
+                .AsTracking()
                 .ToListAsync();
 
             if (EPAs != null)

@@ -14,7 +14,22 @@ namespace Wombat.Application.Repositories
         {
             var responses = await context.OptionCriterionResponses
                 .Where(x => x.AssessmentId == assessmentID)
+                .Include( o => o.Option)
+                .Include(s => s.Criterion)
+                .ThenInclude(sc => sc.OptionsSet)
                 .ToListAsync();
+
+            //if (specialities != null)
+            //{
+            //    foreach (var speciality in specialities)
+            //    {
+            //        var subSpecialities = context.Entry(speciality);
+
+            //        subSpecialities.Collection(e => e.SubSpecialities)
+            //             .Query()
+            //             .Load();
+            //    }
+            //}
 
             return responses;
         }
