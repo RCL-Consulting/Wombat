@@ -18,6 +18,30 @@ namespace Wombat.Data.Configurations.Entities
                     Id = 1,
                     Name = "Default Template",
                     CanDelete = false
+                },
+                new AssessmentForm
+                {
+                    Id = 2,
+                    Name = "Peadiatrics-General EPA1",
+                    CanDelete = true
+                },
+                new AssessmentForm
+                {
+                    Id = 3,
+                    Name = "Peadiatrics-General EPA2",
+                    CanDelete = true
+                },
+                new AssessmentForm
+                {
+                    Id = 4,
+                    Name = "Peadiatrics-General EPA3",
+                    CanDelete = true
+                },
+                new AssessmentForm
+                {
+                    Id = 5,
+                    Name = "Peadiatrics-General EPA4",
+                    CanDelete = true
                 }
             );
         }

@@ -38,6 +38,33 @@
         </dd>
 
         <dt class="col-sm-2">
+            EPA milestone periods
+        </dt>
+        <dd class="col-sm-10">
+            <table class="table" id="EPAScale">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Months</th>
+                        <th scope="col">EPA score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Forms != null)
+                    {
+                        foreach (var item in Model.EPACurricula)
+                        {
+                            var Option = item.EPAScaleOption;
+                            <tr>
+                                <td>@item.NumberOfMonths</td>
+                                <td>@Option?.Rank.ToString() - @Option?.Description
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </dd>
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Forms)
         </dt>
         <dd class="col-sm-10">
@@ -46,9 +73,12 @@
                 {
                     foreach (var item in Model.Forms)
                     {
-                        <li>
-                            @Html.DisplayFor(modelItem => item.Form.Name)
-                        </li>
+                        @if(item.Form != null)
+                        {
+                            <li>
+                                @Html.DisplayFor(modelItem => item.Form.Name)
+                            </li>
+                        }
                     }
                 }
             </ul>

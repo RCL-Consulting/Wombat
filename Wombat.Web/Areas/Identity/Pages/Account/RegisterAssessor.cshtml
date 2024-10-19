@@ -1,7 +1,7 @@
 ﻿@page
-@model RegisterModel
+@model RegisterAsessorModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Register as an Assessor";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -44,26 +44,17 @@
             </div>
             <br />
 
-            <div>
-                <select asp-for="Input.SpecialityId" asp-items="@Model.Specialities" onchange="updateSubspecialityOptions()" id="specialitySelect" class="form-select" aria-required="true">
-                    <option value="">-- Choose an speciality --</option>
-                </select>
-                <span asp-validation-for="Input.SpecialityId" class="text-danger"></span>
-            </div>
-            <br />
-
-            <div>
-                <select asp-for="Input.SubspecialityId" class="form-select" aria-required="true" id="subspecialitySelect">
-                    <option value="">-- Choose a subspeciality --</option>
-                </select>
-                <span asp-validation-for="Input.SubspecialityId" class="text-danger"></span>
-            </div>
-            <br />
-
             <div class="form-floating mb-3">
                 <input asp-for="Input.IdNumber" class="form-control" aria-required="true"  />
                 <label asp-for="Input.IdNumber"></label>
                 <span asp-validation-for="Input.IdNumber" class="text-danger"></span>
+            </div>
+            <br />
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.HPCSANumber" class="form-control" aria-required="true" />
+                <label asp-for="Input.HPCSANumber"></label>
+                <span asp-validation-for="Input.HPCSANumber" class="text-danger"></span>
             </div>
             <br />
 

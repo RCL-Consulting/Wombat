@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Wombat.Common.Models;
 
 namespace Wombat.Data.Configurations.Entities
 {
@@ -22,30 +23,64 @@ namespace Wombat.Data.Configurations.Entities
                     Surname = "Admin",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
+                    InstitutionId = 1,
+                    SubSpecialityId = null
                 },
                 new WombatUser
                 {
                     Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
-                    Email = "assessor@localhost.com",
-                    NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
-                    UserName = "assessor@localhost.com",
-                    NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
+                    Email = "upassessor@localhost.com",
+                    NormalizedEmail = "UPASSESSOR@LOCALHOST.COM",
+                    UserName = "upassessor@localhost.com",
+                    NormalizedUserName = "UPASSESSOR@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "Assessor",
+                    Surname = "UPAssessor",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
+                    InstitutionId = 2,
+                    SubSpecialityId = null
+                },
+                new WombatUser
+                {
+                    Id = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
+                    Email = "uctassessor@localhost.com",
+                    NormalizedEmail = "UCTASSESSOR@LOCALHOST.COM",
+                    UserName = "uctassessor@localhost.com",
+                    NormalizedUserName = "UCTASSESSOR@LOCALHOST.COM",
+                    Name = "System",
+                    Surname = "UCTAssessor",
+                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
+                    EmailConfirmed = true,
+                    InstitutionId = 3,
+                    SubSpecialityId = null
                 },
                 new WombatUser
                 {
                     Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
-                    Email = "trainee@localhost.com",
-                    NormalizedEmail = "TRAINEE@LOCALHOST.COM",
-                    UserName = "trainee@localhost.com",
-                    NormalizedUserName = "TRAINEE@LOCALHOST.COM",
+                    Email = "uptrainee@localhost.com",
+                    NormalizedEmail = "UPTRAINEE@LOCALHOST.COM",
+                    UserName = "uptrainee@localhost.com",
+                    NormalizedUserName = "UPTRAINEE@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "Trainee",
+                    Surname = "UPTrainee",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
+                    InstitutionId = 2,
+                    SubSpecialityId = 1
+                },
+                new WombatUser
+                {
+                    Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
+                    Email = "ucttrainee@localhost.com",
+                    NormalizedEmail = "uctTRAINEE@LOCALHOST.COM",
+                    UserName = "ucttrainee@localhost.com",
+                    NormalizedUserName = "uctTRAINEE@LOCALHOST.COM",
+                    Name = "System",
+                    Surname = "UCTTrainee",
+                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
+                    EmailConfirmed = true,
+                    InstitutionId = 3,
+                    SubSpecialityId = 1
                 }
             );
         }

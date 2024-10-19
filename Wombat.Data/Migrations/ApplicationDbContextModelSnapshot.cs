@@ -176,7 +176,17 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
+                            UserId = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
+                            RoleId = "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E"
+                        },
+                        new
+                        {
                             UserId = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
+                            RoleId = "3FAA94D6-23C2-4365-9951-796673F48402"
+                        },
+                        new
+                        {
+                            UserId = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
                             RoleId = "3FAA94D6-23C2-4365-9951-796673F48402"
                         });
                 });
@@ -235,6 +245,38 @@ namespace Wombat.Data.Migrations
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Default Template"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CanDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Peadiatrics-General EPA1"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Peadiatrics-General EPA2"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CanDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Peadiatrics-General EPA3"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CanDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Peadiatrics-General EPA4"
                         });
                 });
 
@@ -268,6 +310,195 @@ namespace Wombat.Data.Migrations
                     b.HasIndex("SubSpecialityId");
 
                     b.ToTable("EPAs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Provide Consultation to Other Health Care Providers Caring for Children",
+                            Name = "EPA1",
+                            SubSpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = " Provide Recommended Pediatric Health Screening",
+                            Name = "EPA2",
+                            SubSpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Care for the Well Newborn",
+                            Name = "EPA3",
+                            SubSpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Manage Patients with Acute, Common Diagnoses in an Ambulatory,\r\nEmergency, or Inpatient Setting",
+                            Name = "EPA4",
+                            SubSpecialityId = 1
+                        });
+                });
+
+            modelBuilder.Entity("Wombat.Data.EPACurriculum", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EPAId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EPAScaleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumberOfMonths")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EPAId");
+
+                    b.HasIndex("EPAScaleId");
+
+                    b.ToTable("EPACurricula");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 1,
+                            EPAScaleId = 2,
+                            NumberOfMonths = 6
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 1,
+                            EPAScaleId = 3,
+                            NumberOfMonths = 12
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 1,
+                            EPAScaleId = 4,
+                            NumberOfMonths = 24
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 1,
+                            EPAScaleId = 5,
+                            NumberOfMonths = 36
+                        },
+                        new
+                        {
+                            Id = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 2,
+                            EPAScaleId = 2,
+                            NumberOfMonths = 6
+                        },
+                        new
+                        {
+                            Id = 6,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 2,
+                            EPAScaleId = 3,
+                            NumberOfMonths = 12
+                        },
+                        new
+                        {
+                            Id = 7,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 2,
+                            EPAScaleId = 5,
+                            NumberOfMonths = 24
+                        },
+                        new
+                        {
+                            Id = 8,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 3,
+                            EPAScaleId = 3,
+                            NumberOfMonths = 24
+                        },
+                        new
+                        {
+                            Id = 9,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 3,
+                            EPAScaleId = 4,
+                            NumberOfMonths = 36
+                        },
+                        new
+                        {
+                            Id = 10,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 3,
+                            EPAScaleId = 5,
+                            NumberOfMonths = 42
+                        },
+                        new
+                        {
+                            Id = 11,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 4,
+                            EPAScaleId = 3,
+                            NumberOfMonths = 24
+                        },
+                        new
+                        {
+                            Id = 12,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 4,
+                            EPAScaleId = 4,
+                            NumberOfMonths = 42
+                        },
+                        new
+                        {
+                            Id = 13,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 4,
+                            EPAScaleId = 5,
+                            NumberOfMonths = 48
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Data.EPAForm", b =>
@@ -297,6 +528,40 @@ namespace Wombat.Data.Migrations
                     b.HasIndex("FormId");
 
                     b.ToTable("EPAForms");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 1,
+                            FormId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 2,
+                            FormId = 3
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 3,
+                            FormId = 4
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EPAId = 4,
+                            FormId = 5
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Data.Institution", b =>
@@ -335,6 +600,22 @@ namespace Wombat.Data.Migrations
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Owning institution"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CanDelete = false,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "University of Pretoria"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanDelete = false,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "University of Cape Town"
                         });
                 });
 
@@ -465,6 +746,42 @@ namespace Wombat.Data.Migrations
                             Description = "Good enough to train a junior colleague",
                             OptionSetId = 2,
                             Rank = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Not yet",
+                            OptionSetId = 3,
+                            Rank = 0
+                        },
+                        new
+                        {
+                            Id = 7,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "At times, but not consistently",
+                            OptionSetId = 3,
+                            Rank = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Consistently",
+                            OptionSetId = 3,
+                            Rank = 2
+                        },
+                        new
+                        {
+                            Id = 9,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Unable to assess",
+                            OptionSetId = 3,
+                            Rank = -1
                         });
                 });
 
@@ -533,6 +850,216 @@ namespace Wombat.Data.Migrations
                             Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
                             OptionSetId = 1,
                             Rank = 1002
+                        },
+                        new
+                        {
+                            Id = 4,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Establishing and maintaining working relationships with the referring providers/agencies, marked by bidirectional communication",
+                            OptionSetId = 3,
+                            Rank = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Clarifying and focusing the clinical question to be addressed",
+                            OptionSetId = 3,
+                            Rank = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Gathering essential information from referring physician, organization, or health agency, as well as the patient(s) and family",
+                            OptionSetId = 3,
+                            Rank = 3
+                        },
+                        new
+                        {
+                            Id = 7,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Communicating findings and recommendations to the patient and family, and the source of the referral (i.e.,the requesting provider or health agency)",
+                            OptionSetId = 3,
+                            Rank = 4
+                        },
+                        new
+                        {
+                            Id = 8,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Demonstrating content expertise in one’s area of pediatrics to provide consultation",
+                            OptionSetId = 3,
+                            Rank = 5
+                        },
+                        new
+                        {
+                            Id = 9,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Navigating the relationship with the patient/family to be either supportive or directive (or some combination of the two) as needed over time",
+                            OptionSetId = 3,
+                            Rank = 6
+                        },
+                        new
+                        {
+                            Id = 10,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Applying knowledge in selection and interpretation of screening tools and tests (e.g., screens for growth and development, special senses, and medical conditions)",
+                            OptionSetId = 3,
+                            Rank = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Engaging patients and families in shared decision-making for those screening tests that are not mandated by state law",
+                            OptionSetId = 3,
+                            Rank = 2
+                        },
+                        new
+                        {
+                            Id = 12,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Educating patients and families about the implications of the results to their overall health and care plan",
+                            OptionSetId = 3,
+                            Rank = 3
+                        },
+                        new
+                        {
+                            Id = 13,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Performing a physical examination to look for normal variations, abnormal signs and congenital anomalies",
+                            OptionSetId = 3,
+                            Rank = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Identifying and applying key evidence-based guidelines for care of the newborn",
+                            OptionSetId = 3,
+                            Rank = 2
+                        },
+                        new
+                        {
+                            Id = 15,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Providing routine care, as well as addressing common problems that develop within the first 28 days of life",
+                            OptionSetId = 3,
+                            Rank = 3
+                        },
+                        new
+                        {
+                            Id = 16,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Using judgment to know when common problems can be handled at home, and arrange for discharge and follow up",
+                            OptionSetId = 3,
+                            Rank = 4
+                        },
+                        new
+                        {
+                            Id = 17,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessing maternal/family readiness to care for the infant post discharge",
+                            OptionSetId = 3,
+                            Rank = 5
+                        },
+                        new
+                        {
+                            Id = 18,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Transitioning care to the community practitioner",
+                            OptionSetId = 3,
+                            Rank = 6
+                        },
+                        new
+                        {
+                            Id = 19,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Demonstrating confidence that puts new parents at ease",
+                            OptionSetId = 3,
+                            Rank = 7
+                        },
+                        new
+                        {
+                            Id = 20,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessing the severity of illness and using judgment as to whether immediate or emergency actions, stabilization, or transfer to a higher acuity facility are necessary for treatment of urgent or life-threatening problems",
+                            OptionSetId = 3,
+                            Rank = 1
+                        },
+                        new
+                        {
+                            Id = 21,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Gathering essential information through history, physical examination, and initial laboratory evaluation",
+                            OptionSetId = 3,
+                            Rank = 2
+                        },
+                        new
+                        {
+                            Id = 22,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Engaging in sound clinical reasoning that drives the development of an appropriate differential diagnosis to allow the indicated diagnostic tests to be performed",
+                            OptionSetId = 3,
+                            Rank = 3
+                        },
+                        new
+                        {
+                            Id = 23,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Knowing or acquiring knowledge of the evidence related to the primary problem and applying the evidence to the patient’s care in developing a diagnostic work - up and plans for management and follow up",
+                            OptionSetId = 3,
+                            Rank = 4
+                        },
+                        new
+                        {
+                            Id = 24,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Placing the patient at the center of all management decisions to provide patient and family centered care by engaging in bidirectional communication with patients and families",
+                            OptionSetId = 3,
+                            Rank = 5
                         });
                 });
 
@@ -625,6 +1152,16 @@ namespace Wombat.Data.Migrations
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "EPA scale",
                             DisplayRank = true
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanDelete = true,
+                            CanEdit = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "CEX scale",
+                            DisplayRank = true
                         });
                 });
 
@@ -689,6 +1226,170 @@ namespace Wombat.Data.Migrations
                     b.HasIndex("SpecialityId");
 
                     b.ToTable("SubSpecialities");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "General",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Common",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Adolescent Medicine",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Cardiology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Child Abuse Pediatrics",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Critical Care Medicine",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Developmental-Behavioral Pediatrics",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Emergency Medicine",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Endocrinology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Gastroenterology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Hematology-Oncology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Hospital Medicine",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Infectious Diseases",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Neonatal-Perinatal Medicine",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Nephrology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Pulmonology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Rheumatology",
+                            SpecialityId = 1
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CanEditAndDelete = true,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Pediatric Transplant Hepatology",
+                            SpecialityId = 1
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Data.WombatUser", b =>
@@ -712,6 +1413,14 @@ namespace Wombat.Data.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("HPCSANumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("InstitutionId")
                         .HasColumnType("int");
@@ -746,6 +1455,9 @@ namespace Wombat.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SubSpecialityId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Surname")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -769,6 +1481,8 @@ namespace Wombat.Data.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
+                    b.HasIndex("SubSpecialityId");
+
                     b.ToTable("AspNetUsers", (string)null);
 
                     b.HasData(
@@ -776,18 +1490,20 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f861aa8b-3ca3-4e6b-93ca-cfc95679ee8e",
+                            ConcurrencyStamp = "163a6e4a-2540-4421-906d-1fc89aec63b3",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
+                            HPCSANumber = "",
+                            IdNumber = "",
                             InstitutionId = 1,
                             LockoutEnabled = false,
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOAMchGj81hW0FL168PrdTJnG0+Iiempx898tK98l75PZbSBd7q0vGcK5wxZ0nj+vA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENf5yj2W0vFMe0QdSg3yTqCt9/pkPzjuqLEwXblG1KNPJNSx8Kyd8lZBsTsImOnLNw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "15f4d996-ab44-4bdc-9fe7-5b124ef65780",
+                            SecurityStamp = "f0b35909-4b67-48d9-ab81-2b05c2859640",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -796,41 +1512,91 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9eefc6ac-fac9-4cd5-913f-568b309f7671",
+                            ConcurrencyStamp = "c3e952ae-75b6-497c-8200-89e7c583603e",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "assessor@localhost.com",
+                            Email = "upassessor@localhost.com",
                             EmailConfirmed = true,
-                            InstitutionId = 1,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 2,
                             LockoutEnabled = false,
                             Name = "System",
-                            NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
-                            NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGCsbx/hqrc8Wb2xtspGwaLRAopIHDMMc8QLE7FlcPMkhK/aG2DNrs1PiO3Us7rYEA==",
+                            NormalizedEmail = "UPASSESSOR@LOCALHOST.COM",
+                            NormalizedUserName = "UPASSESSOR@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDoM/gSrDOJCwAmRKcMacFngRU6fBqtvfGW+aRGuIDZYZMUFwAduxtPyWZL9oDuVmA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "01f2cf86-1629-4257-9298-162d64885433",
-                            Surname = "Assessor",
+                            SecurityStamp = "9cb40794-aecf-4d93-888e-cb82bfbe8c1f",
+                            Surname = "UPAssessor",
                             TwoFactorEnabled = false,
-                            UserName = "assessor@localhost.com"
+                            UserName = "upassessor@localhost.com"
+                        },
+                        new
+                        {
+                            Id = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d73c6b26-0a80-4f01-9d36-573a1ebf63a1",
+                            DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "uctassessor@localhost.com",
+                            EmailConfirmed = true,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 3,
+                            LockoutEnabled = false,
+                            Name = "System",
+                            NormalizedEmail = "UCTASSESSOR@LOCALHOST.COM",
+                            NormalizedUserName = "UCTASSESSOR@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAED5Rr9DC42ogjdsUM31dbkXKzzm/rNavu6P7dLcqkP7DoU+nWf96iDRNwpPqCO6kxQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4f8f3911-dc79-4bcb-b801-41159a5bb99e",
+                            Surname = "UCTAssessor",
+                            TwoFactorEnabled = false,
+                            UserName = "uctassessor@localhost.com"
                         },
                         new
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d313726a-157a-4d76-bc76-f691c41a78b1",
+                            ConcurrencyStamp = "7e9afe46-5126-4a91-bd19-942d085fe6b5",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "trainee@localhost.com",
+                            Email = "uptrainee@localhost.com",
                             EmailConfirmed = true,
-                            InstitutionId = 1,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 2,
                             LockoutEnabled = false,
                             Name = "System",
-                            NormalizedEmail = "TRAINEE@LOCALHOST.COM",
-                            NormalizedUserName = "TRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECby9Ecce1H+SjDDO7RMG3OFvxB19IwKR47eD2UXzVydir7bw76yYLGztOAtUpqkcw==",
+                            NormalizedEmail = "UPTRAINEE@LOCALHOST.COM",
+                            NormalizedUserName = "UPTRAINEE@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDe+YFKqPphsX8ZNmHDVz12BTFTJHrpdc/NgomTvCvMOIKmSIcKYErzMtanBAv4hsw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5a97fc8f-2234-4185-b399-bac7b1a9280b",
-                            Surname = "Trainee",
+                            SecurityStamp = "d646b999-1cf5-4110-92b1-2f68f81ea724",
+                            SubSpecialityId = 1,
+                            Surname = "UPTrainee",
                             TwoFactorEnabled = false,
-                            UserName = "trainee@localhost.com"
+                            UserName = "uptrainee@localhost.com"
+                        },
+                        new
+                        {
+                            Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "17491246-ef96-4074-a78a-ce9c33661bff",
+                            DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "ucttrainee@localhost.com",
+                            EmailConfirmed = true,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 3,
+                            LockoutEnabled = false,
+                            Name = "System",
+                            NormalizedEmail = "uctTRAINEE@LOCALHOST.COM",
+                            NormalizedUserName = "uctTRAINEE@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAdWek/i+tDHTj7LAT4FzTDIEyyYKhArBeZWMxV4uQW72VXtqx7XlBgF1LI4D4XafA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "1268b5e6-389e-4867-9dfe-23c3da497489",
+                            SubSpecialityId = 1,
+                            Surname = "UCTTrainee",
+                            TwoFactorEnabled = false,
+                            UserName = "ucttrainee@localhost.com"
                         });
                 });
 
@@ -894,6 +1660,25 @@ namespace Wombat.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("SubSpeciality");
+                });
+
+            modelBuilder.Entity("Wombat.Data.EPACurriculum", b =>
+                {
+                    b.HasOne("Wombat.Data.EPA", "EPA")
+                        .WithMany("EPACurricula")
+                        .HasForeignKey("EPAId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Wombat.Data.Option", "EPAScaleOption")
+                        .WithMany()
+                        .HasForeignKey("EPAScaleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EPA");
+
+                    b.Navigation("EPAScaleOption");
                 });
 
             modelBuilder.Entity("Wombat.Data.EPAForm", b =>
@@ -1024,7 +1809,13 @@ namespace Wombat.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Wombat.Data.SubSpeciality", "SubSpeciality")
+                        .WithMany()
+                        .HasForeignKey("SubSpecialityId");
+
                     b.Navigation("Institution");
+
+                    b.Navigation("SubSpeciality");
                 });
 
             modelBuilder.Entity("Wombat.Data.AssessmentForm", b =>
@@ -1036,6 +1827,8 @@ namespace Wombat.Data.Migrations
 
             modelBuilder.Entity("Wombat.Data.EPA", b =>
                 {
+                    b.Navigation("EPACurricula");
+
                     b.Navigation("Forms");
                 });
 

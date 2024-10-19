@@ -32,9 +32,32 @@
             return Result;
         }
 
+        public bool UserIsInRole(string role)
+        {
+            bool result = false;
+            foreach (var item in Roles)
+            {
+                if (item.Display == role)
+                {
+                    if (item.IsChecked)
+                        result = true;
+                    break;
+                }
+            }
+            return result;
+        }
+
         public List<CheckBoxListItem> Roles { get; set; }
 
         public InstitutionVM Institution { get; set; }
 
+        public SpecialityVM? Speciality { get; set; }
+
+        public SubSpecialityVM? SubSpeciality { get; set; }
+
+        public string IdNumber { get; set; } = "";
+        public string HPCSANumber { get; set; } = "";
+
+        public bool EmailConfirmed { get; set; }
     }
 }

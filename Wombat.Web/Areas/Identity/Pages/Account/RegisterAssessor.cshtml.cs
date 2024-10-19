@@ -25,7 +25,7 @@ using Wombat.Data;
 
 namespace Wombat.Areas.Identity.Pages.Account
 {
-    public class RegisterModel : PageModel
+    public class RegisterAsessorModel : PageModel
     {
         private readonly SignInManager<WombatUser> _signInManager;
         private readonly UserManager<WombatUser> _userManager;
@@ -37,14 +37,14 @@ namespace Wombat.Areas.Identity.Pages.Account
         private readonly ISpecialityRepository _specialityRepository;
         private readonly ISubSpecialityRepository _subspecialityRepository;
 
-        public RegisterModel( UserManager<WombatUser> userManager,
-                              IUserStore<WombatUser> userStore,
-                              SignInManager<WombatUser> signInManager,
-                              ILogger<RegisterModel> logger,
-                              IEmailSender emailSender,
-                              IInstitutionRepository institutionRepository,
-                              ISpecialityRepository specialityRepository,
-                              ISubSpecialityRepository subspecialityRepository )
+        public RegisterAsessorModel( UserManager<WombatUser> userManager,
+                                     IUserStore<WombatUser> userStore,
+                                     SignInManager<WombatUser> signInManager,
+                                     ILogger<RegisterModel> logger,
+                                     IEmailSender emailSender,
+                                     IInstitutionRepository institutionRepository,
+                                     ISpecialityRepository specialityRepository,
+                                     ISubSpecialityRepository subspecialityRepository )
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -113,17 +113,15 @@ namespace Wombat.Areas.Identity.Pages.Account
             [Display(Name = "Institution")]
             public int InstitutionId { get; set; }
 
-            [Required]
-            [Display(Name = "Training Number")]
+            [Display(Name = "Personnel Number")]
             public string IdNumber { get; set; }
 
-            [Required]
-            [Display(Name = "Speciality")]
-            public int SpecialityId { get; set; }
+            [Display(Name = "HPCSA Number")]
+            public string HPCSANumber { get; set; }
 
-            [Required]
-            [Display(Name = "Subspeciality")]
-            public int SubspecialityId { get; set; }
+            //[DataType(DataType.Date)]
+            //[Display(Name = "Date Joined")]
+            //public DateTime? DateJoined { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -184,7 +182,8 @@ namespace Wombat.Areas.Identity.Pages.Account
                 user.IdNumber = Input.IdNumber;
                 user.InstitutionId = Input.InstitutionId;
                 user.PhoneNumber = Input.PhoneNumber;
-                user.SubSpecialityId = Input.SubspecialityId;
+                user.HPCSANumber = Input.HPCSANumber;
+                user.SubSpecialityId = null;
                 user.DateJoined = DateTime.Now; //Input.DateJoined ?? default;
 
                 var result = await _userManager.CreateAsync(user, Input.Password);

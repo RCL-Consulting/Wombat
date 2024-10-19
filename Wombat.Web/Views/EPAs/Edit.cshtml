@@ -56,6 +56,21 @@
             <br />
 
             <h4>
+                <button type="button" class="btn btn-success" id="btnAddCurriculum"><i class="fas fa-plus"></i> Add New</button>
+                EPA milestone periods
+            </h4>
+            <hr />
+
+            <div class="input-group col-md-12" id="curriculumHeadings" style="display: none;">
+                <div style="width: 45%"><strong>Number of months from first registration</strong></div>
+                <div style="width: 45%"><strong>Expected EPA score</strong></div>
+            </div>
+            <div id="curriculumCollectionContainer">
+                @Html.EditorFor(model => model.EPACurricula)
+            </div>
+            <br />
+
+            <h4>
                 <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i> Add New</button>
                 Assessment Forms for this EPA
             </h4>
@@ -128,6 +143,52 @@
                 url: '/EPAs/DeleteForm',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
+                }
+            });
+        });
+
+        $("#btnAddCurriculum").on('click', function () {
+            $.ajax({
+                async: true,
+                data: $('#form').serialize(),
+                type: "POST",
+                url: '/EPAs/AddCurriculum',
+                success: function (partialView) {
+                    $('#curriculumCollectionContainer').html(partialView);
+
+                    var Container = document.getElementById("curriculumCollectionContainer");
+                    var Headings = document.getElementById("curriculumHeadings");
+                    if (Container.children.length > 0) {
+                        Headings.style.display = "flex";
+                    }
+                    else {
+                        Headings.style.display = "none";
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '#btnDeleteCurriculum', function () {
+            var form = $('#form').serialize();
+            var parentDiv = $(this).closest('#inputFormRow');
+            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            console.log(DisplayId);
+            $.ajax({
+                async: true,
+                data: form + '&displayId=' + DisplayId,
+                type: "POST",
+                url: '/EPAs/DeleteCurriculum',
+                success: function (partialView) {
+                    $('#curriculumCollectionContainer').html(partialView);
+
+                    var Container = document.getElementById("curriculumCollectionContainer");
+                    var Headings = document.getElementById("curriculumHeadings");
+                    if (Container.children.length > 0) {
+                        Headings.style.display = "flex";
+                    }
+                    else {
+                        Headings.style.display = "none";
+                    }
                 }
             });
         });

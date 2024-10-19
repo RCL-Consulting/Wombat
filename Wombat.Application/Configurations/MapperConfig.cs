@@ -22,6 +22,7 @@ namespace Wombat.Application.Configurations
             CreateMap<SubSpeciality, SubSpecialitySelectVM>().ReverseMap();
             CreateMap<Institution, InstitutionVM>().ReverseMap();
             CreateMap<EPAForm, EPAFormVM>().ReverseMap();
+            CreateMap<EPACurriculum, EPACurriculumVM>().ReverseMap();
         }
     }
 }

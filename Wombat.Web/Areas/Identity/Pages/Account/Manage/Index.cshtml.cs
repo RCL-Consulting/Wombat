@@ -19,18 +19,25 @@ namespace Wombat.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<WombatUser> _userManager;
         private readonly SignInManager<WombatUser> _signInManager;
         private readonly IInstitutionRepository institutionRepository;
+        private readonly ISubSpecialityRepository subSpecialityRepository;
 
         public IndexModel( UserManager<WombatUser> userManager,
                            SignInManager<WombatUser> signInManager,
-                           IInstitutionRepository institutionRepository )
+                           IInstitutionRepository institutionRepository,
+                           ISubSpecialityRepository subSpecialityRepository )
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            this.subSpecialityRepository = subSpecialityRepository;
             this.institutionRepository = institutionRepository;
         }
         public string Name { get; set; }
 
         public string Surname { get; set; }
+
+        public Speciality Speciality { get; set; }
+
+        public SubSpeciality Subspeciality { get; set; }
 
         public string Institution { get; set; }
 
@@ -78,6 +85,10 @@ namespace Wombat.Web.Areas.Identity.Pages.Account.Manage
 
             Name = user.Name;
             Surname = user.Surname;
+
+            Subspeciality = await subSpecialityRepository.GetAsync(user.SubSpecialityId);
+            if (Subspeciality != null)
+                Speciality = Subspeciality.Speciality;
 
             var institution = await institutionRepository.GetAsync(user.InstitutionId);
             if(institution != null)

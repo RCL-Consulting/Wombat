@@ -1,0 +1,73 @@
+﻿@model DashboardVM
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title text-success">@* @Model.TotalRequests *@0</h1>
+                <p class="card-text">@* @Html.DisplayNameFor(model => model.TotalRequests) *@Completed assessments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title text-danger">@* @Model.ApprovedRequests *@0</h1>
+                <p class="card-text">@* @Html.DisplayNameFor(model => model.ApprovedRequests) *@Assessment requests</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title text-primary">@* @Model.ApprovedRequests *@0</h1>
+                <p class="card-text">@* @Html.DisplayNameFor(model => model.ApprovedRequests) *@Pending Assessments</p>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Entrustable Professional Acitvies</h2>
+            <div class="table-responsive small">
+                <table class="table table-striped table-sm" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th scope="col">EPA</th>
+                            <th scope="col">Completed</th>
+                            <th scope="col">Highest</th>
+                            <th scope="col">Lowest</th>
+                            <th scope="col">Last</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.EPAList != null)
+                        {
+                            foreach (var item in Model.EPAList)
+                            {
+                            <tr>
+                                <td>@item.Name: @item.Description</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>
+                                    <a class="btn btn-warning" asp-controller="AssessmentRequest" asp-action="Submit request" asp-route-id="@item.Id" data-toggle="tooltip" data-placement="top" title="Request assessment"><i class="fa-solid fa-clipboard-check"></i></a>
+                                </td>
+                            </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

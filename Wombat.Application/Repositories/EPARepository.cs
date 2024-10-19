@@ -28,24 +28,17 @@ namespace Wombat.Application.Repositories
 
             var epa = await context.EPAs
                 .Include(s => s.Forms)
-                .ThenInclude(sc => sc.Form) // Load associated Courses
+                .ThenInclude(sc => sc.Form) 
+                .Include(s => s.EPACurricula)
+                .ThenInclude(sc => sc.EPAScaleOption)
                 .AsTracking()
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (epa != null)
             {
-                var Forms = context.Entry(epa);
-
-                //Forms.Collection(e => e.Forms)
-                //     .Query()
-                //     .Load();
-
                 epa.SubSpeciality = await subSpecialityRepository.GetAsync(epa.SubSpecialityId);
 
                 return epa;
-                //EPA.AssessmentForm = await assessmentFormRepository.GetAsync(EPA.AssessmentFormId);
-
-                //return EPA;
             }
 
             return null;
@@ -69,5 +62,23 @@ namespace Wombat.Application.Repositories
             return EPAs;
         }
 
+        public async Task<List<EPA>?> GetEPAListBySubspeciality(int id)
+        {
+            var EPAs = await context.EPAs
+                 .Where(s => s.SubSpecialityId == id)
+                 .Include(s => s.Forms)
+                 .ThenInclude(sc => sc.Form)
+                 .AsTracking()
+                 .ToListAsync();
+
+            if (EPAs != null)
+            {
+                foreach (var EPA in EPAs)
+                {
+                    EPA.SubSpeciality = await subSpecialityRepository.GetAsync(EPA.SubSpecialityId);
+                }
+            }
+            return EPAs;
+        }
     }
 }

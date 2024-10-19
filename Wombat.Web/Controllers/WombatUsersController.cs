@@ -18,18 +18,24 @@ namespace Wombat.Controllers
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly ILogger<WombatUsersController> logger;
         private readonly IInstitutionRepository institutionRepository;
+        private readonly ISpecialityRepository specialityRepository;
+        private readonly ISubSpecialityRepository subSpecialityRepository;
         private readonly IMapper mapper;
 
         public WombatUsersController( UserManager<WombatUser> userManager,
                                       RoleManager<IdentityRole> roleManager,
                                       ILogger<WombatUsersController> logger,
                                       IInstitutionRepository institutionRepository,
+                                      ISpecialityRepository specialityRepository,
+                                      ISubSpecialityRepository subSpecialityRepository,
                                       IMapper mapper)
         {
             this.userManager=userManager;
             this.roleManager=roleManager;
             this.logger=logger;
             this.institutionRepository = institutionRepository;
+            this.specialityRepository = specialityRepository;
+            this.subSpecialityRepository = subSpecialityRepository;
             this.mapper=mapper;
         }
 
@@ -50,6 +56,9 @@ namespace Wombat.Controllers
             }
 
             VM.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));
+            VM.SubSpeciality = mapper.Map<SubSpecialityVM>(await subSpecialityRepository.GetAsync(user.SubSpecialityId));
+            if (VM.SubSpeciality != null)
+                VM.Speciality = VM.SubSpeciality.Speciality;
             return VM;
         }
 

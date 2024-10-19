@@ -18,6 +18,18 @@ namespace Wombat.Data.Configurations.Entities
                     Id = 1,
                     Name = "Owning institution",
                     CanDelete = false
+                },
+                new Institution
+                {
+                    Id = 2,
+                    Name = "University of Pretoria",
+                    CanDelete = false
+                },
+                new Institution
+                {
+                    Id = 3,
+                    Name = "University of Cape Town",
+                    CanDelete = false
                 }
             );
         }

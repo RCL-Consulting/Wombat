@@ -20,6 +20,7 @@ namespace Wombat.Controllers
         private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly ISpecialityRepository specialityRepository;
         private readonly ISubSpecialityRepository subSpecialityRepository;
+        private readonly IOptionSetRepository optionSetRepository;
         private readonly IMapper mapper;
         //private readonly ApplicationDbContext Context;
 
@@ -28,13 +29,14 @@ namespace Wombat.Controllers
                                IAssessmentFormRepository assessmentFormRepository,
                                ISpecialityRepository specialityRepository,
                                ISubSpecialityRepository subSpecialityRepository,
+                               IOptionSetRepository optionSetRepository,
                                IMapper mapper )
         {
             this.EPARepository = EPARepository;
             this.assessmentFormRepository = assessmentFormRepository;
             this.specialityRepository = specialityRepository;
             this.subSpecialityRepository = subSpecialityRepository;
-            //this.Context = Context;
+            this.optionSetRepository = optionSetRepository;
             this.mapper = mapper;
         }
 
@@ -58,6 +60,16 @@ namespace Wombat.Controllers
 
             EPAVM.Speciality = EPAVM.SubSpeciality.Speciality;
 
+            var Scale = await optionSetRepository.GetAsync(OptionSet.kEPAScaleId);
+            if (Scale != null)
+            {
+                EPACurriculumVM.AvailableScaleOptions =
+                Scale.Options
+                .OrderBy(i => i.Rank)
+                .Select(i => new SelectListItem(i.Rank.ToString() + "-" + i.Description, i.Id.ToString()))
+                .ToList();
+            }
+
             return View(EPAVM);
         }
 
@@ -75,6 +87,16 @@ namespace Wombat.Controllers
 
             EPAVM.AvailableForms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
             ViewData["Forms"] = EPAVM.AvailableForms;
+
+            var Scale = await optionSetRepository.GetAsync(OptionSet.kEPAScaleId);
+            if (Scale != null)
+            {
+                EPACurriculumVM.AvailableScaleOptions =
+                Scale.Options
+                .OrderBy(i => i.Rank)
+                .Select(i => new SelectListItem(i.Rank.ToString() + "-" + i.Description, i.Id.ToString()))              
+                .ToList();
+            }
             return View(model);
         }
 
@@ -111,6 +133,32 @@ namespace Wombat.Controllers
             epaVM.Forms?.Add(Item);
             ViewData["Forms"] = EPAVM.AvailableForms;
             return PartialView("EPA", epaVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteCurriculum(EPAVM epaVM, int displayId)
+        {
+            ViewData.ModelState.Clear();//CanDeleteFromList
+            var Item = epaVM.EPACurricula?.FirstOrDefault(s => s.DisplayId == displayId);
+            if (Item != null)
+            {
+                epaVM.EPACurricula?.RemoveAll(s => s.DisplayId == displayId);
+            }
+            //ViewData["Forms"] = EPAVM.AvailableForms;
+            return PartialView("EPACurriculum", epaVM);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddCurriculum(EPAVM epaVM)
+        {
+            var Item = new EPACurriculumVM();
+            Item.DisplayId = EPACurriculumVM.NextDisplayId++;
+            Item.EPAId = epaVM.Id;
+            epaVM.EPACurricula?.Add(Item);
+            //ViewData["Forms"] = EPAVM.AvailableForms;
+            return PartialView("EPACurriculum", epaVM);
         }
 
         // POST: EPAs/Create
@@ -168,6 +216,16 @@ namespace Wombat.Controllers
             EPAVM.AvailableForms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
             ViewData["Forms"] = EPAVM.AvailableForms;
 
+            var Scale = await optionSetRepository.GetAsync(OptionSet.kEPAScaleId);
+            if (Scale != null)
+            {
+                EPACurriculumVM.AvailableScaleOptions =
+                Scale.Options
+                .OrderBy(i => i.Rank)
+                .Select(i => new SelectListItem(i.Rank.ToString() + "-" + i.Description, i.Id.ToString()))
+                .ToList();
+            }
+
             return View(EPAVM);
         }
 
@@ -176,6 +234,7 @@ namespace Wombat.Controllers
             EPA.Name = EPAVM.Name;
             EPA.Description = EPAVM.Description;
             EPA.SubSpecialityId = EPAVM.SubSpecialityId;
+            EPA.EPACurricula = mapper.Map<List<EPACurriculum>>(EPAVM.EPACurricula);
 
             var itemsToCompare = EPA.Forms
                 .Where(existing => EPAVM.Forms.Any(newItem => newItem.Id == existing.Id))

@@ -9,6 +9,7 @@ namespace Wombat.Data
         {
             Name = "";
             Description = "";
+            EPACurricula = new List<EPACurriculum>();
         }
 
         public string Description { get; set; }
@@ -22,5 +23,7 @@ namespace Wombat.Data
         public SubSpeciality? SubSpeciality { get; set; }
 
         public ICollection<EPAForm> Forms { get; set; }
+
+        public List<EPACurriculum> EPACurricula { get; set; }
     }
 }

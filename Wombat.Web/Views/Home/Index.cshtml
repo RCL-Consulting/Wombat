@@ -1,8 +1,17 @@
-﻿@{
+﻿@model DashboardVM
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Home</h1>
-    <p>Placeholder for future dashboard.</p>
-</div>
+@if(User.IsInRole(Roles.Trainee))
+{
+    <partial name="TraineeHome.cshtml" model="@Model"/>
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Home</h1>
+        <p>Placeholder for future dashboard.</p>
+    </div>
+}

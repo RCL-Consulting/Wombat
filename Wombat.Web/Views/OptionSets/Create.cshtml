@@ -33,11 +33,6 @@
             <div id="collectionContainer">               
                 @Html.EditorFor(model=>model.Options)
             </div>
-            @* <div class="form-group col-md-12">
-                <div id="newRow" class="col-md-12">
-                    <input type="hidden" id="totalLans" value="0" />
-                </div>
-            </div> *@
             <br />
 
             <div class="form-group">
@@ -81,40 +76,4 @@
     </script>
 }
 
-@* @section Scripts 
-{
-    <script>
-
-        $("#addRow").click(function () {
-
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount++;
-            $("#totalLans").val(rowCount);
-            var html = '';
-            html += '<div id="inputFormRow">';
-            html += '<div class="input-group">';
-
-            //change id attribute to name attribute and modify the name
-            html += '<input type="number" style="width: 10%" type="text" value="' + (rowCount - 1) + '" name="Options[' + (rowCount - 1) + '].Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>';
-            html += '<input style="width: 75%"type="text" name="Options[' + (rowCount - 1) + '].Description" class="form-control m-input" placeholder="Option Text" autocomplete="off" required>';
-            html += '<div style="width: 15%" class="input-group-append">';
-            html += '<button style="width: 100%" id="removeRow" type="button" class="btn btn-danger">Remove</button>';
-            html += '</div>';
-            html += '</div>';
-            html += '<br/>';
-            html += '</div>';
-            $('#newRow').append(html);
-
-        });
-
-        $(document).on('click', '#removeRow', function () {
-            var rowCount = parseInt($("#totalLans").val());
-            rowCount--;
-            $("#totalLans").val(rowCount);
-            $(this).closest('#inputFormRow').remove();
-        });
-
-    </script>
-}
- *@
 

@@ -23,6 +23,12 @@ namespace Wombat.Data.Configurations.Entities
                     Description = "EPA scale",
                     DisplayRank = true,
                     CanDelete = false
+                },
+                new OptionSet
+                {
+                    Id = 3,
+                    Description = "CEX scale",
+                    DisplayRank = true,
                 }
             );
         }

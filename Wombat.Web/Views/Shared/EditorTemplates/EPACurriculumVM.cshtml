@@ -1,0 +1,20 @@
+﻿@model EPACurriculumVM
+
+<div class="input-group col-md-12" id="inputFormRow">
+    <div id="DisplayId" value=@Model.DisplayId></div>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="DisplayId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input style="width: 45%" asp-for="NumberOfMonths" class="form-control" required>
+    <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
+
+    <select style="width: 45%" asp-for="EPAScaleId" asp-items="@EPACurriculumVM.AvailableScaleOptions" class="form-select" >
+        <option value="">-- Select a score --</option>
+    </select>
+    <span asp-validation-for="EPAScaleId" class="text-danger"></span>
+
+    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDeleteCurriculum"><i class="far fa-trash-alt"></i></button>
+</div>
+<br />
+

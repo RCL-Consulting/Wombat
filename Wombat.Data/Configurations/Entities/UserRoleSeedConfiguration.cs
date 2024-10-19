@@ -17,15 +17,27 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new IdentityUserRole<string>
                 {
-                    //"assessor@localhost.com" is assessor
+                    //"upassessor@localhost.com" is assessor
                     RoleId = "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", 
                     UserId = "409696F3-CA82-4381-A734-38A5EF6AA445"
                 },
                 new IdentityUserRole<string>
                 {
-                    //"trainee@localhost.com" is trainee
+                    //"uctassessor@localhost.com" is assessor
+                    RoleId = "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E",
+                    UserId = "965631FD-F55B-4AAE-85B4-81561A5CD78F"
+                },
+                new IdentityUserRole<string>
+                {
+                    //"uptrainee@localhost.com" is trainee
                     RoleId = "3FAA94D6-23C2-4365-9951-796673F48402",
                     UserId = "19A3D40C-9852-43B9-9BEC-B2552FA715F7"
+                },
+                new IdentityUserRole<string>
+                {
+                    //"ucttrainee@localhost.com" is trainee
+                    RoleId = "3FAA94D6-23C2-4365-9951-796673F48402",
+                    UserId = "343ABA27-DDC0-40E0-AD5C-C4E918965876"
                 }
             );
         }

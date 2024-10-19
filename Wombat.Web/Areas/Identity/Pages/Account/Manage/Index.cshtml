@@ -1,4 +1,5 @@
 ﻿@page
+@using Wombat.Common.Constants
 @model IndexModel
 @{
     ViewData["Title"] = "Profile";
@@ -12,19 +13,33 @@
         <form id="profile-form" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Name" class="form-control" placeholder="Please choose your username." disabled />
+                <input asp-for="Name" class="form-control" disabled />
                 <label asp-for="Name" class="form-label"></label>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Surname" class="form-control" placeholder="Please choose your username." disabled />
+                <input asp-for="Surname" class="form-control" disabled />
                 <label asp-for="Surname" class="form-label"></label>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Institution" class="form-control" placeholder="Please choose your username." disabled />
+                <input asp-for="Institution" class="form-control" disabled />
                 <label asp-for="Institution" class="form-label"></label>
             </div>
             <br/>
+
+            @if (Model.User.IsInRole(Roles.Trainee))
+            {
+                <div class="form-floating mb-3">
+                    <input asp-for="Speciality.Name" class="form-control" disabled />
+                    <label asp-for="Speciality" class="form-label"></label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Subspeciality.Name" class="form-control" disabled />
+                    <label asp-for="Subspeciality" class="form-label"></label>
+                </div>
+                <br />
+            }
+
             <div class="form-floating mb-3">
                 <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
                 <label asp-for="Username" class="form-label"></label>

@@ -43,7 +43,35 @@ namespace Wombat.Data.Configurations.Entities
                     Description = "Good enough to train a junior colleague",
                     Rank = 4,
                     OptionSetId = 2
-                }             
+                },
+                new Option
+                {
+                    Id = 6,
+                    Description = "Not yet",
+                    Rank = 0,
+                    OptionSetId = 3
+                },
+                new Option
+                {
+                    Id = 7,
+                    Description = "At times, but not consistently",
+                    Rank = 1,
+                    OptionSetId = 3
+                },
+                new Option
+                {
+                    Id = 8,
+                    Description = "Consistently",
+                    Rank = 2,
+                    OptionSetId = 3
+                },
+                new Option
+                {
+                    Id = 9,
+                    Description = "Unable to assess",
+                    Rank = -1,
+                    OptionSetId = 3
+                }
             );
         }
     }
