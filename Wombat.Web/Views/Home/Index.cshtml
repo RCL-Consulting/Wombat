@@ -8,6 +8,10 @@
 {
     <partial name="TraineeHome.cshtml" model="@Model"/>
 }
+else if (User.IsInRole(Roles.Assessor))
+{
+    <partial name="AssessorHome.cshtml" model="@Model" />
+}
 else
 {
     <div class="text-center">

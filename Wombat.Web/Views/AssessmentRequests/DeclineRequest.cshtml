@@ -1,0 +1,59 @@
+﻿@model AssessmentRequestVM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h4>Decline the assessment request</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="DeclineRequest">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="AssessorId" />
+            <input type="hidden" asp-for="TraineeId" />
+            <input type="hidden" asp-for="AssessmentFormId" />
+            <input type="hidden" asp-for="EPAId" />
+            <div class="form-group">
+                <label asp-for="TraineeDisplayName" class="control-label"></label>
+                <input asp-for="TraineeDisplayName" class="form-control" readonly/>
+            </div>
+            <br/>
+
+            <div class="form-group">
+                <label asp-for="FullEPADisplayName" class="control-label"></label>
+                <input asp-for="FullEPADisplayName" class="form-control" readonly />
+            </div> 
+            <br />
+
+            <div class="form-group">
+                <label asp-for="AssessmentDate" class="control-label"></label>
+                <input asp-for="AssessmentDate" class="form-control" readonly />
+            </div>
+            <br />
+
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" class="form-control" readonly></textarea>
+            </div>
+            <br />
+
+
+            <div class="form-group">
+                <label class="control-label">Notes</label>
+                <textarea asp-for="AssessorNotes" class="form-control"></textarea>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Back Home</a> &nbsp;
+                <input type="submit" value="Submit" class="btn btn-warning" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

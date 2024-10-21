@@ -1,0 +1,43 @@
+﻿@model IEnumerable<AssessmentRequestVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Pending Assessments</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Trainee)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AssessmentDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EPA)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @item.Trainee.Name @item.Trainee.Surname (@item.Trainee.Email)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AssessmentDate)
+                </td>
+                <td>
+                    @item.EPA.SubSpeciality.Speciality.Name-@item.EPA.SubSpeciality.Name @item.EPA.Name
+                </td>
+                <td>
+                    <a class="btn btn-warning" asp-action="LogRequestedAssessment" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-solid fa-clipboard-check"></i></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

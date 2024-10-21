@@ -342,6 +342,54 @@ namespace Wombat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AssessmentRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AssessorNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateRequested = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateAccepted = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateDeclined = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EPAId = table.Column<int>(type: "int", nullable: false),
+                    AssessmentFormId = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AssessmentRequests_AspNetUsers_AssessorId",
+                        column: x => x.AssessorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentRequests_AspNetUsers_TraineeId",
+                        column: x => x.TraineeId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentRequests_AssessmentForms_AssessmentFormId",
+                        column: x => x.AssessmentFormId,
+                        principalTable: "AssessmentForms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentRequests_EPAs_EPAId",
+                        column: x => x.EPAId,
+                        principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "EPACurricula",
                 columns: table => new
                 {
@@ -407,7 +455,8 @@ namespace Wombat.Data.Migrations
                     TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     EPAId = table.Column<int>(type: "int", nullable: false),
-                    FormId = table.Column<int>(type: "int", nullable: true),
+                    FormId = table.Column<int>(type: "int", nullable: false),
+                    AssessmentRequestId = table.Column<int>(type: "int", nullable: false),
                     GoodComment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BadComment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -427,6 +476,12 @@ namespace Wombat.Data.Migrations
                         name: "FK_LoggedAssessments_AspNetUsers_TraineeId",
                         column: x => x.TraineeId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_LoggedAssessments_AssessmentForms_AssessmentRequestId",
+                        column: x => x.AssessmentRequestId,
+                        principalTable: "AssessmentForms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -532,9 +587,9 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "c3e952ae-75b6-497c-8200-89e7c583603e", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDoM/gSrDOJCwAmRKcMacFngRU6fBqtvfGW+aRGuIDZYZMUFwAduxtPyWZL9oDuVmA==", null, false, "9cb40794-aecf-4d93-888e-cb82bfbe8c1f", null, "UPAssessor", false, "upassessor@localhost.com" },
-                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "d73c6b26-0a80-4f01-9d36-573a1ebf63a1", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAED5Rr9DC42ogjdsUM31dbkXKzzm/rNavu6P7dLcqkP7DoU+nWf96iDRNwpPqCO6kxQ==", null, false, "4f8f3911-dc79-4bcb-b801-41159a5bb99e", null, "UCTAssessor", false, "uctassessor@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "163a6e4a-2540-4421-906d-1fc89aec63b3", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAENf5yj2W0vFMe0QdSg3yTqCt9/pkPzjuqLEwXblG1KNPJNSx8Kyd8lZBsTsImOnLNw==", null, false, "f0b35909-4b67-48d9-ab81-2b05c2859640", null, "Admin", false, "admin@localhost.com" }
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "b7e7760e-24c7-4922-9249-3c41988c2b87", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDMwrWv/QWaN7Os1xmaYlWRKoDTTjo39/i1ZqqH3PYyjVJCBqOKfIsSHkVeRcT7oOA==", null, false, "28f67c71-964c-411f-b08a-4b9def856df6", null, "UPAssessor", false, "upassessor@localhost.com" },
+                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "552f0e21-0e24-4de0-9326-d3c8c05488a3", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJk09GC5GCIbodLOxNKQ9drCBcFDyGxC/J6TLLtdwauzNOGkCYJf69vHDFpWOY0Ruw==", null, false, "06a5f0f7-bae5-4933-9e5f-cf250eca25b8", null, "UCTAssessor", false, "uctassessor@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "a1e25007-5acf-430d-8441-a7b1193f0d4f", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEGZzknuRD+JnInmX+PjhcXWXOKXJQJOs86sYbXzhelp7KKgr7sRrGmtrkRvGwjrIwA==", null, false, "4edacf42-53ef-432b-aeec-d9d894d17a4c", null, "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -624,8 +679,8 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "7e9afe46-5126-4a91-bd19-942d085fe6b5", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDe+YFKqPphsX8ZNmHDVz12BTFTJHrpdc/NgomTvCvMOIKmSIcKYErzMtanBAv4hsw==", null, false, "d646b999-1cf5-4110-92b1-2f68f81ea724", 1, "UPTrainee", false, "uptrainee@localhost.com" },
-                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "17491246-ef96-4074-a78a-ce9c33661bff", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "uctTRAINEE@LOCALHOST.COM", "uctTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEAdWek/i+tDHTj7LAT4FzTDIEyyYKhArBeZWMxV4uQW72VXtqx7XlBgF1LI4D4XafA==", null, false, "1268b5e6-389e-4867-9dfe-23c3da497489", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "4791388d-a8bb-4bcc-8992-173fc04f8931", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEL/dWLJEJdhOb/dYE057tHZO0eo9rbPKSb4UHoeBzaybuQAurtZLnAKQo2ngWjV0lQ==", null, false, "376b82e3-564c-41d1-b1f3-6231ca671c2e", 1, "UPTrainee", false, "uptrainee@localhost.com" },
+                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "8212b04a-e5ab-4b17-b8e1-cbd3872c6a91", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "uctTRAINEE@LOCALHOST.COM", "uctTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAELeM3ugmE7Pg7voiZXHztaYYnjGJQ+bAMIM7qwdH2Q2XAZGlfxB/Z58/Wg9yV/d7/Q==", null, false, "74508768-23ab-425f-9f82-0e945f3a9047", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -729,6 +784,26 @@ namespace Wombat.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AssessmentRequests_AssessmentFormId",
+                table: "AssessmentRequests",
+                column: "AssessmentFormId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentRequests_AssessorId",
+                table: "AssessmentRequests",
+                column: "AssessorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentRequests_EPAId",
+                table: "AssessmentRequests",
+                column: "EPAId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentRequests_TraineeId",
+                table: "AssessmentRequests",
+                column: "TraineeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EPACurricula_EPAId",
                 table: "EPACurricula",
                 column: "EPAId");
@@ -752,6 +827,11 @@ namespace Wombat.Data.Migrations
                 name: "IX_EPAs_SubSpecialityId",
                 table: "EPAs",
                 column: "SubSpecialityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LoggedAssessments_AssessmentRequestId",
+                table: "LoggedAssessments",
+                column: "AssessmentRequestId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_AssessorId",
@@ -826,6 +906,9 @@ namespace Wombat.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "AssessmentRequests");
 
             migrationBuilder.DropTable(
                 name: "EPACurricula");

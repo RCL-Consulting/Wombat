@@ -24,6 +24,7 @@ namespace Wombat.Controllers
         private readonly UserManager<WombatUser> userManager;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
         private readonly IAssessmentFormRepository assessmentFormRepository;
+        private readonly IAssessmentRequestRepository assessmentRequestRepository;
         private readonly IEPARepository EPARepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEmailSender emailSender;
@@ -34,6 +35,7 @@ namespace Wombat.Controllers
                                             ILoggedAssessmentRepository loggedAssessmentRepository,
                                             IEPARepository EPARepository,
                                             IAssessmentFormRepository assessmentFormRepository,
+                                            IAssessmentRequestRepository assessmentRequestRepository,
                                             IHttpContextAccessor httpContextAccessor,
                                             IEmailSender emailSender,
                                             IWebHostEnvironment webHostEnvironment,
@@ -43,6 +45,7 @@ namespace Wombat.Controllers
             this.loggedAssessmentRepository=loggedAssessmentRepository;
             this.EPARepository = EPARepository;
             this.assessmentFormRepository = assessmentFormRepository;
+            this.assessmentRequestRepository = assessmentRequestRepository;
             this.httpContextAccessor=httpContextAccessor;
             this.emailSender=emailSender;
             this.webHostEnvironment=webHostEnvironment;
@@ -153,6 +156,38 @@ namespace Wombat.Controllers
                 return NotFound();
 
             ViewData["EPAList"] = mapper.Map<List<EPAVM>>(await EPARepository.GetAllAsync());
+
+            loggedAssessmentVM.AssessmentDate = DateTime.Now;
+            return View(loggedAssessmentVM);
+        }
+
+        [Authorize(Roles = Roles.Assessor)]
+        public async Task<IActionResult> LogRequestedAssessment(int id)
+        {
+            var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
+            if (assessmentRequest == null)
+            {
+                return NotFound();
+            }
+
+            var user = assessmentRequest.Trainee;
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await AddViewDataAsync();
+            var loggedAssessmentVM = new LoggedAssessmentVM();
+            loggedAssessmentVM.TraineeId = assessmentRequest.TraineeId;
+            loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(user);
+
+            if (httpContextAccessor.HttpContext != null)
+            {
+                loggedAssessmentVM.AssessorId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+                loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.GetUserAsync(httpContextAccessor.HttpContext.User));
+            }
+            else
+                return NotFound();
 
             loggedAssessmentVM.AssessmentDate = DateTime.Now;
             return View(loggedAssessmentVM);

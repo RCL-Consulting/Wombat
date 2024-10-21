@@ -1,0 +1,66 @@
+﻿@model AssessmentRequestVM
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h4>Assessment request</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="CreateForEPA">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="TraineeId" />
+            <input type="hidden" asp-for="EPAId" />
+
+            <div class="form-group">
+                <label class="control-label">Assessor</label>
+                <select asp-for="AssessorId" class="form-select" asp-items="ViewBag.Assessors">
+                    <option value="">-- Select an assessor --</option>
+                </select>
+                <span asp-validation-for="AssessorId" class="text-danger"></span>
+            </div>
+            <br/>
+
+            <div class="form-group">
+                <label class="control-label">EPA</label>
+                <input asp-for="EPA.Name" class="form-control" readonly>
+            </div> 
+            <br/>
+
+            <div class="form-group">
+                <label class="control-label">Assessment</label>
+                <select asp-for="AssessmentFormId" class="form-select" asp-items="ViewBag.Forms">
+                </select>
+                <span asp-validation-for="AssessmentFormId" class="text-danger"></span>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <label asp-for="AssessmentDate" class="control-label"></label>
+                <input asp-for="AssessmentDate" class="form-control">
+                <span asp-validation-for="AssessmentDate" class="text-danger"></span>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" class="form-control"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+            <br />
+
+            <div class="form-group">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Cancel</a> &nbsp;
+                <input type="submit" value="Submit" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts 
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

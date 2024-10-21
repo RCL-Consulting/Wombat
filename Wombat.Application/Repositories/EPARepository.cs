@@ -80,5 +80,18 @@ namespace Wombat.Application.Repositories
             }
             return EPAs;
         }
+
+        public async Task<List<AssessmentForm>?> GetFormsByEPA(int id)
+        {
+            var epa = await GetAsync(id);
+
+            var forms = new List<AssessmentForm>();
+            foreach (var form in epa.Forms)
+            {
+                forms.Add(form.Form);
+            }
+
+            return forms;
+        }
     }
 }

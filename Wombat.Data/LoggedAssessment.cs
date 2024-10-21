@@ -29,9 +29,15 @@ namespace Wombat.Data
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public EPA? EPA { get; set; }
 
+        public int FormId { get; set; }
         [ForeignKey("FormId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentForm? Form { get; set; }
+
+        public int AssessmentRequestId { get; set; }
+        [ForeignKey("AssessmentRequestId")]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public AssessmentForm? AssessmentRequest { get; set; }
 
         public List<OptionCriterionResponse>? OptionCriterionResponses { get; set; }
 
