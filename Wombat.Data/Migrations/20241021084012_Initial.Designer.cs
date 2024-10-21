@@ -12,7 +12,7 @@ using Wombat.Data;
 namespace Wombat.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241020140654_Initial")]
+    [Migration("20241021084012_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -255,7 +255,7 @@ namespace Wombat.Data.Migrations
                             CanDelete = true,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Peadiatrics-General EPA1"
+                            Name = "Peadiatrics-General EPA1 CEX"
                         },
                         new
                         {
@@ -263,7 +263,7 @@ namespace Wombat.Data.Migrations
                             CanDelete = true,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Peadiatrics-General EPA2"
+                            Name = "Peadiatrics-General EPA2 CEX"
                         },
                         new
                         {
@@ -271,7 +271,7 @@ namespace Wombat.Data.Migrations
                             CanDelete = true,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Peadiatrics-General EPA3"
+                            Name = "Peadiatrics-General EPA3 CEX"
                         },
                         new
                         {
@@ -279,7 +279,7 @@ namespace Wombat.Data.Migrations
                             CanDelete = true,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Peadiatrics-General EPA4"
+                            Name = "Peadiatrics-General EPA4 CEX"
                         });
                 });
 
@@ -303,6 +303,9 @@ namespace Wombat.Data.Migrations
 
                     b.Property<string>("AssessorNotes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CompletionDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DateAccepted")
                         .HasColumnType("datetime2");
@@ -700,10 +703,6 @@ namespace Wombat.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("BadComment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -715,10 +714,6 @@ namespace Wombat.Data.Migrations
 
                     b.Property<int>("FormId")
                         .HasColumnType("int");
-
-                    b.Property<string>("GoodComment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TraineeId")
                         .IsRequired()
@@ -982,6 +977,36 @@ namespace Wombat.Data.Migrations
                         new
                         {
                             Id = 10,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessment rating",
+                            OptionSetId = 2,
+                            Rank = 1000
+                        },
+                        new
+                        {
+                            Id = 11,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                            OptionSetId = 1,
+                            Rank = 1001
+                        },
+                        new
+                        {
+                            Id = 12,
+                            AssessmentFormId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
+                            OptionSetId = 1,
+                            Rank = 1002
+                        },
+                        new
+                        {
+                            Id = 13,
                             AssessmentFormId = 3,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -991,7 +1016,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 11,
+                            Id = 14,
                             AssessmentFormId = 3,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1001,7 +1026,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 12,
+                            Id = 15,
                             AssessmentFormId = 3,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1011,7 +1036,37 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 13,
+                            Id = 16,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessment rating",
+                            OptionSetId = 2,
+                            Rank = 1000
+                        },
+                        new
+                        {
+                            Id = 17,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                            OptionSetId = 1,
+                            Rank = 1001
+                        },
+                        new
+                        {
+                            Id = 18,
+                            AssessmentFormId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
+                            OptionSetId = 1,
+                            Rank = 1002
+                        },
+                        new
+                        {
+                            Id = 19,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1021,7 +1076,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 14,
+                            Id = 20,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1031,7 +1086,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 15,
+                            Id = 21,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1041,7 +1096,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 16,
+                            Id = 22,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1051,7 +1106,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 17,
+                            Id = 23,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1061,7 +1116,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 18,
+                            Id = 24,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1071,7 +1126,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 19,
+                            Id = 25,
                             AssessmentFormId = 4,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1081,7 +1136,37 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 20,
+                            Id = 26,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessment rating",
+                            OptionSetId = 2,
+                            Rank = 1000
+                        },
+                        new
+                        {
+                            Id = 27,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                            OptionSetId = 1,
+                            Rank = 1001
+                        },
+                        new
+                        {
+                            Id = 28,
+                            AssessmentFormId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
+                            OptionSetId = 1,
+                            Rank = 1002
+                        },
+                        new
+                        {
+                            Id = 29,
                             AssessmentFormId = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1091,7 +1176,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 21,
+                            Id = 30,
                             AssessmentFormId = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1101,7 +1186,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 22,
+                            Id = 31,
                             AssessmentFormId = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1111,7 +1196,7 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 23,
+                            Id = 32,
                             AssessmentFormId = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -1121,13 +1206,43 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = 24,
+                            Id = 33,
                             AssessmentFormId = 5,
                             DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Placing the patient at the center of all management decisions to provide patient and family centered care by engaging in bidirectional communication with patients and families",
                             OptionSetId = 3,
                             Rank = 5
+                        },
+                        new
+                        {
+                            Id = 34,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Assessment rating",
+                            OptionSetId = 2,
+                            Rank = 1000
+                        },
+                        new
+                        {
+                            Id = 35,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                            OptionSetId = 1,
+                            Rank = 1001
+                        },
+                        new
+                        {
+                            Id = 36,
+                            AssessmentFormId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateModified = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level",
+                            OptionSetId = 1,
+                            Rank = 1002
                         });
                 });
 
@@ -1558,7 +1673,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a1e25007-5acf-430d-8441-a7b1193f0d4f",
+                            ConcurrencyStamp = "145bb2bf-f890-42f1-8a51-a26ed8a7e7e6",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -1569,9 +1684,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGZzknuRD+JnInmX+PjhcXWXOKXJQJOs86sYbXzhelp7KKgr7sRrGmtrkRvGwjrIwA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENBpVGkjTvYnPTYnQkXuuh3SUoXtEtAwksj2anyniRvUGczrI+WH23MXNMMn/n2EzA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4edacf42-53ef-432b-aeec-d9d894d17a4c",
+                            SecurityStamp = "2a9b7a40-ef4e-4fba-af08-89c905c33563",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -1580,7 +1695,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b7e7760e-24c7-4922-9249-3c41988c2b87",
+                            ConcurrencyStamp = "8d1ce610-b1fb-42a1-b3d7-e356da028678",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "upassessor@localhost.com",
                             EmailConfirmed = true,
@@ -1591,9 +1706,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UPASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "UPASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDMwrWv/QWaN7Os1xmaYlWRKoDTTjo39/i1ZqqH3PYyjVJCBqOKfIsSHkVeRcT7oOA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDN1LuDyQvaJBvNQrh1TMLnCT/WQOt5DoA7S+QJxwbaBLMLKp9lxvP3BCbI/kSe1nQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "28f67c71-964c-411f-b08a-4b9def856df6",
+                            SecurityStamp = "4eea8ed6-9b9e-4f11-83ab-04a9d28148d8",
                             Surname = "UPAssessor",
                             TwoFactorEnabled = false,
                             UserName = "upassessor@localhost.com"
@@ -1602,7 +1717,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "552f0e21-0e24-4de0-9326-d3c8c05488a3",
+                            ConcurrencyStamp = "25741503-8316-4b7f-b460-8d1b2660d382",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "uctassessor@localhost.com",
                             EmailConfirmed = true,
@@ -1613,9 +1728,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UCTASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "UCTASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJk09GC5GCIbodLOxNKQ9drCBcFDyGxC/J6TLLtdwauzNOGkCYJf69vHDFpWOY0Ruw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFkpNOZy4wmLwyihpBioeJBz1zEvPMAxF71/ukek6n5Jn7AkGt/hSFw1JCXP6gRAnA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "06a5f0f7-bae5-4933-9e5f-cf250eca25b8",
+                            SecurityStamp = "70d67da8-2433-418d-be6f-b96e72c5fe7c",
                             Surname = "UCTAssessor",
                             TwoFactorEnabled = false,
                             UserName = "uctassessor@localhost.com"
@@ -1624,7 +1739,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4791388d-a8bb-4bcc-8992-173fc04f8931",
+                            ConcurrencyStamp = "36196387-771d-4b97-b0d3-e52562006852",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "uptrainee@localhost.com",
                             EmailConfirmed = true,
@@ -1635,9 +1750,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UPTRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "UPTRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL/dWLJEJdhOb/dYE057tHZO0eo9rbPKSb4UHoeBzaybuQAurtZLnAKQo2ngWjV0lQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE4V2ZuKtKtdLXMHGL8npOscYu/WOGPt5QFNUmSmovGnw2SUBUJcfT8bYKS1myWOYA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "376b82e3-564c-41d1-b1f3-6231ca671c2e",
+                            SecurityStamp = "382507ae-aea1-4060-bdd7-03220bac2b43",
                             SubSpecialityId = 1,
                             Surname = "UPTrainee",
                             TwoFactorEnabled = false,
@@ -1647,7 +1762,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8212b04a-e5ab-4b17-b8e1-cbd3872c6a91",
+                            ConcurrencyStamp = "5b39bd5e-1986-4837-bd22-cb66c45a59ec",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "ucttrainee@localhost.com",
                             EmailConfirmed = true,
@@ -1658,9 +1773,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "uctTRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "uctTRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELeM3ugmE7Pg7voiZXHztaYYnjGJQ+bAMIM7qwdH2Q2XAZGlfxB/Z58/Wg9yV/d7/Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBZj12bQZWNFSrMUUBetBNmiMFSB271opUlhX7G+pkvN8YJHrZdWY8T0fSpMnoHU9Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "74508768-23ab-425f-9f82-0e945f3a9047",
+                            SecurityStamp = "e8d8bb77-c356-4bb7-b89e-cd7c26b9384a",
                             SubSpecialityId = 1,
                             Surname = "UCTTrainee",
                             TwoFactorEnabled = false,
@@ -1805,7 +1920,7 @@ namespace Wombat.Data.Migrations
 
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>
                 {
-                    b.HasOne("Wombat.Data.AssessmentForm", "AssessmentRequest")
+                    b.HasOne("Wombat.Data.AssessmentRequest", "AssessmentRequest")
                         .WithMany()
                         .HasForeignKey("AssessmentRequestId")
                         .OnDelete(DeleteBehavior.Restrict)

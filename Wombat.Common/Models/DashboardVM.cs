@@ -23,6 +23,6 @@ namespace Wombat.Common.Models
         public int NumberOfPendingAssessments { get; set; } = 0;
 
         [Display(Name = "Completed assessments")]
-        public int NumberOfCompletedAssessment { get; set; } = 0;
+        public int NumberOfCompletedAssessments { get; set; } = 0;
     }
 }

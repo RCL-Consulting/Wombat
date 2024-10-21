@@ -352,6 +352,7 @@ namespace Wombat.Data.Migrations
                     DateAccepted = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateDeclined = table.Column<DateTime>(type: "datetime2", nullable: true),
                     AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     EPAId = table.Column<int>(type: "int", nullable: false),
@@ -457,8 +458,6 @@ namespace Wombat.Data.Migrations
                     EPAId = table.Column<int>(type: "int", nullable: false),
                     FormId = table.Column<int>(type: "int", nullable: false),
                     AssessmentRequestId = table.Column<int>(type: "int", nullable: false),
-                    GoodComment = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BadComment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AssessmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -479,15 +478,15 @@ namespace Wombat.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_LoggedAssessments_AssessmentForms_AssessmentRequestId",
-                        column: x => x.AssessmentRequestId,
+                        name: "FK_LoggedAssessments_AssessmentForms_FormId",
+                        column: x => x.FormId,
                         principalTable: "AssessmentForms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_LoggedAssessments_AssessmentForms_FormId",
-                        column: x => x.FormId,
-                        principalTable: "AssessmentForms",
+                        name: "FK_LoggedAssessments_AssessmentRequests_AssessmentRequestId",
+                        column: x => x.AssessmentRequestId,
+                        principalTable: "AssessmentRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -551,10 +550,10 @@ namespace Wombat.Data.Migrations
                 values: new object[,]
                 {
                     { 1, false, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Default Template" },
-                    { 2, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA1" },
-                    { 3, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA2" },
-                    { 4, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA3" },
-                    { 5, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA4" }
+                    { 2, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA1 CEX" },
+                    { 3, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA2 CEX" },
+                    { 4, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA3 CEX" },
+                    { 5, true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Peadiatrics-General EPA4 CEX" }
                 });
 
             migrationBuilder.InsertData(
@@ -587,9 +586,9 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "b7e7760e-24c7-4922-9249-3c41988c2b87", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDMwrWv/QWaN7Os1xmaYlWRKoDTTjo39/i1ZqqH3PYyjVJCBqOKfIsSHkVeRcT7oOA==", null, false, "28f67c71-964c-411f-b08a-4b9def856df6", null, "UPAssessor", false, "upassessor@localhost.com" },
-                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "552f0e21-0e24-4de0-9326-d3c8c05488a3", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJk09GC5GCIbodLOxNKQ9drCBcFDyGxC/J6TLLtdwauzNOGkCYJf69vHDFpWOY0Ruw==", null, false, "06a5f0f7-bae5-4933-9e5f-cf250eca25b8", null, "UCTAssessor", false, "uctassessor@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "a1e25007-5acf-430d-8441-a7b1193f0d4f", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEGZzknuRD+JnInmX+PjhcXWXOKXJQJOs86sYbXzhelp7KKgr7sRrGmtrkRvGwjrIwA==", null, false, "4edacf42-53ef-432b-aeec-d9d894d17a4c", null, "Admin", false, "admin@localhost.com" }
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "8d1ce610-b1fb-42a1-b3d7-e356da028678", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDN1LuDyQvaJBvNQrh1TMLnCT/WQOt5DoA7S+QJxwbaBLMLKp9lxvP3BCbI/kSe1nQ==", null, false, "4eea8ed6-9b9e-4f11-83ab-04a9d28148d8", null, "UPAssessor", false, "upassessor@localhost.com" },
+                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "25741503-8316-4b7f-b460-8d1b2660d382", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEFkpNOZy4wmLwyihpBioeJBz1zEvPMAxF71/ukek6n5Jn7AkGt/hSFw1JCXP6gRAnA==", null, false, "70d67da8-2433-418d-be6f-b96e72c5fe7c", null, "UCTAssessor", false, "uctassessor@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "145bb2bf-f890-42f1-8a51-a26ed8a7e7e6", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAENBpVGkjTvYnPTYnQkXuuh3SUoXtEtAwksj2anyniRvUGczrI+WH23MXNMMn/n2EzA==", null, false, "2a9b7a40-ef4e-4fba-af08-89c905c33563", null, "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -606,21 +605,33 @@ namespace Wombat.Data.Migrations
                     { 7, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Communicating findings and recommendations to the patient and family, and the source of the referral (i.e.,the requesting provider or health agency)", 3, 4 },
                     { 8, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Demonstrating content expertise in one’s area of pediatrics to provide consultation", 3, 5 },
                     { 9, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Navigating the relationship with the patient/family to be either supportive or directive (or some combination of the two) as needed over time", 3, 6 },
-                    { 10, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Applying knowledge in selection and interpretation of screening tools and tests (e.g., screens for growth and development, special senses, and medical conditions)", 3, 1 },
-                    { 11, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Engaging patients and families in shared decision-making for those screening tests that are not mandated by state law", 3, 2 },
-                    { 12, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Educating patients and families about the implications of the results to their overall health and care plan", 3, 3 },
-                    { 13, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Performing a physical examination to look for normal variations, abnormal signs and congenital anomalies", 3, 1 },
-                    { 14, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Identifying and applying key evidence-based guidelines for care of the newborn", 3, 2 },
-                    { 15, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Providing routine care, as well as addressing common problems that develop within the first 28 days of life", 3, 3 },
-                    { 16, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Using judgment to know when common problems can be handled at home, and arrange for discharge and follow up", 3, 4 },
-                    { 17, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessing maternal/family readiness to care for the infant post discharge", 3, 5 },
-                    { 18, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Transitioning care to the community practitioner", 3, 6 },
-                    { 19, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Demonstrating confidence that puts new parents at ease", 3, 7 },
-                    { 20, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessing the severity of illness and using judgment as to whether immediate or emergency actions, stabilization, or transfer to a higher acuity facility are necessary for treatment of urgent or life-threatening problems", 3, 1 },
-                    { 21, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Gathering essential information through history, physical examination, and initial laboratory evaluation", 3, 2 },
-                    { 22, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Engaging in sound clinical reasoning that drives the development of an appropriate differential diagnosis to allow the indicated diagnostic tests to be performed", 3, 3 },
-                    { 23, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Knowing or acquiring knowledge of the evidence related to the primary problem and applying the evidence to the patient’s care in developing a diagnostic work - up and plans for management and follow up", 3, 4 },
-                    { 24, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Placing the patient at the center of all management decisions to provide patient and family centered care by engaging in bidirectional communication with patients and families", 3, 5 }
+                    { 10, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessment rating", 2, 1000 },
+                    { 11, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one observation that supports the EPA rating you assigned", 1, 1001 },
+                    { 12, 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level", 1, 1002 },
+                    { 13, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Applying knowledge in selection and interpretation of screening tools and tests (e.g., screens for growth and development, special senses, and medical conditions)", 3, 1 },
+                    { 14, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Engaging patients and families in shared decision-making for those screening tests that are not mandated by state law", 3, 2 },
+                    { 15, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Educating patients and families about the implications of the results to their overall health and care plan", 3, 3 },
+                    { 16, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessment rating", 2, 1000 },
+                    { 17, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one observation that supports the EPA rating you assigned", 1, 1001 },
+                    { 18, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level", 1, 1002 },
+                    { 19, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Performing a physical examination to look for normal variations, abnormal signs and congenital anomalies", 3, 1 },
+                    { 20, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Identifying and applying key evidence-based guidelines for care of the newborn", 3, 2 },
+                    { 21, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Providing routine care, as well as addressing common problems that develop within the first 28 days of life", 3, 3 },
+                    { 22, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Using judgment to know when common problems can be handled at home, and arrange for discharge and follow up", 3, 4 },
+                    { 23, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessing maternal/family readiness to care for the infant post discharge", 3, 5 },
+                    { 24, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Transitioning care to the community practitioner", 3, 6 },
+                    { 25, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Demonstrating confidence that puts new parents at ease", 3, 7 },
+                    { 26, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessment rating", 2, 1000 },
+                    { 27, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one observation that supports the EPA rating you assigned", 1, 1001 },
+                    { 28, 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level", 1, 1002 },
+                    { 29, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessing the severity of illness and using judgment as to whether immediate or emergency actions, stabilization, or transfer to a higher acuity facility are necessary for treatment of urgent or life-threatening problems", 3, 1 },
+                    { 30, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Gathering essential information through history, physical examination, and initial laboratory evaluation", 3, 2 },
+                    { 31, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Engaging in sound clinical reasoning that drives the development of an appropriate differential diagnosis to allow the indicated diagnostic tests to be performed", 3, 3 },
+                    { 32, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Knowing or acquiring knowledge of the evidence related to the primary problem and applying the evidence to the patient’s care in developing a diagnostic work - up and plans for management and follow up", 3, 4 },
+                    { 33, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Placing the patient at the center of all management decisions to provide patient and family centered care by engaging in bidirectional communication with patients and families", 3, 5 },
+                    { 34, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Assessment rating", 2, 1000 },
+                    { 35, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one observation that supports the EPA rating you assigned", 1, 1001 },
+                    { 36, 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Briefly state at least one thing that needs to be demonstrated by the trainee to advance the EPA rating to the next level", 1, 1002 }
                 });
 
             migrationBuilder.InsertData(
@@ -679,8 +690,8 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "4791388d-a8bb-4bcc-8992-173fc04f8931", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEL/dWLJEJdhOb/dYE057tHZO0eo9rbPKSb4UHoeBzaybuQAurtZLnAKQo2ngWjV0lQ==", null, false, "376b82e3-564c-41d1-b1f3-6231ca671c2e", 1, "UPTrainee", false, "uptrainee@localhost.com" },
-                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "8212b04a-e5ab-4b17-b8e1-cbd3872c6a91", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "uctTRAINEE@LOCALHOST.COM", "uctTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAELeM3ugmE7Pg7voiZXHztaYYnjGJQ+bAMIM7qwdH2Q2XAZGlfxB/Z58/Wg9yV/d7/Q==", null, false, "74508768-23ab-425f-9f82-0e945f3a9047", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "36196387-771d-4b97-b0d3-e52562006852", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEE4V2ZuKtKtdLXMHGL8npOscYu/WOGPt5QFNUmSmovGnw2SUBUJcfT8bYKS1myWOYA==", null, false, "382507ae-aea1-4060-bdd7-03220bac2b43", 1, "UPTrainee", false, "uptrainee@localhost.com" },
+                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "5b39bd5e-1986-4837-bd22-cb66c45a59ec", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "uctTRAINEE@LOCALHOST.COM", "uctTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEBZj12bQZWNFSrMUUBetBNmiMFSB271opUlhX7G+pkvN8YJHrZdWY8T0fSpMnoHU9Q==", null, false, "e8d8bb77-c356-4bb7-b89e-cd7c26b9384a", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -908,9 +919,6 @@ namespace Wombat.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "AssessmentRequests");
-
-            migrationBuilder.DropTable(
                 name: "EPACurricula");
 
             migrationBuilder.DropTable(
@@ -932,16 +940,19 @@ namespace Wombat.Data.Migrations
                 name: "Options");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "AssessmentRequests");
 
             migrationBuilder.DropTable(
-                name: "EPAs");
+                name: "OptionSets");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "AssessmentForms");
 
             migrationBuilder.DropTable(
-                name: "OptionSets");
+                name: "EPAs");
 
             migrationBuilder.DropTable(
                 name: "Institutions");

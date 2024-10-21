@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,35 +10,35 @@ using Wombat.Data;
 
 namespace Wombat.Application.Repositories
 {
-    //internal class AssessmentRequestRepository
-    //{
-    //}
     public class AssessmentRequestRepository : GenericRepository<AssessmentRequest>, IAssessmentRequestRepository
     {
-        //IEPARepository EPARepository;
-        //ISpecialityRepository specialityRepository;
-        //ISubSpecialityRepository subSpecialityRepository;
+        private readonly UserManager<WombatUser> userManager;
 
-        public AssessmentRequestRepository( ApplicationDbContext context/*,
-                                            IEPARepository EPARepository,
-                                            ISpecialityRepository specialityRepository,
-                                            ISubSpecialityRepository subSpecialityRepository */) : base(context)
+        public AssessmentRequestRepository( ApplicationDbContext context,
+                                            UserManager<WombatUser> userManager ) : base(context)
         {
-            //this.EPARepository = EPARepository;
-            //this.specialityRepository = specialityRepository;
-            //this.subSpecialityRepository = subSpecialityRepository;
+            this.userManager = userManager;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeByTraineeAndAccepted(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetTraineePendingAssessments(string traineeId)
         {
             var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null)
+                .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate == null)
                 .ToListAsync();
 
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeByTraineeAndDeclined(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetTraineeCompletedAssessments(string traineeId)
+        {
+            var requests = await context.AssessmentRequests
+                .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate != null)
+                .ToListAsync();
+
+            return requests;
+        }
+
+        public async Task<List<AssessmentRequest>?> GetTraineeDeclinedRequests(string traineeId)
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined != null)
@@ -46,7 +47,7 @@ namespace Wombat.Application.Repositories
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeByTraineeAndWaitingApproval(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetTraineePendingRequests(string traineeId)
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined == null)
@@ -55,41 +56,82 @@ namespace Wombat.Application.Repositories
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeOfAssessorAndAccepted(string assessorId)
+        public async Task<List<AssessmentRequest>?> GetAssessorPendingAssessments(string assessorId)
         {
             var requests = await context.AssessmentRequests
-                .Where(r => r.AssessorId == assessorId && r.DateAccepted != null && r.DateDeclined == null)
+                .Where(r => r.AssessorId == assessorId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate==null)
                 .Include(r => r.Trainee)
-                .Include(r => r.EPA)
-                .ThenInclude(e => e!.SubSpeciality)
-                .ThenInclude(s => s!.Speciality)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
+            
+            return requests;
+        }
+
+        public async Task<List<AssessmentRequest>?> GetAssessorCompletedAssessments(string assessorId)
+        {
+            var requests = await context.AssessmentRequests
+                .Where(r => r.AssessorId == assessorId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate != null)
+                .Include(r => r.Trainee)
+                .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeOfAssessorAndDeclined(string assessorId)
+        public async Task<List<AssessmentRequest>?> GetAssessorDeclinedRequests(string assessorId)
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.AssessorId == assessorId && r.DateAccepted == null && r.DateDeclined != null)
                 .Include(r => r.Trainee)
-                .Include(r => r.EPA)
-                .ThenInclude(e => e!.SubSpeciality)
-                .ThenInclude(s => s!.Speciality)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetRequestsMadeOfAssessorAndWaitingApproval(string assessorId)
+        public async Task<List<AssessmentRequest>?> GetAssessorPendingRequests(string assessorId)
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.AssessorId == assessorId && r.DateAccepted == null&& r.DateDeclined == null)
                 .Include(r => r.Trainee)
-                .Include(r => r.EPA)
-                .ThenInclude(e => e!.SubSpeciality)
-                .ThenInclude(s => s!.Speciality)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
@@ -99,11 +141,17 @@ namespace Wombat.Application.Repositories
             var request = await context.AssessmentRequests
                 .Where(r => r.Id == id)
                 .Include(r => r.Trainee)
-                .Include(r => r.EPA)
-                .ThenInclude(e => e!.SubSpeciality)
-                .ThenInclude(s => s!.Speciality)
                 .FirstOrDefaultAsync();
 
+            if (request != null)
+            {
+                request.EPA = await context.EPAs
+                    .Where(e => e.Id == request.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
             return request;
         }
     }

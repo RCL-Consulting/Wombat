@@ -4,7 +4,7 @@
     ViewData["Title"] = "StartAssessment";
 }
 
-<h1>StartAssessment</h1>
+<h1>Assessement for @Model.EPA?.Name</h1>
 
 <hr />
 <div class="row">
@@ -14,6 +14,8 @@
             <input type="hidden" asp-for="AssessorId" />
             <input type="hidden" asp-for="EPAId" />
             <input type="hidden" asp-for="AssessmentDate" />
+            <input type="hidden" asp-for="AssessmentRequestId" />
+            <input type="hidden" asp-for="FormId" />
 
             @for (int i = 0; i < Model.OptionCriterionResponses.Count; i++)
             {
@@ -32,34 +34,37 @@
                                 if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
                                 {
                                     var Rank = optionCriterionResponse.Criterion.OptionsSet.Options[j].Rank;
-                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id==optionCriterionResponse.OptionId ? "checked" : "")>
+                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id == optionCriterionResponse.OptionId ? "checked" : "")>
                                     <label name="OptionCriterionResponses[@i].OptionId" class="radio">@Rank - @Description</label>
                                 }
                                 else
                                 {
-                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id==optionCriterionResponse.OptionId ? "checked" : "")>
+                                    <input name="OptionCriterionResponses[@i].OptionId" value="@Id" type="radio" @(Id == optionCriterionResponse.OptionId ? "checked" : "")>
                                     <label name="OptionCriterionResponses[@i].OptionId" class="radio">@Description</label>
                                 }
                                 <br />
                             }
                         </div>
-                        <br />
-                        <div class="form-group">
-                            <label class="control-label">Comments:</label>
-                            <textarea class="form-control" name="OptionCriterionResponses[@i].Comment" id="OptionCriterionResponses[@i].Comment">@optionCriterionResponse.Comment</textarea>
-                        </div>
-                        <br />
+
+                        @if (optionCriterionResponse.Criterion.OptionsSet.Options.Count == 0)
+                        {
+                            <div class="form-group">
+                                <textarea class="form-control" data-val="true" name="OptionCriterionResponses[@i].Comment" id="OptionCriterionResponses[@i].Comment">@optionCriterionResponse.Comment</textarea>
+                            </div>
+                        }
                     </div>
                 </div>
                 <br />
             }
 
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
+                <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Cancel</a> &nbsp;
                 <input type="submit" value="Submit Assessment" class="btn btn-primary" />
             </div>
         </form>
     </div>
-</div> 
+</div>
 
 

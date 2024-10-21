@@ -103,10 +103,36 @@ namespace Wombat.Data.Configurations.Entities
                     Rank = 6,
                     AssessmentFormId = 2
                 },
-                //EPA2
                 new OptionCriterion
                 {
                     Id = 10,
+                    Description = "Assessment rating",
+                    OptionSetId = 2,
+                    Rank = 1000,
+                    AssessmentFormId = 2
+                },
+                new OptionCriterion
+                {
+                    Id = 11,
+                    Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                    OptionSetId = 1,
+                    Rank = 1001,
+                    AssessmentFormId = 2
+                },
+                new OptionCriterion
+                {
+                    Id = 12,
+                    Description =
+                        "Briefly state at least one thing that needs to be demonstrated by the trainee " +
+                        "to advance the EPA rating to the next level",
+                    OptionSetId = 1,
+                    Rank = 1002,
+                    AssessmentFormId = 2
+                },
+                //EPA2
+                new OptionCriterion
+                {
+                    Id = 13,
                     Description =
                         "Applying knowledge in selection and interpretation of screening tools and tests "+
                         "(e.g., screens for growth and development, special senses, and medical conditions)",
@@ -116,7 +142,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 11,
+                    Id = 14,
                     Description =
                         "Engaging patients and families in shared decision-making for those screening tests "+
                         "that are not mandated by state law",
@@ -126,7 +152,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 12,
+                    Id = 15,
                     Description =
                         "Educating patients and families about the implications of the results to their overall "+
                         "health and care plan",
@@ -134,10 +160,36 @@ namespace Wombat.Data.Configurations.Entities
                     Rank = 3,
                     AssessmentFormId = 3
                 },
+                new OptionCriterion
+                {
+                    Id = 16,
+                    Description = "Assessment rating",
+                    OptionSetId = 2,
+                    Rank = 1000,
+                    AssessmentFormId = 3
+                },
+                new OptionCriterion
+                {
+                    Id = 17,
+                    Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                    OptionSetId = 1,
+                    Rank = 1001,
+                    AssessmentFormId = 3
+                },
+                new OptionCriterion
+                {
+                    Id = 18,
+                    Description =
+                        "Briefly state at least one thing that needs to be demonstrated by the trainee " +
+                        "to advance the EPA rating to the next level",
+                    OptionSetId = 1,
+                    Rank = 1002,
+                    AssessmentFormId = 3
+                },
                 //EPA3
                 new OptionCriterion
                 {
-                    Id = 13,
+                    Id = 19,
                     Description =
                         "Performing a physical examination to look for normal variations, abnormal signs and "+
                         "congenital anomalies",
@@ -147,7 +199,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 14,
+                    Id = 20,
                     Description =
                         "Identifying and applying key evidence-based guidelines for care of the newborn",
                     OptionSetId = 3,
@@ -156,7 +208,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 15,
+                    Id = 21,
                     Description =
                         "Providing routine care, as well as addressing common problems that develop within "+
                         "the first 28 days of life",
@@ -166,7 +218,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 16,
+                    Id = 22,
                     Description =
                         "Using judgment to know when common problems can be handled at home, and arrange for "+
                         "discharge and follow up",
@@ -176,7 +228,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 17,
+                    Id = 23,
                     Description =
                         "Assessing maternal/family readiness to care for the infant post discharge",
                     OptionSetId = 3,
@@ -185,7 +237,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 18,
+                    Id = 24,
                     Description =
                         "Transitioning care to the community practitioner",
                     OptionSetId = 3,
@@ -194,17 +246,43 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 19,
+                    Id = 25,
                     Description =
                         "Demonstrating confidence that puts new parents at ease",
                     OptionSetId = 3,
                     Rank = 7,
                     AssessmentFormId = 4
                 },
+                new OptionCriterion
+                {
+                    Id = 26,
+                    Description = "Assessment rating",
+                    OptionSetId = 2,
+                    Rank = 1000,
+                    AssessmentFormId = 4
+                },
+                new OptionCriterion
+                {
+                    Id = 27,
+                    Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                    OptionSetId = 1,
+                    Rank = 1001,
+                    AssessmentFormId = 4
+                },
+                new OptionCriterion
+                {
+                    Id = 28,
+                    Description =
+                        "Briefly state at least one thing that needs to be demonstrated by the trainee " +
+                        "to advance the EPA rating to the next level",
+                    OptionSetId = 1,
+                    Rank = 1002,
+                    AssessmentFormId = 4
+                },
                 //EPA4
                 new OptionCriterion
                 {
-                    Id = 20,
+                    Id = 29,
                     Description = 
                         "Assessing the severity of illness and using judgment as to whether immediate "+
                         "or emergency actions, stabilization, or transfer to a higher acuity facility are "+
@@ -215,7 +293,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 21,
+                    Id = 30,
                     Description =
                         "Gathering essential information through history, physical examination, and initial "+
                         "laboratory evaluation",
@@ -225,7 +303,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 22,
+                    Id = 31,
                     Description =
                         "Engaging in sound clinical reasoning that drives the development of an appropriate "+
                         "differential diagnosis to allow the indicated diagnostic tests to be performed",
@@ -235,7 +313,7 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 23,
+                    Id = 32,
                     Description =
                         "Knowing or acquiring knowledge of the evidence related to the primary problem and "+
                         "applying the evidence to the patient’s care in developing a diagnostic work - up and "+
@@ -246,12 +324,38 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new OptionCriterion
                 {
-                    Id = 24,
+                    Id = 33,
                     Description =
                         "Placing the patient at the center of all management decisions to provide patient "+
                         "and family centered care by engaging in bidirectional communication with patients and families",
                     OptionSetId = 3,
                     Rank = 5,
+                    AssessmentFormId = 5
+                },
+                new OptionCriterion
+                {
+                    Id = 34,
+                    Description = "Assessment rating",
+                    OptionSetId = 2,
+                    Rank = 1000,
+                    AssessmentFormId = 5
+                },
+                new OptionCriterion
+                {
+                    Id = 35,
+                    Description = "Briefly state at least one observation that supports the EPA rating you assigned",
+                    OptionSetId = 1,
+                    Rank = 1001,
+                    AssessmentFormId = 5
+                },
+                new OptionCriterion
+                {
+                    Id = 36,
+                    Description =
+                        "Briefly state at least one thing that needs to be demonstrated by the trainee " +
+                        "to advance the EPA rating to the next level",
+                    OptionSetId = 1,
+                    Rank = 1002,
                     AssessmentFormId = 5
                 }
             );

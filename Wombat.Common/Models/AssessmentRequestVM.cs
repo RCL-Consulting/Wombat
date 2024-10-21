@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Wombat.Common.Models
 {
+    public enum AssessmentRequestStatus
+    {
+        Requested,
+        Accepted,
+        Declined,
+        Completed
+    }
     public class AssessmentRequestVM
     {
         public int Id { get; set; }
@@ -33,16 +40,19 @@ namespace Wombat.Common.Models
         [Display(Name = "Assessment date")]
         public DateTime? AssessmentDate { get; set; }
 
-        public string TraineeId { get; set; }
+        [Display(Name = "Completion date")]
+        public DateTime?CompletionDate { get; set; }
+
+        public string TraineeId { get; set; } = "";
         public WombatUserVM? Trainee { get; set; }
 
-        public string AssessorId { get; set; }
+        public string AssessorId { get; set; } = "";
         public WombatUserVM? Assessor { get; set; }
 
-        public int EPAId { get; set; }
+        public int EPAId { get; set; } = 0;
         public EPAVM? EPA { get; set; }
 
-        public int? AssessmentFormId { get; set; }
+        public int? AssessmentFormId { get; set; } = 0;
         public AssessmentFormVM? AssessmentForm { get; set; }
 
         public string Notes { get; set; } = "";

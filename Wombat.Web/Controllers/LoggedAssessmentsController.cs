@@ -63,12 +63,12 @@ namespace Wombat.Controllers
             var roles = await userManager.GetRolesAsync(user);
             if (roles.Contains(Roles.Trainee))
             {
-                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmntsbyTraineeAsync(userId));
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByTraineeAsync(userId));
                 return View(loggedAssessments);
             }
             else if (roles.Contains(Roles.Assessor))
             {
-                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmntsbyAssessorAsync(userId));
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByAssessorAsync(userId));
                 return View(loggedAssessments);
             }
             else
@@ -88,6 +88,7 @@ namespace Wombat.Controllers
         // GET: LoggedAssessments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            
             var loggedAssessment = await loggedAssessmentRepository.GetAsync(id);
             if (loggedAssessment == null)
             {
@@ -97,6 +98,20 @@ namespace Wombat.Controllers
             var loggedAssessmentVM = mapper.Map<LoggedAssessmentVM>(loggedAssessment);
             return View(loggedAssessmentVM);
         }
+
+        public async Task<IActionResult> DetailsFromRequest(int? id)
+        {
+            var loggedAssessment = await loggedAssessmentRepository.GetAssessmentByRequestAsync(id);
+            if (loggedAssessment == null)
+            {
+                return NotFound();
+            }
+
+            var loggedAssessmentVM = mapper.Map<LoggedAssessmentVM>(loggedAssessment);
+            return View(loggedAssessmentVM);
+        }
+
+        
 
         public async Task AddViewDataAsync()
         {
@@ -180,6 +195,10 @@ namespace Wombat.Controllers
             var loggedAssessmentVM = new LoggedAssessmentVM();
             loggedAssessmentVM.TraineeId = assessmentRequest.TraineeId;
             loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(user);
+            loggedAssessmentVM.FormId = assessmentRequest.AssessmentFormId;
+            loggedAssessmentVM.AssessorId = assessmentRequest.AssessorId;
+            loggedAssessmentVM.EPAId = assessmentRequest.EPAId;
+            loggedAssessmentVM.AssessmentRequestId = id;
 
             if (httpContextAccessor.HttpContext != null)
             {
@@ -190,6 +209,11 @@ namespace Wombat.Controllers
                 return NotFound();
 
             loggedAssessmentVM.AssessmentDate = DateTime.Now;
+            loggedAssessmentVM.Form = mapper.Map<AssessmentFormVM>(await assessmentFormRepository.GetAsync(loggedAssessmentVM.FormId));
+
+            await PopulateAssessment(loggedAssessmentVM);
+            await AddViewDataAsync();
+
             return View(loggedAssessmentVM);
         }
 
@@ -238,14 +262,6 @@ namespace Wombat.Controllers
         {
             if (ModelState.IsValid)
             {
-                if(loggedAssessmentVM.GoodComment==null)
-                {
-                    loggedAssessmentVM.GoodComment = "";
-                }
-                if (loggedAssessmentVM.BadComment == null)
-                {
-                    loggedAssessmentVM.BadComment = "";
-                }
                 foreach (var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
                 {
                     if(optionCriterionResponse.OptionId==0)
@@ -258,6 +274,10 @@ namespace Wombat.Controllers
                 }
                 var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
                 await loggedAssessmentRepository.AddAsync(loggedAssessment);
+
+                var assessmentRequest = await assessmentRequestRepository.GetAsync(loggedAssessmentVM.AssessmentRequestId);
+                assessmentRequest.CompletionDate = DateTime.Now;
+                await assessmentRequestRepository.UpdateAsync(assessmentRequest);
 
                 var user = await userManager.FindByIdAsync(loggedAssessment.TraineeId);
 
@@ -291,6 +311,18 @@ namespace Wombat.Controllers
         }
 
         // GET: LoggedAssessments/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> CreatePDFFromRequest(int? id)
+        {
+            var loggedAssessment = await loggedAssessmentRepository.GetAssessmentByRequestAsync(id);
+            if (loggedAssessment == null)
+            {
+                return NotFound();
+            }
+
+            return await CreatePDF(loggedAssessment.Id);
+        }
+
         [HttpGet]
         public async Task<IActionResult> CreatePDF(int? id)
         {
@@ -382,14 +414,6 @@ namespace Wombat.Controllers
                 Cells[0].AddParagraph(optionCriterionResponse.Criterion.Description);
                 Cells[1].AddParagraph(Value);
             }
-
-            Cells = table.AddRow().Cells;
-            Cells[0].AddParagraph("Good comments");
-            Cells[1].AddParagraph(loggedAssessment.GoodComment);
-
-            Cells = table.AddRow().Cells;
-            Cells[0].AddParagraph("Bad comments");
-            Cells[1].AddParagraph(loggedAssessment.BadComment);
 
             // Render the PDF document
             var pdfRenderer = new PdfDocumentRenderer(true);

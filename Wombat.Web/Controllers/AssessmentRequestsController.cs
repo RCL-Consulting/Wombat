@@ -41,12 +41,7 @@ namespace Wombat.Web.Controllers
         }
 
         // GET: AssessmentRequests
-        public async Task<IActionResult> Index()
-        {
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAllAsync());
-            return View(Requests);
-        }
-
+        
         private bool UserIsAssessor()
         {
             if (httpContextAccessor.HttpContext == null)
@@ -55,6 +50,39 @@ namespace Wombat.Web.Controllers
             var user = userManager.GetUserAsync(httpContextAccessor.HttpContext.User).Result;
             var roles = userManager.GetRolesAsync(user).Result;
             return roles.Contains(Roles.Assessor);
+        }
+
+        public async Task<IActionResult> Index(AssessmentRequestStatus requestStatus)
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            ViewBag.RequestStatus = requestStatus;
+
+            if (UserIsAssessor())
+            {
+                if (requestStatus == AssessmentRequestStatus.Completed)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorCompletedAssessments(userId));
+                    return View(Requests);
+                }
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> IndexCompletedAssessor()
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            if (!UserIsAssessor())
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorCompletedAssessments(userId));
+            return View(Requests);
         }
 
         public async Task<IActionResult> IndexDeclinedAssessor()
@@ -66,7 +94,7 @@ namespace Wombat.Web.Controllers
                 return NotFound();
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetRequestsMadeOfAssessorAndDeclined(userId));
+            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorDeclinedRequests(userId));
             return View(Requests);
         }
 
@@ -79,7 +107,7 @@ namespace Wombat.Web.Controllers
                 return NotFound();
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetRequestsMadeOfAssessorAndAccepted(userId));
+            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingAssessments(userId));
             return View(Requests);
         }
 
@@ -92,7 +120,7 @@ namespace Wombat.Web.Controllers
                 return NotFound();
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetRequestsMadeOfAssessorAndWaitingApproval(userId));
+            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingRequests(userId));
             return View(Requests);
         }
 
@@ -166,6 +194,7 @@ namespace Wombat.Web.Controllers
                 return NotFound();
             }
             assessmentRequestVM.DateDeclined = DateTime.Now;
+
             var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
 
             if (assessmentRequest == null)
@@ -177,7 +206,8 @@ namespace Wombat.Web.Controllers
             {
                 try
                 {
-                    mapper.Map(assessmentRequestVM, assessmentRequest);
+                    assessmentRequest.AssessorNotes = assessmentRequestVM.AssessorNotes;
+                    assessmentRequest.DateDeclined = assessmentRequestVM.DateDeclined;
                     await assessmentRequestRepository.UpdateAsync(assessmentRequest);
                 }
                 catch (DbUpdateConcurrencyException)

@@ -38,10 +38,10 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <a asp-action="IndexCompletedAssessor" asp-controller="AssessmentRequests" style="text-decoration: none;">
-                    <h1 class="card-title text-success">@Model.NumberOfCompletedAssessment</h1>
+                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Completed" style="text-decoration: none;">
+                    <h1 class="card-title text-success">@Model.NumberOfCompletedAssessments</h1>
                 </a>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfCompletedAssessment)</p>
+                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfCompletedAssessments)</p>
             </div>
         </div>
     </div>

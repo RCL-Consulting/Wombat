@@ -8,7 +8,9 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <h1 class="card-title text-danger">@Model.NumberOfRequestsMade</h1>
+                <a asp-action="IndexAwaitingTrainee" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                    <h1 class="card-title text-danger">@Model.NumberOfRequestsMade</h1>
+                </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsMade)</p>
             </div>
         </div>
@@ -16,7 +18,9 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <h1 class="card-title text-danger">@Model.NumberOfRequestsDeclined</h1>
+                <a asp-action="IndexDeclinedTrainee" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                    <h1 class="card-title text-danger">@Model.NumberOfRequestsDeclined</h1>
+                </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsDeclined)</p>
             </div>
         </div>
@@ -24,7 +28,9 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <h1 class="card-title text-primary">@Model.NumberOfPendingAssessments</h1>
+                <a asp-action="IndexPendingTrainee" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                    <h1 class="card-title text-primary">@Model.NumberOfPendingAssessments</h1>
+                </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfPendingAssessments)</p>
             </div>
         </div>
@@ -32,8 +38,10 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <h1 class="card-title text-success">@Model.NumberOfCompletedAssessment</h1>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfCompletedAssessment)</p>
+                <a asp-action="IndexCompletedTrainee" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                    <h1 class="card-title text-success">@Model.NumberOfCompletedAssessments</h1>
+                </a>
+                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfCompletedAssessments)</p>
             </div>
         </div>
     </div>

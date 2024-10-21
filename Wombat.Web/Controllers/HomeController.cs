@@ -67,25 +67,31 @@ namespace Wombat.Controllers
                 dashboard.User.Speciality = dashboard.User.SubSpeciality.Speciality;
                 dashboard.EPAList = mapper.Map<List<EPAVM>>(await EPARepository.GetEPAListBySubspeciality(dashboard.User.SubSpeciality.Id));
 
-                var requestsMade = await assessmentRequestRepository.GetRequestsMadeByTraineeAndWaitingApproval(userId);
+                var requestsMade = await assessmentRequestRepository.GetTraineePendingRequests(userId);
                 dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
 
-                var requestsDeclined = await assessmentRequestRepository.GetRequestsMadeByTraineeAndDeclined(userId);
+                var requestsDeclined = await assessmentRequestRepository.GetTraineeDeclinedRequests(userId);
                 dashboard.NumberOfRequestsDeclined = requestsDeclined?.Count ?? 0;
 
-                var requestsMadeAndAccepted = await assessmentRequestRepository.GetRequestsMadeByTraineeAndAccepted(userId);
-                dashboard.NumberOfPendingAssessments = requestsMadeAndAccepted?.Count ?? 0;
+                var pendingAssessments = await assessmentRequestRepository.GetTraineePendingAssessments(userId);
+                dashboard.NumberOfPendingAssessments = pendingAssessments?.Count ?? 0;
+
+                var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
+                dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
             }
             else if (roles.Contains(Roles.Assessor))
             {
-                var requestsMade = await assessmentRequestRepository.GetRequestsMadeOfAssessorAndWaitingApproval(userId);
+                var requestsMade = await assessmentRequestRepository.GetAssessorPendingRequests(userId);
                 dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
 
-                var requestsDeclined = await assessmentRequestRepository.GetRequestsMadeOfAssessorAndDeclined(userId);
+                var requestsDeclined = await assessmentRequestRepository.GetAssessorDeclinedRequests(userId);
                 dashboard.NumberOfRequestsDeclined = requestsDeclined?.Count ?? 0;
 
-                var requestsMadeAndAccepted = await assessmentRequestRepository.GetRequestsMadeOfAssessorAndAccepted(userId);
+                var requestsMadeAndAccepted = await assessmentRequestRepository.GetAssessorPendingAssessments(userId);
                 dashboard.NumberOfPendingAssessments = requestsMadeAndAccepted?.Count ?? 0;
+
+                var completedAssessments = await assessmentRequestRepository.GetAssessorCompletedAssessments(userId);
+                dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
             }
 
             dashboard.User.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));               

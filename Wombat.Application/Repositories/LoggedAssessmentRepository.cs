@@ -53,7 +53,7 @@ namespace Wombat.Application.Repositories
             return assessments;
         }
 
-        public async Task<List<LoggedAssessment>?> GetAssessmntsbyTraineeAsync(string id)
+        public async Task<List<LoggedAssessment>?> GetAssessmentsByTraineeAsync(string id)
         {
             var assessments = await context.LoggedAssessments
                 .Where(x => x.TraineeId == id)
@@ -71,7 +71,7 @@ namespace Wombat.Application.Repositories
             return assessments;
         }
 
-        public async Task<List<LoggedAssessment>?> GetAssessmntsbyAssessorAsync(string id)
+        public async Task<List<LoggedAssessment>?> GetAssessmentsByAssessorAsync(string id)
         {
             var assessments = await context.LoggedAssessments
                 .Where(x => x.AssessorId == id)
@@ -87,6 +87,23 @@ namespace Wombat.Application.Repositories
                 }
             }
             return assessments;
+        }
+
+        public async Task<LoggedAssessment?> GetAssessmentByRequestAsync(int? id)
+        {
+            var assessment = await context.LoggedAssessments
+                .Where(x => x.AssessmentRequestId == id)
+                .FirstOrDefaultAsync();
+
+            if (assessment != null)
+            {
+                assessment.Trainee = await userManager.FindByIdAsync(assessment.TraineeId);
+                assessment.Assessor = await userManager.FindByIdAsync(assessment.AssessorId);
+                assessment.EPA = await EPARepository.GetAsync(assessment.EPAId);
+
+                assessment.OptionCriterionResponses = await optionCriterionResponse.GetByAssessmentIdAsync(assessment.Id);
+            }
+            return assessment;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,7 @@ namespace Wombat.Data
         public DateTime? DateAccepted { get; set; }
         public DateTime? DateDeclined { get; set; }
         public DateTime? AssessmentDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
 
         public string TraineeId { get; set; } = "";
 
