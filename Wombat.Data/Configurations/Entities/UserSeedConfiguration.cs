@@ -29,40 +29,26 @@ namespace Wombat.Data.Configurations.Entities
                 new WombatUser
                 {
                     Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
-                    Email = "upassessor@localhost.com",
-                    NormalizedEmail = "UPASSESSOR@LOCALHOST.COM",
-                    UserName = "upassessor@localhost.com",
-                    NormalizedUserName = "UPASSESSOR@LOCALHOST.COM",
+                    Email = "assessor@localhost.com",
+                    NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
+                    UserName = "assessor@localhost.com",
+                    NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "UPAssessor",
+                    Surname = "Assessor",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 2,
-                    SubSpecialityId = null
-                },
-                new WombatUser
-                {
-                    Id = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
-                    Email = "uctassessor@localhost.com",
-                    NormalizedEmail = "UCTASSESSOR@LOCALHOST.COM",
-                    UserName = "uctassessor@localhost.com",
-                    NormalizedUserName = "UCTASSESSOR@LOCALHOST.COM",
-                    Name = "System",
-                    Surname = "UCTAssessor",
-                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
-                    EmailConfirmed = true,
-                    InstitutionId = 3,
                     SubSpecialityId = null
                 },
                 new WombatUser
                 {
                     Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
-                    Email = "uptrainee@localhost.com",
-                    NormalizedEmail = "UPTRAINEE@LOCALHOST.COM",
-                    UserName = "uptrainee@localhost.com",
-                    NormalizedUserName = "UPTRAINEE@LOCALHOST.COM",
+                    Email = "trainee@localhost.com",
+                    NormalizedEmail = "TRAINEE@LOCALHOST.COM",
+                    UserName = "trainee@localhost.com",
+                    NormalizedUserName = "TRAINEE@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "UPTrainee",
+                    Surname = "Trainee",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 2,
@@ -70,40 +56,13 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new WombatUser
                 {
-                    Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
-                    Email = "ucttrainee@localhost.com",
-                    NormalizedEmail = "UCTTRAINEE@LOCALHOST.COM",
-                    UserName = "ucttrainee@localhost.com",
-                    NormalizedUserName = "UCTTRAINEE@LOCALHOST.COM",
-                    Name = "System",
-                    Surname = "UCTTrainee",
-                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
-                    EmailConfirmed = true,
-                    InstitutionId = 3,
-                    SubSpecialityId = 1
-                },
-                new WombatUser
-                {
                     Id = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237",
-                    Email = "upcoordinator@localhost.com",
-                    NormalizedEmail = "UPCOORDINATOR@LOCALHOST.COM",
-                    UserName = "upcoordinator@localhost.com",
-                    NormalizedUserName = "UPCOORDINATOR@LOCALHOST.COM",
+                    Email = "coordinator@localhost.com",
+                    NormalizedEmail = "COORDINATOR@LOCALHOST.COM",
+                    UserName = "coordinator@localhost.com",
+                    NormalizedUserName = "COORDINATOR@LOCALHOST.COM",
                     Name = "System",
-                    Surname = "UPCoordinator",
-                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
-                    EmailConfirmed = true,
-                    InstitutionId = 2
-                },
-                new WombatUser
-                {
-                    Id = "9AF99F0F-868F-41A8-8121-758647507D92",
-                    Email = "uctcoordinator@localhost.com",
-                    NormalizedEmail = "UCTCOORDINATOR@LOCALHOST.COM",
-                    UserName = "uctcoordinator@localhost.com",
-                    NormalizedUserName = "UCTCOORDINATOR@LOCALHOST.COM",
-                    Name = "System",
-                    Surname = "UCTCoordinator",
+                    Surname = "Coordinator",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 2

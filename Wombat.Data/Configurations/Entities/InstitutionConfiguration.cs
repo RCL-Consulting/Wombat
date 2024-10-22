@@ -22,13 +22,7 @@ namespace Wombat.Data.Configurations.Entities
                 new Institution
                 {
                     Id = 2,
-                    Name = "University of Pretoria",
-                    CanDelete = false
-                },
-                new Institution
-                {
-                    Id = 3,
-                    Name = "University of Cape Town",
+                    Name = "University of ABC",
                     CanDelete = false
                 }
             );

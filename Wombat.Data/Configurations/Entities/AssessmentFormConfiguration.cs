@@ -22,25 +22,25 @@ namespace Wombat.Data.Configurations.Entities
                 new AssessmentForm
                 {
                     Id = 2,
-                    Name = "Peadiatrics-General EPA1 CEX",
+                    Name = "Paediatrics-General EPA1 CEX",
                     CanDelete = true
                 },
                 new AssessmentForm
                 {
                     Id = 3,
-                    Name = "Peadiatrics-General EPA2 CEX",
+                    Name = "Paediatrics-General EPA2 CEX",
                     CanDelete = true
                 },
                 new AssessmentForm
                 {
                     Id = 4,
-                    Name = "Peadiatrics-General EPA3 CEX",
+                    Name = "Paediatrics-General EPA3 CEX",
                     CanDelete = true
                 },
                 new AssessmentForm
                 {
                     Id = 5,
-                    Name = "Peadiatrics-General EPA4 CEX",
+                    Name = "Paediatrics-General EPA4 CEX",
                     CanDelete = true
                 }
             );
