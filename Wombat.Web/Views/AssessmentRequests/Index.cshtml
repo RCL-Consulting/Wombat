@@ -4,7 +4,7 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Completed assessments</h1>
+<h1>@ViewBag.Heading</h1>
 
 <table class="table">
     <thead>
@@ -21,8 +21,16 @@
                     @Html.DisplayNameFor(model => model.CompletionDate)
                 </th>
             }
+            else if ( ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
+                      ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
+                      ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.AssessmentDate)
+                </th>
+            }
             <th>
-                @Html.DisplayNameFor(model => model.EPA)
+                @Html.DisplayNameFor(model => model.ShortEPADisplayName)
             </th>
             <th></th>
         </tr>
@@ -43,14 +51,39 @@
                         @Html.DisplayFor(modelItem => item.CompletionDate)
                     </td>
                 }
+                else if ( ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
+                          ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
+                          ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
+                {
+                    <td>
+                        @Html.DisplayFor(modelItem => item.AssessmentDate)
+                    </td>
+                }
                 <td>
-                    @item.EPA.SubSpeciality.Speciality.Name-@item.EPA.SubSpeciality.Name @item.EPA.Name
+                    @item.ShortEPADisplayName
                 </td>
                 <td>
                     @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
                     {
-                        <a class="btn btn-warning" asp-action="CreatePDFFromRequest" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-regular fa-file-pdf"></i></a>
+                        <a class="btn btn-warning" asp-action="CreatePDFFromRequest" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-regular fa-file-pdf"></i></a> @:&nbsp;
                         <a class="btn btn-info" asp-action="DetailsFromRequest" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                    }
+                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested)
+                    {
+                        if (User.IsInRole(Roles.Assessor))
+                        {
+                            <a class="btn btn-success" asp-action="AcceptRequest" asp-route-id="@item.Id"><i class="fa-regular fa-square-check"></i></a> @:&nbsp;
+                            <a class="btn btn-danger" asp-action="DeclineRequest" asp-route-id="@item.Id"><i class="fa-regular fa-rectangle-xmark"></i></a> @:&nbsp;
+                        }
+                        <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-requestStatus="@ViewBag.RequestStatus"><i class="fas fa-info-circle"></i></a>
+                    }
+                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Declined )
+                    {
+                        <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-requestStatus="@ViewBag.RequestStatus"><i class="fas fa-info-circle"></i></a>
+                    }
+                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted && User.IsInRole(Roles.Assessor))
+                    {
+                        <a class="btn btn-warning" asp-action="LogRequestedAssessment" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-solid fa-clipboard-check"></i></a>
                     }
                 </td>
             </tr>

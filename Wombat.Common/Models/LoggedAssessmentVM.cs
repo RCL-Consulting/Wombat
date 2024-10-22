@@ -10,6 +10,7 @@
             EPAId = 0;
         }
 
+        public bool AssessmentIsPublic { get; set; } = false;
         public int Id { get; set; }
         public string TraineeId { get; set; }
         public WombatUserVM? Trainee { get; set; }
@@ -28,5 +29,21 @@
         public List<OptionCriterionResponseVM> OptionCriterionResponses { get; set; }
 
         public DateTime AssessmentDate { get; set; }
+
+        public int Score { get; set; }
+
+        public void SetScore()
+        {
+            int Result = 0;
+            foreach (var item in OptionCriterionResponses)
+            {
+                if (item.Criterion.OptionSetId == 2)
+                {
+                    Result = item.Option.Rank;
+                    break;
+                }
+            }
+            Score = Result;
+        }
     }
 }

@@ -23,6 +23,7 @@ namespace Wombat.Controllers
         private readonly IInstitutionRepository institutionRepository;
         private readonly IEPARepository EPARepository;
         private readonly IAssessmentRequestRepository assessmentRequestRepository;
+        private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
         private readonly IMapper mapper;
 
         public HomeController( UserManager<WombatUser> userManager,
@@ -32,7 +33,8 @@ namespace Wombat.Controllers
                                IMapper mapper,
                                IInstitutionRepository institutionRepository,
                                IEPARepository EPARepository,
-                               IAssessmentRequestRepository assessmentRequestRepository)
+                               IAssessmentRequestRepository assessmentRequestRepository,
+                               ILoggedAssessmentRepository loggedAssessmentRepository )
         {
             this.userManager = userManager;
             this.httpContextAccessor = httpContextAccessor;
@@ -42,6 +44,7 @@ namespace Wombat.Controllers
             this.institutionRepository = institutionRepository;
             this.EPARepository = EPARepository;
             this.assessmentRequestRepository = assessmentRequestRepository;
+            this.loggedAssessmentRepository = loggedAssessmentRepository;
         }
 
         public async Task<IActionResult> IndexAsync()
@@ -65,7 +68,15 @@ namespace Wombat.Controllers
                 if (dashboard.User.SubSpeciality == null)
                     return NotFound();
                 dashboard.User.Speciality = dashboard.User.SubSpeciality.Speciality;
-                dashboard.EPAList = mapper.Map<List<EPAVM>>(await EPARepository.GetEPAListBySubspeciality(dashboard.User.SubSpeciality.Id));
+                var EPAList = await EPARepository.GetEPAListBySubspeciality(dashboard.User.SubSpeciality.Id);
+                if (EPAList != null)
+                {
+                    dashboard.EPAList = mapper.Map<List<EPAVM>>(EPAList);
+                    List<int> EPAIds = EPAList.Select(e => e.Id).ToList();
+
+                    dashboard.TotalAssessmentsPerEPA = await loggedAssessmentRepository.GetTotalAssessmentsPerEPAByTrainee(EPAIds, userId);
+                    dashboard.VisibleAssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, userId);
+                }
 
                 var requestsMade = await assessmentRequestRepository.GetTraineePendingRequests(userId);
                 dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;

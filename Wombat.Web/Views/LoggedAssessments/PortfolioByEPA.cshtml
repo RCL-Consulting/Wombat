@@ -1,0 +1,97 @@
+﻿@model IEnumerable<LoggedAssessmentVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+@if(User.IsInRole(Roles.Trainee))
+{
+    <h1>Edit portfolio</h1>
+}
+else
+{
+    <h1>@ViewBag.EPA Portfolio for @ViewBag.TraineeName</h1>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Assessor)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EPA)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AssessmentDate)
+            </th>
+            <th>
+                Assessment score
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model) 
+    {
+        bool ToggledPublic = !item.AssessmentIsPublic;
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Assessor.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EPA.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AssessmentDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Score)
+            </td>
+            <td>
+                @if(User.IsInRole(Roles.Trainee))
+                {
+                    @if(item.AssessmentIsPublic)
+                    {
+                            <button data-assessmentid="@item.Id" data-ispublic="@ToggledPublic" class="btn btn-warning toggleBtn" type="button" data-toggle="tooltip" data-placement="top" title="Remove from portfolio"><i class="far fa-solid fa-eye"></i></button>
+                    }
+                    else
+                    {
+                            <button data-assessmentid="@item.Id" data-ispublic="@ToggledPublic" class="btn btn-warning toggleBtn" type="button" data-toggle="tooltip" data-placement="top" title="Add to portfolio"><i class="fa-solid fa-eye-slash"></i></button>
+                    }
+                }
+                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-returnAction="PortfolioByEPA" asp-route-returnId="@item.EPA.Id"><i class="fas fa-info-circle"></i></a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<br/>
+<div>
+    <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Back Home</a> &nbsp;
+</div>
+
+<form id="publicForm" asp-action="PortfolioByEPA">
+    <input type="hidden" id="assessmentId" name="assessmentId" />
+    <input type="hidden" id="isPublic" name="isPublic" />
+</form>
+
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            $('.toggleBtn').click(function (e) {
+                var btn = $(this);
+                var id = btn.data("assessmentid");
+                $("#assessmentId").val(id);
+                var isPublic = btn.data("ispublic");
+                $("#isPublic").val(isPublic);
+                $("#publicForm").submit();
+                $("#deleteForm").submit();
+            });
+
+        });
+
+    </script>
+}

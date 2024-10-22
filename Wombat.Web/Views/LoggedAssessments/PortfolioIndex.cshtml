@@ -1,0 +1,32 @@
+﻿@model IEnumerable<WombatUserVM>
+
+@{
+    ViewData["Title"] = "Portfolios";
+}
+
+<h1>Trainee portfolios</h1>
+<hr />
+<br />
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Trainee
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @item.DisplayName
+                </td>
+                <td>
+                    <a class="btn btn-info" asp-action="PortfolioByTrainee" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

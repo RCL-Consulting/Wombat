@@ -15,6 +15,7 @@ using Wombat.Common.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Authorization;
 using Wombat.Application.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Wombat.Controllers
 {
@@ -26,6 +27,8 @@ namespace Wombat.Controllers
         private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly IAssessmentRequestRepository assessmentRequestRepository;
         private readonly IEPARepository EPARepository;
+        private readonly ISubSpecialityRepository subSpecialityRepository;
+        private readonly ISpecialityRepository specialityRepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEmailSender emailSender;
         private readonly IWebHostEnvironment webHostEnvironment;
@@ -36,6 +39,8 @@ namespace Wombat.Controllers
                                             IEPARepository EPARepository,
                                             IAssessmentFormRepository assessmentFormRepository,
                                             IAssessmentRequestRepository assessmentRequestRepository,
+                                            ISpecialityRepository specialityRepository,
+                                            ISubSpecialityRepository subSpecialityRepository,
                                             IHttpContextAccessor httpContextAccessor,
                                             IEmailSender emailSender,
                                             IWebHostEnvironment webHostEnvironment,
@@ -50,6 +55,146 @@ namespace Wombat.Controllers
             this.emailSender=emailSender;
             this.webHostEnvironment=webHostEnvironment;
             this.mapper=mapper;
+            this.subSpecialityRepository = subSpecialityRepository;
+            this.specialityRepository = specialityRepository;
+        }
+
+        public async Task<IActionResult> PortfolioByEPA(int id, string traineeId)
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+
+            var roles = await userManager.GetRolesAsync(user);
+            if (roles.Contains(Roles.Trainee))
+            {
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByEPAAndTraineeAsync(id,userId));
+                foreach(var assessment in loggedAssessments)
+                {
+                    assessment.SetScore();
+                }
+                return View(loggedAssessments);
+            }
+            else if (roles.Contains(Roles.Coordinator))
+            {
+                var trainee = await userManager.FindByIdAsync(traineeId);
+                if( trainee==null || trainee.InstitutionId != user.InstitutionId)
+                    return NotFound();
+
+                var epa = await EPARepository.GetAsync(id);
+                ViewBag.EPA = epa.Name;
+                ViewBag.TraineeName = mapper.Map<WombatUserVM>(trainee).DisplayName;
+
+                var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(id, trainee.Id));
+                foreach (var assessment in loggedAssessments)
+                {
+                    assessment.SetScore();
+                }
+                return View(loggedAssessments);
+            }
+
+            return NotFound();
+        }
+
+        [Authorize(Roles = Roles.Trainee)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PortfolioByEPA(bool isPublic, int assessmentId)
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var assessment = await loggedAssessmentRepository.GetAsync(assessmentId);
+            if(assessment == null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            int epaId = assessment.EPAId;
+            assessment.AssessmentIsPublic = isPublic;
+            try
+            {
+                await loggedAssessmentRepository.UpdateAsync(assessment);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await loggedAssessmentRepository.Exists(assessmentId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }                        
+
+            var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByEPAAndTraineeAsync(epaId, userId));
+            foreach (var item in loggedAssessments)
+            {
+                item.SetScore();
+            }
+            return View(loggedAssessments);
+        }
+
+        public async Task<IActionResult> PortfolioByTrainee(string id)
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var trainee = await userManager.FindByIdAsync(id);
+            if (trainee == null)
+                return NotFound();
+
+            var SubSpeciality = mapper.Map<SubSpecialityVM>(await subSpecialityRepository.GetAsync(trainee.SubSpecialityId));
+            if (SubSpeciality == null)
+                return NotFound();
+
+            var Speciality = SubSpeciality.Speciality;
+            var EPAList = await EPARepository.GetEPAListBySubspeciality(SubSpeciality.Id);
+            if (EPAList == null)
+                return NotFound();
+
+            var portfolio = new PortfolioVM();
+
+            portfolio.Trainee = mapper.Map<WombatUserVM>(trainee);
+            portfolio.EPAList = mapper.Map<List<EPAVM>>(EPAList);
+            List<int> EPAIds = EPAList.Select(e => e.Id).ToList();
+            
+            portfolio.AssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, trainee.Id);
+            portfolio.ScorePerEPA = await loggedAssessmentRepository.GetVisibleScorePerEPAByTrainee(EPAIds, trainee.Id);
+
+            return View(portfolio);
+        }
+
+        public async Task<IActionResult> PortfolioIndex()
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+            if(user == null) return NotFound();
+
+            var institutionId = user.InstitutionId;
+
+            var trainees = await userManager.GetUsersInRoleAsync(Roles.Trainee);
+
+            List<WombatUserVM> traineesHere = new List<WombatUserVM>();
+            foreach( var item in trainees)
+            {
+                if (item.InstitutionId == institutionId)
+                {
+                    traineesHere.Add(mapper.Map<WombatUserVM>(item));
+                }
+            }
+
+            return View(traineesHere);
+        }
+
+        public async Task<IActionResult> AssessorsIndex()
+        {
+            return View();
         }
 
         public async Task<IActionResult> MyAssessments()
@@ -73,8 +218,6 @@ namespace Wombat.Controllers
             }
             else
                 return NotFound();
-
-            return NotFound();
         }
 
         [Authorize(Roles = Roles.Assessor)]
@@ -86,9 +229,11 @@ namespace Wombat.Controllers
         }
 
         // GET: LoggedAssessments/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? id, string returnAction, int returnId )
         {
-            
+            ViewBag.ReturnAction = returnAction;
+            ViewBag.ReturnId = returnId;
+
             var loggedAssessment = await loggedAssessmentRepository.GetAsync(id);
             if (loggedAssessment == null)
             {
@@ -109,9 +254,7 @@ namespace Wombat.Controllers
 
             var loggedAssessmentVM = mapper.Map<LoggedAssessmentVM>(loggedAssessment);
             return View(loggedAssessmentVM);
-        }
-
-        
+        }        
 
         public async Task AddViewDataAsync()
         {
@@ -184,6 +327,9 @@ namespace Wombat.Controllers
             {
                 return NotFound();
             }
+
+            if (assessmentRequest.CompletionDate != null)
+                return RedirectToAction("Home","Index");
 
             var user = assessmentRequest.Trainee;
             if (user == null)

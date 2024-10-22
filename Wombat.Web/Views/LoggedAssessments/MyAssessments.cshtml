@@ -41,7 +41,7 @@
             </td>
             <td>
                 <a class="btn btn-warning" asp-action="CreatePDF" asp-route-id="@item.Id"><i class="fa-regular fa-file-pdf"></i></a>
-                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-returnAction="MyAssessments"><i class="fas fa-info-circle"></i></a>
             </td>
         </tr>
 }

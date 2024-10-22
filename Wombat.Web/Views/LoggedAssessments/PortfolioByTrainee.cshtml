@@ -1,0 +1,49 @@
+﻿@model PortfolioVM
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Portfolio for @Model.Trainee.DisplayName</h2>
+            <div class="table-responsive small">
+                <table class="table table-striped table-sm" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th scope="col">EPA</th>
+                            <th scope="col">Assessments</th>
+                            <th scope="col">Highest score</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.EPAList != null)
+                        {
+                            foreach (var item in Model.EPAList)
+                            {
+                                int totalAssessments = 0;
+                                @if (Model.AssessmentsPerEPA.ContainsKey(item.Id))
+                                {
+                                    totalAssessments = Model.AssessmentsPerEPA[item.Id];
+                                }
+                                int highestScore = 0;
+                                @if (Model.ScorePerEPA.ContainsKey(item.Id))
+                                {
+                                    highestScore = Model.ScorePerEPA[item.Id];
+                                }
+                                <tr>
+                                    <td>@item.Name: @item.Description</td>
+                                    
+                                    <td>@totalAssessments</td>
+                                    <td>@highestScore</td>
+
+                                    <td>
+                                        <a class="btn btn-info" asp-action="PortfolioByEPA" asp-route-id="@item.Id" asp-route-traineeId="@Model.Trainee.Id"><i class="fas fa-info-circle"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

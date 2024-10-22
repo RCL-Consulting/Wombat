@@ -69,6 +69,12 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
+                            Id = "5653650A-167F-42D5-A67F-2C0AE818EB84",
+                            Name = "Coordinator",
+                            NormalizedName = "COORDINATOR"
+                        },
+                        new
+                        {
                             Id = "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8",
                             Name = "Unassigned",
                             NormalizedName = "UNASSIGNED"
@@ -188,6 +194,16 @@ namespace Wombat.Data.Migrations
                         {
                             UserId = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
                             RoleId = "3FAA94D6-23C2-4365-9951-796673F48402"
+                        },
+                        new
+                        {
+                            UserId = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237",
+                            RoleId = "5653650A-167F-42D5-A67F-2C0AE818EB84"
+                        },
+                        new
+                        {
+                            UserId = "9AF99F0F-868F-41A8-8121-758647507D92",
+                            RoleId = "5653650A-167F-42D5-A67F-2C0AE818EB84"
                         });
                 });
 
@@ -692,6 +708,9 @@ namespace Wombat.Data.Migrations
 
                     b.Property<DateTime>("AssessmentDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("AssessmentIsPublic")
+                        .HasColumnType("bit");
 
                     b.Property<int>("AssessmentRequestId")
                         .HasColumnType("int");
@@ -1670,7 +1689,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "145bb2bf-f890-42f1-8a51-a26ed8a7e7e6",
+                            ConcurrencyStamp = "6836c55d-672b-4f3b-b455-4b8e23286abe",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -1681,9 +1700,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAENBpVGkjTvYnPTYnQkXuuh3SUoXtEtAwksj2anyniRvUGczrI+WH23MXNMMn/n2EzA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMxJABVatGy1clCbIh1vGkKsFOs2MZHE9TcUf0FVNKSRGW43UFD/ZnVXT0o0Se/dRQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2a9b7a40-ef4e-4fba-af08-89c905c33563",
+                            SecurityStamp = "90c52ee9-8493-4677-ba77-fa79b5a13a8b",
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -1692,7 +1711,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8d1ce610-b1fb-42a1-b3d7-e356da028678",
+                            ConcurrencyStamp = "7ecc752c-ab9d-409f-9b0b-5c810dfea777",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "upassessor@localhost.com",
                             EmailConfirmed = true,
@@ -1703,9 +1722,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UPASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "UPASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDN1LuDyQvaJBvNQrh1TMLnCT/WQOt5DoA7S+QJxwbaBLMLKp9lxvP3BCbI/kSe1nQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOvoUhgRTXTw8+KO4iav2oXumQOCyZOrNsLYRyOZ85UNl/vVj5fDlupr31NRxbUJaw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4eea8ed6-9b9e-4f11-83ab-04a9d28148d8",
+                            SecurityStamp = "277b6c0e-bc8b-4e1b-9999-035aa9468b44",
                             Surname = "UPAssessor",
                             TwoFactorEnabled = false,
                             UserName = "upassessor@localhost.com"
@@ -1714,7 +1733,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "965631FD-F55B-4AAE-85B4-81561A5CD78F",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "25741503-8316-4b7f-b460-8d1b2660d382",
+                            ConcurrencyStamp = "9e46d487-517d-492c-8d94-94d8be9e1162",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "uctassessor@localhost.com",
                             EmailConfirmed = true,
@@ -1725,9 +1744,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UCTASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "UCTASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFkpNOZy4wmLwyihpBioeJBz1zEvPMAxF71/ukek6n5Jn7AkGt/hSFw1JCXP6gRAnA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGDX2r28EY04nzqgBfSubSvRDi08ULsRKX6cWOkz2xBRns9f6JcVoflr8VXN+2h+fg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "70d67da8-2433-418d-be6f-b96e72c5fe7c",
+                            SecurityStamp = "de3114da-8e6f-4f35-843d-344ba840ea0d",
                             Surname = "UCTAssessor",
                             TwoFactorEnabled = false,
                             UserName = "uctassessor@localhost.com"
@@ -1736,7 +1755,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "36196387-771d-4b97-b0d3-e52562006852",
+                            ConcurrencyStamp = "bb66ff79-a066-4016-a96f-e2493c1d58c3",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "uptrainee@localhost.com",
                             EmailConfirmed = true,
@@ -1747,9 +1766,9 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "UPTRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "UPTRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE4V2ZuKtKtdLXMHGL8npOscYu/WOGPt5QFNUmSmovGnw2SUBUJcfT8bYKS1myWOYA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDJnzeE9hb6ePYwQ3KzTNqk0blXC0LpVF8GiCN/ckid4qjvhfsLRwXlRVmWl1eZ9tg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "382507ae-aea1-4060-bdd7-03220bac2b43",
+                            SecurityStamp = "d048e84b-a5ec-4377-8172-7435468541f4",
                             SubSpecialityId = 1,
                             Surname = "UPTrainee",
                             TwoFactorEnabled = false,
@@ -1759,7 +1778,7 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5b39bd5e-1986-4837-bd22-cb66c45a59ec",
+                            ConcurrencyStamp = "991c882b-85d3-48a8-ad7b-88fe962eaeaf",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "ucttrainee@localhost.com",
                             EmailConfirmed = true,
@@ -1768,15 +1787,59 @@ namespace Wombat.Data.Migrations
                             InstitutionId = 3,
                             LockoutEnabled = false,
                             Name = "System",
-                            NormalizedEmail = "uctTRAINEE@LOCALHOST.COM",
-                            NormalizedUserName = "uctTRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBZj12bQZWNFSrMUUBetBNmiMFSB271opUlhX7G+pkvN8YJHrZdWY8T0fSpMnoHU9Q==",
+                            NormalizedEmail = "UCTTRAINEE@LOCALHOST.COM",
+                            NormalizedUserName = "UCTTRAINEE@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEINWlmMJzD/OmENGf7iDMNOycNfNHxerMK+8y3Vaef/7s0QLoVsHMgqqo6lj12YYag==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "e8d8bb77-c356-4bb7-b89e-cd7c26b9384a",
+                            SecurityStamp = "07e6b285-dfce-4333-86b8-7fbca477f9f3",
                             SubSpecialityId = 1,
                             Surname = "UCTTrainee",
                             TwoFactorEnabled = false,
                             UserName = "ucttrainee@localhost.com"
+                        },
+                        new
+                        {
+                            Id = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bb5e5044-bef3-4650-808b-5b705fcaf497",
+                            DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "upcoordinator@localhost.com",
+                            EmailConfirmed = true,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 2,
+                            LockoutEnabled = false,
+                            Name = "System",
+                            NormalizedEmail = "UPCOORDINATOR@LOCALHOST.COM",
+                            NormalizedUserName = "UPCOORDINATOR@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFJGTds1m6tt8dqMBVz4wN9GfqsciChXjtE+9GgWDZimOTaTu+Sin3ZZTooDzi0S2w==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "04bb3d6a-9c6b-4d61-a928-69addcece923",
+                            Surname = "UPCoordinator",
+                            TwoFactorEnabled = false,
+                            UserName = "upcoordinator@localhost.com"
+                        },
+                        new
+                        {
+                            Id = "9AF99F0F-868F-41A8-8121-758647507D92",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c515a97b-43d1-4948-be4e-75ba384b78f1",
+                            DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "uctcoordinator@localhost.com",
+                            EmailConfirmed = true,
+                            HPCSANumber = "",
+                            IdNumber = "",
+                            InstitutionId = 2,
+                            LockoutEnabled = false,
+                            Name = "System",
+                            NormalizedEmail = "UCTCOORDINATOR@LOCALHOST.COM",
+                            NormalizedUserName = "UCTCOORDINATOR@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOwnuCsLPkkUGvmfcYCHUldRcUK58ifBemVG4uWd21KKcDUWmioqQw0THcBG58RvTQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "79308b75-c8b7-43fb-b5a6-e5ff1f929ba4",
+                            Surname = "UCTCoordinator",
+                            TwoFactorEnabled = false,
+                            UserName = "uctcoordinator@localhost.com"
                         });
                 });
 

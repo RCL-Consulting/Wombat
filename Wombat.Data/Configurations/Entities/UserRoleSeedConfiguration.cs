@@ -38,6 +38,18 @@ namespace Wombat.Data.Configurations.Entities
                     //"ucttrainee@localhost.com" is trainee
                     RoleId = "3FAA94D6-23C2-4365-9951-796673F48402",
                     UserId = "343ABA27-DDC0-40E0-AD5C-C4E918965876"
+                },
+                new IdentityUserRole<string>
+                {
+                    //"upcoordinator@localhost.com" is trainee
+                    RoleId = "5653650A-167F-42D5-A67F-2C0AE818EB84",
+                    UserId = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237"
+                },
+                new IdentityUserRole<string>
+                {
+                    //"uctcoordinator@localhost.com" is trainee
+                    RoleId = "5653650A-167F-42D5-A67F-2C0AE818EB84",
+                    UserId = "9AF99F0F-868F-41A8-8121-758647507D92"
                 }
             );
         }

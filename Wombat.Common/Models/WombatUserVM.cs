@@ -8,6 +8,13 @@
             Email = "";
         }
 
+        public string DisplayName
+        {
+            get
+            {
+                return Name + " " + Surname + " ("+Email+ ")";
+            }
+        }
         public string Name { get; set; }
         public string Surname { get; set; }
 

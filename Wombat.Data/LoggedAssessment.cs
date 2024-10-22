@@ -9,6 +9,7 @@ namespace Wombat.Data
         {
         }
 
+        public bool AssessmentIsPublic { get; set; } = false;
         public string TraineeId { get; set; }
 
         [ForeignKey("TraineeId")]

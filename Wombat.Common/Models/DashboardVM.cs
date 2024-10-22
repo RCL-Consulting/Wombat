@@ -24,5 +24,8 @@ namespace Wombat.Common.Models
 
         [Display(Name = "Completed assessments")]
         public int NumberOfCompletedAssessments { get; set; } = 0;
+
+        public Dictionary<int, int> TotalAssessmentsPerEPA { get; set; }
+        public Dictionary<int, int> VisibleAssessmentsPerEPA { get; set; }
     }
 }

@@ -8,7 +8,7 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <a asp-action="IndexAwaitingAssessor" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Requested" style="text-decoration: none;">
                     <h1 class="card-title text-danger">@Model.NumberOfRequestsMade</h1>
                 </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsMade)</p>
@@ -18,7 +18,7 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <a asp-action="IndexDeclinedAssessor" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Declined" style="text-decoration: none;">
                     <h1 class="card-title text-danger">@Model.NumberOfRequestsDeclined</h1>
                 </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsDeclined)</p>
@@ -28,7 +28,7 @@
     <div class="col-3">
         <div class="card">
             <div class="card-body text-center">
-                <a asp-action="IndexPendingAssessor" asp-controller="AssessmentRequests" style="text-decoration: none;">
+                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Accepted" style="text-decoration: none;">
                     <h1 class="card-title text-primary">@Model.NumberOfPendingAssessments</h1>
                 </a>
                 <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfPendingAssessments)</p>
@@ -47,43 +47,3 @@
     </div>
 </div>
 <br />
-
-@* <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Entrustable Professional Activies</h2>
-            <div class="table-responsive small">
-                <table class="table table-striped table-sm" style="width: 100%">
-                    <thead>
-                        <tr>
-                            <th scope="col">EPA</th>
-                            <th scope="col">Completed</th>
-                            <th scope="col">Highest</th>
-                            <th scope="col">Lowest</th>
-                            <th scope="col">Last</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.EPAList != null)
-                        {
-                            foreach (var item in Model.EPAList)
-                            {
-                                <tr>
-                                    <td>@item.Name: @item.Description</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>
-                                        <a class="btn btn-warning" asp-controller="AssessmentRequests" asp-action="CreateForEPA" asp-route-id="@item.Id" data-toggle="tooltip" data-placement="top" title="Request assessment"><i class="fa-solid fa-clipboard-check"></i></a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div> *@

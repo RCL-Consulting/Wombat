@@ -32,6 +32,12 @@
                                 <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="CreateFromList">Log Assessment</a>
                             </li>
                         }
+                        @if (User.IsInRole(Roles.Coordinator))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="PortfolioIndex">Portfolios</a>
+                            </li>
+                        }
                         @if (User.IsInRole(Roles.Assessor) || User.IsInRole(Roles.Trainee))
                         {
                             <li class="nav-item">

@@ -24,7 +24,18 @@ namespace Wombat.Application.Repositories
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate == null)
+                .Include(r => r.Trainee)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
@@ -33,7 +44,18 @@ namespace Wombat.Application.Repositories
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate != null)
+                .Include(r => r.Trainee)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
@@ -42,7 +64,18 @@ namespace Wombat.Application.Repositories
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined != null)
+                .Include(r => r.Trainee)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }
@@ -51,7 +84,18 @@ namespace Wombat.Application.Repositories
         {
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined == null)
+                .Include(r => r.Trainee)
                 .ToListAsync();
+
+            foreach (var item in requests)
+            {
+                item.EPA = await context.EPAs
+                    .Where(e => e.Id == item.EPAId)
+                    .Include(e => e!.SubSpeciality)
+                    .ThenInclude(s => s!.Speciality)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+            }
 
             return requests;
         }

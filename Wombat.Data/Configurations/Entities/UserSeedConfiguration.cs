@@ -72,15 +72,41 @@ namespace Wombat.Data.Configurations.Entities
                 {
                     Id = "343ABA27-DDC0-40E0-AD5C-C4E918965876",
                     Email = "ucttrainee@localhost.com",
-                    NormalizedEmail = "uctTRAINEE@LOCALHOST.COM",
+                    NormalizedEmail = "UCTTRAINEE@LOCALHOST.COM",
                     UserName = "ucttrainee@localhost.com",
-                    NormalizedUserName = "uctTRAINEE@LOCALHOST.COM",
+                    NormalizedUserName = "UCTTRAINEE@LOCALHOST.COM",
                     Name = "System",
                     Surname = "UCTTrainee",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 3,
                     SubSpecialityId = 1
+                },
+                new WombatUser
+                {
+                    Id = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237",
+                    Email = "upcoordinator@localhost.com",
+                    NormalizedEmail = "UPCOORDINATOR@LOCALHOST.COM",
+                    UserName = "upcoordinator@localhost.com",
+                    NormalizedUserName = "UPCOORDINATOR@LOCALHOST.COM",
+                    Name = "System",
+                    Surname = "UPCoordinator",
+                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
+                    EmailConfirmed = true,
+                    InstitutionId = 2
+                },
+                new WombatUser
+                {
+                    Id = "9AF99F0F-868F-41A8-8121-758647507D92",
+                    Email = "uctcoordinator@localhost.com",
+                    NormalizedEmail = "UCTCOORDINATOR@LOCALHOST.COM",
+                    UserName = "uctcoordinator@localhost.com",
+                    NormalizedUserName = "UCTCOORDINATOR@LOCALHOST.COM",
+                    Name = "System",
+                    Surname = "UCTCoordinator",
+                    PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
+                    EmailConfirmed = true,
+                    InstitutionId = 2
                 }
             );
         }

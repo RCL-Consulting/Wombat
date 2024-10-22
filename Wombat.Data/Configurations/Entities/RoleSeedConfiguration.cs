@@ -30,6 +30,12 @@ namespace Wombat.Data.Configurations.Entities
                 },
                 new IdentityRole
                 {
+                    Id = "5653650A-167F-42D5-A67F-2C0AE818EB84",
+                    Name = Roles.Coordinator,
+                    NormalizedName = Roles.Coordinator.ToUpper()
+                },
+                new IdentityRole
+                {
                     Id = "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8",
                     Name = Roles.Unassigned,
                     NormalizedName = Roles.Unassigned.ToUpper()

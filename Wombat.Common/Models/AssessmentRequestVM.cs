@@ -26,6 +26,17 @@ namespace Wombat.Common.Models
         [Display(Name = "EPA")]
         public string FullEPADisplayName { get { return EPA?.Name + " - " + EPA?.Description; } }
 
+        [Display(Name = "EPA")]
+        public string ShortEPADisplayName 
+        { 
+            get { 
+                if(EPA!=null)
+                    return EPA?.Name; 
+                else
+                    return "";
+            }
+        }
+
         public string AssessorNotes { get; set; } = "";
 
         [Display(Name = "Date requested")]

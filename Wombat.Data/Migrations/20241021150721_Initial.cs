@@ -453,6 +453,7 @@ namespace Wombat.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    AssessmentIsPublic = table.Column<bool>(type: "bit", nullable: false),
                     TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssessorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     EPAId = table.Column<int>(type: "int", nullable: false),
@@ -541,6 +542,7 @@ namespace Wombat.Data.Migrations
                     { "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8", null, "Unassigned", "UNASSIGNED" },
                     { "3FAA94D6-23C2-4365-9951-796673F48402", null, "Trainee", "TRAINEE" },
                     { "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", null, "Assessor", "ASSESSOR" },
+                    { "5653650A-167F-42D5-A67F-2C0AE818EB84", null, "Coordinator", "COORDINATOR" },
                     { "8DDBAFD6-4044-4AF0-BED8-D77B16F75404", null, "Administrator", "ADMINISTRATOR" }
                 });
 
@@ -586,9 +588,11 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "8d1ce610-b1fb-42a1-b3d7-e356da028678", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDN1LuDyQvaJBvNQrh1TMLnCT/WQOt5DoA7S+QJxwbaBLMLKp9lxvP3BCbI/kSe1nQ==", null, false, "4eea8ed6-9b9e-4f11-83ab-04a9d28148d8", null, "UPAssessor", false, "upassessor@localhost.com" },
-                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "25741503-8316-4b7f-b460-8d1b2660d382", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEFkpNOZy4wmLwyihpBioeJBz1zEvPMAxF71/ukek6n5Jn7AkGt/hSFw1JCXP6gRAnA==", null, false, "70d67da8-2433-418d-be6f-b96e72c5fe7c", null, "UCTAssessor", false, "uctassessor@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "145bb2bf-f890-42f1-8a51-a26ed8a7e7e6", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAENBpVGkjTvYnPTYnQkXuuh3SUoXtEtAwksj2anyniRvUGczrI+WH23MXNMMn/n2EzA==", null, false, "2a9b7a40-ef4e-4fba-af08-89c905c33563", null, "Admin", false, "admin@localhost.com" }
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "7ecc752c-ab9d-409f-9b0b-5c810dfea777", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upassessor@localhost.com", true, "", "", 2, false, null, "System", "UPASSESSOR@LOCALHOST.COM", "UPASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEOvoUhgRTXTw8+KO4iav2oXumQOCyZOrNsLYRyOZ85UNl/vVj5fDlupr31NRxbUJaw==", null, false, "277b6c0e-bc8b-4e1b-9999-035aa9468b44", null, "UPAssessor", false, "upassessor@localhost.com" },
+                    { "965631FD-F55B-4AAE-85B4-81561A5CD78F", 0, "9e46d487-517d-492c-8d94-94d8be9e1162", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctassessor@localhost.com", true, "", "", 3, false, null, "System", "UCTASSESSOR@LOCALHOST.COM", "UCTASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEGDX2r28EY04nzqgBfSubSvRDi08ULsRKX6cWOkz2xBRns9f6JcVoflr8VXN+2h+fg==", null, false, "de3114da-8e6f-4f35-843d-344ba840ea0d", null, "UCTAssessor", false, "uctassessor@localhost.com" },
+                    { "9AF99F0F-868F-41A8-8121-758647507D92", 0, "c515a97b-43d1-4948-be4e-75ba384b78f1", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uctcoordinator@localhost.com", true, "", "", 2, false, null, "System", "UCTCOORDINATOR@LOCALHOST.COM", "UCTCOORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEOwnuCsLPkkUGvmfcYCHUldRcUK58ifBemVG4uWd21KKcDUWmioqQw0THcBG58RvTQ==", null, false, "79308b75-c8b7-43fb-b5a6-e5ff1f929ba4", null, "UCTCoordinator", false, "uctcoordinator@localhost.com" },
+                    { "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237", 0, "bb5e5044-bef3-4650-808b-5b705fcaf497", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "upcoordinator@localhost.com", true, "", "", 2, false, null, "System", "UPCOORDINATOR@LOCALHOST.COM", "UPCOORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEFJGTds1m6tt8dqMBVz4wN9GfqsciChXjtE+9GgWDZimOTaTu+Sin3ZZTooDzi0S2w==", null, false, "04bb3d6a-9c6b-4d61-a928-69addcece923", null, "UPCoordinator", false, "upcoordinator@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "6836c55d-672b-4f3b-b455-4b8e23286abe", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEMxJABVatGy1clCbIh1vGkKsFOs2MZHE9TcUf0FVNKSRGW43UFD/ZnVXT0o0Se/dRQ==", null, false, "90c52ee9-8493-4677-ba77-fa79b5a13a8b", null, "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -682,6 +686,8 @@ namespace Wombat.Data.Migrations
                 {
                     { "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", "409696F3-CA82-4381-A734-38A5EF6AA445" },
                     { "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", "965631FD-F55B-4AAE-85B4-81561A5CD78F" },
+                    { "5653650A-167F-42D5-A67F-2C0AE818EB84", "9AF99F0F-868F-41A8-8121-758647507D92" },
+                    { "5653650A-167F-42D5-A67F-2C0AE818EB84", "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237" },
                     { "8DDBAFD6-4044-4AF0-BED8-D77B16F75404", "D68AC189-5BB6-4511-B96F-0F8BD55569AC" }
                 });
 
@@ -690,8 +696,8 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "36196387-771d-4b97-b0d3-e52562006852", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEE4V2ZuKtKtdLXMHGL8npOscYu/WOGPt5QFNUmSmovGnw2SUBUJcfT8bYKS1myWOYA==", null, false, "382507ae-aea1-4060-bdd7-03220bac2b43", 1, "UPTrainee", false, "uptrainee@localhost.com" },
-                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "5b39bd5e-1986-4837-bd22-cb66c45a59ec", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "uctTRAINEE@LOCALHOST.COM", "uctTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEBZj12bQZWNFSrMUUBetBNmiMFSB271opUlhX7G+pkvN8YJHrZdWY8T0fSpMnoHU9Q==", null, false, "e8d8bb77-c356-4bb7-b89e-cd7c26b9384a", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
+                    { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "bb66ff79-a066-4016-a96f-e2493c1d58c3", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "uptrainee@localhost.com", true, "", "", 2, false, null, "System", "UPTRAINEE@LOCALHOST.COM", "UPTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDJnzeE9hb6ePYwQ3KzTNqk0blXC0LpVF8GiCN/ckid4qjvhfsLRwXlRVmWl1eZ9tg==", null, false, "d048e84b-a5ec-4377-8172-7435468541f4", 1, "UPTrainee", false, "uptrainee@localhost.com" },
+                    { "343ABA27-DDC0-40E0-AD5C-C4E918965876", 0, "991c882b-85d3-48a8-ad7b-88fe962eaeaf", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "ucttrainee@localhost.com", true, "", "", 3, false, null, "System", "UCTTRAINEE@LOCALHOST.COM", "UCTTRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEINWlmMJzD/OmENGf7iDMNOycNfNHxerMK+8y3Vaef/7s0QLoVsHMgqqo6lj12YYag==", null, false, "07e6b285-dfce-4333-86b8-7fbca477f9f3", 1, "UCTTrainee", false, "ucttrainee@localhost.com" }
                 });
 
             migrationBuilder.InsertData(

@@ -5,7 +5,7 @@
 }
 
 <div>
-    <h4>Request details</h4>
+    <h4>Request awaiting approval</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
@@ -38,29 +38,19 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.AssessmentDate)
         </dd>
-        @if( Model.DateDeclined != null)
-        {
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.DateDeclined)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.DateDeclined)
-            </dd>
-        }
         <dt class="col-sm-2">
-            Trainee notes
+            @Html.DisplayNameFor(model => model.Notes)
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Notes)
         </dd>
-        <dt class="col-sm-2">
-            Assessor notes
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.AssessorNotes)
-        </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Back Home</a> 
+    <a asp-action="Index" asp-route-requestStatus="@ViewBag.RequestStatus" class="btn btn-dark">Back to List</a> &nbsp;
+    @if (ViewBag.RequestStatus==AssessmentRequestStatus.Requested && User.IsInRole(Roles.Assessor))
+    {
+        <a class="btn btn-success" asp-action="AcceptRequest" asp-route-id="@Model.Id">Accept</a> @:&nbsp;
+        <a class="btn btn-danger" asp-action="DeclineRequest" asp-route-id="@Model.Id">Decline</a> @:&nbsp;
+    }
 </div>

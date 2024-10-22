@@ -67,4 +67,12 @@
     </div>
 </div>
 
+@section Scripts {
+    <script type="text/javascript">
+        let stateObject = {
+            object: "StateObject"
+        }
 
+        history.pushState(stateObject, "", "../../Home/Index")
+    </script>
+}

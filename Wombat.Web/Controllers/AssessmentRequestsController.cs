@@ -52,6 +52,16 @@ namespace Wombat.Web.Controllers
             return roles.Contains(Roles.Assessor);
         }
 
+        private bool UserIsTrainee()
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return false;
+
+            var user = userManager.GetUserAsync(httpContextAccessor.HttpContext.User).Result;
+            var roles = userManager.GetRolesAsync(user).Result;
+            return roles.Contains(Roles.Trainee);
+        }
+
         public async Task<IActionResult> Index(AssessmentRequestStatus requestStatus)
         {
             if (httpContextAccessor.HttpContext == null)
@@ -65,6 +75,52 @@ namespace Wombat.Web.Controllers
                 if (requestStatus == AssessmentRequestStatus.Completed)
                 {
                     var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorCompletedAssessments(userId));
+                    ViewBag.Heading = "Completed assessments";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Requested)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingRequests(userId));
+                    ViewBag.Heading = "Pending requests";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Declined)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorDeclinedRequests(userId));
+                    ViewBag.Heading = "Declined requests";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Accepted)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingAssessments(userId));
+                    ViewBag.Heading = "Pending assessments";
+                    return View(Requests);
+                }
+            }
+            else if (UserIsTrainee())
+            {
+                if (requestStatus == AssessmentRequestStatus.Completed)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineeCompletedAssessments(userId));
+                    ViewBag.Heading = "Completed assessments";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Requested)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineePendingRequests(userId));
+                    ViewBag.Heading = "Pending requests";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Declined)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineeDeclinedRequests(userId));
+                    ViewBag.Heading = "Declined requests";
+                    return View(Requests);
+                }
+                else if (requestStatus == AssessmentRequestStatus.Accepted)
+                {
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineePendingAssessments(userId));
+                    ViewBag.Heading = "Pending assessments";
                     return View(Requests);
                 }
             }
@@ -72,60 +128,8 @@ namespace Wombat.Web.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> IndexCompletedAssessor()
-        {
-            if (httpContextAccessor.HttpContext == null)
-                return NotFound();
-
-            if (!UserIsAssessor())
-                return NotFound();
-
-            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorCompletedAssessments(userId));
-            return View(Requests);
-        }
-
-        public async Task<IActionResult> IndexDeclinedAssessor()
-        {
-            if (httpContextAccessor.HttpContext == null)
-                return NotFound();
-
-            if (!UserIsAssessor())
-                return NotFound();
-
-            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorDeclinedRequests(userId));
-            return View(Requests);
-        }
-
-        public async Task<IActionResult> IndexPendingAssessor()
-        {
-            if (httpContextAccessor.HttpContext == null)
-                return NotFound();
-
-            if (!UserIsAssessor())
-                return NotFound();
-
-            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingAssessments(userId));
-            return View(Requests);
-        }
-
-        public async Task<IActionResult> IndexAwaitingAssessor()
-        {
-            if (httpContextAccessor.HttpContext == null)
-                return NotFound();
-
-            if (!UserIsAssessor())
-                return NotFound();
-
-            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingRequests(userId));
-            return View(Requests);
-        }
-
         // GET: AssessmentRequests/Details/5
-        public async Task<IActionResult> DetailsAwaitingAssessor(int? id)
+        public async Task<IActionResult> Details(int? id, AssessmentRequestStatus requestStatus)
         {
             var request = await assessmentRequestRepository.GetAsync(id);
             if (request == null)
@@ -133,27 +137,7 @@ namespace Wombat.Web.Controllers
                 return NotFound();
             }
 
-            var requestVM = mapper.Map<AssessmentRequestVM>(request);
-
-            requestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(request.EPAId));
-
-            if (httpContextAccessor.HttpContext == null)
-                return NotFound();
-
-            var trainee = await userManager.FindByIdAsync(request.TraineeId);
-            requestVM.Trainee = mapper.Map<WombatUserVM>(trainee);
-
-            return View(requestVM);
-        }
-
-        public async Task<IActionResult> Details(int? id)
-        {
-            var request = await assessmentRequestRepository.GetAsync(id);
-            if (request == null)
-            {
-                return NotFound();
-            }
-
+            ViewBag.RequestStatus = requestStatus;
             var requestVM = mapper.Map<AssessmentRequestVM>(request);
 
             requestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(request.EPAId));
@@ -341,6 +325,7 @@ namespace Wombat.Web.Controllers
             {
                 assessmentRequestVM.Id = 0;
                 assessmentRequestVM.EPA = null;
+                assessmentRequestVM.DateRequested = DateTime.Now;
                 var request = mapper.Map<AssessmentRequest>(assessmentRequestVM);
                 await assessmentRequestRepository.AddAsync(request);
                 return RedirectToAction("Index", "Home");
