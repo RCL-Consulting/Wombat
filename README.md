@@ -1,3 +1,7 @@
+![License](https://img.shields.io/github/license/reniercloete/Wombat)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/reniercloete/Wombat)
+![GitHub last commit](https://img.shields.io/github/last-commit/reniercloete/Wombat)
+
 Wombat - Work-Based Assessment Tool
 ===================================
 
