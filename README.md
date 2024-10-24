@@ -80,7 +80,7 @@ Installation
 Usage
 -----
 
-You will need [Visual Studio community](https://visualstudio.microsoft.com/vs/community/) (free download).  Run `update-database` in the package manager console and you shopuld be ready to go.
+You will need [Visual Studio community](https://visualstudio.microsoft.com/vs/community/) (free download).  Run `update-database` in the package manager console and you should be ready to go.
 
 1.  **Admin Panel**: Log in as an admin to configure institutions, specialities, and user roles, configure EPAs and assessment forms. Log in as `admin@localhost.com` with password `P@ssw0rd`.
 2.  **Coordinator**: Review trainee portfolios. Log in as `coordinator@localhost.com` with password `P@ssw0rd`.
