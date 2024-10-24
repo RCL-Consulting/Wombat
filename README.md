@@ -99,4 +99,4 @@ We welcome contributions! Please follow these steps:
 License
 -------
 
-Wombat is licensed under the GPL-3.0 license.
+Wombat is licensed under the GNU Affero GPL-3.0 license.
