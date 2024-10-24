@@ -42,6 +42,7 @@ Installation
 *   .NET Core SDK (v6 or later)
 *   SQL Server or Azure SQL Database
 *   Azure Account (for deployment)
+*   [Visual Studio community](https://visualstudio.microsoft.com/vs/community/)
 
 ### Setup Instructions
 
@@ -52,10 +53,14 @@ Installation
     cd wombat
     ```    
 1.  Set up the database:
-    
-    *   Create a SQL Server or Azure SQL Database instance.
-    *   Run the provided SQL scripts (located in the `/scripts` folder) to set up the database schema.
-2.  Configure connection strings:
+
+    To run Wombat on the development machine, simply run `update-database` in the package manager console and you should be ready to go.
+
+    To run Wombat on Azure, 
+    *   Create a SQL Server or Azure SQL Database instance and create a new database [Azure Data Studio](https://azure.microsoft.com/en-us/products/data-studio) works well.
+    *   Generate a create script using `Script-Migration -Idempotent` in the package manager console and run the SQL script on your newly created database.
+      
+3.  Configure connection strings:
     
     *   Update the connection string in `appsettings.json` to point to your database.
     
@@ -65,22 +70,21 @@ Installation
         "DefaultConnection": "Server=your-server.database.windows.net;Database=wombat_db;User Id=your-username;Password=your-password;"
       }
     }
-    ```
-    
-3.  Run the application locally:
+    ```    
+4.  Run the application locally:
     
     ```bash  
     dotnet run
     ```
     
-4.  Deploy to Azure:
+5.  Deploy to Azure:
     
     *   Follow the official Microsoft guide to deploy an ASP.NET Core web app to Azure: [Deploy an ASP.NET Core web app to Azure](https://docs.microsoft.com/en-us/azure/app-service/quickstart-dotnetcore).
 
 Usage
 -----
 
-You will need [Visual Studio community](https://visualstudio.microsoft.com/vs/community/) (free download).  Run `update-database` in the package manager console and you should be ready to go.
+The repo is pre-populated with some users and data to get things going as fast as possible:
 
 1.  **Admin Panel**: Log in as an admin to configure institutions, specialities, and user roles, configure EPAs and assessment forms. Log in as `admin@localhost.com` with password `P@ssw0rd`.
 2.  **Coordinator**: Review trainee portfolios. Log in as `coordinator@localhost.com` with password `P@ssw0rd`.
