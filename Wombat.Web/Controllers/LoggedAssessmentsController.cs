@@ -533,7 +533,7 @@ namespace Wombat.Controllers
             cell.VerticalAlignment = MigraDocCore.DocumentObjectModel.Tables.VerticalAlignment.Center;
             paragraph = cell.AddParagraph();
             paragraph.Format.Alignment = ParagraphAlignment.Center;
-            paragraph.AddFormattedText("University of Pretoria\r\nDepartment of Paediatrics and Child Health\r\nSteve Biko Academic Hospital\r\nWork based assessment Feedback Form", TextFormat.Bold);
+            paragraph.AddFormattedText("ABC University\r\nDepartment of Paediatrics and Child Health\r\n\r\nWork based assessment Feedback Form", TextFormat.Bold);
 
             var Cells = table.AddRow().Cells;
             Cells[0].AddParagraph("Date");
