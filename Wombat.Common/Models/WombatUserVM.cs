@@ -73,7 +73,7 @@ namespace Wombat.Common.Models
         public List<CheckBoxListItem> Roles { get; set; }
 
         public int InstitutionId { get; set; }
-        public InstitutionVM Institution { get; set; }
+        public InstitutionVM? Institution { get; set; }
 
         public SpecialityVM? Speciality { get; set; }
 
