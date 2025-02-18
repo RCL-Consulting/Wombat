@@ -24,7 +24,7 @@ namespace Wombat.Data
         public string Name { get; set; }
         public string Surname{ get; set; }
 
-        public string IdNumber { get; set; } = "";
+        public string? IdNumber { get; set; } = "";
 
         public string HPCSANumber { get; set; } = "";
 
