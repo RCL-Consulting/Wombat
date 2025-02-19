@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -113,7 +114,7 @@ namespace Wombat.Areas.Identity.Pages.Account
             [Display(Name = "Institution")]
             public int InstitutionId { get; set; }
 
-            [Required]
+            //[Required]
             [Display(Name = "Training Number")]
             public string IdNumber { get; set; }
 
@@ -143,6 +144,10 @@ namespace Wombat.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Required]
+            [DisplayName("HPCSA Number")]
+            public string HPCSANumber { get;  set; }
         }
 
 
@@ -186,6 +191,7 @@ namespace Wombat.Areas.Identity.Pages.Account
                 user.PhoneNumber = Input.PhoneNumber;
                 user.SubSpecialityId = Input.SubspecialityId;
                 user.DateJoined = DateTime.Now; //Input.DateJoined ?? default;
+                user.HPCSANumber = Input.HPCSANumber;
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
