@@ -24,34 +24,75 @@ namespace Wombat.Services
 {
     public class EmailSender : IEmailSender
     {
-        private readonly string smtpServer;
-        private readonly int port;
-        private readonly string fromEmailAddress;
+        private readonly IConfiguration configuration;
+        private readonly ILogger<EmailSender> logger;
 
-        public EmailSender( string smtpServer, int port, string fromEmailAddress)
+        private EmailSettings emailSettings;
+
+        public EmailSender(IConfiguration configuration, ILogger<EmailSender> logger)
         {
-            this.smtpServer=smtpServer;
-            this.port=port;
-            this.fromEmailAddress=fromEmailAddress;
+            this.configuration = configuration;
+            this.logger = logger;
+
+            emailSettings = new EmailSettings();
+            configuration.GetSection("EmailSettings").Bind(emailSettings);
         }
 
         public async Task SendEmailAsync(string recipient, string subject, string htmlContent)
         {
-            //var message = new MailMessage
-            //{
-            //    From = new MailAddress(fromEmailAddress),
-            //    Subject = subject,
-            //    Body = htmlContent,
-            //    IsBodyHtml = true
-            //};
+            try
+            {
+                if (emailSettings is null)
+                {
+                    await SendViaAzure(recipient, subject, htmlContent);
+                    return;
+                }
 
-            //message.To.Add(new MailAddress(recipient));
+                if (emailSettings.UseSMTP)
+                {
+                    SendViaSmtp(recipient, subject, htmlContent);
+                }
+                else
+                {
+                    await SendViaAzure(recipient, subject, htmlContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error sending email");
+            }
+        }
 
-            //using (var client = new SmtpClient(smtpServer, port))
-            //{
-            //    client.Send(message);
-            //}
+        private void SendViaSmtp(string recipient, string subject, string htmlContent)
+        {
+            try
+            {
+                var message = new MailMessage
+                {
+                    From = new MailAddress(emailSettings.Email),
+                    Subject = subject,
+                    Body = htmlContent,
+                    IsBodyHtml = true
+                };
 
+                message.To.Add(new MailAddress(recipient));
+
+                using (var client = new SmtpClient(emailSettings.Host, emailSettings.Port))
+                {
+                    if (!string.IsNullOrEmpty(emailSettings.Password))
+                        client.Credentials = new NetworkCredential(emailSettings.Email, emailSettings.Password);
+
+                    client.Send(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error sending email via SMTP");
+            }
+        }
+
+        private async Task SendViaAzure(string recipient, string subject, string htmlContent)
+        {
             string connectionString = Environment.GetEnvironmentVariable("COMMUNICATION_SERVICES_CONNECTION_STRING");
             EmailClient emailClient = new EmailClient(connectionString);
 
@@ -78,8 +119,18 @@ namespace Wombat.Services
             {
                 /// OperationID is contained in the exception message and can be used for troubleshooting purposes
                 Console.WriteLine($"Email send operation failed with error code: {ex.ErrorCode}, message: {ex.Message}");
+                logger.LogError(ex, "Error sending email via Azure");
             }
+        }
 
+        public class EmailSettings
+        {
+            public bool UseSMTP { get; set; }
+            public string Host { get; set; }
+            public int Port { get; set; }
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public bool EnableSSL { get; set; }
         }
     }
 }
