@@ -23,8 +23,10 @@ using Wombat.Application.Contracts;
 using Wombat.Data;
 using Wombat.Application.Repositories;
 using Wombat.Services;
+using Wombat.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -36,8 +38,10 @@ builder.Services.AddDefaultIdentity<WombatUser>(options => options.SignIn.Requir
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25, "no-reply@rcl.co.za"));
+//builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25, "no-reply@rcl.co.za"));
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
+builder.Services.AddHostedService<dbMigrator>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAssessmentFormRepository, AssessmentFormRepository>();
 builder.Services.AddScoped<IEPARepository, EPARepository>();
