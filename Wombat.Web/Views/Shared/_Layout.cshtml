@@ -4,84 +4,66 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Work Based Assessment Tool</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" />
-    <link rel="stylesheet" href="~/lib/font-awesome/css/all.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/font-awesome/css/fontawesome.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Wombat.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Work Based Assessment Management Tool</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between container">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        @if (User.IsInRole(Roles.Assessor))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="CreateFromList">Log Assessment</a>
-                            </li>
-                        }
-                        @if (User.IsInRole(Roles.Coordinator))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="PortfolioIndex">Portfolios</a>
-                            </li>
-                        }
-                        @if (User.IsInRole(Roles.Assessor) || User.IsInRole(Roles.Trainee))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="LoggedAssessments" asp-action="MyAssessments">My Assessments</a>
-                            </li>
-                        }
-                        @if (User.IsInRole(Roles.Administrator))
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Management
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Institutions" asp-action="Index">Institutions</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Specialities" asp-action="Index">Specialities</a></li>
-                                    <li><a class="dropdown-item" asp-controller="SubSpecialities" asp-action="Index">Subspecialities</a></li>
-                                    <li><a class="dropdown-item" asp-controller="AssessmentForms" asp-action="Index">Assessment Forms</a></li>
-                                    <li><a class="dropdown-item" asp-controller="EPAs" asp-action="Index">EPAs</a></li>
-                                    <li><a class="dropdown-item" asp-controller="LoggedAssessments" asp-action="Index">Assessments</a></li>
-                                    <li><a class="dropdown-item" asp-controller="WombatUsers" asp-action="Index">Users</a></li>
-                                    <li><a class="dropdown-item" asp-controller="OptionSets" asp-action="Index">Response Options</a></li>
-                                </ul>
-                            </li>
-                        }
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - Work Based Assessment Management Tool - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <!-- SB Admin 2 core styles -->
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet" />
+
+    <!-- Your existing styles -->
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet" />
+    <link href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/Wombat.styles.css" rel="stylesheet" />
+</head>
+
+<body id="page-top">
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        @await Html.PartialAsync("_Sidebar") <!-- create this partial using SB Admin 2 -->
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+
+                <!-- Topbar -->
+                @await Html.PartialAsync("_Topbar") <!-- create this partial using SB Admin 2 -->
+                <!-- End of Topbar -->
+                <!-- Main Content -->
+                <div class="container-fluid pt-3">
+                    @RenderBody()
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="text-center my-auto">
+                        <span>&copy; @DateTime.Now.Year - Work Based Assessment Tool</span>
+                        <a asp-area="" asp-controller="Home" asp-action="Privacy" class="ms-2">Privacy</a>
+                    </div>
+                </div>
+            </footer>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/sweetalert/sweetalert.min.js"></script>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Core SB Admin 2 JS -->
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+
+    <!-- Your JS -->
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
     <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>
@@ -93,7 +75,7 @@
             });
         });
     </script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

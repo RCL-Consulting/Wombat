@@ -1,25 +1,115 @@
 ﻿@model DashboardVM
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Wombat.Data.WombatUser> SignInManager
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-@if(User.IsInRole(Roles.Trainee))
+@if (!SignInManager.IsSignedIn(User))
 {
-    <partial name="TraineeHome.cshtml" model="@Model"/>
-}
-else if (User.IsInRole(Roles.Assessor))
-{
-    <partial name="AssessorHome.cshtml" model="@Model" />
-}
-else if (User.IsInRole(Roles.Coordinator))
-{
-    <partial name="Coordinator.cshtml" model="@Model" />
+    <!-- Guest View -->
+    <div class="container mt-5">
+        <div class="row align-items-center">
+            <!-- Text + Buttons Column -->
+            <div class="col-md-6 text-center text-md-start">
+                <h1 class="display-4 text-primary">Welcome to Wombat</h1>
+                <p class="lead text-muted">An open-source platform for managing clinical work-based assessments.</p>
+                <p class="text-muted">Built for trainees, assessors, and academic coordinators to streamline assessment and feedback.</p>
+
+                <div class="mt-4">
+                    <a class="btn btn-primary btn-lg me-2 mb-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                    <a class="btn btn-outline-success btn-lg me-2 mb-2" asp-area="Identity" asp-page="/Account/Register" asp-route-role="Trainee">Register as Trainee</a>
+                    <a class="btn btn-outline-info btn-lg mb-2" asp-area="Identity" asp-page="/Account/RegisterAssessor">Register as Assessor</a>
+                </div>
+            </div>
+
+            <!-- Image Column -->
+            <div class="col-md-6 text-center mt-5 mt-md-0">
+                <img src="~/images/wombat-landing.png" alt="Illustration" class="img-fluid" style="max-height: 360px;" />
+            </div>
+        </div>
+    </div>
+
 }
 else
 {
-    <div class="text-center">
-        <h1 class="display-4">Home</h1>
-        <p>Placeholder for future dashboard.</p>
+    <!-- Authenticated Users -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Welcome, @User.Identity?.Name</h1>
     </div>
+
+    @if (User.IsInRole(Roles.Trainee))
+    {
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">Trainee Dashboard</h6>
+            </div>
+            <div class="card-body">
+                <partial name="TraineeHome.cshtml" model="@Model" />
+            </div>
+        </div>
+    }
+    else if (User.IsInRole(Roles.Assessor))
+    {
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-info text-white">
+                <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
+            </div>
+            <div class="card-body">
+                <partial name="AssessorHome.cshtml" model="@Model" />
+            </div>
+        </div>
+    }
+    else if (User.IsInRole(Roles.Coordinator))
+    {
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-success text-white">
+                <h6 class="m-0 font-weight-bold">Coordinator Dashboard</h6>
+            </div>
+            <div class="card-body">
+                <partial name="Coordinator.cshtml" model="@Model" />
+            </div>
+        </div>
+    }
+
+    @if (User.IsInRole(Roles.Administrator))
+    {
+        <hr />
+        <div class="row">
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Your Assessments</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">View or log assessments</div>
+                    </div>
+                    <div class="card-footer bg-transparent text-end">
+                        <a asp-controller="LoggedAssessments" asp-action="MyAssessments" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Admin Tools</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Manage institutions, forms, users</div>
+                    </div>
+                    <div class="card-footer bg-transparent text-end">
+                        <a asp-controller="Institutions" asp-action="Index" class="btn btn-sm btn-danger">Manage</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Your Portfolio</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">View training records</div>
+                    </div>
+                    <div class="card-footer bg-transparent text-end">
+                        <a asp-controller="LoggedAssessments" asp-action="PortfolioIndex" class="btn btn-sm btn-success">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 }

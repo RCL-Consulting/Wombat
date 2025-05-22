@@ -1,4 +1,4 @@
-﻿@page
+﻿@* @page
 @model LoginModel
 
 @{
@@ -54,6 +54,64 @@
         </section>
     </div>
     
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+ *@
+ @page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h4 class="m-0 font-weight-bold">Welcome to Wombat</h4>
+                    <small>Work-Based Assessment Management Tool</small>
+                </div>
+                <div class="card-body px-5">
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Email" class="form-label">Email</label>
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Password" class="form-label">Password</label>
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" asp-for="Input.RememberMe" />
+                            <label asp-for="Input.RememberMe" class="form-check-label">
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </div>
+
+                        <button id="login-submit" type="submit" class="btn btn-primary w-100 mb-3">Log in</button>
+
+                        <hr class="my-4" />
+
+                        <div class="text-center">
+                            <a class="d-block small" id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                            <a class="d-block small" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a Trainee</a>
+                            <a class="d-block small" asp-page="./RegisterAssessor" asp-route-returnUrl="@Model.ReturnUrl">Register as an Assessor</a>
+                            <a class="d-block small" id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

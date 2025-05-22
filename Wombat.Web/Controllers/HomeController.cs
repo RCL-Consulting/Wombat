@@ -63,8 +63,12 @@ namespace Wombat.Controllers
             this.loggedAssessmentRepository = loggedAssessmentRepository;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> IndexAsync()
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return View();
+
             if (httpContextAccessor.HttpContext == null)
                 return NotFound();
 
