@@ -40,7 +40,8 @@ namespace Wombat.Data.Configurations.Entities
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 1,
-                    SubSpecialityId = null
+                    SubSpecialityId = null,
+                    ApprovalStatus = WombatUser.eApprovalStatus.Approved,
                 },
                 new WombatUser
                 {
@@ -54,7 +55,8 @@ namespace Wombat.Data.Configurations.Entities
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 2,
-                    SubSpecialityId = null
+                    SubSpecialityId = null,
+                    ApprovalStatus = WombatUser.eApprovalStatus.Approved,
                 },
                 new WombatUser
                 {
@@ -68,7 +70,8 @@ namespace Wombat.Data.Configurations.Entities
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
                     InstitutionId = 2,
-                    SubSpecialityId = 1
+                    SubSpecialityId = 1,
+                    ApprovalStatus = WombatUser.eApprovalStatus.Approved,
                 },
                 new WombatUser
                 {
@@ -81,7 +84,8 @@ namespace Wombat.Data.Configurations.Entities
                     Surname = "Coordinator",
                     PasswordHash = hasher.HashPassword(null, "P@ssw0rd"),
                     EmailConfirmed = true,
-                    InstitutionId = 2
+                    InstitutionId = 2,
+                    ApprovalStatus = WombatUser.eApprovalStatus.Approved,
                 }
             );
         }

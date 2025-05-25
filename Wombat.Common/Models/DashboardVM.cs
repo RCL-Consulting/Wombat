@@ -43,5 +43,8 @@ namespace Wombat.Common.Models
 
         public Dictionary<int, int> TotalAssessmentsPerEPA { get; set; }
         public Dictionary<int, int> VisibleAssessmentsPerEPA { get; set; }
+
+        public string UserName { get; set; }
+        public CoordinatorDashboardVM Coordinator { get; set; }
     }
 }

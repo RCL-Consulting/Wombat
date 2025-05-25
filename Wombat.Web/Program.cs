@@ -24,6 +24,8 @@ using Wombat.Data;
 using Wombat.Application.Repositories;
 using Wombat.Services;
 using Wombat.Web.Services;
+using Wombat.Common.Constants;
+using static Wombat.Data.WombatUser;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
@@ -53,6 +55,7 @@ builder.Services.AddScoped<ISpecialityRepository, SpecialityRepository>();
 builder.Services.AddScoped<ISubSpecialityRepository, SubSpecialityRepository>();
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddScoped<IAssessmentRequestRepository, AssessmentRequestRepository>();
+builder.Services.AddScoped<IRegistrationInvitationRepository, RegistrationInvitationRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Host.UseSerilog((ctx, lc) =>
@@ -88,5 +91,48 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<WombatUser>>();
+
+    foreach (var roleName in Roles.All() )
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+
+    // Create default admin user
+    var adminEmail = "admin@localhost.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    //if (adminUser == null)
+    //{
+    //    adminUser = new WombatUser
+    //    {
+    //        UserName = adminEmail,
+    //        Email = adminEmail,
+    //        EmailConfirmed = true,
+    //        ApprovalStatus = eApprovalStatus.Approved,
+    //        Name = "System",
+    //        Surname = "Administrator",
+    //        InstitutionId = 1, // if required, adjust accordingly
+    //        SubSpecialityId = 1 // if required, adjust accordingly
+    //    };
+
+    //    var result = await userManager.CreateAsync(adminUser, "Admin123!"); // Strong password
+    //    if (!result.Succeeded)
+    //    {
+    //        throw new Exception("Failed to create admin user: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+    //    }
+    //}
+
+    if (!await userManager.IsInRoleAsync(adminUser, Roles.Administrator))
+    {
+        await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
+    }
+}
 
 app.Run();

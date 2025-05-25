@@ -32,7 +32,6 @@ namespace Wombat.Data
         {
             base.OnModelCreating(builder);
             builder.ApplyConfiguration(new InstitutionConfiguration());
-            builder.ApplyConfiguration(new RoleSeedConfiguration());
             builder.ApplyConfiguration(new UserSeedConfiguration());
             builder.ApplyConfiguration(new UserRoleSeedConfiguration());
             builder.ApplyConfiguration(new OptionConfiguration());
@@ -44,8 +43,21 @@ namespace Wombat.Data
             builder.ApplyConfiguration(new EPAConfiguration());
             builder.ApplyConfiguration(new EPAFormConfiguration());
             builder.ApplyConfiguration(new EPACurriculumConfiguration());
-        }
 
+            builder.Entity<RegistrationInvitation>(entity =>
+            {
+                entity.Property(e => e.Email)
+                      .IsRequired()
+                      .HasMaxLength(256);
+
+                entity.Property(e => e.Token)
+                      .IsRequired();
+
+                entity.Property(e => e.Roles)
+                      .IsRequired();
+            });
+        }
+        
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             foreach (var entry in base.ChangeTracker.Entries<BaseEntity>().Where(q => q.State==EntityState.Added ||
@@ -75,5 +87,7 @@ namespace Wombat.Data
 
         public DbSet<LoggedAssessment> LoggedAssessments { get; set; }
         public DbSet<OptionCriterionResponse> OptionCriterionResponses { get; set; }
+
+        public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; }
     }
 }

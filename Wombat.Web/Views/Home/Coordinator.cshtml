@@ -1,5 +1,145 @@
-﻿@model DashboardVM
+﻿@model CoordinatorDashboardVM
 
-@{
-    ViewData["Title"] = "Home Page";
-}
+<div class="row">
+    <div class="col-md-6">
+        @* Pending Registrations *@
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-success text-white">
+                <h6 class="m-0 font-weight-bold">Pending registrations</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.PendingTrainees.Any())
+                {
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle" style="width: 100%">
+                            <thead class="table-success">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var trainee in Model.PendingTrainees)
+                                {
+                                    <tr>
+                                        <td>@trainee.Name</td>
+                                        <td>@trainee.Email</td>
+                                        <td class="text-center">
+                                            <form method="post" asp-controller="Coordinator" asp-action="Approve" class="d-inline">
+                                                <input type="hidden" name="userId" value="@trainee.Id" />
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+
+                                            <form method="post" asp-controller="Coordinator" asp-action="Reject" class="d-inline ms-2">
+                                                <input type="hidden" name="userId" value="@trainee.Id" />
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        No pending trainee registrations for your subspeciality.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @* Trainee Progress *@
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">Trainee Progress</h6>
+            </div>
+            <div class="card-body">
+               @*  @if (Model.TraineeProgress.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var p in Model.TraineeProgress)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@p.Name</strong><br />
+                                    <small>@p.Completed / @p.Expected assessments</small>
+                                </div>
+                                <span class="badge bg-secondary">@($"{p.CompletionRate:F0}%")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else 
+                {*@
+                <div class="alert alert-info">No trainee progress available.</div>
+                @* } *@
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        @* Recent Submissions *@
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-info text-white">
+                <h6 class="m-0 font-weight-bold">Recent Submissions</h6>
+            </div>
+            <div class="card-body">
+               @*  @if (Model.RecentSubmissions.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var s in Model.RecentSubmissions)
+                        {
+                            <li class="list-group-item">
+                                <strong>@s.TraineeName</strong> submitted <em>@s.FormType</em>
+                                by @s.AssessorName on @s.SubmittedOn.ToShortDateString()
+                            </li>
+                        }
+                    </ul>
+                }
+                else 
+                {*@
+                <div class="alert alert-info">No recent submissions.</div>
+                @* } *@
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @* Flagged Assessments *@
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-danger text-white">
+                <h6 class="m-0 font-weight-bold">Flagged Assessments</h6>
+            </div>
+            <div class="card-body">
+               @*  @if (Model.FlaggedAssessments.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var f in Model.FlaggedAssessments)
+                        {
+                            <li class="list-group-item">
+                                <strong>@f.TraineeName</strong> — <em>@f.FormType</em> flagged on @f.SubmittedOn.ToShortDateString()
+                            </li>
+                        }
+                    </ul>
+                }
+                else 
+                {*@
+                <div class="alert alert-info">No flagged assessments.</div>
+               @*  } *@
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+﻿@model List<Wombat.Common.Models.RegistrationInvitationVM>
+
+@{
+    ViewData["Title"] = "Manage Invitations";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="table" style="width: 100%">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th>Institution</th>
+                    <th>Department</th>
+                    <th>Subspeciality</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Email</td>
+                        <td>@item.Roles</td>
+                        <td>@item.Institution</td>
+                        <td>@item.Speciality</td>
+                        <td>@item.SubSpeciality</td>
+                        <td>@item.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <span class="badge @GetStatusClass(item.Status)">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Resend" asp-route-id="@item.Id"
+                               class="btn btn-sm btn-warning me-1"
+                               title="Resend invitation"
+                               data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="fas fa-paper-plane"></i>
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-danger deleteBtn"
+                                    data-id="@item.Id"
+                                    data-input-id="deleteId"
+                                    data-form-id="deleteForm"
+                                    data-message="Are you sure you want to delete the invitation to @item.Email?"
+                                    title="Delete invitation"
+                                    data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form id="deleteForm" asp-action="Delete">
+    <input type="hidden" id="deleteId" name="Id" />
+</form>
+
+@section Scripts 
+{
+
+    @await Html.PartialAsync("_DeleteConfirmationScript")
+}
+
+@functions {
+    string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Used" => "bg-secondary",
+            "Expired" => "bg-warning text-dark",
+            "Active" => "bg-success",
+            _ => "bg-light"
+        };
+    }
+}
+
+

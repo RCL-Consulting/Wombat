@@ -55,6 +55,25 @@ namespace Wombat.Application.Repositories
             return null;
         }
 
+        public async Task<Dictionary<(int, int), string>> GetCoordinatorsBySubspecialityAndInstitutionAsync()
+        {
+            var coordinatorRoleId = await context.Roles
+                .Where(r => r.Name == "Coordinator")
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            var map = await context.Users
+                .Where(u => u.SubSpecialityId != null && u.InstitutionId != null)
+                .Where(u => context.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == coordinatorRoleId))
+                .GroupBy(u => new { u.SubSpecialityId, u.InstitutionId })
+                .ToDictionaryAsync(
+                    g => (g.Key.SubSpecialityId.Value, g.Key.InstitutionId),
+                    g => string.Join(", ", g.Select(u => $"{u.Name} {u.Surname} ({u.Email})"))
+                );
+
+            return map;
+        }
+
         public override async Task<List<SubSpeciality>?> GetAllAsync()
         {
             var subspecialities = await base.GetAllAsync();

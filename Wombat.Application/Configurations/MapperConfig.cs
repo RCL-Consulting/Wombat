@@ -40,6 +40,12 @@ namespace Wombat.Application.Configurations
             CreateMap<EPAForm, EPAFormVM>().ReverseMap();
             CreateMap<EPACurriculum, EPACurriculumVM>().ReverseMap();
             CreateMap<AssessmentRequest, AssessmentRequestVM>().ReverseMap();
+
+            CreateMap<RegistrationInvitation, RegisterFromInviteVM>()
+            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
+                string.IsNullOrEmpty(src.Roles) ? new List<string>() : src.Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList()));
+            CreateMap<RegisterFromInviteVM, RegistrationInvitation>()
+            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => string.Join(",", src.Roles)));
         }
     }
 }

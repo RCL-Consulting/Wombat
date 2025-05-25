@@ -21,6 +21,15 @@ namespace Wombat.Data
 {
     public class WombatUser: IdentityUser
     {
+        public enum eApprovalStatus
+        {
+            Pending,
+            Approved,
+            Rejected
+        }
+
+        public eApprovalStatus ApprovalStatus { get; set; } = eApprovalStatus.Pending;
+
         public string Name { get; set; }
         public string Surname{ get; set; }
 

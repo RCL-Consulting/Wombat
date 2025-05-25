@@ -21,5 +21,6 @@ namespace Wombat.Application.Contracts
     public interface ISubSpecialityRepository : IGenericRepository<SubSpeciality>
     {
         Task<List<SubSpeciality>?> GetSubSpecialitiesBySpecialityAsync(int id);
+        Task<Dictionary<(int SubSpecialityId, int InstitutionId), string>> GetCoordinatorsBySubspecialityAndInstitutionAsync();
     }
 }

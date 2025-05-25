@@ -23,6 +23,7 @@ using Microsoft.Extensions.Logging;
 using Wombat.Application.Contracts;
 using Wombat.Common.Constants;
 using Wombat.Data;
+using static Wombat.Data.WombatUser;
 
 namespace Wombat.Areas.Identity.Pages.Account
 {
@@ -37,6 +38,7 @@ namespace Wombat.Areas.Identity.Pages.Account
         private readonly IInstitutionRepository _institutionRepository;
         private readonly ISpecialityRepository _specialityRepository;
         private readonly ISubSpecialityRepository _subspecialityRepository;
+        public Dictionary<string, string> CoordinatorsBySubspecialityAndInstitution { get; set; }
 
         public RegisterModel( UserManager<WombatUser> userManager,
                               IUserStore<WombatUser> userStore,
@@ -172,6 +174,14 @@ namespace Wombat.Areas.Identity.Pages.Account
                     Subspecialities[item.SpecialityId] = new List<SelectListItem>();
                 Subspecialities[item.SpecialityId].Add(new SelectListItem(item.Name, item.Id.ToString()));
             }
+
+            var rawMap = await _subspecialityRepository.GetCoordinatorsBySubspecialityAndInstitutionAsync();
+
+            // Convert tuple keys to string keys like "subspecialityId-institutionId"
+            CoordinatorsBySubspecialityAndInstitution = rawMap.ToDictionary(
+                kvp => $"{kvp.Key.SubSpecialityId}-{kvp.Key.InstitutionId}",
+                kvp => kvp.Value
+            );
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -192,13 +202,14 @@ namespace Wombat.Areas.Identity.Pages.Account
                 user.SubSpecialityId = Input.SubspecialityId;
                 user.DateJoined = DateTime.Now; //Input.DateJoined ?? default;
                 user.HPCSANumber = Input.HPCSANumber;
+                user.ApprovalStatus = eApprovalStatus.Pending;
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    await _userManager.AddToRoleAsync(user, Roles.Trainee);
+                    await _userManager.AddToRoleAsync(user, Roles.PendingTrainee);
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

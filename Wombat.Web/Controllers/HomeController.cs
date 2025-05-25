@@ -20,12 +20,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
+using static Wombat.Data.WombatUser;
 
 namespace Wombat.Controllers
 {
@@ -81,6 +83,43 @@ namespace Wombat.Controllers
                 User = mapper.Map<WombatUserVM>(user),
                 EPAList = new List<EPAVM>()
             };
+
+            // Step 1: Load all pending users (from DB)
+            var potentialPendingUsers = await userManager.Users
+                .Where(u => u.ApprovalStatus == eApprovalStatus.Pending &&
+                            u.InstitutionId == user.InstitutionId &&
+                            u.SubSpecialityId == user.SubSpecialityId)
+                .ToListAsync();
+
+            // Step 2: Filter in-memory by role
+            var pendingUsers = new List<WombatUser>();
+            foreach (var u in potentialPendingUsers)
+            {
+                if (await userManager.IsInRoleAsync(u, "PendingTrainee"))
+                    pendingUsers.Add(u);
+            }
+
+            // 2. Get all institution and subspeciality names (optional: filter down)
+            var institutions = (await institutionRepository.GetAllAsync()).ToDictionary(i => i.Id, i => i.Name);
+            var subspecialities = (await subSpecialityRepository.GetAllAsync()).ToDictionary(s => s.Id, s => s.Name);
+
+            // 3. Map to view model
+            var pendingVMs = pendingUsers.Select(u => new WombatUserVM
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Surname = u.Surname,
+                Email = u.Email,
+                //InstitutionName = institutions.TryGetValue(u.InstitutionId, out var instName) ? instName : "Unknown",
+                //SubspecialityName = subspecialities.TryGetValue(u.SubSpecialityId.Value, out var subName) ? subName : "Unknown"
+            }).ToList();
+
+            // 4. Assign to the dashboard
+            dashboard.Coordinator = new CoordinatorDashboardVM
+            {
+                PendingTrainees = pendingVMs
+            };
+
 
             if (roles.Contains(Roles.Trainee))
             {

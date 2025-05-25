@@ -4,90 +4,97 @@
     ViewData["Title"] = "Register as an Assessor";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="m-0 font-weight-bold">Register as Assessor</h4>
+                </div>
+                <div class="card-body px-4">
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-<div class="row">
-    <div class="col-md-12">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
+                        <!-- Personal Details -->
+                        <h5 class="text-primary mt-3">Personal Details</h5>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Name" class="form-control" aria-required="true" />
+                            <label asp-for="Input.Name"></label>
+                            <span asp-validation-for="Input.Name" class="text-danger"></span>
+                        </div>
 
-            <h4>Personal details</h4>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Name" class="form-control" aria-required="true"/>
-                <label asp-for="Input.Name"></label>
-                <span asp-validation-for="Input.Name" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Surname" class="form-control" aria-required="true"/>
-                <label asp-for="Input.Surname"></label>
-                <span asp-validation-for="Input.Surname" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-floating mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" aria-required="true" />
-                <label asp-for="Input.PhoneNumber"></label>
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
-            </div>
-            <br />
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Surname" class="form-control" aria-required="true" />
+                            <label asp-for="Input.Surname"></label>
+                            <span asp-validation-for="Input.Surname" class="text-danger"></span>
+                        </div>
 
-            <h4>Training details</h4>
-            <hr />
-            <div>
-                <select asp-for="Input.InstitutionId" asp-items="@Model.Institutions" class="form-select" aria-required="true">
-                    <option value="">-- Choose an institution --</option>
-                </select>
-                <span asp-validation-for="Input.InstitutionId" class="text-danger"></span>
-            </div>
-            <br />
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.PhoneNumber" class="form-control" aria-required="true" />
+                            <label asp-for="Input.PhoneNumber"></label>
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                        </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="Input.IdNumber" class="form-control" aria-required="true"  />
-                <label asp-for="Input.IdNumber"></label>
-                <span asp-validation-for="Input.IdNumber" class="text-danger"></span>
-            </div>
-            <br />
+                        <!-- Training Details -->
+                        <h5 class="text-success mt-4">Training Details</h5>
+                        <div class="mb-3">
+                            <label asp-for="Input.InstitutionId" class="form-label"></label>
+                            <select asp-for="Input.InstitutionId" asp-items="@Model.Institutions" class="form-select" aria-required="true">
+                                <option value="">-- Choose an institution --</option>
+                            </select>
+                            <span asp-validation-for="Input.InstitutionId" class="text-danger"></span>
+                        </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="Input.HPCSANumber" class="form-control" aria-required="true" />
-                <label asp-for="Input.HPCSANumber"></label>
-                <span asp-validation-for="Input.HPCSANumber" class="text-danger"></span>
-            </div>
-            <br />
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.IdNumber" class="form-control" aria-required="true" />
+                            <label asp-for="Input.IdNumber"></label>
+                            <span asp-validation-for="Input.IdNumber" class="text-danger"></span>
+                        </div>
 
-            <h4>Login details</h4>
-            <hr />
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.HPCSANumber" class="form-control" aria-required="true" />
+                            <label asp-for="Input.HPCSANumber"></label>
+                            <span asp-validation-for="Input.HPCSANumber" class="text-danger"></span>
+                        </div>
+
+                        <!-- Login Details -->
+                        <h5 class="text-info mt-4">Login Details</h5>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                            <label asp-for="Input.Email">Email</label>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-3 position-relative">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" id="passwordField" />
+                            <label asp-for="Input.Password">Password</label>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-2 me-2" onclick="togglePassword('passwordField')">👁</button>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+                            <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary mb-2">Create Account</button>
+                    </form>
+                </div>
             </div>
-            <br />
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <br />
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
+        </div>
     </div>
 </div>
-
 
 
 @section Scripts 
 {
     <script>
+         function togglePassword(id) {
+            const field = document.getElementById(id);
+            field.type = field.type === 'password' ? 'text' : 'password';
+        }
+
         const subspecialities = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Subspecialities));
 
         function updateSubspecialityOptions() 

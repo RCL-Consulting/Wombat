@@ -1,0 +1,81 @@
+﻿@model Wombat.Common.Models.RegisterFromInviteVM
+
+@{
+    ViewData["Title"] = "Complete Registration";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">@ViewData["Title"]</h4>
+            </div>
+            <div class="card-body">
+
+                <form asp-action="Complete" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    @* Hidden fields *@
+                    <input type="hidden" asp-for="Email" />
+                    <input type="hidden" asp-for="Token" />
+                    @foreach (var role in Model.Roles)
+                    {
+                        <input type="hidden" name="Roles" value="@role" />
+                    }
+                    <input type="hidden" asp-for="SpecialityName" />
+                    <input type="hidden" asp-for="SubSpecialityName" />
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="FirstName" class="form-control" autocomplete="given-name" required />
+                        <label asp-for="FirstName">First Name</label>
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="LastName" class="form-control" autocomplete="family-name" required />
+                        <label asp-for="LastName">Last Name</label>
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" required />
+                        <label asp-for="Password">Password</label>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" required />
+                        <label asp-for="ConfirmPassword">Confirm Password</label>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Assigned Role(s)</label>
+                        <ul class="mb-0">
+                            @foreach (var role in Model.Roles)
+                            {
+                                <li>@role</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="mb-1"><strong>Department:</strong> @Model.SpecialityName</p>
+                        <p class="mb-0"><strong>Subspecialty:</strong> @Model.SubSpecialityName</p>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> Complete Registration
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

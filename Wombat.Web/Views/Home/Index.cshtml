@@ -8,35 +8,41 @@
 
 @if (!SignInManager.IsSignedIn(User))
 {
-    <!-- Guest View -->
     <div class="container mt-5">
+        <!-- Row 1: Text and Image -->
         <div class="row align-items-center">
-            <!-- Text + Buttons Column -->
-            <div class="col-md-6 text-center text-md-start">
+            <!-- Left Column: Text -->
+            <div class="col-md-6 text-md-start">
                 <h1 class="display-4 text-primary">Welcome to Wombat</h1>
                 <p class="lead text-muted">An open-source platform for managing clinical work-based assessments.</p>
                 <p class="text-muted">Built for trainees, assessors, and academic coordinators to streamline assessment and feedback.</p>
-
-                <div class="mt-4">
-                    <a class="btn btn-primary btn-lg me-2 mb-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
-                    <a class="btn btn-outline-success btn-lg me-2 mb-2" asp-area="Identity" asp-page="/Account/Register" asp-route-role="Trainee">Register as Trainee</a>
-                    <a class="btn btn-outline-info btn-lg mb-2" asp-area="Identity" asp-page="/Account/RegisterAssessor">Register as Assessor</a>
-                </div>
             </div>
 
-            <!-- Image Column -->
-            <div class="col-md-6 text-center mt-5 mt-md-0">
-                <img src="~/images/wombat-landing.png" alt="Illustration" class="img-fluid" style="max-height: 360px;" />
+            <!-- Right Column: Illustration -->
+            <div class="col-md-6 text-center mt-4 mt-md-0">
+                <img src="~/images/wombat-landing.svg" alt="Illustration"
+                     class="img-fluid animate-fade-slide"
+                     style="max-height: 360px;" />
+            </div>
+        </div>
+
+        <!-- Row 2: Buttons -->
+        <div class="row mt-4">
+            <div class="col text-center">
+                <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                <a class="btn btn-outline-success btn-lg me-2" asp-area="Identity" asp-page="/Account/Register" asp-route-role="Trainee">Register as Trainee</a>
+                <a class="btn btn-outline-info btn-lg" asp-area="Identity" asp-page="/Account/RegisterAssessor">Register as Assessor</a>
             </div>
         </div>
     </div>
+
 
 }
 else
 {
     <!-- Authenticated Users -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Welcome, @User.Identity?.Name</h1>
+        <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
     </div>
 
     @if (User.IsInRole(Roles.Trainee))
@@ -63,14 +69,7 @@ else
     }
     else if (User.IsInRole(Roles.Coordinator))
     {
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-success text-white">
-                <h6 class="m-0 font-weight-bold">Coordinator Dashboard</h6>
-            </div>
-            <div class="card-body">
-                <partial name="Coordinator.cshtml" model="@Model" />
-            </div>
-        </div>
+        <partial name="Coordinator.cshtml" model="@Model.Coordinator" />
     }
 
     @if (User.IsInRole(Roles.Administrator))

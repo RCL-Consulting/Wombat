@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Wombat.Data;
+using static Wombat.Data.WombatUser;
 
 namespace Wombat.Areas.Identity.Pages.Account
 {
@@ -23,9 +24,12 @@ namespace Wombat.Areas.Identity.Pages.Account
         private readonly SignInManager<WombatUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<WombatUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel( SignInManager<WombatUser> signInManager, 
+                           UserManager<WombatUser> userManager,
+                           ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            UserManager = userManager;
             _logger = logger;
         }
 
@@ -54,6 +58,7 @@ namespace Wombat.Areas.Identity.Pages.Account
         /// </summary>
         [TempData]
         public string ErrorMessage { get; set; }
+        public UserManager<WombatUser> UserManager { get; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -110,28 +115,60 @@ namespace Wombat.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else
+                var user = await UserManager.FindByEmailAsync(Input.Email);
+
+                if (user == null)
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }
+
+                if (user.ApprovalStatus == eApprovalStatus.Pending)
+                {
+                    ModelState.AddModelError(string.Empty, "Your account is pending approval by your coordinator.");
+                    return Page();
+                }
+                if (user.ApprovalStatus == eApprovalStatus.Rejected)
+                {
+                    ModelState.AddModelError(string.Empty, "Your registration request was rejected.");
+                    return Page();
+                }
+
+                if (await UserManager.IsLockedOutAsync(user))
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return RedirectToPage("./Lockout");
+                }
+
+                // Check password
+                if (!await UserManager.CheckPasswordAsync(user, Input.Password))
+                {
+                    await UserManager.AccessFailedAsync(user); // increment failure count
+
+                    if (await UserManager.IsLockedOutAsync(user))
+                    {
+                        _logger.LogWarning("User account locked out.");
+                        return RedirectToPage("./Lockout");
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return Page();
+                }
+
+                // Password correct, reset failure count
+                await UserManager.ResetAccessFailedCountAsync(user);
+
+                // Two-factor enabled?
+                if (await UserManager.GetTwoFactorEnabledAsync(user))
+                {
+                    await _signInManager.SignInWithClaimsAsync(user, isPersistent: false, additionalClaims: null);
+                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+                }
+
+                // Sign in normally
+                await _signInManager.SignInAsync(user, Input.RememberMe);
+                _logger.LogInformation("User logged in.");
+                return LocalRedirect(returnUrl);
             }
 
             // If we got this far, something failed, redisplay form
