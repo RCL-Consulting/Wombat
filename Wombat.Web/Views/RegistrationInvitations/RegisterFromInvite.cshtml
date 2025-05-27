@@ -24,6 +24,8 @@
                     }
                     <input type="hidden" asp-for="SpecialityName" />
                     <input type="hidden" asp-for="SubSpecialityName" />
+                    <input type="hidden" asp-for="SpecialityId" />
+                    <input type="hidden" asp-for="SubSpecialityId" />
 
                     <div class="form-floating mb-3">
                         <input asp-for="FirstName" class="form-control" autocomplete="given-name" required />
@@ -61,7 +63,10 @@
 
                     <div class="mb-4">
                         <p class="mb-1"><strong>Department:</strong> @Model.SpecialityName</p>
-                        <p class="mb-0"><strong>Subspecialty:</strong> @Model.SubSpecialityName</p>
+                        @if (!String.IsNullOrEmpty(Model.SubSpecialityName))
+                        {
+                            <p class="mb-0"><strong>Subspecialty:</strong> @Model.SubSpecialityName</p>
+                        }
                     </div>
 
                     <div class="d-grid">

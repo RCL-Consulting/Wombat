@@ -86,7 +86,7 @@ namespace Wombat.Web.Controllers
         {
             var model = new InviteUserVM
             {
-                AvailableRoles = Roles.All().Select(r => new SelectListItem { Text = r, Value = r }).ToList(),
+                AvailableRoles = Roles.AllForDisplay().Select(r => new SelectListItem { Text = r, Value = r }).ToList(),
                 Specialities = (await SpecialityRepository.GetAllAsync())
             .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList(),
                 SubSpecialities = (await SubSpecialityRepository.GetAllAsync())
@@ -116,7 +116,7 @@ namespace Wombat.Web.Controllers
             if (!ModelState.IsValid)
             {
                 // reload dropdowns
-                model.AvailableRoles = Roles.All().Select(r => new SelectListItem { Text = r, Value = r }).ToList();
+                model.AvailableRoles = Roles.AllForDisplay().Select(r => new SelectListItem { Text = r, Value = r }).ToList();
                 model.Specialities = (await SpecialityRepository.GetAllAsync()).Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
                 model.SubSpecialities = (await SubSpecialityRepository.GetAllAsync()).Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
                 return View(model);

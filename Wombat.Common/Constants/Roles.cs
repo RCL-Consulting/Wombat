@@ -32,7 +32,7 @@ namespace Wombat.Common.Constants
         /// <summary>
         /// Returns all defined roles (excluding Unassigned, unless needed)
         /// </summary>
-        public static IEnumerable<string> All()
+        public static IEnumerable<string> AllForSystem()
         {
             yield return Administrator;
             yield return InstitutionalAdmin;
@@ -42,7 +42,17 @@ namespace Wombat.Common.Constants
             yield return CommitteeMember;
             yield return Trainee;
             yield return PendingTrainee;
-            // yield return Unassigned; // Uncomment if needed
+        }
+
+        public static IEnumerable<string> AllForDisplay()
+        {
+            yield return Administrator;
+            yield return InstitutionalAdmin;
+            yield return DepartmentAdmin;
+            yield return Assessor;
+            yield return Coordinator;
+            yield return CommitteeMember;
+            yield return Trainee;
         }
     }
 }

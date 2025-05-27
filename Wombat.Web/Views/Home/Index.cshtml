@@ -1,6 +1,7 @@
 ﻿@model DashboardVM
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<Wombat.Data.WombatUser> SignInManager
+@using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Home";
@@ -46,7 +47,22 @@ else
     </div>
 
     @if (User.IsInRole(Roles.Trainee))
-    {
+    {        
+        ViewData["Title"] = "Trainee Dashboard";
+
+        // Prepare data for chart
+        var labels = new[] { "Requested", "Declined", "Pending", "Completed" };
+        var values = new[] {
+                Model.NumberOfRequestsMade,
+                Model.NumberOfRequestsDeclined,
+                Model.NumberOfPendingAssessments,
+                Model.NumberOfCompletedAssessments
+            };
+
+        ViewData["ChartLabels"] = JsonConvert.SerializeObject(labels);
+        ViewData["ChartValues"] = JsonConvert.SerializeObject(values);
+        
+
         <div class="card shadow mb-4">
             <div class="card-header py-3 bg-primary text-white">
                 <h6 class="m-0 font-weight-bold">Trainee Dashboard</h6>
@@ -55,6 +71,38 @@ else
                 <partial name="TraineeHome.cshtml" model="@Model" />
             </div>
         </div>
+
+        @section Scripts {
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const ctx = document.getElementById('assessmentChart');
+                    if (ctx) {
+                        const labels = @Html.Raw(ViewData["ChartLabels"]);
+                        const data = @Html.Raw(ViewData["ChartValues"]);
+
+                        console.log("Chart labels:", labels);
+                        console.log("Chart values:", data);
+
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: data,
+                                    backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { position: 'bottom' }
+                                }
+                            }
+                        });
+                    }
+                });
+            </script>
+        }
     }
     else if (User.IsInRole(Roles.Assessor))
     {

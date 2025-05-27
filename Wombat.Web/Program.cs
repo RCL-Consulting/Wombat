@@ -97,7 +97,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<WombatUser>>();
 
-    foreach (var roleName in Roles.All() )
+    foreach (var roleName in Roles.AllForSystem() )
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
