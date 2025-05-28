@@ -41,8 +41,15 @@ namespace Wombat.Common.Models
         [Display(Name = "Completed assessments")]
         public int NumberOfCompletedAssessments { get; set; } = 0;
 
-        public Dictionary<int, int> TotalAssessmentsPerEPA { get; set; }
-        public Dictionary<int, int> VisibleAssessmentsPerEPA { get; set; }
+        public Dictionary<int, int> TotalAssessmentsPerEPA { get; set; } = new();
+        public Dictionary<int, int> VisibleAssessmentsPerEPA { get; set; } = new();
+
+        // New: rating tracking
+        public Dictionary<int, int> ExpectedRatingPerEPA { get; set; } = new();
+        public Dictionary<int, int> HighestRatingPerEPA { get; set; } = new();
+
+        // Optional: future extension
+        public Dictionary<int, int> MonthsInTrainingPerEPA { get; set; } = new();
 
         public string UserName { get; set; }
         public CoordinatorDashboardVM Coordinator { get; set; }

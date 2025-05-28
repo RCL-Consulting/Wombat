@@ -31,5 +31,7 @@ namespace Wombat.Application.Contracts
         
         Task<List<LoggedAssessment>?> GetAssessmentsByEPAAndTraineeAsync(int epaId, string traineeId);
         Task<List<LoggedAssessment>?> GetVisibleAssessmentsPerEPAByTrainee(int epaId, string traineeId);
+
+        Task<List<LoggedAssessment>> GetByRequestIdsAsync(List<int> requestIds);
     }
 }

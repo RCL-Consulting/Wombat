@@ -61,5 +61,7 @@ namespace Wombat.Data
         public AssessmentForm? AssessmentForm { get; set; }
 
         public string Notes { get; set; } = "";
+
+        public LoggedAssessment? LoggedAssessment { get; set; }
     }
 }

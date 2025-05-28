@@ -1,4 +1,4 @@
-/*Copyright (C) 2024 RCL Consulting
+﻿/*Copyright (C) 2024 RCL Consulting
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,13 @@ namespace Wombat.Controllers
             this.loggedAssessmentRepository = loggedAssessmentRepository;
         }
 
+        private int GetMonthsInTraining(DateTime startDate)
+        {
+            var now = DateTime.UtcNow;
+            return ((now.Year - startDate.Year) * 12) + now.Month - startDate.Month;
+        }
+
+
         [AllowAnonymous]
         public async Task<IActionResult> IndexAsync()
         {
@@ -120,13 +127,17 @@ namespace Wombat.Controllers
                 PendingTrainees = pendingVMs
             };
 
-
             if (roles.Contains(Roles.Trainee))
             {
-                dashboard.User.SubSpeciality = mapper.Map<SubSpecialityVM>(await subSpecialityRepository.GetAsync(user.SubSpecialityId));
+                dashboard.User.SubSpeciality = mapper.Map<SubSpecialityVM>(
+                    await subSpecialityRepository.GetAsync(user.SubSpecialityId)
+                );
+
                 if (dashboard.User.SubSpeciality == null)
                     return NotFound();
+
                 dashboard.User.Speciality = dashboard.User.SubSpeciality.Speciality;
+
                 var EPAList = await EPARepository.GetEPAListBySubspeciality(dashboard.User.SubSpeciality.Id);
                 if (EPAList != null)
                 {
@@ -135,8 +146,49 @@ namespace Wombat.Controllers
 
                     dashboard.TotalAssessmentsPerEPA = await loggedAssessmentRepository.GetTotalAssessmentsPerEPAByTrainee(EPAIds, userId);
                     dashboard.VisibleAssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, userId);
+
+                    // 🔍 NEW: Completed assessments from which to derive actual ratings
+                    var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
+
+                    // 🔍 Extract rating per assessment from linked LoggedAssessment (by OptionSetId = 2)
+                    var ratingsPerEPA = completedAssessments
+                        .Where(a => a.LoggedAssessment != null && a.LoggedAssessment.OptionCriterionResponses != null)
+                        .Select(a =>
+                        {
+                            var rank = a.LoggedAssessment.OptionCriterionResponses
+                                .FirstOrDefault(r => r.Criterion != null && r.Criterion.OptionSetId == 2)?.Option?.Rank ?? 0;
+
+                            return new { a.EPAId, Rank = rank };
+                        })
+                        .ToList();
+
+                    dashboard.HighestRatingPerEPA = ratingsPerEPA
+                        .GroupBy(x => x.EPAId)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Max(x => x.Rank)
+                        );
+
+                    // 🔍 NEW: Expected ratings from curriculum
+                    //var monthsInTraining = GetMonthsInTraining(user.StartDate ?? user.CreatedDate);
+                    var monthsInTraining = 0;
+                    dashboard.ExpectedRatingPerEPA = EPAList
+                        .Select(e => new
+                        {
+                            e.Id,
+                            Curriculum = e.EPACurricula
+                                .Where(c => c.NumberOfMonths <= monthsInTraining)
+                                .OrderByDescending(c => c.NumberOfMonths)
+                                .FirstOrDefault()
+                        })
+                        .Where(x => x.Curriculum?.EPAScaleOption != null)
+                        .ToDictionary(
+                            x => x.Id,
+                            x => x.Curriculum.EPAScaleOption!.Rank
+                        );
                 }
 
+                // General stats
                 var requestsMade = await assessmentRequestRepository.GetTraineePendingRequests(userId);
                 dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
 
@@ -146,9 +198,10 @@ namespace Wombat.Controllers
                 var pendingAssessments = await assessmentRequestRepository.GetTraineePendingAssessments(userId);
                 dashboard.NumberOfPendingAssessments = pendingAssessments?.Count ?? 0;
 
-                var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
-                dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
+                var completedAssessmentsAgain = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
+                dashboard.NumberOfCompletedAssessments = completedAssessmentsAgain?.Count ?? 0;
             }
+
             else if (roles.Contains(Roles.Assessor))
             {
                 var requestsMade = await assessmentRequestRepository.GetAssessorPendingRequests(userId);

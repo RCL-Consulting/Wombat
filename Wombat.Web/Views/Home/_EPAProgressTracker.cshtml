@@ -1,0 +1,38 @@
+﻿@model DashboardVM
+
+<div class="card shadow-sm">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">📈 EPA Progress Tracker</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover small align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>EPA</th>
+                        <th>Current Rating</th>
+                        <th>Target Rating</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.EPAList)
+                    {
+                        var current = Model.HighestRatingPerEPA.GetValueOrDefault(item.Id);
+                        var target = Model.ExpectedRatingPerEPA.GetValueOrDefault(item.Id);
+                        string status = current >= target ? "🟢 On track" :
+                        current == 0 ? "⚪ No data" :
+                        current + 1 == target ? "🟡 Nearly there" : "🔴 Behind";
+
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@(current > 0 ? $"Level {current}" : "-")</td>
+                            <td>Level @target</td>
+                            <td>@status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

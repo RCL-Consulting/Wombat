@@ -38,6 +38,15 @@ namespace Wombat.Application.Repositories
             this.optionCriterionResponse=optionCriterionResponse;
         }
 
+        public async Task<List<LoggedAssessment>> GetByRequestIdsAsync(List<int> requestIds)
+        {
+            return await context.LoggedAssessments
+                .Include(a => a.OptionCriterionResponses)
+                .Where(a => requestIds.Contains(a.AssessmentRequestId))
+                .ToListAsync();
+        }
+
+
         public override async Task<LoggedAssessment?> GetAsync(int? id)
         {
             var assessment = await base.GetAsync(id);

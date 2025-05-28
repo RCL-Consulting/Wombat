@@ -56,6 +56,11 @@ namespace Wombat.Data
                 entity.Property(e => e.Roles)
                       .IsRequired();
             });
+
+            builder.Entity<AssessmentRequest>()
+                .HasOne(ar => ar.LoggedAssessment)
+                .WithOne(la => la.AssessmentRequest)
+                .HasForeignKey<LoggedAssessment>(la => la.AssessmentRequestId);
         }
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
