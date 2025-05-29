@@ -83,5 +83,7 @@ namespace Wombat.Common.Models
         public string HPCSANumber { get; set; } = "";
 
         public bool EmailConfirmed { get; set; }
+
+        public DateTime StartDate { get; set; }
     }
 }

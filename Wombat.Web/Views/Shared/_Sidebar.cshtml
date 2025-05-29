@@ -55,11 +55,11 @@
 
         <!-- System Management -->
         <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSystem" aria-expanded="true" aria-controls="collapseSystem">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSystem" aria-expanded="false" aria-controls="collapseSystem">
                 <i class="fas fa-cogs"></i>
                 <span>System Setup</span>
             </a>
-            <div id="collapseSystem" class="collapse" aria-labelledby="headingSystem" data-parent="#accordionSidebar">
+            <div id="collapseSystem" class="collapse" aria-labelledby="headingSystem">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" asp-controller="Institutions" asp-action="Index">Institutions</a>
                     <a class="collapse-item" asp-controller="Specialities" asp-action="Index">Specialities</a>
@@ -73,11 +73,11 @@
 
         <!-- User Management -->
         <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsers" aria-expanded="true" aria-controls="collapseUsers">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
                 <i class="fas fa-users-cog"></i>
                 <span>User Management</span>
             </a>
-            <div id="collapseUsers" class="collapse" aria-labelledby="headingUsers" data-parent="#accordionSidebar">
+            <div id="collapseUsers" class="collapse" aria-labelledby="headingUsers">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" asp-controller="WombatUsers" asp-action="Index">Users</a>
                     <a class="collapse-item" asp-controller="RegistrationInvitations" asp-action="Invite">Invite Users</a>

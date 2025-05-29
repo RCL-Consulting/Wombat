@@ -116,6 +116,10 @@ namespace Wombat.Areas.Identity.Pages.Account
             [Display(Name = "Institution")]
             public int InstitutionId { get; set; }
 
+            [Required]
+            [Display(Name = "Training start date")]
+            public DateTime StartDate { get; set; }
+
             //[Required]
             [Display(Name = "Training Number")]
             public string IdNumber { get; set; }
@@ -198,6 +202,7 @@ namespace Wombat.Areas.Identity.Pages.Account
                 user.Surname = Input.Surname;
                 user.IdNumber = Input.IdNumber;
                 user.InstitutionId = Input.InstitutionId;
+                user.StartDate = Input.StartDate;
                 user.PhoneNumber = Input.PhoneNumber;
                 user.SubSpecialityId = Input.SubspecialityId;
                 user.DateJoined = DateTime.Now; //Input.DateJoined ?? default;

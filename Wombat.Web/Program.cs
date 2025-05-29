@@ -97,42 +97,22 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<WombatUser>>();
 
-    foreach (var roleName in Roles.AllForSystem() )
-    {
-        if (!await roleManager.RoleExistsAsync(roleName))
-        {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-        }
-    }
-
-    // Create default admin user
-    var adminEmail = "admin@localhost.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    //if (adminUser == null)
+    //foreach (var roleName in Roles.AllForSystem() )
     //{
-    //    adminUser = new WombatUser
+    //    if (!await roleManager.RoleExistsAsync(roleName))
     //    {
-    //        UserName = adminEmail,
-    //        Email = adminEmail,
-    //        EmailConfirmed = true,
-    //        ApprovalStatus = eApprovalStatus.Approved,
-    //        Name = "System",
-    //        Surname = "Administrator",
-    //        InstitutionId = 1, // if required, adjust accordingly
-    //        SubSpecialityId = 1 // if required, adjust accordingly
-    //    };
-
-    //    var result = await userManager.CreateAsync(adminUser, "Admin123!"); // Strong password
-    //    if (!result.Succeeded)
-    //    {
-    //        throw new Exception("Failed to create admin user: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+    //        await roleManager.CreateAsync(new IdentityRole(roleName));
     //    }
     //}
 
-    if (!await userManager.IsInRoleAsync(adminUser, Roles.Administrator))
-    {
-        await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
-    }
+    //// Create default admin user
+    //var adminEmail = "admin@localhost.com";
+    //var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    //if (!await userManager.IsInRoleAsync(adminUser, Roles.Administrator))
+    //{
+    //    await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
+    //}
 }
 
 app.Run();

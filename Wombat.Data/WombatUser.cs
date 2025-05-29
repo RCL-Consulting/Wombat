@@ -46,5 +46,7 @@ namespace Wombat.Data
         public SubSpeciality? SubSpeciality { get; set; }
 
         public DateTime DateJoined { get; set; }
+
+        public DateTime StartDate { get; set; }
     }
 }

@@ -44,6 +44,13 @@
                             </select>
                             <span asp-validation-for="Input.InstitutionId" class="text-danger"></span>
                         </div>
+
+                        <div class="form-group">
+                            <label asp-for="Input.StartDate" class="control-label"></label>
+                            <input asp-for="Input.StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="Input.StartDate" class="text-danger"></span>
+                        </div>
+
                         <div class="mb-3">
                             <label asp-for="Input.SpecialityId" class="form-label"></label>
                             <select asp-for="Input.SpecialityId" asp-items="@Model.Specialities" onchange="updateSubspecialityOptions()" id="specialitySelect" class="form-select" aria-required="true">

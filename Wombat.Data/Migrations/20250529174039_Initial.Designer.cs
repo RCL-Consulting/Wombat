@@ -12,8 +12,8 @@ using Wombat.Data;
 namespace Wombat.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250220164543_TestMigration")]
-    partial class TestMigration
+    [Migration("20250529174039_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,15 +60,21 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E",
-                            Name = "Assessor",
-                            NormalizedName = "ASSESSOR"
+                            Id = "86708DA5-1688-4617-B6FF-B64E78D9A032",
+                            Name = "InstitutionalAdmin",
+                            NormalizedName = "INSTITUTIONALADMIN"
                         },
                         new
                         {
-                            Id = "3FAA94D6-23C2-4365-9951-796673F48402",
-                            Name = "Trainee",
-                            NormalizedName = "TRAINEE"
+                            Id = "725E680D-9DCD-4C9D-B8F9-2415E12F0FA5",
+                            Name = "DepartmentAdmin",
+                            NormalizedName = "DEPARTMENTADMIN"
+                        },
+                        new
+                        {
+                            Id = "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E",
+                            Name = "Assessor",
+                            NormalizedName = "ASSESSOR"
                         },
                         new
                         {
@@ -78,9 +84,21 @@ namespace Wombat.Data.Migrations
                         },
                         new
                         {
-                            Id = "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8",
-                            Name = "Unassigned",
-                            NormalizedName = "UNASSIGNED"
+                            Id = "616FDCDE-67A1-4C3F-8153-ACC4809FCAE8",
+                            Name = "CommitteeMember",
+                            NormalizedName = "COMMITTEEMEMBER"
+                        },
+                        new
+                        {
+                            Id = "3FAA94D6-23C2-4365-9951-796673F48402",
+                            Name = "Trainee",
+                            NormalizedName = "TRAINEE"
+                        },
+                        new
+                        {
+                            Id = "7F94F90B-44AA-4A93-846A-F16581B487F6",
+                            Name = "PendingTrainee",
+                            NormalizedName = "PENDINGTRAINEE"
                         });
                 });
 
@@ -717,7 +735,8 @@ namespace Wombat.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssessmentRequestId");
+                    b.HasIndex("AssessmentRequestId")
+                        .IsUnique();
 
                     b.HasIndex("AssessorId");
 
@@ -1344,6 +1363,59 @@ namespace Wombat.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Wombat.Data.RegistrationInvitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InstitutionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Roles")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SpecialityId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SubSpecialityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstitutionId");
+
+                    b.HasIndex("SpecialityId");
+
+                    b.HasIndex("SubSpecialityId");
+
+                    b.ToTable("RegistrationInvitations");
+                });
+
             modelBuilder.Entity("Wombat.Data.Speciality", b =>
                 {
                     b.Property<int>("Id")
@@ -1579,6 +1651,9 @@ namespace Wombat.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("ApprovalStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -1633,6 +1708,9 @@ namespace Wombat.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("SubSpecialityId")
                         .HasColumnType("int");
 
@@ -1668,7 +1746,8 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "D68AC189-5BB6-4511-B96F-0F8BD55569AC",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a10faef5-fde7-4f09-8448-ce23f9dce824",
+                            ApprovalStatus = 1,
+                            ConcurrencyStamp = "15b74839-ca6f-4e73-a1ab-d3deec333fe2",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
@@ -1679,9 +1758,10 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFNdDhsTAjP5figU2OiTYA9Glfo4ohbsWaXcH0KKR2U5XWNqBEhU+769n7KpYHVG4A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMODqJCTryWZR7VwSKFGonOo2DDn+mhr+LzAzK/NXVHq0SiSxSDFPEH0kWTeMOtYiA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4db7cc75-44dd-4c05-9ad0-d4d8a93d4c74",
+                            SecurityStamp = "0ab00d44-81f8-41c7-85a4-233a791bd438",
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Surname = "Admin",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
@@ -1690,7 +1770,8 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "409696F3-CA82-4381-A734-38A5EF6AA445",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e613f9b8-d22c-4fbc-b704-b2f6e61536a0",
+                            ApprovalStatus = 1,
+                            ConcurrencyStamp = "4587d6d6-d5a1-42f1-bb35-136f7cb640b5",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "assessor@localhost.com",
                             EmailConfirmed = true,
@@ -1701,9 +1782,10 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "ASSESSOR@LOCALHOST.COM",
                             NormalizedUserName = "ASSESSOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIHBsnhaog3ASHi+0/7cZu4/MGoGAL1CY9kRnt5/QXFHLdevi1Mz7oQGdtDobB2dCw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAfBziu7TJ1wdBftBzNvzKSIy0v5ULfpbpVgndaK4ivcK3WjtG9+iZI92z4LtZpjlA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "efb87b85-e647-4b16-a410-34b65f766fed",
+                            SecurityStamp = "6a8179e2-42b4-4de7-a031-93fa7a61c231",
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Surname = "Assessor",
                             TwoFactorEnabled = false,
                             UserName = "assessor@localhost.com"
@@ -1712,7 +1794,8 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "19A3D40C-9852-43B9-9BEC-B2552FA715F7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e55cf8c0-1be1-4411-b0ee-fef7c603f9ab",
+                            ApprovalStatus = 1,
+                            ConcurrencyStamp = "b3ce1e7f-8c0a-4f25-b538-8d1bcac93194",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "trainee@localhost.com",
                             EmailConfirmed = true,
@@ -1723,9 +1806,10 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "TRAINEE@LOCALHOST.COM",
                             NormalizedUserName = "TRAINEE@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGNxLkJsFCWCUCcJa+8ILRcv6cJkUTqwa3y1qlyQT/0xHf9Jr0tKtUnvGDTW4hcBSA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJq/xKWzd+l1yEWF7ONqAHY9pUCmkF5X3zYiXRJWDf1ivhXUIJq7CEyhRiXUi+dltQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "709a2fb2-0fd6-430e-ae40-69c36274a9a6",
+                            SecurityStamp = "802350b9-ce9d-49ab-92cc-026472f81667",
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             SubSpecialityId = 1,
                             Surname = "Trainee",
                             TwoFactorEnabled = false,
@@ -1735,7 +1819,8 @@ namespace Wombat.Data.Migrations
                         {
                             Id = "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8579213a-633c-448e-9e01-7abac8254871",
+                            ApprovalStatus = 1,
+                            ConcurrencyStamp = "d8a2e7cf-0fce-4c83-bb14-8cc9ec7d4906",
                             DateJoined = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "coordinator@localhost.com",
                             EmailConfirmed = true,
@@ -1746,9 +1831,10 @@ namespace Wombat.Data.Migrations
                             Name = "System",
                             NormalizedEmail = "COORDINATOR@LOCALHOST.COM",
                             NormalizedUserName = "COORDINATOR@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELtn6++m8E6AL6MjGtO5bDHaOMZochx2BbQ7eqUheJ6AG9EGY8hbrPd8Coow1HBsag==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI6lfMSh9ALsPJL/JYSU3lE1yK6posL3NF1DPg5aes7z+Z30Z2IVM+WqYxE24hrPlw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "35b5298c-4c31-41d5-84b3-a7e76a639e05",
+                            SecurityStamp = "281c8b6c-602f-4694-86b5-00c25cef7116",
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Surname = "Coordinator",
                             TwoFactorEnabled = false,
                             UserName = "coordinator@localhost.com"
@@ -1893,8 +1979,8 @@ namespace Wombat.Data.Migrations
             modelBuilder.Entity("Wombat.Data.LoggedAssessment", b =>
                 {
                     b.HasOne("Wombat.Data.AssessmentRequest", "AssessmentRequest")
-                        .WithMany()
-                        .HasForeignKey("AssessmentRequestId")
+                        .WithOne("LoggedAssessment")
+                        .HasForeignKey("Wombat.Data.LoggedAssessment", "AssessmentRequestId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1989,6 +2075,31 @@ namespace Wombat.Data.Migrations
                     b.Navigation("Option");
                 });
 
+            modelBuilder.Entity("Wombat.Data.RegistrationInvitation", b =>
+                {
+                    b.HasOne("Wombat.Data.Institution", "Institution")
+                        .WithMany()
+                        .HasForeignKey("InstitutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Wombat.Data.Speciality", "Speciality")
+                        .WithMany()
+                        .HasForeignKey("SpecialityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Wombat.Data.SubSpeciality", "SubSpeciality")
+                        .WithMany()
+                        .HasForeignKey("SubSpecialityId");
+
+                    b.Navigation("Institution");
+
+                    b.Navigation("Speciality");
+
+                    b.Navigation("SubSpeciality");
+                });
+
             modelBuilder.Entity("Wombat.Data.SubSpeciality", b =>
                 {
                     b.HasOne("Wombat.Data.Speciality", "Speciality")
@@ -2022,6 +2133,11 @@ namespace Wombat.Data.Migrations
                     b.Navigation("EPAs");
 
                     b.Navigation("OptionCriteria");
+                });
+
+            modelBuilder.Entity("Wombat.Data.AssessmentRequest", b =>
+                {
+                    b.Navigation("LoggedAssessment");
                 });
 
             modelBuilder.Entity("Wombat.Data.EPA", b =>

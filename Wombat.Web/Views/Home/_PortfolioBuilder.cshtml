@@ -1,41 +1,46 @@
 ﻿@model DashboardVM
 
 <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white">
-        <h5 class="mb-0">📂 Portfolio Builder</h5>
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"> <i class="fas fa-folder-open"></i> Portfolio Builder</h5>
+        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#portfolioCollapse" aria-expanded="true" aria-controls="portfolioCollapse">
+            <i class="fas fa-chevron-down"></i>
+        </button>
     </div>
-    <div class="card-body">
-        <div class="table-responsive small">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>EPA</th>
-                        <th>Visible</th>
-                        <th>Total</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.EPAList)
-                    {
-                        int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
-                        int visible = Model.VisibleAssessmentsPerEPA.GetValueOrDefault(item.Id);
+    <div id="portfolioCollapse" class="collapse show">
+        <div class="card-body">
+            <div class="table-responsive small">
+                <table class="table table-striped align-middle" style="width: 100%">
+                    <thead>
                         <tr>
-                            <td>@item.Name</td>
-                            <td>@visible</td>
-                            <td>@total</td>
-                            <td class="text-center">
-                                @if (total > 0)
-                                {
-                                    <a class="btn btn-sm btn-outline-warning me-1" asp-controller="LoggedAssessments" asp-action="PortfolioByEPA" asp-route-id="@item.Id">
-                                        <i class="fas fa-pencil-alt"></i> Edit
-                                    </a>
-                                }
-                            </td>
+                            <th>EPA</th>
+                            <th>Visible</th>
+                            <th>Total</th>
+                            <th class="text-center">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.EPAList)
+                        {
+                            int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
+                            int visible = Model.VisibleAssessmentsPerEPA.GetValueOrDefault(item.Id);
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@visible</td>
+                                <td>@total</td>
+                                <td class="text-center">
+                                    @if (total > 0)
+                                    {
+                                        <a class="btn btn-sm btn-outline-warning me-1" asp-controller="LoggedAssessments" asp-action="PortfolioByEPA" asp-route-id="@item.Id">
+                                            <i class="fas fa-pencil-alt"></i> Edit
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

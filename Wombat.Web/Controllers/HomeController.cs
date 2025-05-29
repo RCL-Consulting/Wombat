@@ -147,10 +147,10 @@ namespace Wombat.Controllers
                     dashboard.TotalAssessmentsPerEPA = await loggedAssessmentRepository.GetTotalAssessmentsPerEPAByTrainee(EPAIds, userId);
                     dashboard.VisibleAssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, userId);
 
-                    // 🔍 NEW: Completed assessments from which to derive actual ratings
+                    //Completed assessments from which to derive actual ratings
                     var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
 
-                    // 🔍 Extract rating per assessment from linked LoggedAssessment (by OptionSetId = 2)
+                    //Extract rating per assessment from linked LoggedAssessment (by OptionSetId = 2)
                     var ratingsPerEPA = completedAssessments
                         .Where(a => a.LoggedAssessment != null && a.LoggedAssessment.OptionCriterionResponses != null)
                         .Select(a =>
@@ -169,9 +169,8 @@ namespace Wombat.Controllers
                             g => g.Max(x => x.Rank)
                         );
 
-                    // 🔍 NEW: Expected ratings from curriculum
-                    //var monthsInTraining = GetMonthsInTraining(user.StartDate ?? user.CreatedDate);
-                    var monthsInTraining = 0;
+                    //Expected ratings from curriculum
+                    var monthsInTraining = GetMonthsInTraining(user.StartDate);
                     dashboard.ExpectedRatingPerEPA = EPAList
                         .Select(e => new
                         {

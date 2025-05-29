@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Wombat.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -195,13 +195,15 @@ namespace Wombat.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ApprovalStatus = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Surname = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IdNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IdNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HPCSANumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     InstitutionId = table.Column<int>(type: "int", nullable: false),
                     SubSpecialityId = table.Column<int>(type: "int", nullable: true),
                     DateJoined = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -254,6 +256,45 @@ namespace Wombat.Data.Migrations
                         principalTable: "SubSpecialities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RegistrationInvitations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Roles = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    InstitutionId = table.Column<int>(type: "int", nullable: false),
+                    SpecialityId = table.Column<int>(type: "int", nullable: false),
+                    SubSpecialityId = table.Column<int>(type: "int", nullable: true),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RegistrationInvitations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RegistrationInvitations_Institutions_InstitutionId",
+                        column: x => x.InstitutionId,
+                        principalTable: "Institutions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RegistrationInvitations_Specialities_SpecialityId",
+                        column: x => x.SpecialityId,
+                        principalTable: "Specialities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RegistrationInvitations_SubSpecialities_SubSpecialityId",
+                        column: x => x.SubSpecialityId,
+                        principalTable: "SubSpecialities",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -539,10 +580,13 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "0EC1BA72-D475-4B61-9A06-E9F85CF2CCB8", null, "Unassigned", "UNASSIGNED" },
                     { "3FAA94D6-23C2-4365-9951-796673F48402", null, "Trainee", "TRAINEE" },
                     { "50BC176C-BD18-49A8-8DF7-9FC6FE9E7B9E", null, "Assessor", "ASSESSOR" },
                     { "5653650A-167F-42D5-A67F-2C0AE818EB84", null, "Coordinator", "COORDINATOR" },
+                    { "616FDCDE-67A1-4C3F-8153-ACC4809FCAE8", null, "CommitteeMember", "COMMITTEEMEMBER" },
+                    { "725E680D-9DCD-4C9D-B8F9-2415E12F0FA5", null, "DepartmentAdmin", "DEPARTMENTADMIN" },
+                    { "7F94F90B-44AA-4A93-846A-F16581B487F6", null, "PendingTrainee", "PENDINGTRAINEE" },
+                    { "86708DA5-1688-4617-B6FF-B64E78D9A032", null, "InstitutionalAdmin", "INSTITUTIONALADMIN" },
                     { "8DDBAFD6-4044-4AF0-BED8-D77B16F75404", null, "Administrator", "ADMINISTRATOR" }
                 });
 
@@ -584,12 +628,12 @@ namespace Wombat.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
+                columns: new[] { "Id", "AccessFailedCount", "ApprovalStatus", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "StartDate", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, "b77abed7-77dc-4628-954e-e9a22db566e7", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, "", "", 2, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDD9nKLfB5q9ZstO4blykugdUsAbaIcAHMkW6+FrVWsrr9B8kBKi+uFhFXwn5IYT8A==", null, false, "5dc812a3-7463-4fd0-a7cd-3b26eab47fb2", null, "Assessor", false, "assessor@localhost.com" },
-                    { "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237", 0, "272f208b-8485-47aa-bbcc-f48a9234a1e7", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "coordinator@localhost.com", true, "", "", 2, false, null, "System", "COORDINATOR@LOCALHOST.COM", "COORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAENX2l2T4u3PKydtJ0UKG/TIn/mxeO5Auq4LBp3LEtHQ4FfnglhC/ModcLV/VO8aw/g==", null, false, "bf1910f7-b180-4561-a481-93c44a65b96e", null, "Coordinator", false, "coordinator@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, "d9db0a63-77b1-496e-9708-0511dfaf1359", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAECG0gCc7fLk7pOU/d1Ug1HtkYRfPUB8P5TuZGXW5GbEKZSmZxhOL7C5ujw1Ov8wsJQ==", null, false, "3ec966a1-3afb-4e3d-a0e5-6052d270ffed", null, "Admin", false, "admin@localhost.com" }
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, 1, "4587d6d6-d5a1-42f1-bb35-136f7cb640b5", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, "", "", 2, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEAfBziu7TJ1wdBftBzNvzKSIy0v5ULfpbpVgndaK4ivcK3WjtG9+iZI92z4LtZpjlA==", null, false, "6a8179e2-42b4-4de7-a031-93fa7a61c231", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Assessor", false, "assessor@localhost.com" },
+                    { "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237", 0, 1, "d8a2e7cf-0fce-4c83-bb14-8cc9ec7d4906", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "coordinator@localhost.com", true, "", "", 2, false, null, "System", "COORDINATOR@LOCALHOST.COM", "COORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEI6lfMSh9ALsPJL/JYSU3lE1yK6posL3NF1DPg5aes7z+Z30Z2IVM+WqYxE24hrPlw==", null, false, "281c8b6c-602f-4694-86b5-00c25cef7116", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Coordinator", false, "coordinator@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, 1, "15b74839-ca6f-4e73-a1ab-d3deec333fe2", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEMODqJCTryWZR7VwSKFGonOo2DDn+mhr+LzAzK/NXVHq0SiSxSDFPEH0kWTeMOtYiA==", null, false, "0ab00d44-81f8-41c7-85a4-233a791bd438", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -688,8 +732,8 @@ namespace Wombat.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, "99f9429c-8d27-45bd-802c-e7d8df89f1ac", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, "", "", 2, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEEaGC3tGASaGjhTv9/58X3Mo/8IOoe3v7cnllNLnHRbQo8krUvbc0QN33Yt86AITXA==", null, false, "fa7ae374-d62e-451b-8cea-57ef30bb94e5", 1, "Trainee", false, "trainee@localhost.com" });
+                columns: new[] { "Id", "AccessFailedCount", "ApprovalStatus", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "StartDate", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, 1, "b3ce1e7f-8c0a-4f25-b538-8d1bcac93194", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, "", "", 2, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJq/xKWzd+l1yEWF7ONqAHY9pUCmkF5X3zYiXRJWDf1ivhXUIJq7CEyhRiXUi+dltQ==", null, false, "802350b9-ce9d-49ab-92cc-026472f81667", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Trainee", false, "trainee@localhost.com" });
 
             migrationBuilder.InsertData(
                 table: "EPAs",
@@ -835,7 +879,8 @@ namespace Wombat.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_AssessmentRequestId",
                 table: "LoggedAssessments",
-                column: "AssessmentRequestId");
+                column: "AssessmentRequestId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoggedAssessments_AssessorId",
@@ -888,6 +933,21 @@ namespace Wombat.Data.Migrations
                 column: "OptionSetId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RegistrationInvitations_InstitutionId",
+                table: "RegistrationInvitations",
+                column: "InstitutionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrationInvitations_SpecialityId",
+                table: "RegistrationInvitations",
+                column: "SpecialityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrationInvitations_SubSpecialityId",
+                table: "RegistrationInvitations",
+                column: "SubSpecialityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubSpecialities_SpecialityId",
                 table: "SubSpecialities",
                 column: "SpecialityId");
@@ -919,6 +979,9 @@ namespace Wombat.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "OptionCriterionResponses");
+
+            migrationBuilder.DropTable(
+                name: "RegistrationInvitations");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
