@@ -48,6 +48,10 @@ namespace Wombat.Common.Models
         public Dictionary<int, int> ExpectedRatingPerEPA { get; set; } = new();
         public Dictionary<int, int> HighestRatingPerEPA { get; set; } = new();
 
+        public Dictionary<int, int> LatestRatingPerEPA { get; set; } = new();
+
+        public int MonthsInTraining { get; set; } = 0;
+
         // Optional: future extension
         public Dictionary<int, int> MonthsInTrainingPerEPA { get; set; } = new();
 

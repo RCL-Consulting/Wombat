@@ -2,7 +2,7 @@
 
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-chart-line"></i> EPA Progress Tracker</h5>
+        <h5 class="mb-0"><i class="fas fa-chart-line"></i> EPA Progress Tracker (@Model.MonthsInTraining months)</h5>
         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#progressCollapse" aria-expanded="true" aria-controls="portfolioCollapse">
             <i class="fas fa-chevron-down"></i>
         </button>
@@ -14,25 +14,45 @@
                     <thead class="table-light">
                         <tr>
                             <th>EPA</th>
-                            <th>Current Rating</th>
-                            <th>Target Rating</th>
+                            <th>Latest</th>
+                            <th>Highest</th>
+                            <th>Target</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.EPAList)
+                        @foreach (var epa in Model.EPAList)
                         {
-                            var current = Model.HighestRatingPerEPA.GetValueOrDefault(item.Id);
-                            var target = Model.ExpectedRatingPerEPA.GetValueOrDefault(item.Id);
-                            string status = current >= target ? "🟢 On track" :
-                            current == 0 ? "⚪ No data" :
-                            current + 1 == target ? "🟡 Nearly there" : "🔴 Behind";
+                            int id = epa.Id;
+                            int latest = Model.LatestRatingPerEPA.GetValueOrDefault(id, 0);
+                            int highest = Model.HighestRatingPerEPA.GetValueOrDefault(id, 0);
+                            int expected = Model.ExpectedRatingPerEPA.GetValueOrDefault(id, 0);
+
+                            string iconHtml;
+                            string statusClass;
+
+                            if (latest >= expected)
+                            {
+                                iconHtml = "<i class='fas fa-check-circle text-success'></i> On track";
+                                statusClass = "text-success";
+                            }
+                            else if (latest + 1 == expected)
+                            {
+                                iconHtml = "<i class='fas fa-exclamation-circle text-warning'></i> Nearly there";
+                                statusClass = "text-warning";
+                            }
+                            else
+                            {
+                                iconHtml = "<i class='fas fa-times-circle text-danger'></i> Behind";
+                                statusClass = "text-danger";
+                            }
 
                             <tr>
-                                <td>@item.Name</td>
-                                <td>@(current > 0 ? $"Level {current}" : "-")</td>
-                                <td>Level @target</td>
-                                <td>@status</td>
+                                <td>@epa.Name</td>
+                                <td>@($"Level {latest}")</td>
+                                <td>@($"Level {highest}")</td>
+                                <td>@($"Level {expected}")</td>
+                                <td class="@statusClass">@Html.Raw(iconHtml)</td>
                             </tr>
                         }
                     </tbody>

@@ -95,5 +95,8 @@ namespace Wombat.Data
         public DbSet<OptionCriterionResponse> OptionCriterionResponses { get; set; }
 
         public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; }
+
+        public DbSet<EPAQuestion> EPAQuestions { get; set; } = null!;
+        public DbSet<EPAQuestionResponse> EPAQuestionResponses { get; set; } = null!;
     }
 }

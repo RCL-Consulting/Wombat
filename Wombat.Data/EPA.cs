@@ -41,5 +41,8 @@ namespace Wombat.Data
         public ICollection<EPAForm> Forms { get; set; }
 
         public List<EPACurriculum> EPACurricula { get; set; }
+
+        [NotMapped]
+        public int QuestionCount { get; set; }
     }
 }

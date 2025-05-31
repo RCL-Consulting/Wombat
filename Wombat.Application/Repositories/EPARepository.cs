@@ -81,11 +81,13 @@ namespace Wombat.Application.Repositories
         public async Task<List<EPA>?> GetEPAListBySubspeciality(int id)
         {
             var EPAs = await context.EPAs
-                 .Where(s => s.SubSpecialityId == id)
-                 .Include(s => s.Forms)
-                 .ThenInclude(sc => sc.Form)
-                 .AsTracking()
-                 .ToListAsync();
+                .Where(s => s.SubSpecialityId == id)
+                .Include(e => e.EPACurricula)
+                    .ThenInclude(c => c.EPAScaleOption)
+                .Include(e => e.Forms)
+                    .ThenInclude(sc => sc.Form)
+                .AsTracking()
+                .ToListAsync();
 
             if (EPAs != null)
             {
@@ -94,6 +96,7 @@ namespace Wombat.Application.Repositories
                     EPA.SubSpeciality = await subSpecialityRepository.GetAsync(EPA.SubSpecialityId);
                 }
             }
+
             return EPAs;
         }
 

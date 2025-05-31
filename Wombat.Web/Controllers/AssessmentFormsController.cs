@@ -36,8 +36,8 @@ namespace Wombat.Controllers
         private readonly IMapper mapper;
 
         public AssessmentFormsController( IAssessmentFormRepository assessmentFormRepository,
-                                         IOptionSetRepository optionSetRepository,
-                                         IMapper mapper )
+                                          IOptionSetRepository optionSetRepository,
+                                          IMapper mapper )
         {
             this.assessmentFormRepository = assessmentFormRepository;
             this.optionSetRepository=optionSetRepository;

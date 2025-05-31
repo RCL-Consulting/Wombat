@@ -59,22 +59,26 @@ namespace Wombat.Application.Repositories
         public async Task<List<AssessmentRequest>?> GetTraineeCompletedAssessments(string traineeId)
         {
             var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate != null)
+                .Where(r => r.TraineeId == traineeId &&
+                            r.DateAccepted != null &&
+                            r.DateDeclined == null &&
+                            r.CompletionDate != null)
                 .Include(r => r.Trainee)
+                .Include(r => r.LoggedAssessment)
+                    .ThenInclude(la => la.OptionCriterionResponses!)
+                        .ThenInclude(o => o.Option)
+                .Include(r => r.LoggedAssessment)
+                    .ThenInclude(la => la.OptionCriterionResponses!)
+                        .ThenInclude(o => o.Criterion)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e.SubSpeciality)
+                        .ThenInclude(s => s.Speciality)
+                .AsNoTracking()
                 .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
 
             return requests;
         }
+
 
         public async Task<List<AssessmentRequest>?> GetTraineeDeclinedRequests(string traineeId)
         {

@@ -147,59 +147,74 @@ namespace Wombat.Controllers
                     dashboard.TotalAssessmentsPerEPA = await loggedAssessmentRepository.GetTotalAssessmentsPerEPAByTrainee(EPAIds, userId);
                     dashboard.VisibleAssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, userId);
 
-                    //Completed assessments from which to derive actual ratings
+                    // Load completed assessments and extract scores (Rank)
                     var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
 
-                    //Extract rating per assessment from linked LoggedAssessment (by OptionSetId = 2)
-                    var ratingsPerEPA = completedAssessments
-                        .Where(a => a.LoggedAssessment != null && a.LoggedAssessment.OptionCriterionResponses != null)
+                    var scoredAssessments = completedAssessments
+                        .Where(a => a.LoggedAssessment?.OptionCriterionResponses != null)
                         .Select(a =>
                         {
-                            var rank = a.LoggedAssessment.OptionCriterionResponses
-                                .FirstOrDefault(r => r.Criterion != null && r.Criterion.OptionSetId == 2)?.Option?.Rank ?? 0;
+                            var score = a.LoggedAssessment.OptionCriterionResponses
+                                .FirstOrDefault(r => r.Criterion?.OptionSetId == 2)?.Option?.Rank ?? 0;
 
-                            return new { a.EPAId, Rank = rank };
+                            return new
+                            {
+                                a.EPAId,
+                                Score = score,
+                                Date = a.CompletionDate ?? DateTime.MinValue
+                            };
                         })
                         .ToList();
 
-                    dashboard.HighestRatingPerEPA = ratingsPerEPA
-                        .GroupBy(x => x.EPAId)
-                        .ToDictionary(
-                            g => g.Key,
-                            g => g.Max(x => x.Rank)
-                        );
+                    dashboard.HighestRatingPerEPA = EPAList.ToDictionary(
+                        e => e.Id,
+                        e => scoredAssessments
+                                .Where(s => s.EPAId == e.Id)
+                                .Select(s => s.Score)
+                                .DefaultIfEmpty(0)
+                                .Max()
+                    );
 
-                    //Expected ratings from curriculum
+                    dashboard.LatestRatingPerEPA = EPAList.ToDictionary(
+                        e => e.Id,
+                        e => scoredAssessments
+                                .Where(s => s.EPAId == e.Id)
+                                .OrderByDescending(s => s.Date)
+                                .Select(s => s.Score)
+                                .FirstOrDefault()
+                    );
+
                     var monthsInTraining = GetMonthsInTraining(user.StartDate);
-                    dashboard.ExpectedRatingPerEPA = EPAList
+                    dashboard.MonthsInTraining = monthsInTraining;
+                    // Step 1: Match curriculum ≤ months in training
+                    var epaCurricula = EPAList
                         .Select(e => new
                         {
-                            e.Id,
+                            EPAId = e.Id,
                             Curriculum = e.EPACurricula
                                 .Where(c => c.NumberOfMonths <= monthsInTraining)
                                 .OrderByDescending(c => c.NumberOfMonths)
                                 .FirstOrDefault()
                         })
-                        .Where(x => x.Curriculum?.EPAScaleOption != null)
-                        .ToDictionary(
-                            x => x.Id,
-                            x => x.Curriculum.EPAScaleOption!.Rank
-                        );
+                        .ToList();
+
+                    // Step 2: Build dictionary with fallback
+                    dashboard.ExpectedRatingPerEPA = EPAList.ToDictionary(
+                        e => e.Id,
+                        e =>
+                        {
+                            var match = epaCurricula.FirstOrDefault(x => x.EPAId == e.Id);
+                            return match?.Curriculum?.EPAScaleOption?.Rank ?? 0;
+                        });
                 }
 
                 // General stats
-                var requestsMade = await assessmentRequestRepository.GetTraineePendingRequests(userId);
-                dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
-
-                var requestsDeclined = await assessmentRequestRepository.GetTraineeDeclinedRequests(userId);
-                dashboard.NumberOfRequestsDeclined = requestsDeclined?.Count ?? 0;
-
-                var pendingAssessments = await assessmentRequestRepository.GetTraineePendingAssessments(userId);
-                dashboard.NumberOfPendingAssessments = pendingAssessments?.Count ?? 0;
-
-                var completedAssessmentsAgain = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
-                dashboard.NumberOfCompletedAssessments = completedAssessmentsAgain?.Count ?? 0;
+                dashboard.NumberOfRequestsMade = (await assessmentRequestRepository.GetTraineePendingRequests(userId))?.Count ?? 0;
+                dashboard.NumberOfRequestsDeclined = (await assessmentRequestRepository.GetTraineeDeclinedRequests(userId))?.Count ?? 0;
+                dashboard.NumberOfPendingAssessments = (await assessmentRequestRepository.GetTraineePendingAssessments(userId))?.Count ?? 0;
+                dashboard.NumberOfCompletedAssessments = (await assessmentRequestRepository.GetTraineeCompletedAssessments(userId))?.Count ?? 0;
             }
+
 
             else if (roles.Contains(Roles.Assessor))
             {
