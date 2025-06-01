@@ -62,6 +62,12 @@ namespace Wombat.Data
                 .HasOne(ar => ar.LoggedAssessment)
                 .WithOne(la => la.AssessmentRequest)
                 .HasForeignKey<LoggedAssessment>(la => la.AssessmentRequestId);
+
+            builder.Entity<STARResponse>()
+                .HasOne(r => r.Question)
+                .WithMany()
+                .HasForeignKey(r => r.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -96,7 +102,8 @@ namespace Wombat.Data
 
         public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; }
 
-        public DbSet<EPAQuestion> EPAQuestions { get; set; } = null!;
-        public DbSet<EPAQuestionResponse> EPAQuestionResponses { get; set; } = null!;
+        public DbSet<STARItem> STARItems { get; set; }
+        public DbSet<STARResponse> STARResponses { get; set; }
+        public DbSet<STARApplication> STARApplications { get; set; }
     }
 }

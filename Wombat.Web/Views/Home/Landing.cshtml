@@ -1,0 +1,80 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+@{
+    ViewData["Title"] = "Home";
+    Layout = "_Layout";
+    var isHomePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Home"
+                  && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+}
+
+@section LandingPage
+    {
+    <!-- Hero Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Text -->
+                <div class="col-lg-6 text-center text-lg-start">
+                    <h1 class="display-5 fw-bold text-primary">Welcome to Wombat</h1>
+                    <p class="lead text-secondary mb-4">
+                        An open-source platform for managing clinical work-based assessments.<br />
+                        Built for trainees, assessors, and academic coordinators to streamline EPA tracking, feedback, and performance.
+                    </p>
+                    <div class="d-flex justify-content-center justify-content-lg-start gap-3">
+                        <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                        <a class="btn btn-outline-success btn-lg me-2" asp-area="Identity" asp-page="/Account/Register" asp-route-role="Trainee">Register as Trainee</a>
+                    </div>
+                </div>
+
+                <!-- Illustration -->
+                <div class="col-lg-6 text-center mt-5 mt-lg-0">
+                    <img src="/images/wombat-landing.svg" alt="Illustration" class="img-fluid" style="max-height: 400px;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5 text-primary">Why choose Wombat?</h2>
+            <div class="row text-center">
+                <div class="col-md-4 mb-4">
+                    <i class="bi bi-journal-text display-4 text-success mb-3"></i>
+                    <h5>Custom Forms</h5>
+                    <p>Define your own Entrustable Professional Activities (EPAs), questions, and feedback criteria with full flexibility.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="bi bi-people display-4 text-info mb-3"></i>
+                    <h5>Role-based Access</h5>
+                    <p>Separate dashboards for trainees, assessors, and coordinators with access controls tailored to each workflow.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="bi bi-graph-up-arrow display-4 text-warning mb-3"></i>
+                    <h5>Progress Tracking</h5>
+                    <p>Monitor EPA completion, view performance trends, and identify gaps in development over time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center mt-5 mb-3 small text-muted">
+        <div class="d-flex justify-content-center align-items-center mb-2 gap-3 flex-wrap">
+            <a href="https://github.com/RCL-Consulting/Wombat" target="_blank" class="d-flex align-items-center text-decoration-none">
+                <img src="/images/rcl-badge.svg" alt="RCL Consulting Logo" height="32" class="me-2">
+                <span class="text-muted small">View project on GitHub</span>
+            </a>
+        </div>
+        <div>
+            © 2025 Wombat – Work Based Assessment Tool · Version 1.0.0 |
+            <a href="/privacy">Privacy</a>
+        </div>
+    </footer>
+
+    }
+

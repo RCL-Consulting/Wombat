@@ -489,6 +489,70 @@ namespace Wombat.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "STARApplications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TraineeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    EPAId = table.Column<int>(type: "int", nullable: false),
+                    SubmittedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeclinedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FreeTextReflection = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Feedback = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_STARApplications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_STARApplications_AspNetUsers_TraineeId",
+                        column: x => x.TraineeId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_STARApplications_EPAs_EPAId",
+                        column: x => x.EPAId,
+                        principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "STARItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Heading = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OptionSetId = table.Column<int>(type: "int", nullable: false),
+                    EPAId = table.Column<int>(type: "int", nullable: false),
+                    Rank = table.Column<int>(type: "int", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_STARItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_STARItems_EPAs_EPAId",
+                        column: x => x.EPAId,
+                        principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_STARItems_OptionSets_OptionSetId",
+                        column: x => x.OptionSetId,
+                        principalTable: "OptionSets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LoggedAssessments",
                 columns: table => new
                 {
@@ -535,6 +599,41 @@ namespace Wombat.Data.Migrations
                         name: "FK_LoggedAssessments_EPAs_EPAId",
                         column: x => x.EPAId,
                         principalTable: "EPAs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "STARResponses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    STARApplicationId = table.Column<int>(type: "int", nullable: false),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    OptionId = table.Column<int>(type: "int", nullable: true),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_STARResponses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_STARResponses_Options_OptionId",
+                        column: x => x.OptionId,
+                        principalTable: "Options",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_STARResponses_STARApplications_STARApplicationId",
+                        column: x => x.STARApplicationId,
+                        principalTable: "STARApplications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_STARResponses_STARItems_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "STARItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -631,9 +730,9 @@ namespace Wombat.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ApprovalStatus", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "StartDate", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, 1, "4587d6d6-d5a1-42f1-bb35-136f7cb640b5", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, "", "", 2, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEAfBziu7TJ1wdBftBzNvzKSIy0v5ULfpbpVgndaK4ivcK3WjtG9+iZI92z4LtZpjlA==", null, false, "6a8179e2-42b4-4de7-a031-93fa7a61c231", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Assessor", false, "assessor@localhost.com" },
-                    { "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237", 0, 1, "d8a2e7cf-0fce-4c83-bb14-8cc9ec7d4906", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "coordinator@localhost.com", true, "", "", 2, false, null, "System", "COORDINATOR@LOCALHOST.COM", "COORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEI6lfMSh9ALsPJL/JYSU3lE1yK6posL3NF1DPg5aes7z+Z30Z2IVM+WqYxE24hrPlw==", null, false, "281c8b6c-602f-4694-86b5-00c25cef7116", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Coordinator", false, "coordinator@localhost.com" },
-                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, 1, "15b74839-ca6f-4e73-a1ab-d3deec333fe2", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEMODqJCTryWZR7VwSKFGonOo2DDn+mhr+LzAzK/NXVHq0SiSxSDFPEH0kWTeMOtYiA==", null, false, "0ab00d44-81f8-41c7-85a4-233a791bd438", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Admin", false, "admin@localhost.com" }
+                    { "409696F3-CA82-4381-A734-38A5EF6AA445", 0, 1, "4451c1b2-dffe-44ce-8439-57b1edc62072", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "assessor@localhost.com", true, "", "", 2, false, null, "System", "ASSESSOR@LOCALHOST.COM", "ASSESSOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEB9bxxGIqNjCf+YC8zHh2lRAvjRXX90yld12p689gn7mcrvmiNeUoR7pLDPoN2AF0A==", null, false, "fa197779-302f-40cd-bab4-570749b96762", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Assessor", false, "assessor@localhost.com" },
+                    { "BD92BFFF-A88E-4FDB-9F7D-54E57AB58237", 0, 1, "72c7646f-cfeb-4fcd-bcec-f5bce09987a9", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "coordinator@localhost.com", true, "", "", 2, false, null, "System", "COORDINATOR@LOCALHOST.COM", "COORDINATOR@LOCALHOST.COM", "AQAAAAIAAYagAAAAEOsMMSrtMaZl/Hz424x/gS3fZXbQOvi4tQnIQ/YWtKQzekLUzVkREbTOVka6jbSqTg==", null, false, "4b91a8bb-3249-47c3-a5a0-0c5878411e6a", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Coordinator", false, "coordinator@localhost.com" },
+                    { "D68AC189-5BB6-4511-B96F-0F8BD55569AC", 0, 1, "7710f381-f6d4-4479-a572-da4a64420c79", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@localhost.com", true, "", "", 1, false, null, "System", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAECvA7P3aiCjehWz4c33fsw74qtkbOEmhhlFx5tFP/1FCGLhs4PtABDP+3nznogXdnQ==", null, false, "dd24826a-e355-4939-9c65-e023018efc19", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Admin", false, "admin@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -733,7 +832,7 @@ namespace Wombat.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ApprovalStatus", "ConcurrencyStamp", "DateJoined", "Email", "EmailConfirmed", "HPCSANumber", "IdNumber", "InstitutionId", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "StartDate", "SubSpecialityId", "Surname", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, 1, "b3ce1e7f-8c0a-4f25-b538-8d1bcac93194", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, "", "", 2, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAEJq/xKWzd+l1yEWF7ONqAHY9pUCmkF5X3zYiXRJWDf1ivhXUIJq7CEyhRiXUi+dltQ==", null, false, "802350b9-ce9d-49ab-92cc-026472f81667", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Trainee", false, "trainee@localhost.com" });
+                values: new object[] { "19A3D40C-9852-43B9-9BEC-B2552FA715F7", 0, 1, "4f87b4df-38bc-4486-8fd6-0b0912f041f6", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "trainee@localhost.com", true, "", "", 2, false, null, "System", "TRAINEE@LOCALHOST.COM", "TRAINEE@LOCALHOST.COM", "AQAAAAIAAYagAAAAELoT9p0dJfOd7gI64iFPe/0cdf+a+coaW75oVZYwAda/by7f+5lBjRSl/2fs6tt35Q==", null, false, "b29fc018-32a6-47ff-aaaa-aab5113d3d70", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Trainee", false, "trainee@localhost.com" });
 
             migrationBuilder.InsertData(
                 table: "EPAs",
@@ -948,6 +1047,41 @@ namespace Wombat.Data.Migrations
                 column: "SubSpecialityId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_STARApplications_EPAId",
+                table: "STARApplications",
+                column: "EPAId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARApplications_TraineeId",
+                table: "STARApplications",
+                column: "TraineeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARItems_EPAId",
+                table: "STARItems",
+                column: "EPAId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARItems_OptionSetId",
+                table: "STARItems",
+                column: "OptionSetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARResponses_OptionId",
+                table: "STARResponses",
+                column: "OptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARResponses_QuestionId",
+                table: "STARResponses",
+                column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_STARResponses_STARApplicationId",
+                table: "STARResponses",
+                column: "STARApplicationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubSpecialities_SpecialityId",
                 table: "SubSpecialities",
                 column: "SpecialityId");
@@ -984,6 +1118,9 @@ namespace Wombat.Data.Migrations
                 name: "RegistrationInvitations");
 
             migrationBuilder.DropTable(
+                name: "STARResponses");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -994,6 +1131,12 @@ namespace Wombat.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Options");
+
+            migrationBuilder.DropTable(
+                name: "STARApplications");
+
+            migrationBuilder.DropTable(
+                name: "STARItems");
 
             migrationBuilder.DropTable(
                 name: "AssessmentRequests");

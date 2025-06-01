@@ -1,0 +1,29 @@
+﻿@model Wombat.Common.Models.EPAQuestionFormVM.EPAQuestionVM
+
+<div id="inputFormRow" class="border p-3 mb-3 rounded shadow-sm" data-display-id="@Model.DisplayId">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong class="drag-handle" style="cursor: move;">
+            <i class="fas fa-grip-lines-vertical me-2"></i>
+        </strong>
+        <button type="button" class="btn btn-sm btn-danger btnDelete">Remove</button>
+    </div>
+
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="DisplayId" />
+
+    <div class="form-group">
+        <label>Category</label>
+        <input asp-for="Heading" class="form-control" placeholder="e.g. Prior Experience" />
+    </div>
+
+    <div class="form-group mt-2">
+        <label>Title</label>
+        <input asp-for="Description" class="form-control" placeholder="e.g. Describe your previous work..." />
+    </div>
+
+    <div class="form-group mt-2">
+        <label>Option Set</label>
+        <select asp-for="OptionSetId" class="form-select" asp-items="Model.AvailableOptionSets"></select>
+    </div>
+
+</div>

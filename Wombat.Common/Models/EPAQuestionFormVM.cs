@@ -9,7 +9,6 @@ namespace Wombat.Common.Models
 {
     public class EPAQuestionFormVM
     {
-        public int? Id { get; set; }
         public int EPAId { get; set; }
 
         public string EPAName { get; set; } = "";

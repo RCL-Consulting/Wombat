@@ -1,18 +1,80 @@
-﻿<!-- Topbar -->
-<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+﻿@* @using Microsoft.AspNetCore.Identity
+@using Wombat.Common.Models <!-- Replace with your actual namespace -->
+@inject SignInManager<WombatUserVM> SignInManager
+@inject UserManager<WombatUserVM> UserManager *@
 
-    <!-- Sidebar Toggle (Topbar) -->
-    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+<!-- Topbar -->
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm">
+
+    <!-- Sidebar Toggle (for mobile) -->
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle me-3">
         <i class="fa fa-bars"></i>
     </button>
 
-    <span class="navbar-text text-primary font-weight-bold">
-        Work Based Assessment Management Tool
+    <!-- Branding -->
+    <span class="navbar-text text-primary fw-bold d-none d-md-inline">
+        Work Based Assessment Tool
     </span>
 
-    <!-- Topbar Navbar -->
-    <ul class="navbar-nav ml-auto">
-        <partial name="_LoginPartial" />
+    <!-- Right-aligned controls -->
+    <ul class="navbar-nav ms-auto d-flex align-items-center gap-3">
+
+        <!-- GitHub link -->
+        <li class="nav-item">
+            <a class="nav-link text-muted" href="https://github.com/RCL-Consulting/Wombat" target="_blank" title="View on GitHub">
+                <i class="fab fa-github fa-lg"></i>
+            </a>
+        </li>
+
+        <!-- Notifications placeholder -->
+        <li class="nav-item dropdown no-arrow mx-1">
+            <a class="nav-link" href="#" title="Notifications">
+                <i class="fas fa-bell fa-lg"></i>
+                <span class="badge badge-danger badge-counter">!</span>
+            </a>
+        </li>
+
+        @* @if (SignInManager.IsSignedIn(User))
+        {
+            var user = await UserManager.GetUserAsync(User);
+            var displayName = $"{user?.Name} {user?.Surname}".Trim(); *@
+
+            <!-- User info dropdown -->
+            <li class="nav-item dropdown no-arrow">
+                <a class="nav-link dropdown-toggle text-dark d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2 d-none d-lg-inline small">
+                        ABC@* @displayName *@
+                    </span>
+                    <i class="fas fa-user-circle fa-lg"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow animated--grow-in" aria-labelledby="userDropdown">
+                    <li>
+                        <h6 class="dropdown-header">Account</h6>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                            <i class="fas fa-cog fa-sm fa-fw me-2 text-gray-400"></i>
+                            Profile Settings
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <form method="post" asp-area="Identity" asp-page="/Account/Logout" class="d-inline">
+                            <button type="submit" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
+                                Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </li>
+        @* }
+        else
+        {
+            <li class="nav-item">
+                <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            </li>
+        } *@
     </ul>
 </nav>
 <!-- End of Topbar -->

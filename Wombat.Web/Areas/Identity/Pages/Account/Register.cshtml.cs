@@ -38,6 +38,8 @@ namespace Wombat.Areas.Identity.Pages.Account
         private readonly IInstitutionRepository _institutionRepository;
         private readonly ISpecialityRepository _specialityRepository;
         private readonly ISubSpecialityRepository _subspecialityRepository;
+        private readonly IWebHostEnvironment _environment;
+
         public Dictionary<string, string> CoordinatorsBySubspecialityAndInstitution { get; set; }
 
         public RegisterModel( UserManager<WombatUser> userManager,
@@ -47,7 +49,8 @@ namespace Wombat.Areas.Identity.Pages.Account
                               IEmailSender emailSender,
                               IInstitutionRepository institutionRepository,
                               ISpecialityRepository specialityRepository,
-                              ISubSpecialityRepository subspecialityRepository )
+                              ISubSpecialityRepository subspecialityRepository,
+                              IWebHostEnvironment environment )
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -58,6 +61,7 @@ namespace Wombat.Areas.Identity.Pages.Account
             _institutionRepository = institutionRepository;
             _specialityRepository = specialityRepository;
             _subspecialityRepository = subspecialityRepository;
+            _environment = environment;
         }
 
         /// <summary>
@@ -188,6 +192,13 @@ namespace Wombat.Areas.Identity.Pages.Account
             );
         }
 
+        public string LoadTemplateAndInsertValues(string url)
+        {
+            var templatePath = Path.Combine(_environment.WebRootPath, "Templates", "EmailConfirmation.html");
+            var emailTemplate = System.IO.File.ReadAllText(templatePath);
+            return emailTemplate
+                .Replace("{{confirmationLink}}", url);
+        }
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
@@ -225,8 +236,12 @@ namespace Wombat.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    string htmlContent = LoadTemplateAndInsertValues(callbackUrl);
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Wombat Email Confirmation", htmlContent);
+
+                    //await _emailSender.SendEmailAsync(Input.Email, "Wombat Email Confirmation",
+                    //    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

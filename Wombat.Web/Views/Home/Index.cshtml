@@ -3,154 +3,115 @@
 @inject SignInManager<Wombat.Data.WombatUser> SignInManager
 @using Newtonsoft.Json
 
-@{
-    ViewData["Title"] = "Home";
-}
+<!-- Authenticated Users -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
+</div>
 
-@if (!SignInManager.IsSignedIn(User))
+@if (User.IsInRole(Roles.Trainee))
 {
-    <div class="container mt-5">
-        <!-- Row 1: Text and Image -->
-        <div class="row align-items-center">
-            <!-- Left Column: Text -->
-            <div class="col-md-6 text-md-start">
-                <h1 class="display-4 text-primary">Welcome to Wombat</h1>
-                <p class="lead text-muted">An open-source platform for managing clinical work-based assessments.</p>
-                <p class="text-muted">Built for trainees, assessors, and academic coordinators to streamline assessment and feedback.</p>
-            </div>
+    ViewData["Title"] = "Trainee Dashboard";
 
-            <!-- Right Column: Illustration -->
-            <div class="col-md-6 text-center mt-4 mt-md-0">
-                <img src="~/images/wombat-landing.svg" alt="Illustration"
-                     class="img-fluid animate-fade-slide"
-                     style="max-height: 360px;" />
-            </div>
-        </div>
-
-        <!-- Row 2: Buttons -->
-        <div class="row mt-4">
-            <div class="col text-center">
-                <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
-                <a class="btn btn-outline-success btn-lg me-2" asp-area="Identity" asp-page="/Account/Register" asp-route-role="Trainee">Register as Trainee</a>
-                <a class="btn btn-outline-info btn-lg" asp-area="Identity" asp-page="/Account/RegisterAssessor">Register as Assessor</a>
-            </div>
-        </div>
-    </div>
-
-
-}
-else
-{
-    <!-- Authenticated Users -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
-    </div>
-
-    @if (User.IsInRole(Roles.Trainee))
-    {        
-        ViewData["Title"] = "Trainee Dashboard";
-
-        // Prepare data for chart
-        var labels = new[] { "Requested", "Declined", "Pending", "Completed" };
-        var values = new[] {
+    // Prepare data for chart
+    var labels = new[] { "Requested", "Declined", "Pending", "Completed" };
+    var values = new[] {
                 Model.NumberOfRequestsMade,
                 Model.NumberOfRequestsDeclined,
                 Model.NumberOfPendingAssessments,
                 Model.NumberOfCompletedAssessments
             };
 
-        ViewData["ChartLabels"] = JsonConvert.SerializeObject(labels);
-        ViewData["ChartValues"] = JsonConvert.SerializeObject(values);
+    ViewData["ChartLabels"] = JsonConvert.SerializeObject(labels);
+    ViewData["ChartValues"] = JsonConvert.SerializeObject(values);
 
-        <div class="card-body">
-            <partial name="TraineeHome.cshtml" model="@Model" />
-        </div>
+    <div class="card-body">
+        <partial name="TraineeHome.cshtml" model="@Model" />
+    </div>
 
-        @section Scripts {
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const ctx = document.getElementById('assessmentChart');
-                    if (ctx) {
-                        const labels = @Html.Raw(ViewData["ChartLabels"]);
-                        const data = @Html.Raw(ViewData["ChartValues"]);
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('assessmentChart');
+            if (ctx) {
+                const labels = @Html.Raw(ViewData["ChartLabels"]);
+                const data = @Html.Raw(ViewData["ChartValues"]);
 
-                        console.log("Chart labels:", labels);
-                        console.log("Chart values:", data);
+                console.log("Chart labels:", labels);
+                console.log("Chart values:", data);
 
-                        new Chart(ctx, {
-                            type: 'pie',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    data: data,
-                                    backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: { position: 'bottom' }
-                                }
-                            }
-                        });
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
                     }
                 });
-            </script>
+            }
+        });
+    </script>
         }
-    }
-    else if (User.IsInRole(Roles.Assessor))
-    {
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-info text-white">
-                <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
-            </div>
-            <div class="card-body">
-                <partial name="AssessorHome.cshtml" model="@Model" />
-            </div>
+}
+else if (User.IsInRole(Roles.Assessor))
+{
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
         </div>
-    }
-    else if (User.IsInRole(Roles.Coordinator))
-    {
-        <partial name="Coordinator.cshtml" model="@Model.Coordinator" />
-    }
+        <div class="card-body">
+            <partial name="AssessorHome.cshtml" model="@Model" />
+        </div>
+    </div>
+}
+else if (User.IsInRole(Roles.Coordinator))
+{
+    <partial name="Coordinator.cshtml" model="@Model.Coordinator" />
+}
 
-    @if (User.IsInRole(Roles.Administrator))
-    {
-        <hr />
-        <div class="row">
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Your Assessments</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">View or log assessments</div>
-                    </div>
-                    <div class="card-footer bg-transparent text-end">
-                        <a asp-controller="LoggedAssessments" asp-action="MyAssessments" class="btn btn-sm btn-primary">Open</a>
-                    </div>
+@if (User.IsInRole(Roles.Administrator))
+{
+    <hr />
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Your Assessments</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">View or log assessments</div>
                 </div>
-            </div>
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-danger shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Admin Tools</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">Manage institutions, forms, users</div>
-                    </div>
-                    <div class="card-footer bg-transparent text-end">
-                        <a asp-controller="Institutions" asp-action="Index" class="btn btn-sm btn-danger">Manage</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Your Portfolio</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">View training records</div>
-                    </div>
-                    <div class="card-footer bg-transparent text-end">
-                        <a asp-controller="LoggedAssessments" asp-action="PortfolioIndex" class="btn btn-sm btn-success">View</a>
-                    </div>
+                <div class="card-footer bg-transparent text-end">
+                    <a asp-controller="LoggedAssessments" asp-action="MyAssessments" class="btn btn-sm btn-primary">Open</a>
                 </div>
             </div>
         </div>
-    }
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Admin Tools</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">Manage institutions, forms, users</div>
+                </div>
+                <div class="card-footer bg-transparent text-end">
+                    <a asp-controller="Institutions" asp-action="Index" class="btn btn-sm btn-danger">Manage</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Your Portfolio</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">View training records</div>
+                </div>
+                <div class="card-footer bg-transparent text-end">
+                    <a asp-controller="LoggedAssessments" asp-action="PortfolioIndex" class="btn btn-sm btn-success">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
 }

@@ -71,8 +71,16 @@ namespace Wombat.Controllers
             return ((now.Year - startDate.Year) * 12) + now.Month - startDate.Month;
         }
 
-
         [AllowAnonymous]
+        public IActionResult Landing()
+        {
+            if (User.Identity?.IsAuthenticated ?? false)
+                return RedirectToAction("Index");
+
+            return View(); // synchronous
+        }
+
+        [Authorize]
         public async Task<IActionResult> IndexAsync()
         {
             if (!User.Identity?.IsAuthenticated ?? true)

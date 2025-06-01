@@ -9,15 +9,15 @@ using Wombat.Data;
 
 namespace Wombat.Application.Repositories
 {
-    public class EPAQuestionRepository : GenericRepository<EPAQuestion>, IEPAQuestionRepository
+    public class EPAQuestionRepository : GenericRepository<STARItem>, IEPAQuestionRepository
     {
         public EPAQuestionRepository(ApplicationDbContext context) : base(context)
         {
         }
 
-        public async Task<List<EPAQuestion>> GetByEPAIdAsync(int epaId)
+        public async Task<List<STARItem>> GetByEPAIdAsync(int epaId)
         {
-            return await context.EPAQuestions
+            return await context.STARItems
                 .Where(q => q.EPAId == epaId)
                 .Include(q => q.OptionsSet)
                 .ThenInclude(os => os.Options)
@@ -26,9 +26,9 @@ namespace Wombat.Application.Repositories
         }
 
         // Optionally override GetAllAsync for eager loading
-        public override async Task<List<EPAQuestion>?> GetAllAsync()
+        public override async Task<List<STARItem>?> GetAllAsync()
         {
-            return await context.EPAQuestions
+            return await context.STARItems
                 .Include(q => q.OptionsSet)
                 .ThenInclude(os => os.Options)
                 .Include(q => q.EPA)
@@ -44,7 +44,7 @@ namespace Wombat.Application.Repositories
                     .ThenInclude(s => s.Speciality)
                 .ToListAsync();
 
-            var questionCounts = await context.EPAQuestions
+            var questionCounts = await context.STARItems
                 .GroupBy(q => q.EPAId)
                 .Select(g => new { g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.Key, x => x.Count);

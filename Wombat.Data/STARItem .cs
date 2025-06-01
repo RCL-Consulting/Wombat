@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Wombat.Data
 {
-    public class EPAQuestion : BaseEntity
+    public class STARItem : BaseEntity
     {
         public string Heading { get; set; } = "";
         public string Description { get; set; } = "";

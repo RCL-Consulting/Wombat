@@ -8,9 +8,9 @@ using Wombat.Data;
 
 namespace Wombat.Application.Contracts
 {
-    public interface IEPAQuestionRepository : IGenericRepository<EPAQuestion>
+    public interface IEPAQuestionRepository : IGenericRepository<STARItem>
     {
-        Task<List<EPAQuestion>> GetByEPAIdAsync(int epaId);
+        Task<List<STARItem>> GetByEPAIdAsync(int epaId);
         Task<List<EPA>> GetAllWithSpecialitiesAndQuestionCountsAsync();
     }
 

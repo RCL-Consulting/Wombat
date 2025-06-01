@@ -19,162 +19,168 @@
 </head>
 
 <body id="page-top">
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+    @if (IsSectionDefined("LandingPage"))
+    {
+        @RenderSection("LandingPage")
+    }
+    else
+    {
+        <!-- Page Wrapper -->
+        <div id="wrapper">
 
-        <!-- Sidebar -->
-        @await Html.PartialAsync("_Sidebar") <!-- create this partial using SB Admin 2 -->
-        <!-- End of Sidebar -->
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
-            <div id="content">
+            <!-- Sidebar -->
+            @await Html.PartialAsync("_Sidebar") <!-- create this partial using SB Admin 2 -->
+            <!-- End of Sidebar -->
+            <!-- Content Wrapper -->
+            <div id="content-wrapper" class="d-flex flex-column">
+                <div id="content">
 
-                <!-- Topbar -->
-                @await Html.PartialAsync("_Topbar") <!-- create this partial using SB Admin 2 -->
-                <!-- End of Topbar -->
-                <!-- Main Content -->
-                <div class="container-fluid pt-3">
-                    @RenderBody()
+                    <!-- Topbar -->
+                    @await Html.PartialAsync("_Topbar") <!-- create this partial using SB Admin 2 -->
+                    <!-- End of Topbar -->
+                    <!-- Main Content -->
+                    <div class="container-fluid pt-3">
+                        @RenderBody()
+                    </div>
+
                 </div>
 
+                <!-- Footer -->
+                <footer class="sticky-footer bg-white">
+                    <div class="container my-auto">
+                        <div class="text-center my-auto">
+                            <span>&copy; @DateTime.Now.Year - Work Based Assessment Tool</span>
+                            <a asp-area="" asp-controller="Home" asp-action="Privacy" class="ms-2">Privacy</a>
+                        </div>
+                    </div>
+                </footer>
             </div>
+            <!-- End of Content Wrapper -->
 
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="text-center my-auto">
-                        <span>&copy; @DateTime.Now.Year - Work Based Assessment Tool</span>
-                        <a asp-area="" asp-controller="Home" asp-action="Privacy" class="ms-2">Privacy</a>
+        </div>
+        <!-- End of Page Wrapper -->
+        <!-- Scroll to Top Button-->
+        <a class="scroll-to-top rounded" href="#page-top">
+            <i class="fas fa-angle-up"></i>
+        </a>
+
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="globalToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div id="globalToastBody" class="toast-body d-flex align-items-center">
+                        <i id="toastIcon" class="fas fa-info-circle me-2"></i>
+                        <span id="toastMessage">Action complete.</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-danger">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="confirmDeleteLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete this invitation?
+                        <div id="deleteDetails" class="small text-muted mt-2"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form id="confirmDeleteForm" method="post">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-1"></i> Delete
+                            </button>
+                        </form>
                     </div>
                 </div>
-            </footer>
-        </div>
-        <!-- End of Content Wrapper -->
-
-    </div>
-    <!-- End of Page Wrapper -->
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="globalToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div id="globalToastBody" class="toast-body d-flex align-items-center">
-                    <i id="toastIcon" class="fas fa-info-circle me-2"></i>
-                    <span id="toastMessage">Action complete.</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
-    </div>
-
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-danger">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="confirmDeleteLabel">Confirm Delete</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete this invitation?
-                    <div id="deleteDetails" class="small text-muted mt-2"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="confirmDeleteForm" method="post">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt me-1"></i> Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
-    <!-- Core SB Admin 2 JS -->
-    <script src="~/vendor/jquery/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="..." crossorigin="anonymous"></script> 
-    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script> 
-    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="~/js/sb-admin-2.min.js"></script>
+        <!-- Core SB Admin 2 JS -->
+        <script src="~/vendor/jquery/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="..." crossorigin="anonymous"></script>
+        <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+        <script src="~/js/sb-admin-2.min.js"></script>
 
-    <!-- Your JS -->
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>
-    <script>
-        $(function () {
-            $('.table').DataTable();
-            $('.datepicker').datepicker({
-                dateFormat: "yy-mm-dd"
+        <!-- Your JS -->
+        <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
+        <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>
+        <script>
+            $(function () {
+                $('.table').DataTable();
+                $('.datepicker').datepicker({
+                    dateFormat: "yy-mm-dd"
+                });
             });
-        });
-    </script>
-    <script src="~/js/site.js"></script>
-    
-    <script>
-            document.addEventListener("DOMContentLoaded", function () {
-            // --- Confirm Delete Modal Setup ---
-            const modal = document.getElementById("confirmDeleteModal");
-            const detailText = document.getElementById("deleteDetails");
-            const confirmForm = document.getElementById("confirmDeleteForm");
+        </script>
+        <script src="~/js/site.js"></script>
 
-            modal.addEventListener("show.bs.modal", function (event) {
-                const button = event.relatedTarget;
-                const formAction = button.getAttribute("data-form-action");
-                const email = button.getAttribute("data-email");
+        <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                // --- Confirm Delete Modal Setup ---
+                const modal = document.getElementById("confirmDeleteModal");
+                const detailText = document.getElementById("deleteDetails");
+                const confirmForm = document.getElementById("confirmDeleteForm");
 
-                confirmForm.setAttribute("action", formAction);
-                detailText.textContent = email ? `Email: ${email}` : "";
+                modal.addEventListener("show.bs.modal", function (event) {
+                    const button = event.relatedTarget;
+                    const formAction = button.getAttribute("data-form-action");
+                    const email = button.getAttribute("data-email");
+
+                    confirmForm.setAttribute("action", formAction);
+                    detailText.textContent = email ? `Email: ${email}` : "";
+                });
+
+                // --- Toast TempData Handling ---
+                const success = @Html.Raw(Json.Serialize(TempData["Success"]));
+                const error = @Html.Raw(Json.Serialize(TempData["Error"]));
+                const warning = @Html.Raw(Json.Serialize(TempData["Warning"]));
+
+                if (success) showToast(success, "success");
+                if (error) showToast(error, "error");
+                if (warning) showToast(warning, "warning");
             });
 
-            // --- Toast TempData Handling ---
-            const success = @Html.Raw(Json.Serialize(TempData["Success"]));
-            const error = @Html.Raw(Json.Serialize(TempData["Error"]));
-            const warning = @Html.Raw(Json.Serialize(TempData["Warning"]));
+            function showToast(message, type = "info") {
+                const toastEl = document.getElementById("globalToast");
+                const toastBody = document.getElementById("globalToastBody");
+                const toastIcon = document.getElementById("toastIcon");
+                const toastMessage = document.getElementById("toastMessage");
 
-            if (success) showToast(success, "success");
-            if (error) showToast(error, "error");
-            if (warning) showToast(warning, "warning");
-        });
+                // Reset classes
+                toastEl.className = "toast align-items-center border-0 show";
+                toastBody.className = "toast-body d-flex align-items-center";
 
-        function showToast(message, type = "info") {
-            const toastEl = document.getElementById("globalToast");
-            const toastBody = document.getElementById("globalToastBody");
-            const toastIcon = document.getElementById("toastIcon");
-            const toastMessage = document.getElementById("toastMessage");
+                switch (type) {
+                    case "success":
+                        toastEl.classList.add("text-bg-success");
+                        toastIcon.className = "fas fa-check-circle me-2";
+                        break;
+                    case "error":
+                        toastEl.classList.add("text-bg-danger");
+                        toastIcon.className = "fas fa-exclamation-circle me-2";
+                        break;
+                    case "warning":
+                        toastEl.classList.add("text-bg-warning", "text-dark");
+                        toastIcon.className = "fas fa-exclamation-triangle me-2";
+                        break;
+                    default:
+                        toastEl.classList.add("text-bg-primary");
+                        toastIcon.className = "fas fa-info-circle me-2";
+                        break;
+                }
 
-            // Reset classes
-            toastEl.className = "toast align-items-center border-0 show";
-            toastBody.className = "toast-body d-flex align-items-center";
-
-            switch (type) {
-                case "success":
-                    toastEl.classList.add("text-bg-success");
-                    toastIcon.className = "fas fa-check-circle me-2";
-                    break;
-                case "error":
-                    toastEl.classList.add("text-bg-danger");
-                    toastIcon.className = "fas fa-exclamation-circle me-2";
-                    break;
-                case "warning":
-                    toastEl.classList.add("text-bg-warning", "text-dark");
-                    toastIcon.className = "fas fa-exclamation-triangle me-2";
-                    break;
-                default:
-                    toastEl.classList.add("text-bg-primary");
-                    toastIcon.className = "fas fa-info-circle me-2";
-                    break;
+                toastMessage.textContent = message;
+                new bootstrap.Toast(toastEl).show();
             }
-
-            toastMessage.textContent = message;
-            new bootstrap.Toast(toastEl).show();
-        }
-    </script>
-
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
