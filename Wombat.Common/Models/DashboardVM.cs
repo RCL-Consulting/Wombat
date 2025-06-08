@@ -57,5 +57,14 @@ namespace Wombat.Common.Models
 
         public string UserName { get; set; }
         public CoordinatorDashboardVM Coordinator { get; set; }
+
+        // Administrator statistics
+        public int NumberOfInstitutions { get; set; }
+        public int NumberOfSpecialities { get; set; }
+        public int NumberOfSubSpecialities { get; set; }
+        public int NumberOfAssessmentForms { get; set; }
+        public int NumberOfEPAs { get; set; }
+        public int NumberOfUsers { get; set; }
+        public int NumberOfInvitations { get; set; }
     }
 }

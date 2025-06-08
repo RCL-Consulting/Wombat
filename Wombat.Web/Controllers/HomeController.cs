@@ -38,31 +38,40 @@ namespace Wombat.Controllers
         private readonly UserManager<WombatUser> userManager;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ISubSpecialityRepository subSpecialityRepository;
+        private readonly ISpecialityRepository specialityRepository;
         private readonly IInstitutionRepository institutionRepository;
+        private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly IEPARepository EPARepository;
         private readonly IAssessmentRequestRepository assessmentRequestRepository;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
+        private readonly IRegistrationInvitationRepository registrationInvitationRepository;
         private readonly IMapper mapper;
 
         public HomeController( UserManager<WombatUser> userManager,
                                IHttpContextAccessor httpContextAccessor,
                                ISubSpecialityRepository subSpecialityRepository,
+                               ISpecialityRepository specialityRepository,
                                ILogger<HomeController> logger,
                                IMapper mapper,
                                IInstitutionRepository institutionRepository,
+                               IAssessmentFormRepository assessmentFormRepository,
                                IEPARepository EPARepository,
                                IAssessmentRequestRepository assessmentRequestRepository,
-                               ILoggedAssessmentRepository loggedAssessmentRepository )
+                               ILoggedAssessmentRepository loggedAssessmentRepository,
+                               IRegistrationInvitationRepository registrationInvitationRepository )
         {
             this.userManager = userManager;
             this.httpContextAccessor = httpContextAccessor;
             this.subSpecialityRepository = subSpecialityRepository;
+            this.specialityRepository = specialityRepository;
             this.mapper = mapper;
             _logger = logger;
             this.institutionRepository = institutionRepository;
+            this.assessmentFormRepository = assessmentFormRepository;
             this.EPARepository = EPARepository;
             this.assessmentRequestRepository = assessmentRequestRepository;
             this.loggedAssessmentRepository = loggedAssessmentRepository;
+            this.registrationInvitationRepository = registrationInvitationRepository;
         }
 
         private int GetMonthsInTraining(DateTime startDate)
@@ -237,6 +246,16 @@ namespace Wombat.Controllers
 
                 var completedAssessments = await assessmentRequestRepository.GetAssessorCompletedAssessments(userId);
                 dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
+            }
+            else if (roles.Contains(Roles.Administrator))
+            {
+                dashboard.NumberOfInstitutions = (await institutionRepository.GetAllAsync())?.Count ?? 0;
+                dashboard.NumberOfSpecialities = (await specialityRepository.GetAllAsync())?.Count ?? 0;
+                dashboard.NumberOfSubSpecialities = (await subSpecialityRepository.GetAllAsync())?.Count ?? 0;
+                dashboard.NumberOfAssessmentForms = (await assessmentFormRepository.GetAllAsync())?.Count ?? 0;
+                dashboard.NumberOfEPAs = (await EPARepository.GetAllAsync())?.Count ?? 0;
+                dashboard.NumberOfUsers = userManager.Users.Count();
+                dashboard.NumberOfInvitations = (await registrationInvitationRepository.GetAllAsync())?.Count ?? 0;
             }
 
             dashboard.User.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));               
