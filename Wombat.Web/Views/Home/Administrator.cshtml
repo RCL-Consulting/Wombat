@@ -42,13 +42,27 @@
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    <i class="fas fa-stethoscope me-2"></i>Specialities
+                    <i class="fas fa-stethoscope me-2"></i>Specialities & Subspecialities
                 </div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfSpecialities</div>
+
+                <div class="mb-2">
+                    <div class="h6 mb-0 text-gray-800">
+                        Specialities:
+                        <span class="fw-bold">@Model.NumberOfSpecialities</span>
+                    </div>
+                    <div class="h6 mb-0 text-muted small">
+                        Subspecialities:
+                        <span class="fw-bold">@Model.NumberOfSubSpecialities</span>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer bg-transparent text-end">
+
+            <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
                 <a asp-controller="Specialities" asp-action="Index" class="btn btn-sm btn-primary">
-                    <i class="fas fa-cog me-1"></i> Manage
+                    <i class="fas fa-cog me-1"></i> Specialities
+                </a>
+                <a asp-controller="SubSpecialities" asp-action="Index" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-layer-group me-1"></i> Subspecialities
                 </a>
             </div>
         </div>
@@ -62,10 +76,18 @@
                 </div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfUsers</div>
             </div>
-            <div class="card-footer bg-transparent text-end">
-                <a asp-controller="WombatUsers" asp-action="Index" class="btn btn-sm btn-primary">
-                    <i class="fas fa-cog me-1"></i> Manage
-                </a>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                    <a asp-controller="WombatUsers" asp-action="Index" class="btn btn-sm btn-primary">
+                        <i class="fas fa-cog me-1"></i> Manage
+                    </a>
+                    <a asp-controller="RegistrationInvitations" asp-action="Invite" class="btn btn-sm btn-success">
+                        <i class="fas fa-user-plus me-1"></i> Invite
+                    </a>
+                    <a asp-controller="RegistrationInvitations" asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-envelope-open-text me-1"></i> Invitations
+                    </a>
+                </div>
             </div>
         </div>
     </div>

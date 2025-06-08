@@ -1,42 +1,48 @@
 ﻿@model SpecialityVM
 
 @{
-    ViewData["Title"] = "Speciality details";
+    ViewData["Title"] = "Speciality Details";
 }
 
-<h1>Details</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Speciality Details</h4>
+        </div>
 
-<div>
-    <h4>Speciality</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-semibold">Name</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
 
-        <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.SubSpecialities)
-        </dt>
-        <dd class="col-sm-10">
-            <ul class="row list-unstyled">
-                    @if (Model.SubSpecialities != null)
+                <dt class="col-sm-3 fw-semibold align-self-start">Subspecialities</dt>
+                <dd class="col-sm-9">
+                    @if (Model.SubSpecialities != null && Model.SubSpecialities.Any())
                     {
-                        foreach (var item in Model.SubSpecialities)
-                        {
-                        <li class="col-sm-10">
-                                @Html.DisplayFor(modelItem => item.Name)
-                        </li>
-                        }
+                        <ul class="list-group list-group-flush">
+                            @foreach (var sub in Model.SubSpecialities)
+                            {
+                                <li class="list-group-item px-0 py-1">
+                                    @Html.DisplayFor(modelItem => sub.Name)
+                                </li>
+                            }
+                        </ul>
                     }
-            </ul>
-        </dd>
-    </dl>
-</div>
+                    else
+                    {
+                        <span class="text-muted fst-italic">None</span>
+                    }
+                </dd>
+            </dl>
+        </div>
 
-<div>
-    <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-dark">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+        </div>
+    </div>
 </div>

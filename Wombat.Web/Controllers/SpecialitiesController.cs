@@ -117,13 +117,13 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteSubSpeciality(SpecialityVM specialityVM, int displayId)
+        public IActionResult DeleteSubSpeciality(SpecialityVM specialityVM, int DisplayId)
         {
             ViewData.ModelState.Clear();//CanDeleteFromList
-            var Item = specialityVM.SubSpecialities?.FirstOrDefault(s => s.DisplayId == displayId);
+            var Item = specialityVM.SubSpecialities?.FirstOrDefault(s => s.DisplayId == DisplayId);
             if (Item != null && Item.CanEditAndDelete)
             {
-                specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == displayId);
+                specialityVM.SubSpecialities?.RemoveAll(s => s.DisplayId == DisplayId);
             }
             return PartialView("SubSpeciality", specialityVM);
         }

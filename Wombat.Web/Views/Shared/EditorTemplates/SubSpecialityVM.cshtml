@@ -1,8 +1,7 @@
 ﻿@model SubSpecialityVM
 
-<div class="input-group col-md-12" id="inputFormRow">
-    <div id="DisplayId" value=@Model.DisplayId></div>
-    <input type="hidden" asp-for="DisplayId" />
+<div class="input-group col-md-12 inputFormRow" id="inputFormRow_@Model.DisplayId">
+    <input type="hidden" asp-for="DisplayId" class="display-id" />
     <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="CanEditAndDelete" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>

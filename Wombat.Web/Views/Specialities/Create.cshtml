@@ -4,51 +4,71 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create a speciality</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Create New Speciality</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" id="form">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="Create" id="form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <input asp-for="Name" class="form-control" placeholder="Speciality name" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <br />
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold">Speciality Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Internal Medicine" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
 
-            <hr />
-            <h5>
-                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
-                &nbsp;
-                Subspecialities 
-            </h5>
-            <hr />
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                    <h5 class="mb-0">Subspecialities</h5>
+                    <button type="button" class="btn btn-success btn-sm btn-add-subspeciality" id="btnAdd">
+                        <i class="fas fa-plus"></i> Add Subspeciality
+                    </button>
+                </div>
+                <hr />
 
-            <div>
-                <div class="col-md-12">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Default Subspeciality</label>
                     <input class="form-control" value="General" readonly />
                 </div>
-                <br />
-            </div>
-            <div id="subspecialitiesContainer">               
-                @Html.EditorFor(model=>model.SubSpecialities)
-            </div>
-            
 
-            <br/>
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Submit" class="btn btn-primary" />
-            </div>
-        </form>
+                <div id="subspecialitiesContainer">
+                    @Html.EditorFor(model => model.SubSpecialities)
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-dark">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Create
+                    </button>
+                </div>
+            </form>
+
+            <button type="button" class="btn btn-success floating-add-btn btn-add-subspeciality" id="btnAddFloating">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
     </div>
 </div>
 
-@section Scripts {
+@section Scripts
+{
+    <style>
+        .floating-add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
+            border-radius: 50px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+    </style>
 
     <script type="text/javascript">
-        $("#btnAdd").on('click', function () {
+        $(document).on('click', '.btn-add-subspeciality', function () {
             $.ajax({
                 async: true,
                 data: $('#form').serialize(),
@@ -56,18 +76,28 @@
                 url: '/Specialities/AddSubSpeciality',
                 success: function (partialView) {
                     $('#subspecialitiesContainer').html(partialView);
+
+                    // Scroll to the last .inputFormRow inside the container
+                    var container = $('#subspecialitiesContainer');
+                    var lastRow = container.find('.inputFormRow').last();
+
+                    if (lastRow.length) {
+                        $('html, body').animate({
+                            scrollTop: lastRow.offset().top - 100
+                        }, 300);
+                    }
                 }
             });
         });
 
         $(document).on('click', '#btnDelete', function () {
              var form = $('#form').serialize();
-             var parentDiv = $(this).closest('#inputFormRow');
-             var DisplayId = parentDiv.find('#DisplayId').attr('value');
+             var parentDiv = $(this).closest('.inputFormRow');
+             var DisplayId = parentDiv.find('.display-id').val();
              console.log(DisplayId);
              $.ajax({
                  async: true,
-                 data: form + '&displayId=' + DisplayId,
+                 data: form + '&DisplayId=' + DisplayId,
                  type: "POST",
                  url: '/Specialities/DeleteSubSpeciality',
                  success: function (partialView) {
