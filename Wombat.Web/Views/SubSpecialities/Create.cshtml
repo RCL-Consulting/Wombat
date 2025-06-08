@@ -1,34 +1,39 @@
-﻿@model SubSpecialityVM
+@model SubSpecialityVM
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Subspeciality";
 }
 
-<h1>Create a subspeciality</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Add a New Subspeciality</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <br/>
-            <div class="form-group">
-                <label asp-for="Speciality" class="control-label"></label>
-                <select asp-for="SpecialityId" class ="form-control" asp-items="ViewBag.SpecialityId"></select>
-            </div>
-            <br/>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                @* <button id="addRow" type="button" class="btn btn-info">Add Option</button> &nbsp; *@
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label asp-for="SpecialityId" class="form-label fw-semibold">Speciality</label>
+                    <select asp-for="SpecialityId" class="form-select" asp-items="ViewBag.SpecialityId"></select>
+                    <span asp-validation-for="SpecialityId" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-dark">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Create
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
