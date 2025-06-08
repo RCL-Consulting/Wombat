@@ -97,23 +97,6 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<WombatUser>>();
-
-    //foreach (var roleName in Roles.AllForSystem() )
-    //{
-    //    if (!await roleManager.RoleExistsAsync(roleName))
-    //    {
-    //        await roleManager.CreateAsync(new IdentityRole(roleName));
-    //    }
-    //}
-
-    //// Create default admin user
-    //var adminEmail = "admin@localhost.com";
-    //var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    //if (!await userManager.IsInRoleAsync(adminUser, Roles.Administrator))
-    //{
-    //    await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
-    //}
 }
 
 app.Run();

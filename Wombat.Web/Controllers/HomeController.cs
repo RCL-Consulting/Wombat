@@ -125,6 +125,16 @@ namespace Wombat.Controllers
 
             // 2. Get all institution and subspeciality names (optional: filter down)
             var institutions = (await institutionRepository.GetAllAsync()).ToDictionary(i => i.Id, i => i.Name);
+            var recentInstitutions = (await institutionRepository.GetAllAsync())
+                .OrderByDescending(i => i.DateCreated) // assuming you have a DateCreated field
+                .Take(3)
+                .Select(i => new InstitutionVM
+                {
+                    Id = i.Id,
+                    Name = i.Name,
+                    Logo = i.Logo
+                }).ToList();
+            dashboard.RecentInstitutions = recentInstitutions;
             var subspecialities = (await subSpecialityRepository.GetAllAsync()).ToDictionary(s => s.Id, s => s.Name);
 
             // 3. Map to view model

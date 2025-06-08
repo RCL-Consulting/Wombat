@@ -1,0 +1,122 @@
+﻿@model DashboardVM
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!-- Font Awesome (include once in your layout or page head if not already present) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<hr />
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Institutions</div>
+                <div class="h5 mb-3 font-weight-bold text-gray-800">@Model.NumberOfInstitutions</div>
+
+                <div class="d-flex justify-content-start align-items-center gap-2">
+                    @foreach (var institution in Model.RecentInstitutions)
+                    {
+                        var hasLogo = institution.Logo != null;
+                        var base64Image = hasLogo ? Convert.ToBase64String(institution.Logo) : null;
+                        var imageSrc = hasLogo ? $"data:image/png;base64,{base64Image}" : "/images/placeholder-logo.png";
+
+                        <a asp-controller="Institutions" asp-action="Details" asp-route-id="@institution.Id" title="@institution.Name">
+                            <img src="@imageSrc"
+                                 class="img-thumbnail shadow-sm"
+                                 style="height: 40px; width: auto;" />
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="Institutions" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <i class="fas fa-stethoscope me-2"></i>Specialities
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfSpecialities</div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="Specialities" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog me-1"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <i class="fas fa-users me-2"></i>Users
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfUsers</div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="WombatUsers" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog me-1"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <i class="fas fa-file-alt me-2"></i>Assessment Forms
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfAssessmentForms</div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="AssessmentForms" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog me-1"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <i class="fas fa-tasks me-2"></i>EPAs
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfEPAs</div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="EPAs" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog me-1"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <i class="fas fa-envelope-open-text me-2"></i>Invitations
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.NumberOfInvitations</div>
+            </div>
+            <div class="card-footer bg-transparent text-end">
+                <a asp-controller="RegistrationInvitations" asp-action="Index" class="btn btn-sm btn-primary">
+                    <i class="fas fa-cog me-1"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

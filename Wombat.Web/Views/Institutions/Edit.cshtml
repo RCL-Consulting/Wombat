@@ -1,47 +1,54 @@
 ﻿@model InstitutionVM
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Institution";
 }
 
-<h1>Edit</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">Edit Institution</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<h4>Institution</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <br/>
-            <div class="form-group">
-                <label asp-for="Logo" class="control-label"></label>
-                <input class="form-control" type="file" id="Logo" name="logoFile" accept="image/*" onchange="previewLogo(event)" />
-            </div>
-            <br/>
-
-            @if (Model.Logo != null)
-            {
-                var base64Image = Convert.ToBase64String(Model.Logo);
-                var imageSrc = $"data:image/png;base64,{base64Image}"; // Assuming the logo is in PNG format
-                <div>
-                    <img id="logoPreview" src="@imageSrc" alt="Logo" style="height: 200px; width: auto;" />
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
-            }
-            <br/>
 
-            <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="Logo" />
+                <div class="mb-3">
+                    <label for="Logo" class="form-label fw-semibold">Upload New Logo</label>
+                    <input class="form-control" type="file" id="Logo" name="logoFile" accept="image/*" onchange="previewLogo(event)" />
+                </div>
 
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Save Changes" class="btn btn-warning" />
-            </div>
-        </form>
+                <div class="mb-3 text-center">
+                    @{
+                        var hasLogo = Model.Logo != null;
+                        var base64Image = hasLogo ? Convert.ToBase64String(Model.Logo) : null;
+                        var imageSrc = hasLogo ? $"data:image/png;base64,{base64Image}" : "/images/placeholder-logo.png";
+                    }
+
+                    <img id="logoPreview" src="@imageSrc" alt="Logo Preview"
+                         class="img-thumbnail shadow-sm"
+                         style="max-height: 200px;" />
+                </div>
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Logo" />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-dark">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -54,13 +61,12 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    preview.src = e.target.result; // Set the source of the preview image
-                    preview.style.display = "block"; // Show the preview
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
                 };
-                reader.readAsDataURL(file); // Convert the file to a data URL
+                reader.readAsDataURL(file);
             } else {
-                preview.src = ""; // Clear the preview if no file is selected
-                preview.style.display = "none"; // Hide the preview
+                preview.src = "/images/placeholder-logo.png";
             }
         }
     </script>

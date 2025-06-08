@@ -1,40 +1,43 @@
 ﻿@model InstitutionVM
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Institution";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Add a New Institution</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<h4>Institution</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <br/>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
 
-            <div class ="form-group">
-                <label for="Logo" class="control-label">Upload Logo</label>
-                <input class="form-control" type="file" id="Logo" name="logoFile" accept="image/*" onchange="previewLogo(event)" />
-            </div>
-            <br />
+                <div class="mb-3">
+                    <label for="Logo" class="form-label fw-semibold">Upload Logo</label>
+                    <input class="form-control" type="file" id="Logo" name="logoFile" accept="image/*" onchange="previewLogo(event)" />
+                </div>
 
-            <div>
-                <img id="logoPreview" src="" alt="Logo Preview" style="display: none; height: 200px; width: auto;" />
-            </div>
-            <br/>
+                <div class="mb-3 text-center">
+                    <img id="logoPreview" src="" alt="Logo Preview" class="img-thumbnail shadow-sm" style="display: none; max-height: 200px;" />
+                </div>
 
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-dark">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Create
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -47,13 +50,13 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    preview.src = e.target.result; // Set the source of the preview image
-                    preview.style.display = "block"; // Show the preview
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
                 };
-                reader.readAsDataURL(file); // Convert the file to a data URL
+                reader.readAsDataURL(file);
             } else {
-                preview.src = ""; // Clear the preview if no file is selected
-                preview.style.display = "none"; // Hide the preview
+                preview.src = "";
+                preview.style.display = "none";
             }
         }
     </script>

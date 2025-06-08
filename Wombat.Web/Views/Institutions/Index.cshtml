@@ -1,88 +1,87 @@
 ﻿@model IEnumerable<InstitutionVM>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Institutions";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a class="btn btn-success" asp-action="Create"><i class="fas fa-plus"></i> Create New</a>
-</p>
-
-<div class="row">
-    <div class="col-md-12">
-        <table class="table" style="width: 100%">
-            <thead>
-                <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.Name)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.Logo)
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Name)
-                        </td>
-                        <td>
-                            @if (item.Logo != null)
-                            {
-                                var base64Image = Convert.ToBase64String(item.Logo);
-                                var imageSrc = $"data:image/png;base64,{base64Image}"; // Assuming the logo is in PNG format
-                                <img src="@imageSrc" alt="Logo" style="height: 200px; width: auto;" />
-                            }
-                            else
-                            {
-                                <p>No logo available</p>
-                            }
-                        </td>
-                        <td>
-                            <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
-                            <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                            @if(item.CanDelete)
-                            {
-                                <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Institutions</h2>
+        <a class="btn btn-success" asp-action="Create">
+            <i class="fas fa-plus"></i> Create New
+        </a>
     </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No institutions have been added yet.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <table id="institutionTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th class="text-center">Logo</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td class="text-center">
+                                    @if (item.Logo != null)
+                                    {
+                                        var base64Image = Convert.ToBase64String(item.Logo);
+                                        var imageSrc = $"data:image/png;base64,{base64Image}";
+                                        <img src="@imageSrc" alt="Logo" onerror="this.onerror=null; this.src='/images/placeholder-logo.png';" class="img-thumbnail" style="max-height: 50px;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No logo</span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                        @if (item.CanDelete)
+                                        {
+                                            <button type="button"
+                                                    data-id="@item.Id"
+                                                    class="btn btn-danger btn-sm deleteBtn"
+                                                    title="Delete">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    }
 </div>
 
-<form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="optionSetId" name="Id" />
+<form id="deleteForm" asp-action="Delete" method="post">
+    <input type="hidden" id="deleteId" name="Id" />
 </form>
 
-@section Scripts {
-    <script>
-        $(function () {
-
-            $('.deleteBtn').click(function (e) 
-            {
-                swal({
-                    title: "Are you sure?",
-                    text: "Are you sure you want to delete this record?",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true
-                }).then((confirm) => {
-                    if (confirm) {
-                        var btn = $(this);
-                        var id = btn.data("id");
-                        $("#optionSetId").val(id);
-                        $("#deleteForm").submit();
-                    }
-                });
-            });
-        });
-    </script>
+@section Scripts 
+{
+    @await Html.PartialAsync("_DeleteConfirmationScript")
 }
