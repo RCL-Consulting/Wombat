@@ -1,0 +1,68 @@
+@model AdminDashboardVM
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1 class="mb-4">Admin Dashboard</h1>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Users</h5>
+                <p class="display-6 mb-0">@Model.UserCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Institutions</h5>
+                <p class="display-6 mb-0">@Model.InstitutionCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Specialities</h5>
+                <p class="display-6 mb-0">@Model.SpecialityCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-3 mt-2">
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Subspecialities</h5>
+                <p class="display-6 mb-0">@Model.SubSpecialityCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Assessment Forms</h5>
+                <p class="display-6 mb-0">@Model.AssessmentFormCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">EPAs</h5>
+                <p class="display-6 mb-0">@Model.EPACount</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-3 mt-2">
+    <div class="col-md-4">
+        <div class="card text-bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">Logged Assessments</h5>
+                <p class="display-6 mb-0">@Model.LoggedAssessmentCount</p>
+            </div>
+        </div>
+    </div>
+</div>
