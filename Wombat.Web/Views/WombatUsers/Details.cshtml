@@ -1,100 +1,71 @@
 ﻿@model WombatUserVM
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "User Details";
 }
 
-<h1>User Details</h1>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-user me-2"></i>User Details
+            </h4>
+        </div>
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3 fw-semibold">First Name</dt>
+                <dd class="col-sm-9">@Model.Name</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Surname)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Surname)
-        </dd>
-        
+                <dt class="col-sm-3 fw-semibold">Surname</dt>
+                <dd class="col-sm-9">@Model.Surname</dd>
 
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
+                <dt class="col-sm-3 fw-semibold">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.EmailConfirmed)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.EmailConfirmed)
-        </dd>
+                <dt class="col-sm-3 fw-semibold">Email Confirmed</dt>
+                <dd class="col-sm-9">@Model.EmailConfirmed</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Roles)
-        </dt>
-        <dd class="col-sm-10">
-            <ul class="row list-unstyled">
-                @if (Model.Roles != null)
-                {
-                    foreach (var item in Model.Roles)
-                    {                   
-                        if(item.IsChecked)
+                <dt class="col-sm-3 fw-semibold">Roles</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Roles != null)
+                    {
+                        foreach (var item in Model.Roles.Where(r => r.IsChecked))
                         {
-                            <li class="col-sm-10">
-                                @item.Display
-                            </li>
+                            <span class="badge bg-secondary me-1">@item.Display</span>
                         }
                     }
+                </dd>
+
+                <dt class="col-sm-3 fw-semibold">Institution</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Institution?.Logo?.Length > 0)
+                    {
+                        var base64Image = Convert.ToBase64String(Model.Institution.Logo);
+                        var imageSrc = $"data:image/png;base64,{base64Image}";
+                        <img src="@imageSrc" alt="Logo" class="img-thumbnail me-2" style="max-height: 40px;" />
+                    }
+                    @Model.Institution?.Name
+                </dd>
+
+                @if (Model.UserIsInRole(Roles.Trainee))
+                {
+                    <dt class="col-sm-3 fw-semibold">Speciality</dt>
+                    <dd class="col-sm-9">@Model.Speciality?.Name</dd>
+
+                    <dt class="col-sm-3 fw-semibold">Subspeciality</dt>
+                    <dd class="col-sm-9">@Model.SubSpeciality?.Name</dd>
                 }
-            </ul>
-        </dd>
+            </dl>
+        </div>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Institution)
-        </dt>
-
-        <dd class="col-sm-10">
-            @if (Model.Institution.Logo?.Length > 0)
-            {
-                var base64Image = Convert.ToBase64String(Model.Institution.Logo);
-                var imageSrc = $"data:image/png;base64,{base64Image}"; // Assuming the logo is in PNG format
-                <img src="@imageSrc" alt="Logo" style="height: 40px; width: auto;" />
-            }
-            else
-            {
-            }
-            @Html.DisplayFor(model => model.Institution.Name)
-        </dd>
-
-        @if(Model.UserIsInRole(Roles.Trainee))
-        {
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Speciality)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Speciality.Name)
-            </dd>
-
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.SubSpeciality)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.SubSpeciality.Name)
-            </dd>
-        }
-    </dl>
-</div>
-
-<div>
-    <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
+        <div class="card-footer bg-transparent d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-dark">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+        </div>
+    </div>
 </div>

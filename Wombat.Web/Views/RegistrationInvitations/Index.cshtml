@@ -4,61 +4,89 @@
     ViewData["Title"] = "Manage Invitations";
 }
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-envelope-open-text me-2"></i> @ViewData["Title"]
+            </h4>
+        </div>
 
-<div class="row">
-    <div class="col-md-12">
-        <table class="table" style="width: 100%">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Roles</th>
-                    <th>Institution</th>
-                    <th>Department</th>
-                    <th>Subspeciality</th>
-                    <th>Expiry</th>
-                    <th>Status</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.Email</td>
-                        <td>@item.Roles</td>
-                        <td>@item.Institution</td>
-                        <td>@item.Speciality</td>
-                        <td>@item.SubSpeciality</td>
-                        <td>@item.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                        <td>
-                            <span class="badge @GetStatusClass(item.Status)">
-                                @item.Status
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <a asp-action="Resend" asp-route-id="@item.Id"
-                               class="btn btn-sm btn-warning me-1"
-                               title="Resend invitation"
-                               data-bs-toggle="tooltip" data-bs-placement="top">
-                                <i class="fas fa-paper-plane"></i>
-                            </a>
+        <div class="card-body p-4">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    No registration invitations found.
+                </div>
+            }
+            else
+            {
+                <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Expiry</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Email</td>
+                                <td>
+                                    <span class="badge @GetStatusClass(item.Status)">@item.Status</span>
+                                </td>
+                                <td>@item.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                                <td class="text-end text-nowrap">
+                                    <div class="btn-group" role="group">
+                                        @if (item.Status != "Used")
+                                        {
+                                            <a asp-action="Resend" asp-route-id="@item.Id" class="btn btn-sm btn-warning" title="Resend">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </a>
+                                        }
+                                        <button type="button"
+                                                class="btn btn-sm btn-info viewDetailsBtn"
+                                                data-id="@item.Id"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#detailsModal"
+                                                title="View details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger deleteBtn"
+                                                data-id="@item.Id"
+                                                data-input-id="deleteId"
+                                                data-form-id="deleteForm"
+                                                data-message="Are you sure you want to delete the invitation to @item.Email?"
+                                                title="Delete invitation">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
 
-                            <button type="button"
-                                    class="btn btn-sm btn-danger deleteBtn"
-                                    data-id="@item.Id"
-                                    data-input-id="deleteId"
-                                    data-form-id="deleteForm"
-                                    data-message="Are you sure you want to delete the invitation to @item.Email?"
-                                    title="Delete invitation"
-                                    data-bs-toggle="tooltip" data-bs-placement="top">
-                                <i class="far fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<!-- Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="detailsModalLabel"><i class="fas fa-info-circle me-2"></i>Invitation Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content is loaded here via AJAX -->
+            </div>
+        </div>
     </div>
 </div>
 
@@ -66,10 +94,19 @@
     <input type="hidden" id="deleteId" name="Id" />
 </form>
 
-@section Scripts 
+@section Scripts
 {
-
     @await Html.PartialAsync("_DeleteConfirmationScript")
+
+    <script>
+        $(document).on('click', '.viewDetailsBtn', function () {
+            var id = $(this).data('id');
+            $.get('/RegistrationInvitations/Details', { id: id }, function (data) {
+                $('#detailsModal .modal-body').html(data);
+                $('#detailsModal').modal('show');
+            });
+        });
+    </script>
 }
 
 @functions {
@@ -84,5 +121,3 @@
         };
     }
 }
-
-

@@ -28,7 +28,7 @@ body {
 }
 
 .card {
-    border-radius: 0.75rem;
+    /*border-radius: 0.75rem;*/
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
 }
 
@@ -86,3 +86,250 @@ h1, h2, h3 {
     font-weight: 400 !important;
 }
 
+/* Wombat Unified Theme (Desaturated Blues and Grays) */
+
+/* Accent card styling with left border */
+.card-accent {
+    border-left: 5px solid #5a8dee; /* soft blue */
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.card-accent .card-header {
+    background-color: #e9f1fc;  /* very light desaturated blue */
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.card-accent .card-body {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.card-accent-create {
+    border-left: 5px solid #a4c8a0; 
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.card-accent-create .card-header {
+    background-color: #e9f1fc;  /* very light desaturated blue */
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.card-accent-create .card-body {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.card-accent-edit {
+    border-left: 5px solid #fde9a3; 
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.card-accent-edit .card-header {
+    background-color: #e9f1fc;  /* very light desaturated blue */
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.card-accent-edit .card-body {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.card-accent-details {
+    border-left: 5px solid #bcdff6; 
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.card-accent-details .card-header {
+    background-color: #e9f1fc;  /* very light desaturated blue */
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.card-accent-details .card-body {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+/* Header styles */
+.card-header-primary {
+    background-color: #6c8ebf;
+    color: white;
+    border-bottom: 1px solid #ced4da;
+}
+
+.card-header-info {
+    background-color: #70a1b7;
+    color: white;
+    border-bottom: 1px solid #ced4da;
+}
+
+.card-header-warning {
+    background-color: #c9b458;
+    color: white;
+    border-bottom: 1px solid #ced4da;
+}
+
+.card-header-success {
+    background-color: #709f80;
+    color: white;
+    border-bottom: 1px solid #ced4da;
+}
+
+/* Table enhancements */
+.table thead th {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Button soft variants */
+.btn-outline-soft {
+    color: #6c757d;
+    border-color: #dee2e6;
+    background-color: transparent;
+}
+
+.btn-outline-soft:hover {
+    background-color: #e2e6ea;
+    border-color: #ced4da;
+}
+
+/* Global muted adjustments */
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Resend badge coloring */
+.badge-used {
+    background-color: #adb5bd;
+}
+
+.badge-active {
+    background-color: #6c8ebf;
+    color: white;
+}
+
+.badge-expired {
+    background-color: #dee2e6;
+    color: #495057;
+}
+
+.btn-danger {
+    background-color: #e07c7c;
+    border-color: #dc6e6e;
+}
+
+.btn-danger:hover {
+    background-color: #c85d5d;
+    border-color: #b84e4e;
+}
+
+.btn-create {
+    background-color: #a4c8a0; /* muted green */
+    color: #265c3a;
+	border-radius: 50%;
+	padding: 0.7rem 0.9rem;
+    border: none;
+}
+
+.btn-create:hover {
+    background-color: #91b58c;
+    color: #fff;
+	box-shadow: 0 0 0 1px rgba(33, 37, 41, 0.4);
+}
+
+.btn-edit {
+    background-color: #fde9a3;
+    border: none;
+    color: #7a6400;
+}
+
+.btn-edit:hover {
+    background-color: #fce18b;
+    color: #7a6400;
+	box-shadow: 0 0 0 1px rgba(33, 37, 41, 0.4);
+}
+
+.btn-delete {
+    background-color: #f7c6c6;
+    border: none;
+    color: #842029;
+}
+
+.btn-delete:hover {
+    background-color: #f3b2b2;
+    color: #842029;
+	box-shadow: 0 0 0 1px rgba(33, 37, 41, 0.4);
+}
+
+.btn-info {
+    background-color: #bcdff6;
+    border: none;
+    color: #1f4e79;
+}
+
+.btn-info:hover {
+    background-color: #a4cce8;
+    color: #1f4e79;
+	box-shadow: 0 0 0 1px rgba(33, 37, 41, 0.4);
+}
+
+.btn-back {
+    background-color: #212529;
+    border: none;
+    color: #ffffff;
+}
+
+.btn-back:hover {
+    background-color: #000000;
+    color: #ffffff;
+	box-shadow: 0 0 0 1px rgba(33, 37, 41, 0.4);
+}
+
+.btn-icon {
+    border-radius: 50%;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+/* Soften active page button */
+.pagination .page-item.active .page-link {
+    background-color: #b8cde1; /* soft desaturated blue */
+    border-color: #b8cde1;
+    color: #fff;
+}
+
+/* Desaturate page links */
+.pagination .page-link {
+    color: #4a5c6a;
+    background-color: #f0f2f5; /* light grayish-blue */
+    border: 1px solid #dee2e6;
+}
+
+/* Optional hover effect */
+.pagination .page-link:hover {
+    background-color: #dce6ef;
+    color: #2c3e50;
+}

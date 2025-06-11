@@ -15,6 +15,15 @@ namespace Wombat.Application.Repositories
         {
         }
 
+        public override async Task<RegistrationInvitation?> GetAsync(int? id)
+        {
+            return await context.RegistrationInvitations
+                .Include(r => r.Institution)
+                .Include(r => r.Speciality)
+                .Include(r => r.SubSpeciality)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
         public async Task<RegistrationInvitation?> GetByTokenAsync(string token)
         {
             return await context.RegistrationInvitations
