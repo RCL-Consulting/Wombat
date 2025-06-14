@@ -17,14 +17,16 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Application.Contracts;
-using Wombat.Common.Constants;
-using Wombat.Data;
-using Wombat.Common.Models;
-using Wombat.Application.Repositories;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using Mono.TextTemplating;
 using System.Collections.Generic;
+using Wombat.Application.Contracts;
+using Wombat.Application.Repositories;
+using Wombat.Common.Constants;
+using Wombat.Common.Models;
+using Wombat.Data;
 
 namespace Wombat.Controllers
 {
@@ -68,6 +70,47 @@ namespace Wombat.Controllers
             return PartialView("AssessmentForm", assessmentFormVM);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CloneCriteria(int templateFormId, [FromForm] AssessmentFormVM currentForm)
+        {
+            try
+            {
+                var template = await assessmentFormRepository.GetAsync(templateFormId);
+                if (template == null || template.OptionCriteria == null)
+                    return NotFound("Template form not found.");
+
+                var clonedItems = template.OptionCriteria
+                    .OrderBy(c => c.Rank)
+                    .Select(c => new OptionCriterionVM
+                    {
+                        Description = c.Description,
+                        OptionSetId = c.OptionSetId,
+                        Rank = 0,
+                        DisplayId = OptionCriterionVM.NextDisplayId++,
+                        CanEditAndDelete = true
+                    }).ToList();
+
+                var mergedList = currentForm.OptionCriteria ?? new List<OptionCriterionVM>();
+                mergedList.AddRange(clonedItems);
+
+                for (int i = 0; i < mergedList.Count; i++)
+                    mergedList[i].Rank = i + 1;
+
+                currentForm.OptionCriteria = mergedList;
+
+                return PartialView("_OptionCriterionListPartial", currentForm);
+            }
+            catch (Exception ex)
+            {
+                // Replace with your logging tool
+               // Logging.LogError("CloneCriteria error: " + ex.ToString());
+                return StatusCode(500, "Internal server error");
+            }
+
+
+        }
+
+
         // GET: AssessmentForms
         public async Task<IActionResult> Index()
         {
@@ -110,6 +153,11 @@ namespace Wombat.Controllers
                 }
             }
 
+            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
+                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
+                .ToList();
+
             return View(assessmentFormVM);
         }
 
@@ -141,6 +189,12 @@ namespace Wombat.Controllers
             OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
 
             var assessmentFormVM = mapper.Map<AssessmentFormVM>(assessmentForm);
+
+            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
+                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
+                .ToList();
+
             return View(assessmentFormVM);
         }
 
@@ -183,6 +237,12 @@ namespace Wombat.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
+                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
+                .ToList();
+
             return View(assessmentFormVM);
         }
 

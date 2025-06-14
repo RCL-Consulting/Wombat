@@ -5,14 +5,14 @@
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Specialites</h2>
-        <a class="btn btn-success" asp-action="Create">
-            <i class="fas fa-plus"></i> Create New
-        </a>
-    </div>
+    <div class="card card-accent shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-book-open me-2"></i>Specialites</h5>
+            <a asp-action="Create" class="btn btn-create btn-sm" title="Create">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
 
-    <div class="card shadow">
         <div class="card-body p-4">
             <table id="specialityTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
                 <thead class="table-light">
@@ -20,8 +20,8 @@
                         <th>
                             @Html.DisplayNameFor(model => model.Name)
                         </th>
-                        <th class ="text-center">Subspecialities</th>
-                        <th class ="text-center">Actions</th>
+                        <th class="text-center">Subspecialities</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,12 +40,12 @@
                                 @Count.ToString()
                             </td>
                             <td class="text-end text-nowrap">
-                                <div class="btn-group" role="group">
-                                    <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
-                                    <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
+                                <div>
+                                    <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
+                                    <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
                                     <button type="button"
                                             data-id="@item.Id"
-                                            class="btn btn-danger btn-sm deleteBtn"
+                                            class="btn btn-icon btn-delete btn-sm deleteBtn"
                                             title="Delete">
                                         <i class="far fa-trash-alt"></i>
                                     </button>

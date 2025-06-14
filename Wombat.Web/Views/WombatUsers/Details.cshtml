@@ -5,11 +5,11 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">
-                <i class="fas fa-user me-2"></i>User Details
-            </h4>
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user me-2"></i>Wombat User - Details
+            </h5>
         </div>
 
         <div class="card-body">
@@ -59,12 +59,12 @@
             </dl>
         </div>
 
-        <div class="card-footer bg-transparent d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-dark">
-                <i class="fas fa-arrow-left me-1"></i> Back to List
-            </a>
-            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
-                <i class="fas fa-edit me-1"></i> Edit
+        <div class="card-footer bg-light d-flex justify-content-between">
+             <a asp-action="Index" class="btn btn-icon btn-back" title= "All Users">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-icon btn-edit" title="Edit">
+                <i class="fas fa-edit"></i>
             </a>
         </div>
     </div>

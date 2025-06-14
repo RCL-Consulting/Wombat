@@ -7,10 +7,11 @@
 <div class="container mt-4">
     <div class="card card-accent-create shadow-sm">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-university me-2"></i>Add</h5>
+            <h5 class="mb-0"><i class="fas fa-university me-2"></i>Institution - Create</h5>
         </div>
-        <div class="card-body">
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="card-body">
+
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="mb-3">
@@ -27,18 +28,16 @@
                 <div class="mb-3 text-center">
                     <img id="logoPreview" src="" alt="Logo Preview" class="img-thumbnail shadow-sm" style="display: none; max-height: 200px;" />
                 </div>
-
-               
-            </form>
-        </div>
-        <div class="card-footer bg-light d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-icon btn-back" title="All Institutions">
-                <i class="fa-solid fa-list"></i>
-            </a>
-            <button type="submit" class="btn btn-create" title="Create">
-                <i class="fas fa-save"></i>
-            </button>
-        </div>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-icon btn-back" title="All Institutions">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="submit" class="btn btn-create" title="Create">
+                    <i class="fas fa-save"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

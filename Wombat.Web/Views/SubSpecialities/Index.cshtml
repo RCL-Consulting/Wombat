@@ -5,22 +5,23 @@
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Subspecialities</h2>
-        <a class="btn btn-success" asp-action="Create">
-            <i class="fas fa-plus"></i> Create New
-        </a>
-    </div>
-
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            No subspecialities have been added yet.
+    <div class="card card-accent shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-book-bookmark me-2"></i>Subspecialities</h5>
+            <a asp-action="Create" class="btn btn-create btn-sm" title="Create">
+                <i class="fas fa-plus"></i>
+            </a>
         </div>
-    }
-    else
-    {
-        <div class="card shadow">
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                No subspecialities have been added yet.
+            </div>
+        }
+        else
+        {
+
             <div class="card-body p-4">
                 <table id="subSpecialityTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
                     <thead class="table-light">
@@ -37,18 +38,18 @@
                                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
                                 <td>@Html.DisplayFor(modelItem => item.Speciality.Name)</td>
                                 <td class="text-end text-nowrap">
-                                    <div class="btn-group" role="group">
-                                        <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                    <div>
+                                        <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
-                                        <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
+                                        <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                         @if (item.CanEditAndDelete)
                                         {
                                             <button type="button"
                                                     data-id="@item.Id"
-                                                    class="btn btn-danger btn-sm deleteBtn"
+                                                    class="btn btn-icon btn-delete btn-sm deleteBtn"
                                                     title="Delete">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
@@ -60,8 +61,9 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    }
+
+        }
+    </div>
 </div>
 
 <form id="deleteForm" asp-action="Delete" method="post">

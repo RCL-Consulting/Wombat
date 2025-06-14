@@ -1,24 +1,46 @@
 ﻿@model OptionCriterionVM
 
-<div class="input-group col-md-12" id="inputFormRow">
-    <div id="DisplayId" value=@Model.DisplayId></div>
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="DisplayId" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="card shadow-sm border border-primary-subtle bg-light mb-3 inputFormRow" id="inputFormRow_@Model.DisplayId">
+    <div class="card-header bg-primary bg-opacity-10 border-bottom d-flex justify-content-between align-items-center">
+        <span class="fw-semibold criterion-label">
+            <i class="fas fa-grip-vertical me-2 drag-handle text-muted"></i> Criterion @Model.Rank
+        </span>
+        <div class="d-flex gap-1">
+            <button type="button" class="btn btn-icon btn-light btn-move-up" title="Move Up">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <button type="button" class="btn btn-icon btn-light btn-move-down" title="Move Down">
+                <i class="fas fa-arrow-down"></i>
+            </button>
+            <button type="button" class="btn btn-icon btn-delete btn-sm" id="btnDelete" title="Delete">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </div>
 
-    <input style="width: 10%" asp-for="Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>
-    <input style="width: 40%" asp-for="Description" class="form-control" placeholder="Option name" />
-    <select style="width: 40%" asp-for="OptionSetId" class="form-control">
-        <option value="">-- Select a response option set --</option>
-        @foreach (var option in OptionCriterionVM.OptionsSets)
-        {
-            <option value="@option.Id">@option.Description</option>
-        }
-    </select>
-    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
-    <span asp-validation-for="Description" class="text-danger"></span>
-    <span asp-validation-for="OptionSetId" class="text-danger"></span>
-    <span asp-validation-for="Rank" class="text-danger"></span>
+    <div class="card-body position-relative pt-3 pb-2">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Rank" />
+        <input type="hidden" asp-for="DisplayId" class="display-id" />
+        <input type="hidden" asp-for="CanEditAndDelete" />
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label fw-semibold">Form Item</label>
+            <input asp-for="Description" class="form-control" placeholder="Form Item" />
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="OptionSetId" class="form-label fw-semibold">Response Option Set</label>
+            <select asp-for="OptionSetId" class="form-select">
+                <option value="">-- Select a response option set --</option>
+                @foreach (var option in OptionCriterionVM.OptionsSets)
+                {
+                    <option value="@option.Id">@option.Description</option>
+                }
+            </select>
+            <span asp-validation-for="OptionSetId" class="text-danger small"></span>
+        </div>
+
+    </div>
 </div>
-<br />
-

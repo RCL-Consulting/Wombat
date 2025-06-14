@@ -5,9 +5,9 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">Speciality Details</h4>
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-book-open me-2"></i>Speciality - Details</h5>
         </div>
 
         <div class="card-body">
@@ -37,11 +37,11 @@
         </div>
 
         <div class="card-footer d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-dark">
-                <i class="fas fa-arrow-left"></i> Back to List
+            <a asp-action="Index" class="btn btn-icon btn-back" title="All Institutions">
+                <i class="fa-solid fa-list"></i>
             </a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                <i class="fas fa-pencil-alt"></i> Edit
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
+                <i class="fas fa-pencil-alt"></i>
             </a>
         </div>
     </div>

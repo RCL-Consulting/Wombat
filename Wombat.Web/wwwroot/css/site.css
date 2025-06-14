@@ -333,3 +333,8 @@ h1, h2, h3 {
     background-color: #dce6ef;
     color: #2c3e50;
 }
+
+.card.move-highlight {
+    background-color: #e0f2fe !important;
+    transition: background-color 1s ease;
+}

@@ -5,12 +5,13 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-warning text-dark">
-            <h4 class="mb-0">Edit Speciality</h4>
+    <div class="card card-accent-edit shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fa fa-book-open me-2"></i>Speciality - Edit</h5>
         </div>
-        <div class="card-body">
-            <form asp-action="Edit" id="form" method="post">
+        <form asp-action="Edit" id="form" method="post">
+            <div class="card-body">
+
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="mb-3">
@@ -22,10 +23,7 @@
                 <input type="hidden" asp-for="Id" />
 
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                    <h5 class="mb-0">Subspecialities</h5>
-                    <button type="button" class="btn btn-success btn-sm btn-add-subspeciality" id="btnAdd">
-                        <i class="fas fa-plus"></i> Add Subspeciality
-                    </button>
+                    <h5 class="mb-0"><i class="fa fa-book-bookmark me-2"></i>Subspecialities</h5>
                 </div>
                 <hr />
 
@@ -33,20 +31,21 @@
                     @Html.EditorFor(model => model.SubSpecialities)
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <a asp-action="Index" class="btn btn-dark">
-                        <i class="fas fa-arrow-left"></i> Back to List
-                    </a>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                </div>
-            </form>
 
-            <button type="button" class="btn btn-success floating-add-btn btn-add-subspeciality" id="btnAddFloating">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
+
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-icon btn-back" title="All Specialities">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="button" class="btn btn-create btn-sm btn-add-subspeciality" id="btnAdd" title="Add Speciality">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="submit" class="btn btn-icon btn-edit" title="Save Changes">
+                    <i class="fas fa-save"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
