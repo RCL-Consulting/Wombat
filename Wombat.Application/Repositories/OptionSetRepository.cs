@@ -26,6 +26,12 @@ namespace Wombat.Application.Repositories
         {
 
         }
+        public override async Task<List<OptionSet>?> GetAllAsync()
+        {
+            return await context.OptionSets
+                .Include(o => o.Options)
+                .ToListAsync();
+        }
 
         public override async Task<OptionSet?> GetAsync(int? id)
         {

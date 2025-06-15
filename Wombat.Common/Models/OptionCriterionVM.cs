@@ -34,6 +34,6 @@ namespace Wombat.Common.Models
 
         public int Rank { get; set; }
 
-        public static List<OptionSetVM> OptionsSets = new List<OptionSetVM>();
+        static public List<OptionSetVM> OptionsSets = new List<OptionSetVM>();
     }
 }

@@ -79,16 +79,28 @@ namespace Wombat.Controllers
                 if (template == null || template.OptionCriteria == null)
                     return NotFound("Template form not found.");
 
+                var allOptionSets = await optionSetRepository.GetAllAsync();
+                var optionSetVMs = mapper.Map<List<OptionSetVM>>(allOptionSets);
+
+                // ✅ Assign OptionsSets to populate the dropdown
+                OptionCriterionVM.OptionsSets = optionSetVMs;
+
                 var clonedItems = template.OptionCriteria
                     .OrderBy(c => c.Rank)
-                    .Select(c => new OptionCriterionVM
+                    .Select(c =>
                     {
-                        Description = c.Description,
-                        OptionSetId = c.OptionSetId,
-                        Rank = 0,
-                        DisplayId = OptionCriterionVM.NextDisplayId++,
-                        CanEditAndDelete = true
+                        var vm = mapper.Map<OptionCriterionVM>(c);
+                        vm.DisplayId = OptionCriterionVM.NextDisplayId++;
+                        vm.CanEditAndDelete = true;
+
+                        // Optionally assign OptionsSet if needed for details view
+                        var set = optionSetVMs.FirstOrDefault(o => o.Id == c.OptionSetId);
+                        if (set != null)
+                            vm.OptionsSet = set;
+
+                        return vm;
                     }).ToList();
+
 
                 var mergedList = currentForm.OptionCriteria ?? new List<OptionCriterionVM>();
                 mergedList.AddRange(clonedItems);
@@ -102,14 +114,10 @@ namespace Wombat.Controllers
             }
             catch (Exception ex)
             {
-                // Replace with your logging tool
-               // Logging.LogError("CloneCriteria error: " + ex.ToString());
+                // Replace with your logging mechanism
                 return StatusCode(500, "Internal server error");
             }
-
-
         }
-
 
         // GET: AssessmentForms
         public async Task<IActionResult> Index()
@@ -137,22 +145,7 @@ namespace Wombat.Controllers
             var assessmentFormVM = new AssessmentFormVM();
             OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
 
-            var Template = mapper.Map<AssessmentFormVM>(await assessmentFormRepository.GetAsync(AssessmentForm.kTemplateId));
-            if (Template != null)
-            {
-                foreach (var optionCriterion in Template.OptionCriteria)
-                {
-                    assessmentFormVM.OptionCriteria.Add(
-                        new OptionCriterionVM()
-                        {
-                            Description = optionCriterion.Description,
-                            Rank = optionCriterion.Rank,
-                            OptionSetId = optionCriterion.OptionSetId,
-                            DisplayId = OptionCriterionVM.NextDisplayId++
-                        });
-                }
-            }
-
+            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
             ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
                 //.Where(f => f.IsTemplate) // optionally tag forms as templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
@@ -174,6 +167,12 @@ namespace Wombat.Controllers
                 await assessmentFormRepository.AddAsync(assessmentForm);
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
+                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
+                .ToList();
+
             return View(assessmentFormVM);
         }
 

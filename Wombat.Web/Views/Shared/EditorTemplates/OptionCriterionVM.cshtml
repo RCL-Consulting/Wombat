@@ -40,6 +40,16 @@
                 }
             </select>
             <span asp-validation-for="OptionSetId" class="text-danger small"></span>
+            <div class="mb-2">
+                <a class="text-decoration-none small text-primary toggle-preview" href="#" data-target="#optionsPreview_@Model.DisplayId">
+                    Show Available Options
+                </a>
+                <div class="collapse mt-2" id="optionsPreview_@Model.DisplayId">
+                    <div class="card card-body bg-light border option-preview" data-displayid="@Model.DisplayId">
+                        <em class="text-muted small">Select an option set to see available choices</em>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>

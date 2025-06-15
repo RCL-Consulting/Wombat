@@ -45,8 +45,8 @@
                                         @if (item.CanDelete)
                                         {
                                             <button type="button"
-                                                    class="btn btn-icon btn-delete btn-sm deleteBtn"
                                                     data-id="@item.Id"
+                                                    class="btn btn-icon btn-delete btn-sm deleteBtn"
                                                     title="Delete">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
@@ -63,7 +63,7 @@
 </div>
 
 <form id="deleteForm" asp-action="Delete" method="post">
-    <input type="hidden" id="FormId" name="Id" />
+    <input type="hidden" id="deleteId" name="Id" />
 </form>
 
 @section Scripts {
