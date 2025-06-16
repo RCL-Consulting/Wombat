@@ -1,76 +1,89 @@
 ﻿@model OptionSetVM
 
 @{
-    ViewData["Title"] = "Edit Response Options";
+    ViewData["Title"] = "Edit Response Option Set";
 }
 
-<h1>Edit Response Options</h1>
+<div class="container mt-4">
+    <div class="card card-accent-edit shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Response Option Set - Edit</h5>
+        </div>
 
-<hr/>
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="Edit" id="form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="DisplayRank" /> @Html.DisplayNameFor(model => model.DisplayRank)
-                </label>
-            </div>
-            <br />
+        <form asp-action="Edit" id="form" method="post">
+            <div class="card-body">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <h4>
-                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i>Create New</button>
-                Response options
-            </h4>
-            <hr />
-            <div id="collectionContainer">
-                @Html.EditorFor(model => model.Options)
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-semibold">Set Description</label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input asp-for="DisplayRank" class="form-check-input" />
+                    <label asp-for="DisplayRank" class="form-check-label fw-semibold"></label>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Response Options</h5>
+                </div>
+                <hr />
+
+                <div id="collectionContainer" class="d-flex flex-column gap-3">
+                    @Html.EditorFor(model => model.Options)
+                </div>
             </div>
 
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Save Changes" class="btn btn-warning" />
+            <div class="card-footer bg-light">
+                <div class="row text-center align-items-center">
+                    <div class="col-md-4 d-flex justify-content-start">
+                        <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                            <i class="fa-solid fa-list"></i>
+                        </a>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-center flex-wrap gap-2">
+                        <button type="button" class="btn btn-icon btn-create" id="btnAdd" title="Add Option">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-icon btn-edit" title="Save Changes">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
 @section Scripts {
-
-    <script type="text/javascript">
-        $("#btnAdd").on('click', function () {
+    <script>
+        $('#btnAdd').on('click', function () {
             $.ajax({
-                async: true,
-                data: $('#form').serialize(),
-                type: "POST",
+                type: 'POST',
                 url: '/OptionSets/AddOption',
-                success: function (partialView) {
-                    $('#collectionContainer').html(partialView);
+                data: $('#form').serialize(),
+                success: function (partial) {
+                    $('#collectionContainer').html(partial);
                 }
             });
         });
 
-        $(document).on('click', '#btnDelete', function () {
-             var form = $('#form').serialize();
-             var parentDiv = $(this).closest('#inputFormRow');
-             var DisplayId = parentDiv.find('#DisplayId').attr('value');
-             console.log(DisplayId);
-             $.ajax({
-                 async: true,
-                 data: form + '&displayId=' + DisplayId,
-                 type: "POST",
-                 url: '/OptionSets/DeleteOption',
-                 success: function (partialView) {
-                     $('#collectionContainer').html(partialView);
-                 }
-             });
+        $(document).on('click', '.btnDelete', function () {
+            const parentRow = $(this).closest('.inputFormRow');
+            const displayId = parentRow.find('.display-id').val();
+            console.log(displayId);
+            $.ajax({
+                type: 'POST',
+                url: '/OptionSets/DeleteOption',
+                data: $('#form').serialize() + '&displayId=' + displayId,
+                success: function (partial) {
+                    $('#collectionContainer').html(partial);
+                }
+            });
         });
     </script>
 }

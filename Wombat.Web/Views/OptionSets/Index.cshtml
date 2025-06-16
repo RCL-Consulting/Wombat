@@ -4,71 +4,67 @@
     ViewData["Title"] = "Response Options";
 }
 
-<h1>Response Options</h1>
+<div class="container mt-4">
+    <div class="card card-accent shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Response Options</h5>
+            <a asp-action="Create" class="btn btn-create btn-sm" title="Create New Response Option Set">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
 
-<p>
-    <a class="btn btn-success" asp-action="Create"><i class="fas fa-plus"></i> Create New</a>
-</p>
-<div class="row">
-    <div class="col-md-12">
-        <table class="table" style="width: 100%">
-            <thead>
-                <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.Description)
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Description)
-                        </td>
-                        <td>
-                            @if (item.CanEdit)
-                            {
-                                <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
-                            }
-                            <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                            @if(item.CanDelete)
-                            {
-                                <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="card-body p-4">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    No response option sets defined yet.
+                </div>
+            }
+            else
+            {
+                <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Description</td>
+                                <td class="text-end text-nowrap">
+                                    @if (item.CanEdit)
+                                    {
+                                        <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                    }
+                                    <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
+                                    @if (item.CanDelete)
+                                    {
+                                        <button type="button" class="btn btn-icon btn-delete btn-sm deleteBtn"
+                                                data-id="@item.Id" title="Delete">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
     </div>
 </div>
 
 <form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="optionSetId" name="Id" />
+    <input type="hidden" id="deleteId" name="Id" />
 </form>
 
 @section Scripts {
-    <script>
-        $(function () {
-
-            $('.deleteBtn').click(function (e) {
-                swal({
-                    title: "Are you sure?",
-                    text: "Are you sure you want to delete this record?",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true
-                }).then((confirm) => {
-                    if (confirm) {
-                        var btn = $(this);
-                        var id = btn.data("id");
-                        $("#optionSetId").val(id);
-                        $("#deleteForm").submit();
-                    }
-                });
-            });
-        });
-    </script>
+    @await Html.PartialAsync("_DeleteConfirmationScript")
 }

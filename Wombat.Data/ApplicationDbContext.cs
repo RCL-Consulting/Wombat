@@ -102,6 +102,7 @@ namespace Wombat.Data
 
         public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; }
 
+        public DbSet<STARApplicationForm> STARApplicationForms { get; set; }
         public DbSet<STARItem> STARItems { get; set; }
         public DbSet<STARResponse> STARResponses { get; set; }
         public DbSet<STARApplication> STARApplications { get; set; }

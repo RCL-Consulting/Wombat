@@ -86,10 +86,12 @@
             const $card = $(this).closest('.inputFormRow');
             const displayId = $card.find('.display-id').val();
             const $preview = $(`#optionsPreview_${displayId} .option-preview`);
+            const $container = $card.find('.options-preview-container');
             const optionSet = optionSets.find(o => o.id === selectedId);
 
-            if (!optionSet) {
+            if (!optionSet || !Array.isArray(optionSet.options) || optionSet.options.length === 0) {
                 $preview.html('<em class="text-muted small">No options available</em>');
+                $container.hide();
                 return;
             }
 
@@ -105,7 +107,9 @@
             }
             html += '</ul>';
             $preview.html(html);
+            $container.show();
         });
+
 
         $(document).on('click', '.toggle-preview', function (e) {
             e.preventDefault();
@@ -139,10 +143,13 @@
                 contentType: false,
                 success: function (partialHtml) {
                     $('#collectionContainer').html(partialHtml);
-                    updateRanks(); // optional
+                    updateRanks();
+
                     const last = $('#collectionContainer .inputFormRow').last();
                     last[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                     animateHighlight(last);
+
+                    $('select[name$=".OptionSetId"]').trigger('change');
                 },
                 error: function (xhr) {
                     console.error('Insert failed:', xhr.responseText || xhr.statusText);
@@ -241,15 +248,17 @@
                 url: '/AssessmentForms/AddCriterion',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
-
-                    // Scroll to last item (the new card)
+                    
                     const $lastCard = $('#collectionContainer .inputFormRow').last();
                     $('html, body').animate({
-                        scrollTop: $lastCard.offset().top - 100 // adjust offset if needed
+                        scrollTop: $lastCard.offset().top - 100
                     }, 600);
-
-                    animateHighlight($lastCard); // optional: highlight it
+                    
+                    animateHighlight($lastCard);
+                    
+                    $('select[name$=".OptionSetId"]').trigger('change');
                 }
+
             });
         });
 

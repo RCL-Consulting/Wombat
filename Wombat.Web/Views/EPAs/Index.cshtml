@@ -1,82 +1,58 @@
 ﻿@model IEnumerable<EPAVM>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Entrustable Professional Activities";
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="card card-accent shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Entrustable Professional Activities</h5>
+            <a asp-action="Create" class="btn btn-icon btn-create" title="Add New EPA">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
 
-<p>
-    <a class="btn btn-success" asp-action="Create"><i class="fas fa-plus"></i> Create New</a>
-</p>
-
-<div class="row">
-    <div class="col-md-12">
-        <table class="table" style="width: 100%">
-            <thead>
-                <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.Name)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SubSpeciality.Speciality)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SubSpeciality)
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+        <div class="card-body p-4">
+            <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                <thead class="table-light">
                     <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Name)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.SubSpeciality.Speciality.Name)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.SubSpeciality.Name)
-                        </td>
-                        <td>
-                            <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.Id"><i class="fas fa-pencil-alt"></i></a>
-                            <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                            <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="far fa-trash-alt"></i></button>
-                        </td>
+                        <th>Name</th>
+                        <th>Speciality</th>
+                        <th>Subspeciality</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.SubSpeciality.Speciality?.Name</td>
+                            <td>@item.SubSpeciality?.Name</td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon btn-edit me-1" title="Edit">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-icon btn-info me-1" title="Details">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <button data-id="@item.Id" type="button" class="btn btn-icon btn-delete deleteBtn" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-        
 
 <form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="optionSetId" name="Id" />
+    <input type="hidden" id="deleteId" name="Id" />
 </form>
 
 @section Scripts {
-    <script>
-        $(function () {
-
-            $('.deleteBtn').click(function (e) {
-                swal({
-                    title: "Are you sure?",
-                    text: "Are you sure you want to delete this record?",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true
-                }).then((confirm) => {
-                    if (confirm) {
-                        var btn = $(this);
-                        var id = btn.data("id");
-                        $("#optionSetId").val(id);
-                        $("#deleteForm").submit();
-                    }
-                });
-            });
-        });
-    </script>
+    @await Html.PartialAsync("_DeleteConfirmationScript")
 }

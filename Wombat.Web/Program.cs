@@ -56,7 +56,7 @@ builder.Services.AddScoped<ISubSpecialityRepository, SubSpecialityRepository>();
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddScoped<IAssessmentRequestRepository, AssessmentRequestRepository>();
 builder.Services.AddScoped<IRegistrationInvitationRepository, RegistrationInvitationRepository>();
-builder.Services.AddScoped<IEPAQuestionRepository, EPAQuestionRepository>();
+builder.Services.AddScoped<ISTARApplicationFormRepository, STARApplicationFormRepository>();
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Host.UseSerilog((ctx, lc) =>

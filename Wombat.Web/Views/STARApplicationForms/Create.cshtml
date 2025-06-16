@@ -1,17 +1,18 @@
-﻿@model AssessmentFormVM
+﻿@model STARApplicationFormVM
 
 @{
-    ViewData["Title"] = "Edit Assessment Form";
+    ViewData["Title"] = "Create STAR Application Form";
 }
 
 <div class="container mt-4">
-    <div class="card card-accent-edit shadow-sm">
+    <div class="card card-accent-create shadow-sm">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Assessment Form - Edit</h5>
+            <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>STAR Application Form - Create</h5>
         </div>
 
-        <form asp-action="Edit" id="form">
+        <form asp-action="Create" id="form" method="post">
             <div class="card-body">
+
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="mb-3">
@@ -20,65 +21,80 @@
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
-                <input type="hidden" asp-for="Id" />
+                <div class="mb-3">
+                    <label for="specialitySelect" class="form-label fw-semibold">Speciality</label>
+                    <select id="specialitySelect" class="form-select">
+                        <option value="">-- Select Speciality --</option>
+                        @foreach (var s in ViewBag.Specialities as List<SelectListItem>)
+                        {
+                            <option value="@s.Value">@s.Text</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="subspecialitySelect" class="form-label fw-semibold">Subspeciality</label>
+                    <select id="subspecialitySelect" class="form-select" disabled>
+                        <option value="">-- Select Subspeciality --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="EPAId" class="form-label fw-semibold">EPA</label>
+                    <select asp-for="EPAId" id="epaSelect" class="form-select" disabled>
+                        <option value="">-- Select EPA --</option>
+                    </select>
+                    <span asp-validation-for="EPAId" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="IsPublished" class="form-check-input" />
+                    <label asp-for="IsPublished" class="form-check-label"></label>
+                </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
                     <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Assessment Criteria</h5>
                 </div>
                 <hr />
 
-                <div id="collectionContainer" class="sortable-container">                  
-                    @Html.EditorFor(model => model.OptionCriteria)
+                <div id="collectionContainer" class="sortable-container">
+                    @Html.EditorFor(model => model.STARItems)
                 </div>
+
             </div>
 
             <div class="card-footer bg-light">
                 <div class="row text-center align-items-center">
-
-                    <!-- Column 1: Back -->
                     <div class="col-md-4 d-flex justify-content-start">
                         <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
                             <i class="fa-solid fa-list"></i>
                         </a>
                     </div>
-
-                    <!-- Column 2: Add options -->
                     <div class="col-md-4 d-flex justify-content-center flex-wrap gap-2">
-                        <!-- Add Button -->
                         <button type="button" class="btn btn-icon btn-create" id="btnAdd" title="Add Empty Criterion">
                             <i class="fas fa-plus"></i>
                         </button>
-
-                        <!-- Template Insert Group -->
-                        <div class="input-group input-group-sm" style="max-width: 300px;">
-                            <select id="templateSelect" class="form-select">
-                                <option value="">-- Choose Template --</option>
-                                @foreach (var form in ViewBag.Templates as List<SelectListItem>)
-                                {
-                                    <option value="@form.Value">@form.Text</option>
-                                }
-                            </select>
-                            <button type="button" class="btn btn-outline-secondary" id="btnInsertTemplate">Insert</button>
-                        </div>
                     </div>
-
-                    <!-- Column 3: Save -->
                     <div class="col-md-4 d-flex justify-content-end">
                         <button type="submit" class="btn btn-icon btn-edit" title="Save Changes">
                             <i class="fas fa-save"></i>
                         </button>
                     </div>
-
                 </div>
             </div>
-
-
-
         </form>
     </div>
 </div>
 
 @section Scripts {
+    <script id="subspecialityMap" type="application/json">
+        @Html.Raw(Json.Serialize(ViewBag.Subspecialities))
+    </script>
+
+    <script id="epaMap" type="application/json">
+        @Html.Raw(Json.Serialize(ViewBag.EPAs))
+    </script>
+
     <script id="optionSetsData" type="application/json">
         @Html.Raw(Json.Serialize(ViewBag.OptionSets))
     </script>
@@ -120,112 +136,48 @@
             const target = $(this).data('target');
             $(target).collapse('toggle');
         });
-    </script>
 
-    <script type="text/javascript">
         new Sortable(document.getElementById('collectionContainer'), {
             animation: 150,
-            handle: '.drag-handle', // see below
+            handle: '.drag-handle',
             onEnd: function () {
                 updateRanks();
             }
         });
 
-        // Trigger initial previews on page load (for editing existing items)
-        $(function () {
-            $('select[name$=".OptionSetId"]').each(function () {
-                $(this).trigger('change');
-            });
-        });
-
-
-        $('#btnInsertTemplate').on('click', function () {
-            const selectedId = $('#templateSelect').val();
-            if (!selectedId) return;
-
-            const formElement = document.getElementById('form');
-            const formData = new FormData(formElement);
-            formData.append("templateFormId", selectedId);
-
-            $.ajax({
-                type: 'POST',
-                url: '/AssessmentForms/CloneCriteria',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (partialHtml) {
-                    $('#collectionContainer').html(partialHtml);
-                    updateRanks(); // optional
-                    const last = $('#collectionContainer .inputFormRow').last();
-                    last[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    animateHighlight(last);
-
-                    $('select[name$=".OptionSetId"]').trigger('change');
-                },
-                error: function (xhr) {
-                    console.error('Insert failed:', xhr.responseText || xhr.statusText);
-                }
-            });
-        });
-
-        function flipSwap($movingCard, $targetCard, insertFn) {
-            const firstRect = $movingCard[0].getBoundingClientRect();
-
-            // DOM swap
-            insertFn();
-
-            const lastRect = $movingCard[0].getBoundingClientRect();
-
-            const deltaY = firstRect.top - lastRect.top;
-
-            // Apply transform to "teleport" back visually
-            $movingCard.css({
-                transform: `translateY(${deltaY}px)`,
-                transition: 'none'
-            });
-
-            // Force reflow
-            void $movingCard[0].offsetWidth;
-
-            // Then animate to zero offset
-            $movingCard.css({
-                transform: 'translateY(0)',
-                transition: 'transform 300ms ease'
-            });
-
-            // Optional: trigger highlight after animation
-            setTimeout(() => {
-                animateHighlight($movingCard);
-            }, 300);
-        }
-
         function updateRanks() {
             $('#collectionContainer .inputFormRow').each(function (index) {
                 const newRank = index + 1;
-                $(this).find('input[name$=".Rank"]').val(newRank); // update hidden input
-                $(this).find('.criterion-label').text('Criterion ' + newRank); // update visible heading
+                $(this).find('input[name$=".Rank"]').val(newRank);
+                $(this).find('.criterion-label').text('Criterion ' + newRank);
             });
         }
 
         function animateHighlight($card) {
             const highlightClass = 'move-highlight';
-
-            // Add the highlight
             $card.addClass(highlightClass);
-
-            // Force reflow for the transition
             void $card[0].offsetWidth;
-
-            // Scroll into view (centered if possible)
-            $card[0].scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-
-            // Remove highlight after a delay
+            $card[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => {
                 $card.removeClass(highlightClass);
             }, 600);
+        }
+
+        function flipSwap($movingCard, $targetCard, insertFn) {
+            const firstRect = $movingCard[0].getBoundingClientRect();
+            insertFn();
+            const lastRect = $movingCard[0].getBoundingClientRect();
+            const deltaY = firstRect.top - lastRect.top;
+            $movingCard.css({
+                transform: `translateY(${deltaY}px)`,
+                transition: 'none'
+            });
+            void $movingCard[0].offsetWidth;
+            $movingCard.css({
+                transform: 'translateY(0)',
+                transition: 'transform 300ms ease'
+            });
+            setTimeout(() => animateHighlight($movingCard), 300);
         }
 
         $(document).on('click', '.btn-move-up', function () {
@@ -250,47 +202,70 @@
             }
         });
 
-
-        $("#btnAdd").on('click', function () {
+        $('#btnAdd').on('click', function () {
+            console.log('Adding new item...');
             $.ajax({
                 async: true,
                 data: $('#form').serialize(),
-                type: "POST",
-                url: '/AssessmentForms/AddCriterion',
+                type: 'POST',
+                url: '/STARApplicationForms/AddItem',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
 
-                    // Scroll to last item (the new card)
                     const $lastCard = $('#collectionContainer .inputFormRow').last();
                     $('html, body').animate({
-                        scrollTop: $lastCard.offset().top - 100 // adjust offset if needed
+                        scrollTop: $lastCard.offset().top - 100
                     }, 600);
-
-                    animateHighlight($lastCard); // optional: highlight it
-
+                    animateHighlight($lastCard);
                     $('select[name$=".OptionSetId"]').trigger('change');
                 }
             });
         });
 
-
-        $(document).on('click', '#btnDelete', function () {
-            var form = $('#form').serialize();
-            var parentDiv = $(this).closest('.inputFormRow');
-            var DisplayId = parentDiv.find('.display-id').val(); // or
-
-            console.log(DisplayId); // should now print a valid string
+        $(document).on('click', '.btnDelete', function () {
+            const form = $('#form').serialize();
+            const parentDiv = $(this).closest('.inputFormRow');
+            const displayId = parentDiv.find('.display-id').val();
 
             $.ajax({
                 async: true,
-                data: form + '&displayId=' + DisplayId,
-                type: "POST",
-                url: '/AssessmentForms/DeleteCriterion',
+                data: form + '&displayId=' + displayId,
+                type: 'POST',
+                url: '/STARApplicationForms/DeleteItem',
                 success: function (partialView) {
                     $('#collectionContainer').html(partialView);
                 }
             });
         });
 
+        const subspecialityMap = JSON.parse(document.getElementById("subspecialityMap").textContent);
+        const epaMap = JSON.parse(document.getElementById("epaMap").textContent);
+
+        $('#specialitySelect').on('change', function () {
+            const selectedSpecialityId = $(this).val();
+            const subs = subspecialityMap[selectedSpecialityId] || [];
+            const $subSelect = $('#subspecialitySelect');
+            console.log('Here');
+            $subSelect.empty().append('<option value="">-- Select Subspeciality --</option>');
+            subs.forEach(s => {
+                $subSelect.append(`<option value="${s.value}">${s.text}</option>`);
+            });
+
+            $subSelect.prop('disabled', subs.length === 0);
+            $('#epaSelect').empty().append('<option value="">-- Select EPA --</option>').prop('disabled', true);
+        });
+
+        $('#subspecialitySelect').on('change', function () {
+            const selectedSubId = $(this).val();
+            const epas = epaMap[selectedSubId] || [];
+            const $epaSelect = $('#epaSelect');
+
+            $epaSelect.empty().append('<option value="">-- Select EPA --</option>');
+            epas.forEach(e => {
+                $epaSelect.append(`<option value="${e.value}">${e.text}</option>`);
+            });
+
+            $epaSelect.prop('disabled', epas.length === 0);
+        });
     </script>
 }

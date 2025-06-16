@@ -1,0 +1,88 @@
+﻿@model IEnumerable<STARApplicationFormVM>
+
+@{
+    ViewData["Title"] = "Assessment Forms";
+}
+
+<div class="container mt-4">
+    <div class="card card-accent shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-layer-group me-2"></i>STAR Application Forms
+            </h5>
+            <a asp-action="Create" class="btn btn-create btn-sm" title="Create New Form">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
+
+        <div class="card-body p-4">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    No assessment forms have been added yet.
+                </div>
+            }
+            else
+            {
+                <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Form Name</th>
+                            <th>EPA</th>
+                            <th>Speciality</th>
+                            <th>Subspeciality</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.EPAName</td>
+                                <td>@item.SpecialityName</td>
+                                <td>@item.SubSpecialityName</td>
+                                <td>@item.CreatedOn.ToShortDateString()</td>
+                                <td>
+                                    @if (item.IsPublished)
+                                    {
+                                        <span class="badge bg-success">Published</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Draft</span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
+                                    <button type="button"
+                                            data-id="@item.Id"
+                                            class="btn btn-icon btn-delete btn-sm deleteBtn"
+                                            title="Delete">
+                                        <i class="far fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+
+<form id="deleteForm" asp-action="Delete" method="post">
+    <input type="hidden" id="deleteId" name="Id" />
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_DeleteConfirmationScript")
+}

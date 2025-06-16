@@ -15,15 +15,14 @@ namespace Wombat.Data
 
         public int OptionSetId { get; set; }
 
-        [ForeignKey("OptionSetId")]
+        [ForeignKey(nameof(OptionSetId))]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public OptionSet? OptionsSet { get; set; }
 
-        public int EPAId { get; set; }
+        public int FormId { get; set; }
 
-        [ForeignKey("EPAId")]
-        [DeleteBehavior(DeleteBehavior.Cascade)]
-        public EPA? EPA { get; set; }
+        [ForeignKey(nameof(FormId))]
+        public STARApplicationForm? Form { get; set; }
 
         public int Rank { get; set; }
     }

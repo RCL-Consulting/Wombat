@@ -1,92 +1,93 @@
 ﻿@model Wombat.Common.Models.EPAVM
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit EPA";
 }
 
-<h1>Edit EPAs</h1>
+<div class="container mt-4">
+    <div class="card card-accent-edit shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Entrustable Professional Activities - Edit</h5>
+        </div>
 
-<hr />
-<div class="row">
-    <div class="col-md-12">
         <form asp-action="Edit" id="form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="card-body">
 
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-semibold"></label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <input type="hidden" asp-for="Id" />
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Speciality</label>
+                    <select asp-for="SpecialityId" class="form-select" id="specialitySelect" onchange="updateSubSpecialitySelect()">
+                        <option value="">-- Select a speciality --</option>
+                        @foreach (var option in Model.Specialities)
+                        {
+                            <option value="@option.Id">@option.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div id="subSpecialityContainer" class="mb-4">
+                    <label class="form-label fw-semibold">Subspeciality</label>
+                    <select asp-for="SubSpecialityId" id="secondSelect" class="form-select">
+                        <option value="">-- Select a subspeciality --</option>
+                        @foreach (var option in Model.SubSpecialities)
+                        {
+                            <option value="@option.Id">@option.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-semibold text-uppercase text-muted mb-0">EPA Milestone Periods</h6>
+                    <button type="button" class="btn btn-icon btn-create" id="btnAddCurriculum" title="Add New Milestone">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <hr />
+
+                <div id="curriculumCollectionContainer" class="d-flex flex-column gap-3">
+                    @Html.EditorFor(model => model.EPACurricula)
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                    <h6 class="fw-semibold text-uppercase text-muted mb-0">Assessment Forms</h6>
+                    <button type="button" class="btn btn-icon btn-create" id="btnAdd" title="Add Assessment Form">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <hr />
+
+                <div id="collectionContainer">
+                    @Html.EditorFor(model => model.Forms)
+                </div>
             </div>
-            <br/>
 
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <br/>
-            
-            <input type="hidden" asp-for="Id" />
-
-            <h4>Certification Field</h4>
-            <hr />
-            <div>
-                <label for="specialitySelect">Speciality</label>
-                <select asp-for="SpecialityId" class="form-control" id="specialitySelect" onchange="updateSubSpecialitySelect()">
-                    <option value="">-- Select a speciality --</option>
-                    @foreach (var option in Model.Specialities)
-                    {
-                        <option value="@option.Id">@option.Name</option>
-                    }
-                </select>
-            </div>
-            <br />
-
-            <div id="subSpecialityContainer">
-                <label for="secondSelect">Subspeciality</label>
-                <select asp-for="SubSpecialityId" id="secondSelect" class="form-control">
-                    <option value="">-- Select a subspeciality --</option>
-                    @foreach (var option in Model.SubSpecialities)
-                    {
-                        <option value="@option.Id">@option.Name</option>
-                    }
-                </select>
-                <br />
-            </div>
-            <br />
-
-            <h4>
-                <button type="button" class="btn btn-success" id="btnAddCurriculum"><i class="fas fa-plus"></i> Add New</button>
-                EPA milestone periods
-            </h4>
-            <hr />
-
-            <div class="input-group col-md-12" id="curriculumHeadings" style="display: none;">
-                <div style="width: 45%"><strong>Number of months from first registration</strong></div>
-                <div style="width: 45%"><strong>Expected EPA score</strong></div>
-            </div>
-            <div id="curriculumCollectionContainer">
-                @Html.EditorFor(model => model.EPACurricula)
-            </div>
-            <br />
-
-            <h4>
-                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i> Add New</button>
-                Assessment Forms for this EPA
-            </h4>
-            <hr />
-           <div id="collectionContainer">
-                @Html.EditorFor(model => model.Forms)
-            </div>
-            <br />
-
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Save Changes" class="btn btn-warning" />
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="submit" class="btn btn-icon btn-edit" title="Save Changes">
+                    <i class="fas fa-save"></i>
+                </button>
             </div>
         </form>
     </div>
 </div>
+
 
 @section Scripts
 {
@@ -133,8 +134,8 @@
 
         $(document).on('click', '#btnDelete', function () {
             var form = $('#form').serialize();
-            var parentDiv = $(this).closest('#inputFormRow');
-            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            var parentRow = $(this).closest('.inputFormRow'); // uses class now instead of id
+            var DisplayId = parentRow.find('.display-id').val();
             console.log(DisplayId);
             $.ajax({
                 async: true,
@@ -170,8 +171,8 @@
 
         $(document).on('click', '#btnDeleteCurriculum', function () {
             var form = $('#form').serialize();
-            var parentDiv = $(this).closest('#inputFormRow');
-            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            var parentRow = $(this).closest('.inputFormRow'); // uses class now instead of id
+            var DisplayId = parentRow.find('.display-id').val();
             console.log(DisplayId);
             $.ajax({
                 async: true,

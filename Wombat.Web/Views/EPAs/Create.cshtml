@@ -1,123 +1,132 @@
 ﻿@model EPAVM
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create EPA";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="card card-accent-create shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Entrustable Professional Activities - Create</h5>
+        </div>
 
-<h4>EPA</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
         <form asp-action="Create" id="form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold">Name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <h6 class="text-uppercase text-muted fw-bold mt-4 mb-2">Certification Field</h6>
+                <hr />
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="specialitySelect" class="form-label">Speciality</label>
+                        <select asp-for="SpecialityId" class="form-select" id="specialitySelect" onchange="updateSubSpecialitySelect()">
+                            <option value="">-- Select a speciality --</option>
+                            @foreach (var option in Model.Specialities)
+                            {
+                                <option value="@option.Id">@option.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="secondSelect" class="form-label">Subspeciality</label>
+                        <select asp-for="SubSpecialityId" id="secondSelect" class="form-select">
+                            <option value="">-- Select a subspeciality --</option>
+                            @foreach (var option in Model.SubSpecialities)
+                            {
+                                <option value="@option.Id">@option.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                
+                <h6 class="text-uppercase text-muted fw-bold mt-4 mb-2">
+                    EPA Milestone Periods
+                    <button type="button" class="btn btn-icon btn-create ms-2" id="btnAddCurriculum" title="Add Milestone">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h6>
+                <hr />
+
+                <div id="curriculumCollectionContainer" class="d-flex flex-column gap-3">
+                    @Html.EditorFor(model => model.EPACurricula)
+                </div>
+
+                <h6 class="text-uppercase text-muted fw-bold mt-4 mb-2">
+                    Assessment Forms
+                    <button type="button" class="btn btn-icon btn-create ms-2" id="btnAdd" title="Add Form">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h6>
+                <hr />
+
+                <div id="collectionContainer">
+                    @Html.EditorFor(model => model.Forms)
+                </div>
             </div>
-            <br />
 
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-icon btn-back" title="All EPAs">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="submit" class="btn btn-create" title="Create">
+                    <i class="fas fa-save"></i>
+                </button>
             </div>
-            <br />
 
-            <h4>Certification Field</h4>
-            <hr />
-            <div>
-                <label for="specialitySelect">Speciality</label>
-                <select asp-for="SpecialityId" class="form-control" id="specialitySelect" onchange="updateSubSpecialitySelect()">
-                    <option value="">-- Select a speciality --</option>
-                    @foreach (var option in Model.Specialities)
-                    {
-                        <option value="@option.Id">@option.Name</option>
-                    }
-                </select>
-            </div>
-            <br/>
-
-            <div id="subSpecialityContainer">
-                <label for="secondSelect">Subspeciality</label>
-                <select asp-for="SubSpecialityId" id="secondSelect" class="form-control" >
-                    <option value="">-- Select a subspeciality --</option>
-                    @foreach (var option in Model.SubSpecialities)
-                    {
-                        <option value="@option.Id">@option.Name</option>
-                    }
-                </select>
-                <br/>
-            </div>   
-            <br/>
-
-            <h4>
-                <button type="button" class="btn btn-success" id="btnAddCurriculum"><i class="fas fa-plus"></i> Add New</button>
-                EPA milestone periods
-            </h4>
-            <hr />
-
-            <div class="input-group col-md-12" id="curriculumHeadings" style="display: none;">
-                <div style="width: 45%"><strong>Number of months from first registration</strong></div>
-                <div style="width: 45%"><strong>Expected EPA score</strong></div>
-            </div>
-            <div id="curriculumCollectionContainer">
-                @Html.EditorFor(model => model.EPACurricula)
-            </div>
-            <br />
-
-            <h4>
-                <button type="button" class="btn btn-success" id="btnAdd"><i class="fas fa-plus"></i> Add New</button>
-                Assessment Forms for this EPA
-            </h4>
-            <hr />
-
-            <div id="collectionContainer">
-                @Html.EditorFor(model => model.Forms)
-            </div>
-            <br />
-
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Submit" class="btn btn-primary" />
-            </div>
+       
         </form>
     </div>
 </div>
+
 
 @section Scripts
 {
     <script type="text/javascript">
         function updateSubSpecialitySelect() {
-            var mainSelect = document.getElementById("specialitySelect");
-            var subSpecialityContainer = document.getElementById("subSpecialityContainer");
-            var secondSelect = document.getElementById("secondSelect");
+            const mainSelect = document.getElementById("specialitySelect");
+            const secondSelect = document.getElementById("secondSelect");
 
-            // Clear previous options
-            secondSelect.innerHTML = '';
+            // Clear existing options and re-add the default placeholder
+            secondSelect.innerHTML = '<option value="">-- Select a subspeciality --</option>';
 
-            if (mainSelect.value) {
-                // Show the second select
-                subSpecialityContainer.style.display = "block";
+            const selectedSpecialityId = mainSelect.value;
 
-                // Fetch sub-options via AJAX
-                fetch('@Url.Action("GetSubOptions", "EPAs")?mainOptionId=' + mainSelect.value)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(function (subOption) {
-                            console.log(subOption.value);
-                            var newOption = document.createElement("option");
+            if (!selectedSpecialityId) return;
+
+            fetch('@Url.Action("GetSubOptions", "EPAs")?mainOptionId=' + selectedSpecialityId)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        data.forEach(subOption => {
+                            const newOption = document.createElement("option");
                             newOption.value = subOption.id;
                             newOption.textContent = subOption.name;
                             secondSelect.appendChild(newOption);
                         });
-                    })
-                    .catch(error => console.error('Error fetching sub-options:', error));
-            } 
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching subspecialities:', error);
+                });
         }
+
 
         $("#btnAdd").on('click', function () {
             $.ajax({
@@ -133,8 +142,8 @@
 
         $(document).on('click', '#btnDelete', function () {
             var form = $('#form').serialize();
-            var parentDiv = $(this).closest('#inputFormRow');
-            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            var parentRow = $(this).closest('.inputFormRow'); // uses class now instead of id
+            var DisplayId = parentRow.find('.display-id').val();
             console.log(DisplayId);
             $.ajax({
                 async: true,
@@ -171,8 +180,8 @@
 
         $(document).on('click', '#btnDeleteCurriculum', function () {
             var form = $('#form').serialize();
-            var parentDiv = $(this).closest('#inputFormRow');
-            var DisplayId = parentDiv.find('#DisplayId').attr('value');
+            var parentRow = $(this).closest('.inputFormRow'); // uses class now instead of id
+            var DisplayId = parentRow.find('.display-id').val();
             console.log(DisplayId);
             $.ajax({
                 async: true,

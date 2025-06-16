@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Core.Types;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
@@ -86,20 +87,11 @@ namespace Wombat.Web.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var invitation = await RegistrationInvitationRepository.GetAsync(id);
-            if (invitation == null) return NotFound();
+            if (invitation == null)
+                return NotFound();
 
-            var vm = new RegistrationInvitationVM
-            {
-                Email = invitation.Email,
-                Roles = invitation.Roles,
-                Institution = invitation.Institution?.Name ?? "",
-                Speciality = invitation.Speciality?.Name,
-                SubSpeciality = invitation.SubSpeciality?.Name,
-                ExpiryDate = invitation.ExpiryDate,
-                IsUsed = invitation.IsUsed
-            };
-
-            return PartialView("_InvitationDetailsPartial", vm);
+            var vm = Mapper.Map<RegistrationInvitationVM>(invitation);
+            return View(vm);
         }
 
 

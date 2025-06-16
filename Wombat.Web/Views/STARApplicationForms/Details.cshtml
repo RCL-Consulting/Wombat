@@ -1,0 +1,95 @@
+﻿@model Wombat.Common.Models.STARApplicationFormVM
+
+@{
+    ViewData["Title"] = "EPA Question Form Details";
+}
+
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-layer-group me-2"></i>STAR Application Form - Details
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-semibold">EPA</dt>
+                <dd class="col-sm-9">@Model.EPAName</dd>
+
+                <dt class="col-sm-3 fw-semibold">Speciality</dt>
+                <dd class="col-sm-9">@Model.SpecialityName</dd>
+
+                <dt class="col-sm-3 fw-semibold">Subspeciality</dt>
+                <dd class="col-sm-9">@Model.SubSpecialityName</dd>
+
+                <dt class="col-sm-3 fw-semibold align-self-start">Self-Assessment Questions</dt>
+                <dd class="col-sm-9">
+                    @if (Model.STARItems != null && Model.STARItems.Any())
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var group in Model.STARItems
+                                                    .OrderBy(q => q.DisplayId)
+                                                    .GroupBy(q => q.Heading ?? ""))
+                            {
+                                <div class="card border-0 shadow-sm mb-4">
+                                    @if (!string.IsNullOrWhiteSpace(group.Key))
+                                    {
+                                        <div class="card-header bg-light border-bottom fw-semibold text-primary">
+                                            @group.Key
+                                        </div>
+                                    }
+
+                                    <div class="card-body pt-3 pb-2">
+                                        <div class="d-flex flex-column gap-3">
+                                            @foreach (var q in group)
+                                            {
+                                                <div class="card card-subtle shadow-sm">
+                                                    <div class="card-header">@q.Description</div>
+                                                    <div class="card-body py-2">
+                                                        @if (q.OptionSet?.Options?.Any() == true)
+                                                        {
+                                                            <ul class="list-group list-group-flush">
+                                                                @foreach (var opt in q.OptionSet.Options)
+                                                                {
+                                                                    <li class="list-group-item px-0 py-1">
+                                                                        @if (q.OptionSet.DisplayRank)
+                                                                        {
+                                                                            <span class="me-2 text-muted">@opt.Rank.</span>
+                                                                        }
+                                                                        @opt.Description
+                                                                    </li>
+                                                                }
+                                                            </ul>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted fst-italic">No response options defined.</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">No self-assessment questions defined.</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                <i class="fas fa-list"></i>
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
+                <i class="fas fa-pencil-alt"></i>
+            </a>
+        </div>
+    </div>
+</div>

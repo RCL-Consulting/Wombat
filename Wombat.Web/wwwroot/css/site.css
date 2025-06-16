@@ -351,3 +351,22 @@ h1, h2, h3 {
     font-weight: 600;
     border-bottom: 1px solid #dee2e6;
 }
+
+.sidebar .collapse-item {
+    color: #d1d1d1;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    border-radius: 0.35rem;
+}
+
+.sidebar .collapse-item:hover,
+.sidebar .collapse-item:focus {
+    color: #fff;
+    background-color: #4e5d6c; /* slightly lighter than sidebar bg */
+}
+
+.sidebar .collapse-item.active {
+    color: #fff;
+    background-color: #007bff; /* or a muted Wombat accent like #5a8ca5 */
+    font-weight: 600;
+}

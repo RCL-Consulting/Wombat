@@ -1,16 +1,26 @@
 ﻿@model OptionVM
 
-<div class="input-group col-md-12" id="inputFormRow">
-    <div id="DisplayId" value=@Model.DisplayId></div>
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="DisplayId" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div id="inputFormRow_@Model.DisplayId" class="card shadow-sm p-3 inputFormRow">
+    <div class="row g-3 align-items-center">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="DisplayId" class="display-id" />
 
-    <input style="width: 10%" asp-for="Rank" class="form-control m-input" placeholder="Rank" autocomplete="off" required>
-    <input style="width: 80%" asp-for="Description" class="form-control" placeholder="Option name" />
-    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
-    <span asp-validation-for="Description" class="text-danger"></span>
-    <span asp-validation-for="Rank" class="text-danger"></span>
+        <div class="col-12 col-md-2">
+            <label asp-for="Rank" class="form-label fw-semibold">Rank</label>
+            <input asp-for="Rank" class="form-control" type="number" placeholder="1" required />
+            <span asp-validation-for="Rank" class="text-danger small"></span>
+        </div>
+
+        <div class="col-12 col-md-9">
+            <label asp-for="Description" class="form-label fw-semibold">Option Description</label>
+            <input asp-for="Description" class="form-control" placeholder="e.g., Performs independently" required />
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+
+        <div class="col-12 col-md-1 text-end mt-2 mt-md-4">
+            <button type="button" class="btn btn-icon btn-delete btn-sm btnDelete" title="Delete Option">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </div>
 </div>
-<br />
-

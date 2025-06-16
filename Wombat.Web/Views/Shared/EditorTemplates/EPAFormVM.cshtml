@@ -1,21 +1,24 @@
 ﻿@model EPAFormVM
 
-<div class="input-group col-md-12" id="inputFormRow">
-    <div id="DisplayId" value=@Model.DisplayId></div>
-    <input type="hidden" asp-for="DisplayId" />
+<div id="inputFormRow_@Model.DisplayId" class="row g-2 align-items-center inputFormRow mb-2">
+    <input type="hidden" asp-for="DisplayId" class="display-id" />
     <input type="hidden" asp-for="EPAId" />
     <input type="hidden" asp-for="Id" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <select class="form-select" style="width: 90%" asp-for="FormId">
-        <option value="">-- Select Form --</option>
-        @foreach (var item in (List<AssessmentFormVM>)ViewData["Forms"])
-        {
-            <option value="@item.Id">@item.Name</option>
-        }
-    </select>
-    <button style="width: 10%" type="button" class="btn btn-danger" id="btnDelete"><i class="far fa-trash-alt"></i></button>
-    <span asp-validation-for="Id" class="text-danger"></span>
+    <div class="col">
+        <select class="form-select" asp-for="FormId">
+            <option value="">-- Select Form --</option>
+            @foreach (var item in (List<AssessmentFormVM>)ViewData["Forms"])
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        </select>
+        <span asp-validation-for="FormId" class="text-danger small"></span>
+    </div>
+
+    <div class="col-auto">
+        <button type="button" class="btn btn-icon btn-delete btn-sm" id="btnDelete" title="Delete Form">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </div>
 </div>
-<br />
-

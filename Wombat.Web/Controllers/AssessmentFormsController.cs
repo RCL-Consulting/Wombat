@@ -90,6 +90,7 @@ namespace Wombat.Controllers
                     .Select(c =>
                     {
                         var vm = mapper.Map<OptionCriterionVM>(c);
+                        vm.Id = 0; // Reset ID for new items
                         vm.DisplayId = OptionCriterionVM.NextDisplayId++;
                         vm.CanEditAndDelete = true;
 
@@ -189,8 +190,10 @@ namespace Wombat.Controllers
 
             var assessmentFormVM = mapper.Map<AssessmentFormVM>(assessmentForm);
 
+            var allOptionSets = await optionSetRepository.GetAllAsync();
+            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
             ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
-                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Where(f => f.Id != assessmentForm.Id) // optionally tag forms as templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
                 .ToList();
 
@@ -237,8 +240,10 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var allOptionSets = await optionSetRepository.GetAllAsync();
+            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
             ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
-                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+                .Where(f => f.Id != assessmentForm.Id) // optionally tag forms as templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
                 .ToList();
 

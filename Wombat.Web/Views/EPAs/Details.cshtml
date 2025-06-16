@@ -1,91 +1,98 @@
 ﻿@model EPAVM
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "EPA Details";
 }
 
-<h1>Details of @Model.Name</h1>
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>EPA - Details</h5>
+        </div>
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-semibold">Name</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(m => m.Name)</dd>
 
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
+                <dt class="col-sm-3 fw-semibold">Description</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(m => m.Description)</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Speciality)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Speciality.Name)
-        </dd>
+                <dt class="col-sm-3 fw-semibold">Speciality</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(m => m.Speciality.Name)</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.SubSpeciality)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.SubSpeciality.Name)
-        </dd>
+                <dt class="col-sm-3 fw-semibold">Subspeciality</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(m => m.SubSpeciality.Name)</dd>
+            </dl>
 
-        <dt class="col-sm-2">
-            EPA milestone periods
-        </dt>
-        <dd class="col-sm-10">
-            <table class="table" id="EPAScale">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Months</th>
-                        <th scope="col">EPA score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Forms != null)
+            <hr class="my-4" />
+
+            <h6 class="fw-semibold mb-2 text-muted">EPA Milestone Periods</h6>
+
+            @if (Model.EPACurricula != null && Model.EPACurricula.Any())
+            {
+                <div class="row g-3">
+                    @foreach (var item in Model.EPACurricula.OrderBy(c => c.NumberOfMonths))
                     {
-                        foreach (var item in Model.EPACurricula)
-                        {
-                            var Option = item.EPAScaleOption;
-                            <tr>
-                                <td>@item.NumberOfMonths</td>
-                                <td>@Option?.Rank.ToString() - @Option?.Description
-                            </tr>
-                        }
+                        <div class="col-12">
+                            <div class="card shadow-sm border border-primary-subtle">
+                                <div class="card-body py-3">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                                        <div class="mb-2 mb-md-0">
+                                            <strong>Months from registration:</strong>
+                                            <span class="text-muted ms-1">@item.NumberOfMonths</span>
+                                        </div>
+                                        <div>
+                                            <strong>Expected EPA score:</strong>
+                                            <span class="text-muted ms-1">
+                                                @if (item.EPAScaleOption != null)
+                                                {
+                                                    <span class="fw-semibold">@item.EPAScaleOption.Rank – @item.EPAScaleOption.Description</span>
+                                                }
+                                                else
+                                                {
+                                                    <em class="text-muted">N/A</em>
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
-        </dd>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">No milestone periods defined.</p>
+            }
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Forms)
-        </dt>
-        <dd class="col-sm-10">
-            <ul class="row list-unstyled">
-                @if (Model.Forms != null)
-                {
-                    foreach (var item in Model.Forms)
+
+            <hr class="my-4" />
+
+            <h6 class="fw-semibold mb-2 text-muted">Assessment Forms</h6>
+            @if (Model.Forms != null && Model.Forms.Any(f => f.Form != null))
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.Forms.Where(f => f.Form != null))
                     {
-                        @if(item.Form != null)
-                        {
-                            <li>
-                                @Html.DisplayFor(modelItem => item.Form.Name)
-                            </li>
-                        }
+                        <li class="list-group-item">@item.Form.Name</li>
                     }
-                }
-            </ul>
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Index" class="btn btn-dark">Back to List</a> &nbsp;
-    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">No forms linked to this EPA.</p>
+            }
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-icon btn-back" title="All EPAs">
+                <i class="fa-solid fa-list"></i>
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit EPA">
+                <i class="fas fa-pencil-alt"></i>
+            </a>
+        </div>
+    </div>
 </div>
