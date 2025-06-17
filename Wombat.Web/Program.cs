@@ -20,11 +20,12 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Wombat.Application.Configurations;
 using Wombat.Application.Contracts;
-using Wombat.Data;
 using Wombat.Application.Repositories;
+using Wombat.Application.Services;
+using Wombat.Common.Constants;
+using Wombat.Data;
 using Wombat.Services;
 using Wombat.Web.Services;
-using Wombat.Common.Constants;
 using static Wombat.Data.WombatUser;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +58,9 @@ builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddScoped<IAssessmentRequestRepository, AssessmentRequestRepository>();
 builder.Services.AddScoped<IRegistrationInvitationRepository, RegistrationInvitationRepository>();
 builder.Services.AddScoped<ISTARApplicationFormRepository, STARApplicationFormRepository>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<WombatUser>, CustomUserClaimsPrincipalFactory>();
+
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 builder.Host.UseSerilog((ctx, lc) =>

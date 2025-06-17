@@ -1,10 +1,101 @@
 ﻿@model DashboardVM
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<Wombat.Data.WombatUser> SignInManager
+@inject Wombat.Application.Contracts.IUserContextService UserContext
 @using Newtonsoft.Json
 
+@if (UserContext.ApprovalStatus == "Approved")
+{
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
+    </div>
+
+    @* Admin Section *@
+    @if (UserContext.CanManageAssessmentForms || UserContext.IsGlobalAdmin)
+    {
+        <partial name="Administrator.cshtml" model="@Model" />
+    }
+
+    @* Coordinator Section *@
+    @if (UserContext.CanApproveTrainees || UserContext.CanViewPortfolios)
+    {
+        <partial name="Coordinator.cshtml" model="@Model.Coordinator" />
+    }
+
+    @* Assessor Section *@
+    @if (UserContext.CanLogAssessment || UserContext.CanHandleAssessmentRequests)
+    {
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-info text-white">
+                <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
+            </div>
+            <div class="card-body">
+                <partial name="AssessorHome.cshtml" model="@Model" />
+            </div>
+        </div>
+    }
+
+    @* Trainee Section *@
+    @if (UserContext.CanManageOwnPortfolio || UserContext.CanRequestAssessment)
+    {
+        ViewData["Title"] = "Trainee Dashboard";
+
+        var labels = new[] { "Requested", "Declined", "Pending", "Completed" };
+        var values = new[] {
+            Model.NumberOfRequestsMade,
+            Model.NumberOfRequestsDeclined,
+            Model.NumberOfPendingAssessments,
+            Model.NumberOfCompletedAssessments
+        };
+
+        ViewData["ChartLabels"] = JsonConvert.SerializeObject(labels);
+        ViewData["ChartValues"] = JsonConvert.SerializeObject(values);
+
+        <div class="card-body">
+            <partial name="TraineeHome.cshtml" model="@Model" />
+        </div>
+
+        @section Scripts {
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const ctx = document.getElementById('assessmentChart');
+                    if (ctx) {
+                        const labels = @Html.Raw(ViewData["ChartLabels"]);
+                        const data = @Html.Raw(ViewData["ChartValues"]);
+
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: data,
+                                    backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { position: 'bottom' }
+                                }
+                            }
+                        });
+                    }
+                });
+            </script>
+        }
+    }
+    
+}
+else
+{
+    <div class="alert alert-warning">
+        Your account is currently <strong>@UserContext.ApprovalStatus</strong>. Please contact your coordinator.
+    </div>
+}
+
+
 <!-- Authenticated Users -->
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
+@* <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
 </div>
 
@@ -81,3 +172,4 @@ else if (User.IsInRole(Roles.Coordinator))
     <partial name="Administrator.cshtml" model="@Model" />
     
 }
+ *@
