@@ -58,5 +58,20 @@ namespace Wombat.Application.Repositories
 
             return null;
         }
+
+        public async Task<List<AssessmentForm>?> GetScopedFormsForEPA(int epaId, int institutionId, int specialityId, int subSpecialityId)
+        {
+            return await context.EPAForms
+                .Where(e => e.EPAId == epaId && e.Form != null)
+                .Select(e => e.Form!)
+                .Where(f =>
+                    (f.SubSpecialityId == subSpecialityId) ||
+                    (f.SpecialityId == specialityId && f.SubSpecialityId == null) ||
+                    (f.InstitutionId == institutionId && f.SpecialityId == null && f.SubSpecialityId == null) ||
+                    (f.InstitutionId == null && f.SpecialityId == null && f.SubSpecialityId == null)
+                )
+                .Distinct()
+                .ToListAsync();
+        }
     }
 }

@@ -22,7 +22,8 @@ namespace Wombat.Common.Constants
     {
         public const string Administrator = "Administrator";
         public const string InstitutionalAdmin = "InstitutionalAdmin";
-        public const string DepartmentAdmin = "DepartmentAdmin";
+        public const string SpecialityAdmin = "SpecialityAdmin";
+        public const string SubSpecialityAdmin = "SubSpecialityAdmin";
         public const string Assessor = "Assessor";
         public const string Coordinator = "Coordinator";
         public const string CommitteeMember = "CommitteeMember";
@@ -36,7 +37,8 @@ namespace Wombat.Common.Constants
         {
             yield return Administrator;
             yield return InstitutionalAdmin;
-            yield return DepartmentAdmin;
+            yield return SpecialityAdmin;
+            yield return SubSpecialityAdmin;
             yield return Assessor;
             yield return Coordinator;
             yield return CommitteeMember;
@@ -48,7 +50,8 @@ namespace Wombat.Common.Constants
         {
             yield return Administrator;
             yield return InstitutionalAdmin;
-            yield return DepartmentAdmin;
+            yield return SpecialityAdmin;
+            yield return SubSpecialityAdmin;
             yield return Assessor;
             yield return Coordinator;
             yield return CommitteeMember;

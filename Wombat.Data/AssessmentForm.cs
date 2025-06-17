@@ -21,17 +21,20 @@ namespace Wombat.Data
 {
     public class AssessmentForm : BaseEntity
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
-        public List<OptionCriterion> OptionCriteria { get; set; }
+        public int? InstitutionId { get; set; }
+        public Institution? Institution { get; set; }
 
-        public AssessmentForm()
-        {
-            this.OptionCriteria = new List<OptionCriterion>();
-            Name = "";
-        }
+        public int? SpecialityId { get; set; }
+        public Speciality? Speciality { get; set; }
 
-        public ICollection<EPAForm> EPAs { get; set; }
+        public int? SubSpecialityId { get; set; }
+        public SubSpeciality? SubSpeciality { get; set; }
+
+        public List<OptionCriterion> OptionCriteria { get; set; } = new List<OptionCriterion>();
+
+        public ICollection<EPAForm> EPAs { get; set; } = new List<EPAForm>();
 
         public bool CanDelete { get; set; } = true;
 

@@ -20,5 +20,9 @@ namespace Wombat.Application.Contracts
 {
     public interface IAssessmentFormRepository : IGenericRepository<AssessmentForm>
     {
+        Task<List<AssessmentForm>?> GetScopedFormsForEPA( int epaId,
+                                                          int institutionId, 
+                                                          int specialityId, 
+                                                          int subSpecialityId );
     }
 }

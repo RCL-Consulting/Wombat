@@ -36,5 +36,17 @@ namespace Wombat.Common.Models
         public EPAVM? EPAVM { get; set; }
 
         public bool CanDelete { get; set; } = true;
+
+        public int? InstitutionId { get; set; }
+        public string? InstitutionName { get; set; }
+
+        public int? SpecialityId { get; set; }
+        public string? SpecialityName { get; set; }
+
+        public int? SubSpecialityId { get; set; }
+        public string? SubSpecialityName { get; set; }
+
+        public bool IsGlobal =>
+            InstitutionId == null && SpecialityId == null && SubSpecialityId == null;
     }
 }

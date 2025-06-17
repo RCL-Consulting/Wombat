@@ -30,8 +30,14 @@ namespace Wombat.Data.Configurations.Entities
                 new IdentityRole
                 {
                     Id = "725E680D-9DCD-4C9D-B8F9-2415E12F0FA5",
-                    Name = Roles.DepartmentAdmin,
-                    NormalizedName = Roles.DepartmentAdmin.ToUpper()
+                    Name = Roles.SpecialityAdmin,
+                    NormalizedName = Roles.SpecialityAdmin.ToUpper()
+                },
+                new IdentityRole
+                {
+                    Id = "{32EFCBBA-5B31-4248-82C9-4E3A053DEA86}",
+                    Name = Roles.SubSpecialityAdmin,
+                    NormalizedName = Roles.SubSpecialityAdmin.ToUpper()
                 },
                 new IdentityRole
                 {
