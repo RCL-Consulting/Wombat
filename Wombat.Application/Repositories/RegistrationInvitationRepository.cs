@@ -29,6 +29,7 @@ namespace Wombat.Application.Repositories
             return await context.RegistrationInvitations
                .Include(r => r.Speciality)
                .Include(r => r.SubSpeciality)
+               .Include(r => r.Institution)
                .FirstOrDefaultAsync(r => r.Token == token && !r.IsUsed && r.ExpiryDate > DateTime.UtcNow);
         }
 

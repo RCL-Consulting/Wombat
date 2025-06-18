@@ -29,15 +29,19 @@
                             <span asp-validation-for="Roles" class="text-danger"></span>
                         </div>
 
-                        <div class="mb-3">
+                        <div id="institutionGroup" class="mb-3 d-none">
                             <label class="form-label">Institution</label>
-                            <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select"></select>
+                            <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
+                                <option value="">-- Select Institution --</option>
+                            </select>
                             <span asp-validation-for="InstitutionId" class="text-danger"></span>
                         </div>
 
                         <div id="departmentGroup" class="mb-3 d-none">
                             <label class="form-label">Speciality</label>
-                            <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select" id="SpecialityId"></select>
+                            <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select" id="SpecialityId">
+                                <option value="">-- Select Speciality --</option>
+                            </select>
                             <span asp-validation-for="SpecialityId" class="text-danger"></span>
                         </div>
 
@@ -70,12 +74,13 @@
         const allSubSpecialities = @Html.Raw(Json.Serialize(Model.AllSubSpecialities));
         const rolesDropdown = document.getElementById("RolesSelect");
         const departmentGroup = document.getElementById("departmentGroup");
+        const institutionGroup = document.getElementById("institutionGroup");
         const subSpecialityGroup = document.getElementById("subSpecialityGroup");
         const specialityDropdown = document.getElementById("SpecialityId");
         const subSpecialityDropdown = document.getElementById("SubSpecialityId");
 
-        const departmentRoles = ["DepartmentAdmin", "Assessor", "Coordinator", "CommitteeMember", "Trainee"];
-        const subSpecialityRoles = ["Assessor", "Coordinator", "CommitteeMember", "Trainee"];
+        const departmentRoles = ["DepartmentAdmin", "Assessor", "Coordinator", "CommitteeMember", "Trainee", "SpecialityAdmin", "SubSpecialityAdmin"];
+        const subSpecialityRoles = ["Assessor", "Coordinator", "CommitteeMember", "Trainee", "SubSpecialityAdmin"];
 
         function getSelectedRoles() {
             return Array.from(rolesDropdown.selectedOptions).map(o => o.value);
@@ -85,9 +90,27 @@
             const selectedRoles = getSelectedRoles();
             const showDepartment = selectedRoles.some(r => departmentRoles.includes(r));
             const showSub = selectedRoles.some(r => subSpecialityRoles.includes(r));
+            const showInstitution = selectedRoles.length > 1 || (selectedRoles.length === 1 && selectedRoles[0] !== "Administrator");
 
             departmentGroup.classList.toggle("d-none", !showDepartment);
             subSpecialityGroup.classList.toggle("d-none", !showSub);
+            institutionGroup.classList.toggle("d-none", !showInstitution);
+
+            // Clear hidden fields
+            if (!showDepartment)
+            {
+                specialityDropdown.value = "";
+            }
+
+            if (!showSub) 
+            {
+                subSpecialityDropdown.value = "";
+            }
+
+            if (!showInstitution) 
+            {
+                document.querySelector('[name="InstitutionId"]').value = "";
+            }
         }
 
         function populateSubSpecialities(specialityId) {

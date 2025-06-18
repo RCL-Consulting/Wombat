@@ -24,6 +24,7 @@
                     }
                     <input type="hidden" asp-for="SpecialityName" />
                     <input type="hidden" asp-for="SubSpecialityName" />
+                    <input type="hidden" asp-for="InstitutionName" />
                     <input type="hidden" asp-for="SpecialityId" />
                     <input type="hidden" asp-for="SubSpecialityId" />
 
@@ -62,7 +63,14 @@
                     </div>
 
                     <div class="mb-4">
-                        <p class="mb-1"><strong>Department:</strong> @Model.SpecialityName</p>
+                        @if (!String.IsNullOrEmpty(Model.InstitutionName))
+                        {
+                            <p class="mb-0"><strong>Institution:</strong> @Model.InstitutionName</p>
+                        }
+                        @if (!String.IsNullOrEmpty(Model.SpecialityName))
+                        {
+                            <p class="mb-0"><strong>Specialty:</strong> @Model.SpecialityName</p>
+                        }
                         @if (!String.IsNullOrEmpty(Model.SubSpecialityName))
                         {
                             <p class="mb-0"><strong>Subspecialty:</strong> @Model.SubSpecialityName</p>

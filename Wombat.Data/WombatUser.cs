@@ -37,7 +37,7 @@ namespace Wombat.Data
 
         public string HPCSANumber { get; set; } = "";
 
-        public int InstitutionId { get; set; } = 1;
+        public int? InstitutionId { get; set; } = 1;
         [ForeignKey("InstitutionId")]
         public Institution? Institution { get; set; }
 

@@ -67,7 +67,7 @@ namespace Wombat.Application.Repositories
                 .Where(u => context.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == coordinatorRoleId))
                 .GroupBy(u => new { u.SubSpecialityId, u.InstitutionId })
                 .ToDictionaryAsync(
-                    g => (g.Key.SubSpecialityId.Value, g.Key.InstitutionId),
+                    g => (g.Key.SubSpecialityId.Value, g.Key.InstitutionId.Value),
                     g => string.Join(", ", g.Select(u => $"{u.Name} {u.Surname} ({u.Email})"))
                 );
 

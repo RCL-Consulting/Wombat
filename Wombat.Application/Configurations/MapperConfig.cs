@@ -51,8 +51,15 @@ namespace Wombat.Application.Configurations
                 .ForMember(dest => dest.SubSpeciality, opt => opt.MapFrom(src => src.SubSpeciality != null ? src.SubSpeciality.Name : null));
 
 
-            CreateMap<RegisterFromInviteVM, RegistrationInvitation>()
-            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => string.Join(",", src.Roles)));
+            CreateMap<RegistrationInvitation, RegisterFromInviteVM>()
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
+                    string.IsNullOrEmpty(src.Roles)
+                        ? new List<string>()
+                        : src.Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList()));
+                //.ForMember(dest => dest.Institution, opt => opt.MapFrom(src => src.Institution != null ? src.Institution.Name : ""))
+                //.ForMember(dest => dest.Speciality, opt => opt.MapFrom(src => src.Speciality != null ? src.Speciality.Name : null))
+                //.ForMember(dest => dest.SubSpeciality, opt => opt.MapFrom(src => src.SubSpeciality != null ? src.SubSpeciality.Name : null));
+
         }
     }
 }

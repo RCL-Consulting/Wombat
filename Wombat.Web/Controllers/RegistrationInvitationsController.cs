@@ -79,7 +79,8 @@ namespace Wombat.Web.Controllers
             var model = Mapper.Map<RegisterFromInviteVM>(invitation);
             model.SpecialityName = invitation?.Speciality?.Name ?? "";
             model.SubSpecialityName = invitation?.SubSpeciality?.Name ?? "";
-                        
+            model.InstitutionName = invitation?.Institution?.Name ?? "";
+
             return View("RegisterFromInvite", model);
         }
 
@@ -102,9 +103,9 @@ namespace Wombat.Web.Controllers
             {
                 AvailableRoles = Roles.AllForDisplay().Select(r => new SelectListItem { Text = r, Value = r }).ToList(),
                 Specialities = (await SpecialityRepository.GetAllAsync())
-            .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList(),
+                    .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList(),
                 SubSpecialities = (await SubSpecialityRepository.GetAllAsync())
-            .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList()
+                    .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList()
             };
 
             // ✅ Add this to support JS-based filtering of subspecialities
@@ -127,6 +128,19 @@ namespace Wombat.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Invite(InviteUserVM model)
         {
+            var roles = model.Roles ?? new List<string>();
+            bool isOnlyAdmin = roles.Count == 1 && roles[0] == Roles.Administrator;
+
+            if (!isOnlyAdmin && model.InstitutionId == null)
+            {
+                ModelState.AddModelError(nameof(model.InstitutionId), "Institution is required unless the only role is Administrator.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 // reload dropdowns

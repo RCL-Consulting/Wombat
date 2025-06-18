@@ -37,7 +37,10 @@ namespace Wombat.Common.Models
 
         public string ConfirmPassword { get; set; }
 
-        public string SpecialityName { get; set; } = string.Empty;
+        public string? SpecialityName { get; set; } = string.Empty;
         public string? SubSpecialityName { get; set; } = string.Empty;
+
+        public string? InstitutionName { get; set; } = string.Empty;
+
     }
 }

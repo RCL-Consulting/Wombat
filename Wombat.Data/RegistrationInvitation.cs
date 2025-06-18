@@ -33,12 +33,12 @@ namespace Wombat.Data
         [Required]
         public string Roles { get; set; } = String.Empty;// Comma-separated for now. Can be split on load.
 
-        public int InstitutionId { get; set; }
+        public int? InstitutionId { get; set; }
 
         [ForeignKey("InstitutionId")]
         public Institution? Institution { get; set; }
 
-        public int SpecialityId { get; set; }
+        public int? SpecialityId { get; set; }
 
         [ForeignKey("SpecialityId")]
         public Speciality? Speciality { get; set; }
