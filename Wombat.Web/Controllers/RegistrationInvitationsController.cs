@@ -31,7 +31,7 @@ using Wombat.Services;
 
 namespace Wombat.Web.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class RegistrationInvitationsController : Controller
     {
         public UserManager<WombatUser> UserManager { get; }
@@ -85,6 +85,7 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Details(int id)
         {
             var invitation = await RegistrationInvitationRepository.GetAsync(id);
@@ -97,18 +98,30 @@ namespace Wombat.Web.Controllers
 
 
         [HttpGet]
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Invite()
         {
+            var currentUser = await UserManager.GetUserAsync(User);
+            var currentUserRoles = await UserManager.GetRolesAsync(currentUser);
+
+            var allowedRoles = RoleHelper.DisplayRoles
+                .Where(r => currentUserRoles.Any(cur => RoleHierarchy.CanAssign(cur, r.ToStringValue())))
+                .ToList();
+
             var model = new InviteUserVM
             {
-                AvailableRoles = Roles.AllForDisplay().Select(r => new SelectListItem { Text = r, Value = r }).ToList(),
+                AvailableRoles = allowedRoles
+                    .Select(r => new SelectListItem
+                    {
+                        Text = r.GetDisplayName(),
+                        Value = r.ToStringValue()
+                    }).ToList(),
                 Specialities = (await SpecialityRepository.GetAllAsync())
                     .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList(),
                 SubSpecialities = (await SubSpecialityRepository.GetAllAsync())
                     .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList()
             };
 
-            // ✅ Add this to support JS-based filtering of subspecialities
             model.AllSubSpecialities = (await SubSpecialityRepository.GetAllAsync())
                 .Select(s => new SubSpecialityOption
                 {
@@ -126,27 +139,53 @@ namespace Wombat.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Invite(InviteUserVM model)
         {
             var roles = model.Roles ?? new List<string>();
-            bool isOnlyAdmin = roles.Count == 1 && roles[0] == Roles.Administrator;
+            bool isOnlyAdmin = roles.Count == 1 && roles[0] == Role.Administrator.ToStringValue();
 
             if (!isOnlyAdmin && model.InstitutionId == null)
             {
                 ModelState.AddModelError(nameof(model.InstitutionId), "Institution is required unless the only role is Administrator.");
             }
 
-            if (!ModelState.IsValid)
+            var currentUser = await UserManager.GetUserAsync(User);
+            var currentUserRoles = await UserManager.GetRolesAsync(currentUser);
+            var disallowed = model.Roles.Except(RoleHelper.DisplayRoles
+                .Where(r => currentUserRoles.Any(cur => RoleHierarchy.CanAssign(cur, r.ToStringValue())))
+                .Select(r => r.ToStringValue())).ToList();
+
+            if (disallowed.Any())
             {
-                return View(model);
+                ModelState.AddModelError(nameof(model.Roles), "You cannot assign one or more of the selected roles.");
             }
 
             if (!ModelState.IsValid)
             {
                 // reload dropdowns
-                model.AvailableRoles = Roles.AllForDisplay().Select(r => new SelectListItem { Text = r, Value = r }).ToList();
+                model.AvailableRoles = RoleHelper.DisplayRoles
+                    .Select(r => new SelectListItem
+                    {
+                        Text = r.GetDisplayName(),
+                        Value = r.ToStringValue(),
+                        Selected = model.Roles.Contains(r.ToStringValue())
+                    })
+                    .ToList();
                 model.Specialities = (await SpecialityRepository.GetAllAsync()).Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
                 model.SubSpecialities = (await SubSpecialityRepository.GetAllAsync()).Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+
+                model.AllSubSpecialities = (await SubSpecialityRepository.GetAllAsync())
+                    .Select(s => new SubSpecialityOption
+                    {
+                        Id = s.Id,
+                        Name = s.Name,
+                        SpecialityId = s.SpecialityId
+                    }).ToList();
+
+                model.Institutions = (await InstitutionRepository.GetAllAsync())
+                    .Select(i => new SelectListItem { Text = i.Name, Value = i.Id.ToString() })
+                    .ToList();
                 return View(model);
             }
 
@@ -187,12 +226,14 @@ namespace Wombat.Web.Controllers
                 .Replace("{{expiryDate}}", invitation.ExpiryDate.ToString("yyyy-MM-dd"));
         }
 
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Delete(int id)
         {
             await RegistrationInvitationRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Resend(int id)
         {
             var invitation = await RegistrationInvitationRepository.GetAsync(id);
@@ -207,9 +248,44 @@ namespace Wombat.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Index()
         {
+            var currentUser = await UserManager.GetUserAsync(User);
+            var roles = await UserManager.GetRolesAsync(currentUser);
+
             var invitations = await RegistrationInvitationRepository.GetAllAsync();
+
+            // Apply filtering based on role hierarchy
+            if (roles.Contains(Role.Administrator.ToStringValue()))
+            {
+                // No filter needed
+            }
+            else if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()))
+            {
+                invitations = invitations
+                    .Where(i => i.InstitutionId == currentUser.InstitutionId)
+                    .ToList();
+            }
+            else if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
+            {
+                var userSpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                invitations = invitations
+                    .Where(i => i.InstitutionId == currentUser.InstitutionId &&
+                                i.SpecialityId == userSpecialityId)
+                    .ToList();
+            }
+            else if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
+            {
+                invitations = invitations
+                    .Where(i => i.InstitutionId == currentUser.InstitutionId &&
+                                i.SubSpecialityId == currentUser.SubSpecialityId)
+                    .ToList();
+            }
+            else
+            {
+                return Forbid(); // No access
+            }
 
             var result = invitations.Select(inv => new RegistrationInvitationVM
             {
@@ -225,6 +301,7 @@ namespace Wombat.Web.Controllers
 
             return View(result);
         }
+
 
         private string GetFieldForIdentityError(string errorCode)
         {

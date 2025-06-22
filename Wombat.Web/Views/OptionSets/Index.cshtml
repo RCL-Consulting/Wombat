@@ -35,7 +35,7 @@
                             <tr>
                                 <td>@item.Description</td>
                                 <td class="text-end text-nowrap">
-                                    @if (item.CanEdit)
+                                    @if (item.CanEdit && item.IsEditableByCurrentUser)
                                     {
                                         <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
@@ -44,7 +44,7 @@
                                     <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
                                         <i class="fas fa-info-circle"></i>
                                     </a>
-                                    @if (item.CanDelete)
+                                    @if (item.CanDelete && item.IsEditableByCurrentUser)
                                     {
                                         <button type="button" class="btn btn-icon btn-delete btn-sm deleteBtn"
                                                 data-id="@item.Id" title="Delete">

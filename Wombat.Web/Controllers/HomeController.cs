@@ -45,6 +45,7 @@ namespace Wombat.Controllers
         private readonly IAssessmentRequestRepository assessmentRequestRepository;
         private readonly ILoggedAssessmentRepository loggedAssessmentRepository;
         private readonly IRegistrationInvitationRepository registrationInvitationRepository;
+        private readonly IUserContextService userContext;
         private readonly IMapper mapper;
 
         public HomeController( UserManager<WombatUser> userManager,
@@ -58,7 +59,8 @@ namespace Wombat.Controllers
                                IEPARepository EPARepository,
                                IAssessmentRequestRepository assessmentRequestRepository,
                                ILoggedAssessmentRepository loggedAssessmentRepository,
-                               IRegistrationInvitationRepository registrationInvitationRepository )
+                               IRegistrationInvitationRepository registrationInvitationRepository, 
+                               IUserContextService userContext  )
         {
             this.userManager = userManager;
             this.httpContextAccessor = httpContextAccessor;
@@ -72,6 +74,7 @@ namespace Wombat.Controllers
             this.assessmentRequestRepository = assessmentRequestRepository;
             this.loggedAssessmentRepository = loggedAssessmentRepository;
             this.registrationInvitationRepository = registrationInvitationRepository;
+            this.userContext = userContext;
         }
 
         private int GetMonthsInTraining(DateTime startDate)
@@ -154,7 +157,7 @@ namespace Wombat.Controllers
                 PendingTrainees = pendingVMs
             };
 
-            if (roles.Contains(Roles.Trainee))
+            if (roles.Contains(Role.Trainee.ToStringValue()))
             {
                 dashboard.User.SubSpeciality = mapper.Map<SubSpecialityVM>(
                     await subSpecialityRepository.GetAsync(user.SubSpecialityId)
@@ -243,7 +246,7 @@ namespace Wombat.Controllers
             }
 
 
-            else if (roles.Contains(Roles.Assessor))
+            else if (roles.Contains(Role.Assessor.ToStringValue()))
             {
                 var requestsMade = await assessmentRequestRepository.GetAssessorPendingRequests(userId);
                 dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
@@ -257,16 +260,30 @@ namespace Wombat.Controllers
                 var completedAssessments = await assessmentRequestRepository.GetAssessorCompletedAssessments(userId);
                 dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
             }
-            else if (roles.Contains(Roles.Administrator))
-            {
-                dashboard.NumberOfInstitutions = (await institutionRepository.GetAllAsync())?.Count ?? 0;
-                dashboard.NumberOfSpecialities = (await specialityRepository.GetAllAsync())?.Count ?? 0;
-                dashboard.NumberOfSubSpecialities = (await subSpecialityRepository.GetAllAsync())?.Count ?? 0;
-                dashboard.NumberOfAssessmentForms = (await assessmentFormRepository.GetAllAsync())?.Count ?? 0;
-                dashboard.NumberOfEPAs = (await EPARepository.GetAllAsync())?.Count ?? 0;
+            //else if (roles.Contains(Role.Administrator.ToStringValue()))
+            //{
+            //    dashboard.NumberOfInstitutions = (await institutionRepository.GetAllAsync())?.Count ?? 0;
+            //    dashboard.NumberOfSpecialities = (await specialityRepository.GetAllAsync())?.Count ?? 0;
+            //    dashboard.NumberOfSubSpecialities = (await subSpecialityRepository.GetAllAsync())?.Count ?? 0;
+            //    dashboard.NumberOfAssessmentForms = (await assessmentFormRepository.GetAllAsync())?.Count ?? 0;
+            //    dashboard.NumberOfEPAs = (await EPARepository.GetAllAsync())?.Count ?? 0;
+            //    dashboard.NumberOfUsers = userManager.Users.Count();
+            //    dashboard.NumberOfInvitations = (await registrationInvitationRepository.GetAllAsync())?.Count ?? 0;
+            //}
+
+            if (userContext.CanManageUsers)
                 dashboard.NumberOfUsers = userManager.Users.Count();
+
+            if (userContext.CanManageInvitations)
                 dashboard.NumberOfInvitations = (await registrationInvitationRepository.GetAllAsync())?.Count ?? 0;
-            }
+
+            dashboard.NumberOfSpecialities = (await specialityRepository.GetAllAsync())?.Count ?? 0;
+            dashboard.NumberOfSubSpecialities = (await subSpecialityRepository.GetAllAsync())?.Count ?? 0;
+
+            if (userContext.CanManageAssessmentForms)
+                dashboard.NumberOfAssessmentForms = (await assessmentFormRepository.GetAllAsync())?.Count ?? 0;
+
+            dashboard.NumberOfEPAs = (await EPARepository.GetAllAsync())?.Count ?? 0;
 
             dashboard.User.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));               
 

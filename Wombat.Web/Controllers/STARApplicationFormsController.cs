@@ -14,7 +14,7 @@ using static Wombat.Common.Models.STARApplicationVM;
 
 namespace Wombat.Web.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class STARApplicationFormsController : Controller
     {
         private readonly ISTARApplicationFormRepository formRepository;
@@ -80,6 +80,7 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Create()
         {
             ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
@@ -97,6 +98,7 @@ namespace Wombat.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Create(STARApplicationFormVM model)
         {
             if (!ModelState.IsValid)
@@ -175,6 +177,7 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Edit(int id)
         {
             var form = await formRepository.GetAsync(id);
@@ -221,6 +224,8 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Edit(STARApplicationFormVM model)
         {
             var form = await formRepository.GetAsync(model.Id);
@@ -267,6 +272,8 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> AddItem(STARApplicationFormVM model)
         {
             var nextId = model.STARItems.Any()
@@ -293,6 +300,8 @@ namespace Wombat.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> DeleteItem(STARApplicationFormVM model, int displayId)
         {
             model.STARItems.RemoveAll(q => q.DisplayId == displayId);
@@ -313,6 +322,7 @@ namespace Wombat.Web.Controllers
         // POST: AssessmentForms/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await formRepository.DeleteAsync(id);

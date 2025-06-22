@@ -14,6 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>
  */
 
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace Wombat.Common.Models
@@ -48,5 +49,23 @@ namespace Wombat.Common.Models
 
         public bool IsGlobal =>
             InstitutionId == null && SpecialityId == null && SubSpecialityId == null;
+
+        public List<SelectListItem>? Institutions { get; set; }
+        public List<SelectListItem>? Specialities { get; set; }
+        public List<SelectListItem>? SubSpecialities { get; set; }
+
+        public List<SubSpecialityOption> AllSubSpecialities { get; set; } = new();
+
+        public class EPAOption
+        {
+            public int Id { get; set; }
+            public string Name { get; set; } = "";
+            public int SubSpecialityId { get; set; }
+        }
+
+        public List<EPAOption> AllEPAs { get; set; } = new();
+        public List<int> SelectedEPAIds { get; set; } = new();
+
+        public bool IsEditableByCurrentUser { get; set; } = false;
     }
 }

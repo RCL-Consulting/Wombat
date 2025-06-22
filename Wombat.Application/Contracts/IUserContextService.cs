@@ -11,6 +11,8 @@ namespace Wombat.Application.Contracts
         string? UserId { get; }
 
         // Admin permissions
+
+        bool CanManageInstitutions { get; }
         bool CanManageAssessmentForms { get; }
         bool CanManageOptionSets { get; }
         bool CanManageEPAs { get; }

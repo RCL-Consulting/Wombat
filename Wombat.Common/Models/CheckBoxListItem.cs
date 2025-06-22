@@ -19,7 +19,9 @@ namespace Wombat.Common.Models
     public class CheckBoxListItem
     {
         public int ID { get; set; }
-        public string Display { get; set; }
+        public string Display { get; set; } = ""; // internal value
+        public string Label { get; set; } = "";   // user-facing name
         public bool IsChecked { get; set; }
+        public bool IsEditable { get; set; } = true;
     }
 }

@@ -16,7 +16,7 @@
         </a>
     </li>
 
-    @if (User.IsInRole(Roles.Assessor))
+    @if (User.IsInRole(Role.Assessor.ToStringValue()))
     {
         <li class="nav-item">
             <a class="nav-link" asp-controller="LoggedAssessments" asp-action="CreateFromList">
@@ -25,7 +25,7 @@
         </li>
     }
 
-    @if (User.IsInRole(Roles.Coordinator))
+    @if (User.IsInRole(Role.Coordinator.ToStringValue()))
     {
         <li class="nav-item">
             <a class="nav-link" asp-controller="LoggedAssessments" asp-action="PortfolioIndex">
@@ -34,7 +34,7 @@
         </li>
     }
 
-    @if (User.IsInRole(Roles.Assessor) || User.IsInRole(Roles.Trainee))
+    @if (User.IsInRole(Role.Assessor.ToStringValue()) || User.IsInRole(Role.Trainee.ToStringValue()))
     {
         <li class="nav-item">
             <a class="nav-link" asp-controller="LoggedAssessments" asp-action="MyAssessments">
@@ -43,7 +43,7 @@
         </li>
     }
 
-    @if (User.IsInRole(Roles.Administrator))
+    @if (User.IsInRole(Role.Administrator.ToStringValue()))
     {
         <hr class="sidebar-divider" />
         <div class="sidebar-heading">Administration</div>

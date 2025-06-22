@@ -73,7 +73,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(InstitutionVM institutionVM, IFormFile logoFile)
+        public async Task<IActionResult> Create(InstitutionVM institutionVM, IFormFile? logoFile)
         {
             if (logoFile != null && logoFile.Length > 0)
             {

@@ -14,6 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>
  */
 
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace Wombat.Common.Models
@@ -36,6 +37,23 @@ namespace Wombat.Common.Models
         public bool CanDelete { get; set; } = true;
 
         public bool CanEdit { get; set; } = true;
+
+        public List<SelectListItem>? Institutions { get; set; }
+        public List<SelectListItem>? Specialities { get; set; }
+        public List<SelectListItem>? SubSpecialities { get; set; }
+
+        public List<SubSpecialityOption> AllSubSpecialities { get; set; } = new();
+        
+        public int? InstitutionId { get; set; }
+        public string? InstitutionName { get; set; }
+
+        public int? SpecialityId { get; set; }
+        public string? SpecialityName { get; set; }
+
+        public int? SubSpecialityId { get; set; }
+        public string? SubSpecialityName { get; set; }
+
+        public bool IsEditableByCurrentUser { get; set; } = false;
 
     }
 }

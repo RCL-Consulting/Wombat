@@ -69,6 +69,32 @@ builder.Host.UseSerilog((ctx, lc) =>
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Claims.ManageSpecialities, policy =>
+        policy.RequireClaim(Claims.ManageSpecialities, "true"));
+
+    options.AddPolicy(Claims.ManageSubspecialities, policy =>
+        policy.RequireClaim(Claims.ManageSubspecialities, "true"));
+
+    options.AddPolicy(Claims.ManageUsers, policy =>
+        policy.RequireClaim(Claims.ManageUsers, "true"));
+
+    options.AddPolicy(Claims.ManageRegistrationInvitations, policy =>
+        policy.RequireClaim(Claims.ManageRegistrationInvitations, "true"));
+
+    options.AddPolicy(Claims.ManageAssessmentForms, policy =>
+        policy.RequireClaim(Claims.ManageAssessmentForms, "true"));
+
+    options.AddPolicy(Claims.ManageOptionSets, policy =>
+        policy.RequireClaim(Claims.ManageOptionSets, "true"));
+
+    options.AddPolicy(Claims.ManageEPAs, policy =>
+        policy.RequireClaim(Claims.ManageEPAs, "true"));
+
+    // Add more as needed...
+});
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();

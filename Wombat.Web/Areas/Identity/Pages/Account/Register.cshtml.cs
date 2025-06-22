@@ -225,7 +225,7 @@ namespace Wombat.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    await _userManager.AddToRoleAsync(user, Roles.PendingTrainee);
+                    await _userManager.AddToRoleAsync(user, Role.PendingTrainee.ToStringValue());
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

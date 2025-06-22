@@ -27,7 +27,7 @@
             </div>
             <br/>
 
-            @if (Model.User.IsInRole(Roles.Trainee))
+            @if (Model.User.IsInRole(Role.Trainee.ToStringValue()))
             {
                 <div class="form-floating mb-3">
                     <input asp-for="Speciality.Name" class="form-control" disabled />

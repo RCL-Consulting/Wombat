@@ -35,6 +35,15 @@ namespace Wombat.Data
 
         public bool CanEdit { get; set; } = true;
 
+        public int? InstitutionId { get; set; }
+        public Institution? Institution { get; set; }
+
+        public int? SpecialityId { get; set; }
+        public Speciality? Speciality { get; set; }
+
+        public int? SubSpecialityId { get; set; }
+        public SubSpeciality? SubSpeciality { get; set; }
+
         public static int kTextId = 1;
         public static int kEPAScaleId = 2;
     }

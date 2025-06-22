@@ -36,20 +36,28 @@
                                 <td>@item.Name</td>
                                 <td class="text-end text-nowrap">
                                     <div>
-                                        <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </a>
+                                        @if (item.IsEditableByCurrentUser)
+                                        {
+                                            <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </a>
+                                        }
+                                        
                                         <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
-                                        @if (item.CanDelete)
+
+                                        @if (item.IsEditableByCurrentUser)
                                         {
-                                            <button type="button"
-                                                    data-id="@item.Id"
-                                                    class="btn btn-icon btn-delete btn-sm deleteBtn"
-                                                    title="Delete">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
+                                            @if (item.CanDelete)
+                                            {
+                                                <button type="button"
+                                                        data-id="@item.Id"
+                                                        class="btn btn-icon btn-delete btn-sm deleteBtn"
+                                                        title="Delete">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            }
                                         }
                                     </div>
                                 </td>

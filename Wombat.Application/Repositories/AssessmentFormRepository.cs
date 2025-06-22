@@ -16,6 +16,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Contracts;
+using Wombat.Common.Constants;
 using Wombat.Data;
 
 namespace Wombat.Application.Repositories
@@ -30,6 +31,30 @@ namespace Wombat.Application.Repositories
             this.optionSetRepository=optionSetRepository;
         }
 
+        public async Task<IEnumerable<AssessmentForm>> GetScopedFormsAsync( WombatUser user,
+                                                                            IList<string> roles )
+        {
+            var isGlobalAdmin = roles.Contains(Role.Administrator.ToStringValue());
+
+            var allForms = await GetAllAsync(); // or optimize with .AsQueryable() if needed
+
+            if (isGlobalAdmin)
+                return allForms;
+
+            return allForms.Where(f =>
+                f.InstitutionId == null || // system-wide forms always visible
+                (roles.Contains(Role.InstitutionalAdmin.ToStringValue()) &&
+                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId)) ||
+                (roles.Contains(Role.SpecialityAdmin.ToStringValue()) &&
+                    f.SpecialityId == user.SubSpeciality?.SpecialityId &&
+                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId)) ||
+                (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) &&
+                    f.SubSpecialityId == user.SubSpecialityId &&
+                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId))
+            );
+        }
+
+
         public override async Task<AssessmentForm?> GetAsync(int? id)
         {
             if (id == null)
@@ -41,17 +66,25 @@ namespace Wombat.Application.Repositories
 
             if (assessmentForm != null)
             {
-                var OptionCriteria = context.Entry(assessmentForm);
+                var entry = context.Entry(assessmentForm);
 
-                OptionCriteria.Collection(e => e.OptionCriteria)
-                     .Query()
-                     .OrderBy(c => c.Rank)
-                     .Load();
+                // Load and order OptionCriteria
+                await entry.Collection(e => e.OptionCriteria)
+                    .Query()
+                    .OrderBy(c => c.Rank)
+                    .LoadAsync();
 
+                // Load referenced OptionSets
                 foreach (var optionCriterion in assessmentForm.OptionCriteria)
                 {
                     optionCriterion.OptionsSet = await optionSetRepository.GetAsync(optionCriterion.OptionSetId);
                 }
+
+                // Load related EPAs through the EPAForm join table
+                await entry.Collection(e => e.EPAs)
+                    .Query()
+                    .Include(epaForm => epaForm.EPA) // Make sure EPAForm has a navigation property to EPA
+                    .LoadAsync();
 
                 return assessmentForm;
             }

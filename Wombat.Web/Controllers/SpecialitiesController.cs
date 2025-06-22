@@ -32,7 +32,7 @@ using Wombat.Data;
 
 namespace Wombat.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class SpecialitiesController : Controller
     {
         private readonly ISpecialityRepository specialityRepository;
@@ -66,6 +66,7 @@ namespace Wombat.Controllers
         }
 
         // GET: Specialities/Create
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public IActionResult Create()
         {
             return View();
@@ -76,6 +77,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public async Task<IActionResult> Create(SpecialityVM specialityVM)
         {
             if (ModelState.IsValid)
@@ -103,6 +105,7 @@ namespace Wombat.Controllers
         }
 
         // GET: Specialities/Edit/5
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public async Task<IActionResult> Edit(int? id)
         {
             var speciality = await specialityRepository.GetAsync(id);
@@ -117,6 +120,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public IActionResult DeleteSubSpeciality(SpecialityVM specialityVM, int DisplayId)
         {
             ViewData.ModelState.Clear();//CanDeleteFromList
@@ -130,6 +134,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public IActionResult AddSubSpeciality(SpecialityVM specialityVM)
         {
             var Item = new SubSpecialityVM();
@@ -144,6 +149,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public async Task<IActionResult> Edit(int id, SpecialityVM specialityVM)
         {
             if (id != specialityVM.Id)
@@ -184,6 +190,7 @@ namespace Wombat.Controllers
         // POST: OptionSets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSpecialities)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await specialityRepository.DeleteAsync(id);

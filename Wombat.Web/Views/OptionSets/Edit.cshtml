@@ -21,6 +21,36 @@
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
+                <div class="mb-3">
+                    <label asp-for="InstitutionId" class="form-label fw-semibold">Institution</label>
+                    <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
+                        @if (Model.Institutions.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SpecialityId" class="form-label fw-semibold">Speciality</label>
+                    <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select">
+                        @if (Model.Specialities.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SubSpecialityId" class="form-label fw-semibold">Subspeciality</label>
+                    <select asp-for="SubSpecialityId" asp-items="Model.SubSpecialities" class="form-select">
+                        @if (Model.SubSpecialities.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
+
                 <div class="form-check mb-4">
                     <input asp-for="DisplayRank" class="form-check-input" />
                     <label asp-for="DisplayRank" class="form-check-label fw-semibold"></label>
@@ -61,6 +91,32 @@
 
 @section Scripts {
     <script>
+        const allSubSpecialities = @Html.Raw(Json.Serialize(Model.AllSubSpecialities));
+
+        const specialityDropdown = document.getElementById("SpecialityId");
+        const subSpecialityDropdown = document.getElementById("SubSpecialityId");
+
+        function populateSubSpecialities(specialityId) {
+            subSpecialityDropdown.innerHTML = "";
+
+            const filtered = allSubSpecialities.filter(s => s.specialityId === parseInt(specialityId));
+
+            // Only show "-- None --" if there's more than one choice
+            if (filtered.length > 1) {
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.textContent = "-- None --";
+                subSpecialityDropdown.appendChild(defaultOption);
+            }
+
+            filtered.forEach(sub => {
+                const option = document.createElement("option");
+                option.value = sub.id;
+                option.textContent = sub.name;
+                subSpecialityDropdown.appendChild(option);
+            });
+        }
+
         $('#btnAdd').on('click', function () {
             $.ajax({
                 type: 'POST',
@@ -85,5 +141,13 @@
                 }
             });
         });
+
+        specialityDropdown.addEventListener("change", function () {
+            populateSubSpecialities(this.value);
+        });
+
+        if (specialityDropdown.value) {
+            populateSubSpecialities(specialityDropdown.value);
+        }
     </script>
 }

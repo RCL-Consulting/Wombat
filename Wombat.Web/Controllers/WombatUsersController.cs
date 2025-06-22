@@ -15,19 +15,20 @@
  */
 
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Data;
-using Wombat.Common.Models;
-using Wombat.Application.Repositories;
-using Microsoft.AspNetCore.Authorization;
-using Wombat.Common.Constants;
+using System.Security.Claims;
 using Wombat.Application.Contracts;
+using Wombat.Application.Repositories;
+using Wombat.Common.Constants;
+using Wombat.Common.Models;
+using Wombat.Data;
 
 namespace Wombat.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class WombatUsersController : Controller
     {
         private readonly UserManager<WombatUser> userManager;
@@ -36,6 +37,7 @@ namespace Wombat.Controllers
         private readonly IInstitutionRepository institutionRepository;
         private readonly ISpecialityRepository specialityRepository;
         private readonly ISubSpecialityRepository subSpecialityRepository;
+        private readonly IUserContextService userContext;
         private readonly IMapper mapper;
 
         public WombatUsersController( UserManager<WombatUser> userManager,
@@ -44,6 +46,7 @@ namespace Wombat.Controllers
                                       IInstitutionRepository institutionRepository,
                                       ISpecialityRepository specialityRepository,
                                       ISubSpecialityRepository subSpecialityRepository,
+                                      IUserContextService userContext,
                                       IMapper mapper)
         {
             this.userManager=userManager;
@@ -52,6 +55,7 @@ namespace Wombat.Controllers
             this.institutionRepository = institutionRepository;
             this.specialityRepository = specialityRepository;
             this.subSpecialityRepository = subSpecialityRepository;
+            this.userContext = userContext;
             this.mapper=mapper;
         }
 
@@ -59,23 +63,62 @@ namespace Wombat.Controllers
         {
             var allRoles = await roleManager.Roles.ToListAsync();
             var userRoles = await userManager.GetRolesAsync(user);
-            var VM = mapper.Map<WombatUserVM>(user);
 
-            for (int i = 0; i<allRoles.Count; i++)
+            var currentUser = await userManager.GetUserAsync(User);
+            var currentUserRoles = await userManager.GetRolesAsync(currentUser);
+
+            var allowedRoles = RoleHelper.DisplayRoles
+                .Where(r => currentUserRoles.Any(cur => RoleHierarchy.CanAssign(cur, r.ToStringValue())))
+                .Select(r => r.ToStringValue())
+                .ToHashSet();
+            var vm = mapper.Map<WombatUserVM>(user);
+
+            var sortedRoles = RoleHelper.DisplayRoles
+                .OrderByDescending(r => RoleHierarchy.GetRank(r.ToStringValue()))
+                .ToList();
+
+            for (int i = 0; i < sortedRoles.Count; i++)
             {
-                string Name = allRoles[i].Name;
-                var ListItem = new CheckBoxListItem();
-                ListItem.ID = i;
-                ListItem.Display = Name;
-                ListItem.IsChecked = userRoles.Contains(Name);
-                VM.Roles.Add(ListItem);
+                var roleEnum = sortedRoles[i];
+                string value = roleEnum.ToStringValue();
+
+                var item = new CheckBoxListItem
+                {
+                    ID = i,
+                    Display = value,
+                    Label = roleEnum.GetDisplayName(),
+                    IsChecked = userRoles.Contains(value),
+                    IsEditable = allowedRoles.Contains(value)
+                };
+
+                vm.Roles.Add(item);
             }
 
-            VM.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));
-            VM.SubSpeciality = mapper.Map<SubSpecialityVM>(await subSpecialityRepository.GetAsync(user.SubSpecialityId));
-            if (VM.SubSpeciality != null)
-                VM.Speciality = VM.SubSpeciality.Speciality;
-            return VM;
+            vm.Institution = mapper.Map<InstitutionVM>(await institutionRepository.GetAsync(user.InstitutionId));
+            vm.SubSpeciality = mapper.Map<SubSpecialityVM>(await subSpecialityRepository.GetAsync(user.SubSpecialityId));
+            if (vm.SubSpeciality != null)
+                vm.Speciality = vm.SubSpeciality.Speciality;
+
+            return vm;
+        }
+
+        private async Task<string> GetScopeTitleForUserAsync(ClaimsPrincipal user)
+        {
+            var currentUser = await userManager.GetUserAsync(User);
+
+            if (user.IsInRole(Role.Administrator.ToStringValue()))
+                return "Wombat Users";
+
+            if (user.IsInRole(Role.InstitutionalAdmin.ToStringValue()))
+                return $"Wombat Users at {currentUser.Institution?.Name}";
+
+            if (user.IsInRole(Role.SpecialityAdmin.ToStringValue()))
+                return $"Wombat Users at {currentUser.Institution?.Name} in {currentUser.SubSpeciality?.Speciality?.Name}";
+
+            if (user.IsInRole(Role.SubSpecialityAdmin.ToStringValue()))
+                return $"Womabt Users at {currentUser.Institution?.Name} in {currentUser.SubSpeciality?.Speciality?.Name}, {currentUser.SubSpeciality?.Name}";
+
+            return "Wombat Users";
         }
 
         public async Task<List<WombatUserVM>> GetVMWithRoles(List<WombatUser> users)
@@ -90,14 +133,59 @@ namespace Wombat.Controllers
         }
 
         // GET: WombatUsers
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Index()
         {
-            var users = await userManager.Users.ToListAsync();
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+
+            IQueryable<WombatUser> query = userManager.Users
+                .Where(u => u.Id != currentUser.Id); // Exclude current user
+
+            if (roles.Contains(Role.Administrator.ToStringValue()))
+            {
+                // Global admin: no filter
+            }
+            else if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()))
+            {
+                // Institutional admin: same institution
+                query = query.Where(u => u.InstitutionId == currentUser.InstitutionId);
+            }
+            else if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
+            {
+                // Speciality admin: same institution + same speciality
+                int? targetSpecialityId = currentUser.SubSpeciality?.SpecialityId;
+
+                query = query.Where(u =>
+                    u.InstitutionId == currentUser.InstitutionId &&
+                    u.SubSpeciality != null &&
+                    u.SubSpeciality.SpecialityId == targetSpecialityId);
+            }
+            else if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
+            {
+                // Subspeciality admin: same institution + same subspeciality
+                query = query.Where(u =>
+                    u.InstitutionId == currentUser.InstitutionId &&
+                    u.SubSpecialityId == currentUser.SubSpecialityId);
+            }
+            else
+            {
+                return Forbid(); // No access
+            }
+
+            // Load related SubSpeciality and Speciality (for later mapping if needed)
+            var users = await query
+                .Include(u => u.SubSpeciality)
+                    .ThenInclude(s => s.Speciality)
+                .ToListAsync();
+
             var usersVM = await GetVMWithRoles(users);
+            ViewData["UserScopeTitle"] = await GetScopeTitleForUserAsync(User);
             return View(usersVM);
         }
 
         // GET: WombatUsers/Details/5
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Details(string id)
         {
             if (id == null)
@@ -114,65 +202,122 @@ namespace Wombat.Controllers
             return View(wombatUserVM);
         }
 
-        // GET: WombatUsers/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        private bool CanEditUser(WombatUser currentUser, WombatUser targetUser, IList<string> roles)
         {
-            if (id == null)
+            if (currentUser.Id == targetUser.Id)
+                return false; // Don't allow editing yourself
+
+            if (roles.Contains(Role.Administrator.ToStringValue()))
+                return true;
+
+            if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()))
+                return currentUser.InstitutionId == targetUser.InstitutionId;
+
+            if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
             {
-                return NotFound();
+                return currentUser.InstitutionId == targetUser.InstitutionId &&
+                       currentUser.SubSpeciality?.SpecialityId == targetUser.SubSpeciality?.SpecialityId;
             }
 
-            var user = await userManager.FindByIdAsync(id);
-            var wombatUserVM = await GetVMWithRoles(user);
+            if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
+            {
+                return currentUser.InstitutionId == targetUser.InstitutionId &&
+                       currentUser.SubSpecialityId == targetUser.SubSpecialityId;
+            }
 
-            //await AddViewDataAsync();
+            return false;
+        }
+
+        // GET: WombatUsers/Edit/5
+        [Authorize(Policy = Claims.ManageUsers)]
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (id == null) return NotFound();
+
+            var targetUser = await userManager.Users
+                .Include(u => u.SubSpeciality)
+                    .ThenInclude(s => s.Speciality)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (targetUser == null) return NotFound();
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+
+            if (!CanEditUser(currentUser, targetUser, roles))
+            {
+                return Forbid();
+            }
+
+            var wombatUserVM = await GetVMWithRoles(targetUser);
             return View(wombatUserVM);
         }
+
 
         // POST: WombatUsers/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> Edit(string id, WombatUserVM wombatUserVM)
         {
             if (id != wombatUserVM.Id)
-            {
                 return NotFound();
-            }
+
+            var targetUser = await userManager.Users
+                .Include(u => u.SubSpeciality)
+                    .ThenInclude(s => s.Speciality)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (targetUser == null)
+                return NotFound();
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var currentUserRoles = await userManager.GetRolesAsync(currentUser);
+
+            if (!CanEditUser(currentUser, targetUser, currentUserRoles))
+                return Forbid();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var user = await userManager.FindByIdAsync(id);
-                    if (user == null)
-                        return View(wombatUserVM);
+                    var allowedRoles = RoleHelper.DisplayRoles
+                        .Where(r => currentUserRoles.Any(cur => RoleHierarchy.CanAssign(cur, r.ToStringValue())))
+                        .Select(r => r.ToStringValue())
+                        .ToHashSet();
 
-                    var roles = await userManager.GetRolesAsync(user);
-                    await userManager.RemoveFromRolesAsync(user, roles);
-                    foreach (var role in wombatUserVM.Roles)
+                    var targetUserRoles = await userManager.GetRolesAsync(targetUser);
+
+                    // Only remove roles the editor is allowed to manage
+                    foreach (var role in targetUserRoles)
                     {
-                        if (role.IsChecked)
-                            await userManager.AddToRoleAsync(user, role.Display);
+                        if (allowedRoles.Contains(role))
+                            await userManager.RemoveFromRoleAsync(targetUser, role);
                     }
 
-                    await userManager.UpdateAsync(user);
+                    // Only assign allowed roles
+                    foreach (var role in wombatUserVM.Roles.Where(r => r.IsChecked))
+                    {
+                        if (allowedRoles.Contains(role.Display))
+                            await userManager.AddToRoleAsync(targetUser, role.Display);
+                    }
+
+                    await userManager.UpdateAsync(targetUser);
                 }
-                catch (DbUpdateConcurrencyException exception)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!WombatUserVMExists(wombatUserVM.Id))
-                    {
                         return NotFound();
-                    }
-                    else
-                    {
-                        logger.LogError(exception, "Error updating user roles");
-                        throw;
-                    }
+
+                    logger.LogError(ex, "Error updating user");
+                    throw;
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(wombatUserVM);
         }
 
@@ -183,18 +328,38 @@ namespace Wombat.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageUsers)]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var user = await userManager.FindByIdAsync(id);
-            if (user != null)
-            {
-                var roles = await userManager.GetRolesAsync(user);
-                await userManager.RemoveFromRolesAsync(user, roles);
+            var targetUser = await userManager.Users
+                .Include(u => u.SubSpeciality)
+                    .ThenInclude(s => s.Speciality)
+                .FirstOrDefaultAsync(u => u.Id == id);
 
-                await userManager.DeleteAsync(user);
+            if (targetUser == null)
+                return NotFound();
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+
+            if (!CanEditUser(currentUser, targetUser, roles))
+            {
+                return Forbid();
             }
+
+            // Prevent self-deletion
+            if (currentUser.Id == targetUser.Id)
+            {
+                ModelState.AddModelError(string.Empty, "You cannot delete your own account.");
+                return RedirectToAction(nameof(Index));
+            }
+
+            var userRoles = await userManager.GetRolesAsync(targetUser);
+            await userManager.RemoveFromRolesAsync(targetUser, userRoles);
+            await userManager.DeleteAsync(targetUser);
 
             return RedirectToAction(nameof(Index));
         }
+
     }
 }

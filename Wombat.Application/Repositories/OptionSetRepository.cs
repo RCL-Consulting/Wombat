@@ -16,6 +16,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Contracts;
+using Wombat.Common.Constants;
 using Wombat.Data;
 
 namespace Wombat.Application.Repositories
@@ -32,6 +33,42 @@ namespace Wombat.Application.Repositories
                 .Include(o => o.Options)
                 .ToListAsync();
         }
+
+        public async Task<List<OptionSet>> GetScopedOptionSetsAsync(WombatUser user, IList<string> roles)
+        {
+            var query = context.OptionSets.AsQueryable();
+
+            if (roles.Contains(Role.Administrator.ToStringValue()))
+                return await query.ToListAsync();
+
+            if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()) && user.InstitutionId != null)
+            {
+                return await query
+                    .Where(f => f.InstitutionId == user.InstitutionId || f.InstitutionId == null)
+                    .ToListAsync();
+            }
+
+            if (roles.Contains(Role.SpecialityAdmin.ToStringValue()) && user.SubSpeciality?.SpecialityId != null)
+            {
+                return await query
+                    .Where(f =>
+                        f.SpecialityId == user.SubSpeciality.SpecialityId &&
+                        (f.InstitutionId == null || f.InstitutionId == user.InstitutionId))
+                    .ToListAsync();
+            }
+
+            if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) && user.SubSpecialityId != null)
+            {
+                return await query
+                    .Where(f =>
+                        f.SubSpecialityId == user.SubSpecialityId &&
+                        (f.InstitutionId == null || f.InstitutionId == user.InstitutionId))
+                    .ToListAsync();
+            }
+
+            return new List<OptionSet>();
+        }
+
 
         public override async Task<OptionSet?> GetAsync(int? id)
         {

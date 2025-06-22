@@ -48,7 +48,7 @@
 </div>
 <div>
     <a asp-action="Index" asp-route-requestStatus="@ViewBag.RequestStatus" class="btn btn-dark">Back to List</a> &nbsp;
-    @if (ViewBag.RequestStatus==AssessmentRequestStatus.Requested && User.IsInRole(Roles.Assessor))
+    @if (ViewBag.RequestStatus==AssessmentRequestStatus.Requested && User.IsInRole(Role.Assessor.ToStringValue()))
     {
         <a class="btn btn-success" asp-action="AcceptRequest" asp-route-id="@Model.Id">Accept</a> @:&nbsp;
         <a class="btn btn-danger" asp-action="DeclineRequest" asp-route-id="@Model.Id">Decline</a> @:&nbsp;

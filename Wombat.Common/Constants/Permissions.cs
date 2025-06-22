@@ -9,6 +9,7 @@ namespace Wombat.Common.Constants
     public static class Claims
     {
         // Admin operations
+        public const string ManageInstitutions = "manage_institutions";
         public const string ManageOptionSets = "manage_option_sets";
         public const string ManageAssessmentForms = "manage_assessment_forms";
         public const string ManageEPAs = "manage_epas";

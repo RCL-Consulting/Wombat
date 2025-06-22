@@ -24,5 +24,8 @@ namespace Wombat.Application.Contracts
                                                           int institutionId, 
                                                           int specialityId, 
                                                           int subSpecialityId );
+
+        Task<IEnumerable<AssessmentForm>> GetScopedFormsAsync( WombatUser user,
+                                                               IList<string> roles );
     }
 }

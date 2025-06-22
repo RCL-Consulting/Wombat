@@ -16,6 +16,7 @@
 
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -27,27 +28,47 @@ using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
+using static Wombat.Common.Models.AssessmentFormVM;
 
 namespace Wombat.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class AssessmentFormsController : Controller
     {
+        private readonly UserManager<WombatUser> userManager;
         private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly IOptionSetRepository optionSetRepository;
+        private readonly IUserContextService userContext;
+        private readonly IInstitutionRepository institutionRepo;
+        private readonly ISpecialityRepository specialityRepo;
+        private readonly ISubSpecialityRepository subSpecialityRepo;
+        private readonly IEPARepository epaRepository;
         private readonly IMapper mapper;
 
-        public AssessmentFormsController( IAssessmentFormRepository assessmentFormRepository,
+        public AssessmentFormsController( UserManager<WombatUser> userManager,
+                                          IAssessmentFormRepository assessmentFormRepository,
                                           IOptionSetRepository optionSetRepository,
+                                          IUserContextService userContext,
+                                          IInstitutionRepository institutionRepo,
+                                          ISpecialityRepository specialityRepo,
+                                          ISubSpecialityRepository subSpecialityRepo,
+                                          IEPARepository epaRepository,
                                           IMapper mapper )
         {
+            this.userManager = userManager;
             this.assessmentFormRepository = assessmentFormRepository;
             this.optionSetRepository=optionSetRepository;
+            this.userContext = userContext;
+            this.institutionRepo = institutionRepo;
+            this.specialityRepo = specialityRepo;
+            this.subSpecialityRepo = subSpecialityRepo;
+            this.epaRepository = epaRepository;
             this.mapper=mapper;
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public IActionResult DeleteCriterion(AssessmentFormVM assessmentFormVM, int displayId)
         {
             ViewData.ModelState.Clear();//CanDeleteFromList
@@ -61,6 +82,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public IActionResult AddCriterion(AssessmentFormVM assessmentFormVM)
         {
             var Item = new OptionCriterionVM();
@@ -71,6 +93,7 @@ namespace Wombat.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public async Task<IActionResult> CloneCriteria(int templateFormId, [FromForm] AssessmentFormVM currentForm)
         {
             try
@@ -79,7 +102,9 @@ namespace Wombat.Controllers
                 if (template == null || template.OptionCriteria == null)
                     return NotFound("Template form not found.");
 
-                var allOptionSets = await optionSetRepository.GetAllAsync();
+                var currentUser = await userManager.GetUserAsync(User);
+                var roles = await userManager.GetRolesAsync(currentUser);
+                var allOptionSets = await optionSetRepository.GetScopedOptionSetsAsync(currentUser, roles);
                 var optionSetVMs = mapper.Map<List<OptionSetVM>>(allOptionSets);
 
                 // ✅ Assign OptionsSets to populate the dropdown
@@ -123,8 +148,53 @@ namespace Wombat.Controllers
         // GET: AssessmentForms
         public async Task<IActionResult> Index()
         {
-            var Forms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
-            return View(Forms);
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+            var isGlobalAdmin = roles.Contains(Role.Administrator.ToStringValue());
+
+            var scopedForms = await assessmentFormRepository.GetScopedFormsAsync(currentUser, roles);
+
+            var formVMs = mapper.Map<List<AssessmentFormVM>>(scopedForms);
+
+            foreach (var vm in formVMs)
+            {
+                // Global admins can only edit global forms (InstitutionId == null)
+                if (isGlobalAdmin)
+                {
+                    vm.IsEditableByCurrentUser = vm.InstitutionId == null;
+                }
+                else if (
+                    roles.Contains(Role.InstitutionalAdmin.ToStringValue()) &&
+                    vm.InstitutionId != null &&
+                    currentUser.InstitutionId == vm.InstitutionId)
+                {
+                    vm.IsEditableByCurrentUser = true;
+                }
+                else if (
+                    roles.Contains(Role.SpecialityAdmin.ToStringValue()) &&
+                    vm.InstitutionId != null &&
+                    currentUser.InstitutionId == vm.InstitutionId &&
+                    vm.SpecialityId != null &&
+                    currentUser.SubSpeciality?.SpecialityId == vm.SpecialityId)
+                {
+                    vm.IsEditableByCurrentUser = true;
+                }
+                else if (
+                    roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) &&
+                    vm.InstitutionId != null &&
+                    currentUser.InstitutionId == vm.InstitutionId &&
+                    vm.SubSpecialityId != null &&
+                    currentUser.SubSpecialityId == vm.SubSpecialityId)
+                {
+                    vm.IsEditableByCurrentUser = true;
+                }
+                else
+                {
+                    vm.IsEditableByCurrentUser = false;
+                }
+            }
+
+            return View(formVMs);
         }
 
         // GET: AssessmentForms/Details/5
@@ -137,22 +207,196 @@ namespace Wombat.Controllers
             }
 
             var assessmentFormVM = mapper.Map<AssessmentFormVM>(assessmentForm);
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+            var isGlobalAdmin = roles.Contains(Role.Administrator.ToStringValue());
+
+            if (isGlobalAdmin)
+            {
+                assessmentFormVM.IsEditableByCurrentUser = assessmentFormVM.InstitutionId == null;
+            }
+            else if (
+                roles.Contains(Role.InstitutionalAdmin.ToStringValue()) &&
+                assessmentFormVM.InstitutionId != null &&
+                currentUser.InstitutionId == assessmentFormVM.InstitutionId)
+            {
+                assessmentFormVM.IsEditableByCurrentUser = true;
+            }
+            else if (
+                roles.Contains(Role.SpecialityAdmin.ToStringValue()) &&
+                assessmentFormVM.InstitutionId != null &&
+                currentUser.InstitutionId == assessmentFormVM.InstitutionId &&
+                assessmentFormVM.SpecialityId != null &&
+                currentUser.SubSpeciality?.SpecialityId == assessmentFormVM.SpecialityId)
+            {
+                assessmentFormVM.IsEditableByCurrentUser = true;
+            }
+            else if (
+                roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) &&
+                assessmentFormVM.InstitutionId != null &&
+                currentUser.InstitutionId == assessmentFormVM.InstitutionId &&
+                assessmentFormVM.SubSpecialityId != null &&
+                currentUser.SubSpecialityId == assessmentFormVM.SubSpecialityId)
+            {
+                assessmentFormVM.IsEditableByCurrentUser = true;
+            }
+            else
+            {
+                assessmentFormVM.IsEditableByCurrentUser = false;
+            }
+
+            if (assessmentFormVM.InstitutionId != null)
+                assessmentFormVM.InstitutionName = (await institutionRepo.GetAsync(assessmentFormVM.InstitutionId)).Name;
+            if(assessmentFormVM.SubSpecialityId!=null)
+            {
+                var subSpeciality = await subSpecialityRepo.GetAsync(assessmentFormVM.SubSpecialityId);
+                if (subSpeciality != null)
+                {
+                    assessmentFormVM.SpecialityName = subSpeciality.Speciality.Name;
+                    assessmentFormVM.SubSpecialityName = subSpeciality.Name;
+                }
+            }
+
             return View(assessmentFormVM);
         }
 
-        // GET: AssessmentForms/Create
-        public async Task<IActionResult> CreateAsync()
+        private async Task PopulateAssessmentFormVMAsync(AssessmentFormVM vm)
         {
-            var assessmentFormVM = new AssessmentFormVM();
-            OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
 
-            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
-            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
-                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+            if (currentUser.InstitutionId != null)
+                currentUser.Institution = await institutionRepo.GetAsync(currentUser.InstitutionId);
+            if (currentUser.SubSpecialityId != null)
+                currentUser.SubSpeciality = await subSpecialityRepo.GetAsync(currentUser.SubSpecialityId);
+
+            vm.AllSubSpecialities = (await subSpecialityRepo.GetAllAsync())
+                .Select(s => new SubSpecialityOption
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    SpecialityId = s.SpecialityId
+                }).ToList();
+
+            if (roles.Contains(Role.Administrator.ToStringValue()))
+            {
+                vm.Institutions = (await institutionRepo.GetAllAsync())
+                    .Select(i => new SelectListItem { Text = i.Name, Value = i.Id.ToString() }).ToList();
+                vm.Specialities = (await specialityRepo.GetAllAsync())
+                    .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+                if (vm.SpecialityId != null)
+                {
+                    vm.SubSpecialities = (await subSpecialityRepo.GetAllAsync())
+                        .Where(s => s.SpecialityId == vm.SpecialityId)
+                        .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+                }
+                else
+                {
+                    vm.SubSpecialities = new List<SelectListItem>(); // leave empty
+                }
+            }
+            else if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()))
+            {
+                vm.InstitutionId = currentUser.InstitutionId;
+                vm.Institutions = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.InstitutionId.ToString(),
+                        Text = currentUser.Institution?.Name ?? "Institution"
+                    }
+                };
+                vm.Specialities = (await specialityRepo.GetAllAsync())
+                    .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+                if (vm.SpecialityId != null)
+                {
+                    vm.SubSpecialities = (await subSpecialityRepo.GetAllAsync())
+                        .Where(s => s.SpecialityId == vm.SpecialityId)
+                        .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+                }
+                else
+                {
+                    vm.SubSpecialities = new List<SelectListItem>(); // leave empty
+                }
+            }
+            else if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
+            {
+                vm.InstitutionId = currentUser.InstitutionId;
+                vm.Institutions = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.InstitutionId.ToString(),
+                        Text = currentUser.Institution?.Name ?? "Institution"
+                    }
+                };
+                vm.SpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                vm.Specialities = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.SubSpeciality?.SpecialityId.ToString(),
+                        Text = currentUser.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                    }
+                };
+                if (vm.SpecialityId != null)
+                {
+                    vm.SubSpecialities = (await subSpecialityRepo.GetAllAsync())
+                        .Where(s => s.SpecialityId == vm.SpecialityId)
+                        .Select(s => new SelectListItem { Text = s.Name, Value = s.Id.ToString() }).ToList();
+                }
+                else
+                {
+                    vm.SubSpecialities = new List<SelectListItem>(); // leave empty
+                }
+            }
+            else if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
+            {
+                vm.InstitutionId = currentUser.InstitutionId;
+                vm.Institutions = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.InstitutionId.ToString(),
+                        Text = currentUser.Institution?.Name ?? "Institution"
+                    }
+                };
+                vm.SpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                vm.Specialities = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.SubSpeciality?.SpecialityId.ToString(),
+                        Text = currentUser.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                    }
+                };
+                vm.SubSpecialityId = currentUser.SubSpecialityId;
+                vm.SubSpecialities = new List<SelectListItem> {
+                    new SelectListItem {
+                        Value = currentUser.SubSpecialityId.ToString(),
+                        Text = currentUser.SubSpeciality?.Name ?? "SubSpeciality"
+                    }
+                };
+            }
+
+            vm.AllEPAs = (await epaRepository.GetAllAsync())
+                .Select(e => new EPAOption
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    SubSpecialityId = e.SubSpecialityId
+                }).ToList();
+
+            var allOptionSets = await optionSetRepository.GetScopedOptionSetsAsync(currentUser, roles);
+            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
+            // ✅ Assign OptionsSets to populate the dropdown
+            OptionCriterionVM.OptionsSets = ViewBag.OptionSets;
+
+            var templates = await assessmentFormRepository.GetScopedFormsAsync(currentUser, roles);
+            ViewBag.Templates = templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
                 .ToList();
+        }
 
-            return View(assessmentFormVM);
+
+        // GET: AssessmentForms/Create
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
+        public async Task<IActionResult> CreateAsync()
+        {
+            var vm = new AssessmentFormVM();
+            await PopulateAssessmentFormVMAsync(vm);
+            return View(vm);
         }
 
         // POST: AssessmentForms/Create
@@ -160,17 +404,60 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public async Task<IActionResult> Create(AssessmentFormVM assessmentFormVM)
         {
             if (ModelState.IsValid)
             {
-                var assessmentForm = mapper.Map<AssessmentForm>(assessmentFormVM);
-                await assessmentFormRepository.AddAsync(assessmentForm);
-                return RedirectToAction(nameof(Index));
+                var entity = mapper.Map<AssessmentForm>(assessmentFormVM);
+
+                entity.InstitutionId = assessmentFormVM.InstitutionId;
+                entity.SpecialityId = assessmentFormVM.SpecialityId;
+                entity.SubSpecialityId = assessmentFormVM.SubSpecialityId;
+
+                entity.Institution = null;
+                entity.Speciality = null;
+                entity.SubSpeciality = null;
+
+                // Attach selected EPAs
+                if (assessmentFormVM.SelectedEPAIds != null && assessmentFormVM.SelectedEPAIds.Any())
+                {
+                    entity.EPAs = assessmentFormVM.SelectedEPAIds
+                        .Select(id => new EPAForm { EPAId = id })
+                        .ToList();
+                }
+
+                await assessmentFormRepository.AddAsync(entity);
+                return RedirectToAction(nameof(Index)); // Redirect on success
             }
 
-            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
-                //.Where(f => f.IsTemplate) // optionally tag forms as templates
+            // Rehydrate dropdowns if ModelState is invalid
+            assessmentFormVM.AllSubSpecialities = (await subSpecialityRepo.GetAllAsync())
+                .Select(s => new SubSpecialityOption
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    SpecialityId = s.SpecialityId
+                }).ToList();
+
+            assessmentFormVM.AllEPAs = (await epaRepository.GetAllAsync())
+                .Select(e => new EPAOption
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    SubSpecialityId = e.SubSpecialityId
+                }).ToList();
+
+            // You should also rehydrate Institution/Speciality/SubSpeciality dropdowns here based on the user role
+            // (optionally move that logic to a private method to reuse from both GET and POST)
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+            var allOptionSets = await optionSetRepository.GetScopedOptionSetsAsync(currentUser, roles);
+            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
+
+            var templates = await assessmentFormRepository.GetScopedFormsAsync(currentUser, roles);
+            ViewBag.Templates = templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
                 .ToList();
 
@@ -178,26 +465,22 @@ namespace Wombat.Controllers
         }
 
         // GET: AssessmentForms/Edit/5
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public async Task<IActionResult> Edit(int? id)
         {
+            if (id == null)
+                return NotFound();
+
             var assessmentForm = await assessmentFormRepository.GetAsync(id);
             if (assessmentForm == null)
-            {
                 return NotFound();
-            }
 
-            OptionCriterionVM.OptionsSets = mapper.Map<List<OptionSetVM>>(await optionSetRepository.GetAllAsync());
+            var vm = mapper.Map<AssessmentFormVM>(assessmentForm);
+            await PopulateAssessmentFormVMAsync(vm);
 
-            var assessmentFormVM = mapper.Map<AssessmentFormVM>(assessmentForm);
+            vm.SelectedEPAIds = assessmentForm.EPAs?.Select(e => e.EPAId).ToList() ?? new List<int>();
 
-            var allOptionSets = await optionSetRepository.GetAllAsync();
-            ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
-            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
-                .Where(f => f.Id != assessmentForm.Id) // optionally tag forms as templates
-                .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
-                .ToList();
-
-            return View(assessmentFormVM);
+            return View(vm);
         }
 
         // POST: AssessmentForms/Edit/5
@@ -205,6 +488,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public async Task<IActionResult> Edit(int id, AssessmentFormVM assessmentFormVM)
         {
             if (id != assessmentFormVM.Id)
@@ -224,6 +508,11 @@ namespace Wombat.Controllers
                 try
                 {
                     mapper.Map(assessmentFormVM, assessmentForm);
+
+                    assessmentForm.Institution = null;
+                    assessmentForm.Speciality = null;
+                    assessmentForm.SubSpeciality = null;
+
                     await assessmentFormRepository.UpdateAsync(assessmentForm);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -240,9 +529,13 @@ namespace Wombat.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var allOptionSets = await optionSetRepository.GetAllAsync();
+            var currentUser = await userManager.GetUserAsync(User);
+            var roles = await userManager.GetRolesAsync(currentUser);
+            var allOptionSets = await optionSetRepository.GetScopedOptionSetsAsync(currentUser, roles);
             ViewBag.OptionSets = mapper.Map<List<OptionSetVM>>(allOptionSets);
-            ViewBag.Templates = (await assessmentFormRepository.GetAllAsync())
+
+            var templates = await assessmentFormRepository.GetScopedFormsAsync(currentUser, roles);
+            ViewBag.Templates = templates
                 .Where(f => f.Id != assessmentForm.Id) // optionally tag forms as templates
                 .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })
                 .ToList();
@@ -253,6 +546,7 @@ namespace Wombat.Controllers
         // POST: AssessmentForms/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageAssessmentForms)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await assessmentFormRepository.DeleteAsync(id);

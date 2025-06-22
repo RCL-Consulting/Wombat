@@ -22,10 +22,10 @@ namespace Wombat.Application.Services
         public string? UserId => _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         // Global override check
-        public bool IsGlobalAdmin => _user.IsInRole(Roles.Administrator);
+        public bool IsGlobalAdmin => _user.IsInRole(Role.Administrator.ToStringValue());
 
-        public bool CanManageAssessmentForms =>
-            IsGlobalAdmin || HasClaim(Claims.ManageAssessmentForms);
+        public bool CanManageInstitutions => IsGlobalAdmin || HasClaim(Claims.ManageInstitutions);
+        public bool CanManageAssessmentForms => IsGlobalAdmin || HasClaim(Claims.ManageAssessmentForms);
 
         public bool CanManageOptionSets => IsGlobalAdmin || HasClaim(Claims.ManageOptionSets);
         public bool CanManageEPAs => IsGlobalAdmin || HasClaim(Claims.ManageEPAs);

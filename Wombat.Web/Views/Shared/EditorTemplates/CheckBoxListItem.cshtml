@@ -2,6 +2,31 @@
 
 @Html.HiddenFor(x => x.ID)
 @Html.HiddenFor(x => x.Display)
-@Html.CheckBoxFor(x => x.IsChecked)
-@Html.LabelFor(x => x.IsChecked, Model.Display)
-<br />
+
+<div class="form-check mb-1">
+    @if (Model.IsEditable)
+    {
+        <input class="form-check-input me-2" type="checkbox" 
+               name="Roles[@Model.ID].IsChecked"
+               value="true"
+               @(Model.IsChecked ? "checked" : "")
+               id="role_@Model.ID" />
+
+        <label class="form-check-label" for="role_@Model.ID">
+            @Model.Label
+        </label>
+    }
+    else
+    {
+        <input class="form-check-input me-2" type="checkbox" disabled
+               @(Model.IsChecked ? "checked" : "")
+               id="role_@Model.ID" />
+
+        <label class="form-check-label text-muted" for="role_@Model.ID">
+            @Model.Label
+        </label>
+    }
+
+    @* Still need to bind hidden fields *@
+    @Html.HiddenFor(x => x.IsChecked)
+</div>

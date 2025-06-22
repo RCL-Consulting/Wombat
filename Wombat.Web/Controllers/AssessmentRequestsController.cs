@@ -65,7 +65,7 @@ namespace Wombat.Web.Controllers
 
             var user = userManager.GetUserAsync(httpContextAccessor.HttpContext.User).Result;
             var roles = userManager.GetRolesAsync(user).Result;
-            return roles.Contains(Roles.Assessor);
+            return roles.Contains(Role.Assessor.ToStringValue());
         }
 
         private bool UserIsTrainee()
@@ -75,7 +75,7 @@ namespace Wombat.Web.Controllers
 
             var user = userManager.GetUserAsync(httpContextAccessor.HttpContext.User).Result;
             var roles = userManager.GetRolesAsync(user).Result;
-            return roles.Contains(Roles.Trainee);
+            return roles.Contains(Role.Trainee.ToStringValue());
         }
 
         public async Task<IActionResult> Index(AssessmentRequestStatus requestStatus)
@@ -305,7 +305,7 @@ namespace Wombat.Web.Controllers
 
             request.Trainee = mapper.Map<WombatUserVM>(await userManager.GetUserAsync(httpContextAccessor.HttpContext.User));
 
-            var assessors = await userManager.GetUsersInRoleAsync(Roles.Assessor);
+            var assessors = await userManager.GetUsersInRoleAsync(Role.Assessor.ToStringValue());
             List<SelectListItem> assessorList = new List<SelectListItem>();
             foreach (var assessor in assessors)
             {

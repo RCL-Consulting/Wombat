@@ -1,4 +1,5 @@
 @model SubSpecialityVM
+@inject Wombat.Application.Contracts.IUserContextService UserContext
 
 @{
     ViewData["Title"] = "Subspeciality Details";
@@ -29,9 +30,12 @@
             <a asp-action="Index" class="btn btn-icon btn-back" title="All Subspecialities">
                 <i class="fa-solid fa-list"></i>
             </a>
-            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pencil-alt"></i>
-            </a>
+            @if (UserContext.CanManageSubspecialities)
+            {
+                <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-icon btn-edit" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                </a>
+            }
         </div>
     </div>
 </div>

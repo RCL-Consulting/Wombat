@@ -4,7 +4,7 @@
     ViewData["Title"] = "Index";
 }
 
-@if(User.IsInRole(Roles.Trainee))
+@if(User.IsInRole(Role.Trainee.ToStringValue()))
 {
     <h1>Edit portfolio</h1>
 }
@@ -49,7 +49,7 @@ else
                 @Html.DisplayFor(modelItem => item.Score)
             </td>
             <td>
-                @if(User.IsInRole(Roles.Trainee))
+                @if(User.IsInRole(Role.Trainee.ToStringValue()))
                 {
                     @if(item.AssessmentIsPublic)
                     {

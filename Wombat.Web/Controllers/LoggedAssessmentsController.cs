@@ -84,7 +84,7 @@ namespace Wombat.Controllers
             var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
 
             var roles = await userManager.GetRolesAsync(user);
-            if (roles.Contains(Roles.Trainee))
+            if (roles.Contains(Role.Trainee.ToStringValue()))
             {
                 var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByEPAAndTraineeAsync(id,userId));
                 foreach(var assessment in loggedAssessments)
@@ -93,7 +93,7 @@ namespace Wombat.Controllers
                 }
                 return View(loggedAssessments);
             }
-            else if (roles.Contains(Roles.Coordinator))
+            else if (roles.Contains(Role.Coordinator.ToStringValue()))
             {
                 var trainee = await userManager.FindByIdAsync(traineeId);
                 if( trainee==null || trainee.InstitutionId != user.InstitutionId)
@@ -114,7 +114,7 @@ namespace Wombat.Controllers
             return NotFound();
         }
 
-        [Authorize(Roles = Roles.Trainee)]
+        [Authorize(Roles = RoleStrings.Trainee)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PortfolioByEPA(bool isPublic, int assessmentId)
@@ -194,7 +194,7 @@ namespace Wombat.Controllers
 
             var institutionId = user.InstitutionId;
 
-            var trainees = await userManager.GetUsersInRoleAsync(Roles.Trainee);
+            var trainees = await userManager.GetUsersInRoleAsync(Role.Trainee.ToStringValue());
 
             List<WombatUserVM> traineesHere = new List<WombatUserVM>();
             foreach( var item in trainees)
@@ -222,12 +222,12 @@ namespace Wombat.Controllers
             var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
 
             var roles = await userManager.GetRolesAsync(user);
-            if (roles.Contains(Roles.Trainee))
+            if (roles.Contains(Role.Trainee.ToStringValue()))
             {
                 var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByTraineeAsync(userId));
                 return View(loggedAssessments);
             }
-            else if (roles.Contains(Roles.Assessor))
+            else if (roles.Contains(Role.Assessor.ToStringValue()))
             {
                 var loggedAssessments = mapper.Map<List<LoggedAssessmentVM>>(await loggedAssessmentRepository.GetAssessmentsByAssessorAsync(userId));
                 return View(loggedAssessments);
@@ -236,10 +236,10 @@ namespace Wombat.Controllers
                 return NotFound();
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         public async Task<IActionResult> CreateFromList()
         {
-            var trainees = mapper.Map<List<WombatUserVM>>(await userManager.GetUsersInRoleAsync(Roles.Trainee));
+            var trainees = mapper.Map<List<WombatUserVM>>(await userManager.GetUsersInRoleAsync(Role.Trainee.ToStringValue()));
 
             return View(trainees);
         }
@@ -277,14 +277,14 @@ namespace Wombat.Controllers
             var EPAs = mapper.Map<List<EPAVM>>(await EPARepository.GetAllAsync());
             ViewData["EPA"] = new SelectList(EPAs, "Id", "Description");
 
-            var assessors = await userManager.GetUsersInRoleAsync(Roles.Assessor);
+            var assessors = await userManager.GetUsersInRoleAsync(Role.Assessor.ToStringValue());
             ViewData["Assessor"] = new SelectList(assessors, "Id", "Email");
 
-            var trainees = await userManager.GetUsersInRoleAsync(Roles.Trainee);
+            var trainees = await userManager.GetUsersInRoleAsync(Role.Trainee.ToStringValue());
             ViewData["Trainee"] = new SelectList(trainees, "Id", "Email");
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         // GET: LoggedAssessments/Create
         public async Task<IActionResult> Create()
         {
@@ -307,7 +307,7 @@ namespace Wombat.Controllers
             return Json(subOptions);
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         public async Task<IActionResult> LogAssessmentFor(string? id)
         {
             var user = await userManager.FindByIdAsync(id);
@@ -335,7 +335,7 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         public async Task<IActionResult> LogRequestedAssessment(int id)
         {
             var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
@@ -405,7 +405,7 @@ namespace Wombat.Controllers
             }
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StartAssessment(LoggedAssessmentVM loggedAssessmentVM)
@@ -417,7 +417,7 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitAssessment(LoggedAssessmentVM loggedAssessmentVM)
@@ -455,7 +455,7 @@ namespace Wombat.Controllers
         // POST: LoggedAssessments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [Authorize(Roles = Roles.Assessor)]
+        [Authorize(Roles = RoleStrings.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LoggedAssessmentVM loggedAssessmentVM)

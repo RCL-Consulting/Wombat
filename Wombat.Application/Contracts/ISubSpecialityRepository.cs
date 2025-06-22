@@ -14,6 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>
  */
 
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Wombat.Data;
 
 namespace Wombat.Application.Contracts

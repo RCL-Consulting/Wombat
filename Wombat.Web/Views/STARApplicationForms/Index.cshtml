@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<STARApplicationFormVM>
+@inject Wombat.Application.Contracts.IUserContextService UserContext
 
 @{
     ViewData["Title"] = "Assessment Forms";
@@ -10,9 +11,12 @@
             <h5 class="mb-0">
                 <i class="fas fa-layer-group me-2"></i>STAR Application Forms
             </h5>
-            <a asp-action="Create" class="btn btn-create btn-sm" title="Create New Form">
-                <i class="fas fa-plus"></i>
-            </a>
+            @if (UserContext.CanManageEPAs)
+            {
+                <a asp-action="Create" class="btn btn-create btn-sm" title="Create New Form">
+                    <i class="fas fa-plus"></i>
+                </a>
+            }
         </div>
 
         <div class="card-body p-4">
@@ -56,18 +60,26 @@
                                     }
                                 </td>
                                 <td class="text-end text-nowrap">
-                                    <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </a>
+                                    @if (UserContext.CanManageEPAs)
+                                    {
+                                        <a class="btn btn-icon btn-edit btn-sm" asp-action="Edit" asp-route-id="@item.Id" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                    }
+
                                     <a class="btn btn-icon btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id" title="Details">
                                         <i class="fas fa-info-circle"></i>
                                     </a>
-                                    <button type="button"
-                                            data-id="@item.Id"
-                                            class="btn btn-icon btn-delete btn-sm deleteBtn"
-                                            title="Delete">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
+
+                                    @if (UserContext.CanManageEPAs)
+                                    {
+                                        <button type="button"
+                                                data-id="@item.Id"
+                                                class="btn btn-icon btn-delete btn-sm deleteBtn"
+                                                title="Delete">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    }
                                 </td>
                             </tr>
                         }

@@ -17,6 +17,42 @@
                 <dt class="col-sm-3 fw-semibold">Description</dt>
                 <dd class="col-sm-9">@Model.Description</dd>
 
+                <dt class="col-sm-3 fw-semibold">Institution</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.InstitutionName))
+                    {
+                        @Model.InstitutionName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 fw-semibold">Speciality</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.SpecialityName))
+                    {
+                        @Model.SpecialityName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 fw-semibold">Subspeciality</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.SubSpecialityName))
+                    {
+                        @Model.SubSpecialityName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
                 <dt class="col-sm-3 fw-semibold">Display Rank</dt>
                 <dd class="col-sm-9">@Model.DisplayRank</dd>
 
@@ -49,9 +85,12 @@
             <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
                 <i class="fas fa-list"></i>
             </a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pencil-alt"></i>
-            </a>
+            @if (Model.IsEditableByCurrentUser)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                </a>
+            }
         </div>
     </div>
 </div>

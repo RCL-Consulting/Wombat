@@ -15,6 +15,42 @@
                 <dt class="col-sm-3 fw-semibold">Form Name</dt>
                 <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
 
+                <dt class="col-sm-3 fw-semibold">Institution</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.InstitutionName))
+                    {
+                        @Model.InstitutionName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 fw-semibold">Speciality</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.SpecialityName))
+                    {
+                        @Model.SpecialityName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 fw-semibold">Subspeciality</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.SubSpecialityName))
+                    {
+                        @Model.SubSpecialityName
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">All</span>
+                    }
+                </dd>
+
                 <dt class="col-sm-3 fw-semibold align-self-start">Assessment Criteria</dt>
                 <dd class="col-sm-9">
                     @if (Model.OptionCriteria != null && Model.OptionCriteria.Any())
@@ -61,9 +97,12 @@
             <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
                 <i class="fa-solid fa-list"></i>
             </a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pencil-alt"></i>
-            </a>
+            @if (Model.IsEditableByCurrentUser)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-icon btn-edit" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                </a>
+            }
         </div>
     </div>
 </div>

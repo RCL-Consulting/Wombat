@@ -38,8 +38,9 @@ namespace Wombat.Application.Services
             var roles = await UserManager.GetRolesAsync(user);
 
             // Admin-level claims
-            if (roles.Contains(Roles.Administrator))
+            if (roles.Contains(Role.Administrator.ToStringValue()))
             {
+
                 identity.AddClaim(new Claim(Claims.ManageAssessmentForms, "true"));
                 identity.AddClaim(new Claim(Claims.ManageOptionSets, "true"));
                 identity.AddClaim(new Claim(Claims.ManageEPAs, "true"));
@@ -49,22 +50,43 @@ namespace Wombat.Application.Services
                 identity.AddClaim(new Claim(Claims.ManageRegistrationInvitations, "true"));
             }
 
+            if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()))
+            {
+                identity.AddClaim(new Claim(Claims.ManageAssessmentForms, "true"));
+                identity.AddClaim(new Claim(Claims.ManageUsers, "true"));
+                identity.AddClaim(new Claim(Claims.ManageRegistrationInvitations, "true"));
+            }
+
+            if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
+            {
+                identity.AddClaim(new Claim(Claims.ManageAssessmentForms, "true"));
+                identity.AddClaim(new Claim(Claims.ManageUsers, "true"));
+                identity.AddClaim(new Claim(Claims.ManageRegistrationInvitations, "true"));
+            }
+
+            if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
+            {
+                identity.AddClaim(new Claim(Claims.ManageAssessmentForms, "true"));
+                identity.AddClaim(new Claim(Claims.ManageUsers, "true"));
+                identity.AddClaim(new Claim(Claims.ManageRegistrationInvitations, "true"));
+            }
+
             // Assessor-level claims
-            if (roles.Contains(Roles.Assessor))
+            if (roles.Contains(Role.Assessor.ToStringValue()))
             {
                 identity.AddClaim(new Claim(Claims.LogAssessment, "true"));
                 identity.AddClaim(new Claim(Claims.HandleAssessmentRequests, "true"));
             }
 
             // Coordinator-level claims
-            if (roles.Contains(Roles.Coordinator))
+            if (roles.Contains(Role.Coordinator.ToStringValue()))
             {
                 identity.AddClaim(new Claim(Claims.ApproveTrainee, "true"));
                 identity.AddClaim(new Claim(Claims.ViewInstitutionPortfolios, "true"));
             }
 
             // Trainee-level claims
-            if (roles.Contains(Roles.Trainee))
+            if (roles.Contains(Role.Trainee.ToStringValue()))
             {
                 identity.AddClaim(new Claim(Claims.RequestAssessment, "true"));
                 identity.AddClaim(new Claim(Claims.ManageOwnPortfolio, "true"));

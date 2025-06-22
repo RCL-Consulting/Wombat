@@ -16,7 +16,6 @@ namespace Wombat.Common.Models
         [Required]
         public List<string> Roles { get; set; } = new();
 
-        [Required]
         public int? SpecialityId { get; set; }
 
         public int? SubSpecialityId { get; set; }
@@ -30,7 +29,6 @@ namespace Wombat.Common.Models
 
         public List<SubSpecialityOption> AllSubSpecialities { get; set; } = new();
 
-        [Required]
         public int? InstitutionId { get; set; }
 
         public List<SelectListItem> Institutions { get; set; } = new();

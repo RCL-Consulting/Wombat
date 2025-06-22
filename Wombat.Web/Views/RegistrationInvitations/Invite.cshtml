@@ -4,77 +4,78 @@
     ViewData["Title"] = "Invite User";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm rounded-4 overflow-hidden">
+<div class="container mt-4">
+    <div class="card card-accent-create shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Invite New User</h5>
+        </div>
 
-                <!-- Banner -->
-                <div class="bg-primary text-white text-center py-3">
-                    <h4 class="mb-0">@ViewData["Title"]</h4>
+        <form asp-action="Invite" method="post" id="inviteForm">
+            <div class="card-body">
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
-                <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Roles</label>
+                    <select asp-for="Roles" asp-items="Model.AvailableRoles" class="form-select" multiple id="RolesSelect" size="@(Math.Min(Model.AvailableRoles.Count, 10))"></select>
+                    <span asp-validation-for="Roles" class="text-danger"></span>
+                </div>
 
-                    <form asp-action="Invite" method="post">
-                        <div class="form-floating mb-3">
-                            <input asp-for="Email" class="form-control" autocomplete="email" aria-required="true" />
-                            <label asp-for="Email">Email</label>
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
+                <div id="institutionGroup" class="mb-3 d-none">
+                    <label class="form-label fw-semibold">Institution</label>
+                    <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
+                        <option value="">-- Select Institution --</option>
+                    </select>
+                    <span asp-validation-for="InstitutionId" class="text-danger"></span>
+                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Roles</label>
-                            <select asp-for="Roles" asp-items="Model.AvailableRoles" class="form-select" multiple id="RolesSelect"></select>
-                            <span asp-validation-for="Roles" class="text-danger"></span>
-                        </div>
+                <div id="departmentGroup" class="mb-3 d-none">
+                    <label class="form-label fw-semibold">Speciality</label>
+                    <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select" id="SpecialityId">
+                        <option value="">-- Select Speciality --</option>
+                    </select>
+                    <span asp-validation-for="SpecialityId" class="text-danger"></span>
+                </div>
 
-                        <div id="institutionGroup" class="mb-3 d-none">
-                            <label class="form-label">Institution</label>
-                            <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
-                                <option value="">-- Select Institution --</option>
-                            </select>
-                            <span asp-validation-for="InstitutionId" class="text-danger"></span>
-                        </div>
+                <div id="subSpecialityGroup" class="mb-3 d-none">
+                    <label class="form-label fw-semibold">Subspeciality</label>
+                    <select id="SubSpecialityId" name="SubSpecialityId" class="form-select"></select>
+                    <span asp-validation-for="SubSpecialityId" class="text-danger"></span>
+                </div>
 
-                        <div id="departmentGroup" class="mb-3 d-none">
-                            <label class="form-label">Speciality</label>
-                            <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select" id="SpecialityId">
-                                <option value="">-- Select Speciality --</option>
-                            </select>
-                            <span asp-validation-for="SpecialityId" class="text-danger"></span>
-                        </div>
-
-                        <div id="subSpecialityGroup" class="mb-3 d-none">
-                            <label class="form-label">Subspeciality</label>
-                            <select id="SubSpecialityId" name="SubSpecialityId" class="form-select"></select>
-                            <span asp-validation-for="SubSpecialityId" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input asp-for="ExpiryDate" type="date" class="form-control" placeholder="Expiry Date" />
-                            <label asp-for="ExpiryDate">Expiry Date</label>
-                            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-paper-plane me-2"></i>Send Invitation
-                        </button>
-                    </form>
-
+                <div class="mb-3">
+                    <label asp-for="ExpiryDate" class="form-label fw-semibold">Expiry Date</label>
+                    <input asp-for="ExpiryDate" type="date" class="form-control" />
+                    <span asp-validation-for="ExpiryDate" class="text-danger"></span>
                 </div>
             </div>
-        </div>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="submit" class="btn btn-create" title="Send Invitation">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
         const allSubSpecialities = @Html.Raw(Json.Serialize(Model.AllSubSpecialities));
         const rolesDropdown = document.getElementById("RolesSelect");
-        const departmentGroup = document.getElementById("departmentGroup");
         const institutionGroup = document.getElementById("institutionGroup");
+        const departmentGroup = document.getElementById("departmentGroup");
         const subSpecialityGroup = document.getElementById("subSpecialityGroup");
         const specialityDropdown = document.getElementById("SpecialityId");
         const subSpecialityDropdown = document.getElementById("SubSpecialityId");
@@ -92,30 +93,17 @@
             const showSub = selectedRoles.some(r => subSpecialityRoles.includes(r));
             const showInstitution = selectedRoles.length > 1 || (selectedRoles.length === 1 && selectedRoles[0] !== "Administrator");
 
+            institutionGroup.classList.toggle("d-none", !showInstitution);
             departmentGroup.classList.toggle("d-none", !showDepartment);
             subSpecialityGroup.classList.toggle("d-none", !showSub);
-            institutionGroup.classList.toggle("d-none", !showInstitution);
 
-            // Clear hidden fields
-            if (!showDepartment)
-            {
-                specialityDropdown.value = "";
-            }
-
-            if (!showSub) 
-            {
-                subSpecialityDropdown.value = "";
-            }
-
-            if (!showInstitution) 
-            {
-                document.querySelector('[name="InstitutionId"]').value = "";
-            }
+            if (!showDepartment) specialityDropdown.value = "";
+            if (!showSub) subSpecialityDropdown.value = "";
+            if (!showInstitution) document.querySelector('[name="InstitutionId"]').value = "";
         }
 
         function populateSubSpecialities(specialityId) {
             subSpecialityDropdown.innerHTML = "";
-
             const defaultOption = document.createElement("option");
             defaultOption.value = "";
             defaultOption.textContent = "-- Select a SubSpeciality --";
@@ -135,7 +123,6 @@
             populateSubSpecialities(this.value);
         });
 
-        // Initial setup
         updateVisibility();
         if (specialityDropdown.value) {
             populateSubSpecialities(specialityDropdown.value);

@@ -29,7 +29,7 @@ using Newtonsoft.Json.Bson;
 
 namespace Wombat.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class EPAsController: Controller
     {
         private readonly IEPARepository EPARepository;
@@ -90,6 +90,7 @@ namespace Wombat.Controllers
         }
 
         // GET: EPAs/Create
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Create()
         {
             //var Forms = mapper.Map<List<AssessmentFormVM>>(await assessmentFormRepository.GetAllAsync());
@@ -127,6 +128,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public IActionResult DeleteForm(EPAVM epaVM, int displayId)
         {
             ViewData.ModelState.Clear();//CanDeleteFromList
@@ -141,6 +143,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public IActionResult AddForm(EPAVM epaVM)
         {
             var Item = new EPAFormVM();
@@ -153,6 +156,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public IActionResult DeleteCurriculum(EPAVM epaVM, int displayId)
         {
             ViewData.ModelState.Clear();//CanDeleteFromList
@@ -167,6 +171,7 @@ namespace Wombat.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public IActionResult AddCurriculum(EPAVM epaVM)
         {
             var Item = new EPACurriculumVM();
@@ -182,6 +187,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Create(EPAVM EPAVM)
         {
             if (ModelState.IsValid)
@@ -207,6 +213,7 @@ namespace Wombat.Controllers
         }
 
         // GET: EPAs/Edit/5
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Edit(int? id)
         {
             var EPA = await EPARepository.GetAsync(id);
@@ -290,6 +297,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> Edit(int id, EPAVM EPAVM)
         {
             if (id != EPAVM.Id)
@@ -332,6 +340,7 @@ namespace Wombat.Controllers
         // POST: EPAs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageEPAs)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await EPARepository.DeleteAsync(id);

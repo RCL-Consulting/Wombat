@@ -31,7 +31,7 @@ using Wombat.Data;
 
 namespace Wombat.Controllers
 {
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize]
     public class SubSpecialitiesController : Controller
     {
         private readonly ISpecialityRepository specialityRepository;
@@ -68,6 +68,7 @@ namespace Wombat.Controllers
         }
 
         // GET: SubSpecialities/Create
+        [Authorize(Policy = Claims.ManageSubspecialities)]
         public async Task<IActionResult> CreateAsync()
         {
             ViewData["SpecialityId"] = new SelectList(await specialityRepository.GetAllAsync(), "Id", "Name");
@@ -79,6 +80,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSubspecialities)]
         public async Task<IActionResult> Create(SubSpecialityVM subSpecialityVM)
         {
             if (ModelState.IsValid)
@@ -100,6 +102,7 @@ namespace Wombat.Controllers
         }
 
         // GET: SubSpecialities/Edit/5
+        [Authorize(Policy = Claims.ManageSubspecialities)]
         public async Task<IActionResult> Edit(int? id)
         {
             var subSpeciality = await subSpecialityRepository.GetAsync(id);
@@ -118,6 +121,7 @@ namespace Wombat.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSubspecialities)]
         public async Task<IActionResult> Edit(int id, SubSpecialityVM subSpecialityVM)
         {
             if (id != subSpecialityVM.Id)
@@ -159,6 +163,7 @@ namespace Wombat.Controllers
         // POST: OptionSets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.ManageSubspecialities)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await subSpecialityRepository.DeleteAsync(id);

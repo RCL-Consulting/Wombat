@@ -70,7 +70,7 @@
                     }
                     else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested)
                     {
-                        if (User.IsInRole(Roles.Assessor))
+                        if (User.IsInRole(Role.Assessor.ToStringValue()))
                         {
                             <a class="btn btn-success" asp-action="AcceptRequest" asp-route-id="@item.Id"><i class="fa-regular fa-square-check"></i></a> @:&nbsp;
                             <a class="btn btn-danger" asp-action="DeclineRequest" asp-route-id="@item.Id"><i class="fa-regular fa-rectangle-xmark"></i></a> @:&nbsp;
@@ -81,7 +81,7 @@
                     {
                         <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-requestStatus="@ViewBag.RequestStatus"><i class="fas fa-info-circle"></i></a>
                     }
-                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted && User.IsInRole(Roles.Assessor))
+                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted && User.IsInRole(Role.Assessor.ToStringValue()))
                     {
                         <a class="btn btn-warning" asp-action="LogRequestedAssessment" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-solid fa-clipboard-check"></i></a>
                     }

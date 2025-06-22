@@ -20,5 +20,8 @@ namespace Wombat.Application.Contracts
 {
     public interface IOptionSetRepository : IGenericRepository<OptionSet>
     {
+        Task<List<OptionSet>> GetScopedOptionSetsAsync( WombatUser user, 
+                                                        IList<string> roles );
+
     }
 }
