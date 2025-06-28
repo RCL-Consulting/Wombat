@@ -269,7 +269,7 @@ namespace Wombat.Web.Controllers
             }
             else if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
             {
-                var userSpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                var userSpecialityId = currentUser.SpecialityId;
                 invitations = invitations
                     .Where(i => i.InstitutionId == currentUser.InstitutionId &&
                                 i.SpecialityId == userSpecialityId)
@@ -345,6 +345,7 @@ namespace Wombat.Web.Controllers
                 Surname = model.LastName,
                 DateJoined = DateTime.UtcNow,
                 InstitutionId =invitation.InstitutionId,
+                SpecialityId = invitation.SpecialityId,
                 SubSpecialityId = invitation.SubSpecialityId,
                 EmailConfirmed = true, // Assuming email is confirmed by invitation
                 ApprovalStatus = WombatUser.eApprovalStatus.Approved // Automatically approve from invite

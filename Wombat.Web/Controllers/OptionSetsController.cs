@@ -51,7 +51,7 @@ namespace Wombat.Controllers
                 vm.InstitutionId != null &&
                 currentUser.InstitutionId == vm.InstitutionId &&
                 vm.SpecialityId != null &&
-                currentUser.SubSpeciality?.SpecialityId == vm.SpecialityId)
+                currentUser.SpecialityId == vm.SpecialityId)
             {
                 vm.IsEditableByCurrentUser = true;
             }
@@ -165,8 +165,8 @@ namespace Wombat.Controllers
                 vm.SpecialityId = user.SubSpeciality?.SpecialityId;
                 vm.Specialities = new List<SelectListItem> {
                     new SelectListItem {
-                        Value = user.SubSpeciality?.SpecialityId.ToString(),
-                        Text = user.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                        Value = user.SpecialityId.ToString(),
+                        Text = user.Speciality?.Name ?? "Speciality"
                     }
                 };
                 if (vm.SpecialityId != null)
@@ -189,11 +189,11 @@ namespace Wombat.Controllers
                         Text = user.Institution?.Name ?? "Institution"
                     }
                 };
-                vm.SpecialityId = user.SubSpeciality?.SpecialityId;
+                vm.SpecialityId = user.SpecialityId;
                 vm.Specialities = new List<SelectListItem> {
                     new SelectListItem {
-                        Value = user.SubSpeciality?.SpecialityId.ToString(),
-                        Text = user.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                        Value = user.SpecialityId.ToString(),
+                        Text = user.Speciality?.Name ?? "Speciality"
                     }
                 };
                 vm.SubSpecialityId = user.SubSpecialityId;

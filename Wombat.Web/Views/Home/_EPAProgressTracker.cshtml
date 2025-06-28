@@ -1,63 +1,56 @@
 ﻿@model DashboardVM
 
-<div class="card shadow-sm">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-chart-line"></i> EPA Progress Tracker (@Model.MonthsInTraining months)</h5>
-        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#progressCollapse" aria-expanded="true" aria-controls="portfolioCollapse">
-            <i class="fas fa-chevron-down"></i>
-        </button>
+<div class="card card-accent shadow-sm h-100">
+    <div class="card-header card-header-primary">
+        <h6 class="mb-0 text-uppercase">
+            <i class="fas fa-chart-line me-2"></i>EPA Progress Tracker (@Model.MonthsInTraining months)
+        </h6>
     </div>
-    <div id="progressCollapse" class="collapse show">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover small align-middle" style="width: 100%">
-                    <thead class="table-light">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle small" style="width: 100%">
+                <thead class="table-light">
+                    <tr>
+                        <th>EPA</th>
+                        <th>Latest</th>
+                        <th>Highest</th>
+                        <th>Target</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var epa in Model.EPAList)
+                    {
+                        int id = epa.Id;
+                        int latest = Model.LatestRatingPerEPA.GetValueOrDefault(id, 0);
+                        int highest = Model.HighestRatingPerEPA.GetValueOrDefault(id, 0);
+                        int expected = Model.ExpectedRatingPerEPA.GetValueOrDefault(id, 0);
+
+                        string statusClass = latest >= expected ? "text-success"
+                        : latest + 1 == expected ? "text-warning"
+                        : "text-danger";
+
+                        string icon = latest >= expected ? "check-circle"
+                        : latest + 1 == expected ? "exclamation-circle"
+                        : "times-circle";
+
+                        string statusText = latest >= expected ? "On track"
+                        : latest + 1 == expected ? "Nearly there"
+                        : "Behind";
+
                         <tr>
-                            <th>EPA</th>
-                            <th>Latest</th>
-                            <th>Highest</th>
-                            <th>Target</th>
-                            <th>Status</th>
+                            <td>@epa.Name</td>
+                            <td>@($"Level {latest}")</td>
+                            <td>@($"Level {highest}")</td>
+                            <td>@($"Level {expected}")</td>
+                            <td class="@statusClass">
+                                <i class="fas fa-@icon me-1"></i>@statusText
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var epa in Model.EPAList)
-                        {
-                            int id = epa.Id;
-                            int latest = Model.LatestRatingPerEPA.GetValueOrDefault(id, 0);
-                            int highest = Model.HighestRatingPerEPA.GetValueOrDefault(id, 0);
-                            int expected = Model.ExpectedRatingPerEPA.GetValueOrDefault(id, 0);
-
-                            string iconHtml;
-                            string statusClass;
-
-                            if (latest >= expected)
-                            {
-                                iconHtml = "<i class='fas fa-check-circle text-success'></i> On track";
-                                statusClass = "text-success";
-                            }
-                            else if (latest + 1 == expected)
-                            {
-                                iconHtml = "<i class='fas fa-exclamation-circle text-warning'></i> Nearly there";
-                                statusClass = "text-warning";
-                            }
-                            else
-                            {
-                                iconHtml = "<i class='fas fa-times-circle text-danger'></i> Behind";
-                                statusClass = "text-danger";
-                            }
-
-                            <tr>
-                                <td>@epa.Name</td>
-                                <td>@($"Level {latest}")</td>
-                                <td>@($"Level {highest}")</td>
-                                <td>@($"Level {expected}")</td>
-                                <td class="@statusClass">@Html.Raw(iconHtml)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+

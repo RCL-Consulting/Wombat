@@ -1,145 +1,89 @@
 ﻿@model CoordinatorDashboardVM
 
-<div class="row">
-    <div class="col-md-6">
-        @* Pending Registrations *@
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-success text-white">
-                <h6 class="m-0 font-weight-bold">Pending registrations</h6>
+<h4 class="text-uppercase fw-bold mb-4">
+    <i class="fas fa-user-cog me-2"></i>Coordinator Dashboard
+</h4>
+
+<div class="row mt-4">
+
+    <!-- Pending Registrations Summary -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-user-clock me-2"></i>Pending Registrations</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 @if (Model.PendingTrainees.Any())
                 {
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle" style="width: 100%">
-                            <thead class="table-success">
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var trainee in Model.PendingTrainees)
-                                {
-                                    <tr>
-                                        <td>@trainee.Name</td>
-                                        <td>@trainee.Email</td>
-                                        <td class="text-center">
-                                            <form method="post" asp-controller="Coordinator" asp-action="Approve" class="d-inline">
-                                                <input type="hidden" name="userId" value="@trainee.Id" />
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="fas fa-check"></i> Approve
-                                                </button>
-                                            </form>
-
-                                            <form method="post" asp-controller="Coordinator" asp-action="Reject" class="d-inline ms-2">
-                                                <input type="hidden" name="userId" value="@trainee.Id" />
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-times"></i> Reject
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
+                    <p>@Model.PendingTrainees.Count pending trainee registration(s).</p>
                 }
                 else
                 {
-                    <div class="alert alert-info">
-                        No pending trainee registrations for your subspeciality.
-                    </div>
+                    <p class="text-muted">No pending trainee registrations.</p>
                 }
+                <div class="d-flex gap-2">
+                    <a asp-controller="Coordinators" asp-action="Pending"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-user-clock me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        @* Trainee Progress *@
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-primary text-white">
-                <h6 class="m-0 font-weight-bold">Trainee Progress</h6>
+    <!-- Trainee Progress Summary -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Trainee Progress</h6>
             </div>
-            <div class="card-body">
-               @*  @if (Model.TraineeProgress.Any())
-                {
-                    <ul class="list-group">
-                        @foreach (var p in Model.TraineeProgress)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@p.Name</strong><br />
-                                    <small>@p.Completed / @p.Expected assessments</small>
-                                </div>
-                                <span class="badge bg-secondary">@($"{p.CompletionRate:F0}%")</span>
-                            </li>
-                        }
-                    </ul>
-                }
-                else 
-                {*@
-                <div class="alert alert-info">No trainee progress available.</div>
-                @* } *@
+            <div class="card-body p-3">
+                <p class="text-muted">No trainee progress available.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Coordinators" asp-action="Progress"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-chart-line me-1"></i> View All
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Submissions Summary -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-inbox me-2"></i>Recent Submissions</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="text-muted">No recent submissions.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Coordinators" asp-action="Progress"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-inbox me-1"></i> View All
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flagged Assessments Summary -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-flag me-2"></i>Flagged Assessments</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="text-muted">No flagged assessments.</p>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Coordinators" asp-action="Progress"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-flag me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        @* Recent Submissions *@
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-info text-white">
-                <h6 class="m-0 font-weight-bold">Recent Submissions</h6>
-            </div>
-            <div class="card-body">
-               @*  @if (Model.RecentSubmissions.Any())
-                {
-                    <ul class="list-group">
-                        @foreach (var s in Model.RecentSubmissions)
-                        {
-                            <li class="list-group-item">
-                                <strong>@s.TraineeName</strong> submitted <em>@s.FormType</em>
-                                by @s.AssessorName on @s.SubmittedOn.ToShortDateString()
-                            </li>
-                        }
-                    </ul>
-                }
-                else 
-                {*@
-                <div class="alert alert-info">No recent submissions.</div>
-                @* } *@
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        @* Flagged Assessments *@
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-danger text-white">
-                <h6 class="m-0 font-weight-bold">Flagged Assessments</h6>
-            </div>
-            <div class="card-body">
-               @*  @if (Model.FlaggedAssessments.Any())
-                {
-                    <ul class="list-group">
-                        @foreach (var f in Model.FlaggedAssessments)
-                        {
-                            <li class="list-group-item">
-                                <strong>@f.TraineeName</strong> — <em>@f.FormType</em> flagged on @f.SubmittedOn.ToShortDateString()
-                            </li>
-                        }
-                    </ul>
-                }
-                else 
-                {*@
-                <div class="alert alert-info">No flagged assessments.</div>
-               @*  } *@
-            </div>
-        </div>
-    </div>
-</div>
+<hr class="mt-5 mb-4 border-top border-2" />

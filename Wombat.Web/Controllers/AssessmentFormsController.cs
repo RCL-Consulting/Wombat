@@ -175,7 +175,7 @@ namespace Wombat.Controllers
                     vm.InstitutionId != null &&
                     currentUser.InstitutionId == vm.InstitutionId &&
                     vm.SpecialityId != null &&
-                    currentUser.SubSpeciality?.SpecialityId == vm.SpecialityId)
+                    currentUser.SpecialityId == vm.SpecialityId)
                 {
                     vm.IsEditableByCurrentUser = true;
                 }
@@ -228,7 +228,7 @@ namespace Wombat.Controllers
                 assessmentFormVM.InstitutionId != null &&
                 currentUser.InstitutionId == assessmentFormVM.InstitutionId &&
                 assessmentFormVM.SpecialityId != null &&
-                currentUser.SubSpeciality?.SpecialityId == assessmentFormVM.SpecialityId)
+                currentUser.SpecialityId == assessmentFormVM.SpecialityId)
             {
                 assessmentFormVM.IsEditableByCurrentUser = true;
             }
@@ -327,11 +327,11 @@ namespace Wombat.Controllers
                         Text = currentUser.Institution?.Name ?? "Institution"
                     }
                 };
-                vm.SpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                vm.SpecialityId = currentUser.SpecialityId;
                 vm.Specialities = new List<SelectListItem> {
                     new SelectListItem {
-                        Value = currentUser.SubSpeciality?.SpecialityId.ToString(),
-                        Text = currentUser.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                        Value = currentUser.SpecialityId.ToString(),
+                        Text = currentUser.Speciality?.Name ?? "Speciality"
                     }
                 };
                 if (vm.SpecialityId != null)
@@ -354,11 +354,11 @@ namespace Wombat.Controllers
                         Text = currentUser.Institution?.Name ?? "Institution"
                     }
                 };
-                vm.SpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                vm.SpecialityId = currentUser.SpecialityId;
                 vm.Specialities = new List<SelectListItem> {
                     new SelectListItem {
-                        Value = currentUser.SubSpeciality?.SpecialityId.ToString(),
-                        Text = currentUser.SubSpeciality?.Speciality?.Name ?? "Speciality"
+                        Value = currentUser.SpecialityId.ToString(),
+                        Text = currentUser.Speciality?.Name ?? "Speciality"
                     }
                 };
                 vm.SubSpecialityId = currentUser.SubSpecialityId;
@@ -368,6 +368,8 @@ namespace Wombat.Controllers
                         Text = currentUser.SubSpeciality?.Name ?? "SubSpeciality"
                     }
                 };
+
+                vm.AutoPopulateSubSpecialities = false; // Don't auto-populate sub-specialities for SubSpecialityAdmin
             }
 
             vm.AllEPAs = (await epaRepository.GetAllAsync())

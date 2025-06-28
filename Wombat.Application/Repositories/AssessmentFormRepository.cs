@@ -31,29 +31,33 @@ namespace Wombat.Application.Repositories
             this.optionSetRepository=optionSetRepository;
         }
 
-        public async Task<IEnumerable<AssessmentForm>> GetScopedFormsAsync( WombatUser user,
-                                                                            IList<string> roles )
+        public async Task<IEnumerable<AssessmentForm>> GetScopedFormsAsync(WombatUser user, IList<string> roles)
         {
-            var isGlobalAdmin = roles.Contains(Role.Administrator.ToStringValue());
+            var allForms = await GetAllAsync();
 
-            var allForms = await GetAllAsync(); // or optimize with .AsQueryable() if needed
+            var userInstitutionId = user.InstitutionId;
+            var userSpecialityId = user.SpecialityId;
+            var userSubSpecialityId = user.SubSpecialityId;
 
-            if (isGlobalAdmin)
-                return allForms;
+            return allForms.Where(form =>
+                // Always visible: global forms
+                form.InstitutionId == null ||
 
-            return allForms.Where(f =>
-                f.InstitutionId == null || // system-wide forms always visible
-                (roles.Contains(Role.InstitutionalAdmin.ToStringValue()) &&
-                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId)) ||
-                (roles.Contains(Role.SpecialityAdmin.ToStringValue()) &&
-                    f.SpecialityId == user.SubSpeciality?.SpecialityId &&
-                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId)) ||
-                (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) &&
-                    f.SubSpecialityId == user.SubSpecialityId &&
-                    (user.InstitutionId == null || f.InstitutionId == user.InstitutionId))
+                // Forms in user's institution
+                (userInstitutionId != null && form.InstitutionId == userInstitutionId) ||
+
+                // Forms in user's speciality within institution
+                (userInstitutionId != null && userSpecialityId != null &&
+                 form.InstitutionId == userInstitutionId &&
+                 form.SpecialityId == userSpecialityId) ||
+
+                // Forms in user's subspeciality within speciality and institution
+                (userInstitutionId != null && userSpecialityId != null && userSubSpecialityId != null &&
+                 form.InstitutionId == userInstitutionId &&
+                 form.SpecialityId == userSpecialityId &&
+                 form.SubSpecialityId == userSubSpecialityId)
             );
         }
-
 
         public override async Task<AssessmentForm?> GetAsync(int? id)
         {

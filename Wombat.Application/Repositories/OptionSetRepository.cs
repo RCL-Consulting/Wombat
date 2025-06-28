@@ -38,37 +38,31 @@ namespace Wombat.Application.Repositories
         {
             var query = context.OptionSets.AsQueryable();
 
+            // Global admin: see everything
             if (roles.Contains(Role.Administrator.ToStringValue()))
                 return await query.ToListAsync();
 
-            if (roles.Contains(Role.InstitutionalAdmin.ToStringValue()) && user.InstitutionId != null)
-            {
-                return await query
-                    .Where(f => f.InstitutionId == user.InstitutionId || f.InstitutionId == null)
-                    .ToListAsync();
-            }
+            var userInstitutionId = user.InstitutionId;
+            var userSpecialityId = user.SpecialityId;
+            var userSubSpecialityId = user.SubSpecialityId;
 
-            if (roles.Contains(Role.SpecialityAdmin.ToStringValue()) && user.SubSpeciality?.SpecialityId != null)
-            {
-                return await query
-                    .Where(f =>
-                        f.SpecialityId == user.SubSpeciality.SpecialityId &&
-                        (f.InstitutionId == null || f.InstitutionId == user.InstitutionId))
-                    .ToListAsync();
-            }
+            return await query.Where(optionSet =>
+                // Global (no institution)
+                optionSet.InstitutionId == null ||
 
-            if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()) && user.SubSpecialityId != null)
-            {
-                return await query
-                    .Where(f =>
-                        f.SubSpecialityId == user.SubSpecialityId &&
-                        (f.InstitutionId == null || f.InstitutionId == user.InstitutionId))
-                    .ToListAsync();
-            }
+                // Institution match
+                optionSet.InstitutionId == userInstitutionId ||
 
-            return new List<OptionSet>();
+                // Speciality match within institution
+                (optionSet.InstitutionId == userInstitutionId &&
+                 optionSet.SpecialityId == userSpecialityId) ||
+
+                // Subspeciality match within speciality and institution
+                (optionSet.InstitutionId == userInstitutionId &&
+                 optionSet.SpecialityId == userSpecialityId &&
+                 optionSet.SubSpecialityId == userSubSpecialityId)
+            ).ToListAsync();
         }
-
 
         public override async Task<OptionSet?> GetAsync(int? id)
         {

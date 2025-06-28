@@ -41,6 +41,10 @@ namespace Wombat.Data
         [ForeignKey("InstitutionId")]
         public Institution? Institution { get; set; }
 
+        public int? SpecialityId { get; set; }
+        [ForeignKey("SpecialityId")]
+        public Speciality? Speciality { get; set; }
+
         public int? SubSpecialityId { get; set; }
         [ForeignKey("SubSpecialityId")]
         public SubSpeciality? SubSpeciality { get; set; }

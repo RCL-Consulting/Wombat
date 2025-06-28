@@ -122,12 +122,16 @@
     <script>
         const allSubSpecialities = @Html.Raw(Json.Serialize(Model.AllSubSpecialities));
         const allEPAs = @Html.Raw(Json.Serialize(Model.AllEPAs));
+         const autoPopulateSubSpecialities = @Model.AutoPopulateSubSpecialities.ToString().ToLower();
 
         const specialityDropdown = document.getElementById("SpecialityId");
         const subSpecialityDropdown = document.getElementById("SubSpecialityId");
         const epaDropdown = document.getElementById("EpaId");
 
         function populateEPAs(subSpecialityId) {
+
+            if(!subSpecialityId || subSpecialityId === "")
+                return;
             epaDropdown.innerHTML = "";
 
             const defaultOption = document.createElement("option");
@@ -144,7 +148,11 @@
             });
         }
 
-        function populateSubSpecialities(specialityId) {
+        function populateSubSpecialities(specialityId) 
+        {
+            if(!autoPopulateSubSpecialities)
+                return;
+
             subSpecialityDropdown.innerHTML = "";
 
             const filtered = allSubSpecialities.filter(s => s.specialityId === parseInt(specialityId));
@@ -377,10 +385,15 @@
 
         subSpecialityDropdown.addEventListener("change", function () {
             populateEPAs(this.value);
-        });
+        });      
+
+        if (specialityDropdown.value) {
+            populateSubSpecialities(specialityDropdown.value);
+        }
 
         if (subSpecialityDropdown.value) {
             populateEPAs(subSpecialityDropdown.value);
         }
+
     </script>
 }

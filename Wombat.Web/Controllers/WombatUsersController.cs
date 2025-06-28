@@ -154,12 +154,11 @@ namespace Wombat.Controllers
             else if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
             {
                 // Speciality admin: same institution + same speciality
-                int? targetSpecialityId = currentUser.SubSpeciality?.SpecialityId;
+                int? targetSpecialityId = currentUser.SpecialityId;
 
                 query = query.Where(u =>
                     u.InstitutionId == currentUser.InstitutionId &&
-                    u.SubSpeciality != null &&
-                    u.SubSpeciality.SpecialityId == targetSpecialityId);
+                    u.SpecialityId == targetSpecialityId);
             }
             else if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))
             {
@@ -216,7 +215,7 @@ namespace Wombat.Controllers
             if (roles.Contains(Role.SpecialityAdmin.ToStringValue()))
             {
                 return currentUser.InstitutionId == targetUser.InstitutionId &&
-                       currentUser.SubSpeciality?.SpecialityId == targetUser.SubSpeciality?.SpecialityId;
+                       currentUser.SpecialityId == targetUser.SpecialityId;
             }
 
             if (roles.Contains(Role.SubSpecialityAdmin.ToStringValue()))

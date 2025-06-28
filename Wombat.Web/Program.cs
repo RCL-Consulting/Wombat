@@ -92,6 +92,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(Claims.ManageEPAs, policy =>
         policy.RequireClaim(Claims.ManageEPAs, "true"));
 
+    options.AddPolicy(Claims.ApproveTrainee, policy =>
+        policy.RequireClaim(Claims.ApproveTrainee, "true"));
+
     // Add more as needed...
 });
 

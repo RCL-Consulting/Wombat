@@ -1,32 +1,35 @@
 ﻿@model DashboardVM
 
-<div class="card shadow-sm">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Schedule New Assessment</h5>
-        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#scheduleCollapse" aria-expanded="true" aria-controls="portfolioCollapse">
-            <i class="fas fa-chevron-down"></i>
-        </button>
+<div class="card card-accent shadow-sm h-100">
+    <div class="card-header card-header-primary">
+        <h6 class="mb-0 text-uppercase">
+            <i class="fas fa-calendar-check me-2"></i>Schedule New Assessment
+        </h6>
     </div>
-    <div id="scheduleCollapse" class="collapse show">
-        <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-                @foreach (var item in Model.EPAList.OrderBy(e => Model.TotalAssessmentsPerEPA.GetValueOrDefault(e.Id)))
-                {
-                    int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
-                    <div class="col">
-                        <div class="card h-100 border-light">
-                            <div class="card-body">
-                                <h6 class="card-title">@item.Name</h6>
-                                <p class="card-text text-muted small">@item.Description</p>
-                                <p class="text-muted mb-1"><strong>@total</strong> assessment(s) logged</p>
-                                <a class="btn btn-sm btn-outline-success w-100" asp-controller="AssessmentRequests" asp-action="CreateForEPA" asp-route-id="@item.Id">
+    <div class="card-body">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            @foreach (var item in Model.EPAList.OrderBy(e => Model.TotalAssessmentsPerEPA.GetValueOrDefault(e.Id)))
+            {
+                int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
+                <div class="col">
+                    <div class="card h-100 border-light shadow-sm d-flex flex-column">
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title fw-semibold">@item.Name</h6>
+                            <p class="card-text text-muted small">@item.Description</p>
+                            <p class="text-muted mb-3 small"><strong>@total</strong> assessment(s) logged</p>
+                            <div class="mt-auto">
+                                <a class="btn btn-sm btn-outline-success rounded-pill w-100"
+                                   asp-controller="AssessmentRequests"
+                                   asp-action="CreateForEPA"
+                                   asp-route-id="@item.Id">
                                     <i class="fas fa-clipboard-check me-1"></i> Request Assessment
                                 </a>
                             </div>
                         </div>
                     </div>
-                }
-            </div>
+                </div>
+            }
         </div>
     </div>
 </div>
+

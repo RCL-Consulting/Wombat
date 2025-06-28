@@ -1,46 +1,47 @@
 ﻿@model DashboardVM
 
-<div class="card shadow-sm">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"> <i class="fas fa-folder-open"></i> Portfolio Builder</h5>
-        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#portfolioCollapse" aria-expanded="true" aria-controls="portfolioCollapse">
-            <i class="fas fa-chevron-down"></i>
-        </button>
+<div class="card card-accent shadow-sm h-100">
+    <div class="card-header card-header-primary">
+        <h6 class="mb-0 text-uppercase">
+            <i class="fas fa-folder-open me-2"></i>Portfolio Builder
+        </h6>
     </div>
-    <div id="portfolioCollapse" class="collapse show">
-        <div class="card-body">
-            <div class="table-responsive small">
-                <table class="table table-striped align-middle" style="width: 100%">
-                    <thead>
+    <div class="card-body">
+        <div class="table-responsive small">
+            <table class="table table-striped align-middle" style="width: 100%">
+                <thead class="table-light">
+                    <tr>
+                        <th>EPA</th>
+                        <th>Visible</th>
+                        <th>Total</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.EPAList)
+                    {
+                        int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
+                        int visible = Model.VisibleAssessmentsPerEPA.GetValueOrDefault(item.Id);
                         <tr>
-                            <th>EPA</th>
-                            <th>Visible</th>
-                            <th>Total</th>
-                            <th class="text-center">Actions</th>
+                            <td>@item.Name</td>
+                            <td>@visible</td>
+                            <td>@total</td>
+                            <td class="text-center">
+                                @if (total > 0)
+                                {
+                                    <a class="btn btn-sm btn-outline-warning rounded-pill"
+                                       asp-controller="LoggedAssessments"
+                                       asp-action="PortfolioByEPA"
+                                       asp-route-id="@item.Id">
+                                        <i class="fas fa-pencil-alt me-1"></i> Edit
+                                    </a>
+                                }
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.EPAList)
-                        {
-                            int total = Model.TotalAssessmentsPerEPA.GetValueOrDefault(item.Id);
-                            int visible = Model.VisibleAssessmentsPerEPA.GetValueOrDefault(item.Id);
-                            <tr>
-                                <td>@item.Name</td>
-                                <td>@visible</td>
-                                <td>@total</td>
-                                <td class="text-center">
-                                    @if (total > 0)
-                                    {
-                                        <a class="btn btn-sm btn-outline-warning me-1" asp-controller="LoggedAssessments" asp-action="PortfolioByEPA" asp-route-id="@item.Id">
-                                            <i class="fas fa-pencil-alt"></i> Edit
-                                        </a>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+

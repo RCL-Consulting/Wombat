@@ -25,44 +25,35 @@
 
                 <input type="hidden" asp-for="Id" />
 
-                @if (Model.Institutions?.Count > 0)
-                {
-                    <div class="mb-3">
-                        <label asp-for="InstitutionId" class="form-label fw-semibold">Institution</label>
-                        <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
-                            @if (Model.Institutions.Count > 1)
-                            {
-                                <option value="">-- None --</option>
-                            }
-                        </select>
-                    </div>
-                }
+                <div class="mb-3">
+                    <label asp-for="InstitutionId" class="form-label fw-semibold">Institution</label>
+                    <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
+                        @if (Model.Institutions.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
 
-                @if (Model.Specialities?.Count > 0)
-                {
-                    <div class="mb-3">
-                        <label asp-for="SpecialityId" class="form-label fw-semibold">Speciality</label>
-                        <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select">
-                            @if (Model.Specialities.Count > 1)
-                            {
-                                <option value="">-- None --</option>
-                            }
-                        </select>
-                    </div>
-                }
+                <div class="mb-3">
+                    <label asp-for="SpecialityId" class="form-label fw-semibold">Speciality</label>
+                    <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select">
+                        @if (Model.Specialities.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
 
-                @if (Model.SubSpecialities?.Count > 0)
-                {
-                    <div class="mb-3">
-                        <label asp-for="SubSpecialityId" class="form-label fw-semibold">Subspeciality</label>
-                        <select asp-for="SubSpecialityId" asp-items="Model.SubSpecialities" class="form-select">
-                            @if (Model.SubSpecialities.Count > 1)
-                            {
-                                <option value="">-- None --</option>
-                            }
-                        </select>
-                    </div>
-                }
+                <div class="mb-3">
+                    <label asp-for="SubSpecialityId" class="form-label fw-semibold">Subspeciality</label>
+                    <select asp-for="SubSpecialityId" asp-items="Model.SubSpecialities" class="form-select">
+                        @if (Model.SubSpecialities.Count > 1)
+                        {
+                            <option value="">-- None --</option>
+                        }
+                    </select>
+                </div>
 
                 @if (Model.AllEPAs.Any())
                 {
@@ -137,7 +128,7 @@
     </script>
 
     <script>
-        const selectedSubSpecialityId = @selectedSubSpecialityId;
+        const selectedSubSpecialityId = @Html.Raw(Json.Serialize(selectedSubSpecialityId));
         const selectedEPAIds = @Html.Raw(Json.Serialize(selectedEPAIds));
 
         const allSubSpecialities = @Html.Raw(Json.Serialize(Model.AllSubSpecialities));
@@ -169,6 +160,8 @@
 
 
         function populateSubSpecialities(specialityId) {
+
+            console.log("populateSubSpecialities called");
             subSpecialityDropdown.innerHTML = "";
 
             const filtered = allSubSpecialities.filter(s => s.specialityId === parseInt(specialityId));

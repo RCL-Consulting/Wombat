@@ -67,5 +67,7 @@ namespace Wombat.Common.Models
         public List<int> SelectedEPAIds { get; set; } = new();
 
         public bool IsEditableByCurrentUser { get; set; } = false;
+
+        public bool AutoPopulateSubSpecialities { get; set; } = true;
     }
 }
