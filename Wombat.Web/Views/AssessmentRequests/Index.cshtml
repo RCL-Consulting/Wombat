@@ -1,92 +1,140 @@
 ﻿@model IEnumerable<AssessmentRequestVM>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Assessment Requests";
 }
 
-<h1>@ViewBag.Heading</h1>
+<div class="container mt-4">
+    <div class="card card-accent shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>@ViewBag.Heading
+            </h5>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Trainee)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DateRequested)
-            </th>
-            @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
+        <div class="card-body p-4">
+            @if (!Model.Any())
             {
-                <th>
-                    @Html.DisplayNameFor(model => model.CompletionDate)
-                </th>
+                <div class="alert alert-info mb-0">
+                    No assessment requests found.
+                </div>
             }
-            else if ( ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
-                      ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
-                      ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
+            else
             {
-                <th>
-                    @Html.DisplayNameFor(model => model.AssessmentDate)
-                </th>
-            }
-            <th>
-                @Html.DisplayNameFor(model => model.ShortEPADisplayName)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @item.Trainee.Name @item.Trainee.Surname (@item.Trainee.Email)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.DateRequested)
-                </td>
-                @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
-                {
-                    <td>
-                        @Html.DisplayFor(modelItem => item.CompletionDate)
-                    </td>
-                }
-                else if ( ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
-                          ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
-                          ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
-                {
-                    <td>
-                        @Html.DisplayFor(modelItem => item.AssessmentDate)
-                    </td>
-                }
-                <td>
-                    @item.ShortEPADisplayName
-                </td>
-                <td>
-                    @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
-                    {
-                        <a class="btn btn-warning" asp-action="CreatePDFFromRequest" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-regular fa-file-pdf"></i></a> @:&nbsp;
-                        <a class="btn btn-info" asp-action="DetailsFromRequest" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fas fa-info-circle"></i></a>
-                    }
-                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested)
-                    {
-                        if (User.IsInRole(Role.Assessor.ToStringValue()))
+                <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.Trainee)</th>
+                            <th>@Html.DisplayNameFor(model => model.DateRequested)</th>
+                            @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
+                            {
+                                <th>@Html.DisplayNameFor(model => model.CompletionDate)</th>
+                            }
+                            else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
+                            ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
+                            ViewBag.RequestStatus == AssessmentRequestStatus.Accepted)
+                            {
+                                <th>@Html.DisplayNameFor(model => model.AssessmentDate)</th>
+                            }
+                            <th>@Html.DisplayNameFor(model => model.ShortEPADisplayName)</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
                         {
-                            <a class="btn btn-success" asp-action="AcceptRequest" asp-route-id="@item.Id"><i class="fa-regular fa-square-check"></i></a> @:&nbsp;
-                            <a class="btn btn-danger" asp-action="DeclineRequest" asp-route-id="@item.Id"><i class="fa-regular fa-rectangle-xmark"></i></a> @:&nbsp;
+                            <tr>
+                                <td>@item.Trainee.Name @item.Trainee.Surname (@item.Trainee.Email)</td>
+                                <td>@Html.DisplayFor(modelItem => item.DateRequested)</td>
+
+                                @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
+                                {
+                                    <td>@Html.DisplayFor(modelItem => item.CompletionDate)</td>
+                                }
+                                else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
+                                ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
+                                ViewBag.RequestStatus == AssessmentRequestStatus.Accepted)
+                                {
+                                    <td>@Html.DisplayFor(modelItem => item.AssessmentDate)</td>
+                                }
+
+                                <td>@item.ShortEPADisplayName</td>
+                                <td class="text-end text-nowrap">
+                                    @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
+                                    {
+                                        <a class="btn btn-icon btn-warning btn-sm"
+                                           asp-action="CreatePDFFromRequest"
+                                           asp-controller="LoggedAssessments"
+                                           asp-route-id="@item.Id"
+                                           title="Download PDF">
+                                            <i class="fa-regular fa-file-pdf"></i>
+                                        </a>
+                                        <a class="btn btn-icon btn-info btn-sm"
+                                           asp-action="DetailsFromRequest"
+                                           asp-controller="LoggedAssessments"
+                                           asp-route-id="@item.Id"
+                                           title="View Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                    }
+                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested)
+                                    {
+                                        if (User.IsInRole(Role.Assessor.ToStringValue()))
+                                        {
+                                            <a class="btn btn-icon btn-success btn-sm"
+                                               asp-action="AcceptRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Accept Request">
+                                                <i class="fa-regular fa-square-check"></i>
+                                            </a>
+                                            <a class="btn btn-icon btn-danger btn-sm"
+                                               asp-action="DeclineRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Decline Request">
+                                                <i class="fa-regular fa-rectangle-xmark"></i>
+                                            </a>
+                                        }
+                                        <a class="btn btn-icon btn-info btn-sm"
+                                           asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           asp-route-requestStatus="@ViewBag.RequestStatus"
+                                           title="View Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                    }
+                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Declined)
+                                    {
+                                        <a class="btn btn-icon btn-info btn-sm"
+                                           asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           asp-route-requestStatus="@ViewBag.RequestStatus"
+                                           title="View Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                    }
+                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted &&
+                                    User.IsInRole(Role.Assessor.ToStringValue()))
+                                    {
+                                        <a class="btn btn-icon btn-warning btn-sm"
+                                           asp-action="LogRequestedAssessment"
+                                           asp-controller="LoggedAssessments"
+                                           asp-route-id="@item.Id"
+                                           title="Log Assessment">
+                                            <i class="fa-solid fa-clipboard-check"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
                         }
-                        <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-requestStatus="@ViewBag.RequestStatus"><i class="fas fa-info-circle"></i></a>
-                    }
-                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Declined )
-                    {
-                        <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-requestStatus="@ViewBag.RequestStatus"><i class="fas fa-info-circle"></i></a>
-                    }
-                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted && User.IsInRole(Role.Assessor.ToStringValue()))
-                    {
-                        <a class="btn btn-warning" asp-action="LogRequestedAssessment" asp-controller="LoggedAssessments" asp-route-id="@item.Id"><i class="fa-solid fa-clipboard-check"></i></a>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-end">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Back to Home">
+                <i class="fas fa-home"></i>
+            </a>
+        </div>
+    </div>
+</div>

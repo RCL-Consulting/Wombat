@@ -14,29 +14,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Policy;
+using System.Threading.Tasks;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
+using Wombat.Services;
 
 namespace Wombat.Web.Controllers
 {
+    [Authorize]
     public class AssessmentRequestsController : Controller
     {
         private readonly IMapper mapper;
         private readonly IAssessmentRequestRepository assessmentRequestRepository;
         private readonly IAssessmentFormRepository assessmentFormRepository;
+        private readonly IEmailSender emailSender;
+        private readonly IWebHostEnvironment environment;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEPARepository epaRepository;
         private readonly UserManager<WombatUser> userManager;
@@ -46,7 +54,9 @@ namespace Wombat.Web.Controllers
                                              IHttpContextAccessor httpContextAccessor,
                                              IEPARepository epaRepository,
                                              UserManager<WombatUser> userManager,
-                                             IAssessmentFormRepository assessmentFormRepository)
+                                             IAssessmentFormRepository assessmentFormRepository,
+                                             IEmailSender emailSender,
+                                             IWebHostEnvironment environment)
         {
             this.assessmentRequestRepository = assessmentRequestRepository;
             this.epaRepository = epaRepository;
@@ -54,6 +64,8 @@ namespace Wombat.Web.Controllers
             this.mapper = mapper;
             this.userManager = userManager;
             this.assessmentFormRepository = assessmentFormRepository;
+            this.emailSender = emailSender;
+            this.environment = environment;
         }
 
         // GET: AssessmentRequests
@@ -330,24 +342,54 @@ namespace Wombat.Web.Controllers
             return View(request);
         }
 
+        public string LoadTemplateAndInsertValues(AssessmentRequestVM assessmentRequestVM)
+        {
+            var url = Url.Action("Index", "Home", null, Request.Scheme);
+            var templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentRequest.html");
+            var emailTemplate = System.IO.File.ReadAllText(templatePath);
+            return emailTemplate
+                .Replace("{{assessorName}}", assessmentRequestVM.Assessor?.Name)
+                .Replace("{{traineeName}}", assessmentRequestVM.Trainee?.Name ?? "a trainee")
+                .Replace("{{epaName}}", assessmentRequestVM.EPA?.Name)
+                .Replace("{{link}}", url);
+        }
+
         // POST: AssessmentRequests/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Claims.RequestAssessment)]
         public async Task<IActionResult> CreateForEPA(AssessmentRequestVM assessmentRequestVM)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(assessmentRequestVM);
+
+            assessmentRequestVM.Id = 0;
+            assessmentRequestVM.EPA = null;
+            assessmentRequestVM.DateRequested = DateTime.Now;
+
+            var request = mapper.Map<AssessmentRequest>(assessmentRequestVM);
+
+            await assessmentRequestRepository.AddAsync(request);
+
+            //await userManager.FindByIdAsync(traineeId);
+            // 📩 Fetch assessor
+            assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequestVM.AssessorId));
+            if (assessmentRequestVM.Assessor != null && !string.IsNullOrEmpty(assessmentRequestVM.Assessor.Email))
             {
-                assessmentRequestVM.Id = 0;
-                assessmentRequestVM.EPA = null;
-                assessmentRequestVM.DateRequested = DateTime.Now;
-                var request = mapper.Map<AssessmentRequest>(assessmentRequestVM);
-                await assessmentRequestRepository.AddAsync(request);
-                return RedirectToAction("Index", "Home");
+                assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequestVM.TraineeId));
+                assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequestVM.EPAId));
+
+                string htmlContent = LoadTemplateAndInsertValues(assessmentRequestVM);
+
+                string email = assessmentRequestVM.Assessor.Email;
+                await emailSender.SendEmailAsync(email, "Wombat Assessment Request", htmlContent);
             }
-            return View(assessmentRequestVM);
+
+            return RedirectToAction("Index", "Home");
         }
+
 
         // GET: AssessmentRequests/Edit/5
         public async Task<IActionResult> Edit(int? id)

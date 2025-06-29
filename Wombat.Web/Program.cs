@@ -95,6 +95,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(Claims.ApproveTrainee, policy =>
         policy.RequireClaim(Claims.ApproveTrainee, "true"));
 
+    options.AddPolicy(Claims.HandleAssessmentRequests, policy =>
+        policy.RequireClaim(Claims.HandleAssessmentRequests, "true"));
+
+    options.AddPolicy(Claims.RequestAssessment, policy =>
+        policy.RequireClaim(Claims.RequestAssessment, "true"));
+
     // Add more as needed...
 });
 

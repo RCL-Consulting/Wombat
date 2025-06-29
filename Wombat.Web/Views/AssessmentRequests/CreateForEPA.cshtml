@@ -1,66 +1,74 @@
 ﻿@model AssessmentRequestVM
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Assessment Request";
 }
 
-<h4>Assessment request</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="CreateForEPA">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="TraineeId" />
-            <input type="hidden" asp-for="EPAId" />
+<div class="container mt-4">
+    <div class="card card-accent-create shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Assessment Request - Create</h5>
+        </div>
 
-            <div class="form-group">
-                <label class="control-label">Assessor</label>
-                <select asp-for="AssessorId" class="form-select" asp-items="ViewBag.Assessors">
-                    <option value="">-- Select an assessor --</option>
-                </select>
-                <span asp-validation-for="AssessorId" class="text-danger"></span>
+        <form asp-action="CreateForEPA" method="post">
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <input type="hidden" asp-for="TraineeId" />
+                <input type="hidden" asp-for="EPAId" />
+
+                <div class="mb-3">
+                    <label asp-for="AssessorId" class="form-label fw-semibold">Assessor</label>
+                    <select asp-for="AssessorId" class="form-select" asp-items="ViewBag.Assessors">
+                        <option value="">-- Select an assessor --</option>
+                    </select>
+                    <span asp-validation-for="AssessorId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">EPA</label>
+                    <input asp-for="EPA.Name" class="form-control" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AssessmentFormId" class="form-label fw-semibold">Assessment Type</label>
+                    <select asp-for="AssessmentFormId" class="form-select" asp-items="ViewBag.Forms">
+                        <option value="">-- Select a form --</option>
+                    </select>
+                    <span asp-validation-for="AssessmentFormId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AssessmentDate" class="form-label fw-semibold">Assessment Date</label>
+                    <input asp-for="AssessmentDate" class="form-control" />
+                    <span asp-validation-for="AssessmentDate" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label fw-semibold"></label>
+                    <textarea asp-for="Notes" class="form-control"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                </div>
             </div>
-            <br/>
 
-            <div class="form-group">
-                <label class="control-label">EPA</label>
-                <input asp-for="EPA.Name" class="form-control" readonly>
-            </div> 
-            <br/>
-
-            <div class="form-group">
-                <label class="control-label">Assessment type</label>
-                <select asp-for="AssessmentFormId" class="form-select" asp-items="ViewBag.Forms">
-                </select>
-                <span asp-validation-for="AssessmentFormId" class="text-danger"></span>
-            </div>
-            <br />
-
-            <div class="form-group">
-                <label asp-for="AssessmentDate" class="control-label"></label>
-                <input asp-for="AssessmentDate" class="form-control">
-                <span asp-validation-for="AssessmentDate" class="text-danger"></span>
-            </div>
-            <br />
-
-            <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
-                <textarea asp-for="Notes" class="form-control"></textarea>
-                <span asp-validation-for="Notes" class="text-danger"></span>
-            </div>
-            <br />
-
-            <div class="form-group">
-                <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Cancel</a> &nbsp;
-                <input type="submit" value="Submit" class="btn btn-primary" />
+            <div class="card-footer bg-light">
+                <div class="row text-center align-items-center">
+                    <div class="col-md-6 d-flex justify-content-start">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Home">
+                            <i class="fas fa-home"></i>
+                        </a>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-icon btn-create" title="Submit Request">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts 
-{
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
 }

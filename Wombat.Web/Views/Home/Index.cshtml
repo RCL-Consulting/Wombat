@@ -25,14 +25,7 @@
     @* Assessor Section *@
     @if (UserContext.CanLogAssessment || UserContext.CanHandleAssessmentRequests)
     {
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-info text-white">
-                <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
-            </div>
-            <div class="card-body">
-                <partial name="AssessorHome.cshtml" model="@Model" />
-            </div>
-        </div>
+        <partial name="AssessorHome.cshtml" model="@Model" />
     }
 
     @* Trainee Section *@

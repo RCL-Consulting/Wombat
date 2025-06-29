@@ -1,49 +1,100 @@
 ﻿@model DashboardVM
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Assessor Dashboard";
 }
 
-<div class="row">
-    <div class="col-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Requested" style="text-decoration: none;">
-                    <h1 class="card-title text-danger">@Model.NumberOfRequestsMade</h1>
-                </a>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsMade)</p>
+<h4 class="text-uppercase fw-bold mb-4">
+    <i class="fas fa-user-check me-2"></i>Assessor Dashboard
+</h4>
+
+<div class="row mt-4">
+
+    <!-- Pending Requests -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"> <i class="fas fa-hourglass-half me-2"></i>Requests</h6>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-3">
+                    @Model.NumberOfRequestsMade pending requests
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-controller="AssessmentRequests" 
+                       asp-action="Index" 
+                       asp-route-requestStatus="@AssessmentRequestStatus.Requested"  class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-hourglass-half me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Declined" style="text-decoration: none;">
-                    <h1 class="card-title text-danger">@Model.NumberOfRequestsDeclined</h1>
-                </a>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfRequestsDeclined)</p>
+
+    <!-- Declined Requests -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"> <i class="fas fa-ban me-2"></i>Declined</h6>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-3">
+                    @Model.NumberOfRequestsDeclined declined requests
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="Index"
+                       asp-controller="AssessmentRequests"
+                       asp-route-requestStatus="@AssessmentRequestStatus.Declined" 
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-ban me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Accepted" style="text-decoration: none;">
-                    <h1 class="card-title text-primary">@Model.NumberOfPendingAssessments</h1>
-                </a>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfPendingAssessments)</p>
+
+    <!-- Pending Assessments -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"> <i class="fas fa-clipboard-list me-2"></i>Pending</h6>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-3">
+                    @Model.NumberOfPendingAssessments pending assessments
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="Index"
+                       asp-controller="AssessmentRequests"
+                       asp-route-requestStatus="@AssessmentRequestStatus.Accepted"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-clipboard-list me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Completed" style="text-decoration: none;">
-                    <h1 class="card-title text-success">@Model.NumberOfCompletedAssessments</h1>
-                </a>
-                <p class="card-text">@Html.DisplayNameFor(model => model.NumberOfCompletedAssessments)</p>
+
+    <!-- Completed Assessments  -->
+    <div class="col-md-6 col-xl-4 mb-4">
+        <div class="card card-accent shadow-sm h-100">
+            <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"> <i class="fas fa-check-circle me-2"></i>Completed</h6>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-between text-center">
+                <div class="small text-muted mb-3">
+                    @Model.NumberOfCompletedAssessments completed assessments
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="Index"
+                       asp-controller="AssessmentRequests"
+                       asp-route-requestStatus="@AssessmentRequestStatus.Completed"
+                       class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-check-circle me-1"></i> View All
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
-<br />
