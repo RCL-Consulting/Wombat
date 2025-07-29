@@ -159,6 +159,18 @@ namespace Wombat.Controllers
 
             if (roles.Contains(Role.Trainee.ToStringValue()))
             {
+                dashboard.AcceptedRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetTraineePendingAssessments(user.Id)
+                );
+
+                dashboard.PendingRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetTraineePendingRequests(user.Id)
+                );
+
+                dashboard.DeclinedRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetTraineeDeclinedRequests(user.Id)
+                );
+
                 dashboard.User.SubSpeciality = mapper.Map<SubSpecialityVM>(
                     await subSpecialityRepository.GetAsync(user.SubSpecialityId)
                 );

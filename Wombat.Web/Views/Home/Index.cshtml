@@ -49,7 +49,64 @@
         </div>
 
         @section Scripts {
+            @{
+                var events = Model.AcceptedRequests
+                    .Where(x => x.AssessmentDate.HasValue)
+                    .Select(item => new
+                    {
+                        id = item.Id,
+                        start = item.AssessmentDate!.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        end = item.AssessmentDate.Value.AddHours(1).ToString("yyyy-MM-ddTHH:mm:ss"),
+                        text = $"{item.ShortEPADisplayName}",
+                        backColor = "#198754" // green for accepted
+                    })
+                    .Concat(Model.PendingRequests // replace with your actual pending list
+                        .Where(x => x.AssessmentDate.HasValue)
+                        .Select(item => new
+                        {
+                            id = item.Id,
+                            start = item.AssessmentDate!.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
+                            end = item.AssessmentDate.Value.AddHours(1).ToString("yyyy-MM-ddTHH:mm:ss"),
+                            text = $"{item.ShortEPADisplayName}",
+                            backColor = "#ffc107" // yellow for pending
+                        })
+                    );
+
+                var eventsJson = System.Text.Json.JsonSerializer.Serialize(events);
+            }
+
             <script>
+                            let calendar;
+
+                function switchView(viewType) {
+                    if (calendar) {
+                        calendar.dispose(); // Clean up the old instance
+                        document.getElementById("calendar_container").innerHTML = "";
+                    }
+
+                    switch (viewType) {
+                        case "Day":
+                            calendar = new DayPilot.Calendar("calendar_container", {viewType: "Day"});
+                            break;
+                        case "Week":
+                            calendar = new DayPilot.Calendar("calendar_container", {viewType: "Week"});
+                            break;
+                        case "Month":
+                        default:
+                            calendar = new DayPilot.Month("calendar_container");
+                            break;
+                    }
+
+                    calendar.events.list = JSON.parse(`@Html.Raw(eventsJson)`);
+
+                    calendar.init();
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    switchView("Month"); // Default view
+                });
+            </script>
+            @* <script>
                 document.addEventListener('DOMContentLoaded', function () {
                     const ctx = document.getElementById('assessmentChart');
                     if (ctx) {
@@ -74,7 +131,7 @@
                         });
                     }
                 });
-            </script>
+            </script> *@
         }
     }
     
@@ -85,84 +142,3 @@ else
         Your account is currently <strong>@UserContext.ApprovalStatus</strong>. Please contact your coordinator.
     </div>
 }
-
-
-<!-- Authenticated Users -->
-@* <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Welcome, @Model.User.Name</h1>
-</div>
-
-@if (User.IsInRole(Roles.Trainee))
-{
-    ViewData["Title"] = "Trainee Dashboard";
-
-    // Prepare data for chart
-    var labels = new[] { "Requested", "Declined", "Pending", "Completed" };
-    var values = new[] {
-                Model.NumberOfRequestsMade,
-                Model.NumberOfRequestsDeclined,
-                Model.NumberOfPendingAssessments,
-                Model.NumberOfCompletedAssessments
-            };
-
-    ViewData["ChartLabels"] = JsonConvert.SerializeObject(labels);
-    ViewData["ChartValues"] = JsonConvert.SerializeObject(values);
-
-    <div class="card-body">
-        <partial name="TraineeHome.cshtml" model="@Model" />
-    </div>
-
-    @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const ctx = document.getElementById('assessmentChart');
-            if (ctx) {
-                const labels = @Html.Raw(ViewData["ChartLabels"]);
-                const data = @Html.Raw(ViewData["ChartValues"]);
-
-                console.log("Chart labels:", labels);
-                console.log("Chart values:", data);
-
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: data,
-                            backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-        }
-}
-else if (User.IsInRole(Roles.Assessor))
-{
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 bg-info text-white">
-            <h6 class="m-0 font-weight-bold">Assessor Dashboard</h6>
-        </div>
-        <div class="card-body">
-            <partial name="AssessorHome.cshtml" model="@Model" />
-        </div>
-    </div>
-}
-else if (User.IsInRole(Roles.Coordinator))
-{
-    <partial name="Coordinator.cshtml" model="@Model.Coordinator" />
-}
-
-@if (User.IsInRole(Roles.Administrator))
-{
-    <partial name="Administrator.cshtml" model="@Model" />
-    
-}
- *@

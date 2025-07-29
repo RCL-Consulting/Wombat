@@ -81,17 +81,17 @@
                                     {
                                         if (User.IsInRole(Role.Assessor.ToStringValue()))
                                         {
-                                            <a class="btn btn-icon btn-success btn-sm"
+                                            <a class="btn btn-icon btn-create btn-sm"
                                                asp-action="AcceptRequest"
                                                asp-route-id="@item.Id"
                                                title="Accept Request">
-                                                <i class="fa-regular fa-square-check"></i>
+                                                <i class="fas fa-check"></i>
                                             </a>
-                                            <a class="btn btn-icon btn-danger btn-sm"
+                                            <a class="btn btn-icon btn-delete btn-sm"
                                                asp-action="DeclineRequest"
                                                asp-route-id="@item.Id"
                                                title="Decline Request">
-                                                <i class="fa-regular fa-rectangle-xmark"></i>
+                                                <i class="fas fa-times"></i>
                                             </a>
                                         }
                                         <a class="btn btn-icon btn-info btn-sm"
@@ -131,8 +131,8 @@
             }
         </div>
 
-        <div class="card-footer bg-light d-flex justify-content-end">
-            <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Back to Home">
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Home">
                 <i class="fas fa-home"></i>
             </a>
         </div>

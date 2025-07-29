@@ -221,6 +221,16 @@ namespace Wombat.Web.Controllers
                     assessmentRequest.AssessorNotes = assessmentRequestVM.AssessorNotes;
                     assessmentRequest.DateDeclined = assessmentRequestVM.DateDeclined;
                     await assessmentRequestRepository.UpdateAsync(assessmentRequest);
+
+                    assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.AssessorId));
+                    assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.TraineeId));
+                    assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequest.EPAId));
+
+                    if (!string.IsNullOrEmpty(assessmentRequestVM.Trainee?.Email))
+                    {
+                        string html = LoadDeclinedTemplate(assessmentRequestVM);
+                        await emailSender.SendEmailAsync(assessmentRequestVM.Trainee.Email, "Assessment Request Declined", html);
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -280,6 +290,16 @@ namespace Wombat.Web.Controllers
                     assessmentRequest.AssessorNotes = assessmentRequestVM.AssessorNotes;
                     assessmentRequest.DateAccepted = assessmentRequestVM.DateAccepted;
                     await assessmentRequestRepository.UpdateAsync(assessmentRequest);
+
+                    assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.AssessorId));
+                    assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.TraineeId));
+                    assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequest.EPAId));
+
+                    if (!string.IsNullOrEmpty(assessmentRequestVM.Trainee?.Email))
+                    {
+                        string html = LoadAcceptedTemplate(assessmentRequestVM);
+                        await emailSender.SendEmailAsync(assessmentRequestVM.Trainee.Email, "Assessment Request Accepted", html);
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -342,9 +362,38 @@ namespace Wombat.Web.Controllers
             return View(request);
         }
 
+        private string LoadAcceptedTemplate(AssessmentRequestVM vm)
+        {
+            string templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentAccepted.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+            return html
+                .Replace("{{assessorName}}", vm.Assessor?.Name)
+                .Replace("{{traineeName}}", vm.Trainee?.Name ?? "you")
+                .Replace("{{epaName}}", vm.EPA?.Name)
+                .Replace("{{assessorNotes}}", string.IsNullOrWhiteSpace(vm.AssessorNotes) ? "No comments provided." : vm.AssessorNotes);
+        }
+
+        private string LoadDeclinedTemplate(AssessmentRequestVM vm)
+        {
+            string templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentDeclined.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+            return html
+                .Replace("{{assessorName}}", vm.Assessor?.Name)
+                .Replace("{{traineeName}}", vm.Trainee?.Name ?? "you")
+                .Replace("{{epaName}}", vm.EPA?.Name)
+                .Replace("{{assessorNotes}}", string.IsNullOrWhiteSpace(vm.AssessorNotes) ? "No comments provided." : vm.AssessorNotes);
+        }
+
+
         public string LoadTemplateAndInsertValues(AssessmentRequestVM assessmentRequestVM)
         {
-            var url = Url.Action("Index", "Home", null, Request.Scheme);
+            var url = Url.Action(
+                "Details",
+                "AssessmentRequests",
+                new { id = assessmentRequestVM.Id, requestStatus = AssessmentRequestStatus.Requested },
+                Request.Scheme
+            );
+
             var templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentRequest.html");
             var emailTemplate = System.IO.File.ReadAllText(templatePath);
             return emailTemplate
@@ -372,6 +421,7 @@ namespace Wombat.Web.Controllers
             var request = mapper.Map<AssessmentRequest>(assessmentRequestVM);
 
             await assessmentRequestRepository.AddAsync(request);
+            assessmentRequestVM.Id = request.Id;
 
             //await userManager.FindByIdAsync(traineeId);
             // 📩 Fetch assessor

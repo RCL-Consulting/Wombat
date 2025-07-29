@@ -1,0 +1,39 @@
+﻿@model IEnumerable<AssessmentRequestVM>
+
+<div class="card card-accent-danger shadow-sm h-100">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="fas fa-times-circle me-2"></i>Declined Assessment Requests</h6>
+    </div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p class="text-muted">No declined requests.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>EPA</th>
+                            <th>Declined On</th>
+                            <th>Assessor</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderByDescending(r => r.DateDeclined))
+                        {
+                            <tr>
+                                <td>@item.ShortEPADisplayName</td>
+                                <td>@item.DateDeclined?.ToString("yyyy-MM-dd")</td>
+                                <td>@item.Assessor?.Name</td>
+                                <td>@item.AssessorNotes</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

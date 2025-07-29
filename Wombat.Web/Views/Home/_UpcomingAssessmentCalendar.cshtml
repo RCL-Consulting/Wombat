@@ -1,0 +1,17 @@
+﻿@model IEnumerable<AssessmentRequestVM>
+
+<div class="card card-accent-info shadow-sm h-100">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Upcoming Assessments Calendar
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="btn-group mb-3" role="group">
+            <button class="btn btn-outline-primary" onclick="switchView('Day')">Day</button>
+            <button class="btn btn-outline-primary" onclick="switchView('Week')">Week</button>
+            <button class="btn btn-outline-primary" onclick="switchView('Month')">Month</button>
+        </div>
+        <div id="calendar_container" style="width: 100%; height: 500px;"></div>
+    </div>
+</div>

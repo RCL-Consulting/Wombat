@@ -1,59 +1,75 @@
 ﻿@model AssessmentRequestVM
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Decline Request";
 }
 
-<h4>Decline the assessment request</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
+<div class="container mt-4">
+    <div class="card card-accent-edit shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Request - Decline</h5>
+        </div>
+
         <form asp-action="DeclineRequest">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="AssessorId" />
-            <input type="hidden" asp-for="TraineeId" />
-            <input type="hidden" asp-for="AssessmentFormId" />
-            <input type="hidden" asp-for="EPAId" />
-            <div class="form-group">
-                <label asp-for="TraineeDisplayName" class="control-label"></label>
-                <input asp-for="TraineeDisplayName" class="form-control" readonly/>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="AssessorId" />
+                <input type="hidden" asp-for="TraineeId" />
+                <input type="hidden" asp-for="AssessmentFormId" />
+                <input type="hidden" asp-for="EPAId" />
+
+                <div class="form-group">
+                    <label asp-for="TraineeDisplayName" class="control-label"></label>
+                    <input asp-for="TraineeDisplayName" class="form-control" readonly />
+                </div>
+                <br />
+
+                <div class="form-group">
+                    <label asp-for="FullEPADisplayName" class="control-label"></label>
+                    <input asp-for="FullEPADisplayName" class="form-control" readonly />
+                </div>
+                <br />
+
+                <div class="form-group">
+                    <label asp-for="AssessmentDate" class="control-label"></label>
+                    <input asp-for="AssessmentDate" class="form-control" readonly />
+                </div>
+                <br />
+
+                <div class="form-group">
+                    <label class="control-label">Trainee notes</label>
+                    <textarea asp-for="Notes" class="form-control" readonly></textarea>
+                </div>
+                <br />
+
+                <div class="form-group">
+                    <label class="control-label">Assessor notes</label>
+                    <textarea asp-for="AssessorNotes" class="form-control"></textarea>
+                </div>
+                <br />
             </div>
-            <br/>
 
-            <div class="form-group">
-                <label asp-for="FullEPADisplayName" class="control-label"></label>
-                <input asp-for="FullEPADisplayName" class="form-control" readonly />
-            </div> 
-            <br />
-
-            <div class="form-group">
-                <label asp-for="AssessmentDate" class="control-label"></label>
-                <input asp-for="AssessmentDate" class="form-control" readonly />
-            </div>
-            <br />
-
-            <div class="form-group">
-                <label class="control-label">Trainee notes</label>
-                <textarea asp-for="Notes" class="form-control" readonly></textarea>
-            </div>
-            <br />
-
-
-            <div class="form-group">
-                <label class="control-label">Assessor notes</label>
-                <textarea asp-for="AssessorNotes" class="form-control"></textarea>
-            </div>
-            <br />
-
-            <div class="form-group">
-                <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Back Home</a> &nbsp;
-                <input type="submit" value="Submit" class="btn btn-warning" />
+            <div class="card-footer bg-light">
+                <div class="row text-center align-items-center">
+                    <div class="col-md-6 d-flex justify-content-start">
+                        <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                            <i class="fa-solid fa-list"></i>
+                        </a>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-icon btn-edit" title="Save Changes">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

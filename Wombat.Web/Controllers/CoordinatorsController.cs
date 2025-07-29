@@ -41,7 +41,7 @@ namespace Wombat.Web.Controllers
             await userManager.RemoveFromRoleAsync(user, "PendingTrainee");
             await userManager.AddToRoleAsync(user, "Trainee");
 
-            return RedirectToAction(nameof(PendingAsync));
+            return RedirectToAction("Pending");
         }
 
         [HttpPost]
@@ -56,7 +56,7 @@ namespace Wombat.Web.Controllers
             await userManager.UpdateAsync(user);
             await userManager.RemoveFromRoleAsync(user, "PendingTrainee");
 
-            return RedirectToAction(nameof(PendingAsync));
+            return RedirectToAction("Pending");
         }
 
         public async Task<IActionResult> DashboardAsync()

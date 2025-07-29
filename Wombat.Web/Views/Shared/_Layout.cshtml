@@ -15,7 +15,8 @@
     <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" rel="stylesheet" />
     <link href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
-    <link href="~/Wombat.styles.css" rel="stylesheet" />
+
+    @* <link href="~/Wombat.styles.css" rel="stylesheet" /> *@
 </head>
 
 <body id="page-top">
@@ -99,7 +100,6 @@
             </div>
         </div>
 
-
         <!-- Core SB Admin 2 JS -->
         <script src="~/vendor/jquery/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="..." crossorigin="anonymous"></script>
@@ -112,6 +112,9 @@
         <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
         <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
         <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>
+
+        <script src="~/lib/daypilot/daypilot-all.min.js"></script>
+
         <script>
             $(function () {
                 $('.table').DataTable();
@@ -120,6 +123,7 @@
                 });
             });
         </script>
+
         <script src="~/js/site.js"></script>
 
         <script>

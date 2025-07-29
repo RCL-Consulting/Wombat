@@ -30,6 +30,8 @@ namespace Wombat.Common.Models
         Requested,
         Accepted,
         Declined,
+        CancelledByTrainee,
+        CancelledByAssessor,
         Completed
     }
     public class AssessmentRequestVM

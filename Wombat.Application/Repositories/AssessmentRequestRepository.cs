@@ -41,6 +41,7 @@ namespace Wombat.Application.Repositories
             var requests = await context.AssessmentRequests
                 .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate == null)
                 .Include(r => r.Trainee)
+                .Include(r => r.Assessor)
                 .ToListAsync();
 
             foreach (var item in requests)

@@ -68,5 +68,10 @@ namespace Wombat.Common.Models
         public int NumberOfInvitations { get; set; }
 
         public List<InstitutionVM> RecentInstitutions { get; set; } = new();
+
+        public List<AssessmentRequestVM> AcceptedRequests { get; set; } = new();
+
+        public List<AssessmentRequestVM> PendingRequests { get; set; } = new();
+        public List<AssessmentRequestVM> DeclinedRequests { get; set; } = new();
     }
 }
