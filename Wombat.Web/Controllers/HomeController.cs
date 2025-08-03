@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
@@ -104,7 +105,10 @@ namespace Wombat.Controllers
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
             var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
             var roles = await userManager.GetRolesAsync(user);
-            
+
+            Expression<Func<AssessmentRequest, bool>> isTrainee = r => r.TraineeId == userId;
+            Expression<Func<AssessmentRequest, bool>> isAssessor = r => r.AssessorId == userId;
+
             var dashboard = new DashboardVM
             {
                 User = mapper.Map<WombatUserVM>(user),
@@ -160,15 +164,27 @@ namespace Wombat.Controllers
             if (roles.Contains(Role.Trainee.ToStringValue()))
             {
                 dashboard.AcceptedRequests = mapper.Map<List<AssessmentRequestVM>>(
-                    await assessmentRequestRepository.GetTraineePendingAssessments(user.Id)
+                    await assessmentRequestRepository.GetPendingAssessmentsAsync(isTrainee)
                 );
 
                 dashboard.PendingRequests = mapper.Map<List<AssessmentRequestVM>>(
-                    await assessmentRequestRepository.GetTraineePendingRequests(user.Id)
+                    await assessmentRequestRepository.GetPendingRequestsAsync(isTrainee)
+                );
+
+                dashboard.NotConductedAssessments = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetNotConductedAssessmentsAsync(isTrainee)
+                );
+
+                dashboard.ExpiredRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetExpiredRequestsAsync(isTrainee)
                 );
 
                 dashboard.DeclinedRequests = mapper.Map<List<AssessmentRequestVM>>(
-                    await assessmentRequestRepository.GetTraineeDeclinedRequests(user.Id)
+                    await assessmentRequestRepository.GetDeclinedRequestsAsync(isTrainee)
+                );
+
+                dashboard.CompletedAssessments = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetCompletedAssessmentsAsync(isTrainee)
                 );
 
                 dashboard.User.SubSpeciality = mapper.Map<SubSpecialityVM>(
@@ -190,7 +206,7 @@ namespace Wombat.Controllers
                     dashboard.VisibleAssessmentsPerEPA = await loggedAssessmentRepository.GetVisibleAssessmentsPerEPAByTrainee(EPAIds, userId);
 
                     // Load completed assessments and extract scores (Rank)
-                    var completedAssessments = await assessmentRequestRepository.GetTraineeCompletedAssessments(userId);
+                    var completedAssessments = await assessmentRequestRepository.GetCompletedAssessmentsAsync(isTrainee);
 
                     var scoredAssessments = completedAssessments
                         .Where(a => a.LoggedAssessment?.OptionCriterionResponses != null)
@@ -249,28 +265,44 @@ namespace Wombat.Controllers
                             return match?.Curriculum?.EPAScaleOption?.Rank ?? 0;
                         });
                 }
-
                 // General stats
-                dashboard.NumberOfRequestsMade = (await assessmentRequestRepository.GetTraineePendingRequests(userId))?.Count ?? 0;
-                dashboard.NumberOfRequestsDeclined = (await assessmentRequestRepository.GetTraineeDeclinedRequests(userId))?.Count ?? 0;
-                dashboard.NumberOfPendingAssessments = (await assessmentRequestRepository.GetTraineePendingAssessments(userId))?.Count ?? 0;
-                dashboard.NumberOfCompletedAssessments = (await assessmentRequestRepository.GetTraineeCompletedAssessments(userId))?.Count ?? 0;
+                dashboard.NumberOfRequestsMade = (await assessmentRequestRepository.GetPendingRequestsAsync(isTrainee))?.Count ?? 0;
+                dashboard.NumberOfRequestsDeclined = (await assessmentRequestRepository.GetDeclinedRequestsAsync(isTrainee))?.Count ?? 0;
+                dashboard.NumberOfPendingAssessments = (await assessmentRequestRepository.GetPendingAssessmentsAsync(isTrainee))?.Count ?? 0;
+                dashboard.NumberOfCompletedAssessments = (await assessmentRequestRepository.GetCompletedAssessmentsAsync(isTrainee))?.Count ?? 0;
             }
 
 
             else if (roles.Contains(Role.Assessor.ToStringValue()))
             {
-                var requestsMade = await assessmentRequestRepository.GetAssessorPendingRequests(userId);
-                dashboard.NumberOfRequestsMade = requestsMade?.Count ?? 0;
+                dashboard.NotConductedAssessments = mapper.Map<List<AssessmentRequestVM>>(
+                   await assessmentRequestRepository.GetNotConductedAssessmentsAsync(isAssessor)
+                );
 
-                var requestsDeclined = await assessmentRequestRepository.GetAssessorDeclinedRequests(userId);
-                dashboard.NumberOfRequestsDeclined = requestsDeclined?.Count ?? 0;
+                dashboard.ExpiredRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetExpiredRequestsAsync(isAssessor)
+                );
 
-                var requestsMadeAndAccepted = await assessmentRequestRepository.GetAssessorPendingAssessments(userId);
-                dashboard.NumberOfPendingAssessments = requestsMadeAndAccepted?.Count ?? 0;
+                dashboard.AcceptedRequests = mapper.Map<List<AssessmentRequestVM>>(
+                   await assessmentRequestRepository.GetPendingAssessmentsAsync(isAssessor)
+                );
+                dashboard.NumberOfPendingAssessments = dashboard.AcceptedRequests?.Count ?? 0;
 
-                var completedAssessments = await assessmentRequestRepository.GetAssessorCompletedAssessments(userId);
-                dashboard.NumberOfCompletedAssessments = completedAssessments?.Count ?? 0;
+                dashboard.PendingRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetPendingRequestsAsync(isAssessor)
+                );
+                dashboard.NumberOfRequestsMade = dashboard.PendingRequests?.Count ?? 0;
+
+                dashboard.DeclinedRequests = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetDeclinedRequestsAsync(isAssessor)
+                );
+                dashboard.NumberOfRequestsDeclined = dashboard.DeclinedRequests?.Count ?? 0;
+
+
+                dashboard.CompletedAssessments = mapper.Map<List<AssessmentRequestVM>>(
+                    await assessmentRequestRepository.GetCompletedAssessmentsAsync(isAssessor)
+                );
+                dashboard.NumberOfCompletedAssessments = dashboard.CompletedAssessments?.Count ?? 0;
             }
             //else if (roles.Contains(Role.Administrator.ToStringValue()))
             //{

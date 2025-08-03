@@ -43,10 +43,32 @@
                     @Html.DisplayFor(model => model.AssessmentDate)
                 </dd>
                 <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.Notes)
+                    @Html.DisplayNameFor(model => model.Events)
                 </dt>
                 <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.Notes)
+                    @if (Model.Events?.Any() == true)
+                    {
+                        <div class="card shadow-sm mt-4">
+                            <div class="card-header bg-light text-muted">
+                                <i class="fas fa-comments me-2"></i>Event History
+                            </div>
+                            <div class="card-body">
+                                @foreach (var evt in Model.Events)
+                                {
+                                    <div class="mb-3">
+                                        <div>
+                                            <strong>@evt.Actor?.DisplayName</strong>
+                                            <span class="text-muted">(@evt.Type) on @evt.Timestamp.ToLocalTime():</span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(evt.Message))
+                                        {
+                                            <div class="ms-3">@evt.Message</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 </dd>
             </dl>
         </div>
@@ -55,14 +77,30 @@
                 <i class="fa-solid fa-list"></i>
             </a>
             <div>
-                @if (ViewBag.RequestStatus==AssessmentRequestStatus.Requested && User.IsInRole(Role.Assessor.ToStringValue()))
+                @if (Model.Status==AssessmentRequestStatus.Requested && User.IsInRole(Role.Assessor.ToStringValue()))
                 {
                     <a class="btn btn-icon btn-create" asp-action="AcceptRequest" asp-route-id="@Model.Id" title="Accept Request">
                                                     <i class="fas fa-check"></i>
                                                     </a>
                     <a class="btn btn-icon btn-delete" asp-action="DeclineRequest" asp-route-id="@Model.Id"title="Decline Request">
-                                                    <i class="fas fa-times"></i></a>
+                        <i class="fas fa-times"></i></a>
                 }
+                else if (Model.Status == AssessmentRequestStatus.Accepted)
+                {
+                    <a class="btn btn-icon btn-edit btn-sm"
+                       asp-action="LogRequestedAssessment"
+                       asp-controller="LoggedAssessments"
+                       asp-route-id="@Model.Id"
+                       title="Log Assessment">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </a>
+                }
+                <a class="btn btn-icon btn-create btn-sm"
+                   asp-action="ExportCalendarEntry"
+                   asp-route-id="@Model.Id"
+                   title="Export calendar event">
+                    <i class="fas fa-calendar-plus"></i>
+                </a>
             </div>
         </div>
     </div>

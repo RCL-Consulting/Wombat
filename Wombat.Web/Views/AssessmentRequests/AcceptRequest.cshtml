@@ -37,16 +37,34 @@
                 <br />
 
                 <div class="form-group">
-                    <label class="control-label">Trainee notes</label>
-                    <textarea asp-for="Notes" class="form-control" readonly></textarea>
+                    <label class="control-label">Comment</label>
+                    <textarea asp-for="ActionComment" class="form-control"></textarea>
                 </div>
                 <br />
 
-
-                <div class="form-group">
-                    <label class="control-label">Assessor notes</label>
-                    <textarea asp-for="AssessorNotes" class="form-control"></textarea>
-                </div>
+                @if (Model.Events?.Any() == true)
+                {
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header bg-light text-muted">
+                            <i class="fas fa-comments me-2"></i>Event History
+                        </div>
+                        <div class="card-body">
+                            @foreach (var evt in Model.Events)
+                            {
+                                <div class="mb-3">
+                                    <div>
+                                        <strong>@evt.Actor?.DisplayName</strong>
+                                        <span class="text-muted">(@evt.Type) on @evt.Timestamp.ToLocalTime():</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(evt.Message))
+                                    {
+                                        <div class="ms-3">@evt.Message</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
                 <br />
             </div>
             <div class="card-footer bg-light">

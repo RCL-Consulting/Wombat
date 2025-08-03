@@ -1,0 +1,24 @@
+﻿<div class="card card-accent shadow-sm h-100">
+    <div class="card-header card-header-primary d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0 d-flex align-items-center">
+            <i class="fas fa-calendar-alt me-2"></i>Calendar
+        </h6>
+        <div class="d-flex align-items-center gap-2">
+            <div id="calendar_range_display" class="fw-semibold text-muted me-3"></div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-secondary" onclick="navigateCalendar(-1)">Previous</button>
+                <button class="btn btn-outline-secondary" onclick="goToToday()">Today</button>
+                <button class="btn btn-outline-secondary" onclick="navigateCalendar(1)">Next</button>             
+            </div>
+        </div>
+        <a asp-action="ExportCalendarEntries" asp-controller="AssessmentRequests" class="btn btn-create btn-sm" title="Export calendar (Accepted only)">
+            <i class="fas fa-calendar-plus"></i>
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-column flex-md-row">
+            <div id="navigator_container" class="me-md-3 mb-3 mb-md-0" style="flex: 20%; margin-right: 10px;"></div>
+            <div id="calendar_container" style="flex-grow: 1; min-height: 500px;"></div>
+        </div>
+    </div>
+</div>

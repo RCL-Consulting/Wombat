@@ -23,10 +23,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Policy;
+using System.Text;
 using System.Threading.Tasks;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
@@ -45,6 +48,8 @@ namespace Wombat.Web.Controllers
         private readonly IAssessmentFormRepository assessmentFormRepository;
         private readonly IEmailSender emailSender;
         private readonly IWebHostEnvironment environment;
+        private readonly IAssessmentWorkflowService assessmentWorkflowService;
+        private readonly IAssessmentEventRepository assessmentEventRepository;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IEPARepository epaRepository;
         private readonly UserManager<WombatUser> userManager;
@@ -56,7 +61,9 @@ namespace Wombat.Web.Controllers
                                              UserManager<WombatUser> userManager,
                                              IAssessmentFormRepository assessmentFormRepository,
                                              IEmailSender emailSender,
-                                             IWebHostEnvironment environment)
+                                             IWebHostEnvironment environment,
+                                             IAssessmentWorkflowService assessmentWorkflowService,
+                                             IAssessmentEventRepository assessmentEventRepository )
         {
             this.assessmentRequestRepository = assessmentRequestRepository;
             this.epaRepository = epaRepository;
@@ -66,9 +73,9 @@ namespace Wombat.Web.Controllers
             this.assessmentFormRepository = assessmentFormRepository;
             this.emailSender = emailSender;
             this.environment = environment;
+            this.assessmentWorkflowService = assessmentWorkflowService;
+            this.assessmentEventRepository = assessmentEventRepository;
         }
-
-        // GET: AssessmentRequests
         
         private bool UserIsAssessor()
         {
@@ -98,29 +105,32 @@ namespace Wombat.Web.Controllers
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
             ViewBag.RequestStatus = requestStatus;
 
+            Expression<Func<AssessmentRequest, bool>> isAssessor = r => r.AssessorId == userId;
+            Expression<Func<AssessmentRequest, bool>> isTrainee = r => r.TraineeId == userId;
+
             if (UserIsAssessor())
-            {
+            {             
                 if (requestStatus == AssessmentRequestStatus.Completed)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorCompletedAssessments(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetCompletedAssessmentsAsync(isAssessor));
                     ViewBag.Heading = "Completed assessments";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Requested)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingRequests(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetPendingRequestsAsync(isAssessor));
                     ViewBag.Heading = "Pending requests";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Declined)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorDeclinedRequests(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetDeclinedRequestsAsync(isAssessor));
                     ViewBag.Heading = "Declined requests";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Accepted)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetAssessorPendingAssessments(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetPendingAssessmentsAsync(isAssessor));
                     ViewBag.Heading = "Pending assessments";
                     return View(Requests);
                 }
@@ -129,25 +139,25 @@ namespace Wombat.Web.Controllers
             {
                 if (requestStatus == AssessmentRequestStatus.Completed)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineeCompletedAssessments(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetCompletedAssessmentsAsync(isTrainee));
                     ViewBag.Heading = "Completed assessments";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Requested)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineePendingRequests(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetPendingRequestsAsync(isTrainee));
                     ViewBag.Heading = "Pending requests";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Declined)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineeDeclinedRequests(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetDeclinedRequestsAsync(isTrainee));
                     ViewBag.Heading = "Declined requests";
                     return View(Requests);
                 }
                 else if (requestStatus == AssessmentRequestStatus.Accepted)
                 {
-                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetTraineePendingAssessments(userId));
+                    var Requests = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetPendingAssessmentsAsync(isTrainee));
                     ViewBag.Heading = "Pending assessments";
                     return View(Requests);
                 }
@@ -176,6 +186,8 @@ namespace Wombat.Web.Controllers
             var trainee = await userManager.FindByIdAsync(request.TraineeId);
             requestVM.Trainee = mapper.Map<WombatUserVM>(trainee);
 
+            requestVM.Events = mapper.Map<List<AssessmentEventVM>>(await assessmentEventRepository.GetEventsForRequestAsync(request.Id));
+
             return View(requestVM);
         }
 
@@ -194,6 +206,8 @@ namespace Wombat.Web.Controllers
             var trainee = await userManager.FindByIdAsync(request.TraineeId);
             requestVM.Trainee = mapper.Map<WombatUserVM>(trainee);
 
+            requestVM.Events = mapper.Map<List<AssessmentEventVM>>(await assessmentEventRepository.GetEventsForRequestAsync(request.Id));
+
             return View(requestVM);
         }
 
@@ -205,32 +219,14 @@ namespace Wombat.Web.Controllers
             {
                 return NotFound();
             }
-            assessmentRequestVM.DateDeclined = DateTime.Now;
-
-            var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
-
-            if (assessmentRequest == null)
-            {
-                return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    assessmentRequest.AssessorNotes = assessmentRequestVM.AssessorNotes;
-                    assessmentRequest.DateDeclined = assessmentRequestVM.DateDeclined;
-                    await assessmentRequestRepository.UpdateAsync(assessmentRequest);
-
-                    assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.AssessorId));
-                    assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.TraineeId));
-                    assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequest.EPAId));
-
-                    if (!string.IsNullOrEmpty(assessmentRequestVM.Trainee?.Email))
-                    {
-                        string html = LoadDeclinedTemplate(assessmentRequestVM);
-                        await emailSender.SendEmailAsync(assessmentRequestVM.Trainee.Email, "Assessment Request Declined", html);
-                    }
+                    await assessmentWorkflowService.DeclineRequestAsync( assessmentRequestVM, 
+                                                                         userManager.GetUserId(httpContextAccessor.HttpContext.User),
+                                                                         Request );
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -248,6 +244,81 @@ namespace Wombat.Web.Controllers
             return View(assessmentRequestVM);
         }
 
+        private void GetCAddalendarEvent( AssessmentRequestVM assessmentRequest,
+                                          StringBuilder calendar )
+        {
+            string name = "";
+            if (UserIsAssessor())
+                name = assessmentRequest.Trainee.DisplayName;
+            else if (UserIsTrainee())
+                name = assessmentRequest.Assessor.DisplayName;
+
+            string text = assessmentRequest.EPA?.Name + " Assessment (" + name + ")";
+
+            calendar.AppendLine("BEGIN:VEVENT");
+            calendar.AppendLine($"UID:{assessmentRequest.Id}@wombat.app");
+            calendar.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
+            calendar.AppendLine($"DTSTART:{assessmentRequest.AssessmentDate:yyyyMMddTHHmmssZ}");
+            calendar.AppendLine($"DTEND:{assessmentRequest.AssessmentDate:yyyyMMddTHHmmssZ}");
+            calendar.AppendLine($"SUMMARY:{text}");
+            calendar.AppendLine("END:VEVENT");
+        }
+
+        public async Task<IActionResult> ExportCalendarEntry(int? id)
+        {
+            var request = await assessmentRequestRepository.GetAsync(id);
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            var requestVM = mapper.Map<AssessmentRequestVM>(request);
+
+            var calendar = new StringBuilder();
+            calendar.AppendLine("BEGIN:VCALENDAR");
+            calendar.AppendLine("VERSION:2.0");
+            calendar.AppendLine("PRODID:-//Wombat//Assessment Calendar//EN");
+
+            GetCAddalendarEvent(requestVM, calendar);
+
+            calendar.AppendLine("END:VCALENDAR");
+
+            return File(Encoding.UTF8.GetBytes(calendar.ToString()), "text/calendar", "calendar.ics");
+        }
+
+        public async Task<IActionResult> ExportCalendarEntries()
+        {
+            if (httpContextAccessor.HttpContext == null)
+                return NotFound();
+
+            var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+
+            Expression<Func<AssessmentRequest, bool>> predicate;
+
+            if (UserIsAssessor())
+                predicate = r => r.AssessorId == userId;
+            else if (UserIsTrainee())
+                predicate = r => r.TraineeId == userId;
+            else
+                return NotFound();
+
+            List<AssessmentRequestVM> PendingAssessments = mapper.Map<List<AssessmentRequestVM>>(await assessmentRequestRepository.GetPendingAssessmentsAsync(predicate));
+            
+            var calendar = new StringBuilder();
+            calendar.AppendLine("BEGIN:VCALENDAR");
+            calendar.AppendLine("VERSION:2.0");
+            calendar.AppendLine("PRODID:-//Wombat//Assessment Calendar//EN");
+
+            foreach (var requestVM in PendingAssessments)
+            {
+                GetCAddalendarEvent(requestVM, calendar);
+            }
+
+            calendar.AppendLine("END:VCALENDAR");
+
+            return File(Encoding.UTF8.GetBytes(calendar.ToString()), "text/calendar", "calendar.ics");
+        }
+
         public async Task<IActionResult> AcceptRequest(int? id)
         {
             var request = await assessmentRequestRepository.GetAsync(id);
@@ -263,6 +334,8 @@ namespace Wombat.Web.Controllers
             var trainee = await userManager.FindByIdAsync(request.TraineeId);
             requestVM.Trainee = mapper.Map<WombatUserVM>(trainee);
 
+            requestVM.Events = mapper.Map<List<AssessmentEventVM>>(await assessmentEventRepository.GetEventsForRequestAsync(request.Id));
+
             return View(requestVM);
         }
 
@@ -274,32 +347,14 @@ namespace Wombat.Web.Controllers
             {
                 return NotFound();
             }
-            assessmentRequestVM.DateAccepted = DateTime.Now;
-
-            var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
-
-            if (assessmentRequest == null)
-            {
-                return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    assessmentRequest.AssessorNotes = assessmentRequestVM.AssessorNotes;
-                    assessmentRequest.DateAccepted = assessmentRequestVM.DateAccepted;
-                    await assessmentRequestRepository.UpdateAsync(assessmentRequest);
-
-                    assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.AssessorId));
-                    assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequest.TraineeId));
-                    assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequest.EPAId));
-
-                    if (!string.IsNullOrEmpty(assessmentRequestVM.Trainee?.Email))
-                    {
-                        string html = LoadAcceptedTemplate(assessmentRequestVM);
-                        await emailSender.SendEmailAsync(assessmentRequestVM.Trainee.Email, "Assessment Request Accepted", html);
-                    }
+                    await assessmentWorkflowService.AcceptRequestAsync( assessmentRequestVM,
+                                                                        userManager.GetUserId(httpContextAccessor.HttpContext.User),
+                                                                        Request);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -360,48 +415,7 @@ namespace Wombat.Web.Controllers
             ViewBag.Forms = formList;
 
             return View(request);
-        }
-
-        private string LoadAcceptedTemplate(AssessmentRequestVM vm)
-        {
-            string templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentAccepted.html");
-            var html = System.IO.File.ReadAllText(templatePath);
-            return html
-                .Replace("{{assessorName}}", vm.Assessor?.Name)
-                .Replace("{{traineeName}}", vm.Trainee?.Name ?? "you")
-                .Replace("{{epaName}}", vm.EPA?.Name)
-                .Replace("{{assessorNotes}}", string.IsNullOrWhiteSpace(vm.AssessorNotes) ? "No comments provided." : vm.AssessorNotes);
-        }
-
-        private string LoadDeclinedTemplate(AssessmentRequestVM vm)
-        {
-            string templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentDeclined.html");
-            var html = System.IO.File.ReadAllText(templatePath);
-            return html
-                .Replace("{{assessorName}}", vm.Assessor?.Name)
-                .Replace("{{traineeName}}", vm.Trainee?.Name ?? "you")
-                .Replace("{{epaName}}", vm.EPA?.Name)
-                .Replace("{{assessorNotes}}", string.IsNullOrWhiteSpace(vm.AssessorNotes) ? "No comments provided." : vm.AssessorNotes);
-        }
-
-
-        public string LoadTemplateAndInsertValues(AssessmentRequestVM assessmentRequestVM)
-        {
-            var url = Url.Action(
-                "Details",
-                "AssessmentRequests",
-                new { id = assessmentRequestVM.Id, requestStatus = AssessmentRequestStatus.Requested },
-                Request.Scheme
-            );
-
-            var templatePath = Path.Combine(environment.WebRootPath, "Templates", "AssessmentRequest.html");
-            var emailTemplate = System.IO.File.ReadAllText(templatePath);
-            return emailTemplate
-                .Replace("{{assessorName}}", assessmentRequestVM.Assessor?.Name)
-                .Replace("{{traineeName}}", assessmentRequestVM.Trainee?.Name ?? "a trainee")
-                .Replace("{{epaName}}", assessmentRequestVM.EPA?.Name)
-                .Replace("{{link}}", url);
-        }
+        }       
 
         // POST: AssessmentRequests/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -414,28 +428,18 @@ namespace Wombat.Web.Controllers
             if (!ModelState.IsValid)
                 return View(assessmentRequestVM);
 
+            if(httpContextAccessor == null || httpContextAccessor.HttpContext == null)
+                return NotFound();
+
             assessmentRequestVM.Id = 0;
             assessmentRequestVM.EPA = null;
             assessmentRequestVM.DateRequested = DateTime.Now;
 
             var request = mapper.Map<AssessmentRequest>(assessmentRequestVM);
 
-            await assessmentRequestRepository.AddAsync(request);
-            assessmentRequestVM.Id = request.Id;
-
-            //await userManager.FindByIdAsync(traineeId);
-            // 📩 Fetch assessor
-            assessmentRequestVM.Assessor = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequestVM.AssessorId));
-            if (assessmentRequestVM.Assessor != null && !string.IsNullOrEmpty(assessmentRequestVM.Assessor.Email))
-            {
-                assessmentRequestVM.Trainee = mapper.Map<WombatUserVM>(await userManager.FindByIdAsync(assessmentRequestVM.TraineeId));
-                assessmentRequestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(assessmentRequestVM.EPAId));
-
-                string htmlContent = LoadTemplateAndInsertValues(assessmentRequestVM);
-
-                string email = assessmentRequestVM.Assessor.Email;
-                await emailSender.SendEmailAsync(email, "Wombat Assessment Request", htmlContent);
-            }
+            await assessmentWorkflowService.CreateRequestAsync( assessmentRequestVM, 
+                                                                userManager.GetUserId(httpContextAccessor.HttpContext.User),
+                                                                Request );
 
             return RedirectToAction("Index", "Home");
         }

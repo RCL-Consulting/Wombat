@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Wombat.Application.Contracts;
@@ -26,6 +27,23 @@ using Wombat.Data;
 
 namespace Wombat.Application.Repositories
 {
+    public static class PredicateBuilder
+    {
+        public static Expression<Func<T, bool>> AndAlso<T>(
+            this Expression<Func<T, bool>> expr1,
+            Expression<Func<T, bool>> expr2)
+        {
+            var param = Expression.Parameter(typeof(T), "r");
+
+            var body = Expression.AndAlso(
+                Expression.Invoke(expr1, param),
+                Expression.Invoke(expr2, param)
+            );
+
+            return Expression.Lambda<Func<T, bool>>(body, param);
+        }
+    }
+
     public class AssessmentRequestRepository : GenericRepository<AssessmentRequest>, IAssessmentRequestRepository
     {
         private readonly UserManager<WombatUser> userManager;
@@ -36,35 +54,118 @@ namespace Wombat.Application.Repositories
             this.userManager = userManager;
         }
 
-        public async Task<List<AssessmentRequest>?> GetTraineePendingAssessments(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetPendingRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
+            var now = DateTime.Now;
+
             var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate == null)
+                .Where(predicate)
+                .Where(r =>
+                    r.DateAccepted == null &&
+                    r.DateDeclined == null &&
+                    (!r.AssessmentDate.HasValue || r.AssessmentDate > now)
+                )
                 .Include(r => r.Trainee)
                 .Include(r => r.Assessor)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e!.SubSpeciality)
+                        .ThenInclude(s => s!.Speciality)
+                .AsNoTracking()
                 .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
 
             return requests;
         }
 
-        public async Task<List<AssessmentRequest>?> GetTraineeCompletedAssessments(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetPendingAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
+            var now = DateTime.Now;
+
+            Expression<Func<AssessmentRequest, bool>> pendingPredicate = r =>
+                r.DateAccepted != null &&
+                r.DateDeclined == null &&
+                r.CompletionDate == null &&
+                r.AssessmentDate > now;
+
+            var combined = predicate.AndAlso(pendingPredicate);
+
             var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId &&
-                            r.DateAccepted != null &&
-                            r.DateDeclined == null &&
-                            r.CompletionDate != null)
+                .Where(combined)
                 .Include(r => r.Trainee)
+                .Include(r => r.Assessor)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e.SubSpeciality)
+                        .ThenInclude(s => s.Speciality)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return requests;
+        }
+
+        public async Task<List<AssessmentRequest>?> GetExpiredRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
+        {
+            var now = DateTime.Now;
+
+            var expiredPredicate = predicate.AndAlso(r =>
+                r.DateAccepted == null &&
+                r.DateDeclined == null &&
+                r.AssessmentDate.HasValue &&
+                r.AssessmentDate <= now
+            );
+
+            var requests = await context.AssessmentRequests
+                .Where(expiredPredicate)
+                .Include(r => r.Trainee)
+                .Include (r => r.Assessor)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e!.SubSpeciality)
+                        .ThenInclude(s => s!.Speciality)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return requests;
+        }
+
+        public async Task<List<AssessmentRequest>?> GetNotConductedAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
+        {
+            var now = DateTime.Now;
+
+            var notConductedPredicate = predicate.AndAlso(r =>
+                r.DateAccepted != null &&
+                r.DateDeclined == null &&
+                r.CompletionDate == null &&
+                r.AssessmentDate.HasValue &&
+                r.AssessmentDate <= now
+            );
+
+            var requests = await context.AssessmentRequests
+                .Where(notConductedPredicate)
+                .Include(r => r.Trainee)
+                .Include(r => r.Assessor)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e!.SubSpeciality)
+                        .ThenInclude(s => s!.Speciality)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return requests;
+        }
+
+        public async Task<List<AssessmentRequest>?> GetCompletedAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> userPredicate)
+        {
+            // Common predicate for completed assessments
+            Expression<Func<AssessmentRequest, bool>> completedPredicate = r =>
+                r.DateAccepted != null &&
+                r.DateDeclined == null &&
+                r.CompletionDate != null;
+
+            // Combine predicates
+            var combined = userPredicate.AndAlso(completedPredicate);
+
+            // Query with full eager loading
+            var requests = await context.AssessmentRequests
+                .Where(combined)
+                .Include(r => r.Trainee)
+                .Include(r => r.Assessor)
                 .Include(r => r.LoggedAssessment)
                     .ThenInclude(la => la.OptionCriterionResponses!)
                         .ThenInclude(o => o.Option)
@@ -80,123 +181,26 @@ namespace Wombat.Application.Repositories
             return requests;
         }
 
-
-        public async Task<List<AssessmentRequest>?> GetTraineeDeclinedRequests(string traineeId)
+        public async Task<List<AssessmentRequest>?> GetDeclinedRequestsAsync(Expression<Func<AssessmentRequest, bool>> userPredicate)
         {
+            // Common filter for declined requests
+            Expression<Func<AssessmentRequest, bool>> declinedPredicate = r =>
+                r.DateAccepted == null &&
+                r.DateDeclined != null;
+
+            // Combine user and common predicates
+            var combined = userPredicate.AndAlso(declinedPredicate);
+
+            // Query with eager loading
             var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined != null)
+                .Where(combined)
                 .Include(r => r.Trainee)
+                .Include(r => r.Assessor)
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e.SubSpeciality)
+                        .ThenInclude(s => s.Speciality)
+                .AsNoTracking()
                 .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-
-            return requests;
-        }
-
-        public async Task<List<AssessmentRequest>?> GetTraineePendingRequests(string traineeId)
-        {
-            var requests = await context.AssessmentRequests
-                .Where(r => r.TraineeId == traineeId && r.DateAccepted == null && r.DateDeclined == null)
-                .Include(r => r.Trainee)
-                .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-
-            return requests;
-        }
-
-        public async Task<List<AssessmentRequest>?> GetAssessorPendingAssessments(string assessorId)
-        {
-            var requests = await context.AssessmentRequests
-                .Where(r => r.AssessorId == assessorId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate==null)
-                .Include(r => r.Trainee)
-                .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-            
-            return requests;
-        }
-
-        public async Task<List<AssessmentRequest>?> GetAssessorCompletedAssessments(string assessorId)
-        {
-            var requests = await context.AssessmentRequests
-                .Where(r => r.AssessorId == assessorId && r.DateAccepted != null && r.DateDeclined == null && r.CompletionDate != null)
-                .Include(r => r.Trainee)
-                .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-
-            return requests;
-        }
-
-        public async Task<List<AssessmentRequest>?> GetAssessorDeclinedRequests(string assessorId)
-        {
-            var requests = await context.AssessmentRequests
-                .Where(r => r.AssessorId == assessorId && r.DateAccepted == null && r.DateDeclined != null)
-                .Include(r => r.Trainee)
-                .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-
-            return requests;
-        }
-
-        public async Task<List<AssessmentRequest>?> GetAssessorPendingRequests(string assessorId)
-        {
-            var requests = await context.AssessmentRequests
-                .Where(r => r.AssessorId == assessorId && r.DateAccepted == null&& r.DateDeclined == null)
-                .Include(r => r.Trainee)
-                .ToListAsync();
-
-            foreach (var item in requests)
-            {
-                item.EPA = await context.EPAs
-                    .Where(e => e.Id == item.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
 
             return requests;
         }

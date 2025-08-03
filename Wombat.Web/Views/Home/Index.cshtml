@@ -48,91 +48,8 @@
             <partial name="TraineeHome.cshtml" model="@Model" />
         </div>
 
-        @section Scripts {
-            @{
-                var events = Model.AcceptedRequests
-                    .Where(x => x.AssessmentDate.HasValue)
-                    .Select(item => new
-                    {
-                        id = item.Id,
-                        start = item.AssessmentDate!.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
-                        end = item.AssessmentDate.Value.AddHours(1).ToString("yyyy-MM-ddTHH:mm:ss"),
-                        text = $"{item.ShortEPADisplayName}",
-                        backColor = "#198754" // green for accepted
-                    })
-                    .Concat(Model.PendingRequests // replace with your actual pending list
-                        .Where(x => x.AssessmentDate.HasValue)
-                        .Select(item => new
-                        {
-                            id = item.Id,
-                            start = item.AssessmentDate!.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
-                            end = item.AssessmentDate.Value.AddHours(1).ToString("yyyy-MM-ddTHH:mm:ss"),
-                            text = $"{item.ShortEPADisplayName}",
-                            backColor = "#ffc107" // yellow for pending
-                        })
-                    );
+        
 
-                var eventsJson = System.Text.Json.JsonSerializer.Serialize(events);
-            }
-
-            <script>
-                            let calendar;
-
-                function switchView(viewType) {
-                    if (calendar) {
-                        calendar.dispose(); // Clean up the old instance
-                        document.getElementById("calendar_container").innerHTML = "";
-                    }
-
-                    switch (viewType) {
-                        case "Day":
-                            calendar = new DayPilot.Calendar("calendar_container", {viewType: "Day"});
-                            break;
-                        case "Week":
-                            calendar = new DayPilot.Calendar("calendar_container", {viewType: "Week"});
-                            break;
-                        case "Month":
-                        default:
-                            calendar = new DayPilot.Month("calendar_container");
-                            break;
-                    }
-
-                    calendar.events.list = JSON.parse(`@Html.Raw(eventsJson)`);
-
-                    calendar.init();
-                }
-
-                document.addEventListener('DOMContentLoaded', function () {
-                    switchView("Month"); // Default view
-                });
-            </script>
-            @* <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const ctx = document.getElementById('assessmentChart');
-                    if (ctx) {
-                        const labels = @Html.Raw(ViewData["ChartLabels"]);
-                        const data = @Html.Raw(ViewData["ChartValues"]);
-
-                        new Chart(ctx, {
-                            type: 'pie',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    data: data,
-                                    backgroundColor: ['#dc3545', '#6c757d', '#0d6efd', '#198754'],
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: { position: 'bottom' }
-                                }
-                            }
-                        });
-                    }
-                });
-            </script> *@
-        }
     }
     
 }
@@ -141,4 +58,189 @@ else
     <div class="alert alert-warning">
         Your account is currently <strong>@UserContext.ApprovalStatus</strong>. Please contact your coordinator.
     </div>
+}
+
+@section Scripts {
+    @functions {
+        object? ToCalendarEvent(
+            Wombat.Common.Models.AssessmentRequestVM item,
+            string iconHtml,
+            string backColor,
+            string status,
+            string currentUserRole,
+            bool useLoggedDate = false)
+        {
+            var date = useLoggedDate
+                ? (item.LoggedAssessment?.AssessmentDate ?? item.AssessmentDate)
+                : item.AssessmentDate;
+
+            if (!date.HasValue)
+                return null;
+
+            var nameTag = currentUserRole switch
+            {
+                "Trainee" => $" • {item.Assessor?.DisplayName}",
+                "Assessor" => $" • {item.Trainee?.DisplayName}",
+                _ => ""
+            };
+
+            var label = $"{item.ShortEPADisplayName} ({item.StatusDisplayName}) {nameTag}";
+            var html = $"<i class='{iconHtml} me-1'></i>{label}";
+
+            return new
+            {
+                id = item.Id,
+                start = date.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = date.Value.AddHours(1).ToString("yyyy-MM-ddTHH:mm:ss"),
+                text = label,
+                html,
+                backColor,
+                status
+            };
+        }
+    }
+
+    @{
+        // Replace this with your actual role logic if needed
+        string currentUserRole = User.IsInRole("Trainee") ? "Trainee" :
+                                 User.IsInRole("Assessor") ? "Assessor" : "";
+
+        var events = Model.AcceptedRequests
+                .Where(x => x.AssessmentDate.HasValue)
+                .Select(x => ToCalendarEvent(x, "fas fa-calendar-check text-success", "#d1e7dd", "Accepted", currentUserRole))
+
+            .Concat(Model.PendingRequests
+                .Where(x => x.AssessmentDate.HasValue)
+                .Select(x => ToCalendarEvent(x, "fas fa-hourglass-half text-warning", "#fff3cd", "Pending", currentUserRole)))
+
+            .Concat(Model.NotConductedAssessments
+                .Where(x => x.AssessmentDate.HasValue)
+                .Select(x => ToCalendarEvent(x, "fas fa-exclamation-circle text-danger", "#f8d7da", "NotConducted", currentUserRole)))
+
+            .Concat(Model.ExpiredRequests
+                .Where(x => x.AssessmentDate.HasValue)
+                .Select(x => ToCalendarEvent(x, "fas fa-clock text-muted", "#f5c6cb", "Expired", currentUserRole)))
+
+            .Concat(Model.CompletedAssessments
+                .Where(x => x.AssessmentDate.HasValue || x.LoggedAssessment != null)
+                .Select(x => ToCalendarEvent(x, "fas fa-check-circle text-primary", "#cfe2ff", "Completed", currentUserRole, useLoggedDate: true)))
+            .Where(x => x != null)!; // filter out any null entries
+
+        var eventsJson = System.Text.Json.JsonSerializer.Serialize(events);
+        var detailUrlTemplate = Url.Action("Details", "AssessmentRequests", new { id = "__id__" });
+    }
+
+
+    <script>
+        let calendar;
+        let navigator;
+        const rawEvents = JSON.parse(`@Html.Raw(eventsJson)`);
+        const eventDates = new Set();
+
+        rawEvents.forEach(e => {
+            if (e.start) {
+                const dateOnly = e.start.substring(0, 10);
+                eventDates.add(dateOnly);
+            }
+        });
+
+        function navigateCalendar(offset) {
+            if (!calendar) return;
+
+            const view = calendar.viewType;
+            const date = calendar.startDate || calendar.visibleStart();
+            let newStart;
+
+            if (view === "Day") {
+                newStart = date.addDays(offset);
+            } else if (view === "Week") {
+                newStart = date.addDays(offset * 7);
+            } else {
+                newStart = date.addMonths(offset);
+            }
+
+            calendar.startDate = newStart;
+            calendar.update();
+
+            if (navigator) {
+                navigator.select(newStart);
+            }
+        }
+
+        function goToToday() {
+            if (!calendar) return;
+
+            const today = DayPilot.Date.today();
+            calendar.startDate = today;
+            calendar.update();
+
+            if (navigator) {
+                navigator.select(today);
+            }
+        }
+
+        function switchView(viewType) {
+            if (calendar) {
+                calendar.dispose();
+                document.getElementById("calendar_container").innerHTML = "";
+            }
+
+            const baseUrl = "@detailUrlTemplate";
+
+            const options = {
+                timeRangeSelectedHandling: "Disabled", // Disables time range selection
+                eventMoveHandling: "Disabled",        // Disables event moving
+                eventResizeHandling: "Disabled",      // Disables event resizing
+                eventDeleteHandling: "Disabled",      // Disables event deletion (e.g., via built-in icon)
+                eventRightClickHandling: "Disabled",  // Disables event right-click (if not needed for context menu)
+                onEventClick: function (args) {
+                    const id = args.e.data.id;
+                    const url = baseUrl.replace("__id__", id);
+                    window.location.href = url;
+                }
+            };
+
+            switch (viewType) {
+                case "Day":
+                    calendar = new DayPilot.Calendar("calendar_container", { viewType: "Day", ...options });
+                    break;
+                case "Month":
+                    calendar = new DayPilot.Month("calendar_container", options);
+                    break;
+                default:
+                case "Week":
+                    calendar = new DayPilot.Calendar("calendar_container",
+                        {
+                            viewType: "Week",
+                            headerDateFormat:"d",
+                            ...options });
+                    break;
+            }
+
+            console.log("Initializing calendar with view type:", viewType);
+            calendar.events.list = rawEvents;
+            calendar.init();
+
+            navigator = new DayPilot.Navigator("navigator_container", {
+                 cellWidth: "Auto",
+                showMonths: 1,
+                selectMode: "week",
+                onTimeRangeSelected: function (args) {
+                    calendar.startDate = args.start;
+                    calendar.update();
+                }
+            });
+
+            navigator.events.list = rawEvents;
+
+            navigator.init();
+
+            // Match current calendar view
+            navigator.select(calendar.startDate);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            switchView("week");
+        });
+    </script>
 }

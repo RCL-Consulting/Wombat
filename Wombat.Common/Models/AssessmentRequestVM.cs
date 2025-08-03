@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,13 +28,39 @@ namespace Wombat.Common.Models
 {
     public enum AssessmentRequestStatus
     {
+        [Display(Name = "Requested")]
         Requested,
+        [Display(Name = "Accepted")]
         Accepted,
+        [Display(Name = "Declined")]
         Declined,
+        [Display(Name = "Cancelled by trainee")]
         CancelledByTrainee,
+        [Display(Name = "Cancelled by assessor")]
         CancelledByAssessor,
-        Completed
+        [Display(Name = "Completed")]
+        Completed,
+        [Display(Name = "Not conducted")]
+        NotConducted,
+        [Display(Name = "Expired")]
+        Expired,
+        [Display(Name = "Awaiting assessment")]
+        None
     }
+
+    public static class EnumExtensions
+    {
+        public static string GetDisplayName(this Enum value)
+        {
+            return value
+                .GetType()
+                .GetMember(value.ToString())
+                .First()
+                .GetCustomAttribute<DisplayAttribute>()?
+                .Name ?? value.ToString();
+        }
+    }
+
     public class AssessmentRequestVM
     {
         public int Id { get; set; }
@@ -84,6 +111,21 @@ namespace Wombat.Common.Models
         public int? AssessmentFormId { get; set; } = 0;
         public AssessmentFormVM? AssessmentForm { get; set; }
 
+        public AssessmentRequestStatus Status { get; set; } = AssessmentRequestStatus.Requested;
+        public string StatusDisplayName 
+        { 
+            get { return Status.GetDisplayName(); }
+        }
+
         public string Notes { get; set; } = "";
+
+        public LoggedAssessmentVM? LoggedAssessment { get; set; }
+
+        [Display(Name = "Comment")]
+        [StringLength(1000)]
+        public string? ActionComment { get; set; }
+
+        public List<AssessmentEventVM> Events = new();
+
     }
 }

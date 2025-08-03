@@ -1,69 +1,65 @@
 ﻿@model LoggedAssessmentVM
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Assessment Details";
 }
 
-<h1>Details</h1>
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>Assessment Details for @Model.EPA?.Name
+            </h5>
+        </div>
 
-<div>
-    <h4>LoggedAssessment</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Trainee)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Trainee.Email)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Assessor)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Assessor.Email)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.EPA)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.EPA.Description)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.AssessmentDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.AssessmentDate)
-        </dd>
-    </dl>
+        <div class="card-body p-4">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-semibold">Trainee</dt>
+                <dd class="col-sm-9">@Model.Trainee?.Email</dd>
 
-    @foreach (var optionCriterionResponse in Model.OptionCriterionResponses)
-    {
-        var Value = "";
-        @if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
-        {
-            Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
-        }
-        else if (optionCriterionResponse.Option != null)
-        {
-            Value = optionCriterionResponse.Option.Description;
-        }
-        else
-        {
-            Value = optionCriterionResponse.Comment;
-        }
-        <div class="card">
-            <div class="card-header">
-                @optionCriterionResponse.Criterion.Description
-            </div>
-            <div class="card-body">
-                @Value
+                <dt class="col-sm-3 fw-semibold">Assessor</dt>
+                <dd class="col-sm-9">@Model.Assessor?.Email</dd>
+
+                <dt class="col-sm-3 fw-semibold">EPA</dt>
+                <dd class="col-sm-9">@Model.EPA?.Description</dd>
+
+                <dt class="col-sm-3 fw-semibold">Assessment Date</dt>
+                <dd class="col-sm-9">@Model.AssessmentDate.ToString("yyyy-MM-dd")</dd>
+            </dl>
+
+
+            <div class="mt-4">
+                @foreach (var optionCriterionResponse in Model.OptionCriterionResponses)
+                {
+                    var value = "";
+                    if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank && optionCriterionResponse.Option != null)
+                    {
+                        value = $"{optionCriterionResponse.Option.Rank} - {optionCriterionResponse.Option.Description}";
+                    }
+                    else if (optionCriterionResponse.Option != null)
+                    {
+                        value = optionCriterionResponse.Option.Description;
+                    }
+                    else
+                    {
+                        value = optionCriterionResponse.Comment;
+                    }
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-light text-muted fw-semibold">
+                            @optionCriterionResponse.Criterion.Description
+                        </div>
+                        <div class="card-body">
+                            @value
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-        <br />
-    }
-</div>
-<br/>
-
-<div>
-    <a asp-action="Index" asp-controller="Home" class="btn btn-dark">Back Home</a> &nbsp;
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" asp-controller="AssessmentRequests" asp-route-requestStatus="@AssessmentRequestStatus.Completed" class="btn btn-icon btn-back" title="Back to List">
+                <i class="fa-solid fa-list"></i>
+            </a>
+        </div>
+    </div>
 </div>

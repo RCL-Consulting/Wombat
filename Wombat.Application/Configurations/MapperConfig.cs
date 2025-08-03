@@ -39,7 +39,22 @@ namespace Wombat.Application.Configurations
             CreateMap<Institution, InstitutionVM>().ReverseMap();
             CreateMap<EPAForm, EPAFormVM>().ReverseMap();
             CreateMap<EPACurriculum, EPACurriculumVM>().ReverseMap();
-            CreateMap<AssessmentRequest, AssessmentRequestVM>().ReverseMap();
+            CreateMap<AssessmentEvent, AssessmentEventVM>().ReverseMap();
+
+            CreateMap<AssessmentRequest, AssessmentRequestVM>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src =>
+                    src.CompletionDate != null ? AssessmentRequestStatus.Completed :
+                    src.DateDeclined != null ? AssessmentRequestStatus.Declined :
+                    src.DateAccepted != null ? (
+                        src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
+                            ? AssessmentRequestStatus.NotConducted
+                            : AssessmentRequestStatus.Accepted
+                    ) :
+                    src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
+                        ? AssessmentRequestStatus.Expired :
+                    AssessmentRequestStatus.Requested
+                ))
+                .ReverseMap();
 
             CreateMap<RegistrationInvitation, RegistrationInvitationVM>()
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
@@ -56,9 +71,6 @@ namespace Wombat.Application.Configurations
                     string.IsNullOrEmpty(src.Roles)
                         ? new List<string>()
                         : src.Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList()));
-                //.ForMember(dest => dest.Institution, opt => opt.MapFrom(src => src.Institution != null ? src.Institution.Name : ""))
-                //.ForMember(dest => dest.Speciality, opt => opt.MapFrom(src => src.Speciality != null ? src.Speciality.Name : null))
-                //.ForMember(dest => dest.SubSpeciality, opt => opt.MapFrom(src => src.SubSpeciality != null ? src.SubSpeciality.Name : null));
 
         }
     }

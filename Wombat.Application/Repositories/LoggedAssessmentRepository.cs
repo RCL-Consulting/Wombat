@@ -42,10 +42,9 @@ namespace Wombat.Application.Repositories
         {
             return await context.LoggedAssessments
                 .Include(a => a.OptionCriterionResponses)
-                .Where(a => requestIds.Contains(a.AssessmentRequestId))
+                .Where(a => a.AssessmentRequestId != null && requestIds.Contains(a.AssessmentRequestId.Value))
                 .ToListAsync();
         }
-
 
         public override async Task<LoggedAssessment?> GetAsync(int? id)
         {

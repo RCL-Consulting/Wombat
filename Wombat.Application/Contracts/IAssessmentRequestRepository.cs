@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Wombat.Data;
@@ -25,14 +26,13 @@ namespace Wombat.Application.Contracts
 {
     public interface IAssessmentRequestRepository : IGenericRepository<AssessmentRequest>
     {
-        Task<List<AssessmentRequest>?> GetTraineePendingRequests(string traineeId);
-        Task<List<AssessmentRequest>?> GetTraineePendingAssessments(string traineeId);
-        Task<List<AssessmentRequest>?> GetTraineeCompletedAssessments(string traineeId);
-        Task<List<AssessmentRequest>?> GetTraineeDeclinedRequests(string traineeId);
+        Task<List<AssessmentRequest>?> GetPendingRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
+        Task<List<AssessmentRequest>?> GetPendingAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
+        Task<List<AssessmentRequest>?> GetCompletedAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
+        Task<List<AssessmentRequest>?> GetDeclinedRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
+        Task<List<AssessmentRequest>?> GetExpiredRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
+        Task<List<AssessmentRequest>?> GetNotConductedAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate);
 
-        Task<List<AssessmentRequest>?> GetAssessorPendingRequests(string assessorId);
-        Task<List<AssessmentRequest>?> GetAssessorPendingAssessments(string assessorId);
-        Task<List<AssessmentRequest>?> GetAssessorCompletedAssessments(string assessorId); 
-        Task<List<AssessmentRequest>?> GetAssessorDeclinedRequests(string assessorId);
     }
+
 }

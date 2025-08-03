@@ -70,8 +70,11 @@ namespace Wombat.Common.Models
         public List<InstitutionVM> RecentInstitutions { get; set; } = new();
 
         public List<AssessmentRequestVM> AcceptedRequests { get; set; } = new();
-
         public List<AssessmentRequestVM> PendingRequests { get; set; } = new();
         public List<AssessmentRequestVM> DeclinedRequests { get; set; } = new();
+        public List<AssessmentRequestVM> ExpiredRequests { get; set; } = new();
+        public List<AssessmentRequestVM> NotConductedAssessments { get; set; } = new();
+        public List<AssessmentRequestVM> CompletedAssessments { get; set; } = new();
+
     }
 }

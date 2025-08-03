@@ -60,6 +60,9 @@ builder.Services.AddScoped<IRegistrationInvitationRepository, RegistrationInvita
 builder.Services.AddScoped<ISTARApplicationFormRepository, STARApplicationFormRepository>();
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<WombatUser>, CustomUserClaimsPrincipalFactory>();
+builder.Services.AddScoped<IAssessmentWorkflowService, AssessmentWorkflowService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAssessmentEventRepository, AssessmentEventRepository>();
 
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 

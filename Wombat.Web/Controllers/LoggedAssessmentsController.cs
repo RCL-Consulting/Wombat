@@ -15,23 +15,24 @@
  */
 
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using MigraDocCore.DocumentObjectModel;
 using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
 using MigraDocCore.Rendering;
 using PdfSharpCore.Utils;
 using SixLabors.ImageSharp.PixelFormats;
+using System;
 using Wombat.Application.Contracts;
-using Wombat.Common.Constants;
-using Wombat.Data;
-using Wombat.Common.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
 using Wombat.Application.Repositories;
-using Microsoft.EntityFrameworkCore;
+using Wombat.Common.Constants;
+using Wombat.Common.Models;
+using Wombat.Data;
 
 namespace Wombat.Controllers
 {
@@ -417,6 +418,20 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
+        private string LoadTemplateAndInsertValues(LoggedAssessmentVM vm)
+        {
+            var url = Url.Action(
+                "DetailsFromRequest",
+                "LoggedAssessments",
+                new { id = vm.Id },
+                Request.Scheme
+            );
+
+            string templatePath = Path.Combine(webHostEnvironment.WebRootPath, "Templates", "LoggedAssessment.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+            return html.Replace("{{link}}", url);
+        }
+
         [Authorize(Roles = RoleStrings.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -443,7 +458,10 @@ namespace Wombat.Controllers
 
                 var user = await userManager.FindByIdAsync(loggedAssessment.TraineeId);
 
-                await emailSender.SendEmailAsync(user.Email, "Assessment Submitted", "Your assessment has been submitted.");
+                loggedAssessmentVM.Id = loggedAssessment.Id;
+                string htmlContent = LoadTemplateAndInsertValues(loggedAssessmentVM);
+                string email = user.Email;
+                await emailSender.SendEmailAsync(email, "Assessment Submitted", htmlContent);
 
                 return RedirectToAction(nameof(MyAssessments));
             }

@@ -44,11 +44,11 @@
                     <span asp-validation-for="AssessmentDate" class="text-danger"></span>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Notes" class="form-label fw-semibold"></label>
-                    <textarea asp-for="Notes" class="form-control"></textarea>
-                    <span asp-validation-for="Notes" class="text-danger"></span>
+                <div class="form-group">
+                    <label class="control-label">Comment</label>
+                    <textarea asp-for="ActionComment" class="form-control"></textarea>
                 </div>
+
             </div>
 
             <div class="card-footer bg-light">

@@ -97,6 +97,7 @@ namespace Wombat.Data
         public DbSet<Speciality> Specialities { get; set; }
         public DbSet<SubSpeciality> SubSpecialities { get; set; }
 
+        public DbSet<AssessmentEvent> AssessmentEvents { get; set; }
         public DbSet<LoggedAssessment> LoggedAssessments { get; set; }
         public DbSet<OptionCriterionResponse> OptionCriterionResponses { get; set; }
 

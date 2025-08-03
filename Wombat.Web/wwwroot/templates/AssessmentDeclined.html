@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+		.button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Assessment Request Declined</div>
+        <p>Hello {{traineeName}},</p>
+        <p>
+            Unfortunately, <strong>{{assessorName}}</strong> has declined your request to be assessed on the EPA:
+            <br/><strong>{{epaName}}</strong>
+        </p>
+        <p>You may consider sending this request to another assessor.</p>
+		<p>Please click below to view this assessment request:</p>
+		<p>
+			<a href="{{link}}" class="button">Go to Assessment</a>
+		</p>
+		<p><strong>Assessor Comments:</strong></p>
+		<p>{{assessorNotes}}</p>
+        <p class="footer">This is an automated message from the Wombat platform.</p>
+    </div>
+</body>
+</html>

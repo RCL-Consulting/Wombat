@@ -28,7 +28,6 @@ namespace Wombat.Data
 {
     public class AssessmentRequest: BaseEntity
     {
-        public string? AssessorNotes { get; set; }
         public DateTime? DateRequested { get; set; }
 
         public DateTime? DateAccepted { get; set; }
@@ -59,8 +58,6 @@ namespace Wombat.Data
         [ForeignKey("AssessmentFormId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentForm? AssessmentForm { get; set; }
-
-        public string Notes { get; set; } = "";
 
         public LoggedAssessment? LoggedAssessment { get; set; }
     }

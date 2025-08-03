@@ -49,7 +49,7 @@ namespace Wombat.Data
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentForm? Form { get; set; }
 
-        public int AssessmentRequestId { get; set; }
+        public int? AssessmentRequestId { get; set; }
         [ForeignKey("AssessmentRequestId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentRequest? AssessmentRequest { get; set; }
