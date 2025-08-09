@@ -551,6 +551,57 @@ namespace Wombat.Web.Controllers
             return View(assessmentRequestVM);
         }
 
+        // GET: AssessmentRequests/RescheduleRequest/5
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> RescheduleRequest(int id)
+        {
+            var req = await assessmentRequestRepository.GetAsync(id);
+            if (req == null) return NotFound();
+
+            var userId = userManager.GetUserId(User);
+            var isParty = req.TraineeId == userId || req.AssessorId == userId || User.IsInRole(RoleStrings.Administrator);
+            if (!isParty) return Forbid();
+
+            // Only pending items (Requested or Accepted) may be rescheduled
+            if (req.Status != AssessmentRequestStatus.Requested && req.Status != AssessmentRequestStatus.Accepted)
+                return BadRequest("Only requested or accepted items can be rescheduled.");
+
+            var vm = new RescheduleVM
+            {
+                Id = req.Id,
+                Status = req.Status,
+                CurrentAssessmentDate = req.AssessmentDate,
+                NewAssessmentDate = req.AssessmentDate ?? DateTime.Now.AddDays(1),
+                IsTrainee = req.TraineeId == userId,
+                IsAssessor = req.AssessorId == userId
+            };
+
+            return View(vm); // Views/AssessmentRequests/Reschedule.cshtml
+        }
+
+        // POST: AssessmentRequests/RescheduleRequest
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RescheduleRequest(RescheduleVM vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            var actorId = userManager.GetUserId(User);
+
+            // Optionally extend your service to accept a message; if not, it already logs old→new.
+            await assessmentWorkflowService.RescheduleRequestAsync(
+                requestId: vm.Id,
+                newAssessmentDateLocal: vm.NewAssessmentDate,
+                comment: vm.Message, // can be null
+                actorId: actorId,
+                httpRequest: Request
+            );
+
+            return RedirectToAction(nameof(Details), new { id = vm.Id });
+        }
+
         // POST: AssessmentForms/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

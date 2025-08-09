@@ -23,42 +23,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Wombat.Common.Constants;
 
 namespace Wombat.Common.Models
-{
-    public enum AssessmentRequestStatus
-    {
-        [Display(Name = "Requested")]
-        Requested,
-        [Display(Name = "Accepted")]
-        Accepted,
-        [Display(Name = "Declined")]
-        Declined,
-        [Display(Name = "Cancelled")]
-        Cancelled,
-        [Display(Name = "Completed")]
-        Completed,
-        [Display(Name = "Not conducted")]
-        NotConducted,
-        [Display(Name = "Expired")]
-        Expired,
-        [Display(Name = "Awaiting assessment")]
-        None
-    }
-
-    public static class EnumExtensions
-    {
-        public static string GetDisplayName(this Enum value)
-        {
-            return value
-                .GetType()
-                .GetMember(value.ToString())
-                .First()
-                .GetCustomAttribute<DisplayAttribute>()?
-                .Name ?? value.ToString();
-        }
-    }
-
+{  
     public class AssessmentRequestVM
     {
         public int Id { get; set; }
@@ -117,6 +85,8 @@ namespace Wombat.Common.Models
         { 
             get { return Status.GetDisplayName(); }
         }
+
+        public AssessmentRequestStatus BaseStatus { get; set; }
 
         public string Notes { get; set; } = "";
 

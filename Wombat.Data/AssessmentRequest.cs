@@ -22,41 +22,35 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Wombat.Common.Models;
+using Wombat.Common.Constants;
 
 namespace Wombat.Data
 {
-    public class AssessmentRequest: BaseEntity
+    public class AssessmentRequest : BaseEntity
     {
-        public DateTime? DateRequested { get; set; }
+        // Single source of truth for lifecycle
+        public AssessmentRequestStatus Status { get; set; } = AssessmentRequestStatus.Requested;
+        public DateTime StatusChangedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime? DateAccepted { get; set; }
-        public DateTime? DateDeclined { get; set; }
-        public DateTime? DateCancelled { get; set; }
-        public DateTime? AssessmentDate { get; set; }
-        public DateTime? CompletionDate { get; set; }
+        // Domain dates (not statuses)
+        public DateTime? AssessmentDate { get; set; }       // scheduled date/time
+        public DateTime? CompletionDate { get; set; }       // when assessment was logged
 
+        // Parties / references
         public string TraineeId { get; set; } = "";
-
-        [ForeignKey("TraineeId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
-        public WombatUser? Trainee{ get; set; }
+        [ForeignKey(nameof(TraineeId)), DeleteBehavior(DeleteBehavior.Restrict)]
+        public WombatUser? Trainee { get; set; }
 
         public string AssessorId { get; set; } = "";
-
-        [ForeignKey("AssessorId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        [ForeignKey(nameof(AssessorId)), DeleteBehavior(DeleteBehavior.Restrict)]
         public WombatUser? Assessor { get; set; }
 
         public int EPAId { get; set; }
-
-        [ForeignKey("EPAId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        [ForeignKey(nameof(EPAId)), DeleteBehavior(DeleteBehavior.Restrict)]
         public EPA? EPA { get; set; }
-        public int AssessmentFormId { get; set; }
 
-        [ForeignKey("AssessmentFormId")]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public int AssessmentFormId { get; set; }
+        [ForeignKey(nameof(AssessmentFormId)), DeleteBehavior(DeleteBehavior.Restrict)]
         public AssessmentForm? AssessmentForm { get; set; }
 
         public LoggedAssessment? LoggedAssessment { get; set; }

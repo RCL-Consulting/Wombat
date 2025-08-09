@@ -7,6 +7,13 @@
     ViewData["Title"] = "Details";
 }
 
+@{
+    var myUserId = UserManager.GetUserId(User);
+    bool isParty = (Model.TraineeId == myUserId) || (Model.AssessorId == myUserId) || User.IsInRole(Role.Administrator.ToStringValue());
+    bool isPending = Model.BaseStatus == AssessmentRequestStatus.Requested || Model.BaseStatus == AssessmentRequestStatus.Accepted;
+    bool canCancel = isPending && isParty;
+}
+
 <div class="container mt-4">
     <div class="card card-accent-details shadow-sm">
         <div class="card-header">
@@ -112,24 +119,57 @@
                 <i class="fa-solid fa-list"></i>
             </a>
             <div>
-                @if (Model.Status==AssessmentRequestStatus.Requested && User.IsInRole(Role.Assessor.ToStringValue()))
+                @if (User.IsInRole(Role.Assessor.ToStringValue()))
                 {
-                    <a class="btn btn-icon btn-create" asp-action="AcceptRequest" asp-route-id="@Model.Id" title="Accept Request">
-                                                    <i class="fas fa-check"></i>
-                                                    </a>
-                    <a class="btn btn-icon btn-delete" asp-action="DeclineRequest" asp-route-id="@Model.Id"title="Decline Request">
-                        <i class="fas fa-times"></i></a>
+                    if (Model.BaseStatus == AssessmentRequestStatus.Requested)
+                    {
+                        <a class="btn btn-icon btn-create"
+                        asp-action="AcceptRequest"
+                        asp-route-id="@Model.Id"
+                        title="Accept Request">
+                            <i class="fas fa-check"></i>
+                        </a>
+                        <a class="btn btn-icon btn-delete"
+                        asp-action="DeclineRequest"
+                        asp-route-id="@Model.Id"
+                        title="Decline Request">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    }
+                    else if (Model.BaseStatus == AssessmentRequestStatus.Accepted)
+                    {
+                        <a class="btn btn-icon btn-edit btn-sm"
+                        asp-action="LogRequestedAssessment"
+                        asp-controller="LoggedAssessments"
+                        asp-route-id="@Model.Id"
+                        title="Log Assessment">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </a>
+                    }
                 }
-                else if (Model.Status == AssessmentRequestStatus.Accepted)
+
+                @* Cancel available to trainee OR assessor (or admin) while pending *@
+                @if (canCancel)
                 {
-                    <a class="btn btn-icon btn-edit btn-sm"
-                       asp-action="LogRequestedAssessment"
-                       asp-controller="LoggedAssessments"
+                    <a class="btn btn-icon btn-delete"
+                       asp-action="CancelRequest"
                        asp-route-id="@Model.Id"
-                       title="Log Assessment">
-                        <i class="fa-solid fa-clipboard-check"></i>
+                       title="Cancel Request"
+                       onclick="return confirm('Cancel this request?');">
+                        <i class="fas fa-ban"></i>
                     </a>
                 }
+
+                @if (isPending && isParty)
+                {
+                    <a class="btn btn-icon btn-edit"
+                       asp-action="RescheduleRequest"
+                       asp-route-id="@Model.Id"
+                       title="Reschedule">
+                        <i class="fas fa-calendar-alt"></i>
+                    </a>
+                }
+
                 <a class="btn btn-icon btn-create btn-sm"
                    asp-action="ExportCalendarEntry"
                    asp-route-id="@Model.Id"
@@ -138,6 +178,7 @@
                 </a>
             </div>
         </div>
+
     </div>
 </div>
 

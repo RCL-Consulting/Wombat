@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Wombat.Application.Contracts;
 using Wombat.Data;
+using Wombat.Common.Constants;
 
 namespace Wombat.Application.Repositories
 {
@@ -60,9 +61,7 @@ namespace Wombat.Application.Repositories
 
             var requests = await context.AssessmentRequests
                 .Where(predicate)
-                .Where(r =>
-                    r.DateAccepted == null &&
-                    r.DateDeclined == null &&
+                .Where(r => r.Status == AssessmentRequestStatus.Requested &&
                     (!r.AssessmentDate.HasValue || r.AssessmentDate > now)
                 )
                 .Include(r => r.Trainee)
@@ -81,8 +80,7 @@ namespace Wombat.Application.Repositories
             var now = DateTime.Now;
 
             Expression<Func<AssessmentRequest, bool>> pendingPredicate = r =>
-                r.DateAccepted != null &&
-                r.DateDeclined == null &&
+                r.Status == AssessmentRequestStatus.Accepted &&
                 r.CompletionDate == null &&
                 r.AssessmentDate > now;
 
@@ -106,8 +104,7 @@ namespace Wombat.Application.Repositories
             var now = DateTime.Now;
 
             var expiredPredicate = predicate.AndAlso(r =>
-                r.DateAccepted == null &&
-                r.DateDeclined == null &&
+                r.Status == AssessmentRequestStatus.Requested &&
                 r.AssessmentDate.HasValue &&
                 r.AssessmentDate <= now
             );
@@ -130,8 +127,7 @@ namespace Wombat.Application.Repositories
             var now = DateTime.Now;
 
             var notConductedPredicate = predicate.AndAlso(r =>
-                r.DateAccepted != null &&
-                r.DateDeclined == null &&
+               r.Status == AssessmentRequestStatus.Accepted &&
                 r.CompletionDate == null &&
                 r.AssessmentDate.HasValue &&
                 r.AssessmentDate <= now
@@ -154,9 +150,7 @@ namespace Wombat.Application.Repositories
         {
             // Common predicate for completed assessments
             Expression<Func<AssessmentRequest, bool>> completedPredicate = r =>
-                r.DateAccepted != null &&
-                r.DateDeclined == null &&
-                r.CompletionDate != null;
+                r.Status == AssessmentRequestStatus.Completed;
 
             // Combine predicates
             var combined = userPredicate.AndAlso(completedPredicate);
@@ -185,8 +179,7 @@ namespace Wombat.Application.Repositories
         {
             // Common filter for declined requests
             Expression<Func<AssessmentRequest, bool>> declinedPredicate = r =>
-                r.DateAccepted == null &&
-                r.DateDeclined != null;
+                r.Status == AssessmentRequestStatus.Declined;
 
             // Combine user and common predicates
             var combined = userPredicate.AndAlso(declinedPredicate);
@@ -207,21 +200,19 @@ namespace Wombat.Application.Repositories
 
         public override async Task<AssessmentRequest?> GetAsync(int? id)
         {
-            var request = await context.AssessmentRequests
+            if (id is null) return null;
+
+            var qry = context.AssessmentRequests
                 .Where(r => r.Id == id)
                 .Include(r => r.Trainee)
-                .FirstOrDefaultAsync();
+                .Include(r => r.Assessor)
+                .Include(r => r.AssessmentForm) // <-- add this
+                .Include(r => r.EPA)
+                    .ThenInclude(e => e.SubSpeciality)
+                        .ThenInclude(s => s.Speciality)
+                .AsSplitQuery(); // safer with multiple includes
 
-            if (request != null)
-            {
-                request.EPA = await context.EPAs
-                    .Where(e => e.Id == request.EPAId)
-                    .Include(e => e!.SubSpeciality)
-                    .ThenInclude(s => s!.Speciality)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-            }
-            return request;
+            return await qry.FirstOrDefaultAsync();
         }
     }
 }

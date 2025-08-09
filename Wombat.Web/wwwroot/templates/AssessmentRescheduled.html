@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family:'Segoe UI',sans-serif; color:#333; line-height:1.5; margin:0; }
+    .container { max-width:600px; margin:0 auto; padding:2rem; background:#f9f9f9; border:1px solid #ddd; border-radius:8px; }
+    .header { background:#0d6efd; color:#fff; padding:1rem; border-top-left-radius:8px; border-top-right-radius:8px; text-align:center; font-weight:600; }
+    .kv { margin:0.25rem 0; }
+    .label { color:#666; font-size:.95rem; }
+    .value { font-weight:600; }
+    .note { background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:.75rem 1rem; margin-top:.5rem; white-space:pre-wrap; }
+    .button { display:inline-block; margin-top:1rem; padding:.75rem 1.25rem; background:#0d6efd; color:#fff; text-decoration:none; border-radius:4px; }
+    .footer { margin-top:2rem; font-size:.85rem; color:#666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Assessment Request Rescheduled</div>
+
+    <p>Hello {{recipientName}},</p>
+
+    <p><strong>{{actorName}}</strong> rescheduled the assessment for:</p>
+    <div class="kv"><span class="label">EPA:</span> <span class="value">{{epaName}}</span></div>
+    <div class="kv"><span class="label">Old date:</span> <span class="value">{{oldDate}}</span></div>
+    <div class="kv"><span class="label">New date:</span> <span class="value">{{newDate}}</span></div>
+
+    {{#statusNote}}
+    <div class="note">{{statusNote}}</div>
+    {{/statusNote}}
+
+    <p><a href="{{link}}" class="button">Open Request</a></p>
+
+    <p class="footer">This is an automated message from the Wombat platform.</p>
+  </div>
+</body>
+</html>

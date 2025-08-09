@@ -1,0 +1,90 @@
+﻿@model AssessmentRequestVM
+@{
+    ViewData["Title"] = "Cancel Request";
+}
+<div class="container mt-4">
+    <div class="card card-accent-delete shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-ban me-2"></i>Request - Cancel</h5>
+        </div>
+
+        <form asp-action="CancelRequest" method="post">
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="AssessorId" />
+                <input type="hidden" asp-for="TraineeId" />
+                <input type="hidden" asp-for="AssessmentFormId" />
+                <input type="hidden" asp-for="EPAId" />
+
+                <div class="form-group">
+                    <label asp-for="TraineeDisplayName" class="control-label"></label>
+                    <input asp-for="TraineeDisplayName" class="form-control" readonly />
+                </div>
+                <br />
+                <div class="form-group">
+                    <label asp-for="FullEPADisplayName" class="control-label"></label>
+                    <input asp-for="FullEPADisplayName" class="form-control" readonly />
+                </div>
+                <br />
+                <div class="form-group">
+                    <label asp-for="AssessmentDate" class="control-label"></label>
+                    <input asp-for="AssessmentDate" class="form-control" readonly />
+                </div>
+                <br />
+
+                <div class="form-group">
+                    <label class="control-label">Comment (optional)</label>
+                    <textarea asp-for="ActionComment" class="form-control" rows="3"
+                              placeholder="Add a short reason for cancelling…"></textarea>
+                </div>
+                <br />
+
+                @if (Model.Events?.Any() == true)
+                {
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header bg-light text-muted">
+                            <i class="fas fa-comments me-2"></i>Event History
+                        </div>
+                        <div class="card-body">
+                            @foreach (var evt in Model.Events)
+                            {
+                                <div class="mb-3">
+                                    <div>
+                                        <strong>@evt.Actor?.DisplayName</strong>
+                                        <span class="text-muted">(@evt.Type) on @evt.Timestamp.ToLocalTime():</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(evt.Message))
+                                    {
+                                        <div class="ms-3">@evt.Message</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-light">
+                <div class="row text-center align-items-center">
+                    <div class="col-md-6 d-flex justify-content-start">
+                        <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
+                            <i class="fa-solid fa-list"></i>
+                        </a>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-icon btn-delete" title="Confirm Cancel">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

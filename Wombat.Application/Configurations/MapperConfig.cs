@@ -41,20 +41,20 @@ namespace Wombat.Application.Configurations
             CreateMap<EPACurriculum, EPACurriculumVM>().ReverseMap();
             CreateMap<AssessmentEvent, AssessmentEventVM>().ReverseMap();
 
+            // In your profile
             CreateMap<AssessmentRequest, AssessmentRequestVM>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src =>
-                    src.CompletionDate != null ? AssessmentRequestStatus.Completed :
-                    src.DateCancelled != null ? AssessmentRequestStatus.Cancelled :
-                    src.DateDeclined != null ? AssessmentRequestStatus.Declined :
-                    src.DateAccepted != null ? (
-                        src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
-                            ? AssessmentRequestStatus.NotConducted
-                            : AssessmentRequestStatus.Accepted
-                    ) :
-                    src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
-                        ? AssessmentRequestStatus.Expired :
-                    AssessmentRequestStatus.Requested))
-                .ReverseMap();
+                .ForMember(d => d.BaseStatus, opt => opt.MapFrom(src => src.Status))
+                .ForMember(d => d.Status, opt => opt.MapFrom(src => src.GetDisplayStatus(DateTime.UtcNow)));
+
+            // IMPORTANT: don’t write derived status back to entity
+            CreateMap<AssessmentRequestVM, AssessmentRequest>()
+                .ForMember(e => e.Status, opt => opt.Ignore())
+                .ForMember(e => e.StatusChangedAt, opt => opt.Ignore()); CreateMap<AssessmentRequest, AssessmentRequestVM>()
+                .ForMember(d => d.Status, opt => opt.MapFrom(src => src.GetDisplayStatus(DateTime.UtcNow)));
+
+            CreateMap<AssessmentRequestVM, AssessmentRequest>()
+                .ForMember(e => e.Status, opt => opt.Ignore())
+                .ForMember(e => e.StatusChangedAt, opt => opt.Ignore());
 
             CreateMap<RegistrationInvitation, RegistrationInvitationVM>()
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>

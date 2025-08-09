@@ -30,6 +30,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
+using Wombat.Application.Services;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
@@ -47,6 +48,7 @@ namespace Wombat.Controllers
         private readonly ISubSpecialityRepository subSpecialityRepository;
         private readonly ISpecialityRepository specialityRepository;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IAssessmentWorkflowService assessmentWorkflowService;
         private readonly IEmailSender emailSender;
         private readonly IWebHostEnvironment webHostEnvironment;
         private readonly IMapper mapper;
@@ -59,6 +61,7 @@ namespace Wombat.Controllers
                                             ISpecialityRepository specialityRepository,
                                             ISubSpecialityRepository subSpecialityRepository,
                                             IHttpContextAccessor httpContextAccessor,
+                                            IAssessmentWorkflowService assessmentWorkflowService,
                                             IEmailSender emailSender,
                                             IWebHostEnvironment webHostEnvironment,
                                             IMapper mapper)
@@ -69,6 +72,7 @@ namespace Wombat.Controllers
             this.assessmentFormRepository = assessmentFormRepository;
             this.assessmentRequestRepository = assessmentRequestRepository;
             this.httpContextAccessor=httpContextAccessor;
+            this.assessmentWorkflowService = assessmentWorkflowService;
             this.emailSender=emailSender;
             this.webHostEnvironment=webHostEnvironment;
             this.mapper=mapper;
@@ -339,45 +343,29 @@ namespace Wombat.Controllers
         [Authorize(Roles = RoleStrings.Assessor)]
         public async Task<IActionResult> LogRequestedAssessment(int id)
         {
-            var assessmentRequest = await assessmentRequestRepository.GetAsync(id);
-            if (assessmentRequest == null)
+            try
             {
+                var assessorId = userManager.GetUserId(User);
+                var vm = await assessmentWorkflowService.PrepareLogRequestedAssessmentAsync(id, assessorId);
+
+                // Your existing helpers remain in the controller:
+                await PopulateAssessment(vm);   // e.g., hydrate item responses, defaults, etc.
+                await AddViewDataAsync();       // e.g., dropdowns/select lists for the view
+
+                return View(vm);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // If it's "already completed", you were redirecting Home/Index before
+                if (ex.Message.Contains("completed", StringComparison.OrdinalIgnoreCase))
+                    return RedirectToAction("Index", "Home");
+
                 return NotFound();
             }
-
-            if (assessmentRequest.CompletionDate != null)
-                return RedirectToAction("Home","Index");
-
-            var user = assessmentRequest.Trainee;
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            await AddViewDataAsync();
-            var loggedAssessmentVM = new LoggedAssessmentVM();
-            loggedAssessmentVM.TraineeId = assessmentRequest.TraineeId;
-            loggedAssessmentVM.Trainee = mapper.Map<WombatUserVM>(user);
-            loggedAssessmentVM.FormId = assessmentRequest.AssessmentFormId;
-            loggedAssessmentVM.AssessorId = assessmentRequest.AssessorId;
-            loggedAssessmentVM.EPAId = assessmentRequest.EPAId;
-            loggedAssessmentVM.AssessmentRequestId = id;
-
-            if (httpContextAccessor.HttpContext != null)
-            {
-                loggedAssessmentVM.AssessorId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-                loggedAssessmentVM.Assessor = mapper.Map<WombatUserVM>(await userManager.GetUserAsync(httpContextAccessor.HttpContext.User));
-            }
-            else
-                return NotFound();
-
-            loggedAssessmentVM.AssessmentDate = DateTime.Now;
-            loggedAssessmentVM.Form = mapper.Map<AssessmentFormVM>(await assessmentFormRepository.GetAsync(loggedAssessmentVM.FormId));
-
-            await PopulateAssessment(loggedAssessmentVM);
-            await AddViewDataAsync();
-
-            return View(loggedAssessmentVM);
         }
 
         public async Task PopulateAssessment(LoggedAssessmentVM loggedAssessmentVM)
@@ -418,56 +406,34 @@ namespace Wombat.Controllers
             return View(loggedAssessmentVM);
         }
 
-        private string LoadTemplateAndInsertValues(LoggedAssessmentVM vm)
-        {
-            var url = Url.Action(
-                "DetailsFromRequest",
-                "LoggedAssessments",
-                new { id = vm.Id },
-                Request.Scheme
-            );
-
-            string templatePath = Path.Combine(webHostEnvironment.WebRootPath, "Templates", "LoggedAssessment.html");
-            var html = System.IO.File.ReadAllText(templatePath);
-            return html.Replace("{{link}}", url);
-        }
-
         [Authorize(Roles = RoleStrings.Assessor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitAssessment(LoggedAssessmentVM loggedAssessmentVM)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var optionCriterionResponse in loggedAssessmentVM.OptionCriterionResponses)
-                {
-                    if(optionCriterionResponse.OptionId==0)
-                        optionCriterionResponse.OptionId = null;
-                    
-                    if (optionCriterionResponse.Comment==null)
-                    {
-                        optionCriterionResponse.Comment = "";
-                    }
-                }
-                var loggedAssessment = mapper.Map<LoggedAssessment>(loggedAssessmentVM);
-                await loggedAssessmentRepository.AddAsync(loggedAssessment);
-
-                var assessmentRequest = await assessmentRequestRepository.GetAsync(loggedAssessmentVM.AssessmentRequestId);
-                assessmentRequest.CompletionDate = DateTime.Now;
-                await assessmentRequestRepository.UpdateAsync(assessmentRequest);
-
-                var user = await userManager.FindByIdAsync(loggedAssessment.TraineeId);
-
-                loggedAssessmentVM.Id = loggedAssessment.Id;
-                string htmlContent = LoadTemplateAndInsertValues(loggedAssessmentVM);
-                string email = user.Email;
-                await emailSender.SendEmailAsync(email, "Assessment Submitted", htmlContent);
-
-                return RedirectToAction(nameof(MyAssessments));
+                await PopulateAssessment(loggedAssessmentVM);
+                return View(loggedAssessmentVM);
             }
 
-            await PopulateAssessment(loggedAssessmentVM);
-            return View(loggedAssessmentVM);
+            try
+            {
+                var assessorId = userManager.GetUserId(User);
+                var loggedId = await assessmentWorkflowService.SubmitAssessmentAsync(loggedAssessmentVM, assessorId, Request);
+                return RedirectToAction(nameof(MyAssessments));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await PopulateAssessment(loggedAssessmentVM);
+                return View(loggedAssessmentVM);
+            }
+            
         }
 
         // POST: LoggedAssessments/Create

@@ -13,6 +13,7 @@ namespace Wombat.Common.Constants
         RequestDeclined,
         RequestCancelled,
         AssessmentLogged,
-        CommentAdded
+        CommentAdded,
+        RequestRescheduled
     }
 }

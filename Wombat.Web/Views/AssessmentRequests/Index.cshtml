@@ -7,6 +7,12 @@
     ViewData["Title"] = "Assessment Requests";
 }
 
+@{
+    var myId = UserManager.GetUserId(User);
+    bool isParty(AssessmentRequestVM r) => r.TraineeId == myId || r.AssessorId == myId || User.IsInRole(RoleStrings.Administrator);
+    bool isPending(AssessmentRequestVM r) => r.BaseStatus == AssessmentRequestStatus.Requested || r.BaseStatus == AssessmentRequestStatus.Accepted;
+}
+
 <div class="container mt-4">
     <div class="card card-accent-details shadow-sm">
         <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
@@ -97,6 +103,27 @@
                                                 <i class="fas fa-times"></i>
                                             </a>
                                         }
+
+                                        @if (User.IsInRole(Role.Trainee.ToStringValue()) && item.TraineeId == UserManager.GetUserId(User))
+                                        {
+                                            <a class="btn btn-icon btn-delete btn-sm"
+                                               asp-action="CancelRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Cancel Request">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                        }
+
+                                        @if (isPending(item) && isParty(item))
+                                        {
+                                            <a class="btn btn-icon btn-edit btn-sm"
+                                               asp-action="RescheduleRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Reschedule">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </a>
+                                        }
+
                                         <a class="btn btn-icon btn-info btn-sm"
                                            asp-action="Details"
                                            asp-route-id="@item.Id"

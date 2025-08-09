@@ -1,0 +1,67 @@
+﻿@model RescheduleVM
+@{
+    ViewData["Title"] = "Reschedule Assessment";
+    bool willRevertToRequested = Model.Status == AssessmentRequestStatus.Accepted && Model.IsTrainee;
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm card-accent-edit">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Reschedule</h5>
+        </div>
+
+        <form asp-action="RescheduleRequest" method="post">
+            @Html.AntiForgeryToken()
+            <div class="card-body">
+                <input type="hidden" asp-for="Id" />
+
+                @if (willRevertToRequested)
+                {
+                    <div class="alert alert-warning">
+                        Rescheduling as the trainee will move this request back to <strong>Requested</strong>
+                        and the assessor will need to accept or decline again.
+                    </div>
+                }
+                else if (Model.Status == AssessmentRequestStatus.Accepted && Model.IsAssessor)
+                {
+                    <div class="alert alert-info">
+                        You’re the assessor. Updating the date will keep the request <strong>Accepted</strong>.
+                    </div>
+                }
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">@Html.DisplayNameFor(m => m.CurrentAssessmentDate)</label>
+                        <input class="form-control" value="@(Model.CurrentAssessmentDate?.ToString("g") ?? "—")" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NewAssessmentDate" class="form-label"></label>
+                        <input asp-for="NewAssessmentDate" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="NewAssessmentDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Message" class="form-label"></label>
+                        <textarea asp-for="Message" class="form-control" rows="2" placeholder="Add a note (optional)…"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-icon btn-back" title="Back">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button type="submit" class="btn btn-icon btn-edit" title="Save new date">
+                    <i class="fas fa-save"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

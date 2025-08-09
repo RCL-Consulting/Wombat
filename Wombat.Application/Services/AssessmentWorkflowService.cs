@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Http;        // for Request
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Routing;
+using System.Security.Policy;
 using Wombat.Application.Contracts;
+using Wombat.Application.Repositories;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
@@ -20,6 +22,8 @@ namespace Wombat.Application.Services
         private readonly IMapper _mapper;
         private readonly UserManager<WombatUser> _userManager;
         private readonly IEPARepository _epaRepository;
+        private readonly IAssessmentFormRepository _assessmentFormRepository;
+        private readonly ILoggedAssessmentRepository _loggedAssessmentRepository;
         private readonly IWebHostEnvironment _environment;
         private readonly LinkGenerator _linkGenerator;
 
@@ -29,6 +33,8 @@ namespace Wombat.Application.Services
                                           IMapper mapper,
                                           UserManager<WombatUser> userManager,
                                           IEPARepository epaRepository,
+                                          IAssessmentFormRepository assessmentFormRepository,
+                                          ILoggedAssessmentRepository loggedAssessmentRepository,
                                           IWebHostEnvironment environment,
                                           LinkGenerator linkGenerator )
         {
@@ -38,6 +44,8 @@ namespace Wombat.Application.Services
             _mapper = mapper;
             _userManager = userManager;
             _epaRepository = epaRepository;
+            _assessmentFormRepository = assessmentFormRepository;
+            _loggedAssessmentRepository = loggedAssessmentRepository;
             _environment = environment;
             _linkGenerator = linkGenerator;
         }
@@ -55,53 +63,53 @@ namespace Wombat.Application.Services
         }
 
         public async Task<AssessmentRequest> CreateRequestAsync( AssessmentRequestVM model, 
-                                                                 string actorId,
-                                                                 HttpRequest httpRequest)
-
+                                                                 string actorId, 
+                                                                 HttpRequest httpRequest )
         {
-            // Map view model to entity
             var request = _mapper.Map<AssessmentRequest>(model);
-            request.DateRequested = DateTime.UtcNow;
 
-            // Save request
+            // initial state
+            request.Status = AssessmentRequestStatus.Requested;
+            request.StatusChangedAt = DateTime.UtcNow;
+
             await _assessmentRequestRepository.AddAsync(request);
-            model.Id = request.Id;           
 
-            // Log event
-            var actor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(actorId));
-            var evt = new AssessmentEvent
+            // Log "created"
+            _context.AssessmentEvents.Add(new AssessmentEvent
             {
                 ActorId = actorId,
-                Type = AssessmentEventType.RequestCreated,
                 AssessmentRequestId = request.Id,
-                Message = string.IsNullOrWhiteSpace(model.ActionComment)
-                ? $"Request for EPA '{request.EPA?.Name}' was created."
-                : model.ActionComment
-            };
-            _context.AssessmentEvents.Add(evt);
+                Type = AssessmentEventType.RequestCreated,
+                Message = string.IsNullOrWhiteSpace(model.ActionComment) ? null : model.ActionComment.Trim(),
+                Timestamp = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
 
-            model.Assessor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.AssessorId));
-            if (model.Assessor != null && !string.IsNullOrEmpty(model.Assessor.Email))
+            // Notify assessor (reuse your existing template)
+            var assessor = await _userManager.FindByIdAsync(request.AssessorId);
+            if (assessor != null)
             {
-                model.Trainee = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.TraineeId));
-                model.EPA = _mapper.Map<EPAVM>(await _epaRepository.GetAsync(model.EPAId));
+                var trainee = await _userManager.FindByIdAsync(request.TraineeId);
+                var epa = await _epaRepository.GetAsync(request.EPAId);
+
+                var vm = new AssessmentRequestVM
+                {
+                    Id = request.Id,
+                    Assessor = _mapper.Map<WombatUserVM>(assessor),
+                    Trainee = _mapper.Map<WombatUserVM>(trainee),
+                    EPA = _mapper.Map<EPAVM>(epa),
+                    ActionComment = model.ActionComment
+                };
 
                 var url = _linkGenerator.GetUriByAction(
                     httpContext: httpRequest.HttpContext,
                     action: "Details",
                     controller: "AssessmentRequests",
-                    values: new { id = request.Id, requestStatus = AssessmentRequestStatus.Requested }
-                );
+                    values: new { id = request.Id, anchor = "events" });
 
-                string htmlContent = LoadCreateTemplateAndInsertValues(model, url);
-
-                 // Notify assessor
-                await _notificationService.NotifyAsync(
-                    request.AssessorId,
-                    "New Assessment Request",
-                     htmlContent);
-            }           
+                var html = LoadCreateTemplateAndInsertValues(vm, url);
+                await _notificationService.NotifyAsync(assessor.Id, "New Assessment Request", html);
+            }
 
             return request;
         }
@@ -119,63 +127,9 @@ namespace Wombat.Application.Services
                 .Replace("{{link}}",url);
         }
 
-        public async Task<AssessmentRequest> AcceptRequestAsync( AssessmentRequestVM model,
-                                                                 string actorId, 
-                                                                 HttpRequest httpRequest )
-        {
-            int requestId = model.Id;
+        public Task AcceptRequestAsync( AssessmentRequestVM model, string actorId, HttpRequest req)
+            => TransitionAsync(model.Id, AssessmentRequestStatus.Accepted, actorId, model.ActionComment, req);
 
-            // Retrieve request
-            var request = await _assessmentRequestRepository.GetAsync(requestId);
-            if (request == null)
-                throw new InvalidOperationException("Assessment request not found.");
-
-            // Mark as accepted
-            request.DateAccepted = DateTime.UtcNow;
-            await _assessmentRequestRepository.UpdateAsync(request);
-
-            model.Assessor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.AssessorId));
-            model.Trainee = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.TraineeId));
-            model.EPA = _mapper.Map<EPAVM>(await _epaRepository.GetAsync(model.EPAId));
-
-            // Log event
-            var actor = await _userManager.FindByIdAsync(actorId);
-            var actorVM = _mapper.Map<WombatUserVM>(actor);
-            var epa = await _epaRepository.GetAsync(request.EPAId);
-
-            var evt = new AssessmentEvent
-            {
-                ActorId = actorId,
-                Type = AssessmentEventType.RequestAccepted,
-                AssessmentRequestId = request.Id,
-                Message = string.IsNullOrWhiteSpace(model.ActionComment)
-                ? $"Request for EPA '{request.EPA?.Name}' was accepted."
-                : model.ActionComment
-            };
-            _context.AssessmentEvents.Add(evt);
-            await _context.SaveChangesAsync();
-
-            // Notify trainee
-            if (!string.IsNullOrEmpty(request.TraineeId))
-            {
-                var trainee = await _userManager.FindByIdAsync(request.TraineeId);
-
-                var url = _linkGenerator.GetUriByAction(
-                    httpContext: httpRequest.HttpContext,
-                    action: "Details",
-                    controller: "AssessmentRequests",
-                    values: new { id = request.Id, requestStatus = AssessmentRequestStatus.Requested }
-                );
-                string html = LoadAcceptTemplateAndInsertValues(model, url);
-
-                await _notificationService.NotifyAsync(
-                    trainee.Id,
-                    "Assessment Request Accepted",
-                    html);
-            }
-
-            return request;
-        }
         private string LoadAcceptDeclineTemplateAndInsertValues( AssessmentRequestVM vm,
                                                                  string url )
         {
@@ -189,60 +143,8 @@ namespace Wombat.Application.Services
                 .Replace("{{link}}", url);
         }
 
-        public async Task<AssessmentRequest> DeclineRequestAsync( AssessmentRequestVM model,
-                                                                  string actorId,
-                                                                  HttpRequest httpRequest )
-        {
-            // Retrieve the request
-            var request = await _assessmentRequestRepository.GetAsync(model.Id);
-            if (request == null)
-                throw new InvalidOperationException("Assessment request not found.");
-
-            // Mark as declined
-            request.DateDeclined = DateTime.UtcNow;
-            await _assessmentRequestRepository.UpdateAsync(request);
-            model.Assessor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.AssessorId));
-            model.Trainee = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(model.TraineeId));
-            model.EPA = _mapper.Map<EPAVM>(await _epaRepository.GetAsync(model.EPAId));
-
-            // Log the event
-            var actor = await _userManager.FindByIdAsync(actorId);
-            var actorVM = _mapper.Map<WombatUserVM>(actor);
-            var epa = await _epaRepository.GetAsync(request.EPAId);
-
-            var evt = new AssessmentEvent
-            {
-                ActorId = actorId,
-                Type = AssessmentEventType.RequestDeclined,
-                AssessmentRequestId = request.Id,
-                Message = string.IsNullOrWhiteSpace(model.ActionComment)
-                ? $"Request for EPA '{request.EPA?.Name}' was declined."
-                : model.ActionComment
-            };
-            _context.AssessmentEvents.Add(evt);
-            await _context.SaveChangesAsync();
-
-            // Notify trainee
-            if (!string.IsNullOrEmpty(request.TraineeId))
-            {
-                var trainee = await _userManager.FindByIdAsync(request.TraineeId);
-
-                var url = _linkGenerator.GetUriByAction(
-                    httpContext: httpRequest.HttpContext,
-                    action: "Details",
-                    controller: "AssessmentRequests",
-                    values: new { id = request.Id, requestStatus = AssessmentRequestStatus.Requested }
-                );
-                string html = LoadAcceptDeclineTemplateAndInsertValues(model, url);
-
-                await _notificationService.NotifyAsync(
-                    trainee.Id,
-                    "Assessment Request Declined",
-                    html);
-            }
-
-            return request;
-        }
+        public Task DeclineRequestAsync( AssessmentRequestVM model, string actorId, HttpRequest req )
+            => TransitionAsync(model.Id, AssessmentRequestStatus.Declined, actorId, model.ActionComment, req);
 
         private string LoadRequestCommentTemplateAndInsertValues( string commenterName,
                                                                   string recipientName,
@@ -347,51 +249,408 @@ namespace Wombat.Application.Services
                 .Replace("{{link}}", url);
         }
 
-        public async Task<AssessmentRequest> CancelRequestAsync( AssessmentRequestVM model,
-                                                                 string actorId,
-                                                                 HttpRequest httpRequest )
+        public Task CancelRequestAsync( AssessmentRequestVM model, string actorId, HttpRequest req )
+            => TransitionAsync(model.Id, AssessmentRequestStatus.Cancelled, actorId, model.ActionComment, req);
+
+        private static readonly Dictionary<AssessmentRequestStatus, AssessmentRequestStatus[]> Allowed =
+            new()
+            {
+                { AssessmentRequestStatus.Requested, new[] { AssessmentRequestStatus.Accepted, AssessmentRequestStatus.Declined, AssessmentRequestStatus.Cancelled } },
+                { AssessmentRequestStatus.Accepted,  new[] { AssessmentRequestStatus.Cancelled, AssessmentRequestStatus.Declined, AssessmentRequestStatus.Completed, AssessmentRequestStatus.Requested } }, // <-- add Requested
+                { AssessmentRequestStatus.Declined,  Array.Empty<AssessmentRequestStatus>() },
+                { AssessmentRequestStatus.Cancelled, Array.Empty<AssessmentRequestStatus>() },
+                { AssessmentRequestStatus.Completed, Array.Empty<AssessmentRequestStatus>() }
+            };      
+
+        public async Task TransitionAsync( int requestId,
+                                           AssessmentRequestStatus newStatus,
+                                           string actorId,
+                                           string? message,
+                                           HttpRequest httpRequest )
         {
-            var request = await _assessmentRequestRepository.GetAsync(model.Id)
-                  ?? throw new InvalidOperationException("Assessment request not found.");
+            var request = await _assessmentRequestRepository.GetAsync(requestId)
+                         ?? throw new InvalidOperationException("Assessment request not found.");
 
-            if (request.CompletionDate != null) throw new InvalidOperationException("Completed requests cannot be cancelled.");
-            if (request.DateAccepted == null) throw new InvalidOperationException("Only accepted requests can be cancelled.");
+            // Guardrails
+            if (!Allowed.TryGetValue(request.Status, out var next) || !next.Contains(newStatus))
+                throw new InvalidOperationException($"Illegal transition: {request.Status} → {newStatus}");
 
-            // Treat cancel as decline (fast path)
-            request.DateCancelled = DateTime.UtcNow;
+            if (request.Status == AssessmentRequestStatus.Completed)
+                throw new InvalidOperationException("Completed requests are immutable.");
+
+            // Apply
+            request.Status = newStatus;
+            request.StatusChangedAt = DateTime.UtcNow;
+
+            if (newStatus == AssessmentRequestStatus.Completed && request.CompletionDate == null)
+                request.CompletionDate = DateTime.UtcNow;
+
             await _assessmentRequestRepository.UpdateAsync(request);
 
-            // Event logs who cancelled (assessor or trainee)
+            // Log event
+            var evtType = newStatus switch
+            {
+                AssessmentRequestStatus.Requested => AssessmentEventType.RequestCreated,
+                AssessmentRequestStatus.Accepted => AssessmentEventType.RequestAccepted,
+                AssessmentRequestStatus.Declined => AssessmentEventType.RequestDeclined,
+                AssessmentRequestStatus.Cancelled => AssessmentEventType.RequestCancelled,
+                AssessmentRequestStatus.Completed => AssessmentEventType.AssessmentLogged,
+                _ => AssessmentEventType.CommentAdded
+            };
+
             _context.AssessmentEvents.Add(new AssessmentEvent
             {
                 ActorId = actorId,
-                Type = AssessmentEventType.RequestCancelled,
                 AssessmentRequestId = request.Id,
-                Message = string.IsNullOrWhiteSpace(model.ActionComment)
-                    ? $"Request for EPA '{request.EPA?.Name}' was cancelled."
-                    : model.ActionComment,
+                Type = evtType,
+                Message = string.IsNullOrWhiteSpace(message) ? null : message.Trim(),
                 Timestamp = DateTime.UtcNow
             });
             await _context.SaveChangesAsync();
 
-            // Notify the other side
+            await NotifyOtherPartyAsync(request, actorId, newStatus, httpRequest, message);
+        }
+
+
+        private async Task NotifyOtherPartyAsync( AssessmentRequest request,
+                                                  string actorId,
+                                                  AssessmentRequestStatus newStatus,
+                                                  HttpRequest httpRequest,
+                                                  string? message )
+        {
+            // Resolve actor/recipient
+            var actor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(actorId));
             var recipientId = actorId == request.TraineeId ? request.AssessorId : request.TraineeId;
-            if (!string.IsNullOrEmpty(recipientId))
+            if (string.IsNullOrEmpty(recipientId)) return;
+
+            var recipient = await _userManager.FindByIdAsync(recipientId);
+            var assessor = await _userManager.FindByIdAsync(request.AssessorId);
+            var trainee = await _userManager.FindByIdAsync(request.TraineeId);
+            var epa = request.EPA ?? await _epaRepository.GetAsync(request.EPAId);
+
+            var vm = new AssessmentRequestVM
             {
-                model.Assessor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(request.AssessorId));
-                model.Trainee = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(request.TraineeId));
-                model.EPA = _mapper.Map<EPAVM>(await _epaRepository.GetAsync(request.EPAId));
+                Id = request.Id,
+                Assessor = _mapper.Map<WombatUserVM>(assessor),
+                Trainee = _mapper.Map<WombatUserVM>(trainee),
+                EPA = _mapper.Map<EPAVM>(epa),
+                ActionComment = message
+            };
 
-                var actor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(actorId));
-                var url = _linkGenerator.GetUriByAction(httpRequest.HttpContext, "Details", "AssessmentRequests",
-                                                        new { id = request.Id, anchor = "events" });
+            var url = _linkGenerator.GetUriByAction(
+                httpContext: httpRequest.HttpContext,
+                action: "Details",
+                controller: "AssessmentRequests",
+                values: new { id = request.Id, anchor = "events" });
 
-                var html = LoadCancelTemplateAndInsertValues(model, url, actor?.DisplayName ?? actor?.Email);
-                await _notificationService.NotifyAsync(recipientId, "Assessment Request Cancelled", html);
+            string subject, html;
+
+            switch (newStatus)
+            {
+                case AssessmentRequestStatus.Accepted:
+                    subject = "Assessment Request Accepted";
+                    html = LoadAcceptTemplateAndInsertValues(vm, url);
+                    break;
+
+                case AssessmentRequestStatus.Declined:
+                    subject = "Assessment Request Declined";
+                    html = LoadAcceptDeclineTemplateAndInsertValues(vm, url);
+                    break;
+
+                case AssessmentRequestStatus.Cancelled:
+                    subject = "Assessment Request Cancelled";
+                    html = LoadCancelTemplateAndInsertValues(vm, url, actor?.DisplayName ?? actor?.Email);
+                    break;
+
+                case AssessmentRequestStatus.Requested:
+                    subject = "New Assessment Request";
+                    html = LoadCreateTemplateAndInsertValues(vm, url);
+                    break;
+
+                case AssessmentRequestStatus.Completed:
+                    subject = "Assessment Logged";
+                    // (Optional) add a Completed template if you want email on log.
+                    html = $"<p>The assessment for <strong>{vm.EPA?.Name}</strong> has been logged.</p><p><a href=\"{url}\">Open</a></p>";
+                    break;
+
+                default:
+                    return;
             }
 
-            return request;
+            await _notificationService.NotifyAsync(recipient.Id, subject, html);
         }
+
+        // AssessmentWorkflowService.cs
+        public async Task<LoggedAssessmentVM> PrepareLogRequestedAssessmentAsync(int requestId, string assessorId)
+        {
+            var request = await _assessmentRequestRepository.GetAsync(requestId)
+                         ?? throw new InvalidOperationException("Assessment request not found.");
+
+            // Domain guards
+            if (request.CompletionDate != null)
+                throw new InvalidOperationException("Assessment already completed.");
+
+            // Only the assigned assessor (or an admin, if you want to allow that) may log it
+            var isAssignedAssessor = !string.IsNullOrEmpty(request.AssessorId) &&
+                                      string.Equals(request.AssessorId, assessorId, StringComparison.Ordinal);
+
+            if (!isAssignedAssessor)
+                throw new UnauthorizedAccessException("Only the assigned assessor can log this assessment.");
+
+            // Load related data
+            var trainee = request.Trainee ?? await _userManager.FindByIdAsync(request.TraineeId);
+            var assessor = await _userManager.FindByIdAsync(assessorId);
+            var form = request.AssessmentFormId != 0
+                            ? await _assessmentFormRepository.GetAsync(request.AssessmentFormId)
+                            : null;
+            var epa = request.EPA ?? await _epaRepository.GetAsync(request.EPAId);
+
+            if (trainee == null || assessor == null || epa == null)
+                throw new InvalidOperationException("Request is missing required links (trainee/assessor/EPA).");
+
+            // Build VM for the view
+            var vm = new LoggedAssessmentVM
+            {
+                AssessmentRequestId = request.Id,
+
+                TraineeId = request.TraineeId,
+                Trainee = _mapper.Map<WombatUserVM>(trainee),
+
+                AssessorId = assessorId,
+                Assessor = _mapper.Map<WombatUserVM>(assessor),
+
+                EPAId = request.EPAId,
+                EPA = _mapper.Map<EPAVM>(epa),
+
+                FormId = request.AssessmentFormId,
+                Form = form != null ? _mapper.Map<AssessmentFormVM>(form) : null,
+
+                // default the assessment date to "now" for convenience
+                AssessmentDate = DateTime.Now
+            };
+
+            return vm;
+        }
+
+        private string LoadTemplateAndInsertValues( LoggedAssessmentVM vm,
+                                                    string url )
+        {
+            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "LoggedAssessment.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+            return html.Replace("{{link}}", url);
+        }
+
+        public async Task<int> SubmitAssessmentAsync( LoggedAssessmentVM vm, 
+                                                      string assessorId, 
+                                                      HttpRequest httpRequest )
+        {
+            if (vm == null) throw new ArgumentNullException(nameof(vm));
+
+            // Load request and guard
+            var request = await _assessmentRequestRepository.GetAsync(vm.AssessmentRequestId)
+                         ?? throw new InvalidOperationException("Assessment request not found.");
+
+            if (request.Status != AssessmentRequestStatus.Accepted)
+                throw new InvalidOperationException("Only accepted requests can be completed.");
+
+            // Authorization: only assigned assessor (tweak if admins/coordinators allowed)
+            if (!string.Equals(request.AssessorId, assessorId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("Only the assigned assessor may submit this assessment.");
+
+            // Normalize responses (moved out of controller)
+            if (vm.OptionCriterionResponses != null)
+            {
+                foreach (var r in vm.OptionCriterionResponses)
+                {
+                    if (r.OptionId == 0) r.OptionId = null;
+                    r.Comment ??= string.Empty;
+                }
+            }
+
+            // Map and persist within a transaction to keep request+assessment consistent
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            var logged = _mapper.Map<LoggedAssessment>(vm);
+            // Ensure relationships
+            logged.AssessorId = assessorId;
+            logged.TraineeId = request.TraineeId;
+            logged.EPAId = request.EPAId;
+            logged.FormId = request.AssessmentFormId;
+
+            await _loggedAssessmentRepository.AddAsync(logged);
+
+            // Transition request -> Completed (this stamps CompletionDate in TransitionAsync)
+            await TransitionAsync(request.Id, AssessmentRequestStatus.Completed, assessorId,
+                                  message: "Assessment submitted.", httpRequest: httpRequest);
+
+            await tx.CommitAsync();
+
+            // Notify trainee (optional: switch to your templated email)
+            var trainee = await _userManager.FindByIdAsync(request.TraineeId);
+            if (trainee != null)
+            {
+                var url = _linkGenerator.GetUriByAction(
+                    httpContext: httpRequest.HttpContext,
+                    action: "DetailsFromRequest",
+                    controller: "LoggedAssessments",
+                    values: new { id = logged.Id });
+
+                var body = LoadTemplateAndInsertValues (vm, url);
+                var subject = "Assessment Submitted";
+                await _notificationService.NotifyAsync(trainee.Id, subject, body);
+            }
+
+            return logged.Id;
+        }
+
+        public async Task RescheduleRequestAsync( int requestId,
+                                                  DateTime newAssessmentDateLocal,   // incoming local time; convert to UTC if you store UTC
+                                                  string? comment,
+                                                  string actorId,
+                                                  HttpRequest httpRequest )
+        {
+            var request = await _assessmentRequestRepository.GetAsync(requestId)
+                         ?? throw new InvalidOperationException("Assessment request not found.");
+
+            // Basic guards
+            if (request.Status is AssessmentRequestStatus.Declined
+                               or AssessmentRequestStatus.Cancelled
+                               or AssessmentRequestStatus.Completed)
+                throw new InvalidOperationException("Only requested or accepted items can be rescheduled.");
+
+            // Authorization: trainee, assessor, or admin
+            var isTrainee = string.Equals(request.TraineeId, actorId, StringComparison.Ordinal);
+            var isAssessor = string.Equals(request.AssessorId, actorId, StringComparison.Ordinal);
+            var isAdmin = false; // set via IAuthorizationService or role check if you like
+            if (!(isTrainee || isAssessor || isAdmin))
+                throw new UnauthorizedAccessException("Only the trainee or the assigned assessor may reschedule.");
+
+            // Normalize date (store UTC if your model expects UTC)
+            var newDate = newAssessmentDateLocal; // .ToUniversalTime() if needed
+
+            // No-op if same date
+            if (request.AssessmentDate.HasValue && request.AssessmentDate.Value == newDate)
+                return;
+
+            var oldDate = request.AssessmentDate;
+            request.AssessmentDate = newDate;
+            await _assessmentRequestRepository.UpdateAsync(request);
+
+            string message = oldDate.HasValue
+                    ? $"Assessment date changed from {oldDate.Value:G} to {newDate:G}."
+                    : $"Assessment date set to {newDate:G}.";
+            if (comment != null)
+                message = comment;
+            // Always log a "date changed" event
+            _context.AssessmentEvents.Add(new AssessmentEvent
+            {
+                ActorId = actorId,
+                AssessmentRequestId = request.Id,
+                Type = AssessmentEventType.RequestRescheduled,
+                Timestamp = DateTime.UtcNow,
+                Message = message
+            });
+            await _context.SaveChangesAsync();
+
+            // If accepted and trainee reschedules → kick back to Requested so assessor re-confirms
+            if (request.Status == AssessmentRequestStatus.Accepted && isTrainee)
+            {
+                await TransitionAsync(
+                    requestId: request.Id,
+                    newStatus: AssessmentRequestStatus.Requested,
+                    actorId: actorId,
+                    message: "Rescheduled by trainee; requires assessor re-acceptance.",
+                    httpRequest: httpRequest);
+            }
+            // If accepted and assessor reschedules → stay Accepted (no state change)
+
+            // Notify the other party
+            await NotifyRescheduleAsync(request, actorId, oldDate, newDate, httpRequest);
+        }
+
+        private string LoadRescheduleTemplateAndInsertValues( string recipientName,
+                                                              string actorName,
+                                                              string epaName,
+                                                              string? oldDateStr,
+                                                              string newDateStr,
+                                                              string? statusNote,
+                                                              string url)
+        {
+            var path = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentRescheduled.html");
+            var html = System.IO.File.ReadAllText(path);
+
+            // very simple “templating”
+            html = html.Replace("{{recipientName}}", recipientName ?? "there")
+                       .Replace("{{actorName}}", actorName ?? "Someone")
+                       .Replace("{{epaName}}", epaName ?? "the EPA")
+                       .Replace("{{oldDate}}", string.IsNullOrWhiteSpace(oldDateStr) ? "—" : oldDateStr)
+                       .Replace("{{newDate}}", newDateStr ?? "—")
+                       .Replace("{{link}}", url ?? "#");
+
+            // Optional status note handling (remove block if empty)
+            if (string.IsNullOrWhiteSpace(statusNote))
+            {
+                // naive removal of the note block
+                var startTag = "{{#statusNote}}";
+                var endTag = "{{/statusNote}}";
+                var startIdx = html.IndexOf(startTag, StringComparison.Ordinal);
+                var endIdx = html.IndexOf(endTag, StringComparison.Ordinal);
+                if (startIdx >= 0 && endIdx > startIdx)
+                {
+                    html = html.Remove(startIdx, (endIdx + endTag.Length) - startIdx);
+                }
+            }
+            else
+            {
+                html = html.Replace("{{#statusNote}}", "")
+                           .Replace("{{/statusNote}}", "")
+                           .Replace("{{statusNote}}", statusNote);
+            }
+
+            return html;
+        }
+
+        private async Task NotifyRescheduleAsync( AssessmentRequest request,
+                                                  string actorId,
+                                                  DateTime? oldDate,
+                                                  DateTime newDate,
+                                                  HttpRequest httpRequest )
+        {
+            var actor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(actorId));
+            var recipientId = actorId == request.TraineeId ? request.AssessorId : request.TraineeId;
+            if (string.IsNullOrEmpty(recipientId)) return;
+
+            var recipient = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(recipientId));
+            var epa = request.EPA ?? await _epaRepository.GetAsync(request.EPAId);
+
+            var url = _linkGenerator.GetUriByAction(
+                httpContext: httpRequest.HttpContext,
+                action: "Details",
+                controller: "AssessmentRequests",
+                values: new { id = request.Id, anchor = "events" });
+
+            // Format dates (pick your culture/timezone policy; below uses local server time)
+            string oldStr = oldDate.HasValue ? oldDate.Value.ToString("g") : "";
+            string newStr = newDate.ToString("g");
+
+            // If trainee rescheduled an Accepted request, note the state change
+            string? statusNote = null;
+            if (request.Status == AssessmentRequestStatus.Requested) // after TransitionAsync it’s already back to Requested
+                statusNote = "This request moved back to Requested and needs to be accepted again.";
+
+            var html = LoadRescheduleTemplateAndInsertValues(
+                recipientName: recipient?.DisplayName ?? recipient?.Email,
+                actorName: actor?.DisplayName ?? actor?.Email,
+                epaName: epa?.Name,
+                oldDateStr: oldStr,
+                newDateStr: newStr,
+                statusNote: statusNote,
+                url: url
+            );
+
+            await _notificationService.NotifyAsync(recipient.Id, "Assessment Request Rescheduled", html);
+        }
+
     }
 
 }
