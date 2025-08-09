@@ -17,13 +17,19 @@ namespace Wombat.Application.Contracts
         Task<AssessmentRequest> AcceptRequestAsync( AssessmentRequestVM model, 
                                                     string actorId,
                                                     HttpRequest httpRequest );
-        Task<AssessmentRequest> DeclineRequestAsync(AssessmentRequestVM model,
-                                                    string actorId,
-                                                    HttpRequest httpRequest );
+        Task<AssessmentRequest> DeclineRequestAsync( AssessmentRequestVM model,
+                                                     string actorId,
+                                                     HttpRequest httpRequest );
 
-        //Task CancelRequestAsync(int requestId, string actorId, string reason);
+        Task<AssessmentEvent> AddCommentToRequestAsync( int requestId,
+                                                        string actorId,
+                                                        string comment,
+                                                        HttpRequest httpRequest );
+
+        Task<AssessmentRequest> CancelRequestAsync(AssessmentRequestVM model,
+                                                    string actorId,
+                                                    HttpRequest httpRequest);
         //Task<LoggedAssessment> LogAssessmentAsync(LoggedAssessmentVM model, string actorId);
-        //Task AddCommentAsync(string actorId, string text, int? requestId = null, int? loggedAssessmentId = null);
         //Task<IEnumerable<AssessmentEvent>> GetTimelineForUserAsync(string userId);
     }
 

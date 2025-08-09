@@ -20,7 +20,6 @@ namespace Wombat.Application.Services
         private readonly IMapper _mapper;
         private readonly UserManager<WombatUser> _userManager;
         private readonly IEPARepository _epaRepository;
-        private readonly IEmailSender _emailSender;
         private readonly IWebHostEnvironment _environment;
         private readonly LinkGenerator _linkGenerator;
 
@@ -245,6 +244,154 @@ namespace Wombat.Application.Services
             return request;
         }
 
+        private string LoadRequestCommentTemplateAndInsertValues( string commenterName,
+                                                                  string recipientName,
+                                                                  string epaName,
+                                                                  string comment,
+                                                                  string url )
+        {
+            var templatePath = Path.Combine(_environment.WebRootPath, "Templates", "RequestCommentAdded.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+
+            return html
+                .Replace("{{commenterName}}", commenterName ?? "Someone")
+                .Replace("{{recipientName}}", recipientName ?? "there")
+                .Replace("{{epaName}}", epaName ?? "the EPA")
+                .Replace("{{comment}}", string.IsNullOrWhiteSpace(comment) ? "(no message provided)" : comment)
+                .Replace("{{link}}", url ?? "#");
+        }
+
+        // Add comment to AssessmentRequest + notify the "other side"
+        public async Task<AssessmentEvent> AddCommentToRequestAsync( int requestId,
+                                                                     string actorId,
+                                                                     string comment,
+                                                                     HttpRequest httpRequest )
+        {
+            if (string.IsNullOrWhiteSpace(comment))
+                throw new ArgumentException("Comment must not be empty.", nameof(comment));
+
+            var request = await _assessmentRequestRepository.GetAsync(requestId);
+            if (request == null)
+                throw new InvalidOperationException("Assessment request not found.");
+
+            // Persist event
+            var evt = new AssessmentEvent
+            {
+                ActorId = actorId,
+                Type = AssessmentEventType.CommentAdded, // ensure this enum value exists
+                AssessmentRequestId = request.Id,
+                Message = comment.Trim(),
+                Timestamp = DateTime.UtcNow
+            };
+
+            _context.AssessmentEvents.Add(evt);
+            await _context.SaveChangesAsync();
+
+            // Build notification
+            var actor = _mapper.Map<WombatUserVM> (await _userManager.FindByIdAsync(actorId));
+            var commenterName = actor?.DisplayName ?? actor?.Email ?? "Someone";
+
+            // Notify the opposite party if present
+            string recipientId = null;
+            if (!string.IsNullOrEmpty(request.TraineeId) && !string.Equals(request.TraineeId, actorId, StringComparison.Ordinal))
+                recipientId = request.TraineeId;
+            else if (!string.IsNullOrEmpty(request.AssessorId) && !string.Equals(request.AssessorId, actorId, StringComparison.Ordinal))
+                recipientId = request.AssessorId;
+
+            if (!string.IsNullOrEmpty(recipientId))
+            {
+                var recipient = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(recipientId));
+
+                // Resolve EPA name (if not loaded on request)
+                var epaName = request.EPA?.Name;
+                if (string.IsNullOrEmpty(epaName) && request.EPAId != 0)
+                {
+                    var epa = await _epaRepository.GetAsync(request.EPAId);
+                    epaName = epa?.Name;
+                }
+
+                var url = _linkGenerator.GetUriByAction(
+                    httpContext: httpRequest.HttpContext,
+                    action: "Details",
+                    controller: "AssessmentRequests",
+                    values: new { id = request.Id, anchor = "events" }
+                );
+
+                var html = LoadRequestCommentTemplateAndInsertValues(
+                    commenterName: commenterName,
+                    recipientName: recipient?.DisplayName ?? recipient?.Email,
+                    epaName: epaName,
+                    comment: comment,
+                    url: url
+                );
+
+                await _notificationService.NotifyAsync(
+                    recipient.Id,
+                    "New comment on your assessment request",
+                    html);
+            }
+
+            return evt;
+        }
+
+        private string LoadCancelTemplateAndInsertValues(AssessmentRequestVM vm, string url, string actorName)
+        {
+            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentCancelled.html");
+            var html = System.IO.File.ReadAllText(templatePath);
+            return html
+                .Replace("{{actorName}}", actorName ?? "The trainee")
+                .Replace("{{assessorName}}", vm.Assessor?.Name)
+                .Replace("{{traineeName}}", vm.Trainee?.Name ?? "you")
+                .Replace("{{epaName}}", vm.EPA?.Name)
+                .Replace("{{comment}}", string.IsNullOrWhiteSpace(vm.ActionComment) ? "No comments provided." : vm.ActionComment)
+                .Replace("{{link}}", url);
+        }
+
+        public async Task<AssessmentRequest> CancelRequestAsync( AssessmentRequestVM model,
+                                                                 string actorId,
+                                                                 HttpRequest httpRequest )
+        {
+            var request = await _assessmentRequestRepository.GetAsync(model.Id)
+                  ?? throw new InvalidOperationException("Assessment request not found.");
+
+            if (request.CompletionDate != null) throw new InvalidOperationException("Completed requests cannot be cancelled.");
+            if (request.DateAccepted == null) throw new InvalidOperationException("Only accepted requests can be cancelled.");
+
+            // Treat cancel as decline (fast path)
+            request.DateCancelled = DateTime.UtcNow;
+            await _assessmentRequestRepository.UpdateAsync(request);
+
+            // Event logs who cancelled (assessor or trainee)
+            _context.AssessmentEvents.Add(new AssessmentEvent
+            {
+                ActorId = actorId,
+                Type = AssessmentEventType.RequestCancelled,
+                AssessmentRequestId = request.Id,
+                Message = string.IsNullOrWhiteSpace(model.ActionComment)
+                    ? $"Request for EPA '{request.EPA?.Name}' was cancelled."
+                    : model.ActionComment,
+                Timestamp = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            // Notify the other side
+            var recipientId = actorId == request.TraineeId ? request.AssessorId : request.TraineeId;
+            if (!string.IsNullOrEmpty(recipientId))
+            {
+                model.Assessor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(request.AssessorId));
+                model.Trainee = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(request.TraineeId));
+                model.EPA = _mapper.Map<EPAVM>(await _epaRepository.GetAsync(request.EPAId));
+
+                var actor = _mapper.Map<WombatUserVM>(await _userManager.FindByIdAsync(actorId));
+                var url = _linkGenerator.GetUriByAction(httpRequest.HttpContext, "Details", "AssessmentRequests",
+                                                        new { id = request.Id, anchor = "events" });
+
+                var html = LoadCancelTemplateAndInsertValues(model, url, actor?.DisplayName ?? actor?.Email);
+                await _notificationService.NotifyAsync(recipientId, "Assessment Request Cancelled", html);
+            }
+
+            return request;
+        }
     }
 
 }

@@ -32,6 +32,7 @@ namespace Wombat.Data
 
         public DateTime? DateAccepted { get; set; }
         public DateTime? DateDeclined { get; set; }
+        public DateTime? DateCancelled { get; set; }
         public DateTime? AssessmentDate { get; set; }
         public DateTime? CompletionDate { get; set; }
 
@@ -52,7 +53,6 @@ namespace Wombat.Data
         [ForeignKey("EPAId")]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public EPA? EPA { get; set; }
-
         public int AssessmentFormId { get; set; }
 
         [ForeignKey("AssessmentFormId")]

@@ -49,13 +49,14 @@
                     @Html.DisplayNameFor(model => model.Events)
                 </dt>
                 <dd class="col-sm-10">
-                    @if (Model.Events?.Any() == true)
-                    {
-                        <div class="card shadow-sm mt-4">
-                            <div class="card-header bg-light text-muted">
-                                <i class="fas fa-comments me-2"></i>Event History
-                            </div>
-                            <div class="card-body">
+                    <div class="card shadow-sm mt-4" id="events">
+                        <div class="card-header bg-light text-muted">
+                            <i class="fas fa-comments me-2"></i>Event History
+                        </div>
+
+                        <div class="card-body">
+                            @if (Model.Events?.Any() == true)
+                            {
                                 @foreach (var evt in Model.Events)
                                 {
                                     <div class="mb-3">
@@ -69,28 +70,42 @@
                                         }
                                     </div>
                                 }
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="text-muted">No events yet.</div>
+                            }
                         </div>
-                    }
+
+                        @if (Model.TraineeId == UserManager.GetUserId(User) || Model.AssessorId == UserManager.GetUserId(User))
+                        {
+                            <div class="card-footer bg-light">
+                                <form asp-action="AddComment" method="post" class="d-flex gap-2 align-items-start">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" asp-for="Id" />
+                                    <div class="flex-grow-1">
+                                        <label for="ActionComment" class="visually-hidden">Add a comment</label>
+                                        <textarea asp-for="ActionComment"
+                                                  id="ActionComment"
+                                                  class="form-control"
+                                                  rows="2"
+                                                  placeholder="Write a comment…"></textarea>
+                                    </div>
+                                    <button type="submit"
+                                            class="btn btn-icon btn-edit"
+                                            id="sendCommentBtn"
+                                            title="Send comment"
+                                            aria-label="Send comment"
+                                            disabled>
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
                 </dd>
             </dl>
 
-            @if (Model.TraineeId == UserManager.GetUserId(User) || Model.AssessorId == UserManager.GetUserId(User))
-            {
-                <form asp-action="AddComment" class="mt-4">
-                    <input type="hidden" asp-for="Id" />
-                    <div class="form-group">
-                        <label class="control-label">Comment</label>
-                        <textarea asp-for="ActionComment" class="form-control"></textarea>
-                    </div>
-                    <br />
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-icon btn-edit" title="Add Comment">
-                            <i class="fas fa-save"></i>
-                        </button>
-                    </div>
-                </form>
-            }
         </div>
         <div class="card-footer d-flex justify-content-between">
             <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
@@ -125,3 +140,24 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const ta = document.getElementById('ActionComment');
+            const btn = document.getElementById('sendCommentBtn');
+            if (!ta || !btn) return;
+
+            const toggle = () => btn.disabled = !ta.value.trim();
+            ta.addEventListener('input', toggle);
+            toggle();
+
+            ta.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !btn.disabled) {
+                    e.preventDefault();
+                    btn.closest('form').submit();
+                }
+            });
+        })();
+    </script>
+}

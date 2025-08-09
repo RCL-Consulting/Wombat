@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<AssessmentRequestVM>
+@using Wombat.Data
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<WombatUser> UserManager
 
 @{
     ViewData["Title"] = "Assessment Requests";
@@ -112,16 +115,31 @@
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                     }
-                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted &&
-                                    User.IsInRole(Role.Assessor.ToStringValue()))
+                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
                                     {
-                                        <a class="btn btn-icon btn-edit btn-sm"
-                                           asp-action="LogRequestedAssessment"
-                                           asp-controller="LoggedAssessments"
-                                           asp-route-id="@item.Id"
-                                           title="Log Assessment">
-                                            <i class="fa-solid fa-clipboard-check"></i>
-                                        </a>
+                                        if (User.IsInRole(Role.Assessor.ToStringValue()))
+                                        {
+                                            <a class="btn btn-icon btn-edit btn-sm"
+                                               asp-action="LogRequestedAssessment"
+                                               asp-controller="LoggedAssessments"
+                                               asp-route-id="@item.Id"
+                                               title="Log Assessment">
+                                                <i class="fa-solid fa-clipboard-check"></i>
+                                            </a>
+                                        }
+
+                                        @* Trainee (request owner) can cancel while pending *@
+                                        @if ( (User.IsInRole(Role.Trainee.ToStringValue()) && item.TraineeId == UserManager.GetUserId(User)) ||
+                                              (User.IsInRole(Role.Assessor.ToStringValue()) && item.AssessorId == UserManager.GetUserId(User)))
+                                        {
+                                            <a class="btn btn-icon btn-delete btn-sm"
+                                               asp-action="CancelRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Cancel Request">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                        }
+
                                         <a class="btn btn-icon btn-info btn-sm"
                                            asp-action="Details"
                                            asp-route-id="@item.Id"

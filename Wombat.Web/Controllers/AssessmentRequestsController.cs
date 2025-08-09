@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
+using Wombat.Application.Services;
 using Wombat.Common.Constants;
 using Wombat.Common.Models;
 using Wombat.Data;
@@ -195,34 +196,13 @@ namespace Wombat.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment(int id, AssessmentRequestVM model)
         {
-            var request = await assessmentRequestRepository.GetAsync(id);
-            if (request == null)
-            {
-                return NotFound();
-            }
+            if (string.IsNullOrWhiteSpace(model.ActionComment))
+                return RedirectToAction(nameof(Details), new { id = model.Id, anchor = "events" });
 
-            var userId = userManager.GetUserId(User);
-            if (userId != request.AssessorId && userId != request.TraineeId)
-            {
-                return Forbid();
-            }
+            // create AssessmentEvent (Type = CommentAdded), set Actor = current user, Timestamp = UtcNow
+            await assessmentWorkflowService.AddCommentToRequestAsync(model.Id, userManager.GetUserId(httpContextAccessor.HttpContext.User), model.ActionComment, Request);
 
-            var comment = model.ActionComment?.Trim();
-            if (!string.IsNullOrWhiteSpace(comment))
-            {
-                var assessmentEvent = new AssessmentEvent
-                {
-                    ActorId = userId,
-                    AssessmentRequestId = id,
-                    Type = AssessmentEventType.CommentAdded,
-                    Message = comment,
-                    Timestamp = DateTime.UtcNow
-                };
-
-                await assessmentEventRepository.AddAsync(assessmentEvent);
-            }
-
-            return RedirectToAction(nameof(Details), new { id });
+            return RedirectToAction(nameof(Details), new { id = model.Id, anchor = "events" });
         }
 
         public async Task<IActionResult> DeclineRequest(int? id)
@@ -352,6 +332,43 @@ namespace Wombat.Web.Controllers
 
             return File(Encoding.UTF8.GetBytes(calendar.ToString()), "text/calendar", "calendar.ics");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CancelRequest(int id)
+        {
+            var vm = mapper.Map<AssessmentRequestVM>(await assessmentRequestRepository.GetAsync(id)); // or map manually
+            if (vm == null) return NotFound();
+
+            // Only allowed when currently Accepted (pending assessment)
+            if (vm.Status != AssessmentRequestStatus.Accepted)
+                return BadRequest("Only accepted requests can be cancelled.");
+
+            // Only the trainee who created it (or an admin) can cancel
+            var userId = userManager.GetUserId(User);
+            var allowed = User.IsInRole(Role.Administrator.ToStringValue()) ||
+                   vm.TraineeId == userId ||
+                   vm.AssessorId == userId;
+            if (!allowed) return Forbid();
+
+            // Load events for context
+            vm.Events = mapper.Map<List<AssessmentEventVM>>(await assessmentEventRepository.GetEventsForRequestAsync(id));
+            return View(vm); // views/AssessmentRequests/Cancel.cshtml
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelRequest(AssessmentRequestVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var userId = userManager.GetUserId(User);
+            await assessmentWorkflowService.CancelRequestAsync(vm, userId, Request);
+
+            // Return to Accepted list (now it will drop out)
+            return RedirectToAction(nameof(Index), new { requestStatus = AssessmentRequestStatus.Accepted });
+        }
+
 
         public async Task<IActionResult> AcceptRequest(int? id)
         {

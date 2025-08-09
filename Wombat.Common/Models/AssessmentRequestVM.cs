@@ -34,10 +34,8 @@ namespace Wombat.Common.Models
         Accepted,
         [Display(Name = "Declined")]
         Declined,
-        [Display(Name = "Cancelled by trainee")]
-        CancelledByTrainee,
-        [Display(Name = "Cancelled by assessor")]
-        CancelledByAssessor,
+        [Display(Name = "Cancelled")]
+        Cancelled,
         [Display(Name = "Completed")]
         Completed,
         [Display(Name = "Not conducted")]
@@ -92,6 +90,9 @@ namespace Wombat.Common.Models
 
         [Display(Name = "Date declined")]
         public DateTime? DateDeclined { get; set; }
+
+        [Display(Name = "Date cancelled")]
+        public DateTime? DateCancelled { get; set; }
 
         [Display(Name = "Assessment date")]
         public DateTime? AssessmentDate { get; set; }

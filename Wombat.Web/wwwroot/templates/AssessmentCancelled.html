@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family:'Segoe UI',sans-serif; color:#333; line-height:1.5; margin:0; }
+    .container { max-width:600px; margin:0 auto; padding:2rem; background:#f9f9f9; border:1px solid #ddd; border-radius:8px; }
+    .header { background:#dc3545; color:#fff; padding:1rem; border-top-left-radius:8px; border-top-right-radius:8px; text-align:center; font-weight:600; }
+    .button { display:inline-block; margin-top:1rem; padding:0.75rem 1.25rem; background:#0d6efd; color:#fff; text-decoration:none; border-radius:4px; }
+    .footer { margin-top:2rem; font-size:0.85rem; color:#666; }
+    .bubble { background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:0.75rem 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Assessment Request Cancelled</div>
+    <p>Hello {{assessorName}},</p>
+    <p><strong>{{actorName}}</strong> has cancelled the assessment request for:</p>
+    <p><strong>{{epaName}}</strong></p>
+    <p>Comment:</p>
+    <div class="bubble">{{comment}}</div>
+    <p>You can review the request here:</p>
+    <p><a href="{{link}}" class="button">Open Request</a></p>
+    <p class="footer">This is an automated message from the Wombat platform.</p>
+  </div>
+</body>
+</html>

@@ -44,6 +44,7 @@ namespace Wombat.Application.Configurations
             CreateMap<AssessmentRequest, AssessmentRequestVM>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src =>
                     src.CompletionDate != null ? AssessmentRequestStatus.Completed :
+                    src.DateCancelled != null ? AssessmentRequestStatus.Cancelled :
                     src.DateDeclined != null ? AssessmentRequestStatus.Declined :
                     src.DateAccepted != null ? (
                         src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
@@ -52,8 +53,7 @@ namespace Wombat.Application.Configurations
                     ) :
                     src.AssessmentDate.HasValue && src.AssessmentDate.Value < DateTime.Now
                         ? AssessmentRequestStatus.Expired :
-                    AssessmentRequestStatus.Requested
-                ))
+                    AssessmentRequestStatus.Requested))
                 .ReverseMap();
 
             CreateMap<RegistrationInvitation, RegistrationInvitationVM>()
