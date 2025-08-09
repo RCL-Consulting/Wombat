@@ -191,6 +191,40 @@ namespace Wombat.Web.Controllers
             return View(requestVM);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(int id, AssessmentRequestVM model)
+        {
+            var request = await assessmentRequestRepository.GetAsync(id);
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            var userId = userManager.GetUserId(User);
+            if (userId != request.AssessorId && userId != request.TraineeId)
+            {
+                return Forbid();
+            }
+
+            var comment = model.ActionComment?.Trim();
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                var assessmentEvent = new AssessmentEvent
+                {
+                    ActorId = userId,
+                    AssessmentRequestId = id,
+                    Type = AssessmentEventType.CommentAdded,
+                    Message = comment,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                await assessmentEventRepository.AddAsync(assessmentEvent);
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         public async Task<IActionResult> DeclineRequest(int? id)
         {
             var request = await assessmentRequestRepository.GetAsync(id);
