@@ -1,4 +1,6 @@
 ﻿@model AssessmentRequestVM
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<WombatUser> UserManager
 
 @{
     ViewData["Title"] = "Details";
@@ -71,6 +73,23 @@
                     }
                 </dd>
             </dl>
+
+            @if (Model.TraineeId == UserManager.GetUserId(User) || Model.AssessorId == UserManager.GetUserId(User))
+            {
+                <form asp-action="AddComment" class="mt-4">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="form-group">
+                        <label class="control-label">Comment</label>
+                        <textarea asp-for="ActionComment" class="form-control"></textarea>
+                    </div>
+                    <br />
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-icon btn-edit" title="Add Comment">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </form>
+            }
         </div>
         <div class="card-footer d-flex justify-content-between">
             <a asp-action="Index" class="btn btn-icon btn-back" title="Back to List">
