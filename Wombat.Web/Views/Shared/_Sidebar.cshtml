@@ -2,9 +2,19 @@
 
     <!-- Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Home" asp-action="Index">
-        <img src="/images/wombat-logo-white.svg" alt="Wombat Logo" width="40" class="me-2">
-        <div class="brand-text fw-bold text-white">WOMBAT</div>
+        <!-- Full logo for medium and up -->
+        <img src="/images/wombat-logo-white.svg"
+             alt="Wombat Logo"
+             width="150"
+             class="me-2 d-none d-md-inline">
+
+        <!-- Icon-only logo for small screens -->
+        <img src="/images/wombat-logo-white-small.svg"
+             alt="Wombat Icon"
+             width="48"
+             class="me-2 d-inline d-md-none">
     </a>
+
 
     <hr class="sidebar-divider my-2" />
 
