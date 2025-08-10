@@ -104,6 +104,16 @@ namespace Wombat.Controllers
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
             var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext.User);
+
+            if (user == null)
+            {
+                // either show a public landing view…
+                return View("Landing");
+
+                // …or redirect to the Identity login page:
+                // return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var roles = await userManager.GetRolesAsync(user);
 
             Expression<Func<AssessmentRequest, bool>> isTrainee = r => r.TraineeId == userId;

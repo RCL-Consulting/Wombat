@@ -501,7 +501,7 @@ namespace Wombat.Application.Services
             await tx.CommitAsync();
 
             // Notify trainee (optional: switch to your templated email)
-            var trainee = await _userManager.FindByIdAsync(request.TraineeId);
+            var trainee = await _userManager.FindByIdAsync(logged.TraineeId);
             if (trainee != null)
             {
                 var url = _linkGenerator.GetUriByAction(
