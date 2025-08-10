@@ -25,20 +25,20 @@
         </li>
     }
 
-    @if (User.IsInRole(Role.Coordinator.ToStringValue()))
+   @*  @if (User.IsInRole(Role.Coordinator.ToStringValue()))
     {
         <li class="nav-item">
             <a class="nav-link" asp-controller="LoggedAssessments" asp-action="PortfolioIndex">
                 <i class="fas fa-folder-open"></i> <span>Portfolios</span>
             </a>
         </li>
-    }
+    } *@
 
     @if (User.IsInRole(Role.Assessor.ToStringValue()) || User.IsInRole(Role.Trainee.ToStringValue()))
     {
         <li class="nav-item">
             <a class="nav-link" asp-controller="LoggedAssessments" asp-action="MyAssessments">
-                <i class="fas fa-file-alt"></i> <span>My Assessments</span>
+                <i class="fas fa-file-alt"></i> <span>Assessments</span>
             </a>
         </li>
     }

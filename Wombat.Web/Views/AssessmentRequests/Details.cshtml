@@ -12,12 +12,49 @@
     bool isParty = (Model.TraineeId == myUserId) || (Model.AssessorId == myUserId) || User.IsInRole(Role.Administrator.ToStringValue());
     bool isPending = Model.BaseStatus == AssessmentRequestStatus.Requested || Model.BaseStatus == AssessmentRequestStatus.Accepted;
     bool canCancel = isPending && isParty;
+    bool canReschedule = isParty && (isPending || Model.BaseStatus == AssessmentRequestStatus.Declined);
+
+    // Use display/derived status for the big badge
+    var displayStatus = Model.Status;          // e.g., Accepted / NotConducted / Expired …
+    var baseStatus = Model.BaseStatus;      // e.g., Requested / Accepted / Declined / Cancelled / Completed
+
+    // Map status to a bootstrap-ish badge class and icon
+    Func<AssessmentRequestStatus, (string css, string icon)> badge = s => s switch
+    {
+        AssessmentRequestStatus.Accepted => ("badge bg-success", "fas fa-check"),
+        AssessmentRequestStatus.Requested => ("badge bg-primary", "fas fa-hourglass-half"),
+        AssessmentRequestStatus.Declined => ("badge bg-danger", "fas fa-times"),
+        AssessmentRequestStatus.Cancelled => ("badge bg-secondary", "fas fa-ban"),
+        AssessmentRequestStatus.Completed => ("badge bg-info", "fas fa-clipboard-check"),
+        AssessmentRequestStatus.NotConducted => ("badge bg-warning text-dark", "fas fa-exclamation-triangle"),
+        AssessmentRequestStatus.Expired => ("badge bg-dark", "fas fa-clock"),
+        _ => ("badge bg-light text-dark", "fas fa-info-circle")
+    };
+
+    var (css, icon) = badge(displayStatus);
+
+    // If the derived display differs from the base lifecycle, show a subtle sub-label
+    var showBaseHint = baseStatus != displayStatus
+        && (displayStatus == AssessmentRequestStatus.NotConducted || displayStatus == AssessmentRequestStatus.Expired);
+
+    bool isCompleted = Model.BaseStatus == AssessmentRequestStatus.Completed && Model.LoggedAssessment != null;
 }
 
 <div class="container mt-4">
     <div class="card card-accent-details shadow-sm">
         <div class="card-header">
             <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Request - Details</h5>
+
+            <span class="@css" title="Current status">
+                <i class="@icon me-1"></i>@Model.StatusDisplayName
+            </span>
+
+            @if (showBaseHint)
+            {
+                <span class="badge bg-light text-muted" title="Base lifecycle status">
+                    base: @baseStatus.GetDisplayName()
+                </span>
+            }
         </div>
 
         <div class="card-body">
@@ -46,11 +83,17 @@
                 <dd class="col-sm-10">
                     @Model.EPA.Name - @Model.EPA.Description
                 </dd>
-                <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.AssessmentDate)
-                </dt>
+                <dt class="col-sm-2">@Html.DisplayNameFor(m => m.AssessmentDate)</dt>
                 <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.AssessmentDate)
+                    @Html.DisplayFor(m => m.AssessmentDate)
+                    @if (Model.Status == AssessmentRequestStatus.NotConducted)
+                    {
+                        <span class="text-warning ms-2"><i class="fas fa-exclamation-triangle me-1"></i>date passed, not logged</span>
+                    }
+                    else if (Model.Status == AssessmentRequestStatus.Expired)
+                    {
+                        <span class="text-muted ms-2"><i class="fas fa-clock me-1"></i>date passed, not accepted</span>
+                    }
                 </dd>
                 <dt class="col-sm-2">
                     @Html.DisplayNameFor(model => model.Events)
@@ -160,13 +203,24 @@
                     </a>
                 }
 
-                @if (isPending && isParty)
+                @if (canReschedule)
                 {
                     <a class="btn btn-icon btn-edit"
-                       asp-action="RescheduleRequest"
+                       asp-action="Reschedule"
                        asp-route-id="@Model.Id"
                        title="Reschedule">
                         <i class="fas fa-calendar-alt"></i>
+                    </a>
+                }
+
+                @if (isCompleted)
+                {
+                    <a class="btn btn-icon btn-info"
+                       asp-controller="LoggedAssessments"
+                       asp-action="Details"
+                       asp-route-id="@Model.LoggedAssessment.Id"
+                       title="View Logged Assessment">
+                        <i class="fas fa-clipboard-list"></i>
                     </a>
                 }
 

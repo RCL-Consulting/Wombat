@@ -1,70 +1,151 @@
 ﻿@model LoggedAssessmentVM
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Assessment – Details";
+    var backAction = (string)(ViewBag.ReturnAction ?? "MyAssessments");
+    var backId = (int?)(ViewBag.ReturnId ?? null);
 }
 
-<h1>Details</h1>
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-clipboard-list me-2"></i>Assessment – Details
+            </h5>
+        </div>
 
-<div>
-    <h4>LoggedAssessment</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Trainee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Trainee.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Assessor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Assessor.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EPA)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EPA.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AssessmentDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AssessmentDate)
-        </dd>
-    </dl>
+        <div class="card-body p-4">
+            <!-- Top summary -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">Trainee</div>
+                        <div class="fw-semibold">
+                            @if (Model.Trainee != null)
+                            {
+                                @($"{Model.Trainee.Name} {Model.Trainee.Surname}")
+                                <span class="text-muted">(@Model.Trainee.Email)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
 
-    @foreach (var optionCriterionResponse in Model.OptionCriterionResponses)
-    {
-        var Value = "";
-        @if (optionCriterionResponse.Criterion.OptionsSet.DisplayRank)
-        {
-            Value = optionCriterionResponse.Option.Rank + "-" + optionCriterionResponse.Option.Description;
-        }
-        else if (optionCriterionResponse.Option != null)
-        {
-            Value = optionCriterionResponse.Option.Description;
-        }
-        else
-        {
-            Value = optionCriterionResponse.Comment;
-        }
-        <div class="card">
-            <div class="card-header">
-                @optionCriterionResponse.Criterion.Description
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">Assessor</div>
+                        <div class="fw-semibold">
+                            @if (Model.Assessor != null)
+                            {
+                                @($"{Model.Assessor.Name} {Model.Assessor.Surname}")
+                                <span class="text-muted">(@Model.Assessor.Email)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">EPA</div>
+                        <div class="fw-semibold">
+                            @Model.EPA?.Name
+                            @if (!string.IsNullOrWhiteSpace(Model.EPA?.Description))
+                            {
+                                <span class="text-muted">— @Model.EPA.Description</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">Assessment date</div>
+                        <div class="fw-semibold">@Model.AssessmentDate.ToString("g")</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                @Value
+
+            <!-- Responses -->
+            <div class="mt-4">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fa-regular fa-list-check me-2"></i>
+                    <h6 class="mb-0">Responses</h6>
+                </div>
+
+                @if (Model.OptionCriterionResponses == null || !Model.OptionCriterionResponses.Any())
+                {
+                    <div class="alert alert-info mb-0">
+                        No responses recorded for this assessment.
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var r in Model.OptionCriterionResponses)
+                        {
+                            string valueText;
+                            if (r?.Criterion?.OptionsSet?.DisplayRank == true && r?.Option != null)
+                            {
+                                valueText = $"{r.Option.Rank}-{r.Option.Description}";
+                            }
+                            else if (r?.Option != null)
+                            {
+                                valueText = r.Option.Description;
+                            }
+                            else
+                            {
+                                valueText = string.IsNullOrWhiteSpace(r?.Comment) ? "—" : r!.Comment!;
+                            }
+
+                            <div class="col-12">
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-light text-muted">
+                                        @r?.Criterion?.Description
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="fw-semibold">@valueText</div>
+
+                                        @* If both an option and a comment exist, show the comment subtly *@
+                                        @if (r?.Option != null && !string.IsNullOrWhiteSpace(r?.Comment))
+                                        {
+                                            <div class="text-muted small mt-2">
+                                                <i class="fa-regular fa-comment-dots me-1"></i>@r.Comment
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         </div>
-        <br/>
-    }
-    
-</div>
-<br/>
 
-<div>
-    <a asp-action="@ViewBag.ReturnAction" asp-route-id="@ViewBag.ReturnId" class="btn btn-dark">Back to List</a>
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a asp-action="@backAction" asp-route-id="@backId" class="btn btn-icon btn-back" title="Back">
+                <i class="fa-solid fa-list"></i>
+            </a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-icon btn-edit btn-sm"
+                   asp-action="CreatePDF"
+                   asp-route-id="@Model.Id"
+                   title="Download PDF">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

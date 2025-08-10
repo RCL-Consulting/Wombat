@@ -104,7 +104,6 @@ namespace Wombat.Web.Controllers
                 return NotFound();
 
             var userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
-            ViewBag.RequestStatus = requestStatus;
 
             Expression<Func<AssessmentRequest, bool>> isAssessor = r => r.AssessorId == userId;
             Expression<Func<AssessmentRequest, bool>> isTrainee = r => r.TraineeId == userId;
@@ -168,7 +167,7 @@ namespace Wombat.Web.Controllers
         }
 
         // GET: AssessmentRequests/Details/5
-        public async Task<IActionResult> Details(int? id, AssessmentRequestStatus requestStatus)
+        public async Task<IActionResult> Details(int? id)
         {
             var request = await assessmentRequestRepository.GetAsync(id);
             if (request == null)
@@ -176,7 +175,6 @@ namespace Wombat.Web.Controllers
                 return NotFound();
             }
 
-            ViewBag.RequestStatus = requestStatus;
             var requestVM = mapper.Map<AssessmentRequestVM>(request);
 
             requestVM.EPA = mapper.Map<EPAVM>(await epaRepository.GetAsync(request.EPAId));

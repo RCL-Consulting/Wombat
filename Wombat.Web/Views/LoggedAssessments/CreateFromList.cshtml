@@ -1,32 +1,88 @@
 ﻿@model IEnumerable<WombatUserVM>
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Select Trainee for Ad‑hoc Assessment";
+    var items = Model?.ToList() ?? new List<WombatUserVM>();
+    bool sameSpec = Context.Request.Query["sameSpeciality"] == "true";
+    bool sameSub = Context.Request.Query["sameSubSpeciality"] == "true";
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-clipboard-check me-2"></i>Select Trainee
+            </h5>
+            <span class="badge bg-primary">@items.Count</span>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Email)
-                </td>
-                <td>
-                    <a class="btn btn-warning" asp-action="LogAssessmentFor" asp-route-id="@item.Id"><i class="fa-solid fa-clipboard-check"></i></a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+        <div class="card-body p-4">
+            <form method="get" asp-action="CreateFromList" class="row g-3 mb-3 align-items-center">
+                <div class="col-auto form-check">
+                    <input type="checkbox" class="form-check-input" id="sameSpeciality" name="sameSpeciality"
+                           value="true" @(sameSpec ? "checked" : "") />
+                    <label class="form-check-label" for="sameSpeciality">Same speciality</label>
+                </div>
+                <div class="col-auto form-check">
+                    <input type="checkbox" class="form-check-input" id="sameSubSpeciality" name="sameSubSpeciality"
+                           value="true" @(sameSub ? "checked" : "") />
+                    <label class="form-check-label" for="sameSubSpeciality">Same subspeciality</label>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-icon btn-create">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+                </div>
+            </form>
 
+            @if (!items.Any())
+            {
+                <div class="alert alert-info mb-0 d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No trainees found with the selected filters.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:40%">Trainee</th>
+                                <th style="width:40%">Email</th>
+                                <th class="text-end" style="width:20%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in items)
+                            {
+                                var displayName = string.Join(" ", new[] { u?.Name, u?.Surname }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                                <tr>
+                                    <td class="text-nowrap">@(!string.IsNullOrWhiteSpace(displayName) ? displayName : "—")</td>
+                                    <td class="text-nowrap">@u?.Email</td>
+                                    <td class="text-end text-nowrap">
+                                        <a class="btn btn-icon btn-edit btn-sm"
+                                           asp-action="LogAssessmentFor"
+                                           asp-route-id="@u!.Id"
+                                           title="Log assessment">
+                                            <i class="fa-solid fa-clipboard-check"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <div class="text-muted small">
+                <i class="far fa-clock me-1"></i>Updated @DateTime.Now.ToString("g")
+            </div>
+        </div>
+    </div>
+</div>

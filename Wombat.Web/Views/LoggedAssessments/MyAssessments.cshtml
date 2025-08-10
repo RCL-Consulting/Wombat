@@ -1,78 +1,78 @@
 ﻿@model IEnumerable<LoggedAssessmentVM>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "My Assessments";
+    var items = Model?.ToList() ?? new List<LoggedAssessmentVM>();
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="card card-accent-details shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-clipboard-check me-2"></i>My Assessments
+            </h5>
+            <span class="badge bg-primary">@items.Count</span>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Trainee)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Assessor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EPA)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AssessmentDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Trainee.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Assessor.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EPA.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AssessmentDate)
-            </td>
-            <td>
-                <a class="btn btn-warning" asp-action="CreatePDF" asp-route-id="@item.Id"><i class="fa-regular fa-file-pdf"></i></a>
-                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.Id" asp-route-returnAction="MyAssessments"><i class="fas fa-info-circle"></i></a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <div class="card-body p-4">
+            @if (!items.Any())
+            {
+                <div class="alert alert-info mb-0 d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No assessments found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Html.DisplayNameFor(m => m.First().EPA)</th>
+                                <th class="text-nowrap">@Html.DisplayNameFor(m => m.First().AssessmentDate)</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in items)
+                            {
+                                <tr>
+                                    <td class="text-truncate" style="max-width: 380px">
+                                        @item.EPA?.Name
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @item.AssessmentDate.ToString("g")
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a class="btn btn-icon btn-edit btn-sm"
+                                           asp-action="CreatePDF"
+                                           asp-route-id="@item.Id"
+                                           title="Download PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        <a class="btn btn-icon btn-info btn-sm"
+                                           asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           asp-route-returnAction="MyAssessments"
+                                           title="View details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
 
-<form id="deleteForm" asp-action="Delete">
-    <input type="hidden" id="optionSetId" name="Id" />
-</form>
-
-
-@section Scripts {
-    <script>
-        $(function () {
-
-            $('.deleteBtn').click(function (e) {
-                swal({
-                    title: "Are you sure?",
-                    text: "Are you sure you want to delete this record?",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true
-                }).then((confirm) => {
-                    if (confirm) {
-                        var btn = $(this);
-                        var id = btn.data("id");
-                        $("#optionSetId").val(id);
-                        $("#deleteForm").submit();
-                    }
-                });
-            });
-        });
-    </script>
-}
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-icon btn-back" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <div class="text-muted small">
+                <i class="far fa-clock me-1"></i>Updated @DateTime.Now.ToString("g")
+            </div>
+        </div>
+    </div>
+</div>

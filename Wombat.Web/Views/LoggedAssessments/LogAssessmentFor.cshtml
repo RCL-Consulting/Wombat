@@ -1,106 +1,175 @@
 ﻿@model LoggedAssessmentVM
 
 @{
-    ViewData["Title"] = "Loag an assessment";
+    ViewData["Title"] = "Log an assessment";
+
+    // safe casts for dropdown data
+    var epaList = (ViewData["EPAList"] as IEnumerable<EPAVM>) ?? Enumerable.Empty<EPAVM>();
+    var formList = (ViewData["FormList"] as IEnumerable<EPAVM>) ?? Enumerable.Empty<EPAVM>(); // if preloaded
 }
 
-<h1>Log an assessment</h1>
+<div class="container mt-4">
+    <div class="card card-accent-create shadow-sm">
+        <div class="card-header card-header-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-clipboard-check me-2"></i>Log an assessment
+            </h5>
+        </div>
 
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <dl class="row">
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Trainee)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Trainee.Email)
-            </dd>
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Assessor)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Assessor.Email)
-            </dd>
-        </dl>
-        <form asp-action="StartAssessment">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="TraineeId" />
-            <input type="hidden" asp-for="AssessorId" />
-    
-            <div class="form-group">
-                <label class="control-label">Assessment EPA</label>
-                <select asp-for="EPAId" class="form-select" id="epaSelect" onchange="updateAssessmentSelect()">
-                    <option value="">-- Select an EPA --</option>
-                    @foreach (var option in (List<EPAVM>)ViewData["EPAList"])
-                    {
-                        <option value="@option.Id">@option.Name</option>
-                    }
-                </select>
+        <div class="card-body p-4">
+            <!-- Summary strip -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">Trainee</div>
+                        <div class="fw-semibold">
+                            @if (Model.Trainee != null)
+                            {
+                                @($"{Model.Trainee.Name} {Model.Trainee.Surname}")
+                                <span class="text-muted">(@Model.Trainee.Email)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">Assessor</div>
+                        <div class="fw-semibold">
+                            @if (Model.Assessor != null)
+                            {
+                                @($"{Model.Assessor.Name} {Model.Assessor.Surname}")
+                                <span class="text-muted">(@Model.Assessor.Email)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
-            <br />
 
-            <div id="FormContainer">
-                <label for="secondSelect">Assessment Form</label>
-                <select asp-for="FormId" id="secondSelect" class="form-select">
-                    <option value="">-- Select a Form --</option>
-                    @if (ViewData["FormList"] != null)
-                    {
-                        foreach (var option in (List<EPAVM>)ViewData["FormList"])
+            <form asp-action="StartAssessment" method="post" class="mt-2">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <input type="hidden" asp-for="TraineeId" />
+                <input type="hidden" asp-for="AssessorId" />
+
+                <!-- EPA -->
+                <div class="mb-3">
+                    <label class="form-label">Assessment EPA</label>
+                    <select asp-for="EPAId" class="form-select" id="epaSelect">
+                        <option value="">-- Select an EPA --</option>
+                        @foreach (var option in epaList)
                         {
                             <option value="@option.Id">@option.Name</option>
                         }
-                    }
-                </select>
-            </div>
-            <br />
+                    </select>
+                    <span asp-validation-for="EPAId" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label asp-for="AssessmentDate" class="control-label"></label>
-                <input asp-for="AssessmentDate" class="form-control datepicker" type="text" />
-                <span asp-validation-for="AssessmentDate" class="text-danger"></span>
-            </div>
-            <br />
+                <!-- Form (cascades from EPA) -->
+                <div class="mb-3">
+                    <label class="form-label">Assessment Form</label>
+                    <div class="position-relative">
+                        <select asp-for="FormId" id="formSelect" class="form-select" disabled>
+                            <option value="">-- Select a Form --</option>
+                            @* If you sometimes preload *@
+                            @foreach (var f in formList)
+                            {
+                                <option value="@f.Id">@f.Name</option>
+                            }
+                        </select>
+                        <div id="formLoading" class="position-absolute top-50 end-0 translate-middle-y me-3 d-none">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </div>
+                    <span asp-validation-for="FormId" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <a asp-action="MyAssessments" class="btn btn-dark">Back to List</a> &nbsp;
-                <input type="submit" value="Create" class="btn btn-primary" /> 
-            </div>
-        </form>
+                <!-- Date -->
+                <div class="mb-3">
+                    <label asp-for="AssessmentDate" class="form-label"></label>
+                    <input asp-for="AssessmentDate" class="form-control datepicker" type="text" placeholder="yyyy-mm-dd hh:mm" />
+                    <span asp-validation-for="AssessmentDate" class="text-danger"></span>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-between pt-2">
+                    <a asp-action="MyAssessments" class="btn btn-icon btn-back" title="Back to List">
+                        <i class="fa-solid fa-list"></i>
+                    </a>
+                    <button type="submit" class="btn btn-icon btn-create" title="Create">
+                        <i class="fas fa-save"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <span class="text-muted small"><i class="far fa-clock me-1"></i>@DateTime.Now.ToString("g")</span>
+        </div>
     </div>
 </div>
 
-@section Scripts
-{
-    <script type="text/javascript">
-        function updateAssessmentSelect() {
-            var mainSelect = document.getElementById("epaSelect");
-            var FormContainer = document.getElementById("FormContainer");
-            var secondSelect = document.getElementById("secondSelect");
+@section Scripts {
+    <script>
+        (function () {
+            const epaSelect  = document.getElementById('epaSelect');
+            const formSelect = document.getElementById('formSelect');
+            const formLoading = document.getElementById('formLoading');
 
-            // Clear previous options
-            secondSelect.innerHTML = '';
+            async function loadForms(epaId) {
+                formSelect.innerHTML = '<option value="">-- Select a Form --</option>';
+                formSelect.disabled = true;
+                formLoading.classList.remove('d-none');
+                try {
+                    const url = '@Url.Action("GetSubOptions", "LoggedAssessments")' + '?mainOptionId=' + encodeURIComponent(epaId);
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!res.ok) throw new Error('Failed to load forms');
+                    const data = await res.json();
+                    for (const sub of data) {
+                        const opt = document.createElement('option');
+                        opt.value = sub.id;
+                        opt.textContent = sub.name;
+                        formSelect.appendChild(opt);
+                    }
+                    formSelect.disabled = false;
+                } catch (err) {
+                    console.error(err);
+                    // show a simple fallback option
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Failed to load forms';
+                    formSelect.appendChild(opt);
+                } finally {
+                    formLoading.classList.add('d-none');
+                }
+            }
 
-            if (mainSelect.value) {
-                // Show the second select
-                FormContainer.style.display = "block";
+            epaSelect.addEventListener('change', function () {
+                const val = this.value;
+                if (!val) {
+                    formSelect.innerHTML = '<option value="">-- Select a Form --</option>';
+                    formSelect.disabled = true;
+                    return;
+                }
+                loadForms(val);
+            });
 
-                // Fetch sub-options via AJAX
-                fetch('@Url.Action("GetSubOptions", "LoggedAssessments")?mainOptionId=' + mainSelect.value)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(function (subOption) {
-                            console.log(subOption.value);
-                            var newOption = document.createElement("option");
-                            newOption.value = subOption.id;
-                            newOption.textContent = subOption.name;
-                            secondSelect.appendChild(newOption);
-                        });
-                    })
-                    .catch(error => console.error('Error fetching sub-options:', error));
-            } 
-        }
+            // If EPA already selected (e.g., validation return), trigger load
+            if (epaSelect.value) {
+                loadForms(epaSelect.value);
+            }
+        })();
     </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
-
-

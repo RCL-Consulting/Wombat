@@ -207,6 +207,12 @@ namespace Wombat.Application.Repositories
                 .Include(r => r.Trainee)
                 .Include(r => r.Assessor)
                 .Include(r => r.AssessmentForm) // <-- add this
+                .Include(r => r.LoggedAssessment)
+                    .ThenInclude(la => la.OptionCriterionResponses!)
+                        .ThenInclude(o => o.Option)
+                .Include(r => r.LoggedAssessment)
+                    .ThenInclude(la => la.OptionCriterionResponses!)
+                        .ThenInclude(o => o.Criterion)
                 .Include(r => r.EPA)
                     .ThenInclude(e => e.SubSpeciality)
                         .ThenInclude(s => s.Speciality)

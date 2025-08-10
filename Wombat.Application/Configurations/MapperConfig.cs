@@ -41,17 +41,12 @@ namespace Wombat.Application.Configurations
             CreateMap<EPACurriculum, EPACurriculumVM>().ReverseMap();
             CreateMap<AssessmentEvent, AssessmentEventVM>().ReverseMap();
 
-            // In your profile
+            // Entity -> VM: map both BaseStatus (persisted) and Status (derived/display)
             CreateMap<AssessmentRequest, AssessmentRequestVM>()
                 .ForMember(d => d.BaseStatus, opt => opt.MapFrom(src => src.Status))
                 .ForMember(d => d.Status, opt => opt.MapFrom(src => src.GetDisplayStatus(DateTime.UtcNow)));
 
-            // IMPORTANT: don’t write derived status back to entity
-            CreateMap<AssessmentRequestVM, AssessmentRequest>()
-                .ForMember(e => e.Status, opt => opt.Ignore())
-                .ForMember(e => e.StatusChangedAt, opt => opt.Ignore()); CreateMap<AssessmentRequest, AssessmentRequestVM>()
-                .ForMember(d => d.Status, opt => opt.MapFrom(src => src.GetDisplayStatus(DateTime.UtcNow)));
-
+            // VM -> Entity: never write the derived display status back
             CreateMap<AssessmentRequestVM, AssessmentRequest>()
                 .ForMember(e => e.Status, opt => opt.Ignore())
                 .ForMember(e => e.StatusChangedAt, opt => opt.Ignore());

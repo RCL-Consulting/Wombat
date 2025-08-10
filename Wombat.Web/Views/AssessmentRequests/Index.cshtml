@@ -34,17 +34,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>@Html.DisplayNameFor(model => model.Trainee)</th>
-                            <th>@Html.DisplayNameFor(model => model.DateRequested)</th>
-                            @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
-                            {
-                                <th>@Html.DisplayNameFor(model => model.CompletionDate)</th>
-                            }
-                            else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
-                            ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
-                            ViewBag.RequestStatus == AssessmentRequestStatus.Accepted)
-                            {
-                                <th>@Html.DisplayNameFor(model => model.AssessmentDate)</th>
-                            }
+                            <th>@Html.DisplayNameFor(model => model.AssessmentDate)</th>
                             <th>@Html.DisplayNameFor(model => model.ShortEPADisplayName)</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -54,22 +44,11 @@
                         {
                             <tr>
                                 <td>@item.Trainee.Name @item.Trainee.Surname (@item.Trainee.Email)</td>
-                                <td>@Html.DisplayFor(modelItem => item.DateRequested)</td>
-
-                                @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
-                                {
-                                    <td>@Html.DisplayFor(modelItem => item.CompletionDate)</td>
-                                }
-                                else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested ||
-                                ViewBag.RequestStatus == AssessmentRequestStatus.Declined ||
-                                ViewBag.RequestStatus == AssessmentRequestStatus.Accepted)
-                                {
-                                    <td>@Html.DisplayFor(modelItem => item.AssessmentDate)</td>
-                                }
-
+                                <td>@Html.DisplayFor(modelItem => item.AssessmentDate)</td>
+                                
                                 <td>@item.ShortEPADisplayName</td>
                                 <td class="text-end text-nowrap">
-                                    @if (ViewBag.RequestStatus == AssessmentRequestStatus.Completed)
+                                    @if (item.BaseStatus == AssessmentRequestStatus.Completed)
                                     {
                                         <a class="btn btn-icon btn-edit btn-sm"
                                            asp-action="CreatePDFFromRequest"
@@ -86,7 +65,7 @@
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                     }
-                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Requested)
+                                    else if (item.BaseStatus == AssessmentRequestStatus.Requested)
                                     {
                                         if (User.IsInRole(Role.Assessor.ToStringValue()))
                                         {
@@ -114,7 +93,7 @@
                                             </a>
                                         }
 
-                                        @if (isPending(item) && isParty(item))
+                                        @if (isParty(item) && (isPending(item) || item.BaseStatus == AssessmentRequestStatus.Declined))
                                         {
                                             <a class="btn btn-icon btn-edit btn-sm"
                                                asp-action="RescheduleRequest"
@@ -127,22 +106,29 @@
                                         <a class="btn btn-icon btn-info btn-sm"
                                            asp-action="Details"
                                            asp-route-id="@item.Id"
-                                           asp-route-requestStatus="@ViewBag.RequestStatus"
                                            title="View Details">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                     }
-                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Declined)
+                                    else if (item.BaseStatus == AssessmentRequestStatus.Declined)
                                     {
+                                        @if (isParty(item) && (isPending(item) || item.BaseStatus == AssessmentRequestStatus.Declined))
+                                        {
+                                            <a class="btn btn-icon btn-edit btn-sm"
+                                               asp-action="RescheduleRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Reschedule">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </a>
+                                        }
                                         <a class="btn btn-icon btn-info btn-sm"
                                            asp-action="Details"
                                            asp-route-id="@item.Id"
-                                           asp-route-requestStatus="@ViewBag.RequestStatus"
                                            title="View Details">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                     }
-                                    else if (ViewBag.RequestStatus == AssessmentRequestStatus.Accepted )
+                                    else if (item.BaseStatus == AssessmentRequestStatus.Accepted)
                                     {
                                         if (User.IsInRole(Role.Assessor.ToStringValue()))
                                         {
@@ -167,14 +153,24 @@
                                             </a>
                                         }
 
+                                        @if (isParty(item) && (isPending(item) || item.BaseStatus == AssessmentRequestStatus.Declined))
+                                        {
+                                            <a class="btn btn-icon btn-edit btn-sm"
+                                               asp-action="RescheduleRequest"
+                                               asp-route-id="@item.Id"
+                                               title="Reschedule">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </a>
+                                        }
+
                                         <a class="btn btn-icon btn-info btn-sm"
                                            asp-action="Details"
                                            asp-route-id="@item.Id"
-                                           asp-route-requestStatus="@ViewBag.RequestStatus"
                                            title="View Details">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                     }
+                                    
                                 </td>
                             </tr>
                         }

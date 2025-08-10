@@ -256,11 +256,12 @@ namespace Wombat.Application.Services
             new()
             {
                 { AssessmentRequestStatus.Requested, new[] { AssessmentRequestStatus.Accepted, AssessmentRequestStatus.Declined, AssessmentRequestStatus.Cancelled } },
-                { AssessmentRequestStatus.Accepted,  new[] { AssessmentRequestStatus.Cancelled, AssessmentRequestStatus.Declined, AssessmentRequestStatus.Completed, AssessmentRequestStatus.Requested } }, // <-- add Requested
-                { AssessmentRequestStatus.Declined,  Array.Empty<AssessmentRequestStatus>() },
+                { AssessmentRequestStatus.Accepted,  new[] { AssessmentRequestStatus.Cancelled, AssessmentRequestStatus.Declined, AssessmentRequestStatus.Completed, AssessmentRequestStatus.Requested } },
+                { AssessmentRequestStatus.Declined,  new[] { AssessmentRequestStatus.Requested, AssessmentRequestStatus.Accepted } }, // <-- add Accepted
                 { AssessmentRequestStatus.Cancelled, Array.Empty<AssessmentRequestStatus>() },
                 { AssessmentRequestStatus.Completed, Array.Empty<AssessmentRequestStatus>() }
-            };      
+            };
+
 
         public async Task TransitionAsync( int requestId,
                                            AssessmentRequestStatus newStatus,
@@ -446,16 +447,20 @@ namespace Wombat.Application.Services
         {
             if (vm == null) throw new ArgumentNullException(nameof(vm));
 
-            // Load request and guard
-            var request = await _assessmentRequestRepository.GetAsync(vm.AssessmentRequestId)
-                         ?? throw new InvalidOperationException("Assessment request not found.");
+            AssessmentRequest request = null;
+            if (vm.AssessmentRequestId != null && vm.AssessmentRequestId != 0)
+            {
+                // Load request and guard
+                request = await _assessmentRequestRepository.GetAsync(vm.AssessmentRequestId)
+                          ?? throw new InvalidOperationException("Assessment request not found.");
 
-            if (request.Status != AssessmentRequestStatus.Accepted)
-                throw new InvalidOperationException("Only accepted requests can be completed.");
+                if (request.Status != AssessmentRequestStatus.Accepted)
+                    throw new InvalidOperationException("Only accepted requests can be completed.");
 
-            // Authorization: only assigned assessor (tweak if admins/coordinators allowed)
-            if (!string.Equals(request.AssessorId, assessorId, StringComparison.Ordinal))
-                throw new UnauthorizedAccessException("Only the assigned assessor may submit this assessment.");
+                // Authorization: only assigned assessor (tweak if admins/coordinators allowed)
+                if (!string.Equals(request.AssessorId, assessorId, StringComparison.Ordinal))
+                    throw new UnauthorizedAccessException("Only the assigned assessor may submit this assessment.");
+            }
 
             // Normalize responses (moved out of controller)
             if (vm.OptionCriterionResponses != null)
@@ -467,21 +472,31 @@ namespace Wombat.Application.Services
                 }
             }
 
+            if (vm.AssessmentRequestId == 0)
+                vm.AssessmentRequestId = null;
+
             // Map and persist within a transaction to keep request+assessment consistent
             using var tx = await _context.Database.BeginTransactionAsync();
 
             var logged = _mapper.Map<LoggedAssessment>(vm);
             // Ensure relationships
             logged.AssessorId = assessorId;
-            logged.TraineeId = request.TraineeId;
-            logged.EPAId = request.EPAId;
-            logged.FormId = request.AssessmentFormId;
+
+            if (request != null)
+            {
+                logged.TraineeId = request.TraineeId;
+                logged.EPAId = request.EPAId;
+                logged.FormId = request.AssessmentFormId;
+            }
 
             await _loggedAssessmentRepository.AddAsync(logged);
 
-            // Transition request -> Completed (this stamps CompletionDate in TransitionAsync)
-            await TransitionAsync(request.Id, AssessmentRequestStatus.Completed, assessorId,
-                                  message: "Assessment submitted.", httpRequest: httpRequest);
+            if (request != null)
+            {
+                // Transition request -> Completed (this stamps CompletionDate in TransitionAsync)
+                await TransitionAsync(request.Id, AssessmentRequestStatus.Completed, assessorId,
+                                      message: "Assessment submitted.", httpRequest: httpRequest);
+            }
 
             await tx.CommitAsync();
 
@@ -504,7 +519,7 @@ namespace Wombat.Application.Services
         }
 
         public async Task RescheduleRequestAsync( int requestId,
-                                                  DateTime newAssessmentDateLocal,   // incoming local time; convert to UTC if you store UTC
+                                                  DateTime newAssessmentDateLocal,
                                                   string? comment,
                                                   string actorId,
                                                   HttpRequest httpRequest )
@@ -512,36 +527,37 @@ namespace Wombat.Application.Services
             var request = await _assessmentRequestRepository.GetAsync(requestId)
                          ?? throw new InvalidOperationException("Assessment request not found.");
 
-            // Basic guards
-            if (request.Status is AssessmentRequestStatus.Declined
-                               or AssessmentRequestStatus.Cancelled
-                               or AssessmentRequestStatus.Completed)
-                throw new InvalidOperationException("Only requested or accepted items can be rescheduled.");
-
-            // Authorization: trainee, assessor, or admin
             var isTrainee = string.Equals(request.TraineeId, actorId, StringComparison.Ordinal);
             var isAssessor = string.Equals(request.AssessorId, actorId, StringComparison.Ordinal);
-            var isAdmin = false; // set via IAuthorizationService or role check if you like
+            var isAdmin = false; // plug in role check if needed
+
+            if (request.Status is AssessmentRequestStatus.Cancelled or AssessmentRequestStatus.Completed)
+                throw new InvalidOperationException("Cancelled or completed requests cannot be rescheduled.");
+
             if (!(isTrainee || isAssessor || isAdmin))
                 throw new UnauthorizedAccessException("Only the trainee or the assigned assessor may reschedule.");
 
-            // Normalize date (store UTC if your model expects UTC)
-            var newDate = newAssessmentDateLocal; // .ToUniversalTime() if needed
-
-            // No-op if same date
-            if (request.AssessmentDate.HasValue && request.AssessmentDate.Value == newDate)
-                return;
-
+            var newDate = newAssessmentDateLocal; // convert to UTC if that’s your convention
             var oldDate = request.AssessmentDate;
+
+            if (oldDate.HasValue && oldDate.Value == newDate) return; // no-op
+
             request.AssessmentDate = newDate;
             await _assessmentRequestRepository.UpdateAsync(request);
 
-            string message = oldDate.HasValue
-                    ? $"Assessment date changed from {oldDate.Value:G} to {newDate:G}."
-                    : $"Assessment date set to {newDate:G}.";
-            if (comment != null)
-                message = comment;
-            // Always log a "date changed" event
+            string message = "";
+            if(string.IsNullOrWhiteSpace(comment))
+            {
+                message = oldDate.HasValue
+                    ? $"Assessment date changed from {oldDate.Value:g} to {newDate:g}."
+                    : $"Assessment date set to {newDate:g}.";
+            }
+            else
+            {
+                message = comment.Trim();
+            }
+
+            // Always log the reschedule event
             _context.AssessmentEvents.Add(new AssessmentEvent
             {
                 ActorId = actorId,
@@ -552,21 +568,29 @@ namespace Wombat.Application.Services
             });
             await _context.SaveChangesAsync();
 
-            // If accepted and trainee reschedules → kick back to Requested so assessor re-confirms
+            // Follow-up state changes
             if (request.Status == AssessmentRequestStatus.Accepted && isTrainee)
             {
-                await TransitionAsync(
-                    requestId: request.Id,
-                    newStatus: AssessmentRequestStatus.Requested,
-                    actorId: actorId,
-                    message: "Rescheduled by trainee; requires assessor re-acceptance.",
-                    httpRequest: httpRequest);
+                await TransitionAsync(request.Id, AssessmentRequestStatus.Requested, actorId,
+                    "Rescheduled by trainee; requires assessor re-acceptance.", httpRequest);
             }
-            // If accepted and assessor reschedules → stay Accepted (no state change)
+            else if (request.Status == AssessmentRequestStatus.Declined)
+            {
+                if (isTrainee || isAdmin)
+                {
+                    await TransitionAsync(request.Id, AssessmentRequestStatus.Requested, actorId,
+                        "Rescheduled after decline; requires assessor re-acceptance.", httpRequest);
+                }
+                else if (isAssessor)
+                {
+                    await TransitionAsync(request.Id, AssessmentRequestStatus.Accepted, actorId,
+                        "Assessor rescheduled and accepted on the new date.", httpRequest);
+                }
+            }
 
-            // Notify the other party
             await NotifyRescheduleAsync(request, actorId, oldDate, newDate, httpRequest);
         }
+
 
         private string LoadRescheduleTemplateAndInsertValues( string recipientName,
                                                               string actorName,
@@ -629,27 +653,26 @@ namespace Wombat.Application.Services
                 controller: "AssessmentRequests",
                 values: new { id = request.Id, anchor = "events" });
 
-            // Format dates (pick your culture/timezone policy; below uses local server time)
-            string oldStr = oldDate.HasValue ? oldDate.Value.ToString("g") : "";
-            string newStr = newDate.ToString("g");
-
-            // If trainee rescheduled an Accepted request, note the state change
-            string? statusNote = null;
-            if (request.Status == AssessmentRequestStatus.Requested) // after TransitionAsync it’s already back to Requested
-                statusNote = "This request moved back to Requested and needs to be accepted again.";
+            string? statusNote = request.Status switch
+            {
+                AssessmentRequestStatus.Requested => "This request moved back to Requested and needs to be accepted again.",
+                AssessmentRequestStatus.Accepted => "The assessor accepted the request on the new date.",
+                _ => null
+            };
 
             var html = LoadRescheduleTemplateAndInsertValues(
                 recipientName: recipient?.DisplayName ?? recipient?.Email,
                 actorName: actor?.DisplayName ?? actor?.Email,
                 epaName: epa?.Name,
-                oldDateStr: oldStr,
-                newDateStr: newStr,
+                oldDateStr: oldDate.HasValue ? oldDate.Value.ToString("g") : "",
+                newDateStr: newDate.ToString("g"),
                 statusNote: statusNote,
                 url: url
             );
 
             await _notificationService.NotifyAsync(recipient.Id, "Assessment Request Rescheduled", html);
         }
+
 
     }
 

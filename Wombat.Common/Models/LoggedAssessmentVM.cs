@@ -40,7 +40,7 @@ namespace Wombat.Common.Models
         public int FormId { get; set; }
         public AssessmentFormVM? Form { get; set; }
 
-        public int AssessmentRequestId { get; set; }
+        public int? AssessmentRequestId { get; set; }
 
         public List<OptionCriterionResponseVM> OptionCriterionResponses { get; set; }
 
