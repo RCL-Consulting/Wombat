@@ -53,7 +53,7 @@ namespace Wombat.Application.Services
         private string LoadCreateTemplateAndInsertValues( AssessmentRequestVM assessmentRequestVM,
                                                           string url )
         {
-            var templatePath = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentRequest.html");
+            var templatePath = Path.Combine(_environment.WebRootPath, "templates", "AssessmentRequest.html");
             var emailTemplate = System.IO.File.ReadAllText(templatePath);
             return emailTemplate
                 .Replace("{{assessorName}}", assessmentRequestVM.Assessor?.Name)
@@ -117,7 +117,7 @@ namespace Wombat.Application.Services
         private string LoadAcceptTemplateAndInsertValues( AssessmentRequestVM vm,
                                                           string url )
         {
-            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentAccepted.html");
+            string templatePath = Path.Combine(_environment.WebRootPath, "templates", "AssessmentAccepted.html");
             var html = System.IO.File.ReadAllText(templatePath);
             return html
                 .Replace("{{assessorName}}", vm.Assessor?.Name)
@@ -133,7 +133,7 @@ namespace Wombat.Application.Services
         private string LoadAcceptDeclineTemplateAndInsertValues( AssessmentRequestVM vm,
                                                                  string url )
         {
-            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentDeclined.html");
+            string templatePath = Path.Combine(_environment.WebRootPath, "templates", "AssessmentDeclined.html");
             var html = System.IO.File.ReadAllText(templatePath);
             return html
                 .Replace("{{assessorName}}", vm.Assessor?.Name)
@@ -152,7 +152,7 @@ namespace Wombat.Application.Services
                                                                   string comment,
                                                                   string url )
         {
-            var templatePath = Path.Combine(_environment.WebRootPath, "Templates", "RequestCommentAdded.html");
+            var templatePath = Path.Combine(_environment.WebRootPath, "templates", "RequestCommentAdded.html");
             var html = System.IO.File.ReadAllText(templatePath);
 
             return html
@@ -238,7 +238,7 @@ namespace Wombat.Application.Services
 
         private string LoadCancelTemplateAndInsertValues(AssessmentRequestVM vm, string url, string actorName)
         {
-            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentCancelled.html");
+            string templatePath = Path.Combine(_environment.WebRootPath, "templates", "AssessmentCancelled.html");
             var html = System.IO.File.ReadAllText(templatePath);
             return html
                 .Replace("{{actorName}}", actorName ?? "The trainee")
@@ -436,7 +436,7 @@ namespace Wombat.Application.Services
         private string LoadTemplateAndInsertValues( LoggedAssessmentVM vm,
                                                     string url )
         {
-            string templatePath = Path.Combine(_environment.WebRootPath, "Templates", "LoggedAssessment.html");
+            string templatePath = Path.Combine(_environment.WebRootPath, "templates", "LoggedAssessment.html");
             var html = System.IO.File.ReadAllText(templatePath);
             return html.Replace("{{link}}", url);
         }
@@ -600,7 +600,7 @@ namespace Wombat.Application.Services
                                                               string? statusNote,
                                                               string url)
         {
-            var path = Path.Combine(_environment.WebRootPath, "Templates", "AssessmentRescheduled.html");
+            var path = Path.Combine(_environment.WebRootPath, "templates", "AssessmentRescheduled.html");
             var html = System.IO.File.ReadAllText(path);
 
             // very simple “templating”

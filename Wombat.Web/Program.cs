@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Threading.Channels;
 using Wombat.Application.Configurations;
 using Wombat.Application.Contracts;
 using Wombat.Application.Repositories;
@@ -41,8 +42,10 @@ builder.Services.AddDefaultIdentity<WombatUser>(options => options.SignIn.Requir
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddHttpContextAccessor();
 
-//builder.Services.AddTransient<IEmailSender>(s => new EmailSender("localhost", 25, "no-reply@rcl.co.za"));
-builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailSender, MailKitEmailSender>();
+builder.Services.AddSingleton<Channel<(string to, string subject, string html)>>(Channel.CreateUnbounded<(string, string, string)>());
+builder.Services.AddHostedService<EmailWorker>();
 
 builder.Services.AddHostedService<dbMigrator>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

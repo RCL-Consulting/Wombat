@@ -194,7 +194,7 @@ namespace Wombat.Areas.Identity.Pages.Account
 
         public string LoadTemplateAndInsertValues(string url)
         {
-            var templatePath = Path.Combine(_environment.WebRootPath, "Templates", "EmailConfirmation.html");
+            var templatePath = Path.Combine(_environment.WebRootPath, "templates", "EmailConfirmation.html");
             var emailTemplate = System.IO.File.ReadAllText(templatePath);
             return emailTemplate
                 .Replace("{{confirmationLink}}", url);

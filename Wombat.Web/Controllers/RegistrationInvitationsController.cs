@@ -219,7 +219,7 @@ namespace Wombat.Web.Controllers
 
         public string LoadTemplateAndInsertValues(RegistrationInvitation invitation, string url)
         {
-            var templatePath = Path.Combine(Environment.WebRootPath, "Templates", "RegistrationInvitation.html");
+            var templatePath = Path.Combine(Environment.WebRootPath, "templates", "RegistrationInvitation.html");
             var emailTemplate = System.IO.File.ReadAllText(templatePath);
             return emailTemplate
                 .Replace("{{registrationLink}}", url)
