@@ -30,7 +30,7 @@ namespace Wombat.Common.Constants
         Trainee,
         PendingTrainee
     }
-        public static class RoleStrings
+    public static class RoleStrings
     {
         public const string Administrator = "Administrator";
         public const string InstitutionalAdmin = "InstitutionalAdmin";

@@ -26,6 +26,7 @@ using Wombat.Application.Services;
 using Wombat.Common.Constants;
 using Wombat.Data;
 using Wombat.Services;
+using Wombat.Web.Infrastructure.Identity;
 using Wombat.Web.Services;
 using static Wombat.Data.WombatUser;
 
@@ -34,7 +35,14 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+//builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsql => npgsql.MigrationsAssembly("Wombat.Data")   // <-- add this
+    )
+);
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<WombatUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -111,6 +119,22 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// 1) Apply EF Core migrations on startup (creates AspNet* and your tables)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate(); // <-- MUST run before seeding
+}
+
+if (app.Environment.IsDevelopment())
+{
+    await IdentitySeeder.SeedDevAsync(app.Services);
+}
+else
+{
+    await IdentitySeeder.SeedProdBootstrapAsync(app.Services, app.Configuration);
+}
 
 app.UseSerilogRequestLogging();
 

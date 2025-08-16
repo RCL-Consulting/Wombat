@@ -32,9 +32,7 @@ namespace Wombat.Data
         {
             base.OnModelCreating(builder);
             builder.ApplyConfiguration(new InstitutionConfiguration());
-            builder.ApplyConfiguration(new UserSeedConfiguration());
             builder.ApplyConfiguration(new RoleSeedConfiguration());
-            builder.ApplyConfiguration(new UserRoleSeedConfiguration());
             builder.ApplyConfiguration(new OptionConfiguration());
             builder.ApplyConfiguration(new OptionSetConfiguration());
             builder.ApplyConfiguration(new SpecialityConfiguration());
