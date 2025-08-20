@@ -26,6 +26,7 @@ using Wombat.Application.Services;
 using Wombat.Common.Constants;
 using Wombat.Data;
 using Wombat.Services;
+using Wombat.Web.Infrastructure;
 using Wombat.Web.Infrastructure.Identity;
 using Wombat.Web.Services;
 using static Wombat.Data.WombatUser;
@@ -82,6 +83,11 @@ builder.Host.UseSerilog((ctx, lc) =>
     .ReadFrom.Configuration(ctx.Configuration));
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.ModelMetadataDetailsProviders.Add(new GlobalDateTimeDisplayMetadataProvider());
+});
 
 builder.Services.AddAuthorization(options =>
 {

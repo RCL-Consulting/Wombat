@@ -1,0 +1,3 @@
+﻿@model DateTime?
+
+@(Model.HasValue? Model.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "")

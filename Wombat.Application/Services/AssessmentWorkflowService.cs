@@ -427,7 +427,7 @@ namespace Wombat.Application.Services
                 Form = form != null ? _mapper.Map<AssessmentFormVM>(form) : null,
 
                 // default the assessment date to "now" for convenience
-                AssessmentDate = DateTime.Now
+                AssessmentDate = DateTime.UtcNow
             };
 
             return vm;

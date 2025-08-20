@@ -57,7 +57,7 @@ namespace Wombat.Application.Repositories
 
         public async Task<List<AssessmentRequest>?> GetPendingRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var requests = await context.AssessmentRequests
                 .Where(predicate)
@@ -77,7 +77,7 @@ namespace Wombat.Application.Repositories
 
         public async Task<List<AssessmentRequest>?> GetPendingAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             Expression<Func<AssessmentRequest, bool>> pendingPredicate = r =>
                 r.Status == AssessmentRequestStatus.Accepted &&
@@ -101,7 +101,7 @@ namespace Wombat.Application.Repositories
 
         public async Task<List<AssessmentRequest>?> GetExpiredRequestsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var expiredPredicate = predicate.AndAlso(r =>
                 r.Status == AssessmentRequestStatus.Requested &&
@@ -124,7 +124,7 @@ namespace Wombat.Application.Repositories
 
         public async Task<List<AssessmentRequest>?> GetNotConductedAssessmentsAsync(Expression<Func<AssessmentRequest, bool>> predicate)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var notConductedPredicate = predicate.AndAlso(r =>
                r.Status == AssessmentRequestStatus.Accepted &&

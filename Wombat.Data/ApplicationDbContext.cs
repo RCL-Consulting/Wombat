@@ -16,6 +16,7 @@
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Reflection.Emit;
 using Wombat.Common.Models;
 using Wombat.Data.Configurations.Entities;
@@ -28,6 +29,14 @@ namespace Wombat.Data
             : base(options)
         {
         }
+
+        static DateTime ToUtc(DateTime dt) => dt.Kind switch
+        {
+            DateTimeKind.Utc => dt,
+            DateTimeKind.Local => dt.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime()
+        };
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -66,6 +75,25 @@ namespace Wombat.Data
                 .WithMany()
                 .HasForeignKey(r => r.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => ToUtc(v),                  // to DB
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc)); // from DB
+
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? ToUtc(v.Value) : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+            foreach (var entityType in builder.Model.GetEntityTypes())
+            {
+                foreach (var prop in entityType.GetProperties())
+                {
+                    if (prop.ClrType == typeof(DateTime))
+                        prop.SetValueConverter(dateTimeConverter);
+                    else if (prop.ClrType == typeof(DateTime?))
+                        prop.SetValueConverter(nullableDateTimeConverter);
+                }
+            }
         }
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
