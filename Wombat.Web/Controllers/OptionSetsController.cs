@@ -353,6 +353,7 @@ namespace Wombat.Controllers
                 try
                 {
                     mapper.Map(optionSetVM, optionSet);
+
                     await optionSetRepository.UpdateAsync(optionSet);
                     return RedirectToAction(nameof(Index));
                 }

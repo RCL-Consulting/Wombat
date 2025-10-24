@@ -24,7 +24,7 @@
                 <div class="mb-3">
                     <label asp-for="InstitutionId" class="form-label fw-semibold">Institution</label>
                     <select asp-for="InstitutionId" asp-items="Model.Institutions" class="form-select">
-                        @if (Model.Institutions.Count > 1)
+                        @if (Model.Institutions != null && Model.Institutions.Count > 1)
                         {
                             <option value="">-- None --</option>
                         }
@@ -34,7 +34,7 @@
                 <div class="mb-3">
                     <label asp-for="SpecialityId" class="form-label fw-semibold">Speciality</label>
                     <select asp-for="SpecialityId" asp-items="Model.Specialities" class="form-select">
-                        @if (Model.Specialities.Count > 1)
+                        @if (Model.Specialities != null && Model.Specialities.Count > 1)
                         {
                             <option value="">-- None --</option>
                         }
@@ -44,7 +44,7 @@
                 <div class="mb-3">
                     <label asp-for="SubSpecialityId" class="form-label fw-semibold">Subspeciality</label>
                     <select asp-for="SubSpecialityId" asp-items="Model.SubSpecialities" class="form-select">
-                        @if (Model.SubSpecialities.Count > 1)
+                        @if (Model.SubSpecialities != null && Model.SubSpecialities.Count > 1)
                         {
                             <option value="">-- None --</option>
                         }

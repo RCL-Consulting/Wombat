@@ -76,7 +76,10 @@ builder.Services.AddScoped<IAssessmentWorkflowService, AssessmentWorkflowService
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAssessmentEventRepository, AssessmentEventRepository>();
 
-builder.Services.AddAutoMapper(typeof(MapperConfig));
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<MapperConfig>();
+});
 
 builder.Host.UseSerilog((ctx, lc) =>
     lc.WriteTo.Console()

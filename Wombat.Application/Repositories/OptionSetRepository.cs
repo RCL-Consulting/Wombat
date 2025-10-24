@@ -36,55 +36,61 @@ namespace Wombat.Application.Repositories
 
         public async Task<List<OptionSet>> GetScopedOptionSetsAsync(WombatUser user, IList<string> roles)
         {
-            var query = context.OptionSets.AsQueryable();
+            // One base query that always brings navs
+            var q = context.OptionSets
+                .Include(e => e.Institution)
+                .Include(e => e.Speciality)
+                .Include(e => e.SubSpeciality)
+                .Include(e => e.Options); // load collection; we'll sort after
 
-            // Global admin: see everything
+            List<OptionSet> list;
+
+            // Global admin: see everything (with navs)
             if (roles.Contains(Role.Administrator.ToStringValue()))
-                return await query.ToListAsync();
+            {
+                list = await q.ToListAsync();
+            }
+            else
+            {
+                var ui = user.InstitutionId;
+                var us = user.SpecialityId;
+                var uss = user.SubSpecialityId;
 
-            var userInstitutionId = user.InstitutionId;
-            var userSpecialityId = user.SpecialityId;
-            var userSubSpecialityId = user.SubSpecialityId;
+                list = await q.Where(e =>
+                       e.InstitutionId == null
+                    || e.InstitutionId == ui
+                    || (e.InstitutionId == ui && e.SpecialityId == us)
+                    || (e.InstitutionId == ui && e.SpecialityId == us && e.SubSpecialityId == uss)
+                ).ToListAsync();
+            }
 
-            return await query.Where(optionSet =>
-                // Global (no institution)
-                optionSet.InstitutionId == null ||
+            // Ensure Options are ordered (Include doesn't guarantee order on the collection)
+            foreach (var os in list)
+                os.Options = os.Options.OrderBy(o => o.Rank).ToList();
 
-                // Institution match
-                optionSet.InstitutionId == userInstitutionId ||
-
-                // Speciality match within institution
-                (optionSet.InstitutionId == userInstitutionId &&
-                 optionSet.SpecialityId == userSpecialityId) ||
-
-                // Subspeciality match within speciality and institution
-                (optionSet.InstitutionId == userInstitutionId &&
-                 optionSet.SpecialityId == userSpecialityId &&
-                 optionSet.SubSpecialityId == userSubSpecialityId)
-            ).ToListAsync();
+            return list;
         }
+
 
         public override async Task<OptionSet?> GetAsync(int? id)
         {
-            if (id == null)
-            {
-                return null;
-            }
+            if (id is null) return null;
 
-            var optionSet = await base.GetAsync(id);
+            var optionSet = await context.OptionSets
+                .Include(e => e.Institution)
+                .Include(e => e.Speciality)
+                .Include(e => e.SubSpeciality)
+                .FirstOrDefaultAsync(e => e.Id == id.Value);
 
-            if (optionSet!=null)
-            {
-                var Options = context.Entry(optionSet);
+            if (optionSet is null) return null;
 
-                Options.Collection(e => e.Options)
-                     .Query()
-                     .OrderBy(c => c.Rank)
-                     .Load();
-                return optionSet;
-            }
+            await context.Entry(optionSet)
+                .Collection(e => e.Options)
+                .Query()
+                .OrderBy(o => o.Rank)
+                .LoadAsync();
 
-            return null;
+            return optionSet;
         }
     }
 }

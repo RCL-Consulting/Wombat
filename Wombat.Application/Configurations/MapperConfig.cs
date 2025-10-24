@@ -24,9 +24,35 @@ namespace Wombat.Application.Configurations
     {
         public MapperConfig()
         {
-            CreateMap<AssessmentForm, AssessmentFormVM>().ReverseMap();
+            CreateMap<AssessmentForm, AssessmentFormVM>()
+                .ForMember(vm => vm.InstitutionId, o => o.MapFrom(s => s.InstitutionId))
+                .ForMember(vm => vm.SpecialityId, o => o.MapFrom(s => s.SpecialityId))
+                .ForMember(vm => vm.SubSpecialityId, o => o.MapFrom(s => s.SubSpecialityId))
+                // (optional) if you show names in the VM:
+                .ForMember(vm => vm.InstitutionName,  o => o.MapFrom(s => s.Institution.Name))
+                .ForMember(vm => vm.SpecialityName,   o => o.MapFrom(s => s.Speciality.Name))
+                .ForMember(vm => vm.SubSpecialityName,o => o.MapFrom(s => s.SubSpeciality.Name));
+
+            CreateMap<AssessmentFormVM, AssessmentForm>()
+                // write only the FKs; DO NOT map navs on updates from a form
+                .ForMember(d => d.InstitutionId, o => o.MapFrom(vm => vm.InstitutionId))
+                .ForMember(d => d.SpecialityId, o => o.MapFrom(vm => vm.SpecialityId))
+                .ForMember(d => d.SubSpecialityId, o => o.MapFrom(vm => vm.SubSpecialityId))
+                .ForMember(d => d.Institution, o => o.Ignore())
+                .ForMember(d => d.Speciality, o => o.Ignore())
+                .ForMember(d => d.SubSpeciality, o => o.Ignore());
+
             CreateMap<OptionCriterion, OptionCriterionVM>().ReverseMap();
-            CreateMap<OptionSet, OptionSetVM>().ReverseMap();
+
+            CreateMap<OptionSet, OptionSetVM>()
+                .ForMember(vm => vm.InstitutionId, o => o.MapFrom(s => s.InstitutionId))
+                .ForMember(vm => vm.SpecialityId, o => o.MapFrom(s => s.SpecialityId))
+                .ForMember(vm => vm.SubSpecialityId, o => o.MapFrom(s => s.SubSpecialityId))
+                .ReverseMap()
+                .ForMember(d => d.Institution, o => o.Ignore())
+                .ForMember(d => d.Speciality, o => o.Ignore())
+                .ForMember(d => d.SubSpeciality, o => o.Ignore());
+
             CreateMap<Option, OptionVM>().ReverseMap();
             CreateMap<EPA, EPAVM>().ReverseMap();
             CreateMap<LoggedAssessment, LoggedAssessmentVM>().ReverseMap();

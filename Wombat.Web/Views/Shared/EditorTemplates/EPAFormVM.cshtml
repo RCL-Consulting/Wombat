@@ -8,9 +8,12 @@
     <div class="col">
         <select class="form-select" asp-for="FormId">
             <option value="">-- Select Form --</option>
-            @foreach (var item in (List<AssessmentFormVM>)ViewData["Forms"])
+            @if(ViewData.ContainsKey("Forms") == true)
             {
-                <option value="@item.Id">@item.Name</option>
+                foreach (var item in (List<AssessmentFormVM>)ViewData["Forms"])
+                {
+                    <option value="@item.Id">@item.Name</option>
+                }
             }
         </select>
         <span asp-validation-for="FormId" class="text-danger small"></span>
