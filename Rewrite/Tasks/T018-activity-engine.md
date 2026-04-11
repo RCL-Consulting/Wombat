@@ -3,6 +3,7 @@
 **Phase:** 2 — Activity platform
 **Depends on:** T017
 **Blocks:** T019, T020, T021, T022
+**Status:** Implemented on 2026-04-11
 
 ## Goal
 

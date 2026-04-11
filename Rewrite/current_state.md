@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T018 — Activity engine: generic commands, workflow runtime, credit rules** (not started)
+**T019 — Activity builder UI + dynamic form renderer** (not started)
 
-Next session: read `Tasks/T018-activity-engine.md` and build on top of the T017 activity platform now in Domain + Infrastructure.
+Next session: read `Tasks/T019-activity-builder-ui.md` and build on top of the T018 runtime now in Application + Infrastructure.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,32 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T018 completed:
+- Added the activity-runtime application slice under `src/Wombat.Application/Features/Activities/`:
+  - DTOs for activity details, summaries, transitions, validation errors, and activity-type list items
+  - service contracts: `IActivityService`, `ISchemaValidator`, `IWorkflowEvaluator`, `ICreditApplier`
+  - commands: create draft, update draft, transition activity, rebuild curriculum progress
+  - queries: get activity by id, list by subject, list actor inbox, list scoped activity types
+- Added infrastructure implementations under `src/Wombat.Infrastructure/Activities/`:
+  - `ActivityService` for orchestration and JSON merge/validation flow
+  - `SchemaValidator` with required-field, numeric range, hidden-field, option, and scale checks
+  - `WorkflowEvaluator` as pure actor-rule evaluation over `ClaimsPrincipal`
+  - `CreditApplier` with curriculum-item matching and idempotent credit application
+- Added `CurriculumItemProgress` in Domain plus EF configuration and the `CurriculumItemProgress` migration.
+- Registered the new activity runtime services in Infrastructure DI.
+- Added 21 application tests under `tests/Wombat.Application.Tests/Activities/` covering:
+  - schema validation edge cases
+  - workflow evaluator subject/creator/role/scope/all/any paths
+  - deterministic evaluator behaviour over 1000 randomized runs
+  - credit application match / non-match / minimum-level / idempotency cases
+  - end-to-end create draft -> update -> transition -> progress update flow
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build` passes with 24/24 tests green when `DOTNET_CLI_HOME` is pointed at a writable workspace path.
+  - `dotnet ef migrations add CurriculumItemProgress --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --output-dir Persistence/Migrations --configuration Release --no-build` succeeds when `DOTNET_CLI_HOME` is pointed at a writable workspace path.
+- Scope note:
+  - Draft editing currently allows the subject or creator to edit non-terminal activities. If T019 surfaces a stronger per-state edit rule requirement, capture it as a focused follow-up instead of widening T018 retroactively.
 
 T017 completed:
 - Added the new activity-platform domain slice under `src/Wombat.Domain/Activities/`:

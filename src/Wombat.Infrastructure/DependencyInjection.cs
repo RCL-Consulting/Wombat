@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Services;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Email;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -56,6 +58,10 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
+        services.AddScoped<IActivityService, ActivityService>();
+        services.AddScoped<ISchemaValidator, SchemaValidator>();
+        services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
+        services.AddScoped<ICreditApplier, CreditApplier>();
 
         services.AddScoped<RoleSeeder>();
         services.AddScoped<AdminSeeder>();
