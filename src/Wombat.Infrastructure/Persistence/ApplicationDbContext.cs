@@ -4,6 +4,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Forms;
+using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 using Wombat.Infrastructure.Identity;
@@ -31,6 +32,8 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<FormCriterion> FormCriteria => Set<FormCriterion>();
     public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<TraineeProfile> TraineeProfiles => Set<TraineeProfile>();
+    public DbSet<AssessorProfile> AssessorProfiles => Set<AssessorProfile>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

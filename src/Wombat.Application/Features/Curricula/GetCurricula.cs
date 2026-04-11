@@ -26,7 +26,9 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
             .ThenByDescending(entity => entity.EffectiveFrom)
             .Select(entity => new CurriculumDto(
                 entity.Id,
+                entity.SubSpeciality.SpecialityId,
                 entity.SubSpecialityId,
+                entity.SubSpeciality.Speciality.Name,
                 entity.SubSpeciality.Name,
                 entity.Name,
                 entity.Version,
@@ -55,7 +57,9 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
             .Where(entity => entity.Id == request.Id)
             .Select(entity => new CurriculumDto(
                 entity.Id,
+                entity.SubSpeciality.SpecialityId,
                 entity.SubSpecialityId,
+                entity.SubSpeciality.Speciality.Name,
                 entity.SubSpeciality.Name,
                 entity.Name,
                 entity.Version,

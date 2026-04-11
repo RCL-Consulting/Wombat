@@ -146,6 +146,8 @@ static string BuildRegisterUrl(string token, string error)
 static string GetLandingPath(string role)
     => string.Equals(role, WombatRoles.Administrator, StringComparison.Ordinal)
         ? "/admin/invitations"
+        : string.Equals(role, WombatRoles.PendingTrainee, StringComparison.Ordinal)
+            ? "/"
         : "/";
 
 internal sealed class LoginRequest

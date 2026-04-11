@@ -15,9 +15,25 @@
         {
             <p>
                 <a href="/admin/invitations">Open invitation administration</a> |
-                <a href="/admin/institutions">Open institution administration</a>
+                <a href="/admin/institutions">Open institution administration</a> |
+                <a href="/admin/trainees">Open trainee administration</a> |
+                <a href="/admin/assessors">Open assessor administration</a>
             </p>
         }
+
+        @if (state.User.IsInRole(WombatRoles.PendingTrainee))
+        {
+            <p>You are registered and waiting for admission to a curriculum.</p>
+        }
+
+        @if (state.User.IsInRole(WombatRoles.Trainee))
+        {
+            <p>Trainee dashboard stub: curriculum progress and activity inbox land in later tasks.</p>
+        }
+
+        <p>
+            <a href="/account/profile">Edit profile</a>
+        </p>
 
         <p>
             <a href="/account/logout">Sign out</a>

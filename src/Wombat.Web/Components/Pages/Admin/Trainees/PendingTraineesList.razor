@@ -1,0 +1,118 @@
+@page "/admin/trainees"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Trainees</PageTitle>
+
+<h1>Trainees</h1>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+
+@if (_loading)
+{
+    <p>Loading trainees...</p>
+}
+else
+{
+    <h2>Pending admission</h2>
+
+    @if (_pendingTrainees.Count == 0)
+    {
+        <p>No pending trainees found.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Institution</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trainee in _pendingTrainees)
+                {
+                    <tr>
+                        <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
+                        <td>@trainee.Email</td>
+                        <td>@GetInstitutionName(trainee.InstitutionId)</td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href="@($"/admin/trainees/edit?userId={Uri.EscapeDataString(trainee.UserId)}")">Admit to curriculum</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h2>Active profiles</h2>
+
+    @if (_trainees.Count == 0)
+    {
+        <p>No trainee profiles found.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Curriculum</th>
+                    <th>Sub-speciality</th>
+                    <th>Expected completion</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trainee in _trainees)
+                {
+                    <tr>
+                        <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
+                        <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
+                        <td>@trainee.SubSpecialityName</td>
+                        <td>@trainee.ExpectedCompletionDate.ToString("yyyy-MM-dd")</td>
+                        <td>@(trainee.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <a class="btn btn-outline-secondary btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private IReadOnlyList<PendingTraineeDto> _pendingTrainees = [];
+    private IReadOnlyList<TraineeProfileDto> _trainees = [];
+    private IReadOnlyList<InstitutionDto> _institutions = [];
+    private bool _loading = true;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+            _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery());
+            _trainees = await Sender.Send(new ListTraineesForSpecialityQuery());
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetInstitutionName(int? institutionId)
+        => _institutions.FirstOrDefault(entity => entity.Id == institutionId)?.Name ?? "Unscoped";
+}

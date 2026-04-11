@@ -43,12 +43,17 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        var subSpecialityName = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
+        var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => entity.Name)
+            .Select(entity => new
+            {
+                entity.Name,
+                entity.SpecialityId,
+                SpecialityName = entity.Speciality.Name
+            })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (subSpecialityName is null)
+        if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
@@ -70,6 +75,6 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, subSpecialityName, true);
+        return CurriculumMappings.ToDto(curriculum, subSpeciality.SpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, true);
     }
 }

@@ -1,0 +1,151 @@
+@page "/account/profile"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Profile</PageTitle>
+
+<h1>Profile</h1>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+    <p>@_statusMessage</p>
+}
+
+@if (_loading)
+{
+    <p>Loading profile...</p>
+}
+else if (_model is not null)
+{
+    <p>Roles: @string.Join(", ", _model.Roles)</p>
+
+    <EditForm EditContext="_editContext" FormName="account-profile">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Email</label>
+            <InputText class="form-control" @bind-Value="_model.Email" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="profile-first-name">First name</label>
+            <InputText id="profile-first-name" class="form-control" @bind-Value="_model.FirstName" />
+        </div>
+
+        <div class="mb-3">
+            <label for="profile-last-name">Last name</label>
+            <InputText id="profile-last-name" class="form-control" @bind-Value="_model.LastName" />
+        </div>
+
+        <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="SaveValidatedAsync">@(_saving ? "Saving..." : "Save profile")</button>
+    </EditForm>
+}
+
+@code {
+    private ProfileFormModel? _model;
+    private EditContext? _editContext;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _errorMessage;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var profile = await Sender.Send(new GetCurrentUserProfileQuery(userId));
+
+            _model = new ProfileFormModel
+            {
+                UserId = profile.UserId,
+                Email = profile.Email,
+                FirstName = profile.FirstName,
+                LastName = profile.LastName,
+                Roles = profile.Roles
+            };
+
+            _editContext = new EditContext(_model);
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveValidatedAsync()
+    {
+        if (_editContext is null || !_editContext.Validate())
+        {
+            return;
+        }
+
+        await SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            var profile = await Sender.Send(new UpdateCurrentUserProfileCommand(
+                _model.UserId,
+                _model.FirstName,
+                _model.LastName));
+
+            _model.FirstName = profile.FirstName;
+            _model.LastName = profile.LastName;
+            _statusMessage = "Profile saved.";
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task<string> GetCurrentUserIdAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? throw new InvalidOperationException("The current user identifier is missing.");
+    }
+
+    private sealed class ProfileFormModel
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
+        public string LastName { get; set; } = string.Empty;
+
+        public IReadOnlyCollection<string> Roles { get; set; } = [];
+    }
+}

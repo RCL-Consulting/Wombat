@@ -37,12 +37,17 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
 
     public async Task<CurriculumDto> Handle(CreateCurriculumCommand request, CancellationToken cancellationToken)
     {
-        var subSpecialityName = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
+        var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => entity.Name)
+            .Select(entity => new
+            {
+                entity.Name,
+                entity.SpecialityId,
+                SpecialityName = entity.Speciality.Name
+            })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (subSpecialityName is null)
+        if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
@@ -67,6 +72,6 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
             throw new InvalidOperationException("A curriculum with the same name and version already exists for this sub-speciality.", exception);
         }
 
-        return new CurriculumDto(curriculum.Id, curriculum.SubSpecialityId, subSpecialityName, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, true, []);
+        return new CurriculumDto(curriculum.Id, subSpeciality.SpecialityId, curriculum.SubSpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, true, []);
     }
 }

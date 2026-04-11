@@ -2,7 +2,9 @@ namespace Wombat.Application.Features.Curricula;
 
 public sealed record CurriculumDto(
     int Id,
+    int SpecialityId,
     int SubSpecialityId,
+    string SpecialityName,
     string SubSpecialityName,
     string Name,
     string Version,

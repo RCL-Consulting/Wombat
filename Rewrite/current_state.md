@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T006 — Trainee / Assessor / Admin profile data** (not started)
+**T017 — Activity platform: schema, aggregates, storage** (not started)
 
-Next session: read `Tasks/T006-trainee-assessor-profiles.md` and execute it.
+Next session: read `Tasks/T017-activity-platform-schema.md` and execute it.
 
 ## Critical-path reminder (post-pivot)
 
@@ -150,6 +150,28 @@ T005 completed:
   - `dotnet ef migrations has-pending-model-changes --project src/Wombat.Infrastructure --startup-project src/Wombat.Web` reports no pending model changes.
   - Manual walkthrough passed on 2026-04-11: admin issued an invitation, invited user registered successfully, could log out and back in, and reusing the same invitation link was rejected.
 
+T006 completed:
+- Added concrete `TraineeProfile` and `AssessorProfile` domain entities, EF configurations, and the `Profiles` migration.
+- Added an application-facing `IUserAdministrationService` plus an infrastructure implementation to load users, sync scope rows, promote `PendingTrainee` to `Trainee`, and update names.
+- Added trainee CQRS for admission, update, deactivate, lookup, and pending-trainee listing.
+- Added assessor CQRS for create/update and lookup/list flows, with a guard that only `Assessor` users can receive an assessor profile.
+- Added account CQRS for self-service first/last-name edits.
+- Added Blazor pages for:
+  - `Admin/Trainees` pending admission + active-profile editing
+  - `Admin/Assessors` list + edit
+  - `Account/Profile`
+- Follow-up fix during manual checking:
+  - `Account/Profile` now saves through an explicit Blazor button + `EditContext` validation path instead of relying on form submit, because the original implementation could fall back to a plain browser POST/refresh on `/account/profile`.
+- Updated home-page stubs so `PendingTrainee` sees onboarding copy and `Trainee` sees a dashboard placeholder after re-sign-in.
+- Fixed a latent claims issue by having `WombatUserClaimsPrincipalFactory` load current scope rows from the database instead of relying on unloaded navigation collections.
+- Extended `CurriculumDto` with speciality metadata because T006 admission/edit flows need curriculum-to-speciality resolution in the UI.
+- Verified:
+  - `dotnet build C:\Users\Renier\Wombat\Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test C:\Users\Renier\Wombat\tests\Wombat.Application.Tests\Wombat.Application.Tests.csproj -c Release --no-build --filter AdmitTrainee` passes with 2/2 tests green.
+  - `dotnet ef migrations add Profiles --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --output-dir Persistence/Migrations --configuration Release --no-build` generated `20260411150759_Profiles` plus `Designer.cs` successfully.
+- Verification caveat:
+  - The manual end-to-end admin-admit / trainee-relogin walkthrough from the task file was not run in this session.
+
 ## Last known-good commit
 
 `a167c87` — T004: add EPAs curricula and assessment forms
@@ -179,3 +201,4 @@ None.
 | 2026-04-11 | implementation v3 | T003 | Added institution/speciality/sub-speciality domain slices, EF config and migration, admin Blazor maintenance pages, startup data seeding, and test coverage; build/test/migration/app-start verification passed, but a full authenticated manual walkthrough remains pending the later login UI work. |
 | 2026-04-11 | implementation v4 | T004 | Added EPAs, entrustment scales, curricula, curriculum items, assessment forms, admin CRUD pages, validators/tests, and the `EpasAndCurricula` migration; build and targeted application tests passed, but the manual DB walkthrough remains pending local connection setup. |
 | 2026-04-11 | implementation v5 | T005 | Implemented invitation flow, invite/admin UI, registration/login/logout, invitation migration/tests, fixed runtime startup/auth integration issues discovered during manual exercise, and completed the full manual invite/register/login/reuse walkthrough. |
+| 2026-04-11 | implementation v6 | T006 | Added trainee/assessor profiles, pending-trainee admission with role promotion, self-service profile editing, admin trainee/assessor Blazor pages, targeted admission tests, and the `Profiles` migration; then fixed the `/account/profile` save interaction after manual testing. Build/tests passed, but the full manual admit/relogin walkthrough remains pending. |

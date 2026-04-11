@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddWombatAuthorization();
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
+        services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
         services.AddScoped<RoleSeeder>();
         services.AddScoped<AdminSeeder>();

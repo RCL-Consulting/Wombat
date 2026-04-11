@@ -1,0 +1,195 @@
+@page "/admin/assessors/edit"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Assessor Profile</PageTitle>
+
+<h1>Assessor Profile</h1>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+    <p>@_statusMessage</p>
+}
+
+@if (_loading)
+{
+    <p>Loading assessor profile...</p>
+}
+else if (_model is not null)
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="assessor-profile">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="assessor-user-id">Assessor user</label>
+            <InputSelect id="assessor-user-id" class="form-select" @bind-Value="_model.UserId" disabled="@_isExisting">
+                <option value="">Select assessor</option>
+                @foreach (var user in _assessorUsers)
+                {
+                    <option value="@user.UserId">@($"{user.FirstName} {user.LastName} ({user.Email})")</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="assessor-institution-id">Institution</label>
+            <InputSelect id="assessor-institution-id" class="form-select" @bind-Value="_model.InstitutionId">
+                @foreach (var institution in _institutions)
+                {
+                    <option value="@institution.Id">@institution.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="assessor-speciality-id">Speciality</label>
+            <InputSelect id="assessor-speciality-id" class="form-select" @bind-Value="_model.SpecialityId">
+                <option value="">All</option>
+                @foreach (var speciality in FilteredSpecialities)
+                {
+                    <option value="@speciality.Id">@speciality.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="assessor-sub-speciality-id">Sub-speciality</label>
+            <InputSelect id="assessor-sub-speciality-id" class="form-select" @bind-Value="_model.SubSpecialityId" disabled="@(!_model.SpecialityId.HasValue)">
+                <option value="">All</option>
+                @foreach (var subSpeciality in FilteredSubSpecialities)
+                {
+                    <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="assessor-qualifications">Qualifications</label>
+            <InputTextArea id="assessor-qualifications" class="form-control" @bind-Value="_model.Qualifications" />
+        </div>
+
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save assessor profile")</button>
+    </EditForm>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")]
+    public int? Id { get; set; }
+
+    private IReadOnlyList<InstitutionDto> _institutions = [];
+    private IReadOnlyList<SpecialityDto> _specialities = [];
+    private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+    private IReadOnlyList<AssessorUserDto> _assessorUsers = [];
+    private AssessorProfileFormModel? _model;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _isExisting;
+    private string? _errorMessage;
+    private string? _statusMessage;
+
+    private IEnumerable<SpecialityDto> FilteredSpecialities
+        => _specialities.Where(entity => entity.InstitutionId == _model?.InstitutionId);
+
+    private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
+        => _subSpecialities.Where(entity => entity.SpecialityId == _model?.SpecialityId);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+            _assessorUsers = await Sender.Send(new ListAssessorUsersQuery());
+
+            if (Id.HasValue)
+            {
+                var profile = await Sender.Send(new GetAssessorProfileByIdQuery(Id.Value));
+                _isExisting = true;
+                _model = new AssessorProfileFormModel
+                {
+                    UserId = profile.UserId,
+                    InstitutionId = profile.InstitutionId,
+                    SpecialityId = profile.SpecialityId,
+                    SubSpecialityId = profile.SubSpecialityId,
+                    Qualifications = profile.Qualifications
+                };
+            }
+            else
+            {
+                _model = new AssessorProfileFormModel
+                {
+                    InstitutionId = _institutions.FirstOrDefault()?.Id ?? 0
+                };
+            }
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            await Sender.Send(new CreateOrUpdateAssessorProfileCommand(
+                _model.UserId,
+                _model.Qualifications,
+                _model.InstitutionId,
+                _model.SpecialityId,
+                _model.SubSpecialityId));
+
+            _statusMessage = "Assessor profile saved.";
+            _isExisting = true;
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class AssessorProfileFormModel
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1, int.MaxValue)]
+        public int InstitutionId { get; set; }
+
+        public int? SpecialityId { get; set; }
+        public int? SubSpecialityId { get; set; }
+
+        [Required]
+        [MaxLength(4000)]
+        public string Qualifications { get; set; } = string.Empty;
+    }
+}

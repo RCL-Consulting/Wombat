@@ -29,7 +29,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 - [x] T004 — EPAs, Curricula, assessment forms *(note: `AssessmentForm` from T004 stays as the scale/rubric building block; specific instruments move to activity types in Phase 3)*
 - [x] T005 — Invitation flow
-- [ ] T006 — Trainee / Assessor / Admin profile data
+- [x] T006 — Trainee / Assessor / Admin profile data
 
 ### Phase 2 — Activity platform *(NEW — replaces the former Phase 2 assessment aggregates)*
 
