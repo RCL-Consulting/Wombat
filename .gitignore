@@ -362,3 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Wombat.Web/appsettings.Local.json
+ClinicAssist.NET_ref_DO_NOT_COMMIT/
+Rewrite/.dotnet/

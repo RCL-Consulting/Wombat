@@ -1,0 +1,201 @@
+# Infrastructure — Linode deployment
+
+Wombat will run on a Linode VPS. The layout mirrors ClinicAssist.NET's production setup. Everything in this document is "what the server should look like when task T015 is done".
+
+## Target
+
+- **One Linode VPS**, Ubuntu 24.04 LTS, 2GB RAM minimum (4GB recommended if Blazor circuits grow).
+- **One managed PostgreSQL database** — either Linode Managed Postgres or a local Postgres on the same VPS. Local Postgres is fine for Phase 1; migrate to managed later if load justifies it.
+- **DNS** — an `A` record pointing `wombat.<yourdomain>` at the VPS IP.
+- **Email** — SMTP credentials for an external provider (Postmark, SendGrid, Mailgun, or a self-hosted Postfix). The app only needs SMTP host/port/user/pass, nothing custom.
+
+## Server layout
+
+```
+/opt/wombat/
+├── app/                  <-- published binaries (dotnet publish output)
+│   ├── Wombat.Web.dll
+│   └── ...
+├── data/                 <-- writable runtime data
+│   ├── logs/             <-- serilog rolling files
+│   └── uploads/          <-- if needed
+└── config/
+    ├── appsettings.Production.json
+    └── wombat.env        <-- environment variables, loaded by systemd (mode 600)
+```
+
+Owner: a dedicated `wombat` system user with no shell login. `sudo adduser --system --group --no-create-home --shell /usr/sbin/nologin wombat`.
+
+## Systemd unit
+
+`/etc/systemd/system/wombat.service`:
+
+```ini
+[Unit]
+Description=Wombat Web
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/wombat/app
+ExecStart=/usr/bin/dotnet /opt/wombat/app/Wombat.Web.dll
+Restart=always
+RestartSec=5
+User=wombat
+Group=wombat
+EnvironmentFile=/opt/wombat/config/wombat.env
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+KillSignal=SIGINT
+TimeoutStopSec=30
+SyslogIdentifier=wombat
+ProtectSystem=strict
+ReadWritePaths=/opt/wombat/data
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Match ClinicAssist's unit file where it differs; do not invent differences.
+
+## Caddy
+
+`/etc/caddy/Caddyfile` stanza:
+
+```
+wombat.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:5080 {
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        flush_interval -1
+    }
+    log {
+        output file /var/log/caddy/wombat.log
+    }
+}
+```
+
+`flush_interval -1` is required for SignalR / Blazor Server streaming responses. Do not forget it.
+
+Caddy handles TLS automatically via Let's Encrypt. No manual cert management.
+
+## Database
+
+Two options:
+
+1. **Local Postgres 16** on the same VPS — simpler, cheaper, fine for Phase 1.
+2. **Linode Managed Postgres** — pay for it when uptime matters more than $.
+
+For Phase 1, use local Postgres:
+
+```bash
+sudo apt install postgresql-16
+sudo -u postgres createuser --pwprompt wombat
+sudo -u postgres createdb -O wombat wombat
+```
+
+Connection string in `wombat.env`:
+
+```
+Wombat__ConnectionStrings__Default=Host=127.0.0.1;Database=wombat;Username=wombat;Password=...
+```
+
+## Environment file
+
+`/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):
+
+```
+Wombat__ConnectionStrings__Default=Host=127.0.0.1;Database=wombat;Username=wombat;Password=REDACTED
+Wombat__Email__SmtpHost=smtp.example.com
+Wombat__Email__SmtpPort=587
+Wombat__Email__SmtpUser=wombat@example.com
+Wombat__Email__SmtpPassword=REDACTED
+Wombat__Email__FromAddress=no-reply@example.com
+Wombat__Email__FromName=Wombat
+Wombat__BaseUrl=https://wombat.example.com
+Wombat__SeedAdminEmail=renier@rcl.co.za
+Wombat__SeedAdminPassword=REDACTED
+```
+
+The double-underscore syntax is ASP.NET Core's convention for nesting. Never commit this file.
+
+## Deployment process
+
+Two paths depending on taste:
+
+### Simple (Phase 1)
+
+1. On dev machine: `dotnet publish src/Wombat.Web -c Release -o publish/`
+2. `rsync -az --delete publish/ wombat@vps:/opt/wombat/app/`
+3. `ssh wombat@vps "sudo systemctl restart wombat"`
+4. Tail logs: `journalctl -u wombat -f`
+
+Wrap that in a `deploy.sh` script committed to the repo. That is the whole deploy pipeline. Add CI later if needed.
+
+### Fancy (later)
+
+- GitHub Actions on push to `main`: build, test, publish artifact, scp to server, restart service.
+- Staging environment on a second subdomain and a second systemd unit.
+
+Defer the fancy path. Task T015 delivers the simple path only.
+
+## Backups
+
+- **Database**: nightly `pg_dump` to `/var/backups/wombat/`, then `rsync` off-host (or Linode Object Storage). Retain 14 daily, 4 weekly, 6 monthly.
+- **Config**: `/opt/wombat/config/` backed up daily, same destination. Secrets in this file mean the backup destination must be private.
+- **Uploads**: if the app writes user files, back those up the same way.
+
+A simple cron:
+
+```
+0 2 * * * /usr/local/bin/wombat-backup.sh >> /var/log/wombat-backup.log 2>&1
+```
+
+Script contents live in the repo under `deploy/wombat-backup.sh`.
+
+## Secrets management
+
+- No secrets in the repo.
+- No secrets in `appsettings.Production.json`.
+- Secrets live in `/opt/wombat/config/wombat.env` on the server, mode 600, owner wombat.
+- Rotation: edit the env file, `systemctl restart wombat`. That's the whole rotation story for Phase 1.
+
+## Observability
+
+- `journalctl -u wombat` for application logs (Serilog Console sink).
+- `/opt/wombat/data/logs/` for Serilog file sink (rolling daily, keep 30 days).
+- `/var/log/caddy/wombat.log` for HTTP logs.
+- Optional: a Seq instance on a subdomain, pointed at by Serilog's Seq sink. Nice to have; not required for Phase 1.
+
+## Health check
+
+Expose `/health` in `Wombat.Web` and have Caddy probe it (or a simple cron + curl). If it returns non-200 for two consecutive minutes, restart the service and email you. Don't get clever; a 10-line shell script is fine.
+
+## Rollback
+
+- Keep the last two published binary directories: `/opt/wombat/app.prev/` is the previous release.
+- Rollback = `rm -rf /opt/wombat/app && mv /opt/wombat/app.prev /opt/wombat/app && systemctl restart wombat`.
+- For database migrations, rollback is manual — if a migration is destructive, restore from the nightly dump. Prefer additive migrations.
+
+## First-boot checklist
+
+When setting up a fresh VPS:
+
+1. Fresh Ubuntu 24.04, apply all updates, set hostname.
+2. Create `wombat` system user.
+3. Install .NET 10 SDK (from Microsoft's APT repo) or just the runtime if you're publishing self-contained from dev.
+4. Install Postgres 16, create the database and user.
+5. Install Caddy from the official APT repo.
+6. Copy `appsettings.Production.json` and `wombat.env` to `/opt/wombat/config/`.
+7. Publish from dev and rsync to `/opt/wombat/app/`.
+8. Install the systemd unit, `systemctl daemon-reload`, `systemctl enable --now wombat`.
+9. Install the Caddyfile stanza, `systemctl reload caddy`.
+10. Run DB migrations: `dotnet Wombat.Web.dll --migrate` (wire this up as a one-shot mode, same as ClinicAssist's `dbMigrator`).
+11. Visit `https://wombat.example.com`, log in as the seeded admin, issue an invitation.
+
+That checklist is the verification for T015. Put it in the task file too.
