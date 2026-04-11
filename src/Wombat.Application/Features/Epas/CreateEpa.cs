@@ -1,0 +1,72 @@
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Epas;
+
+namespace Wombat.Application.Features.Epas;
+
+public sealed record CreateEpaCommand(
+    int SubSpecialityId,
+    string Code,
+    string Title,
+    string? Description,
+    string? RequiredKnowledgeSkills) : IRequest<EpaDto>;
+
+public sealed class CreateEpaCommandValidator : AbstractValidator<CreateEpaCommand>
+{
+    public CreateEpaCommandValidator()
+    {
+        RuleFor(command => command.SubSpecialityId).GreaterThan(0);
+        RuleFor(command => command.Code).NotEmpty().MaximumLength(64);
+        RuleFor(command => command.Title).NotEmpty().MaximumLength(200);
+        RuleFor(command => command.Description).MaximumLength(4000);
+        RuleFor(command => command.RequiredKnowledgeSkills).MaximumLength(8000);
+    }
+}
+
+public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, EpaDto>
+{
+    private readonly IApplicationDbContext _dbContext;
+
+    public CreateEpaCommandHandler(IApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<EpaDto> Handle(CreateEpaCommand request, CancellationToken cancellationToken)
+    {
+        var subSpecialityName = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
+            .Where(entity => entity.Id == request.SubSpecialityId)
+            .Select(entity => entity.Name)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (subSpecialityName is null)
+        {
+            throw new InvalidOperationException("The selected sub-speciality was not found.");
+        }
+
+        var epa = new Epa
+        {
+            SubSpecialityId = request.SubSpecialityId,
+            Code = request.Code.Trim(),
+            Title = request.Title.Trim(),
+            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
+            RequiredKnowledgeSkills = string.IsNullOrWhiteSpace(request.RequiredKnowledgeSkills) ? null : request.RequiredKnowledgeSkills.Trim(),
+            CreatedOn = DateTime.UtcNow
+        };
+
+        _dbContext.Set<Epa>().Add(epa);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception)
+        {
+            throw new InvalidOperationException("An EPA with the same code already exists for this sub-speciality.", exception);
+        }
+
+        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpecialityName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.IsActive, epa.CreatedOn);
+    }
+}

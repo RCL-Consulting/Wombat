@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Curricula;
+using Wombat.Domain.Epas;
+using Wombat.Domain.Forms;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Identity;
 
@@ -18,6 +21,14 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<Institution> Institutions => Set<Institution>();
     public DbSet<Speciality> Specialities => Set<Speciality>();
     public DbSet<SubSpeciality> SubSpecialities => Set<SubSpeciality>();
+    public DbSet<Epa> Epas => Set<Epa>();
+    public DbSet<EntrustmentScale> EntrustmentScales => Set<EntrustmentScale>();
+    public DbSet<EntrustmentLevel> EntrustmentLevels => Set<EntrustmentLevel>();
+    public DbSet<Curriculum> Curricula => Set<Curriculum>();
+    public DbSet<CurriculumItem> CurriculumItems => Set<CurriculumItem>();
+    public DbSet<AssessmentForm> AssessmentForms => Set<AssessmentForm>();
+    public DbSet<FormCriterion> FormCriteria => Set<FormCriterion>();
+    public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

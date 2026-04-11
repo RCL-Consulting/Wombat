@@ -9,4 +9,7 @@ public sealed class SubSpeciality
     public bool IsActive { get; set; } = true;
 
     public Speciality Speciality { get; set; } = null!;
+    public ICollection<Wombat.Domain.Epas.Epa> Epas { get; set; } = [];
+    public ICollection<Wombat.Domain.Curricula.Curriculum> Curricula { get; set; } = [];
+    public ICollection<Wombat.Domain.Forms.AssessmentForm> AssessmentForms { get; set; } = [];
 }

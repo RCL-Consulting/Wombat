@@ -1,0 +1,88 @@
+@page "/admin/curricula"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Curricula</PageTitle>
+
+<h1>Curricula</h1>
+
+<p>
+    <a href="/admin/curricula/new">Create curriculum</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+else if (_curricula is null || _subSpecialities is null || _specialities is null || _institutions is null)
+{
+    <p>Loading curricula...</p>
+}
+else if (_curricula.Count == 0)
+{
+    <p>No curricula found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Institution</th>
+                <th>Speciality</th>
+                <th>Sub-speciality</th>
+                <th>Effective</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var curriculum in _curricula)
+            {
+                var subSpeciality = _subSpecialities.Single(entity => entity.Id == curriculum.SubSpecialityId);
+                var speciality = _specialities.Single(entity => entity.Id == subSpeciality.SpecialityId);
+                var institution = _institutions.Single(entity => entity.Id == speciality.InstitutionId);
+
+                <tr>
+                    <td>@curriculum.Name</td>
+                    <td>@curriculum.Version</td>
+                    <td>@institution.Name</td>
+                    <td>@speciality.Name</td>
+                    <td>@subSpeciality.Name</td>
+                    <td>@curriculum.EffectiveFrom.ToString("yyyy-MM-dd")</td>
+                    <td>@curriculum.Items.Count</td>
+                    <td>@(curriculum.IsActive ? "Active" : "Inactive")</td>
+                    <td>
+                        <a href="@($"/admin/curricula/{curriculum.Id}")">Edit</a> |
+                        <a href="@($"/admin/curricula/{curriculum.Id}/items")">Items</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<CurriculumDto>? _curricula;
+    private IReadOnlyList<InstitutionDto>? _institutions;
+    private IReadOnlyList<SpecialityDto>? _specialities;
+    private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _curricula = await Sender.Send(new GetCurriculaListQuery());
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+}

@@ -1,0 +1,23 @@
+namespace Wombat.Application.Features.Curricula;
+
+public sealed record CurriculumDto(
+    int Id,
+    int SubSpecialityId,
+    string SubSpecialityName,
+    string Name,
+    string Version,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    bool IsActive,
+    bool CanEditInPlace,
+    IReadOnlyList<CurriculumItemDto> Items);
+
+public sealed record CurriculumItemDto(
+    int Id,
+    int EpaId,
+    string EpaCode,
+    string EpaTitle,
+    int RequiredCount,
+    int MinimumLevelOrder,
+    int WindowMonths,
+    double? Weight);

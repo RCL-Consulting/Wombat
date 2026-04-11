@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T004 — EPAs, Curricula, assessment forms** (not started)
+**T005 — Invitation flow** (not started)
 
-Next session: read `Tasks/T004-epas-curricula-assessment-forms.md` and execute it.
+Next session: read `Tasks/T005-invitation-flow.md` and execute it.
 
 ## Critical-path reminder (post-pivot)
 
@@ -112,6 +112,30 @@ T003 completed:
 - Verification caveat:
   - The admin UI is role-gated, but a full manual login walkthrough was not re-run in this session because local admin bootstrap credentials are not currently configured in committed settings and there is still no dedicated login UI task completed yet.
 
+T004 completed:
+- Added new domain slices for EPAs, entrustment scales/levels, curricula/curriculum items, and assessment forms/form criteria/form-EPA links.
+- Added EF Core configurations, DbContext sets, and the `EpasAndCurricula` migration with updated model snapshot.
+- Expanded `DataSeeder` so the demo tree now ensures a default `O-R Scale`, one sample EPA, and one sample curriculum with a seeded curriculum item under the demo sub-speciality.
+- Added CQRS handlers, validators, and DTOs for:
+  - EPA create/update/deactivate/list/get flows
+  - curriculum create/update/list/get, item add/update/remove, and clone-as-new-version flows
+  - assessment form create/update/deactivate/list/get, criterion add/remove, and EPA link/unlink flows
+- Added two small global lookup queries for all specialities and all sub-specialities to support admin selectors.
+- Added Blazor admin pages under:
+  - `Admin/Epas/` for list + create/edit
+  - `Admin/Curricula/` for list + create/edit + item management
+  - `Admin/Forms/` for list + create/edit + criterion/EPA-link management
+- Added tests for:
+  - `Curriculum.CloneAsNewVersion()`
+  - `CreateEpaCommandValidator`
+  - `CreateCurriculumCommandValidator`
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build` passes with 6/6 tests green.
+  - `dotnet ef migrations add EpasAndCurricula --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --output-dir Persistence/Migrations --configuration Release --no-build` succeeds.
+- Verification caveat:
+  - The manual database-backed walkthrough from the task file (create EPA, form, curriculum, curriculum item and reload) was not run in this session because no fresh local verification database/connection override was configured for T004.
+
 ## Last known-good commit
 
 `0caee6a` — Add institution hierarchy and admin pages
@@ -119,7 +143,7 @@ T003 completed:
 ## Open questions
 
 - **Icon set.** ClinicAssist learned that the Bootstrap Icons web font is problematic. We need to pick an icon strategy before T010. Current leaning: inline SVGs from Lucide copied into a static folder. Decide at the start of T010.
-- **Will there be a `Programme` layer above `SubSpeciality`?** DOMAIN.md mentions this as "maybe later". Defer; current plan assumes Curriculum belongs directly to SubSpeciality. Revisit at T004.
+- **Will there be a `Programme` layer above `SubSpeciality`?** DOMAIN.md mentions this as "maybe later". Deferred; current plan still assumes Curriculum belongs directly to SubSpeciality. Revisit when T006/T017 make programme-level assignment pressure concrete.
 - **Schema DSL extensibility: repeatable sections.** Decided for v1: no repeatable sections. T020's QI seed uses three pre-numbered sub-sections (`pdsa_1`, `pdsa_2`, `pdsa_3`). Repeatable sections are T019-c.
 - **Drag-and-drop library for the builder.** Decided for v1: no drag-drop; up/down buttons only. SortableJS comes in T019-b.
 - **Cron timezone.** T024 says cron expressions run in the institution's timezone. Confirm institution tz is stored on `InstitutionBrand` in T023.
@@ -139,3 +163,4 @@ None.
 | 2026-04-11 | implementation v1 | T001 | Replaced the old root solution with a new `Wombat.sln`, scaffolded `src/` and `tests/`, added central package management and editor config, and verified build/test/web/api startup locally. |
 | 2026-04-11 | implementation v2 | T002 | Added ASP.NET Core Identity plumbing, role/admin seeding, claim-based authorization helpers, initial EF migration, and verified seeding against a fresh local Postgres database. |
 | 2026-04-11 | implementation v3 | T003 | Added institution/speciality/sub-speciality domain slices, EF config and migration, admin Blazor maintenance pages, startup data seeding, and test coverage; build/test/migration/app-start verification passed, but a full authenticated manual walkthrough remains pending the later login UI work. |
+| 2026-04-11 | implementation v4 | T004 | Added EPAs, entrustment scales, curricula, curriculum items, assessment forms, admin CRUD pages, validators/tests, and the `EpasAndCurricula` migration; build and targeted application tests passed, but the manual DB walkthrough remains pending local connection setup. |

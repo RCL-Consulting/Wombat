@@ -1,0 +1,226 @@
+@page "/admin/epas/new"
+@page "/admin/epas/{Id:int}"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsNew ? "Create EPA" : "Edit EPA")</PageTitle>
+
+<h1>@(IsNew ? "Create EPA" : "Edit EPA")</h1>
+
+<p>
+    <a href="/admin/epas">Back to EPAs</a>
+</p>
+
+@if (_loading)
+{
+    <p>Loading EPA...</p>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+        <p>@_statusMessage</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <p>@_errorMessage</p>
+    }
+
+    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="epa-sub-speciality">Sub-speciality</label>
+            <InputSelect id="epa-sub-speciality" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId">
+                @foreach (var option in SubSpecialityOptions)
+                {
+                    <option value="@option.Id">@option.Label</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="epa-code">Code</label>
+            <InputText id="epa-code" class="form-control" @bind-Value="_model.Code" />
+        </div>
+
+        <div class="mb-3">
+            <label for="epa-title">Title</label>
+            <InputText id="epa-title" class="form-control" @bind-Value="_model.Title" />
+        </div>
+
+        <div class="mb-3">
+            <label for="epa-description">Description</label>
+            <InputTextArea id="epa-description" class="form-control" @bind-Value="_model.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label for="epa-rks">Required knowledge and skills</label>
+            <InputTextArea id="epa-rks" class="form-control" @bind-Value="_model.RequiredKnowledgeSkills" />
+        </div>
+
+        @if (!IsNew)
+        {
+            <div class="mb-3">
+                <label>
+                    <InputCheckbox @bind-Value="_model.IsActive" />
+                    Active
+                </label>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+        @if (!IsNew)
+        {
+            <button type="button" class="btn btn-outline-danger ms-2" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+        }
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private readonly EpaFormModel _model = new();
+    private IReadOnlyList<InstitutionDto> _institutions = [];
+    private IReadOnlyList<SpecialityDto> _specialities = [];
+    private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+    private string? _errorMessage;
+    private string? _statusMessage;
+    private bool _loading;
+    private bool _saving;
+
+    private bool IsNew => !Id.HasValue;
+
+    private IEnumerable<LookupOption> SubSpecialityOptions =>
+        from subSpeciality in _subSpecialities
+        join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
+        join institution in _institutions on speciality.InstitutionId equals institution.Id
+        select new LookupOption(subSpeciality.Id, $"{institution.Name} / {speciality.Name} / {subSpeciality.Name}");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+
+            if (IsNew)
+            {
+                _model.SubSpecialityId = _subSpecialities.FirstOrDefault()?.Id ?? 0;
+                _model.IsActive = true;
+                return;
+            }
+
+            var epa = await Sender.Send(new GetEpaByIdQuery(Id!.Value));
+
+            if (epa is null)
+            {
+                Navigation.NavigateTo("/not-found");
+                return;
+            }
+
+            _model.SubSpecialityId = epa.SubSpecialityId;
+            _model.Code = epa.Code;
+            _model.Title = epa.Title;
+            _model.Description = epa.Description;
+            _model.RequiredKnowledgeSkills = epa.RequiredKnowledgeSkills;
+            _model.IsActive = epa.IsActive;
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            EpaDto epa;
+
+            if (IsNew)
+            {
+                epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills)));
+                Navigation.NavigateTo($"/admin/epas/{epa.Id}");
+                return;
+            }
+
+            epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.IsActive));
+            _model.IsActive = epa.IsActive;
+            _statusMessage = "EPA saved.";
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeactivateAsync()
+    {
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            await Sender.Send(new DeactivateEpaCommand(Id!.Value));
+            _model.IsActive = false;
+            _statusMessage = "EPA deactivated.";
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private sealed class EpaFormModel
+    {
+        [Range(1, int.MaxValue)]
+        public int SubSpecialityId { get; set; }
+
+        [Required]
+        [StringLength(64)]
+        public string Code { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [StringLength(4000)]
+        public string? Description { get; set; }
+
+        [StringLength(8000)]
+        public string? RequiredKnowledgeSkills { get; set; }
+
+        public bool IsActive { get; set; } = true;
+    }
+
+    private sealed record LookupOption(int Id, string Label);
+}

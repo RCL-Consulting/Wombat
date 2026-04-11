@@ -42,10 +42,10 @@ Model EPAs, Curricula (correctly — see DOMAIN.md), CurriculumItems, and Assess
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — unit tests for `Curriculum.CloneAsNewVersion()` and for validators.
+- [x] `dotnet build` clean.
+- [x] `dotnet test` — unit tests for `Curriculum.CloneAsNewVersion()` and for validators.
 - [ ] Manual: create an EPA, create a form linked to it, create a curriculum, add the EPA as a curriculum item with RequiredCount=3 and MinimumLevelOrder=4. Reload and confirm persistence.
-- [ ] Cloning a curriculum creates a new row with version incremented and all items copied.
+- [x] Cloning a curriculum creates a new row with version incremented and all items copied.
 
 ## Notes & gotchas
 

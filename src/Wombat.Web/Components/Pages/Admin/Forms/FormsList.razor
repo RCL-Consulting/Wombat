@@ -1,0 +1,69 @@
+@page "/admin/forms"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Assessment Forms</PageTitle>
+
+<h1>Assessment forms</h1>
+
+<p>
+    <a href="/admin/forms/new">Create form</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+else if (_forms is null)
+{
+    <p>Loading forms...</p>
+}
+else if (_forms.Count == 0)
+{
+    <p>No assessment forms found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Scale</th>
+                <th>Criteria</th>
+                <th>EPA links</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var form in _forms)
+            {
+                <tr>
+                    <td>@form.Name</td>
+                    <td>@form.ScaleName</td>
+                    <td>@form.Criteria.Count</td>
+                    <td>@form.EpaLinks.Count</td>
+                    <td>@(form.IsActive ? "Active" : "Inactive")</td>
+                    <td><a href="@($"/admin/forms/{form.Id}")">Edit</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AssessmentFormDto>? _forms;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _forms = await Sender.Send(new GetAssessmentFormsListQuery());
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+}

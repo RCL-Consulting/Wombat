@@ -1,0 +1,266 @@
+@page "/admin/curricula/new"
+@page "/admin/curricula/{Id:int}"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsNew ? "Create Curriculum" : "Edit Curriculum")</PageTitle>
+
+<h1>@(IsNew ? "Create curriculum" : "Edit curriculum")</h1>
+
+<p>
+    <a href="/admin/curricula">Back to curricula</a>
+    @if (!IsNew)
+    {
+        <span> | </span>
+        <a href="@($"/admin/curricula/{Id}/items")">Manage items</a>
+    }
+</p>
+
+@if (_loading)
+{
+    <p>Loading curriculum...</p>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+        <p>@_statusMessage</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <p>@_errorMessage</p>
+    }
+
+    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="curriculum-sub-speciality">Sub-speciality</label>
+            <InputSelect id="curriculum-sub-speciality" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId">
+                @foreach (var option in SubSpecialityOptions)
+                {
+                    <option value="@option.Id">@option.Label</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="curriculum-name">Name</label>
+            <InputText id="curriculum-name" class="form-control" @bind-Value="_model.Name" />
+        </div>
+
+        <div class="mb-3">
+            <label for="curriculum-version">Version</label>
+            <InputText id="curriculum-version" class="form-control" @bind-Value="_model.Version" />
+        </div>
+
+        <div class="mb-3">
+            <label for="curriculum-effective-from">Effective from</label>
+            <InputDate id="curriculum-effective-from" class="form-control" @bind-Value="_model.EffectiveFrom" />
+        </div>
+
+        <div class="mb-3">
+            <label for="curriculum-effective-to">Effective to</label>
+            <InputDate id="curriculum-effective-to" class="form-control" TValue="DateOnly?" @bind-Value="_model.EffectiveTo" />
+        </div>
+
+        @if (!IsNew)
+        {
+            <div class="mb-3">
+                <label>
+                    <InputCheckbox @bind-Value="_model.IsActive" />
+                    Active
+                </label>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+    </EditForm>
+
+    @if (!IsNew)
+    {
+        <hr />
+
+        <h2>Clone as new version</h2>
+
+        <EditForm Model="_cloneModel" OnValidSubmit="CloneAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="clone-version">New version</label>
+                <InputText id="clone-version" class="form-control" @bind-Value="_cloneModel.Version" />
+            </div>
+
+            <div class="mb-3">
+                <label for="clone-effective-from">Effective from</label>
+                <InputDate id="clone-effective-from" class="form-control" @bind-Value="_cloneModel.EffectiveFrom" />
+            </div>
+
+            <div class="mb-3">
+                <label for="clone-effective-to">Effective to</label>
+                <InputDate id="clone-effective-to" class="form-control" TValue="DateOnly?" @bind-Value="_cloneModel.EffectiveTo" />
+            </div>
+
+            <button type="submit" class="btn btn-outline-secondary" disabled="@_saving">Clone</button>
+        </EditForm>
+    }
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private readonly CurriculumFormModel _model = new();
+    private readonly CloneCurriculumModel _cloneModel = new();
+    private IReadOnlyList<InstitutionDto> _institutions = [];
+    private IReadOnlyList<SpecialityDto> _specialities = [];
+    private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+    private string? _errorMessage;
+    private string? _statusMessage;
+    private bool _loading;
+    private bool _saving;
+
+    private bool IsNew => !Id.HasValue;
+
+    private IEnumerable<LookupOption> SubSpecialityOptions =>
+        from subSpeciality in _subSpecialities
+        join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
+        join institution in _institutions on speciality.InstitutionId equals institution.Id
+        select new LookupOption(subSpeciality.Id, $"{institution.Name} / {speciality.Name} / {subSpeciality.Name}");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+
+            if (IsNew)
+            {
+                _model.SubSpecialityId = _subSpecialities.FirstOrDefault()?.Id ?? 0;
+                _model.EffectiveFrom = DateOnly.FromDateTime(DateTime.Today);
+                _model.IsActive = true;
+                _cloneModel.EffectiveFrom = DateOnly.FromDateTime(DateTime.Today);
+                return;
+            }
+
+            var curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id!.Value));
+
+            if (curriculum is null)
+            {
+                Navigation.NavigateTo("/not-found");
+                return;
+            }
+
+            _model.SubSpecialityId = curriculum.SubSpecialityId;
+            _model.Name = curriculum.Name;
+            _model.Version = curriculum.Version;
+            _model.EffectiveFrom = curriculum.EffectiveFrom;
+            _model.EffectiveTo = curriculum.EffectiveTo;
+            _model.IsActive = curriculum.IsActive;
+
+            _cloneModel.Version = $"{curriculum.Version}-copy";
+            _cloneModel.EffectiveFrom = curriculum.EffectiveFrom.AddDays(1);
+            _cloneModel.EffectiveTo = curriculum.EffectiveTo;
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            CurriculumDto curriculum;
+
+            if (IsNew)
+            {
+                curriculum = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo));
+                Navigation.NavigateTo($"/admin/curricula/{curriculum.Id}");
+                return;
+            }
+
+            curriculum = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, _model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsActive));
+            _model.IsActive = curriculum.IsActive;
+            _statusMessage = "Curriculum saved.";
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task CloneAsync()
+    {
+        _saving = true;
+        _errorMessage = null;
+        _statusMessage = null;
+
+        try
+        {
+            var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo));
+            Navigation.NavigateTo($"/admin/curricula/{cloned.Id}");
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class CurriculumFormModel
+    {
+        [Range(1, int.MaxValue)]
+        public int SubSpecialityId { get; set; }
+
+        [Required]
+        [StringLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(64)]
+        public string Version { get; set; } = string.Empty;
+
+        public DateOnly EffectiveFrom { get; set; }
+        public DateOnly? EffectiveTo { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    private sealed class CloneCurriculumModel
+    {
+        [Required]
+        [StringLength(64)]
+        public string Version { get; set; } = string.Empty;
+
+        public DateOnly EffectiveFrom { get; set; }
+        public DateOnly? EffectiveTo { get; set; }
+    }
+
+    private sealed record LookupOption(int Id, string Label);
+}
