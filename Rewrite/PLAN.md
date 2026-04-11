@@ -33,7 +33,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 ### Phase 2 — Activity platform *(NEW — replaces the former Phase 2 assessment aggregates)*
 
-- [ ] T017 — Activity platform: schema, aggregates, storage
+- [x] T017 — Activity platform: schema, aggregates, storage
 - [ ] T018 — Activity engine: generic commands, workflow runtime, credit rules
 - [ ] T019 — Activity builder UI + dynamic form renderer (v1 — visual form editor, JSON-validated workflow/credit editors, ten field types, single-condition `show_if`, draft/publish lifecycle)
 

@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T017 — Activity platform: schema, aggregates, storage** (not started)
+**T018 — Activity engine: generic commands, workflow runtime, credit rules** (not started)
 
-Next session: read `Tasks/T017-activity-platform-schema.md` and execute it.
+Next session: read `Tasks/T018-activity-engine.md` and build on top of the T017 activity platform now in Domain + Infrastructure.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,38 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T017 completed:
+- Added the new activity-platform domain slice under `src/Wombat.Domain/Activities/`:
+  - aggregates: `ActivityType`, `Activity`, `ActivityTransition`, `ActivityPermissionRule`
+  - scope enum: `ActivityScope`
+  - schema DSL + parser: `Schema/*`
+  - workflow DSL + actor-rule grammar/parser: `Workflow/*`
+  - credit-rules DSL + parser: `Credit/*`
+- `ActivityType.PublishNewVersion(...)` now validates and normalizes schema/workflow/credit JSON before bumping the version.
+- `Activity.ApplyTransition(...)` now parses the owning activity type's workflow, enforces that the requested transition is declared from the current state, updates state/data, and appends an `ActivityTransition` snapshot row.
+- Wired EF Core for the activity platform:
+  - added DbSets to `ApplicationDbContext`
+  - added activity configurations under `src/Wombat.Infrastructure/Persistence/Configurations/Activities/`
+  - mapped `SchemaJson`, `WorkflowJson`, `CreditRulesJson`, `DataJson`, and `SnapshotJson` as `jsonb`
+  - added the composite dashboard index and GIN index in configuration
+- Generated and committed the `ActivitiesPlatform` migration plus `Designer.cs`.
+- Patched the migration to add the two required jsonb expression indexes:
+  - `("DataJson"->>'epa_id')`
+  - `("DataJson"->>'assessor_user_id')`
+- Added 15 domain tests under `tests/Wombat.Domain.Tests/Activities/` covering:
+  - schema parser success/failure cases
+  - workflow parser success/failure cases
+  - credit-rules parser success/failure cases
+  - parser round-trips
+  - `Activity.ApplyTransition(...)`
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Domain.Tests/Wombat.Domain.Tests.csproj -c Release --no-build` passes with 15/15 tests green when `DOTNET_CLI_HOME` is pointed at a writable workspace path.
+  - `dotnet ef migrations add ActivitiesPlatform --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --output-dir Persistence/Migrations --configuration Release --no-build` succeeds.
+  - `dotnet ef database update --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --configuration Release --no-build` succeeds against the local `wombat` Postgres database using the committed localhost connection string.
+- Verification caveat:
+  - The final task check "insert a sample `ActivityType` row and round-trip the stored jsonb payloads back through the parsers" was not automated in this session. The parsers are covered by unit tests and the migration was applied successfully to Postgres, but the explicit database-backed parser round-trip still remains available as a quick follow-up check if needed.
 
 Planning session on 2026-04-11, followed by T001 scaffold completion.
 
@@ -180,6 +212,7 @@ T006 completed:
 
 - **Icon set.** ClinicAssist learned that the Bootstrap Icons web font is problematic. We need to pick an icon strategy before T010. Current leaning: inline SVGs from Lucide copied into a static folder. Decide at the start of T010.
 - **Will there be a `Programme` layer above `SubSpeciality`?** DOMAIN.md mentions this as "maybe later". Deferred; current plan still assumes Curriculum belongs directly to SubSpeciality. Revisit when T006/T017 make programme-level assignment pressure concrete.
+- **Actor-rule grammar normal form.** T017 ships a deliberately tiny parser for `subject`, `creator`, `role:<name>`, `scope:<name>`, `+`, and `|`. T018 needs to decide whether the runtime evaluator treats mixed `+`/`|` expressions strictly left-to-right or whether it will reject ambiguous strings and require explicit future grammar expansion.
 - **Schema DSL extensibility: repeatable sections.** Decided for v1: no repeatable sections. T020's QI seed uses three pre-numbered sub-sections (`pdsa_1`, `pdsa_2`, `pdsa_3`). Repeatable sections are T019-c.
 - **Drag-and-drop library for the builder.** Decided for v1: no drag-drop; up/down buttons only. SortableJS comes in T019-b.
 - **Cron timezone.** T024 says cron expressions run in the institution's timezone. Confirm institution tz is stored on `InstitutionBrand` in T023.
@@ -202,3 +235,4 @@ None.
 | 2026-04-11 | implementation v4 | T004 | Added EPAs, entrustment scales, curricula, curriculum items, assessment forms, admin CRUD pages, validators/tests, and the `EpasAndCurricula` migration; build and targeted application tests passed, but the manual DB walkthrough remains pending local connection setup. |
 | 2026-04-11 | implementation v5 | T005 | Implemented invitation flow, invite/admin UI, registration/login/logout, invitation migration/tests, fixed runtime startup/auth integration issues discovered during manual exercise, and completed the full manual invite/register/login/reuse walkthrough. |
 | 2026-04-11 | implementation v6 | T006 | Added trainee/assessor profiles, pending-trainee admission with role promotion, self-service profile editing, admin trainee/assessor Blazor pages, targeted admission tests, and the `Profiles` migration; then fixed the `/account/profile` save interaction after manual testing. Build/tests passed, but the full manual admit/relogin walkthrough remains pending. |
+| 2026-04-11 | implementation v7 | T017 | Added the activity-platform aggregates, schema/workflow/credit DSL parsers, EF jsonb mappings, `ActivitiesPlatform` migration with json-path indexes, and 15 domain tests. Build, domain tests, and local Postgres migration update passed; explicit DB-backed parser round-trip remains optional follow-up verification. |

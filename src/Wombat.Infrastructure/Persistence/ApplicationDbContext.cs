@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Forms;
@@ -31,6 +32,10 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<AssessmentForm> AssessmentForms => Set<AssessmentForm>();
     public DbSet<FormCriterion> FormCriteria => Set<FormCriterion>();
     public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
+    public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
+    public DbSet<Activity> Activities => Set<Activity>();
+    public DbSet<ActivityTransition> ActivityTransitions => Set<ActivityTransition>();
+    public DbSet<ActivityPermissionRule> ActivityPermissionRules => Set<ActivityPermissionRule>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<TraineeProfile> TraineeProfiles => Set<TraineeProfile>();
     public DbSet<AssessorProfile> AssessorProfiles => Set<AssessorProfile>();
