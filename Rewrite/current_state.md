@@ -174,7 +174,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`a167c87` — T004: add EPAs curricula and assessment forms
+`8a424f1` — T006: implement trainee and assessor profiles
 
 ## Open questions
 
