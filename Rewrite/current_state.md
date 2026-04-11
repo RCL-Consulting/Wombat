@@ -174,7 +174,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`8a424f1` — T006: implement trainee and assessor profiles
+`6e2513b` — T006: finalize session handoff for trainee and assessor profiles
 
 ## Open questions
 
