@@ -33,7 +33,7 @@ else
         <p>@_errorMessage</p>
     }
 
-    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="curriculum-edit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -86,7 +86,7 @@ else
 
         <h2>Clone as new version</h2>
 
-        <EditForm Model="_cloneModel" OnValidSubmit="CloneAsync">
+        <EditForm Model="_cloneModel" OnValidSubmit="CloneAsync" FormName="curriculum-clone">
             <DataAnnotationsValidator />
             <ValidationSummary />
 

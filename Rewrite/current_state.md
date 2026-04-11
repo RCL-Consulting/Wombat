@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T005 — Invitation flow** (not started)
+**T006 — Trainee / Assessor / Admin profile data** (not started)
 
-Next session: read `Tasks/T005-invitation-flow.md` and execute it.
+Next session: read `Tasks/T006-trainee-assessor-profiles.md` and execute it.
 
 ## Critical-path reminder (post-pivot)
 
@@ -136,9 +136,23 @@ T004 completed:
 - Verification caveat:
   - The manual database-backed walkthrough from the task file (create EPA, form, curriculum, curriculum item and reload) was not run in this session because no fresh local verification database/connection override was configured for T004.
 
+T005 completed:
+- Added `Invitation` plus EF configuration and the `Invitations` migration, including first/last-name columns on `WombatIdentityUser` for invited registrations.
+- Added `InvitationTokenService`, invitation CQRS handlers/queries, DTOs, and a logging `IEmailSender` stub.
+- Added admin invitation issue/revoke UI plus account login/register/logout pages and route updates.
+- Fixed several runtime integration gaps uncovered during real testing:
+  - startup now runs `Database.MigrateAsync()` before seeding
+  - all `EditForm`s now set `FormName`
+  - auth cookie issuance moved to real `/account/login`, `/account/register`, and `/account/logout` POST endpoints because interactive component events cannot safely write auth headers
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build --filter Invitations` passes with 5/5 tests green.
+  - `dotnet ef migrations has-pending-model-changes --project src/Wombat.Infrastructure --startup-project src/Wombat.Web` reports no pending model changes.
+  - Manual walkthrough passed on 2026-04-11: admin issued an invitation, invited user registered successfully, could log out and back in, and reusing the same invitation link was rejected.
+
 ## Last known-good commit
 
-`0caee6a` — Add institution hierarchy and admin pages
+`a167c87` — T004: add EPAs curricula and assessment forms
 
 ## Open questions
 
@@ -164,3 +178,4 @@ None.
 | 2026-04-11 | implementation v2 | T002 | Added ASP.NET Core Identity plumbing, role/admin seeding, claim-based authorization helpers, initial EF migration, and verified seeding against a fresh local Postgres database. |
 | 2026-04-11 | implementation v3 | T003 | Added institution/speciality/sub-speciality domain slices, EF config and migration, admin Blazor maintenance pages, startup data seeding, and test coverage; build/test/migration/app-start verification passed, but a full authenticated manual walkthrough remains pending the later login UI work. |
 | 2026-04-11 | implementation v4 | T004 | Added EPAs, entrustment scales, curricula, curriculum items, assessment forms, admin CRUD pages, validators/tests, and the `EpasAndCurricula` migration; build and targeted application tests passed, but the manual DB walkthrough remains pending local connection setup. |
+| 2026-04-11 | implementation v5 | T005 | Implemented invitation flow, invite/admin UI, registration/login/logout, invitation migration/tests, fixed runtime startup/auth integration issues discovered during manual exercise, and completed the full manual invite/register/login/reuse walkthrough. |

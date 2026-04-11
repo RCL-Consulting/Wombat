@@ -5,6 +5,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Forms;
 using Wombat.Domain.Institutions;
+using Wombat.Domain.Invitations;
 using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Persistence;
@@ -29,6 +30,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<AssessmentForm> AssessmentForms => Set<AssessmentForm>();
     public DbSet<FormCriterion> FormCriteria => Set<FormCriterion>();
     public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -37,6 +39,9 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
 
         builder.Entity<WombatIdentityUser>(entity =>
         {
+            entity.Property(user => user.FirstName).HasMaxLength(100);
+            entity.Property(user => user.LastName).HasMaxLength(100);
+
             entity.HasMany(user => user.SpecialityScopes)
                 .WithOne(scope => scope.User)
                 .HasForeignKey(scope => scope.UserId)

@@ -28,7 +28,7 @@ else
         <p>@_errorMessage</p>
     }
 
-    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="assessment-form-edit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -132,7 +132,7 @@ else
             </ul>
         }
 
-        <EditForm Model="_criterionModel" OnValidSubmit="AddCriterionAsync">
+        <EditForm Model="_criterionModel" OnValidSubmit="AddCriterionAsync" FormName="assessment-form-criterion">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -174,7 +174,7 @@ else
             </ul>
         }
 
-        <EditForm Model="_linkModel" OnValidSubmit="LinkEpaAsync">
+        <EditForm Model="_linkModel" OnValidSubmit="LinkEpaAsync" FormName="assessment-form-link-epa">
             <DataAnnotationsValidator />
             <ValidationSummary />
 

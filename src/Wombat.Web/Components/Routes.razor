@@ -5,7 +5,14 @@
                 <LayoutView Layout="typeof(Layout.MainLayout)">
                     <PageTitle>Access denied</PageTitle>
                     <h1>Access denied</h1>
-                    <p>You do not have permission to access this page.</p>
+                    <AuthorizeView>
+                        <Authorized Context="authorizedState">
+                            <p>You do not have permission to access this page.</p>
+                        </Authorized>
+                        <NotAuthorized Context="anonymousState">
+                            <p>You need to <a href="/account/login">sign in</a> before you can access this page.</p>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </LayoutView>
             </NotAuthorized>
         </AuthorizeRouteView>

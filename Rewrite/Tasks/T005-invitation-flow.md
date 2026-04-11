@@ -39,10 +39,17 @@ Implement the invitation-only registration flow end-to-end: an admin issues an i
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] Unit tests: token generation produces unique values; hash-and-verify round-trips; expired invitations are rejected; revoked invitations are rejected; used invitations are rejected.
-- [ ] Manual: issue an invitation as the seeded admin, copy the token from the log, navigate to `/Account/Register?token=...`, register with a new email, confirm the user exists in `AspNetUsers` with the right role, log out and back in.
-- [ ] The invitation row is marked used and cannot be re-used.
+- [x] `dotnet build` clean.
+- [x] Unit tests: token generation produces unique values; hash-and-verify round-trips; expired invitations are rejected; revoked invitations are rejected; used invitations are rejected.
+- [x] Manual: issue an invitation as the seeded admin, copy the token from the log, navigate to `/Account/Register?token=...`, register with a new email, confirm the user exists in `AspNetUsers` with the right role, log out and back in.
+- [x] The invitation row is marked used and cannot be re-used.
+
+## Session notes
+
+- 2026-04-11: Implemented the invitation aggregate, EF configuration, `Invitations` migration, token hashing/verification service, CQRS handlers and DTOs, a logging `IEmailSender` stub, admin invitation UI, registration page, and basic login/logout pages.
+- 2026-04-11: Added startup migration application so the seeded data path no longer fails on a fresh database, and moved login/register/logout cookie issuance to real POST endpoints after interactive Blazor cookie writes failed with `Headers are read-only, response has already started.`
+- 2026-04-11: Added invitation-focused application tests covering token uniqueness, hash verification, and rejection of expired/revoked/used invitations.
+- 2026-04-11: Manual walkthrough passed: admin issued an invitation, invited user registered successfully, invited user could log back in, and reusing the same invitation link was rejected.
 
 ## Notes & gotchas
 
