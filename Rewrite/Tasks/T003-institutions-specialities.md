@@ -3,6 +3,7 @@
 **Phase:** 0 — Ground truth
 **Depends on:** T002
 **Blocks:** T004, T005, T011
+**Status:** Implemented on 2026-04-11 in commit `0caee6a` (follow-up manual auth walkthrough still pending)
 
 ## Goal
 
@@ -40,10 +41,17 @@ Model the organisational reference hierarchy: an Institution has many Specialiti
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — new unit tests cover the validators and a sample handler using an in-memory context.
+- [x] `dotnet build` clean.
+- [x] `dotnet test` — new unit tests cover the validators and a sample handler using an in-memory context.
 - [ ] Manual: log in as the seeded admin, create a second institution, create a speciality under it, create a sub-speciality. Reload and confirm they persist.
 - [ ] Deleting an institution with children is refused with a clear error.
+
+## Outcome
+
+- Domain entities, EF configuration, CQRS handlers, validators, migration, startup seeding, and admin maintenance pages were added.
+- `InstitutionsInitial` was applied successfully to the local verification database `wombat_t002_verify`.
+- The web host still starts successfully after the migration.
+- Remaining gap: authenticated manual browser verification is deferred until the login/bootstrap path is exercised again.
 
 ## Notes & gotchas
 

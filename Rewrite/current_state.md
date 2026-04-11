@@ -114,7 +114,7 @@ T003 completed:
 
 ## Last known-good commit
 
-`483738d` — Add identity and role model plumbing
+`0caee6a` — Add institution hierarchy and admin pages
 
 ## Open questions
 
