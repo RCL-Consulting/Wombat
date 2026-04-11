@@ -55,6 +55,7 @@ public static class DependencyInjection
 
         services.AddScoped<RoleSeeder>();
         services.AddScoped<AdminSeeder>();
+        services.AddScoped<DataSeeder>();
 
         return services;
     }

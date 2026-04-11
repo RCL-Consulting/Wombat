@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Persistence;
@@ -14,10 +15,14 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
 
     public DbSet<WombatIdentityUserSpecialityScope> UserSpecialityScopes => Set<WombatIdentityUserSpecialityScope>();
     public DbSet<WombatIdentityUserSubSpecialityScope> UserSubSpecialityScopes => Set<WombatIdentityUserSubSpecialityScope>();
+    public DbSet<Institution> Institutions => Set<Institution>();
+    public DbSet<Speciality> Specialities => Set<Speciality>();
+    public DbSet<SubSpeciality> SubSpecialities => Set<SubSpeciality>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         builder.Entity<WombatIdentityUser>(entity =>
         {

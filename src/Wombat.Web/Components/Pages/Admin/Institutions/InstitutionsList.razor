@@ -1,0 +1,72 @@
+@page "/admin/institutions"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Institutions</PageTitle>
+
+<h1>Institutions</h1>
+
+<p>
+    <a href="/admin/institutions/new">Create institution</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+else if (_institutions is null)
+{
+    <p>Loading institutions...</p>
+}
+else if (_institutions.Count == 0)
+{
+    <p>No institutions found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Short code</th>
+                <th>Contact email</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var institution in _institutions)
+            {
+                <tr>
+                    <td>@institution.Name</td>
+                    <td>@institution.ShortCode</td>
+                    <td>@institution.ContactEmail</td>
+                    <td>@(institution.IsActive ? "Active" : "Inactive")</td>
+                    <td>@institution.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        <a href="@($"/admin/institutions/{institution.Id}")">Edit</a> |
+                        <a href="@($"/admin/institutions/{institution.Id}/specialities")">Specialities</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<InstitutionDto>? _institutions;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _institutions = await Sender.Send(new GetInstitutionsListQuery());
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+}

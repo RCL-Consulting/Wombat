@@ -14,5 +14,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7</UserSecretsId>
   </PropertyGroup>
 </Project>

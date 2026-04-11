@@ -1,0 +1,81 @@
+@page "/admin/institutions/{InstitutionId:int}/specialities"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Specialities</PageTitle>
+
+<h1>Specialities</h1>
+
+@if (_institution is not null)
+{
+    <p>Institution: <strong>@_institution.Name</strong> (@_institution.ShortCode)</p>
+}
+
+<p>
+    <a href="/admin/institutions">Back to institutions</a> |
+    <a href="@($"/admin/institutions/{InstitutionId}/specialities/new")">Create speciality</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+else if (_specialities is null)
+{
+    <p>Loading specialities...</p>
+}
+else if (_specialities.Count == 0)
+{
+    <p>No specialities found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var speciality in _specialities)
+            {
+                <tr>
+                    <td>@speciality.Name</td>
+                    <td>@speciality.Description</td>
+                    <td>@(speciality.IsActive ? "Active" : "Inactive")</td>
+                    <td>
+                        <a href="@($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}")">Edit</a> |
+                        <a href="@($"/admin/specialities/{speciality.Id}/sub-specialities")">Sub-specialities</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int InstitutionId { get; set; }
+
+    private InstitutionDto? _institution;
+    private IReadOnlyList<SpecialityDto>? _specialities;
+    private string? _errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId));
+            _specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId));
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+}

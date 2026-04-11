@@ -1,0 +1,102 @@
+@page "/admin/specialities/{SpecialityId:int}/sub-specialities"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Sub-Specialities</PageTitle>
+
+<h1>Sub-specialities</h1>
+
+@if (_speciality is not null)
+{
+    <p>Speciality: <strong>@_speciality.Name</strong></p>
+}
+
+<p>
+    @if (_speciality is not null)
+    {
+        <a href="@($"/admin/institutions/{_speciality.InstitutionId}/specialities")">Back to specialities</a>
+        <span> | </span>
+    }
+    <a href="@($"/admin/specialities/{SpecialityId}/sub-specialities/new")">Create sub-speciality</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <p>@_errorMessage</p>
+}
+else if (_subSpecialities is null)
+{
+    <p>Loading sub-specialities...</p>
+}
+else if (_subSpecialities.Count == 0)
+{
+    <p>No sub-specialities found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var subSpeciality in _subSpecialities)
+            {
+                <tr>
+                    <td>@subSpeciality.Name</td>
+                    <td>@subSpeciality.Description</td>
+                    <td>@(subSpeciality.IsActive ? "Active" : "Inactive")</td>
+                    <td>
+                        <a href="@($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}")">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int SpecialityId { get; set; }
+
+    private SpecialityDto? _speciality;
+    private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
+    private string? _errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            _speciality = await FindSpecialityAsync(SpecialityId);
+            _subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId));
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+
+    private async Task<SpecialityDto?> FindSpecialityAsync(int specialityId)
+    {
+        var institutions = await Sender.Send(new GetInstitutionsListQuery());
+
+        foreach (var institution in institutions)
+        {
+            var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(institution.Id));
+            var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
+
+            if (speciality is not null)
+            {
+                return speciality;
+            }
+        }
+
+        return null;
+    }
+}

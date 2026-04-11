@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T003 — Institutions, Specialities, SubSpecialities** (not started)
+**T004 — EPAs, Curricula, assessment forms** (not started)
 
-Next session: read `Tasks/T003-institutions-specialities.md` and execute it.
+Next session: read `Tasks/T004-epas-curricula-assessment-forms.md` and execute it.
 
 ## Critical-path reminder (post-pivot)
 
@@ -94,9 +94,27 @@ Important environment note:
 - The committed `appsettings.json` connection string remains a placeholder local default.
 - Local Postgres verification on this machine used an environment override to a working dev connection and a fresh temporary database `wombat_t002_verify`.
 
+T003 completed:
+- Added `Institution`, `Speciality`, and `SubSpeciality` entities in Domain.
+- Added EF configurations, `DataSeeder`, and the `InstitutionsInitial` migration in Infrastructure.
+- Added the institution/speciality/sub-speciality query and command handlers plus validators in Application.
+- Wired the Blazor host for authorization-aware routing, scoped MediatR dispatch from components, and startup data seeding.
+- Added admin pages under `src/Wombat.Web/Components/Pages/Admin/Institutions/` for list/create/edit/deactivate flows across the hierarchy.
+- Added two new application tests:
+  - validator coverage for `CreateInstitutionCommandValidator`
+  - in-memory handler coverage for `CreateInstitutionCommandHandler`
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build` passes with 3/3 tests green.
+  - `dotnet ef migrations add InstitutionsInitial --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --output-dir Persistence/Migrations` succeeds.
+  - `dotnet ef database update --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext` succeeds against `wombat_t002_verify`.
+  - `dotnet run --project src/Wombat.Web --no-build -c Release --launch-profile http` returns HTTP 200 from `/` after the migration.
+- Verification caveat:
+  - The admin UI is role-gated, but a full manual login walkthrough was not re-run in this session because local admin bootstrap credentials are not currently configured in committed settings and there is still no dedicated login UI task completed yet.
+
 ## Last known-good commit
 
-`c843421` — Scaffold new Wombat solution
+`483738d` — Add identity and role model plumbing
 
 ## Open questions
 
@@ -120,3 +138,4 @@ None.
 | 2026-04-11 | planning v3 | — | Builder scope refinement: rewrote T019 for honest v1 scope (visual form editor, JSON-validated workflow/credit, ten field types, single-condition show_if, up/down reorder, draft/publish lifecycle). Added T019-b through T019-g as deferred follow-ups. Ready for T001 to begin. |
 | 2026-04-11 | implementation v1 | T001 | Replaced the old root solution with a new `Wombat.sln`, scaffolded `src/` and `tests/`, added central package management and editor config, and verified build/test/web/api startup locally. |
 | 2026-04-11 | implementation v2 | T002 | Added ASP.NET Core Identity plumbing, role/admin seeding, claim-based authorization helpers, initial EF migration, and verified seeding against a fresh local Postgres database. |
+| 2026-04-11 | implementation v3 | T003 | Added institution/speciality/sub-speciality domain slices, EF config and migration, admin Blazor maintenance pages, startup data seeding, and test coverage; build/test/migration/app-start verification passed, but a full authenticated manual walkthrough remains pending the later login UI work. |

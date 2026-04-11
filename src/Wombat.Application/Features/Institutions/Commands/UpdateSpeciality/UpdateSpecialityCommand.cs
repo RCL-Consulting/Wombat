@@ -1,0 +1,10 @@
+using MediatR;
+
+namespace Wombat.Application.Features.Institutions.Commands.UpdateSpeciality;
+
+public sealed record UpdateSpecialityCommand(
+    int Id,
+    int InstitutionId,
+    string Name,
+    string? Description,
+    bool IsActive) : IRequest<SpecialityDto>;
