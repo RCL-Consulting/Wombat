@@ -363,4 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /Wombat.Web/appsettings.Local.json
 ClinicAssist.NET_ref_DO_NOT_COMMIT/
+Wombat_ref_old_DO_NOT_COMMIT/
 Rewrite/.dotnet/

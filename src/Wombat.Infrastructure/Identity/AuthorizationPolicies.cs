@@ -1,0 +1,75 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using Wombat.Domain.Identity;
+
+namespace Wombat.Infrastructure.Identity;
+
+public static class AuthorizationPolicies
+{
+    public const string RequireInstitutionScope = nameof(RequireInstitutionScope);
+    public const string RequireSpecialityScope = nameof(RequireSpecialityScope);
+    public const string RequireSubSpecialityScope = nameof(RequireSubSpecialityScope);
+    public const string RequireSpecialityAdminForCurrentInstitution = nameof(RequireSpecialityAdminForCurrentInstitution);
+    public const string RequireSubSpecialityAdminForCurrentInstitution = nameof(RequireSubSpecialityAdminForCurrentInstitution);
+
+    public static IServiceCollection AddWombatAuthorization(this IServiceCollection services)
+    {
+        services.AddSingleton<IAuthorizationHandler, ScopeClaimRequirementHandler>();
+
+        services.AddAuthorization(options =>
+        {
+            foreach (var role in WombatRoles.All)
+            {
+                options.AddPolicy(role, policy => policy.RequireRole(role));
+            }
+
+            options.AddPolicy(RequireInstitutionScope, policy =>
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.InstitutionId)));
+
+            options.AddPolicy(RequireSpecialityScope, policy =>
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.SpecialityId)));
+
+            options.AddPolicy(RequireSubSpecialityScope, policy =>
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.SubSpecialityId)));
+
+            options.AddPolicy(RequireSpecialityAdminForCurrentInstitution, policy =>
+            {
+                policy.RequireRole(WombatRoles.SpecialityAdmin);
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.InstitutionId));
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.SpecialityId));
+            });
+
+            options.AddPolicy(RequireSubSpecialityAdminForCurrentInstitution, policy =>
+            {
+                policy.RequireRole(WombatRoles.SubSpecialityAdmin);
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.InstitutionId));
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.SubSpecialityId));
+            });
+        });
+
+        return services;
+    }
+
+    private sealed class ScopeClaimRequirement : IAuthorizationRequirement
+    {
+        public ScopeClaimRequirement(string claimType)
+        {
+            ClaimType = claimType;
+        }
+
+        public string ClaimType { get; }
+    }
+
+    private sealed class ScopeClaimRequirementHandler : AuthorizationHandler<ScopeClaimRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ScopeClaimRequirement requirement)
+        {
+            if (context.User.HasClaim(claim => claim.Type == requirement.ClaimType))
+            {
+                context.Succeed(requirement);
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+}

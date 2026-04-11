@@ -22,7 +22,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 ### Phase 0 — Ground truth
 
 - [x] T001 — Scaffold the solution
-- [ ] T002 — Port Identity & role model
+- [x] T002 — Port Identity & role model
 - [ ] T003 — Institutions, Specialities, SubSpecialities
 
 ### Phase 1 — Core domain

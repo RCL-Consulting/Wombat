@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T002 — Port Identity & role model** (not started)
+**T003 — Institutions, Specialities, SubSpecialities** (not started)
 
-Next session: read `Tasks/T002-identity-roles.md` and execute it.
+Next session: read `Tasks/T003-institutions-specialities.md` and execute it.
 
 ## Critical-path reminder (post-pivot)
 
@@ -77,9 +77,26 @@ Reference for future tasks:
 - The architecture reference remains `ClinicAssist.NET_ref_DO_NOT_COMMIT/`.
 - Historical old-Wombat code can be recovered from git history if needed.
 
+T002 completed:
+- Added `WombatUser` and role constants in Domain.
+- Added `IApplicationDbContext`, claims principal extensions, and claim-type constants in Application.
+- Added `ApplicationDbContext : IdentityDbContext<WombatIdentityUser>`, identity scope entities, role/admin seeders, authorization policies, and a claims principal factory in Infrastructure.
+- Wired Identity and authorization into `Wombat.Web/Program.cs` and startup seeding now runs on app boot.
+- Added the initial migration `IdentityInitial` under `src/Wombat.Infrastructure/Persistence/Migrations/`.
+- Added a unit test covering `ClaimsPrincipalExtensions.GetInstitutionId()`.
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build --filter GetInstitutionId` passes.
+  - `dotnet ef database update --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext` succeeds against a fresh local verification database when `ConnectionStrings__DefaultConnection` is overridden to the local Postgres dev connection.
+  - Running the app against that fresh verification database seeds all 9 roles and 1 `Administrator` bootstrap user.
+
+Important environment note:
+- The committed `appsettings.json` connection string remains a placeholder local default.
+- Local Postgres verification on this machine used an environment override to a working dev connection and a fresh temporary database `wombat_t002_verify`.
+
 ## Last known-good commit
 
-Pending. T001 filesystem work is complete; commit still needs to be created in git.
+`c843421` — Scaffold new Wombat solution
 
 ## Open questions
 
@@ -102,3 +119,4 @@ None.
 | 2026-04-11 | planning v2 | — | No-code pivot: added CUSTOMIZATION.md, Activity platform (T017–T020), hardcoded features (T021–T022), cross-cutting ops (T023–T027). Superseded T007–T009. |
 | 2026-04-11 | planning v3 | — | Builder scope refinement: rewrote T019 for honest v1 scope (visual form editor, JSON-validated workflow/credit, ten field types, single-condition show_if, up/down reorder, draft/publish lifecycle). Added T019-b through T019-g as deferred follow-ups. Ready for T001 to begin. |
 | 2026-04-11 | implementation v1 | T001 | Replaced the old root solution with a new `Wombat.sln`, scaffolded `src/` and `tests/`, added central package management and editor config, and verified build/test/web/api startup locally. |
+| 2026-04-11 | implementation v2 | T002 | Added ASP.NET Core Identity plumbing, role/admin seeding, claim-based authorization helpers, initial EF migration, and verified seeding against a fresh local Postgres database. |
