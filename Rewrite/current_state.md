@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T020 — Seed initial activity types** (not started)
+**T021 — Multi-source feedback** (next)
 
-Next session: read `Tasks/T020-seed-activity-types.md` and seed the first real activity catalogue on top of the T019 builder/runtime now in place.
+T020 is complete in the working tree. Next session: read `Tasks/T021-multi-source-feedback.md` and build the first hardcoded non-builder activity type on top of the seeded starter catalogue now in place.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,60 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T020 completed in the working tree:
+- Added the starter activity catalogue under `src/Wombat.Infrastructure/Activities/Seeds/`:
+  - `mini_cex`
+  - `dops`
+  - `cbd`
+  - `acat`
+  - `star_reflection`
+  - `procedure_log`
+  - `research_output`
+  - `teaching_session`
+  - `qi_project`
+  - `journal_club`
+- Added `src/Wombat.Infrastructure/Activities/Seeds/README.md` documenting each starter seed plus current caveats.
+- Extended schema support so form fields can reference external catalogues:
+  - `FormField` now carries `CatalogueKey`
+  - `FormSchemaParser` now parses/serializes `"catalogue"`
+  - the activity builder UI now exposes a `Catalogue key` field and round-trips it correctly
+- Added a new procedure reference table:
+  - `ProcedureCatalogueEntry`
+  - EF config `ProcedureCatalogueEntryConfiguration`
+  - `ApplicationDbContext.ProcedureCatalogueEntries`
+  - migration `20260412133721_ProcedureCatalogueSeeds`
+- Added runtime reference-data lookup:
+  - `IActivityReferenceDataService`
+  - `ActivityReferenceDataService`
+  - `ActivityForm` now resolves catalogue-backed choices at render time
+- Extended the workflow actor-rule grammar with `field:<field_key>` and updated `WorkflowEvaluator` so seeded WBAs can target the assessor named in `assessor_user_id`
+- Expanded the shared activity form/runtime + builder so seeded types are editable/renderable:
+  - `ActivityForm` now handles `user` and `epa` fields in addition to the earlier T019 set
+  - the builder field-type picker now includes `Scale`, `User`, and `EPA`
+- Reworked `DataSeeder`:
+  - still ensures the demo institution/speciality/sub-speciality, O-R Scale, EPA, and curriculum
+  - now seeds ~20 `ProcedureCatalogueEntry` rows
+  - now loads all ten activity-type JSON trios from `Activities/Seeds/`
+  - only creates missing activity types and publishes them at version 1
+  - does not overwrite existing types
+- Added `--seed` support to `src/Wombat.Web/Program.cs`:
+  - the host now seeds/migrates and exits cleanly when started with `--seed`
+- Added seed verification coverage:
+  - new project `tests/Wombat.Infrastructure.Tests/`
+  - `Activities/SeedParseTests.cs` parses every seed JSON trio and verifies `DataSeeder` seeds the starter catalogue without overwriting an existing type
+  - `WorkflowEvaluatorTests` now covers `field:<field_key>` actor rules
+  - bUnit activity-form tests now register the new reference-data service
+- Verified:
+  - `dotnet build Wombat.sln -c Release --no-restore` passes with 0 warnings and 0 errors.
+  - `dotnet test Wombat.sln -c Release --no-build --no-restore` passes for discovered tests:
+    - Domain: 15/15
+    - Application: 25/25
+    - Infrastructure: 3/3
+    - Web: 19/19
+  - `dotnet run --project src/Wombat.Web --no-build -c Release -- --seed` exits 0 and applies the `ProcedureCatalogueSeeds` migration plus starter seed data against the configured local database.
+- Scope caveat:
+  - The current curriculum model still only supports EPA-targeted progress. `mini_cex`, `cbd`, `acat`, and `dops` seed real credit directives; `procedure_log`, `research_output`, `teaching_session`, `qi_project`, and `journal_club` currently seed with no credit rules until non-EPA curriculum requirements exist.
 
 T019 completed:
 - Added activity-type draft/publish infrastructure:
@@ -343,6 +397,7 @@ T006 completed:
 - **Will there be a `Programme` layer above `SubSpeciality`?** DOMAIN.md mentions this as "maybe later". Deferred; current plan still assumes Curriculum belongs directly to SubSpeciality. Revisit when T006/T017 make programme-level assignment pressure concrete.
 - **Actor-rule grammar normal form.** T017 ships a deliberately tiny parser for `subject`, `creator`, `role:<name>`, `scope:<name>`, `+`, and `|`. T018 needs to decide whether the runtime evaluator treats mixed `+`/`|` expressions strictly left-to-right or whether it will reject ambiguous strings and require explicit future grammar expansion.
 - **Schema DSL extensibility: repeatable sections.** Decided for v1: no repeatable sections. T020's QI seed uses three pre-numbered sub-sections (`pdsa_1`, `pdsa_2`, `pdsa_3`). Repeatable sections are T019-c.
+- **Non-EPA curriculum requirements.** T020 confirmed the current curriculum/progress model only supports EPA-targeted credit. Procedure logs and scholarly/teaching/QI/journal-club starter seeds therefore ship without direct credit rules for now. Revisit if T021/T022 or a follow-up introduces generic requirement targets.
 - **Drag-and-drop library for the builder.** Decided for v1: no drag-drop; up/down buttons only. SortableJS comes in T019-b.
 - **Cron timezone.** T024 says cron expressions run in the institution's timezone. Confirm institution tz is stored on `InstitutionBrand` in T023.
 - **GitHub Actions.** Defer until post-T016. Phase 1 deploy is rsync + systemctl.

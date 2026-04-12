@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "project",
+      "title": "Project",
+      "fields": [
+        { "key": "project_title", "type": "text", "label": "Project title", "required": true },
+        { "key": "problem_statement", "type": "longtext", "label": "Problem statement", "required": true },
+        { "key": "team", "type": "longtext", "label": "Team", "required": true },
+        { "key": "measures", "type": "longtext", "label": "Measures", "required": true }
+      ]
+    },
+    {
+      "key": "pdsa_1",
+      "title": "PDSA cycle 1",
+      "fields": [
+        { "key": "pdsa_1_plan", "type": "longtext", "label": "Plan", "required": true },
+        { "key": "pdsa_1_do", "type": "longtext", "label": "Do", "required": true },
+        { "key": "pdsa_1_study", "type": "longtext", "label": "Study", "required": true },
+        { "key": "pdsa_1_act", "type": "longtext", "label": "Act", "required": true }
+      ]
+    },
+    {
+      "key": "pdsa_2",
+      "title": "PDSA cycle 2",
+      "fields": [
+        { "key": "pdsa_2_plan", "type": "longtext", "label": "Plan" },
+        { "key": "pdsa_2_do", "type": "longtext", "label": "Do" },
+        { "key": "pdsa_2_study", "type": "longtext", "label": "Study" },
+        { "key": "pdsa_2_act", "type": "longtext", "label": "Act" }
+      ]
+    },
+    {
+      "key": "pdsa_3",
+      "title": "PDSA cycle 3",
+      "fields": [
+        { "key": "pdsa_3_plan", "type": "longtext", "label": "Plan" },
+        { "key": "pdsa_3_do", "type": "longtext", "label": "Do" },
+        { "key": "pdsa_3_study", "type": "longtext", "label": "Study" },
+        { "key": "pdsa_3_act", "type": "longtext", "label": "Act" }
+      ]
+    },
+    {
+      "key": "close_out",
+      "title": "Close out",
+      "fields": [
+        { "key": "outcomes", "type": "longtext", "label": "Outcomes", "required": true },
+        { "key": "reflection", "type": "longtext", "label": "Reflection", "required": true }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "session",
+      "title": "Teaching session",
+      "fields": [
+        { "key": "topic", "type": "text", "label": "Topic", "required": true },
+        { "key": "audience_type", "type": "choice", "label": "Audience", "required": true, "options": ["students", "interns", "registrars", "multidisciplinary_team", "public"] },
+        { "key": "audience_count", "type": "number", "label": "Audience count", "required": true, "validation": { "min": 1 } },
+        { "key": "duration_minutes", "type": "number", "label": "Duration in minutes", "required": true, "validation": { "min": 1 } },
+        { "key": "format", "type": "choice", "label": "Format", "required": true, "options": ["bedside", "seminar", "simulation", "lecture", "small_group"] },
+        { "key": "self_evaluation", "type": "longtext", "label": "Self-evaluation", "required": true },
+        { "key": "feedback_received", "type": "longtext", "label": "Feedback received" }
+      ]
+    }
+  ]
+}

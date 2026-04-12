@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
+        { "key": "assessor_user_id", "type": "user", "label": "Assessor user id", "help_text": "Use the target assessor's user id for now.", "required": true },
+        { "key": "case_summary", "type": "longtext", "label": "Case summary", "required": true }
+      ]
+    },
+    {
+      "key": "discussion",
+      "title": "Discussion",
+      "fields": [
+        { "key": "record_review", "type": "scale", "label": "Medical record review", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "management", "type": "scale", "label": "Management planning", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "ethics", "type": "scale", "label": "Professional and ethical judgment", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "fields": [
+        { "key": "feedback", "type": "longtext", "label": "Feedback", "required": true },
+        { "key": "action_plan", "type": "longtext", "label": "Action plan", "required": true }
+      ]
+    }
+  ]
+}

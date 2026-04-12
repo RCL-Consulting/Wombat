@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "reflection",
+      "title": "Reflection",
+      "fields": [
+        { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
+        { "key": "situation", "type": "longtext", "label": "Situation", "required": true },
+        { "key": "task", "type": "longtext", "label": "Task", "required": true },
+        { "key": "action", "type": "longtext", "label": "Action", "required": true },
+        { "key": "result", "type": "longtext", "label": "Result", "required": true },
+        { "key": "what_i_learned", "type": "longtext", "label": "What I learned" }
+      ]
+    }
+  ]
+}

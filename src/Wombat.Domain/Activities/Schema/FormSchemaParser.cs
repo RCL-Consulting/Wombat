@@ -70,6 +70,11 @@ public static class FormSchemaParser
                     writer.WriteEndArray();
                 }
 
+                if (!string.IsNullOrWhiteSpace(field.CatalogueKey))
+                {
+                    writer.WriteString("catalogue", field.CatalogueKey);
+                }
+
                 if (!string.IsNullOrWhiteSpace(field.ScaleKey))
                 {
                     writer.WriteString("scale_key", field.ScaleKey);
@@ -176,7 +181,7 @@ public static class FormSchemaParser
         EnsureObject(element, "Field must be an object.");
         EnsureAllowedProperties(
             element,
-            ["key", "type", "label", "help_text", "required", "options", "scale_key", "validation", "show_if"],
+            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "validation", "show_if"],
             "field");
 
         return new FormField(
@@ -186,6 +191,7 @@ public static class FormSchemaParser
             GetOptionalTrimmedString(element, "help_text"),
             GetBooleanOrDefault(element, "required"),
             ParseOptionalStringArray(element, "options"),
+            GetOptionalTrimmedString(element, "catalogue"),
             GetOptionalTrimmedString(element, "scale_key"),
             ParseOptionalValidation(element, "validation"),
             ParseOptionalVisibilityCondition(element, "show_if"));

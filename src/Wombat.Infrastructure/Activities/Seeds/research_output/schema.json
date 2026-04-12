@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "output",
+      "title": "Research output",
+      "fields": [
+        { "key": "output_type", "type": "choice", "label": "Type", "required": true, "options": ["journal_article", "conference_poster", "oral_presentation", "book_chapter"] },
+        { "key": "title", "type": "text", "label": "Title", "required": true },
+        { "key": "authors", "type": "longtext", "label": "Authors", "required": true },
+        { "key": "venue", "type": "text", "label": "Venue", "required": true },
+        { "key": "activity_date", "type": "date", "label": "Date", "required": true },
+        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": ["first_author", "co_author", "senior_author", "presenter"] },
+        { "key": "abstract", "type": "longtext", "label": "Abstract", "required": true },
+        { "key": "url_or_doi", "type": "text", "label": "URL or DOI" },
+        { "key": "supporting_file", "type": "file", "label": "PDF upload" }
+      ]
+    }
+  ]
+}

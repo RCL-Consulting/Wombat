@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
         services.AddScoped<IActivityService, ActivityService>();
+        services.AddScoped<IActivityReferenceDataService, ActivityReferenceDataService>();
         services.AddScoped<ISchemaValidator, SchemaValidator>();
         services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
         services.AddScoped<ICreditApplier, CreditApplier>();

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
@@ -7,6 +9,46 @@ namespace Wombat.Infrastructure.Persistence;
 
 public sealed class DataSeeder
 {
+    private const string SeedActorUserId = "seed-system";
+
+    private static readonly SeedDefinition[] ActivityTypeSeeds =
+    [
+        new("mini_cex", "Mini-CEX", "Mini clinical evaluation exercise.", ActivityScope.Speciality),
+        new("dops", "DOPS", "Direct observation of procedural skills.", ActivityScope.Speciality),
+        new("cbd", "Case-based Discussion", "Structured case-based discussion.", ActivityScope.Speciality),
+        new("acat", "ACAT", "Acute care assessment tool.", ActivityScope.Speciality),
+        new("star_reflection", "STAR Reflection", "Situation-task-action-result reflection.", ActivityScope.Speciality),
+        new("procedure_log", "Procedure Log", "Self-logged procedural experience.", ActivityScope.Speciality),
+        new("research_output", "Research Output", "Publication, poster, or presentation evidence.", ActivityScope.Speciality),
+        new("teaching_session", "Teaching Session", "Teaching activity delivered by the trainee.", ActivityScope.Speciality),
+        new("qi_project", "QI Project", "Quality-improvement project with fixed PDSA sections.", ActivityScope.Speciality),
+        new("journal_club", "Journal Club", "Journal club attendance or presentation log.", ActivityScope.Speciality)
+    ];
+
+    private static readonly ProcedureSeed[] ProcedureSeeds =
+    [
+        new("abdominal_paracentesis", "Abdominal paracentesis", "General medicine"),
+        new("arterial_blood_gas", "Arterial blood gas sampling", "General medicine"),
+        new("arterial_line", "Arterial line insertion", "Critical care"),
+        new("ascitic_tap", "Diagnostic ascitic tap", "General medicine"),
+        new("blood_culture", "Peripheral blood culture collection", "General medicine"),
+        new("central_line", "Central venous catheter insertion", "Critical care"),
+        new("chest_drain", "Chest drain insertion", "Respiratory"),
+        new("defibrillation", "Defibrillation / cardioversion", "Emergency care"),
+        new("endotracheal_intubation", "Endotracheal intubation", "Critical care"),
+        new("intercostal_drain", "Intercostal drain management", "Respiratory"),
+        new("joint_aspiration", "Joint aspiration", "Musculoskeletal"),
+        new("lumbar_puncture", "Lumbar puncture", "Neurology"),
+        new("nasogastric_tube", "Nasogastric tube insertion", "General medicine"),
+        new("pleural_aspiration", "Pleural aspiration", "Respiratory"),
+        new("suturing", "Simple wound suturing", "Emergency care"),
+        new("thoracentesis", "Thoracentesis", "Respiratory"),
+        new("tracheostomy_care", "Tracheostomy care", "Critical care"),
+        new("urinary_catheter", "Urinary catheterisation", "General medicine"),
+        new("venepuncture", "Venepuncture", "General medicine"),
+        new("ward_ultrasound", "Focused bedside ultrasound", "General medicine")
+    ];
+
     private readonly ApplicationDbContext _dbContext;
 
     public DataSeeder(ApplicationDbContext dbContext)
@@ -15,6 +57,13 @@ public sealed class DataSeeder
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
+    {
+        var context = await EnsureDemoContextAsync(cancellationToken);
+        await EnsureProcedureCatalogueAsync(cancellationToken);
+        await EnsureActivityTypeSeedsAsync(context.SpecialityId, cancellationToken);
+    }
+
+    private async Task<DemoSeedContext> EnsureDemoContextAsync(CancellationToken cancellationToken)
     {
         var institution = await _dbContext.Institutions
             .Include(entity => entity.Specialities)
@@ -50,6 +99,11 @@ public sealed class DataSeeder
             _dbContext.SubSpecialities.Add(subSpeciality);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        var specialityId = await _dbContext.Specialities
+            .Where(entity => entity.InstitutionId == institution.Id)
+            .Select(entity => entity.Id)
+            .FirstAsync(cancellationToken);
 
         var subSpecialityId = await _dbContext.SubSpecialities
             .Where(entity => entity.Speciality.InstitutionId == institution.Id)
@@ -139,5 +193,110 @@ public sealed class DataSeeder
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        return new DemoSeedContext(institution.Id, specialityId, subSpecialityId, epa.Id);
     }
+
+    private async Task EnsureProcedureCatalogueAsync(CancellationToken cancellationToken)
+    {
+        var existingKeys = await _dbContext.ProcedureCatalogueEntries
+            .Select(entity => entity.Key)
+            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
+
+        var newEntries = ProcedureSeeds
+            .Where(seed => !existingKeys.Contains(seed.Key))
+            .Select(seed => new ProcedureCatalogueEntry
+            {
+                Key = seed.Key,
+                Name = seed.Name,
+                Category = seed.Category
+            })
+            .ToList();
+
+        if (newEntries.Count == 0)
+        {
+            return;
+        }
+
+        _dbContext.ProcedureCatalogueEntries.AddRange(newEntries);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureActivityTypeSeedsAsync(int specialityId, CancellationToken cancellationToken)
+    {
+        var existingKeys = await _dbContext.ActivityTypes
+            .Select(entity => entity.Key)
+            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
+
+        foreach (var seed in ActivityTypeSeeds)
+        {
+            if (existingKeys.Contains(seed.Key))
+            {
+                continue;
+            }
+
+            var schemaJson = await ReadSeedFileAsync(seed.Key, "schema.json", cancellationToken);
+            var workflowJson = await ReadSeedFileAsync(seed.Key, "workflow.json", cancellationToken);
+            var creditJson = await ReadSeedFileAsync(seed.Key, "credit.json", cancellationToken);
+            var displayFieldsJson = BuildDisplayFieldsJson(schemaJson);
+
+            var activityType = new ActivityType
+            {
+                Key = seed.Key,
+                Name = seed.Name,
+                Description = seed.Description,
+                Scope = seed.Scope,
+                ScopeId = specialityId,
+                OwnerUserId = SeedActorUserId,
+                CreatedOn = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, SeedActorUserId);
+            activityType.PublishDraft(SeedActorUserId);
+
+            _dbContext.ActivityTypes.Add(activityType);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static string BuildDisplayFieldsJson(string schemaJson)
+    {
+        var fields = FormSchemaParser.Parse(schemaJson)
+            .Sections
+            .SelectMany(section => section.Fields)
+            .Select(field => field.Key)
+            .Take(3)
+            .ToArray();
+
+        return System.Text.Json.JsonSerializer.Serialize(fields);
+    }
+
+    private static async Task<string> ReadSeedFileAsync(string activityKey, string fileName, CancellationToken cancellationToken)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", activityKey, fileName);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"Seed file '{fileName}' for activity type '{activityKey}' was not found.", path);
+        }
+
+        return await File.ReadAllTextAsync(path, cancellationToken);
+    }
+
+    private sealed record DemoSeedContext(
+        int InstitutionId,
+        int SpecialityId,
+        int SubSpecialityId,
+        int EpaId);
+
+    private sealed record ProcedureSeed(
+        string Key,
+        string Name,
+        string Category);
+
+    private sealed record SeedDefinition(
+        string Key,
+        string Name,
+        string Description,
+        ActivityScope Scope);
 }

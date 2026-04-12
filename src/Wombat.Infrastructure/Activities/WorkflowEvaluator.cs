@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
@@ -43,6 +44,7 @@ public sealed class WorkflowEvaluator : IWorkflowEvaluator
             CreatorUserActorRule => HasNameIdentifier(principal, activity.CreatedByUserId),
             NamedRoleActorRule namedRole => principal.IsInRole(namedRole.Role),
             ScopeMatchActorRule scopeMatch => IsInActivityScope(scopeMatch.Scope, activity, principal),
+            FieldUserActorRule fieldUser => HasNameIdentifier(principal, GetStringFieldValue(activity.DataJson, fieldUser.Field)),
             CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.All
                 => combined.Rules.All(child => EvaluateRule(child, activity, principal)),
             CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.Any
@@ -78,4 +80,29 @@ public sealed class WorkflowEvaluator : IWorkflowEvaluator
             principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
             userId,
             StringComparison.Ordinal);
+
+    private static string GetStringFieldValue(string dataJson, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(dataJson) || string.IsNullOrWhiteSpace(fieldName))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(dataJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object ||
+                !document.RootElement.TryGetProperty(fieldName, out var value) ||
+                value.ValueKind != JsonValueKind.String)
+            {
+                return string.Empty;
+            }
+
+            return value.GetString() ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
+    }
 }

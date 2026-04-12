@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
+        { "key": "assessor_user_id", "type": "user", "label": "Assessor user id", "help_text": "Use the target assessor's user id for now.", "required": true },
+        { "key": "setting", "type": "choice", "label": "Clinical setting", "required": true, "options": ["ward", "clinic", "emergency_unit", "call_review"] },
+        { "key": "presenting_complaint", "type": "text", "label": "Presenting complaint", "required": true },
+        { "key": "complexity", "type": "choice", "label": "Case complexity", "required": true, "options": ["low", "moderate", "high"] }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Assessment",
+      "fields": [
+        { "key": "history", "type": "scale", "label": "History taking", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "exam", "type": "scale", "label": "Examination", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "communication", "type": "scale", "label": "Communication", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "professionalism", "type": "scale", "label": "Professionalism", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "fields": [
+        { "key": "strengths", "type": "longtext", "label": "Strengths", "required": true },
+        { "key": "improvements", "type": "longtext", "label": "Areas for improvement", "required": true },
+        { "key": "plan", "type": "longtext", "label": "Agreed plan", "required": true }
+      ]
+    }
+  ]
+}

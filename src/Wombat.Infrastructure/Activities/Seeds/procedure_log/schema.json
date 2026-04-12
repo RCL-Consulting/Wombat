@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "procedure",
+      "title": "Procedure log",
+      "fields": [
+        { "key": "procedure_key", "type": "choice", "label": "Procedure", "required": true, "catalogue": "procedure_catalogue" },
+        { "key": "performed_on", "type": "date", "label": "Date", "required": true },
+        { "key": "patient_age_band", "type": "choice", "label": "Patient age band", "required": true, "options": ["neonate", "child", "adult", "older_adult"] },
+        { "key": "indication", "type": "longtext", "label": "Indication", "required": true },
+        { "key": "role", "type": "choice", "label": "Role", "required": true, "options": ["primary", "assistant", "observer"] },
+        { "key": "supervision", "type": "choice", "label": "Supervision", "required": true, "options": ["independent", "indirect", "direct"] },
+        { "key": "complication", "type": "choice", "label": "Complication", "required": true, "options": ["none", "minor", "major"] },
+        { "key": "complication_details", "type": "longtext", "label": "Complication details", "show_if": { "field": "complication", "operator": "not_equals", "value": "none" } },
+        { "key": "reflection", "type": "longtext", "label": "Reflection" }
+      ]
+    }
+  ]
+}

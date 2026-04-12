@@ -1,11 +1,18 @@
 using Bunit;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Web.Components.Shared.Activities;
 
 namespace Wombat.Web.Tests.Activities;
 
 public sealed class BuilderPreviewParityTests : TestContext
 {
+    public BuilderPreviewParityTests()
+    {
+        Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+    }
+
     [Fact]
     public void ActivityForm_And_ActivityDetail_RenderTheSameSchemaShape()
     {
@@ -39,5 +46,11 @@ public sealed class BuilderPreviewParityTests : TestContext
         builderPreview.Markup.Should().Contain("Your message");
         runtimeDetail.Markup.Should().Contain("Greeting");
         runtimeDetail.Markup.Should().Contain("Your message");
+    }
+
+    private sealed class StubActivityReferenceDataService : IActivityReferenceDataService
+    {
+        public Task<IReadOnlyList<ActivityCatalogueOption>> GetCatalogueOptionsAsync(string catalogueKey, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
     }
 }

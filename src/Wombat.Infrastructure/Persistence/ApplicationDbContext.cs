@@ -35,6 +35,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
     public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
     public DbSet<ActivityTypeVersion> ActivityTypeVersions => Set<ActivityTypeVersion>();
+    public DbSet<ProcedureCatalogueEntry> ProcedureCatalogueEntries => Set<ProcedureCatalogueEntry>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityTransition> ActivityTransitions => Set<ActivityTransition>();
     public DbSet<ActivityPermissionRule> ActivityPermissionRules => Set<ActivityPermissionRule>();

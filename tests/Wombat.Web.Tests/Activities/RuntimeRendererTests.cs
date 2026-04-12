@@ -1,11 +1,18 @@
 using Bunit;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Web.Components.Shared.Activities;
 
 namespace Wombat.Web.Tests.Activities;
 
 public sealed class RuntimeRendererTests : TestContext
 {
+    public RuntimeRendererTests()
+    {
+        Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+    }
+
     [Fact]
     public void ActivityForm_HonorsVisibilityConditions()
     {
@@ -37,5 +44,11 @@ public sealed class RuntimeRendererTests : TestContext
 
         hidden.Markup.Should().NotContain("Advanced notes");
         visible.Markup.Should().Contain("Advanced notes");
+    }
+
+    private sealed class StubActivityReferenceDataService : IActivityReferenceDataService
+    {
+        public Task<IReadOnlyList<ActivityCatalogueOption>> GetCatalogueOptionsAsync(string catalogueKey, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
     }
 }

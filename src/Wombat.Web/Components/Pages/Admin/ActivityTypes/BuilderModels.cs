@@ -29,6 +29,7 @@ internal sealed class BuilderSchemaModel
                     HelpText = field.HelpText,
                     Required = field.Required,
                     OptionsText = string.Join(Environment.NewLine, field.Options),
+                    CatalogueKey = field.CatalogueKey,
                     ScaleKey = field.ScaleKey,
                     Min = field.Validation?.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Max = field.Validation?.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -60,6 +61,7 @@ internal sealed class BuilderSchemaModel
                     NullIfWhiteSpace(field.HelpText),
                     field.Required,
                     ParseOptions(field.OptionsText),
+                    NullIfWhiteSpace(field.CatalogueKey),
                     NullIfWhiteSpace(field.ScaleKey),
                     BuildValidation(field),
                     BuildVisibility(field.ShowIfField, field.ShowIfOperator, field.ShowIfValue)))
@@ -213,6 +215,7 @@ internal sealed class BuilderFieldModel
     public string? HelpText { get; set; }
     public bool Required { get; set; }
     public string? OptionsText { get; set; }
+    public string? CatalogueKey { get; set; }
     public string? ScaleKey { get; set; }
     public string? Min { get; set; }
     public string? Max { get; set; }

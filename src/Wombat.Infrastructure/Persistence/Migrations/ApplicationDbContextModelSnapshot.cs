@@ -423,6 +423,39 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("ActivityTypeVersions", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.Activities.ProcedureCatalogueEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("Category", "Name");
+
+                    b.ToTable("ProcedureCatalogueEntries", (string)null);
+                });
+
             modelBuilder.Entity("Wombat.Domain.Curricula.Curriculum", b =>
                 {
                     b.Property<int>("Id")

@@ -61,6 +61,19 @@ public sealed class WorkflowEvaluatorTests
         }
     }
 
+    [Fact]
+    public void Evaluate_FieldActorRuleMatchesUserIdStoredInActivityData()
+    {
+        var activity = CreateActivity(ActivityScope.Speciality, 120);
+        activity.DataJson = """{ "assessor_user_id": "assessor-1" }""";
+
+        _evaluator.Evaluate(CreateWorkflow("field:assessor_user_id"), activity, "act", CreatePrincipal("assessor-1"))
+            .Allowed.Should().BeTrue();
+
+        _evaluator.Evaluate(CreateWorkflow("field:assessor_user_id"), activity, "act", CreatePrincipal("someone-else"))
+            .Allowed.Should().BeFalse();
+    }
+
     private static Workflow CreateWorkflow(string actorRule)
         => new(
             1,

@@ -1,0 +1,9 @@
+{
+  "counts_for": [
+    {
+      "curriculum_item_match": { "epa_field": "epa_id" },
+      "amount": 1,
+      "minimum_level_field": "overall"
+    }
+  ]
+}

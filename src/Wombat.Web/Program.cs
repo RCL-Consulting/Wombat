@@ -120,6 +120,11 @@ await using (var scope = app.Services.CreateAsyncScope())
     await dataSeeder.SeedAsync();
 }
 
+if (args.Contains("--seed", StringComparer.Ordinal))
+{
+    return;
+}
+
 app.Run();
 
 static string GetSafeLocalUrl(string? url)

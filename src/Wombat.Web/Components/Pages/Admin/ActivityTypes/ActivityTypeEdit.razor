@@ -184,6 +184,9 @@
                   <FormField Label="Options" InputId="field-options" FullWidth="true">
                     <textarea id="field-options" class="form-control" rows="4" @bind="selectedField.OptionsText"></textarea>
                   </FormField>
+                  <FormField Label="Catalogue key" InputId="field-catalogue">
+                    <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />
+                  </FormField>
                   <div class="form-check">
                     <input id="field-required" class="form-check-input" type="checkbox" @bind="selectedField.Required" />
                     <label for="field-required">Required</label>
@@ -234,6 +237,9 @@
     FieldType.Date,
     FieldType.Choice,
     FieldType.MultiChoice,
+    FieldType.Scale,
+    FieldType.User,
+    FieldType.Epa,
     FieldType.Likert,
     FieldType.ProcedureRef,
     FieldType.File,
@@ -521,6 +527,9 @@
     {
       FieldType.LongText => "Long text",
       FieldType.MultiChoice => "Multi-choice",
+      FieldType.Scale => "Scale",
+      FieldType.User => "User",
+      FieldType.Epa => "EPA",
       FieldType.ProcedureRef => "Procedure reference",
       _ => fieldType.ToString()
     };

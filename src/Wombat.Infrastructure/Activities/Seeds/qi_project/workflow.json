@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    { "key": "draft", "label": "Draft" },
+    { "key": "submitted", "label": "Submitted" },
+    { "key": "reviewed", "label": "Reviewed", "terminal": true }
+  ],
+  "transitions": [
+    { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "requires_fields": ["project_title", "problem_statement", "team", "measures", "pdsa_1_plan", "pdsa_1_do", "pdsa_1_study", "pdsa_1_act", "outcomes", "reflection"] },
+    { "key": "review", "from": "submitted", "to": "reviewed", "actor": "role:SpecialityAdmin+scope:speciality" }
+  ]
+}

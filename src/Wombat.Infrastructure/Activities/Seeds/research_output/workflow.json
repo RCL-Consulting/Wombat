@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    { "key": "draft", "label": "Draft" },
+    { "key": "submitted", "label": "Submitted" },
+    { "key": "verified", "label": "Verified", "terminal": true },
+    { "key": "rejected", "label": "Rejected", "terminal": true }
+  ],
+  "transitions": [
+    { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "requires_fields": ["output_type", "title", "authors", "venue", "activity_date", "trainee_role", "abstract"] },
+    { "key": "verify", "from": "submitted", "to": "verified", "actor": "role:SpecialityAdmin+scope:speciality" },
+    { "key": "reject", "from": "submitted", "to": "rejected", "actor": "role:SpecialityAdmin+scope:speciality", "requires_note": true }
+  ]
+}

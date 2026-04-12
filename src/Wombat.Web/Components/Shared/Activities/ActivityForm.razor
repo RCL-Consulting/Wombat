@@ -1,7 +1,9 @@
 @using System.Globalization
 @using System.Text.Json
 @using System.Text.Json.Nodes
+@using Wombat.Application.Features.Activities.Services
 @using Wombat.Domain.Activities.Schema
+@inject IActivityReferenceDataService ReferenceDataService
 
 @if (!string.IsNullOrWhiteSpace(_loadError))
 {
@@ -32,6 +34,7 @@ else if (_schema is not null)
               @switch (field.Type)
               {
                 case FieldType.Text:
+                case FieldType.User:
                 case FieldType.Signature:
                 case FieldType.ProcedureRef:
                   <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
@@ -40,6 +43,7 @@ else if (_schema is not null)
                   <textarea id="@field.Key" class="form-control" rows="4" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
                   break;
                 case FieldType.Number:
+                case FieldType.Epa:
                 case FieldType.Likert:
                 case FieldType.Scale:
                 case FieldType.Rating:
@@ -51,25 +55,25 @@ else if (_schema is not null)
                 case FieldType.Choice:
                   <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                     <option value="">Select…</option>
-                    @foreach (var option in field.Options)
+                    @foreach (var option in GetOptions(field))
                     {
-                      <option value="@option" selected="@string.Equals(GetString(field.Key), option, StringComparison.Ordinal)">@option</option>
+                      <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
                     }
                   </select>
                   break;
                 case FieldType.MultiChoice:
                   <div class="full-width">
-                    @foreach (var option in field.Options)
+                    @foreach (var option in GetOptions(field))
                     {
                       <div class="form-check">
                         <input
-                          id="@($"{field.Key}-{option}")"
+                          id="@($"{field.Key}-{option.Value}")"
                           class="form-check-input"
                           type="checkbox"
-                          checked="@GetMultiChoiceValues(field.Key).Contains(option, StringComparer.Ordinal)"
+                          checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
                           disabled="@ReadOnly"
-                          @onchange="args => ToggleMultiChoice(field.Key, option, args.Value is bool checkedValue && checkedValue)" />
-                        <label for="@($"{field.Key}-{option}")">@option</label>
+                          @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
+                        <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
                       </div>
                     }
                   </div>
@@ -103,19 +107,23 @@ else if (_schema is not null)
   private JsonObject _data = [];
   private string? _loadError;
 
-  protected override void OnParametersSet()
+  private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
+
+  protected override async Task OnParametersSetAsync()
   {
     try
     {
       _schema = FormSchemaParser.Parse(SchemaJson);
       _data = JsonNode.Parse(string.IsNullOrWhiteSpace(DataJson) ? "{}" : DataJson)?.AsObject() ?? [];
       _loadError = null;
+      await LoadCatalogueOptionsAsync();
     }
     catch (Exception exception)
     {
       _loadError = exception.Message;
       _schema = null;
       _data = [];
+      _catalogueOptionsByField.Clear();
     }
   }
 
@@ -144,6 +152,20 @@ else if (_schema is not null)
     return array.Select(item => item?.GetValue<string>() ?? string.Empty)
       .Where(item => !string.IsNullOrWhiteSpace(item))
       .ToArray();
+  }
+
+  private IReadOnlyList<ActivityCatalogueOption> GetOptions(Wombat.Domain.Activities.Schema.FormField field)
+  {
+    if (field.Options.Count > 0)
+    {
+      return field.Options
+        .Select(option => new ActivityCatalogueOption(option, option))
+        .ToArray();
+    }
+
+    return _catalogueOptionsByField.TryGetValue(field.Key, out var options)
+      ? options
+      : [];
   }
 
   private bool IsVisible(VisibilityCondition? condition)
@@ -207,6 +229,26 @@ else if (_schema is not null)
 
     _data[key] = new JsonArray(values.Select(value => JsonValue.Create(value)).ToArray());
     await DataJsonChanged.InvokeAsync(_data.ToJsonString());
+  }
+
+  private async Task LoadCatalogueOptionsAsync()
+  {
+    _catalogueOptionsByField.Clear();
+
+    if (_schema is null)
+    {
+      return;
+    }
+
+    foreach (var field in _schema.Sections.SelectMany(section => section.Fields))
+    {
+      if (string.IsNullOrWhiteSpace(field.CatalogueKey))
+      {
+        continue;
+      }
+
+      _catalogueOptionsByField[field.Key] = await ReferenceDataService.GetCatalogueOptionsAsync(field.CatalogueKey);
+    }
   }
 
   private static int CompareNumeric(string left, string right)

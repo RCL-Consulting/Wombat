@@ -28,6 +28,7 @@ public static class ActorRuleParser
             CreatorUserActorRule => "creator",
             NamedRoleActorRule namedRole => $"role:{namedRole.Role}",
             ScopeMatchActorRule scopeMatch => $"scope:{scopeMatch.Scope}",
+            FieldUserActorRule fieldUser => $"field:{fieldUser.Field}",
             CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.All
                 => string.Join('+', combined.Rules.Select(Serialize)),
             CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.Any
@@ -59,8 +60,10 @@ public static class ActorRuleParser
                 new NamedRoleActorRule(GetNamedValue(value, "role:")),
             _ when value.StartsWith("scope:", StringComparison.Ordinal) =>
                 new ScopeMatchActorRule(GetNamedValue(value, "scope:")),
+            _ when value.StartsWith("field:", StringComparison.Ordinal) =>
+                new FieldUserActorRule(GetNamedValue(value, "field:")),
             _ => throw new WorkflowParseException(
-                "Actor rule grammar supports only 'subject', 'creator', 'role:<name>', 'scope:<name>', '+' and '|'.")
+                "Actor rule grammar supports only 'subject', 'creator', 'role:<name>', 'scope:<name>', 'field:<name>', '+' and '|'.")
         };
     }
 

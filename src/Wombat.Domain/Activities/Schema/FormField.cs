@@ -7,6 +7,7 @@ public sealed record FormField(
     string? HelpText,
     bool Required,
     IReadOnlyList<string> Options,
+    string? CatalogueKey,
     string? ScaleKey,
     FieldValidation? Validation,
     VisibilityCondition? ShowIf);

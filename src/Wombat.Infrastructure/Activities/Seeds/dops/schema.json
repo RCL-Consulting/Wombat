@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
+        { "key": "assessor_user_id", "type": "user", "label": "Assessor user id", "help_text": "Use the target assessor's user id for now.", "required": true },
+        { "key": "procedure_key", "type": "choice", "label": "Procedure", "required": true, "catalogue": "procedure_catalogue" },
+        { "key": "indications", "type": "longtext", "label": "Indications", "required": true },
+        { "key": "complexity", "type": "choice", "label": "Procedure complexity", "required": true, "options": ["low", "moderate", "high"] }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Assessment",
+      "fields": [
+        { "key": "preparation", "type": "scale", "label": "Preparation", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "consent", "type": "scale", "label": "Consent and explanation", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "technique", "type": "scale", "label": "Technical performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "fields": [
+        { "key": "strengths", "type": "longtext", "label": "Strengths", "required": true },
+        { "key": "improvements", "type": "longtext", "label": "Areas for improvement", "required": true },
+        { "key": "plan", "type": "longtext", "label": "Agreed plan", "required": true }
+      ]
+    }
+  ]
+}

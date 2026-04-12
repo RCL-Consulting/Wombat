@@ -50,7 +50,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 ### Phase 3 — Seeded activity types
 
-- [ ] T020 — Seed initial activity types (Mini-CEX, DOPS, CbD, ACAT, STAR Reflection, Procedure Log entry, Research Output, Teaching Session, QI Project)
+- [x] T020 — Seed initial activity types (Mini-CEX, DOPS, CbD, ACAT, STAR Reflection, Procedure Log entry, Research Output, Teaching Session, QI Project)
 
 ### Phase 4 — Hardcoded domain features (things that cannot be no-code)
 

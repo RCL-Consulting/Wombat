@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "initial_state": "requested",
+  "states": [
+    { "key": "requested", "label": "Requested" },
+    { "key": "accepted", "label": "Accepted" },
+    { "key": "completed", "label": "Completed", "terminal": true },
+    { "key": "declined", "label": "Declined", "terminal": true },
+    { "key": "cancelled", "label": "Cancelled", "terminal": true }
+  ],
+  "transitions": [
+    { "key": "accept", "from": "requested", "to": "accepted", "actor": "field:assessor_user_id" },
+    { "key": "decline", "from": "requested", "to": "declined", "actor": "field:assessor_user_id", "requires_note": true },
+    { "key": "cancel", "from": ["requested", "accepted"], "to": "cancelled", "actor": "subject|field:assessor_user_id" },
+    { "key": "complete", "from": "accepted", "to": "completed", "actor": "field:assessor_user_id", "requires_fields": ["overall", "feedback", "action_plan"] }
+  ]
+}

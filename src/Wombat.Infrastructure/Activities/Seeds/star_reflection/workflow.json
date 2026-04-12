@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    { "key": "draft", "label": "Draft" },
+    { "key": "submitted", "label": "Submitted" },
+    { "key": "approved", "label": "Approved", "terminal": true },
+    { "key": "declined", "label": "Declined" }
+  ],
+  "transitions": [
+    { "key": "submit", "from": ["draft", "declined"], "to": "submitted", "actor": "subject", "requires_fields": ["situation", "task", "action", "result"] },
+    { "key": "approve", "from": "submitted", "to": "approved", "actor": "role:SpecialityAdmin+scope:speciality" },
+    { "key": "decline", "from": "submitted", "to": "declined", "actor": "role:SpecialityAdmin+scope:speciality", "requires_note": true },
+    { "key": "revise", "from": "declined", "to": "draft", "actor": "subject" }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "attendance",
+      "title": "Journal club",
+      "fields": [
+        { "key": "session_date", "type": "date", "label": "Date", "required": true },
+        { "key": "article_reference", "type": "longtext", "label": "Article reference", "required": true },
+        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": ["presenter", "attendee"] },
+        { "key": "key_learning_points", "type": "longtext", "label": "Key learning points", "required": true }
+      ]
+    }
+  ]
+}
