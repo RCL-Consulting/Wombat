@@ -6,7 +6,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 **T021 — Multi-source feedback** (next)
 
-T020 is complete in the working tree. Next session: read `Tasks/T021-multi-source-feedback.md` and build the first hardcoded non-builder activity type on top of the seeded starter catalogue now in place.
+T020 is committed. Next session: read `Tasks/T021-multi-source-feedback.md` and build the first hardcoded non-builder activity type on top of the seeded starter catalogue now in place.
 
 ## Critical-path reminder (post-pivot)
 
@@ -18,7 +18,7 @@ See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the
 
 ## Last session notes
 
-T020 completed in the working tree:
+T020 completed:
 - Added the starter activity catalogue under `src/Wombat.Infrastructure/Activities/Seeds/`:
   - `mini_cex`
   - `dops`
@@ -388,7 +388,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`b30de68` — T019: activity builder UI and dynamic form renderer
+`2fde3f4` — T020: seed initial activity types
 
 ## Open questions
 
