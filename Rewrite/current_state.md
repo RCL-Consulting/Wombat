@@ -334,7 +334,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`pending` — update after the T019 commit is created in this session
+`b30de68` — T019: activity builder UI and dynamic form renderer
 
 ## Open questions
 
