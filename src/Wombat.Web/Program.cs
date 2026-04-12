@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using MediatR;
 using Wombat.Application;
 using Wombat.Application.Features.Invitations;
@@ -19,12 +21,15 @@ builder.Logging.AddConsole();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<IScopedSender, ScopedSender>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
@@ -53,7 +58,7 @@ app.MapPost("/account/login/submit", async (
         : Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Invalid email or password."));
 })
 .AllowAnonymous()
-.DisableAntiforgery();
+;
 
 app.MapPost("/account/register/submit", async (
     ISender sender,
@@ -94,14 +99,13 @@ app.MapPost("/account/register/submit", async (
     }
 })
 .AllowAnonymous()
-.DisableAntiforgery();
+;
 
-app.MapPost("/account/logout/submit", async (SignInManager<WombatIdentityUser> signInManager) =>
+app.MapPost("/account/logout", async (SignInManager<WombatIdentityUser> signInManager) =>
 {
     await signInManager.SignOutAsync();
-    return Results.LocalRedirect("/");
-})
-.DisableAntiforgery();
+    return Results.LocalRedirect("/account/login");
+});
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

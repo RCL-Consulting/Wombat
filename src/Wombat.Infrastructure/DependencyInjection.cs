@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,13 +44,16 @@ public static class DependencyInjection
         .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>()
         .AddDefaultTokenProviders();
 
+        services.AddAuthentication()
+            .AddIdentityCookies();
+
         services.ConfigureApplicationCookie(options =>
         {
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             options.Cookie.SameSite = SameSiteMode.Lax;
             options.LoginPath = "/account/login";
-            options.AccessDeniedPath = "/account/access-denied";
+            options.AccessDeniedPath = "/access-denied";
             options.SlidingExpiration = true;
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
         });

@@ -18,6 +18,10 @@ public static class AuthorizationPolicies
 
         services.AddAuthorization(options =>
         {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
             foreach (var role in WombatRoles.All)
             {
                 options.AddPolicy(role, policy => policy.RequireRole(role));

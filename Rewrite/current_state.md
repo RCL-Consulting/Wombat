@@ -18,6 +18,45 @@ See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the
 
 ## Last session notes
 
+T010 completed:
+- Added the shared web design system foundation for `Wombat.Web`:
+  - replaced the default `wwwroot/app.css` with the full token-driven layout/form/table/card/alert/pager system from `DESIGN.md`
+  - added Lucide SVG assets under `src/Wombat.Web/wwwroot/icons/`
+  - added shared browser helpers in `wwwroot/wombat.js` and `wwwroot/js/dialog.js`
+- Rebuilt the application shell:
+  - rewrote `Components/Layout/MainLayout.razor` + `.razor.css`
+  - created `Components/Layout/NavMenu.razor` + `.razor.css` with role-gated navigation and sign-out integration
+  - updated routing so anonymous users are redirected to login and authenticated users see `/access-denied`
+- Added the shared component library under `src/Wombat.Web/Components/Shared/`:
+  - `Icon`, `PageHeader`, `Breadcrumbs`, `DataTable`, `FormField`, `FormActions`, `ConfirmDialog`, `PagerControls`, `StatePanel`, `Skeleton`, `Alert`, `PasswordToggleButton`, `RedirectToLogin`
+- Reworked the account/error/home surfaces:
+  - rewrote login, logout, register, profile, change-password, forgot-password, access-denied, error, not-found, and home pages to use the shared design system
+- Rewrote the existing primitive admin pages to use the new page shell and components without changing MediatR handlers:
+  - institutions/specialities/sub-specialities
+  - EPAs
+  - curricula + curriculum items
+  - assessment forms
+  - invitations
+  - trainees
+  - assessors
+- Updated web/auth wiring:
+  - added `ServerAuthenticationStateProvider`
+  - enabled `UseStaticFiles()` / `UseRouting()`
+  - set the identity access-denied path to `/access-denied`
+  - added a fallback authorization policy requiring authenticated users
+  - kept cookie auth POST endpoints aligned with the new account pages
+- Added `tests/Wombat.Web.Tests/` with bUnit smoke coverage:
+  - `DesignSystemSmokeTests`
+  - `PageShapeSmokeTests`
+  - `NavMenuAuthorizationTests`
+- Verified:
+  - `dotnet build Wombat.sln -c Release` passes with 0 warnings and 0 errors.
+  - `dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj -c Release --no-build --no-restore` passes with 16/16 tests green.
+  - `dotnet test tests/Wombat.Architecture.Tests/Wombat.Architecture.Tests.csproj -c Release --no-build --no-restore` exits successfully, but the project still contains no discovered tests.
+  - The T010 grep checks for legacy Bootstrap/table/icon/raw-hex patterns now return zero matches.
+- Follow-up note:
+  - `tests/Wombat.Architecture.Tests` still has no discovered tests, so architecture-boundary enforcement remains a Phase 7 coverage gap rather than something T010 validated.
+
 T018 completed:
 - Added the activity-runtime application slice under `src/Wombat.Application/Features/Activities/`:
   - DTOs for activity details, summaries, transitions, validation errors, and activity-type list items
@@ -75,6 +114,20 @@ T017 completed:
   - `dotnet ef database update --project src/Wombat.Infrastructure --startup-project src/Wombat.Web --context ApplicationDbContext --configuration Release --no-build` succeeds against the local `wombat` Postgres database using the committed localhost connection string.
 - Verification caveat:
   - The final task check "insert a sample `ActivityType` row and round-trip the stored jsonb payloads back through the parsers" was not automated in this session. The parsers are covered by unit tests and the migration was applied successfully to Postgres, but the explicit database-backed parser round-trip still remains available as a quick follow-up check if needed.
+
+**Pass 4 — design-system pass (2026-04-12):**
+- Created `DESIGN.md` as the canonical UI/design-system contract for the rewrite. Covers CSS custom properties, typography scale, layout grid, NavMenu, button system, table system, form system, card system, dashboard grid, alerts, skeleton loaders, pager, accessibility rules, icon strategy, page-level patterns (list/detail/form/dashboard/account), mandatory `app.css` section order, non-negotiables, and the task-graph mapping that shows T010 shipping the contract and T011/T019/all later UI tasks consuming it.
+- Identity decision: port ClinicAssist's structure — token names, class names, spacing scale, layout grid — but use a distinct Wombat palette. Palette placeholder values in `DESIGN.md` currently mirror ClinicAssist; the `Wombat palette — TBD` block is the single place to change them before T010 executes.
+- Rewrote `Tasks/T010-web-layout-auth.md` from a light "copy the pattern" task into an executable spec. Now depends on T002 and blocks both T011 and T019. Enumerates the 20 Lucide icons, gives the full `Icon.razor` / `MainLayout.razor` code shape, lists every shared component (`PageHeader`, `Breadcrumbs`, `DataTable<TItem>`, `FormField`, `FormActions`, `ConfirmDialog`, `PagerControls`, `StatePanel`, `Skeleton`, `Alert`, `PasswordToggleButton`), rewrites `Login.razor`, creates a new `tests/Wombat.Web.Tests/` project with bUnit smoke tests, and catalogs every primitive admin page (EpasList, CurriculaList, Institutions, Invitations, Trainees, Assessors, Profile, Register) that must be rewritten against the design system. Adds grep-based verification checks that forbid `class="table"`, raw hex outside `:root`, `.btn-outline-primary`, and `<i class="bi bi-*">`.
+- Rewrote `Tasks/T011-role-dashboards.md`. Dependencies updated to T010 + T019 + T021 + T022 (not the superseded T008/T009). Adds a `DashboardCard.razor` shared component spec, new CSS classes (`.dashboard-metric*`, `.progress-bar*`, `.detail-card--emphasis`, `.detail-card--warning`, `.badge*`, `.status-dot*`), card-by-card wireframes for all seven role dashboards, a `DashboardRouter.razor` with explicit priority order matching DOMAIN.md, a role-switch cookie, a one-query-per-dashboard rule with `Get{Role}DashboardSummaryQuery` under `Wombat.Application/Features/Dashboards/`, a <200ms perf target, and bUnit test requirements. Notes that dashboards are the highest-visibility surface for T010 drift.
+- Amended `Tasks/T019-activity-builder-ui.md`. Now depends on "T010 (web chrome + design system)". Added a top-of-file callout enumerating the exact classes and components the builder consumes, the candidate new classes it may need to add to `DESIGN.md` first (`.tab-bar`, `.tab-bar-tab`, `.builder-two-col`, `.field-type-icon`, `.state-diagram`), and the rule that no builder page may inline a `<style>` block. Added inline design-system cross-refs to the `ActivityTypesList`, `ActivityTypeEdit`, and Form-tab steps. Added five design-system compliance greps to the Verification section.
+- Updated `Rewrite/README.md` document map to list `DESIGN.md`.
+- Created `C:\Users\Renier\Wombat\CLAUDE.md` at the repo root, using ClinicAssist's CLAUDE.md section structure populated with Wombat rewrite facts: activity-platform pivot, `Rewrite/` task workflow, `current_state.md` handoff, reference folders, 9 roles, Linode + Caddy + systemd deploy, MediatR v12 cap, `DateOnly` for clinical dates, `IScopedSender` not `ISender`, `jsonb` storage, design-system non-negotiables (no Bootstrap Icons font, no `btn-outline-*` variants, no raw hex outside `:root`).
+
+Rationale: the plan was solid on architecture but light on UI specifications — so the first Razor pages delivered in T003–T006 regressed to a primitive `<h1>` + `<table class="table">` shape far below the ClinicAssist reference. Fixing it retroactively in every task would drift. Fixing it once in `DESIGN.md` and having T010 ship the system-wide contract (before T011 and T019 consume it) is the cheap path.
+
+T018 completed:
+- See the "Last session notes" block above for full detail.
 
 Planning session on 2026-04-11, followed by T001 scaffold completion.
 
@@ -232,11 +285,12 @@ T006 completed:
 
 ## Last known-good commit
 
-`6e2513b` — T006: finalize session handoff for trainee and assessor profiles
+`pending` — update after the T010 commit is created in this session
 
 ## Open questions
 
-- **Icon set.** ClinicAssist learned that the Bootstrap Icons web font is problematic. We need to pick an icon strategy before T010. Current leaning: inline SVGs from Lucide copied into a static folder. Decide at the start of T010.
+- **Icon set.** Decided in Pass 4: inline SVGs from Lucide, shipped via a shared `Icon.razor` component backed by `wwwroot/icons/*.svg` files. Bootstrap Icons font is forbidden. See `DESIGN.md` § Icons and T010 step on `Icon.razor`.
+- **Wombat palette.** `DESIGN.md` currently carries ClinicAssist palette values as placeholders. Pick the distinct Wombat palette (primary, primary-hover, secondary, secondary-hover, sidebar gradient stops) before T010 implementation begins.
 - **Will there be a `Programme` layer above `SubSpeciality`?** DOMAIN.md mentions this as "maybe later". Deferred; current plan still assumes Curriculum belongs directly to SubSpeciality. Revisit when T006/T017 make programme-level assignment pressure concrete.
 - **Actor-rule grammar normal form.** T017 ships a deliberately tiny parser for `subject`, `creator`, `role:<name>`, `scope:<name>`, `+`, and `|`. T018 needs to decide whether the runtime evaluator treats mixed `+`/`|` expressions strictly left-to-right or whether it will reject ambiguous strings and require explicit future grammar expansion.
 - **Schema DSL extensibility: repeatable sections.** Decided for v1: no repeatable sections. T020's QI seed uses three pre-numbered sub-sections (`pdsa_1`, `pdsa_2`, `pdsa_3`). Repeatable sections are T019-c.
@@ -262,3 +316,5 @@ None.
 | 2026-04-11 | implementation v5 | T005 | Implemented invitation flow, invite/admin UI, registration/login/logout, invitation migration/tests, fixed runtime startup/auth integration issues discovered during manual exercise, and completed the full manual invite/register/login/reuse walkthrough. |
 | 2026-04-11 | implementation v6 | T006 | Added trainee/assessor profiles, pending-trainee admission with role promotion, self-service profile editing, admin trainee/assessor Blazor pages, targeted admission tests, and the `Profiles` migration; then fixed the `/account/profile` save interaction after manual testing. Build/tests passed, but the full manual admit/relogin walkthrough remains pending. |
 | 2026-04-11 | implementation v7 | T017 | Added the activity-platform aggregates, schema/workflow/credit DSL parsers, EF jsonb mappings, `ActivitiesPlatform` migration with json-path indexes, and 15 domain tests. Build, domain tests, and local Postgres migration update passed; explicit DB-backed parser round-trip remains optional follow-up verification. |
+| 2026-04-11 | implementation v8 | T018 | Added activity-runtime application slice: DTOs, service contracts, commands/queries, infrastructure implementations (SchemaValidator, WorkflowEvaluator, CreditApplier), CurriculumItemProgress entity, migration, and 21 application tests (24 total green). |
+| 2026-04-12 | planning v4 | — | Design-system pass: created `DESIGN.md`, rewrote T010/T011, amended T019, updated README.md/current_state.md, created root `CLAUDE.md`. Closes the GUI-spec gap between primitive HTML and the ClinicAssist reference. |

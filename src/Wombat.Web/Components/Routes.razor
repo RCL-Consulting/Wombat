@@ -2,18 +2,16 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <LayoutView Layout="typeof(Layout.MainLayout)">
-                    <PageTitle>Access denied</PageTitle>
-                    <h1>Access denied</h1>
-                    <AuthorizeView>
-                        <Authorized Context="authorizedState">
-                            <p>You do not have permission to access this page.</p>
-                        </Authorized>
-                        <NotAuthorized Context="anonymousState">
-                            <p>You need to <a href="/account/login">sign in</a> before you can access this page.</p>
-                        </NotAuthorized>
-                    </AuthorizeView>
-                </LayoutView>
+                <AuthorizeView Context="authState">
+                    <Authorized Context="authorizedUser">
+                        <LayoutView Layout="typeof(Layout.MainLayout)">
+                            <AccessDenied />
+                        </LayoutView>
+                    </Authorized>
+                    <NotAuthorized Context="anonymousUser">
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeView>
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

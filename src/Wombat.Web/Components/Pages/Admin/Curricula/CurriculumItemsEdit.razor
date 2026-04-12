@@ -5,250 +5,253 @@
 
 <PageTitle>Curriculum Items</PageTitle>
 
-<h1>Curriculum items</h1>
+<PageHeader Title="Curriculum items" Subtitle="@(_curriculum is null ? "Manage EPA requirements for the selected curriculum." : $"{_curriculum.Name} ({_curriculum.Version})")">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/curricula">Back to curricula</a>
+    <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{Id}")">Back to curriculum</a>
+  </Actions>
+</PageHeader>
 
-<p>
-    <a href="/admin/curricula">Back to curricula</a> |
-    <a href="@($"/admin/curricula/{Id}")">Back to curriculum</a>
-</p>
-
-@if (_loading)
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>Loading curriculum items...</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
-else if (_curriculum is null)
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p>Curriculum not found.</p>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
-else
-{
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-        <p>@_statusMessage</p>
-    }
 
-    @if (!string.IsNullOrWhiteSpace(_errorMessage))
-    {
-        <p>@_errorMessage</p>
-    }
-
-    <p><strong>@_curriculum.Name</strong> (@_curriculum.Version)</p>
-
-    <table class="table">
-        <thead>
+<StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@(string.IsNullOrWhiteSpace(_errorMessage) ? null : _errorMessage)">
+  @if (_curriculum is not null)
+  {
+    <div class="detail-card">
+      <h3>Existing items</h3>
+      <div class="table-container shadow">
+        <table class="clinic-table">
+          <thead>
             <tr>
-                <th>EPA</th>
-                <th>Required count</th>
-                <th>Minimum level</th>
-                <th>Window months</th>
-                <th>Weight</th>
-                <th></th>
+              <th>EPA</th>
+              <th>Required count</th>
+              <th>Minimum level</th>
+              <th>Window months</th>
+              <th>Weight</th>
+              <th></th>
             </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
             @foreach (var item in _curriculum.Items)
             {
-                <tr>
-                    @if (_editingItemId == item.Id)
-                    {
-                        <td>
-                            <InputSelect class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
-                                @foreach (var epa in AvailableEpas)
-                                {
-                                    <option value="@epa.Id">@epa.Code - @epa.Title</option>
-                                }
-                            </InputSelect>
-                        </td>
-                        <td><InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" /></td>
-                        <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
-                        <td><InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" /></td>
-                        <td><InputNumber class="form-control" @bind-Value="_itemModel.Weight" /></td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" @onclick="SaveItemAsync">Save</button>
-                            <button class="btn btn-sm btn-outline-secondary ms-1" @onclick="CancelEdit">Cancel</button>
-                        </td>
-                    }
-                    else
-                    {
-                        <td>@item.EpaCode - @item.EpaTitle</td>
-                        <td>@item.RequiredCount</td>
-                        <td>@item.MinimumLevelOrder</td>
-                        <td>@item.WindowMonths</td>
-                        <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" @onclick="() => BeginEdit(item)">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
-                        </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <h2>Add item</h2>
-
-    <EditForm Model="_itemModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label>EPA</label>
-                <InputSelect class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
-                    @foreach (var epa in AvailableEpas)
-                    {
+              <tr>
+                @if (_editingItemId == item.Id)
+                {
+                  <td>
+                    <InputSelect class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
+                      @foreach (var epa in AvailableEpas)
+                      {
                         <option value="@epa.Id">@epa.Code - @epa.Title</option>
-                    }
-                </InputSelect>
-            </div>
-            <div class="col-md-2">
-                <label>Required count</label>
-                <InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" />
-            </div>
-            <div class="col-md-2">
-                <label>Minimum level</label>
-                <InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" />
-            </div>
-            <div class="col-md-2">
-                <label>Window months</label>
-                <InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" />
-            </div>
-            <div class="col-md-2">
-                <label>Weight</label>
-                <InputNumber class="form-control" @bind-Value="_itemModel.Weight" />
-            </div>
+                      }
+                    </InputSelect>
+                  </td>
+                  <td><InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_itemModel.Weight" /></td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="btn btn-sm btn-primary" @onclick="SaveItemAsync">Save</button>
+                      <button class="btn btn-sm btn-outline" @onclick="CancelEdit">Cancel</button>
+                    </div>
+                  </td>
+                }
+                else
+                {
+                  <td>@item.EpaCode - @item.EpaTitle</td>
+                  <td>@item.RequiredCount</td>
+                  <td>@item.MinimumLevelOrder</td>
+                  <td>@item.WindowMonths</td>
+                  <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="btn btn-sm btn-outline" @onclick="() => BeginEdit(item)">Edit</button>
+                      <button class="btn btn-sm btn-danger" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-container mt-3">
+      <h3>Add item</h3>
+      <EditForm Model="_itemModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+
+        <div class="form-grid form-grid--wide">
+          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true">
+            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
+              @foreach (var epa in AvailableEpas)
+              {
+                <option value="@epa.Id">@epa.Code - @epa.Title</option>
+              }
+            </InputSelect>
+          </FormField>
+
+          <FormField Label="Required count" InputId="curriculum-item-count">
+            <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_itemModel.RequiredCount" />
+          </FormField>
+
+          <FormField Label="Minimum level" InputId="curriculum-item-level">
+            <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" />
+          </FormField>
+
+          <FormField Label="Window months" InputId="curriculum-item-window">
+            <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_itemModel.WindowMonths" />
+          </FormField>
+
+          <FormField Label="Weight" InputId="curriculum-item-weight">
+            <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_itemModel.Weight" />
+          </FormField>
         </div>
 
-        <button type="submit" class="btn btn-primary mt-3" disabled="@_saving">Add item</button>
-    </EditForm>
-}
+        <FormActions>
+          <button type="submit" class="btn btn-primary" disabled="@_saving">Add item</button>
+        </FormActions>
+      </EditForm>
+    </div>
+  }
+</StatePanel>
 
 @code {
-    [Parameter]
-    public int Id { get; set; }
+  [Parameter]
+  public int Id { get; set; }
 
-    private CurriculumDto? _curriculum;
-    private IReadOnlyList<EpaDto> _epas = [];
-    private readonly CurriculumItemFormModel _itemModel = new();
-    private int? _editingItemId;
-    private string? _errorMessage;
-    private string? _statusMessage;
-    private bool _loading;
-    private bool _saving;
+  private CurriculumDto? _curriculum;
+  private IReadOnlyList<EpaDto> _epas = [];
+  private readonly CurriculumItemFormModel _itemModel = new();
+  private int? _editingItemId;
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
 
-    private IEnumerable<EpaDto> AvailableEpas => _epas.Where(entity => entity.SubSpecialityId == _curriculum?.SubSpecialityId);
+  private IEnumerable<EpaDto> AvailableEpas => _epas.Where(entity => entity.SubSpecialityId == _curriculum?.SubSpecialityId);
 
-    protected override async Task OnParametersSetAsync()
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        _loading = true;
-        _errorMessage = null;
-        _statusMessage = null;
+      _curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id));
+      if (_curriculum is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
 
-        try
-        {
-            _curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id));
-            if (_curriculum is null)
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
+      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId));
+      ResetItemModel();
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
 
-            _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId));
-            ResetItemModel();
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+  private async Task AddItemAsync()
+  {
+    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item added.");
+    ResetItemModel();
+  }
+
+  private void BeginEdit(CurriculumItemDto item)
+  {
+    _editingItemId = item.Id;
+    _itemModel.EpaId = item.EpaId;
+    _itemModel.RequiredCount = item.RequiredCount;
+    _itemModel.MinimumLevelOrder = item.MinimumLevelOrder;
+    _itemModel.WindowMonths = item.WindowMonths;
+    _itemModel.Weight = item.Weight;
+  }
+
+  private void CancelEdit()
+  {
+    _editingItemId = null;
+    ResetItemModel();
+  }
+
+  private async Task SaveItemAsync()
+  {
+    if (!_editingItemId.HasValue)
+    {
+      return;
     }
 
-    private async Task AddItemAsync()
+    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item saved.");
+    _editingItemId = null;
+    ResetItemModel();
+  }
+
+  private async Task RemoveItemAsync(int itemId)
+  {
+    await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId)), "Curriculum item removed.");
+  }
+
+  private async Task RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item added.");
-        ResetItemModel();
+      _curriculum = await action();
+      _statusMessage = successMessage;
     }
-
-    private void BeginEdit(CurriculumItemDto item)
+    catch (Exception exception)
     {
-        _editingItemId = item.Id;
-        _itemModel.EpaId = item.EpaId;
-        _itemModel.RequiredCount = item.RequiredCount;
-        _itemModel.MinimumLevelOrder = item.MinimumLevelOrder;
-        _itemModel.WindowMonths = item.WindowMonths;
-        _itemModel.Weight = item.Weight;
+      _errorMessage = exception.Message;
     }
-
-    private void CancelEdit()
+    finally
     {
-        _editingItemId = null;
-        ResetItemModel();
+      _saving = false;
     }
+  }
 
-    private async Task SaveItemAsync()
-    {
-        if (!_editingItemId.HasValue)
-        {
-            return;
-        }
+  private void ResetItemModel()
+  {
+    _itemModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
+    _itemModel.RequiredCount = 1;
+    _itemModel.MinimumLevelOrder = 4;
+    _itemModel.WindowMonths = 12;
+    _itemModel.Weight = null;
+  }
 
-        await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item saved.");
-        _editingItemId = null;
-        ResetItemModel();
-    }
+  private sealed class CurriculumItemFormModel
+  {
+    [Range(1, int.MaxValue)]
+    public int EpaId { get; set; }
 
-    private async Task RemoveItemAsync(int itemId)
-    {
-        await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId)), "Curriculum item removed.");
-    }
+    [Range(1, int.MaxValue)]
+    public int RequiredCount { get; set; }
 
-    private async Task RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
-    {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
+    [Range(1, 20)]
+    public int MinimumLevelOrder { get; set; }
 
-        try
-        {
-            _curriculum = await action();
-            _statusMessage = successMessage;
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
-    }
+    [Range(1, int.MaxValue)]
+    public int WindowMonths { get; set; }
 
-    private void ResetItemModel()
-    {
-        _itemModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
-        _itemModel.RequiredCount = 1;
-        _itemModel.MinimumLevelOrder = 4;
-        _itemModel.WindowMonths = 12;
-        _itemModel.Weight = null;
-    }
-
-    private sealed class CurriculumItemFormModel
-    {
-        [Range(1, int.MaxValue)]
-        public int EpaId { get; set; }
-
-        [Range(1, int.MaxValue)]
-        public int RequiredCount { get; set; }
-
-        [Range(1, 20)]
-        public int MinimumLevelOrder { get; set; }
-
-        [Range(1, int.MaxValue)]
-        public int WindowMonths { get; set; }
-
-        public double? Weight { get; set; }
-    }
+    public double? Weight { get; set; }
+  }
 }

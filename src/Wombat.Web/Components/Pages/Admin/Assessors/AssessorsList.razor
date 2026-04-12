@@ -4,77 +4,63 @@
 
 <PageTitle>Assessors</PageTitle>
 
-<h1>Assessors</h1>
+<PageHeader Title="Assessors" Subtitle="Create and maintain assessor profiles across institutions and specialities.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/assessors/edit">
+      <Icon Name="plus" />
+      Create assessor profile
+    </a>
+  </Actions>
+</PageHeader>
 
 @if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p>@_errorMessage</p>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
 
-@if (_loading)
-{
-    <p>Loading assessors...</p>
-}
-else
-{
-    <p>
-        <a class="btn btn-primary" href="/admin/assessors/edit">Create assessor profile</a>
-    </p>
-
-    @if (_assessors.Count == 0)
-    {
-        <p>No assessor profiles found.</p>
-    }
-    else
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Institution</th>
-                    <th>Speciality</th>
-                    <th>Sub-speciality</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var assessor in _assessors)
-                {
-                    <tr>
-                        <td>@($"{assessor.FirstName} {assessor.LastName}")</td>
-                        <td>@assessor.Email</td>
-                        <td>@assessor.InstitutionName</td>
-                        <td>@(assessor.SpecialityName ?? "All")</td>
-                        <td>@(assessor.SubSpecialityName ?? "All")</td>
-                        <td>
-                            <a class="btn btn-outline-secondary btn-sm" href="@($"/admin/assessors/edit?id={assessor.Id}")">Edit</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-}
+<StatePanel IsLoading="_loading" IsEmpty="@(_assessors.Count == 0)" EmptyTitle="No assessor profiles" EmptyBody="Create the first assessor profile to make assessors selectable in the workflow." LoadError="@(null)">
+  <DataTable TItem="AssessorProfileDto" Items="_assessors" Caption="Assessor profiles">
+    <HeaderRow>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Institution</th>
+        <th>Speciality</th>
+        <th>Sub-speciality</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="assessor">
+      <tr>
+        <td>@($"{assessor.FirstName} {assessor.LastName}")</td>
+        <td>@assessor.Email</td>
+        <td>@assessor.InstitutionName</td>
+        <td>@(assessor.SpecialityName ?? "All")</td>
+        <td>@(assessor.SubSpecialityName ?? "All")</td>
+        <td><a class="btn btn-outline btn-sm" href="@($"/admin/assessors/edit?id={assessor.Id}")">Edit</a></td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
 
 @code {
-    private IReadOnlyList<AssessorProfileDto> _assessors = [];
-    private bool _loading = true;
-    private string? _errorMessage;
+  private IReadOnlyList<AssessorProfileDto> _assessors = [];
+  private bool _loading = true;
+  private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        try
-        {
-            _assessors = await Sender.Send(new ListAssessorsForSpecialityQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _assessors = await Sender.Send(new ListAssessorsForSpecialityQuery());
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
 }

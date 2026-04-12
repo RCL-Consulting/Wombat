@@ -1,0 +1,32 @@
+<div class="form-group @(FullWidth ? "full-width" : string.Empty)">
+  <label for="@InputId">
+    @Label
+    @if (Required)
+    {
+      <span aria-hidden="true">*</span>
+      <span class="visually-hidden">required</span>
+    }
+  </label>
+
+  @ChildContent
+
+  @if (!string.IsNullOrWhiteSpace(HelpText))
+  {
+    <small class="page-subtitle">@HelpText</small>
+  }
+
+  @if (ValidationContent is not null)
+  {
+    @ValidationContent
+  }
+</div>
+
+@code {
+  [Parameter, EditorRequired] public string Label { get; set; } = default!;
+  [Parameter, EditorRequired] public string InputId { get; set; } = default!;
+  [Parameter] public string? HelpText { get; set; }
+  [Parameter] public bool Required { get; set; }
+  [Parameter] public bool FullWidth { get; set; }
+  [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+  [Parameter] public RenderFragment? ValidationContent { get; set; }
+}

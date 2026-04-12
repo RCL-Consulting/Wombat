@@ -1,47 +1,47 @@
 @page "/"
-@using System.Security.Claims
 
 <PageTitle>Home</PageTitle>
 
-<h1>Wombat</h1>
+<AuthorizeView Context="homeAuth">
+  <Authorized Context="state">
+    @{
+      var role = ResolvePrimaryRole(state.User);
+      var displayName = state.User.Identity?.Name ?? "User";
+    }
 
-<p>The rewrite foundation is running.</p>
+    <PageHeader Title="@($"Welcome back, {displayName}")" Subtitle="@($"Your current role: {role}")" />
 
-<AuthorizeView>
-    <Authorized Context="state">
-        <p>Signed in as @state.User.Identity?.Name.</p>
-
-        @if (state.User.IsInRole(WombatRoles.Administrator))
-        {
-            <p>
-                <a href="/admin/invitations">Open invitation administration</a> |
-                <a href="/admin/institutions">Open institution administration</a> |
-                <a href="/admin/trainees">Open trainee administration</a> |
-                <a href="/admin/assessors">Open assessor administration</a>
-            </p>
-        }
-
-        @if (state.User.IsInRole(WombatRoles.PendingTrainee))
-        {
-            <p>You are registered and waiting for admission to a curriculum.</p>
-        }
-
-        @if (state.User.IsInRole(WombatRoles.Trainee))
-        {
-            <p>Trainee dashboard stub: curriculum progress and activity inbox land in later tasks.</p>
-        }
-
-        <p>
-            <a href="/account/profile">Edit profile</a>
-        </p>
-
-        <p>
-            <a href="/account/logout">Sign out</a>
-        </p>
-    </Authorized>
-    <NotAuthorized>
-        <p>
-            <a href="/account/login">Sign in</a>
-        </p>
-    </NotAuthorized>
+    <div class="dashboard-grid">
+      <div class="detail-card">
+        <h3>Dashboard</h3>
+        <p>Role-specific dashboards land in T011.</p>
+      </div>
+      <div class="detail-card">
+        <h3>Workflow</h3>
+        <p>Activity workflow surfaces land in T019 and later tasks.</p>
+      </div>
+      <div class="detail-card detail-card--empty">
+        <div class="state-panel-title">Coming soon</div>
+        <div class="state-panel-copy">This stub confirms the authenticated layout, navigation, and design system are working end-to-end.</div>
+      </div>
+    </div>
+  </Authorized>
+  <NotAuthorized Context="anonymousHome">
+    <RedirectToLogin />
+  </NotAuthorized>
 </AuthorizeView>
+
+@code {
+  private static string ResolvePrimaryRole(System.Security.Claims.ClaimsPrincipal user)
+  {
+    foreach (var role in WombatRoles.All)
+    {
+      if (user.IsInRole(role))
+      {
+        return role;
+      }
+    }
+
+    return "Authenticated";
+  }
+}

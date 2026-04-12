@@ -59,7 +59,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 ### Phase 5 — Web & messaging
 
-- [ ] T010 — Web layout, auth, navigation, role-gated routing
+- [x] T010 — Web layout, auth, navigation, role-gated routing
 - [ ] T011 — Role dashboards (widgets query generically over activities)
 - [ ] T012 — Email infrastructure
 - [ ] T024 — Scheduled nudges & digest emails

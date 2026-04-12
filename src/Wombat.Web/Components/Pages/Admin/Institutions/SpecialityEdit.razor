@@ -6,199 +6,195 @@
 
 <PageTitle>@(IsNew ? "Create Speciality" : "Edit Speciality")</PageTitle>
 
-<h1>@(IsNew ? "Create speciality" : "Edit speciality")</h1>
-
-@if (_institution is not null)
-{
-    <p>Institution: <strong>@_institution.Name</strong> (@_institution.ShortCode)</p>
-}
-
-<p>
-    <a href="@($"/admin/institutions/{InstitutionId}/specialities")">Back to specialities</a>
+<PageHeader Title="@(IsNew ? "Create speciality" : "Edit speciality")" Subtitle="@(_institution is null ? "Scope this speciality under the current institution." : $"Institution: {_institution.Name} ({_institution.ShortCode})")">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{InstitutionId}/specialities")">Back to specialities</a>
     @if (!IsNew && Id.HasValue)
     {
-        <span> | </span>
-        <a href="@($"/admin/specialities/{Id.Value}/sub-specialities")">Manage sub-specialities</a>
+      <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{Id.Value}/sub-specialities")">Manage sub-specialities</a>
     }
-</p>
+  </Actions>
+</PageHeader>
 
-@if (_loading)
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>Loading speciality...</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
-else
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-        <p>@_statusMessage</p>
-    }
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
 
-    @if (!string.IsNullOrWhiteSpace(_errorMessage))
-    {
-        <p>@_errorMessage</p>
-    }
-
+<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <div class="form-container">
     <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="speciality-edit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
 
-        <div class="mb-3">
-            <label for="speciality-name">Name</label>
-            <InputText id="speciality-name" class="form-control" @bind-Value="_model.Name" />
-        </div>
+      <div class="form-grid">
+        <FormField Label="Name" InputId="speciality-name" Required="true">
+          <InputText id="speciality-name" class="form-control" @bind-Value="_model.Name" />
+          <ValidationMessage For="() => _model.Name" />
+        </FormField>
 
-        <div class="mb-3">
-            <label for="speciality-description">Description</label>
-            <InputTextArea id="speciality-description" class="form-control" @bind-Value="_model.Description" />
-        </div>
+        <FormField Label="Description" InputId="speciality-description" FullWidth="true">
+          <InputTextArea id="speciality-description" class="form-control" @bind-Value="_model.Description" />
+          <ValidationMessage For="() => _model.Description" />
+        </FormField>
 
         @if (!IsNew)
         {
-            <div class="mb-3">
-                <label>
-                    <InputCheckbox @bind-Value="_model.IsActive" />
-                    Active
-                </label>
+          <FormField Label="Status" InputId="speciality-active">
+            <div class="form-check">
+              <InputCheckbox id="speciality-active" class="form-check-input" @bind-Value="_model.IsActive" />
+              <label for="speciality-active">Active</label>
             </div>
+          </FormField>
         }
+      </div>
 
-        <button type="submit" class="btn btn-primary">@(_saving ? "Saving..." : "Save")</button>
+      <FormActions>
+        <a class="btn btn-outline" href="@($"/admin/institutions/{InstitutionId}/specialities")">Cancel</a>
         @if (!IsNew)
         {
-            <button type="button" class="btn btn-outline-danger ms-2" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
         }
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+      </FormActions>
     </EditForm>
-}
+  </div>
+</StatePanel>
 
 @code {
-    [Parameter]
-    public int InstitutionId { get; set; }
+  [Parameter]
+  public int InstitutionId { get; set; }
 
-    [Parameter]
-    public int? Id { get; set; }
+  [Parameter]
+  public int? Id { get; set; }
 
-    private InstitutionDto? _institution;
-    private SpecialityFormModel _model = new();
-    private string? _errorMessage;
-    private string? _statusMessage;
-    private bool _loading;
-    private bool _saving;
+  private InstitutionDto? _institution;
+  private SpecialityFormModel _model = new();
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
 
-    private bool IsNew => !Id.HasValue;
+  private bool IsNew => !Id.HasValue;
 
-    protected override async Task OnParametersSetAsync()
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        _loading = true;
-        _errorMessage = null;
-        _statusMessage = null;
+      _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId));
 
-        try
-        {
-            _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId));
+      if (_institution is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
 
-            if (_institution is null)
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
+      if (IsNew)
+      {
+        _model = new SpecialityFormModel { IsActive = true };
+        return;
+      }
 
-            if (IsNew)
-            {
-                _model = new SpecialityFormModel { IsActive = true };
-                return;
-            }
+      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId));
+      var specialityId = Id!.Value;
+      var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
 
-            var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId));
-            var specialityId = Id!.Value;
-            var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
+      if (speciality is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
 
-            if (speciality is null)
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
-
-            _model = new SpecialityFormModel
-            {
-                Name = speciality.Name,
-                Description = speciality.Description,
-                IsActive = speciality.IsActive
-            };
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _model = new SpecialityFormModel
+      {
+        Name = speciality.Name,
+        Description = speciality.Description,
+        IsActive = speciality.IsActive
+      };
     }
-
-    private async Task SaveAsync()
+    catch (Exception exception)
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            SpecialityDto speciality;
-
-            if (IsNew)
-            {
-                speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description)));
-                Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}");
-                return;
-            }
-
-            speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, InstitutionId, _model.Name, EmptyToNull(_model.Description), _model.IsActive));
-            _model.IsActive = speciality.IsActive;
-            _statusMessage = "Speciality saved.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _errorMessage = exception.Message;
     }
-
-    private async Task DeactivateAsync()
+    finally
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            await Sender.Send(new DeactivateSpecialityCommand(Id!.Value));
-            _model.IsActive = false;
-            _statusMessage = "Speciality deactivated.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _loading = false;
     }
+  }
 
-    private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+  private async Task SaveAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
 
-    private sealed class SpecialityFormModel
+    try
     {
-        [Required]
-        [StringLength(200)]
-        public string Name { get; set; } = string.Empty;
+      SpecialityDto speciality;
 
-        [StringLength(2000)]
-        public string? Description { get; set; }
+      if (IsNew)
+      {
+        speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description)));
+        Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}");
+        return;
+      }
 
-        public bool IsActive { get; set; } = true;
+      speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, InstitutionId, _model.Name, EmptyToNull(_model.Description), _model.IsActive));
+      _model.IsActive = speciality.IsActive;
+      _statusMessage = "Speciality saved.";
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task DeactivateAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new DeactivateSpecialityCommand(Id!.Value));
+      _model.IsActive = false;
+      _statusMessage = "Speciality deactivated.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+  private sealed class SpecialityFormModel
+  {
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [StringLength(2000)]
+    public string? Description { get; set; }
+
+    public bool IsActive { get; set; } = true;
+  }
 }

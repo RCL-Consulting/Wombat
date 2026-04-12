@@ -1,0 +1,26 @@
+@if (!_dismissed)
+{
+  <div class="alert alert-@Kind">
+    @if (Dismissible)
+    {
+      <div class="actions-cell">
+        <div>@ChildContent</div>
+        <button type="button" class="btn btn-outline btn-xs" @onclick="Dismiss">×</button>
+      </div>
+    }
+    else
+    {
+      @ChildContent
+    }
+  </div>
+}
+
+@code {
+  private bool _dismissed;
+
+  [Parameter] public string Kind { get; set; } = "info";
+  [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+  [Parameter] public bool Dismissible { get; set; }
+
+  private void Dismiss() => _dismissed = true;
+}

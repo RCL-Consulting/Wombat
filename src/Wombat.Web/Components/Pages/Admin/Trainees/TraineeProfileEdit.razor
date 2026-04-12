@@ -5,242 +5,246 @@
 
 <PageTitle>Trainee Profile</PageTitle>
 
-<h1>Trainee Profile</h1>
+<PageHeader Title="Trainee profile" Subtitle="@(_isAdmission ? "Admit a pending trainee into a curriculum." : "Update curriculum and completion details for this trainee.")">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/trainees">Back to trainees</a>
+  </Actions>
+</PageHeader>
 
 @if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p>@_errorMessage</p>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>@_statusMessage</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
 
-@if (_loading)
-{
-    <p>Loading trainee profile...</p>
-}
-else if (_model is not null)
-{
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="trainee-profile">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+<StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The trainee profile could not be loaded." LoadError="@(null)">
+  @if (_model is not null)
+  {
+    <div class="details-grid">
+      <aside class="detail-card">
+        <h3>Trainee summary</h3>
+        <p><strong>Email:</strong> @_model.Email</p>
+        <p><strong>Name:</strong> @_model.FullName</p>
+        <p><strong>Status:</strong> @(_model.IsActive ? "Active" : "Inactive")</p>
+      </aside>
 
-        <div class="mb-3">
-            <label>Email</label>
-            <InputText class="form-control" @bind-Value="_model.Email" disabled />
-        </div>
+      <section class="detail-card">
+        <h3>Profile details</h3>
+        <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="trainee-profile">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
 
-        <div class="mb-3">
-            <label>Name</label>
-            <InputText class="form-control" @bind-Value="_model.FullName" disabled />
-        </div>
-
-        <div class="mb-3">
-            <label for="curriculum-id">Curriculum</label>
-            <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
+          <div class="form-grid form-grid--wide">
+            <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
+              <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
                 @foreach (var curriculum in _curricula)
                 {
-                    <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+                  <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
                 }
-            </InputSelect>
-        </div>
+              </InputSelect>
+            </FormField>
 
-        <div class="mb-3">
-            <label for="programme-start-date">Programme start date</label>
-            <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
-        </div>
+            <FormField Label="Programme start date" InputId="programme-start-date" Required="true">
+              <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
+            </FormField>
 
-        <div class="mb-3">
-            <label for="expected-completion-date">Expected completion date</label>
-            <InputDate id="expected-completion-date" class="form-control" @bind-Value="_model.ExpectedCompletionDate" />
-            <small>Leave this empty to derive it from the curriculum window.</small>
-        </div>
+            <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="Leave this empty to derive it from the curriculum window.">
+              <InputDate id="expected-completion-date" class="form-control" @bind-Value="_model.ExpectedCompletionDate" />
+            </FormField>
+          </div>
 
-        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
-
-        @if (!_isAdmission && _model.IsActive)
-        {
-            <button type="button" class="btn btn-outline-danger ms-2" disabled="@_saving" @onclick="DeactivateAsync">Deactivate</button>
-        }
-    </EditForm>
-}
+          <FormActions>
+            <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
+            @if (!_isAdmission && _model.IsActive)
+            {
+              <button type="button" class="btn btn-danger" disabled="@_saving" @onclick="DeactivateAsync">Deactivate</button>
+            }
+            <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
+          </FormActions>
+        </EditForm>
+      </section>
+    </div>
+  }
+</StatePanel>
 
 @code {
-    [SupplyParameterFromQuery(Name = "id")]
-    public int? Id { get; set; }
+  [SupplyParameterFromQuery(Name = "id")]
+  public int? Id { get; set; }
 
-    [SupplyParameterFromQuery(Name = "userId")]
-    public string? UserId { get; set; }
+  [SupplyParameterFromQuery(Name = "userId")]
+  public string? UserId { get; set; }
 
-    private IReadOnlyList<CurriculumDto> _curricula = [];
-    private TraineeProfileFormModel? _model;
-    private bool _loading = true;
-    private bool _saving;
-    private bool _isAdmission;
-    private string? _errorMessage;
-    private string? _statusMessage;
+  private IReadOnlyList<CurriculumDto> _curricula = [];
+  private TraineeProfileFormModel? _model;
+  private bool _loading = true;
+  private bool _saving;
+  private bool _isAdmission;
+  private string? _errorMessage;
+  private string? _statusMessage;
 
-    protected override async Task OnParametersSetAsync()
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        _loading = true;
-        _errorMessage = null;
-        _statusMessage = null;
+      _curricula = await Sender.Send(new GetCurriculaListQuery());
 
-        try
+      if (Id.HasValue)
+      {
+        var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value));
+        _isAdmission = false;
+        _model = new TraineeProfileFormModel
         {
-            _curricula = await Sender.Send(new GetCurriculaListQuery());
+          Id = profile.Id,
+          UserId = profile.UserId,
+          Email = profile.Email,
+          FullName = $"{profile.FirstName} {profile.LastName}",
+          CurriculumId = profile.CurriculumId,
+          ProgrammeStartDate = profile.ProgrammeStartDate,
+          ExpectedCompletionDate = profile.ExpectedCompletionDate,
+          IsActive = profile.IsActive
+        };
+      }
+      else if (!string.IsNullOrWhiteSpace(UserId))
+      {
+        _isAdmission = true;
+        var pendingUsers = await Sender.Send(new ListPendingTraineesQuery());
+        var pendingUser = pendingUsers.FirstOrDefault(entity => entity.UserId == UserId)
+          ?? throw new InvalidOperationException("The pending trainee could not be found.");
 
-            if (Id.HasValue)
-            {
-                var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value));
-                _isAdmission = false;
-                _model = new TraineeProfileFormModel
-                {
-                    Id = profile.Id,
-                    UserId = profile.UserId,
-                    Email = profile.Email,
-                    FullName = $"{profile.FirstName} {profile.LastName}",
-                    CurriculumId = profile.CurriculumId,
-                    ProgrammeStartDate = profile.ProgrammeStartDate,
-                    ExpectedCompletionDate = profile.ExpectedCompletionDate,
-                    IsActive = profile.IsActive
-                };
-            }
-            else if (!string.IsNullOrWhiteSpace(UserId))
-            {
-                _isAdmission = true;
-                var pendingUsers = await Sender.Send(new ListPendingTraineesQuery());
-                var pendingUser = pendingUsers.FirstOrDefault(entity => entity.UserId == UserId)
-                    ?? throw new InvalidOperationException("The pending trainee could not be found.");
+        var defaultCurriculum = ResolveDefaultCurriculum(pendingUser);
 
-                var defaultCurriculum = ResolveDefaultCurriculum(pendingUser);
-
-                _model = new TraineeProfileFormModel
-                {
-                    UserId = pendingUser.UserId,
-                    Email = pendingUser.Email,
-                    FullName = $"{pendingUser.FirstName} {pendingUser.LastName}",
-                    CurriculumId = defaultCurriculum?.Id ?? _curricula.FirstOrDefault()?.Id ?? 0,
-                    ProgrammeStartDate = DateOnly.FromDateTime(DateTime.Today)
-                };
-            }
-            else
-            {
-                throw new InvalidOperationException("A trainee profile id or user id is required.");
-            }
-        }
-        catch (Exception exception)
+        _model = new TraineeProfileFormModel
         {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+          UserId = pendingUser.UserId,
+          Email = pendingUser.Email,
+          FullName = $"{pendingUser.FirstName} {pendingUser.LastName}",
+          CurriculumId = defaultCurriculum?.Id ?? _curricula.FirstOrDefault()?.Id ?? 0,
+          ProgrammeStartDate = DateOnly.FromDateTime(DateTime.Today)
+        };
+      }
+      else
+      {
+        throw new InvalidOperationException("A trainee profile id or user id is required.");
+      }
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private CurriculumDto? ResolveDefaultCurriculum(PendingTraineeDto pendingUser)
+  {
+    if (pendingUser.SubSpecialityIds.Count > 0)
+    {
+      return _curricula.FirstOrDefault(entity => pendingUser.SubSpecialityIds.Contains(entity.SubSpecialityId));
     }
 
-    private CurriculumDto? ResolveDefaultCurriculum(PendingTraineeDto pendingUser)
+    if (pendingUser.SpecialityIds.Count > 0)
     {
-        if (pendingUser.SubSpecialityIds.Count > 0)
-        {
-            return _curricula.FirstOrDefault(entity => pendingUser.SubSpecialityIds.Contains(entity.SubSpecialityId));
-        }
-
-        if (pendingUser.SpecialityIds.Count > 0)
-        {
-            return _curricula.FirstOrDefault(entity => pendingUser.SpecialityIds.Contains(entity.SpecialityId));
-        }
-
-        return _curricula.FirstOrDefault();
+      return _curricula.FirstOrDefault(entity => pendingUser.SpecialityIds.Contains(entity.SpecialityId));
     }
 
-    private async Task SaveAsync()
+    return _curricula.FirstOrDefault();
+  }
+
+  private async Task SaveAsync()
+  {
+    if (_model is null)
     {
-        if (_model is null)
-        {
-            return;
-        }
-
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            if (_isAdmission)
-            {
-                var result = await Sender.Send(new AdmitTraineeCommand(
-                    _model.UserId,
-                    _model.CurriculumId,
-                    _model.ProgrammeStartDate,
-                    _model.ExpectedCompletionDate));
-
-                NavigationManager.NavigateTo($"/admin/trainees/edit?id={result.Id}", forceLoad: false);
-                return;
-            }
-
-            await Sender.Send(new UpdateTraineeProfileCommand(
-                _model.Id,
-                _model.CurriculumId,
-                _model.ProgrammeStartDate,
-                _model.ExpectedCompletionDate));
-
-            _statusMessage = "Trainee profile saved.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      return;
     }
 
-    private async Task DeactivateAsync()
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        if (_model is null || _model.Id <= 0)
-        {
-            return;
-        }
+      if (_isAdmission)
+      {
+        var result = await Sender.Send(new AdmitTraineeCommand(
+          _model.UserId,
+          _model.CurriculumId,
+          _model.ProgrammeStartDate,
+          _model.ExpectedCompletionDate));
 
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
+        NavigationManager.NavigateTo($"/admin/trainees/edit?id={result.Id}", forceLoad: false);
+        return;
+      }
 
-        try
-        {
-            await Sender.Send(new DeactivateTraineeProfileCommand(_model.Id));
-            _model.IsActive = false;
-            _statusMessage = "Trainee profile deactivated.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      await Sender.Send(new UpdateTraineeProfileCommand(
+        _model.Id,
+        _model.CurriculumId,
+        _model.ProgrammeStartDate,
+        _model.ExpectedCompletionDate));
+
+      _statusMessage = "Trainee profile saved.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task DeactivateAsync()
+  {
+    if (_model is null || _model.Id <= 0)
+    {
+      return;
     }
 
-    private sealed class TraineeProfileFormModel
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        public int Id { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-
-        [Required]
-        [Range(1, int.MaxValue)]
-        public int CurriculumId { get; set; }
-
-        [Required]
-        public DateOnly ProgrammeStartDate { get; set; }
-
-        public DateOnly? ExpectedCompletionDate { get; set; }
-        public bool IsActive { get; set; } = true;
+      await Sender.Send(new DeactivateTraineeProfileCommand(_model.Id));
+      _model.IsActive = false;
+      _statusMessage = "Trainee profile deactivated.";
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private sealed class TraineeProfileFormModel
+  {
+    public int Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+
+    [Required]
+    [Range(1, int.MaxValue)]
+    public int CurriculumId { get; set; }
+
+    [Required]
+    public DateOnly ProgrammeStartDate { get; set; }
+
+    public DateOnly? ExpectedCompletionDate { get; set; }
+    public bool IsActive { get; set; } = true;
+  }
 }

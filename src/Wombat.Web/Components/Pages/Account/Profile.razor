@@ -5,147 +5,160 @@
 
 <PageTitle>Profile</PageTitle>
 
-<h1>Profile</h1>
+<PageHeader Title="My account" Subtitle="Update your name and review your assigned roles." />
 
 @if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p>@_errorMessage</p>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>@_statusMessage</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
 
-@if (_loading)
-{
-    <p>Loading profile...</p>
-}
-else if (_model is not null)
-{
-    <p>Roles: @string.Join(", ", _model.Roles)</p>
-
-    <EditForm EditContext="_editContext" FormName="account-profile">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label>Email</label>
-            <InputText class="form-control" @bind-Value="_model.Email" disabled />
+<StatePanel IsLoading="_loading" LoadError="@(_loading ? null : _errorMessage)" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
+  @if (_model is not null)
+  {
+    <div class="details-grid">
+      <aside class="detail-card">
+        <h3>Account summary</h3>
+        <p><strong>Email:</strong> @_model.Email</p>
+        <p><strong>Roles:</strong> @string.Join(", ", _model.Roles)</p>
+        <div class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="/account/change-password">Change password</a>
         </div>
+      </aside>
 
-        <div class="mb-3">
-            <label for="profile-first-name">First name</label>
-            <InputText id="profile-first-name" class="form-control" @bind-Value="_model.FirstName" />
-        </div>
+      <section class="detail-card">
+        <h3>Profile details</h3>
+        <EditForm EditContext="_editContext" FormName="account-profile">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
 
-        <div class="mb-3">
-            <label for="profile-last-name">Last name</label>
-            <InputText id="profile-last-name" class="form-control" @bind-Value="_model.LastName" />
-        </div>
+          <div class="form-grid">
+            <FormField Label="Email" InputId="profile-email">
+              <InputText id="profile-email" class="form-control" @bind-Value="_model.Email" disabled />
+            </FormField>
 
-        <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="SaveValidatedAsync">@(_saving ? "Saving..." : "Save profile")</button>
-    </EditForm>
-}
+            <FormField Label="First name" InputId="profile-first-name" Required="true">
+              <InputText id="profile-first-name" class="form-control" @bind-Value="_model.FirstName" />
+              <ValidationMessage For="() => _model.FirstName" />
+            </FormField>
+
+            <FormField Label="Last name" InputId="profile-last-name" Required="true">
+              <InputText id="profile-last-name" class="form-control" @bind-Value="_model.LastName" />
+              <ValidationMessage For="() => _model.LastName" />
+            </FormField>
+          </div>
+
+          <FormActions>
+            <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="SaveValidatedAsync">@(_saving ? "Saving..." : "Save profile")</button>
+          </FormActions>
+        </EditForm>
+      </section>
+    </div>
+  }
+</StatePanel>
 
 @code {
-    private ProfileFormModel? _model;
-    private EditContext? _editContext;
-    private bool _loading = true;
-    private bool _saving;
-    private string? _errorMessage;
-    private string? _statusMessage;
+  private ProfileFormModel? _model;
+  private EditContext? _editContext;
+  private bool _loading = true;
+  private bool _saving;
+  private string? _errorMessage;
+  private string? _statusMessage;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        try
-        {
-            var userId = await GetCurrentUserIdAsync();
-            var profile = await Sender.Send(new GetCurrentUserProfileQuery(userId));
+      var userId = await GetCurrentUserIdAsync();
+      var profile = await Sender.Send(new GetCurrentUserProfileQuery(userId));
 
-            _model = new ProfileFormModel
-            {
-                UserId = profile.UserId,
-                Email = profile.Email,
-                FirstName = profile.FirstName,
-                LastName = profile.LastName,
-                Roles = profile.Roles
-            };
+      _model = new ProfileFormModel
+      {
+        UserId = profile.UserId,
+        Email = profile.Email,
+        FirstName = profile.FirstName,
+        LastName = profile.LastName,
+        Roles = profile.Roles
+      };
 
-            _editContext = new EditContext(_model);
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _editContext = new EditContext(_model);
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task SaveValidatedAsync()
+  {
+    if (_editContext is null || !_editContext.Validate())
+    {
+      return;
     }
 
-    private async Task SaveValidatedAsync()
-    {
-        if (_editContext is null || !_editContext.Validate())
-        {
-            return;
-        }
+    await SaveAsync();
+  }
 
-        await SaveAsync();
+  private async Task SaveAsync()
+  {
+    if (_model is null)
+    {
+      return;
     }
 
-    private async Task SaveAsync()
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        if (_model is null)
-        {
-            return;
-        }
+      var profile = await Sender.Send(new UpdateCurrentUserProfileCommand(
+        _model.UserId,
+        _model.FirstName,
+        _model.LastName));
 
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            var profile = await Sender.Send(new UpdateCurrentUserProfileCommand(
-                _model.UserId,
-                _model.FirstName,
-                _model.LastName));
-
-            _model.FirstName = profile.FirstName;
-            _model.LastName = profile.LastName;
-            _statusMessage = "Profile saved.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _model.FirstName = profile.FirstName;
+      _model.LastName = profile.LastName;
+      _statusMessage = "Profile saved.";
     }
-
-    private async Task<string> GetCurrentUserIdAsync()
+    catch (Exception exception)
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? throw new InvalidOperationException("The current user identifier is missing.");
+      _errorMessage = exception.Message;
     }
-
-    private sealed class ProfileFormModel
+    finally
     {
-        public string UserId { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(100)]
-        public string FirstName { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(100)]
-        public string LastName { get; set; } = string.Empty;
-
-        public IReadOnlyCollection<string> Roles { get; set; } = [];
+      _saving = false;
     }
+  }
+
+  private async Task<string> GetCurrentUserIdAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
+  }
+
+  private sealed class ProfileFormModel
+  {
+    public string UserId { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(100)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(100)]
+    public string LastName { get; set; } = string.Empty;
+
+    public IReadOnlyCollection<string> Roles { get; set; } = [];
+  }
 }

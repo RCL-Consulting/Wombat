@@ -1,0 +1,190 @@
+@using Wombat.Domain.Identity
+
+<div class="top-row ps-3 navbar navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="">Wombat</a>
+  </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" @bind="IsNavMenuExpanded" />
+
+<div class="nav-scrollable" @onclick="CloseNavMenu">
+  <nav class="flex-column">
+    <div class="nav-item px-3">
+      <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        <span class="bi bi-home-nav-menu" aria-hidden="true"></span>
+        Home
+      </NavLink>
+    </div>
+
+    <AuthorizeView Context="navAuth">
+      <Authorized Context="navUser">
+        <div class="nav-item px-3">
+          <NavLink class="nav-link" href="/account/profile">
+            <span class="bi bi-user-nav-menu" aria-hidden="true"></span>
+            My Account
+          </NavLink>
+        </div>
+
+        <AuthorizeView Roles="@($"{WombatRoles.Trainee},{WombatRoles.PendingTrainee}")" Context="traineeAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/activities">
+              <span class="bi bi-calendar-nav-menu" aria-hidden="true"></span>
+              Activities
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/my-activities">
+              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              My Activities
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/my-curriculum">
+              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              My Curriculum
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@WombatRoles.Assessor" Context="assessorAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/activity-inbox">
+              <span class="bi bi-inbox-nav-menu" aria-hidden="true"></span>
+              Activity Inbox
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/recent-activities">
+              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              Recent Activities
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@WombatRoles.Coordinator" Context="coordinatorAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/invitations">
+              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              Invitations
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/stalled-activities">
+              <span class="bi bi-alert-triangle-nav-menu" aria-hidden="true"></span>
+              Stalled Activities
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin},{WombatRoles.CommitteeMember}")" Context="programmeAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/programme-trainees">
+              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              Programme Trainees
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin}")" Context="curriculumAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/curricula">
+              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              Curriculum
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/star-review-queue">
+              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              STAR Review Queue
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@WombatRoles.InstitutionalAdmin" Context="institutionAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/institutions">
+              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              Institution
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/specialities">
+              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              Specialities
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/users">
+              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              Users
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@WombatRoles.Administrator" Context="adminAuth">
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/institutions">
+              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              Institutions
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/invitations">
+              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              Invitations
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/users">
+              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              Users
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/activity-types">
+              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              Activity Types
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/placeholder/system">
+              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              System
+            </NavLink>
+          </div>
+        </AuthorizeView>
+
+        <div class="nav-item px-3">
+          <form action="/account/logout" method="post">
+            <AntiforgeryToken />
+            <button type="submit" class="nav-link nav-logout-button">
+              <span class="bi bi-log-out-nav-menu" aria-hidden="true"></span>
+              Logout
+            </button>
+          </form>
+        </div>
+      </Authorized>
+      <NotAuthorized Context="anonymousNav">
+        <div class="nav-item px-3">
+          <NavLink class="nav-link" href="/account/login">
+            <span class="bi bi-user-nav-menu" aria-hidden="true"></span>
+            Sign in
+          </NavLink>
+        </div>
+      </NotAuthorized>
+    </AuthorizeView>
+  </nav>
+</div>
+
+@code {
+  private bool IsNavMenuExpanded { get; set; }
+
+  private void CloseNavMenu()
+  {
+    if (IsNavMenuExpanded)
+    {
+      IsNavMenuExpanded = false;
+    }
+  }
+}

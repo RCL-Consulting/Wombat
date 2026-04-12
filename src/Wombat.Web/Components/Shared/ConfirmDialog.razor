@@ -1,0 +1,44 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<dialog @ref="_dialog" class="dialog-scrim dialog-card">
+  <div class="form-container">
+    <h2>@Title</h2>
+    <p>@Body</p>
+    <FormActions>
+      <button type="button" class="btn btn-outline" @onclick="CancelAsync">Cancel</button>
+      <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")" @onclick="ConfirmAsync">@ConfirmLabel</button>
+    </FormActions>
+  </div>
+</dialog>
+
+@code {
+  private ElementReference _dialog;
+
+  [Parameter] public string Title { get; set; } = "Confirm";
+  [Parameter] public string Body { get; set; } = string.Empty;
+  [Parameter] public string ConfirmLabel { get; set; } = "Confirm";
+  [Parameter] public bool DangerAction { get; set; }
+  [Parameter] public EventCallback OnConfirm { get; set; }
+  [Parameter] public EventCallback OnCancel { get; set; }
+
+  public ValueTask ShowAsync()
+    => JS.InvokeVoidAsync("wombatDialog.showModal", _dialog);
+
+  public ValueTask CloseAsync()
+    => JS.InvokeVoidAsync("wombatDialog.close", _dialog);
+
+  private async Task ConfirmAsync()
+  {
+    await OnConfirm.InvokeAsync();
+    await CloseAsync();
+  }
+
+  private async Task CancelAsync()
+  {
+    await OnCancel.InvokeAsync();
+    await CloseAsync();
+  }
+
+  public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}

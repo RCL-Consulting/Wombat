@@ -1,10 +1,15 @@
-@page "/account/logout"
+@page "/account/logout-confirm"
+
 <PageTitle>Sign out</PageTitle>
 
-<h1>Sign out</h1>
+<PageHeader Title="Sign out" Subtitle="Use the button below to end the current session." />
 
-<p>Use the button below to end the current session.</p>
-
-<form method="post" action="/account/logout/submit">
-    <button type="submit" class="btn btn-outline-secondary">Sign out</button>
-</form>
+<div class="form-container">
+  <form method="post" action="/account/logout">
+    <AntiforgeryToken />
+    <FormActions>
+      <a class="btn btn-outline" href="/">Cancel</a>
+      <button type="submit" class="btn btn-primary">Sign out</button>
+    </FormActions>
+  </form>
+</div>

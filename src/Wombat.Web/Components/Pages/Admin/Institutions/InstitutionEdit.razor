@@ -6,191 +6,192 @@
 
 <PageTitle>@(IsNew ? "Create Institution" : "Edit Institution")</PageTitle>
 
-<h1>@(IsNew ? "Create institution" : "Edit institution")</h1>
-
-<p>
-    <a href="/admin/institutions">Back to institutions</a>
+<PageHeader Title="@(IsNew ? "Create institution" : "Edit institution")" Subtitle="Maintain the institution record used for scoping and onboarding.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
     @if (!IsNew)
     {
-        <span> | </span>
-        <a href="@($"/admin/institutions/{Id}/specialities")">Manage specialities</a>
+      <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{Id}/specialities")">Manage specialities</a>
     }
-</p>
+  </Actions>
+</PageHeader>
 
-@if (_loading)
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>Loading institution...</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
-else
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-        <p>@_statusMessage</p>
-    }
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
 
-    @if (!string.IsNullOrWhiteSpace(_errorMessage))
-    {
-        <p>@_errorMessage</p>
-    }
-
+<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <div class="form-container">
     <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="institution-edit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
 
-        <div class="mb-3">
-            <label for="institution-name">Name</label>
-            <InputText id="institution-name" class="form-control" @bind-Value="_model.Name" />
-        </div>
+      <div class="form-grid">
+        <FormField Label="Name" InputId="institution-name" Required="true">
+          <InputText id="institution-name" class="form-control" @bind-Value="_model.Name" />
+          <ValidationMessage For="() => _model.Name" />
+        </FormField>
 
-        <div class="mb-3">
-            <label for="institution-short-code">Short code</label>
-            <InputText id="institution-short-code" class="form-control" @bind-Value="_model.ShortCode" />
-        </div>
+        <FormField Label="Short code" InputId="institution-short-code" Required="true">
+          <InputText id="institution-short-code" class="form-control" @bind-Value="_model.ShortCode" />
+          <ValidationMessage For="() => _model.ShortCode" />
+        </FormField>
 
-        <div class="mb-3">
-            <label for="institution-email">Contact email</label>
-            <InputText id="institution-email" class="form-control" @bind-Value="_model.ContactEmail" />
-        </div>
+        <FormField Label="Contact email" InputId="institution-email">
+          <InputText id="institution-email" class="form-control" @bind-Value="_model.ContactEmail" />
+          <ValidationMessage For="() => _model.ContactEmail" />
+        </FormField>
 
         @if (!IsNew)
         {
-            <div class="mb-3">
-                <label>
-                    <InputCheckbox @bind-Value="_model.IsActive" />
-                    Active
-                </label>
+          <FormField Label="Status" InputId="institution-active">
+            <div class="form-check">
+              <InputCheckbox id="institution-active" class="form-check-input" @bind-Value="_model.IsActive" />
+              <label for="institution-active">Active</label>
             </div>
+          </FormField>
         }
+      </div>
 
-        <button type="submit" class="btn btn-primary">@(_saving ? "Saving..." : "Save")</button>
+      <FormActions>
+        <a class="btn btn-outline" href="/admin/institutions">Cancel</a>
         @if (!IsNew)
         {
-            <button type="button" class="btn btn-outline-danger ms-2" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
         }
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+      </FormActions>
     </EditForm>
-}
+  </div>
+</StatePanel>
 
 @code {
-    [Parameter]
-    public int? Id { get; set; }
+  [Parameter]
+  public int? Id { get; set; }
 
-    private InstitutionFormModel _model = new();
-    private string? _errorMessage;
-    private string? _statusMessage;
-    private bool _loading;
-    private bool _saving;
+  private InstitutionFormModel _model = new();
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
 
-    private bool IsNew => !Id.HasValue;
+  private bool IsNew => !Id.HasValue;
 
-    protected override async Task OnParametersSetAsync()
+  protected override async Task OnParametersSetAsync()
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+
+    if (IsNew)
     {
-        _errorMessage = null;
-        _statusMessage = null;
-
-        if (IsNew)
-        {
-            _model = new InstitutionFormModel { IsActive = true };
-            return;
-        }
-
-        _loading = true;
-
-        try
-        {
-            var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value));
-
-            if (institution is null)
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
-
-            _model = new InstitutionFormModel
-            {
-                Name = institution.Name,
-                ShortCode = institution.ShortCode,
-                ContactEmail = institution.ContactEmail,
-                IsActive = institution.IsActive
-            };
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _model = new InstitutionFormModel { IsActive = true };
+      return;
     }
 
-    private async Task SaveAsync()
+    _loading = true;
+
+    try
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
+      var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value));
 
-        try
-        {
-            InstitutionDto institution;
+      if (institution is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
 
-            if (IsNew)
-            {
-                institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail)));
-                Navigation.NavigateTo($"/admin/institutions/{institution.Id}");
-                return;
-            }
-
-            institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), _model.IsActive));
-            _model.IsActive = institution.IsActive;
-            _statusMessage = "Institution saved.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _model = new InstitutionFormModel
+      {
+        Name = institution.Name,
+        ShortCode = institution.ShortCode,
+        ContactEmail = institution.ContactEmail,
+        IsActive = institution.IsActive
+      };
     }
-
-    private async Task DeactivateAsync()
+    catch (Exception exception)
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            await Sender.Send(new DeactivateInstitutionCommand(Id!.Value));
-            _model.IsActive = false;
-            _statusMessage = "Institution deactivated.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _errorMessage = exception.Message;
     }
-
-    private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private sealed class InstitutionFormModel
+    finally
     {
-        [Required]
-        [StringLength(200)]
-        public string Name { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(32)]
-        public string ShortCode { get; set; } = string.Empty;
-
-        [StringLength(320)]
-        public string? ContactEmail { get; set; }
-
-        public bool IsActive { get; set; } = true;
+      _loading = false;
     }
+  }
+
+  private async Task SaveAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      InstitutionDto institution;
+
+      if (IsNew)
+      {
+        institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail)));
+        Navigation.NavigateTo($"/admin/institutions/{institution.Id}");
+        return;
+      }
+
+      institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), _model.IsActive));
+      _model.IsActive = institution.IsActive;
+      _statusMessage = "Institution saved.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task DeactivateAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new DeactivateInstitutionCommand(Id!.Value));
+      _model.IsActive = false;
+      _statusMessage = "Institution deactivated.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+  private sealed class InstitutionFormModel
+  {
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(32)]
+    public string ShortCode { get; set; } = string.Empty;
+
+    [StringLength(320)]
+    public string? ContactEmail { get; set; }
+
+    public bool IsActive { get; set; } = true;
+  }
 }

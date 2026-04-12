@@ -1,0 +1,52 @@
+@if (TotalCount > 0)
+{
+  <div class="pager">
+    <div class="pager-info">@SummaryText</div>
+    <div class="pager-actions">
+      <button type="button" class="btn btn-outline btn-sm" disabled="@(Page <= 1)" @onclick="() => ChangePageAsync(Page - 1)">Previous</button>
+      <button type="button" class="btn btn-outline btn-sm" disabled="@(Page >= TotalPages)" @onclick="() => ChangePageAsync(Page + 1)">Next</button>
+    </div>
+    <div class="pager-page-size">
+      <span class="pager-page-size-label">Per page:</span>
+      <select class="form-select form-select-sm pager-page-size-select" value="@PageSize" @onchange="HandlePageSizeChangedAsync">
+        @foreach (var size in _pageSizes)
+        {
+          <option value="@size">@size</option>
+        }
+      </select>
+    </div>
+  </div>
+}
+
+@code {
+  private static readonly int[] _pageSizes = [10, 20, 50, 100];
+
+  [Parameter] public int Page { get; set; } = 1;
+  [Parameter] public int PageSize { get; set; } = 20;
+  [Parameter] public int TotalCount { get; set; }
+  [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+  [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
+
+  private int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)Math.Max(1, PageSize)));
+
+  private string SummaryText
+  {
+    get
+    {
+      var start = ((Math.Max(Page, 1) - 1) * Math.Max(PageSize, 1)) + 1;
+      var end = Math.Min(TotalCount, Math.Max(Page, 1) * Math.Max(PageSize, 1));
+      return $"Showing {start}-{end} of {TotalCount}";
+    }
+  }
+
+  private Task ChangePageAsync(int nextPage)
+    => OnPageChanged.InvokeAsync(Math.Max(1, Math.Min(nextPage, TotalPages)));
+
+  private async Task HandlePageSizeChangedAsync(ChangeEventArgs args)
+  {
+    if (int.TryParse(args.Value?.ToString(), out var pageSize))
+    {
+      await OnPageSizeChanged.InvokeAsync(pageSize);
+    }
+  }
+}

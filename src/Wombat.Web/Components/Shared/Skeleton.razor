@@ -1,0 +1,10 @@
+@for (var i = 0; i < Count; i++)
+{
+  <div class="skeleton" style="width:@Width;height:@Height"></div>
+}
+
+@code {
+  [Parameter] public string Width { get; set; } = "100%";
+  [Parameter] public string Height { get; set; } = "1rem";
+  [Parameter] public int Count { get; set; } = 1;
+}

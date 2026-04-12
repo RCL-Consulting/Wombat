@@ -1,0 +1,14 @@
+@page "/access-denied"
+@attribute [AllowAnonymous]
+
+<PageTitle>Access denied</PageTitle>
+
+<PageHeader Title="Access denied" Subtitle="You do not have permission to view this page." />
+
+<Alert Kind="warning">
+  Your current role does not allow access to this area. Return to the dashboard or sign in with a different account.
+</Alert>
+
+<div class="actions-cell">
+  <a class="btn btn-outline" href="/">Back to home</a>
+</div>

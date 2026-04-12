@@ -1,103 +1,111 @@
 @page "/account/register"
+@attribute [AllowAnonymous]
 @inject IScopedSender Sender
 @inject IJSRuntime JS
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Complete registration</PageTitle>
 
-<h1>Complete registration</h1>
+<div class="account-form-container shadow">
+  <h2>Complete registration</h2>
 
-@if (_loading)
-{
-    <p>Loading invitation...</p>
-}
-else if (!string.IsNullOrWhiteSpace(_pageErrorMessage))
-{
-    <p>@_pageErrorMessage</p>
-}
-else if (_preview is not null)
-{
-    <p>Registering @(_preview.Email) as @(_preview.TargetRole).</p>
+  @if (_loading)
+  {
+    <Skeleton Count="4" Height="2.75rem" />
+  }
+  else if (!string.IsNullOrWhiteSpace(_pageErrorMessage))
+  {
+    <Alert Kind="danger">@_pageErrorMessage</Alert>
+  }
+  else if (_preview is not null)
+  {
+    <Alert Kind="info">Registering @_preview.Email as @_preview.TargetRole.</Alert>
 
     <form method="post" action="/account/register/submit">
-        <div class="mb-3">
-            <label for="register-email">Email</label>
-            <input id="register-email" class="form-control" type="email" value="@_preview.Email" disabled />
-        </div>
+      <AntiforgeryToken />
+      <div class="mb-3">
+        <label for="register-email">Email</label>
+        <input id="register-email" class="form-control" type="email" value="@_preview.Email" disabled />
+      </div>
 
-        <div class="mb-3">
-            <label for="register-first-name">First name</label>
-            <input id="register-first-name" class="form-control" type="text" name="FirstName" required maxlength="100" />
-        </div>
+      <div class="mb-3">
+        <label for="register-first-name">First name</label>
+        <input id="register-first-name" class="form-control" type="text" name="FirstName" required maxlength="100" />
+      </div>
 
-        <div class="mb-3">
-            <label for="register-last-name">Last name</label>
-            <input id="register-last-name" class="form-control" type="text" name="LastName" required maxlength="100" />
-        </div>
+      <div class="mb-3">
+        <label for="register-last-name">Last name</label>
+        <input id="register-last-name" class="form-control" type="text" name="LastName" required maxlength="100" />
+      </div>
 
-        <div class="mb-3">
-            <label for="register-password">Password</label>
-            <input id="register-password" class="form-control" type="password" name="Password" required />
-        </div>
+      <div class="mb-3 password-wrapper">
+        <label for="register-password">Password</label>
+        <input id="register-password" class="form-control" type="password" name="Password" required />
+        <PasswordToggleButton For="register-password" />
+      </div>
 
-        <div class="mb-3">
-            <label for="register-confirm-password">Confirm password</label>
-            <input id="register-confirm-password" class="form-control" type="password" name="ConfirmPassword" required />
-        </div>
+      <div class="mb-3 password-wrapper">
+        <label for="register-confirm-password">Confirm password</label>
+        <input id="register-confirm-password" class="form-control" type="password" name="ConfirmPassword" required />
+        <PasswordToggleButton For="register-confirm-password" />
+      </div>
 
-        <input type="hidden" name="Token" value="@_token" />
+      <input type="hidden" name="Token" value="@_token" />
+      <FormActions>
         <button type="submit" class="btn btn-primary">Register</button>
+      </FormActions>
     </form>
-}
+  }
+</div>
 
 @code {
-    [SupplyParameterFromQuery(Name = "token")]
-    public string? Token { get; set; }
-    
-    [SupplyParameterFromQuery(Name = "error")]
-    public string? Error { get; set; }
+  [SupplyParameterFromQuery(Name = "token")]
+  public string? Token { get; set; }
 
-    private InvitationPreviewDto? _preview;
-    private string? _token;
-    private string? _pageErrorMessage;
-    private bool _loading = true;
-    private bool _urlCleaned;
+  [SupplyParameterFromQuery(Name = "error")]
+  public string? Error { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+  private InvitationPreviewDto? _preview;
+  private string? _token;
+  private string? _pageErrorMessage;
+  private bool _loading = true;
+  private bool _urlCleaned;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _pageErrorMessage = Error;
+    _preview = null;
+    _token = Token;
+
+    if (string.IsNullOrWhiteSpace(_token))
     {
-        _loading = true;
-        _pageErrorMessage = Error;
-        _preview = null;
-        _token = Token;
-
-        if (string.IsNullOrWhiteSpace(_token))
-        {
-            _pageErrorMessage ??= "The invitation token is missing.";
-            _loading = false;
-            return;
-        }
-
-        try
-        {
-            _preview = await Sender.Send(new GetInvitationPreviewQuery(_token));
-        }
-        catch (Exception exception)
-        {
-            _pageErrorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _pageErrorMessage ??= "The invitation token is missing.";
+      _loading = false;
+      return;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    try
     {
-        if (_urlCleaned || string.IsNullOrWhiteSpace(_token))
-        {
-            return;
-        }
-
-        _urlCleaned = true;
-        await JS.InvokeVoidAsync("wombat.clearInvitationTokenFromUrl");
+      _preview = await Sender.Send(new GetInvitationPreviewQuery(_token));
     }
+    catch (Exception exception)
+    {
+      _pageErrorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_urlCleaned || string.IsNullOrWhiteSpace(_token))
+    {
+      return;
+    }
+
+    _urlCleaned = true;
+    await JS.InvokeVoidAsync("wombat.clearInvitationTokenFromUrl");
+  }
 }

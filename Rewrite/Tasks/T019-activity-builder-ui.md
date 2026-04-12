@@ -1,9 +1,11 @@
 # T019 — Activity builder UI + dynamic form renderer (v1)
 
 **Phase:** 2 — Activity platform
-**Depends on:** T018, T010 (web chrome)
+**Depends on:** T018, T010 (web chrome + design system)
 **Blocks:** T020, T011
 **Follow-ups:** T019-b (drag-drop), T019-c (nested + repeatable sections), T019-d (visual workflow editor), T019-e (visual credit editor), T019-f (multi-condition visibility), T019-g (schema templates & copy)
+
+> **Read `../DESIGN.md` before touching any Razor file.** T019 consumes (and does not silently extend) the design system defined there and built in T010: `PageHeader`, `.form-container`, `.form-grid`, `.form-actions`, `.detail-card` (+ `--interactive` for hoverable add-field targets, `--empty` for the "no fields yet" state), `.clinic-table`, `.btn`/`.btn-primary`/`.btn-outline`/`.btn-sm`, `.validation-summary-errors`, `.alert`, `StatePanel`, `ConfirmDialog`, `FormField`, `FormActions`. If the builder truly needs a new shared class (likely: `.tab-bar`, `.tab-bar-tab`, `.builder-two-col`, `.field-type-icon`, `.state-diagram` — enumerate before starting), add it to `DESIGN.md` in the same commit and land the rule in `app.css` before using it anywhere. **Never** inline a `<style>` block inside a builder page. The builder is the most complex UI in Wombat; it is also the loudest test of whether the design system holds — so it hurts first and most when the contract breaks.
 
 ## Goal
 
@@ -16,9 +18,9 @@ The guiding principle for this task is **honest scoping**. Everything in the "De
 ### Builder (admin side)
 
 1. **Pages** under `Wombat.Web/Components/Pages/Admin/ActivityTypes/`:
-   - `ActivityTypesList.razor` — lists types in the current scope, filter by active/scope/key, version badge, "Edit draft" and "View published" actions.
-   - `ActivityTypeEdit.razor` — three-tab editor: **Form**, **Workflow**, **Credit**.
-   - Header shows the published version, the draft version (if one exists), and buttons: **Save draft**, **Discard draft**, **Publish new version**, **Preview as trainee**.
+   - `ActivityTypesList.razor` — lists types in the current scope, filter by active/scope/key, version badge, "Edit draft" and "View published" actions. Uses `PageHeader` + `.clinic-table` inside `.table-container` + `PagerControls` — do not hand-roll a `<table class="table">`.
+   - `ActivityTypeEdit.razor` — three-tab editor: **Form**, **Workflow**, **Credit**. Page shell is `PageHeader` followed by a `.tab-bar` (new class in `DESIGN.md`) followed by the active tab's body wrapped in `.form-container`. Save/Discard/Publish/Preview live in a sticky `.form-actions` bar at the bottom of the page.
+   - Header shows the published version, the draft version (if one exists), and buttons: **Save draft**, **Discard draft**, **Publish new version**, **Preview as trainee**. Buttons use `.btn .btn-primary`, `.btn .btn-outline`, and `.btn .btn-danger` — never `.btn-outline-primary`.
 
 2. **Draft/publish lifecycle**:
    - The published `ActivityType` row is immutable. Editing means creating a draft.
@@ -29,8 +31,9 @@ The guiding principle for this task is **honest scoping**. Everything in the "De
    - Existing activities stay pinned to the version they were created under. They are never rewritten by a publish.
 
 3. **Form tab — the visual builder**:
-   - Left column: a list of sections, each showing its title and the fields inside it. Each field row shows its label, type icon, and a "required" dot if applicable.
-   - Right column: a live preview of the form rendered with the runtime `ActivityForm.razor` component against the current staging schema, with dummy data.
+   - Two-column layout using the shared `.builder-two-col` grid (add to `DESIGN.md` — a `display: grid; grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr); gap: var(--space-6);` container, collapsing to a single column below 1100px).
+   - Left column: a `.detail-card` titled "Sections" containing a list of section cards. Each section is itself a nested `.detail-card` with its own fields rendered as `.detail-card--interactive` rows. Each field row shows its label, type icon (from the `.field-type-icon` sprite — Lucide SVGs sized via `--space-5`), and a "required" dot if applicable.
+   - Right column: a `.detail-card` titled "Live preview" containing the runtime `ActivityForm.razor` component rendered against the current staging schema with dummy data. The preview card is the same visual treatment a trainee sees at submission time, so any drift shows up immediately.
    - Section controls on each section card: **Edit title**, **Delete section**, **Move section up**, **Move section down**, **Add field**.
    - Field controls on each field row: **Edit**, **Delete**, **Move field up**, **Move field down** (within the section). Moving a field between sections in v1 is done via Delete + Add in the target section; cross-section moves are deferred to T019-b.
    - **Add field** opens an inline panel (not a modal) with a field-type dropdown of the ten supported types. Selecting a type reveals the type-specific edit panel below it, with sensible defaults.
@@ -133,6 +136,12 @@ The guiding principle for this task is **honest scoping**. Everything in the "De
   - Builder preview / runtime render parity test.
   - Draft/publish lifecycle: editing a published type creates a draft; publish bumps version; existing activities keep their pinned version.
   - Validation: publishing a draft with an unreachable workflow state is rejected; publishing with a credit rule referencing a missing field is rejected.
+- [ ] **Design-system compliance greps (must return zero matches):**
+  - `grep -R '<style' src/Wombat.Web/Components/Pages/Admin/ActivityTypes src/Wombat.Web/Components/Shared/Activities` — no inline `<style>` blocks in builder or renderer files.
+  - `grep -R 'class="table"' src/Wombat.Web/Components/Pages/Admin/ActivityTypes src/Wombat.Web/Components/Shared/Activities` — no primitive Bootstrap tables; everything is `.clinic-table`.
+  - `grep -R 'btn-outline-primary\|btn-outline-secondary\|btn-outline-danger' src/Wombat.Web/Components/Pages/Admin/ActivityTypes src/Wombat.Web/Components/Shared/Activities` — Wombat uses `.btn-outline`, not the Bootstrap variants.
+  - `grep -R '<i class="bi bi-' src/Wombat.Web/Components/Pages/Admin/ActivityTypes src/Wombat.Web/Components/Shared/Activities` — no Bootstrap Icons (the font isn't loaded — use the shared `Icon` component).
+  - `grep -REn '#[0-9a-fA-F]{3,6}' src/Wombat.Web/Components/Pages/Admin/ActivityTypes src/Wombat.Web/Components/Shared/Activities` — no raw hex colors; everything routes through CSS custom properties.
 - [ ] Manual walkthrough — **the T019 acceptance script**:
   1. Log in as an Administrator. Go to Admin → Activity Types → New.
   2. Create a type with Key `hello_world`, Name `Hello World`, global scope.

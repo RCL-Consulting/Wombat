@@ -5,253 +5,245 @@
 
 <PageTitle>Invitations</PageTitle>
 
-<h1>Invitations</h1>
+<PageHeader Title="Invitations" Subtitle="Issue invitation-only onboarding links and review active invitations." />
 
 @if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>@_statusMessage</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p>@_errorMessage</p>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
 
-<EditForm Model="_model" OnValidSubmit="IssueAsync" FormName="issue-invitation">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="details-grid">
+  <section class="detail-card">
+    <h3>Issue invitation</h3>
+    <EditForm Model="_model" OnValidSubmit="IssueAsync" FormName="issue-invitation">
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
 
-    <div class="mb-3">
-        <label for="invitation-email">Email</label>
-        <InputText id="invitation-email" class="form-control" @bind-Value="_model.Email" />
-    </div>
+      <div class="form-grid form-grid--wide">
+        <FormField Label="Email" InputId="invitation-email" Required="true">
+          <InputText id="invitation-email" class="form-control" @bind-Value="_model.Email" />
+          <ValidationMessage For="() => _model.Email" />
+        </FormField>
 
-    <div class="mb-3">
-        <label for="invitation-role">Role</label>
-        <InputSelect id="invitation-role" class="form-select" @bind-Value="_model.TargetRole">
+        <FormField Label="Role" InputId="invitation-role" Required="true">
+          <InputSelect id="invitation-role" class="form-select" @bind-Value="_model.TargetRole">
             @foreach (var role in _roles)
             {
-                <option value="@role">@role</option>
+              <option value="@role">@role</option>
             }
-        </InputSelect>
-    </div>
+          </InputSelect>
+        </FormField>
 
-    <div class="mb-3">
-        <label for="invitation-institution">Institution</label>
-        <InputSelect id="invitation-institution" class="form-select" @bind-Value="_model.InstitutionId">
+        <FormField Label="Institution" InputId="invitation-institution" Required="true">
+          <InputSelect id="invitation-institution" class="form-select" @bind-Value="_model.InstitutionId">
             <option value="">Select institution</option>
             @foreach (var institution in _institutions)
             {
-                <option value="@institution.Id">@institution.Name</option>
+              <option value="@institution.Id">@institution.Name</option>
             }
-        </InputSelect>
-    </div>
+          </InputSelect>
+        </FormField>
 
-    <div class="mb-3">
-        <label for="invitation-speciality">Speciality</label>
-        <InputSelect id="invitation-speciality" class="form-select" @bind-Value="_model.SpecialityId" disabled="@(!RequiresSpeciality)">
+        <FormField Label="Speciality" InputId="invitation-speciality">
+          <InputSelect id="invitation-speciality" class="form-select" @bind-Value="_model.SpecialityId" disabled="@(!RequiresSpeciality)">
             <option value="">Select speciality</option>
             @foreach (var speciality in FilteredSpecialities)
             {
-                <option value="@speciality.Id">@speciality.Name</option>
+              <option value="@speciality.Id">@speciality.Name</option>
             }
-        </InputSelect>
-    </div>
+          </InputSelect>
+        </FormField>
 
-    <div class="mb-3">
-        <label for="invitation-sub-speciality">Sub-speciality</label>
-        <InputSelect id="invitation-sub-speciality" class="form-select" @bind-Value="_model.SubSpecialityId" disabled="@(!RequiresSubSpeciality)">
+        <FormField Label="Sub-speciality" InputId="invitation-sub-speciality">
+          <InputSelect id="invitation-sub-speciality" class="form-select" @bind-Value="_model.SubSpecialityId" disabled="@(!RequiresSubSpeciality)">
             <option value="">Select sub-speciality</option>
             @foreach (var subSpeciality in FilteredSubSpecialities)
             {
-                <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+              <option value="@subSpeciality.Id">@subSpeciality.Name</option>
             }
-        </InputSelect>
-    </div>
+          </InputSelect>
+        </FormField>
+      </div>
 
-    <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Issuing..." : "Issue invitation")</button>
-</EditForm>
+      <FormActions>
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Issuing..." : "Issue invitation")</button>
+      </FormActions>
+    </EditForm>
+  </section>
 
-<hr />
-
-@if (_loading)
-{
-    <p>Loading invitations...</p>
-}
-else if (_invitations.Count == 0)
-{
-    <p>No active invitations found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Institution</th>
-                <th>Speciality</th>
-                <th>Sub-speciality</th>
-                <th>Issued</th>
-                <th>Expires</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var invitation in _invitations)
-            {
-                <tr>
-                    <td>@invitation.Email</td>
-                    <td>@invitation.TargetRole</td>
-                    <td>@invitation.InstitutionName</td>
-                    <td>@invitation.SpecialityName</td>
-                    <td>@invitation.SubSpecialityName</td>
-                    <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
-                    <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+  <section class="detail-card">
+    <h3>Active invitations</h3>
+    <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_invitations.Count == 0)" EmptyTitle="No active invitations" EmptyBody="Issue an invitation to create the first onboarding link.">
+      <DataTable TItem="ActiveInvitationDto" Items="_invitations" Caption="Active invitations">
+        <HeaderRow>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Institution</th>
+            <th>Speciality</th>
+            <th>Sub-speciality</th>
+            <th>Issued</th>
+            <th>Expires</th>
+            <th></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="invitation">
+          <tr>
+            <td>@invitation.Email</td>
+            <td>@invitation.TargetRole</td>
+            <td>@invitation.InstitutionName</td>
+            <td>@invitation.SpecialityName</td>
+            <td>@invitation.SubSpecialityName</td>
+            <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
+            <td><button type="button" class="btn btn-danger btn-sm" @onclick="() => RevokeAsync(invitation.Id)">Revoke</button></td>
+          </tr>
+        </Row>
+      </DataTable>
+    </StatePanel>
+  </section>
+</div>
 
 @code {
-    private static readonly string[] _roles =
-    [
-        WombatRoles.InstitutionalAdmin,
-        WombatRoles.SpecialityAdmin,
-        WombatRoles.SubSpecialityAdmin,
-        WombatRoles.Coordinator,
-        WombatRoles.CommitteeMember,
-        WombatRoles.Assessor,
-        WombatRoles.Trainee
-    ];
+  private static readonly string[] _roles =
+  [
+    WombatRoles.InstitutionalAdmin,
+    WombatRoles.SpecialityAdmin,
+    WombatRoles.SubSpecialityAdmin,
+    WombatRoles.Coordinator,
+    WombatRoles.CommitteeMember,
+    WombatRoles.Assessor,
+    WombatRoles.Trainee
+  ];
 
-    private InvitationFormModel _model = new();
-    private IReadOnlyList<InstitutionDto> _institutions = [];
-    private IReadOnlyList<SpecialityDto> _specialities = [];
-    private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-    private IReadOnlyList<ActiveInvitationDto> _invitations = [];
-    private string? _statusMessage;
-    private string? _errorMessage;
-    private bool _loading = true;
-    private bool _saving;
+  private InvitationFormModel _model = new();
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+  private IReadOnlyList<ActiveInvitationDto> _invitations = [];
+  private string? _statusMessage;
+  private string? _errorMessage;
+  private bool _loading = true;
+  private bool _saving;
 
-    private bool RequiresSpeciality
-        => _model.TargetRole is WombatRoles.SpecialityAdmin or WombatRoles.SubSpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember or WombatRoles.Assessor or WombatRoles.Trainee;
+  private bool RequiresSpeciality
+    => _model.TargetRole is WombatRoles.SpecialityAdmin or WombatRoles.SubSpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember or WombatRoles.Assessor or WombatRoles.Trainee;
 
-    private bool RequiresSubSpeciality
-        => _model.TargetRole is WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor or WombatRoles.Trainee;
+  private bool RequiresSubSpeciality
+    => _model.TargetRole is WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor or WombatRoles.Trainee;
 
-    private IEnumerable<SpecialityDto> FilteredSpecialities
-        => _specialities.Where(entity => _model.InstitutionId.HasValue && entity.InstitutionId == _model.InstitutionId.Value);
+  private IEnumerable<SpecialityDto> FilteredSpecialities
+    => _specialities.Where(entity => _model.InstitutionId.HasValue && entity.InstitutionId == _model.InstitutionId.Value);
 
-    private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
-        => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);
+  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
+    => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+
+    try
     {
-        await LoadAsync();
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
     }
-
-    private async Task LoadAsync()
+    catch (Exception exception)
     {
-        _loading = true;
-        _errorMessage = null;
-
-        try
-        {
-            _institutions = await Sender.Send(new GetInstitutionsListQuery());
-            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
-            _invitations = await Sender.Send(new ListActiveInvitationsQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _errorMessage = exception.Message;
     }
-
-    private async Task IssueAsync()
+    finally
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            if (!RequiresSpeciality)
-            {
-                _model.SpecialityId = null;
-                _model.SubSpecialityId = null;
-            }
-            else if (!RequiresSubSpeciality)
-            {
-                _model.SubSpecialityId = null;
-            }
-
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var issuedByUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                ?? throw new InvalidOperationException("The current user identifier is missing.");
-
-            await Sender.Send(new IssueInvitationCommand(
-                _model.Email,
-                _model.TargetRole,
-                _model.InstitutionId ?? 0,
-                _model.SpecialityId,
-                _model.SubSpecialityId,
-                issuedByUserId));
-
-            _statusMessage = $"Invitation issued for {_model.Email}. The stub sender logged the registration link.";
-            _model = new InvitationFormModel();
-            _invitations = await Sender.Send(new ListActiveInvitationsQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _loading = false;
     }
+  }
 
-    private async Task RevokeAsync(int invitationId)
+  private async Task IssueAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        _errorMessage = null;
-        _statusMessage = null;
+      if (!RequiresSpeciality)
+      {
+        _model.SpecialityId = null;
+        _model.SubSpecialityId = null;
+      }
+      else if (!RequiresSubSpeciality)
+      {
+        _model.SubSpecialityId = null;
+      }
 
-        try
-        {
-            await Sender.Send(new RevokeInvitationCommand(invitationId));
-            _statusMessage = "Invitation revoked.";
-            _invitations = await Sender.Send(new ListActiveInvitationsQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var issuedByUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      await Sender.Send(new IssueInvitationCommand(
+        _model.Email,
+        _model.TargetRole,
+        _model.InstitutionId ?? 0,
+        _model.SpecialityId,
+        _model.SubSpecialityId,
+        issuedByUserId));
+
+      _statusMessage = $"Invitation issued for {_model.Email}. The stub sender logged the registration link.";
+      _model = new InvitationFormModel();
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
     }
-
-    private sealed class InvitationFormModel
+    catch (Exception exception)
     {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        public string TargetRole { get; set; } = WombatRoles.InstitutionalAdmin;
-
-        [Required]
-        public int? InstitutionId { get; set; }
-
-        public int? SpecialityId { get; set; }
-        public int? SubSpecialityId { get; set; }
+      _errorMessage = exception.Message;
     }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task RevokeAsync(int invitationId)
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new RevokeInvitationCommand(invitationId));
+      _statusMessage = "Invitation revoked.";
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
+
+  private sealed class InvitationFormModel
+  {
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string TargetRole { get; set; } = WombatRoles.InstitutionalAdmin;
+
+    [Required]
+    public int? InstitutionId { get; set; }
+
+    public int? SpecialityId { get; set; }
+    public int? SubSpecialityId { get; set; }
+  }
 }

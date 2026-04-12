@@ -1,0 +1,143 @@
+.navbar-toggler {
+  appearance: none;
+  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  height: 2.5rem;
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
+  width: 3.5rem;
+}
+
+.navbar-toggler:checked {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.top-row {
+  background-color: rgba(0, 0, 0, 0.4);
+  min-height: 3.5rem;
+}
+
+.navbar-brand {
+  color: white;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.bi {
+  background-size: cover;
+  display: inline-block;
+  height: 1.25rem;
+  margin-left: 0.35rem;
+  margin-right: 0.75rem;
+  position: relative;
+  top: -1px;
+  width: 1.25rem;
+}
+
+.bi-home-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 24 24'%3E%3Cpath d='M3 11.5 12 4l9 7.5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 10.5V20h14v-9.5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.bi-user-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='4' stroke='white' stroke-width='2'/%3E%3Cpath d='M5 20a7 7 0 0 1 14 0' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.bi-users-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M16 20a4 4 0 0 0-8 0' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='9' r='3' stroke='white' stroke-width='2'/%3E%3Cpath d='M20 20a4 4 0 0 0-3-3.87' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M4 20a4 4 0 0 1 3-3.87' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.bi-book-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M4 19a2 2 0 0 1 2-2h14' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+
+.bi-inbox-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M4 13h4l2 3h4l2-3h4' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 5h14l2 8v6H3v-6z' stroke='white' stroke-width='2' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.bi-calendar-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='2' stroke='white' stroke-width='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 11h18' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.bi-file-text-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z' stroke='white' stroke-width='2'/%3E%3Cpath d='M14 3v5h5' stroke='white' stroke-width='2'/%3E%3Cpath d='M9 13h6M9 17h6' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.bi-settings-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='3' stroke='white' stroke-width='2'/%3E%3Cpath d='M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2H9a1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1V9c0 .4.3.8.7.8H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.4 1.2Z' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.bi-log-out-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M16 17l5-5-5-5M21 12H9' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.bi-alert-triangle-nav-menu {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M10.3 3.9 1.8 18.3A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0Z' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M12 9v4M12 17h.01' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.nav-item {
+  font-size: 0.9rem;
+  padding-bottom: 0.5rem;
+}
+
+.nav-item:first-of-type {
+  padding-top: 1rem;
+}
+
+.nav-item:last-of-type {
+  padding-bottom: 1rem;
+}
+
+.nav-item ::deep .nav-link {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: rgb(215 215 215);
+  display: flex;
+  height: 3rem;
+  line-height: 3rem;
+  padding-left: 0.45rem;
+  padding-right: 0.75rem;
+  width: 100%;
+}
+
+.nav-item ::deep a.active {
+  background-color: rgba(255, 255, 255, 0.37);
+  color: white;
+}
+
+.nav-item ::deep .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-logout-button {
+  background: none;
+  border: none;
+  color: rgb(215 215 215);
+  text-align: left;
+  width: 100%;
+}
+
+.nav-scrollable {
+  display: none;
+}
+
+.navbar-toggler:checked ~ .nav-scrollable {
+  display: block;
+}
+
+@media (min-width: 641px) {
+  .navbar-toggler {
+    display: none;
+  }
+
+  .nav-scrollable {
+    display: block;
+    height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+  }
+}

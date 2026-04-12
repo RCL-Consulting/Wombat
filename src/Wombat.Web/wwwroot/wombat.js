@@ -11,3 +11,12 @@ window.wombat.clearInvitationTokenFromUrl = function () {
     const next = `${url.pathname}${search ? `?${search}` : ""}${url.hash}`;
     window.history.replaceState({}, "", next);
 };
+
+window.wombat.togglePasswordVisibility = function (elementId, visible) {
+    const input = document.getElementById(elementId);
+    if (!input) {
+        return;
+    }
+
+    input.type = visible ? "text" : "password";
+};

@@ -4,66 +4,56 @@
 
 <PageTitle>Assessment Forms</PageTitle>
 
-<h1>Assessment forms</h1>
+<PageHeader Title="Assessment forms" Subtitle="Manage the form shells, criteria, and EPA links used in assessments.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/forms/new">
+      <Icon Name="plus" />
+      Create form
+    </a>
+  </Actions>
+</PageHeader>
 
-<p>
-    <a href="/admin/forms/new">Create form</a>
-</p>
-
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-    <p>@_errorMessage</p>
-}
-else if (_forms is null)
-{
-    <p>Loading forms...</p>
-}
-else if (_forms.Count == 0)
-{
-    <p>No assessment forms found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Scale</th>
-                <th>Criteria</th>
-                <th>EPA links</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var form in _forms)
-            {
-                <tr>
-                    <td>@form.Name</td>
-                    <td>@form.ScaleName</td>
-                    <td>@form.Criteria.Count</td>
-                    <td>@form.EpaLinks.Count</td>
-                    <td>@(form.IsActive ? "Active" : "Inactive")</td>
-                    <td><a href="@($"/admin/forms/{form.Id}")">Edit</a></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<StatePanel IsLoading="@(_forms is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_forms?.Count == 0)" EmptyTitle="No assessment forms yet" EmptyBody="Create the first form before linking it into assessment workflows.">
+  @if (_forms is not null)
+  {
+    <DataTable TItem="AssessmentFormDto" Items="_forms" Caption="Assessment forms">
+      <HeaderRow>
+        <tr>
+          <th>Name</th>
+          <th>Scale</th>
+          <th>Criteria</th>
+          <th>EPA links</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="form">
+        <tr>
+          <td>@form.Name</td>
+          <td>@form.ScaleName</td>
+          <td>@form.Criteria.Count</td>
+          <td>@form.EpaLinks.Count</td>
+          <td>@(form.IsActive ? "Active" : "Inactive")</td>
+          <td><a class="btn btn-outline btn-sm" href="@($"/admin/forms/{form.Id}")">Edit</a></td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
 
 @code {
-    private IReadOnlyList<AssessmentFormDto>? _forms;
-    private string? _errorMessage;
+  private IReadOnlyList<AssessmentFormDto>? _forms;
+  private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        try
-        {
-            _forms = await Sender.Send(new GetAssessmentFormsListQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
+      _forms = await Sender.Send(new GetAssessmentFormsListQuery());
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
 }

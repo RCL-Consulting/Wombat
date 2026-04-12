@@ -4,69 +4,61 @@
 
 <PageTitle>Institutions</PageTitle>
 
-<h1>Institutions</h1>
+<PageHeader Title="Institutions" Subtitle="Maintain institution records and drill into their speciality structure.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/institutions/new">
+      <Icon Name="plus" />
+      Create institution
+    </a>
+  </Actions>
+</PageHeader>
 
-<p>
-    <a href="/admin/institutions/new">Create institution</a>
-</p>
-
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-    <p>@_errorMessage</p>
-}
-else if (_institutions is null)
-{
-    <p>Loading institutions...</p>
-}
-else if (_institutions.Count == 0)
-{
-    <p>No institutions found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Short code</th>
-                <th>Contact email</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var institution in _institutions)
-            {
-                <tr>
-                    <td>@institution.Name</td>
-                    <td>@institution.ShortCode</td>
-                    <td>@institution.ContactEmail</td>
-                    <td>@(institution.IsActive ? "Active" : "Inactive")</td>
-                    <td>@institution.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>
-                        <a href="@($"/admin/institutions/{institution.Id}")">Edit</a> |
-                        <a href="@($"/admin/institutions/{institution.Id}/specialities")">Specialities</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<StatePanel IsLoading="@(_institutions is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_institutions?.Count == 0)" EmptyTitle="No institutions yet" EmptyBody="Create the first institution to start configuring scope and onboarding.">
+  @if (_institutions is not null)
+  {
+    <DataTable TItem="InstitutionDto" Items="_institutions" Caption="Institutions">
+      <HeaderRow>
+        <tr>
+          <th>Name</th>
+          <th>Short code</th>
+          <th>Contact email</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="institution">
+        <tr>
+          <td>@institution.Name</td>
+          <td>@institution.ShortCode</td>
+          <td>@institution.ContactEmail</td>
+          <td>@(institution.IsActive ? "Active" : "Inactive")</td>
+          <td>@institution.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+          <td>
+            <div class="actions-cell">
+              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{institution.Id}")">Edit</a>
+              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{institution.Id}/specialities")">Specialities</a>
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
 
 @code {
-    private IReadOnlyList<InstitutionDto>? _institutions;
-    private string? _errorMessage;
+  private IReadOnlyList<InstitutionDto>? _institutions;
+  private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        try
-        {
-            _institutions = await Sender.Send(new GetInstitutionsListQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
 }

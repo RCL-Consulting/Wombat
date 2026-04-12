@@ -1,0 +1,55 @@
+@page "/placeholder/{Feature}"
+
+<PageTitle>@Heading</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" />
+
+<div class="dashboard-grid">
+  <div class="detail-card">
+    <h3>Planned surface</h3>
+    <p>This area is stubbed so navigation and authorization can be exercised before the feature task lands.</p>
+  </div>
+  <div class="detail-card">
+    <h3>Next task</h3>
+    <p>@TaskHint</p>
+  </div>
+  <div class="detail-card detail-card--empty">
+    <div class="state-panel-title">Coming soon</div>
+    <div class="state-panel-copy">The shell, nav, and design system are in place. The feature implementation follows in a later task.</div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public string Feature { get; set; } = string.Empty;
+
+  private string Heading => Feature switch
+  {
+    "activities" => "Activities",
+    "my-activities" => "My Activities",
+    "my-curriculum" => "My Curriculum",
+    "activity-inbox" => "Activity Inbox",
+    "recent-activities" => "Recent Activities",
+    "stalled-activities" => "Stalled Activities",
+    "programme-trainees" => "Programme Trainees",
+    "star-review-queue" => "STAR Review Queue",
+    "specialities" => "Specialities",
+    "users" => "Users",
+    "activity-types" => "Activity Types",
+    "system" => "System",
+    _ => "Coming soon"
+  };
+
+  private string Subtitle => Feature switch
+  {
+    "activity-types" => "This route exists so the design system and role-gated navigation can be validated before T019.",
+    "programme-trainees" => "This route exists so speciality and committee navigation can be exercised before the dashboard and workflow tasks land.",
+    _ => "This placeholder keeps the route live until its feature task replaces the stub."
+  };
+
+  private string TaskHint => Feature switch
+  {
+    "activity-types" => "T019 will replace this stub.",
+    "activities" or "my-activities" or "activity-inbox" or "recent-activities" or "stalled-activities" => "T019 and later activity tasks will replace this stub.",
+    _ => "T011 or later role-specific work will replace this stub."
+  };
+}

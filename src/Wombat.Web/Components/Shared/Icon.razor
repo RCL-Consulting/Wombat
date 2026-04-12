@@ -1,0 +1,9 @@
+<svg class="icon @Class" width="@Size" height="@Size" aria-hidden="true">
+  <use href="@($"/icons/{Name}.svg#i")"></use>
+</svg>
+
+@code {
+  [Parameter, EditorRequired] public string Name { get; set; } = default!;
+  [Parameter] public int Size { get; set; } = 16;
+  [Parameter] public string Class { get; set; } = string.Empty;
+}

@@ -16,6 +16,7 @@ This folder is the canonical plan for rewriting Wombat on top of the same archit
 | `PLAN.md` | Master plan. Phases, task list, progress checkboxes. |
 | `DOMAIN.md` | What EPAs, WBAs, STAR and the role hierarchy actually mean. Corrects misunderstandings in the current Wombat model. |
 | `ARCHITECTURE.md` | Clean Architecture / CQRS layout, conventions, non-negotiables. |
+| `DESIGN.md` | The canonical UI/design-system contract: tokens, layout grid, buttons, tables, forms, cards, dashboards, alerts, skeletons, icons, and the `app.css` section order. **Any task that writes Razor must read this first.** |
 | `WORKFLOW.md` | Git branching, session handoff, verification protocol, agent prompts. |
 | `INFRASTRUCTURE.md` | Linode server layout, deployment, secrets, backups. |
 | `current_state.md` | Live state. Updated at the end of every session. |

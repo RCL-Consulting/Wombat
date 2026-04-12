@@ -4,78 +4,71 @@
 
 <PageTitle>EPAs</PageTitle>
 
-<h1>EPAs</h1>
+<PageHeader Title="EPAs" Subtitle="Maintain the entrustable professional activities available to curricula and forms.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/epas/new">
+      <Icon Name="plus" />
+      Create EPA
+    </a>
+  </Actions>
+</PageHeader>
 
-<p>
-    <a href="/admin/epas/new">Create EPA</a>
-</p>
-
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-    <p>@_errorMessage</p>
-}
-else if (_epas is null || _subSpecialities is null || _specialities is null || _institutions is null)
-{
-    <p>Loading EPAs...</p>
-}
-else if (_epas.Count == 0)
-{
-    <p>No EPAs found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Title</th>
-                <th>Institution</th>
-                <th>Speciality</th>
-                <th>Sub-speciality</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var epa in _epas)
-            {
-                var subSpeciality = _subSpecialities.Single(entity => entity.Id == epa.SubSpecialityId);
-                var speciality = _specialities.Single(entity => entity.Id == subSpeciality.SpecialityId);
-                var institution = _institutions.Single(entity => entity.Id == speciality.InstitutionId);
-
-                <tr>
-                    <td>@epa.Code</td>
-                    <td>@epa.Title</td>
-                    <td>@institution.Name</td>
-                    <td>@speciality.Name</td>
-                    <td>@subSpeciality.Name</td>
-                    <td>@(epa.IsActive ? "Active" : "Inactive")</td>
-                    <td><a href="@($"/admin/epas/{epa.Id}")">Edit</a></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<StatePanel IsLoading="@(_epas is null || _subSpecialities is null || _specialities is null || _institutions is null)" LoadError="@_errorMessage" IsEmpty="@(_epas?.Count == 0)" EmptyTitle="No EPAs yet" EmptyBody="Create the first EPA to start building curricula and assessment forms.">
+  @if (_epas is not null && _subSpecialities is not null && _specialities is not null && _institutions is not null)
+  {
+    <DataTable TItem="EpaDto" Items="_epas" Caption="Entrustable professional activities">
+      <HeaderRow>
+        <tr>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Institution</th>
+          <th>Speciality</th>
+          <th>Sub-speciality</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="epa">
+        @{
+          var subSpeciality = _subSpecialities.Single(entity => entity.Id == epa.SubSpecialityId);
+          var speciality = _specialities.Single(entity => entity.Id == subSpeciality.SpecialityId);
+          var institution = _institutions.Single(entity => entity.Id == speciality.InstitutionId);
+        }
+        <tr>
+          <td>@epa.Code</td>
+          <td>@epa.Title</td>
+          <td>@institution.Name</td>
+          <td>@speciality.Name</td>
+          <td>@subSpeciality.Name</td>
+          <td>@(epa.IsActive ? "Active" : "Inactive")</td>
+          <td>
+            <a class="btn btn-outline btn-sm" href="@($"/admin/epas/{epa.Id}")">Edit</a>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
 
 @code {
-    private IReadOnlyList<EpaDto>? _epas;
-    private IReadOnlyList<InstitutionDto>? _institutions;
-    private IReadOnlyList<SpecialityDto>? _specialities;
-    private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
-    private string? _errorMessage;
+  private IReadOnlyList<EpaDto>? _epas;
+  private IReadOnlyList<InstitutionDto>? _institutions;
+  private IReadOnlyList<SpecialityDto>? _specialities;
+  private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
+  private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    try
     {
-        try
-        {
-            _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
-            _institutions = await Sender.Send(new GetInstitutionsListQuery());
-            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
+      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
     }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
 }

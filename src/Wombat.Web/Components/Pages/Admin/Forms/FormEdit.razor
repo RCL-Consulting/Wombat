@@ -6,389 +6,416 @@
 
 <PageTitle>@(IsNew ? "Create Assessment Form" : "Edit Assessment Form")</PageTitle>
 
-<h1>@(IsNew ? "Create assessment form" : "Edit assessment form")</h1>
+<PageHeader Title="@(IsNew ? "Create assessment form" : "Edit assessment form")" Subtitle="Define the scope, scale, criteria, and EPA links for the assessment form.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/forms">Back to forms</a>
+  </Actions>
+</PageHeader>
 
-<p>
-    <a href="/admin/forms">Back to forms</a>
-</p>
-
-@if (_loading)
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
 {
-    <p>Loading form...</p>
+  <Alert Kind="success">@_statusMessage</Alert>
 }
-else
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-        <p>@_statusMessage</p>
-    }
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
 
-    @if (!string.IsNullOrWhiteSpace(_errorMessage))
-    {
-        <p>@_errorMessage</p>
-    }
-
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="assessment-form-edit">
+<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <div class="details-grid">
+    <section class="detail-card">
+      <h3>Form details</h3>
+      <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="assessment-form-edit">
         <DataAnnotationsValidator />
-        <ValidationSummary />
+        <ValidationSummary class="validation-summary-errors" />
 
-        <div class="mb-3">
-            <label for="form-name">Name</label>
+        <div class="form-grid form-grid--wide">
+          <FormField Label="Name" InputId="form-name" Required="true">
             <InputText id="form-name" class="form-control" @bind-Value="_model.Name" />
-        </div>
+            <ValidationMessage For="() => _model.Name" />
+          </FormField>
 
-        <div class="mb-3">
-            <label for="form-institution">Institution</label>
+          <FormField Label="Institution" InputId="form-institution">
             <InputSelect id="form-institution" class="form-select" TValue="int?" @bind-Value="_model.InstitutionId">
-                <option value="">Any institution</option>
-                @foreach (var institution in _institutions)
-                {
-                    <option value="@institution.Id">@institution.Name</option>
-                }
+              <option value="">Any institution</option>
+              @foreach (var institution in _institutions)
+              {
+                <option value="@institution.Id">@institution.Name</option>
+              }
             </InputSelect>
-        </div>
+          </FormField>
 
-        <div class="mb-3">
-            <label for="form-speciality">Speciality</label>
+          <FormField Label="Speciality" InputId="form-speciality">
             <InputSelect id="form-speciality" class="form-select" TValue="int?" @bind-Value="_model.SpecialityId">
-                <option value="">Any speciality</option>
-                @foreach (var speciality in FilteredSpecialities)
-                {
-                    <option value="@speciality.Id">@speciality.Name</option>
-                }
+              <option value="">Any speciality</option>
+              @foreach (var speciality in FilteredSpecialities)
+              {
+                <option value="@speciality.Id">@speciality.Name</option>
+              }
             </InputSelect>
-        </div>
+          </FormField>
 
-        <div class="mb-3">
-            <label for="form-sub-speciality">Sub-speciality</label>
+          <FormField Label="Sub-speciality" InputId="form-sub-speciality">
             <InputSelect id="form-sub-speciality" class="form-select" TValue="int?" @bind-Value="_model.SubSpecialityId">
-                <option value="">Any sub-speciality</option>
-                @foreach (var subSpeciality in FilteredSubSpecialities)
-                {
-                    <option value="@subSpeciality.Id">@subSpeciality.Name</option>
-                }
+              <option value="">Any sub-speciality</option>
+              @foreach (var subSpeciality in FilteredSubSpecialities)
+              {
+                <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+              }
             </InputSelect>
-        </div>
+          </FormField>
 
-        <div class="mb-3">
-            <label for="form-scale">Entrustment scale</label>
+          <FormField Label="Entrustment scale" InputId="form-scale" Required="true">
             <InputSelect id="form-scale" class="form-select" TValue="int" @bind-Value="_model.ScaleId">
-                @foreach (var scale in _scales)
-                {
-                    <option value="@scale.Id">@scale.Name</option>
-                }
+              @foreach (var scale in _scales)
+              {
+                <option value="@scale.Id">@scale.Name</option>
+              }
             </InputSelect>
-        </div>
+          </FormField>
 
-        <div class="mb-3">
-            <label>
-                <InputCheckbox @bind-Value="_model.CanDelete" />
-                Can delete
-            </label>
-        </div>
-
-        @if (!IsNew)
-        {
-            <div class="mb-3">
-                <label>
-                    <InputCheckbox @bind-Value="_model.IsActive" />
-                    Active
-                </label>
+          <FormField Label="Delete behavior" InputId="form-can-delete">
+            <div class="form-check">
+              <InputCheckbox id="form-can-delete" class="form-check-input" @bind-Value="_model.CanDelete" />
+              <label for="form-can-delete">Can delete</label>
             </div>
-        }
+          </FormField>
 
-        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
-        @if (!IsNew)
-        {
-            <button type="button" class="btn btn-outline-danger ms-2" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
-        }
-    </EditForm>
+          @if (!IsNew)
+          {
+            <FormField Label="Status" InputId="form-active">
+              <div class="form-check">
+                <InputCheckbox id="form-active" class="form-check-input" @bind-Value="_model.IsActive" />
+                <label for="form-active">Active</label>
+              </div>
+            </FormField>
+          }
+        </div>
+
+        <FormActions>
+          <a class="btn btn-outline" href="/admin/forms">Cancel</a>
+          @if (!IsNew)
+          {
+            <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+          }
+          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+        </FormActions>
+      </EditForm>
+    </section>
 
     @if (!IsNew && _form is not null)
     {
-        <hr />
-
-        <h2>Criteria</h2>
-
+      <aside class="detail-card">
+        <h3>Criteria</h3>
         @if (_form.Criteria.Count == 0)
         {
-            <p>No criteria configured.</p>
+          <div class="detail-card detail-card--empty-compact">No criteria configured.</div>
         }
         else
         {
-            <ul>
+          <div class="table-container">
+            <table class="clinic-table">
+              <thead>
+                <tr>
+                  <th>Prompt</th>
+                  <th>Help text</th>
+                  <th>Required</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
                 @foreach (var criterion in _form.Criteria)
                 {
-                    <li>
-                        <strong>@criterion.Order.</strong> @criterion.Prompt
-                        @if (!string.IsNullOrWhiteSpace(criterion.HelpText))
-                        {
-                            <span> - @criterion.HelpText</span>
-                        }
-                        <span> (@(criterion.IsRequired ? "Required" : "Optional"))</span>
-                        <button class="btn btn-sm btn-link" @onclick="() => RemoveCriterionAsync(criterion.Id)">Remove</button>
-                    </li>
+                  <tr>
+                    <td>@criterion.Prompt</td>
+                    <td>@criterion.HelpText</td>
+                    <td>@(criterion.IsRequired ? "Required" : "Optional")</td>
+                    <td><button class="btn btn-outline btn-sm" @onclick="() => RemoveCriterionAsync(criterion.Id)">Remove</button></td>
+                  </tr>
                 }
-            </ul>
+              </tbody>
+            </table>
+          </div>
         }
 
         <EditForm Model="_criterionModel" OnValidSubmit="AddCriterionAsync" FormName="assessment-form-criterion">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
 
-            <div class="mb-3">
-                <label>Prompt</label>
-                <InputText class="form-control" @bind-Value="_criterionModel.Prompt" />
-            </div>
-            <div class="mb-3">
-                <label>Help text</label>
-                <InputText class="form-control" @bind-Value="_criterionModel.HelpText" />
-            </div>
-            <div class="mb-3">
-                <label>
-                    <InputCheckbox @bind-Value="_criterionModel.IsRequired" />
-                    Required
-                </label>
-            </div>
-            <button type="submit" class="btn btn-outline-primary" disabled="@_saving">Add criterion</button>
+          <div class="form-grid">
+            <FormField Label="Prompt" InputId="criterion-prompt" Required="true">
+              <InputText id="criterion-prompt" class="form-control" @bind-Value="_criterionModel.Prompt" />
+              <ValidationMessage For="() => _criterionModel.Prompt" />
+            </FormField>
+
+            <FormField Label="Help text" InputId="criterion-help">
+              <InputText id="criterion-help" class="form-control" @bind-Value="_criterionModel.HelpText" />
+              <ValidationMessage For="() => _criterionModel.HelpText" />
+            </FormField>
+
+            <FormField Label="Required" InputId="criterion-required">
+              <div class="form-check">
+                <InputCheckbox id="criterion-required" class="form-check-input" @bind-Value="_criterionModel.IsRequired" />
+                <label for="criterion-required">Required</label>
+              </div>
+            </FormField>
+          </div>
+
+          <FormActions>
+            <button type="submit" class="btn btn-outline" disabled="@_saving">Add criterion</button>
+          </FormActions>
         </EditForm>
 
-        <hr />
-
-        <h2>Linked EPAs</h2>
-
+        <h3>Linked EPAs</h3>
         @if (_form.EpaLinks.Count == 0)
         {
-            <p>No EPA links configured.</p>
+          <div class="detail-card detail-card--empty-compact">No EPA links configured.</div>
         }
         else
         {
-            <ul>
+          <div class="table-container">
+            <table class="clinic-table">
+              <thead>
+                <tr>
+                  <th>EPA</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
                 @foreach (var link in _form.EpaLinks)
                 {
-                    <li>
-                        @link.EpaCode - @link.EpaTitle
-                        <button class="btn btn-sm btn-link" @onclick="() => UnlinkEpaAsync(link.Id)">Remove</button>
-                    </li>
+                  <tr>
+                    <td>@link.EpaCode - @link.EpaTitle</td>
+                    <td><button class="btn btn-outline btn-sm" @onclick="() => UnlinkEpaAsync(link.Id)">Remove</button></td>
+                  </tr>
                 }
-            </ul>
+              </tbody>
+            </table>
+          </div>
         }
 
         <EditForm Model="_linkModel" OnValidSubmit="LinkEpaAsync" FormName="assessment-form-link-epa">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
 
-            <div class="mb-3">
-                <label>EPA</label>
-                <InputSelect class="form-select" TValue="int" @bind-Value="_linkModel.EpaId">
-                    @foreach (var epa in LinkableEpas)
-                    {
-                        <option value="@epa.Id">@epa.Code - @epa.Title</option>
-                    }
-                </InputSelect>
-            </div>
-            <button type="submit" class="btn btn-outline-primary" disabled="@_saving">Link EPA</button>
+          <div class="form-grid">
+            <FormField Label="EPA" InputId="link-epa" Required="true">
+              <InputSelect id="link-epa" class="form-select" TValue="int" @bind-Value="_linkModel.EpaId">
+                @foreach (var epa in LinkableEpas)
+                {
+                  <option value="@epa.Id">@epa.Code - @epa.Title</option>
+                }
+              </InputSelect>
+            </FormField>
+          </div>
+
+          <FormActions>
+            <button type="submit" class="btn btn-outline" disabled="@_saving">Link EPA</button>
+          </FormActions>
         </EditForm>
+      </aside>
     }
-}
+  </div>
+</StatePanel>
 
 @code {
-    [Parameter]
-    public int? Id { get; set; }
+  [Parameter]
+  public int? Id { get; set; }
 
-    private readonly FormModel _model = new();
-    private readonly CriterionModel _criterionModel = new() { IsRequired = true };
-    private readonly LinkModel _linkModel = new();
-    private AssessmentFormDto? _form;
-    private IReadOnlyList<InstitutionDto> _institutions = [];
-    private IReadOnlyList<SpecialityDto> _specialities = [];
-    private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-    private IReadOnlyList<EntrustmentScaleDto> _scales = [];
-    private IReadOnlyList<EpaDto> _epas = [];
-    private string? _errorMessage;
-    private string? _statusMessage;
-    private bool _loading;
-    private bool _saving;
+  private readonly FormModel _model = new();
+  private readonly CriterionModel _criterionModel = new() { IsRequired = true };
+  private readonly LinkModel _linkModel = new();
+  private AssessmentFormDto? _form;
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+  private IReadOnlyList<EntrustmentScaleDto> _scales = [];
+  private IReadOnlyList<EpaDto> _epas = [];
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
 
-    private bool IsNew => !Id.HasValue;
-    private IEnumerable<SpecialityDto> FilteredSpecialities => _model.InstitutionId.HasValue ? _specialities.Where(entity => entity.InstitutionId == _model.InstitutionId.Value) : _specialities;
-    private IEnumerable<SubSpecialityDto> FilteredSubSpecialities => _model.SpecialityId.HasValue ? _subSpecialities.Where(entity => entity.SpecialityId == _model.SpecialityId.Value) : _subSpecialities;
-    private IEnumerable<EpaDto> LinkableEpas => _model.SubSpecialityId.HasValue ? _epas.Where(entity => entity.SubSpecialityId == _model.SubSpecialityId.Value) : _epas;
+  private bool IsNew => !Id.HasValue;
+  private IEnumerable<SpecialityDto> FilteredSpecialities => _model.InstitutionId.HasValue ? _specialities.Where(entity => entity.InstitutionId == _model.InstitutionId.Value) : _specialities;
+  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities => _model.SpecialityId.HasValue ? _subSpecialities.Where(entity => entity.SpecialityId == _model.SpecialityId.Value) : _subSpecialities;
+  private IEnumerable<EpaDto> LinkableEpas => _model.SubSpecialityId.HasValue ? _epas.Where(entity => entity.SubSpecialityId == _model.SubSpecialityId.Value) : _epas;
 
-    protected override async Task OnParametersSetAsync()
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        _loading = true;
-        _errorMessage = null;
-        _statusMessage = null;
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
 
-        try
-        {
-            _institutions = await Sender.Send(new GetInstitutionsListQuery());
-            _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-            _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
-            _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
-            _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
+      _model.ScaleId = _scales.FirstOrDefault()?.Id ?? 0;
+      _linkModel.EpaId = _epas.FirstOrDefault()?.Id ?? 0;
 
-            _model.ScaleId = _scales.FirstOrDefault()?.Id ?? 0;
-            _linkModel.EpaId = _epas.FirstOrDefault()?.Id ?? 0;
+      if (IsNew)
+      {
+        _model.CanDelete = true;
+        _model.IsActive = true;
+        return;
+      }
 
-            if (IsNew)
-            {
-                _model.CanDelete = true;
-                _model.IsActive = true;
-                return;
-            }
+      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id!.Value));
+      if (_form is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
 
-            _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id!.Value));
-            if (_form is null)
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
+      _model.Name = _form.Name;
+      _model.InstitutionId = _form.InstitutionId;
+      _model.SpecialityId = _form.SpecialityId;
+      _model.SubSpecialityId = _form.SubSpecialityId;
+      _model.ScaleId = _form.ScaleId;
+      _model.CanDelete = _form.CanDelete;
+      _model.IsActive = _form.IsActive;
 
-            _model.Name = _form.Name;
-            _model.InstitutionId = _form.InstitutionId;
-            _model.SpecialityId = _form.SpecialityId;
-            _model.SubSpecialityId = _form.SubSpecialityId;
-            _model.ScaleId = _form.ScaleId;
-            _model.CanDelete = _form.CanDelete;
-            _model.IsActive = _form.IsActive;
-
-            _linkModel.EpaId = LinkableEpas.FirstOrDefault()?.Id ?? _linkModel.EpaId;
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
+      _linkModel.EpaId = LinkableEpas.FirstOrDefault()?.Id ?? _linkModel.EpaId;
     }
-
-    private async Task SaveAsync()
+    catch (Exception exception)
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            if (IsNew)
-            {
-                _form = await Sender.Send(new CreateAssessmentFormCommand(_model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete));
-                Navigation.NavigateTo($"/admin/forms/{_form.Id}");
-                return;
-            }
-
-            _form = await Sender.Send(new UpdateAssessmentFormCommand(Id!.Value, _model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete, _model.IsActive));
-            _statusMessage = "Assessment form saved.";
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _errorMessage = exception.Message;
     }
-
-    private async Task DeactivateAsync()
+    finally
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            await Sender.Send(new DeactivateAssessmentFormCommand(Id!.Value));
-            _model.IsActive = false;
-            _statusMessage = "Assessment form deactivated.";
-            _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id.Value));
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _loading = false;
     }
+  }
 
-    private async Task AddCriterionAsync()
+  private async Task SaveAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        await RefreshFormAsync(() => Sender.Send(new AddFormCriterionCommand(Id!.Value, _criterionModel.Prompt, EmptyToNull(_criterionModel.HelpText), _criterionModel.IsRequired)), "Criterion added.");
-        _criterionModel.Prompt = string.Empty;
-        _criterionModel.HelpText = null;
-        _criterionModel.IsRequired = true;
+      if (IsNew)
+      {
+        _form = await Sender.Send(new CreateAssessmentFormCommand(_model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete));
+        Navigation.NavigateTo($"/admin/forms/{_form.Id}");
+        return;
+      }
+
+      _form = await Sender.Send(new UpdateAssessmentFormCommand(Id!.Value, _model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete, _model.IsActive));
+      _statusMessage = "Assessment form saved.";
     }
-
-    private Task RemoveCriterionAsync(int criterionId)
-        => RefreshFormAsync(() => Sender.Send(new RemoveFormCriterionCommand(Id!.Value, criterionId)), "Criterion removed.");
-
-    private Task LinkEpaAsync()
-        => RefreshFormAsync(() => Sender.Send(new LinkFormToEpaCommand(Id!.Value, _linkModel.EpaId)), "EPA linked.");
-
-    private Task UnlinkEpaAsync(int linkId)
-        => RefreshFormAsync(() => Sender.Send(new UnlinkFormFromEpaCommand(Id!.Value, linkId)), "EPA unlinked.");
-
-    private async Task RefreshFormAsync(Func<Task<AssessmentFormDto>> action, string successMessage)
+    catch (Exception exception)
     {
-        _saving = true;
-        _errorMessage = null;
-        _statusMessage = null;
-
-        try
-        {
-            _form = await action();
-            _statusMessage = successMessage;
-        }
-        catch (Exception exception)
-        {
-            _errorMessage = exception.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+      _errorMessage = exception.Message;
     }
-
-    private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private sealed class FormModel
+    finally
     {
-        [Required]
-        [StringLength(200)]
-        public string Name { get; set; } = string.Empty;
-
-        public int? InstitutionId { get; set; }
-        public int? SpecialityId { get; set; }
-        public int? SubSpecialityId { get; set; }
-
-        [Range(1, int.MaxValue)]
-        public int ScaleId { get; set; }
-
-        public bool CanDelete { get; set; } = true;
-        public bool IsActive { get; set; } = true;
+      _saving = false;
     }
+  }
 
-    private sealed class CriterionModel
+  private async Task DeactivateAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
     {
-        [Required]
-        [StringLength(500)]
-        public string Prompt { get; set; } = string.Empty;
-
-        [StringLength(2000)]
-        public string? HelpText { get; set; }
-
-        public bool IsRequired { get; set; } = true;
+      await Sender.Send(new DeactivateAssessmentFormCommand(Id!.Value));
+      _model.IsActive = false;
+      _statusMessage = "Assessment form deactivated.";
+      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id.Value));
     }
-
-    private sealed class LinkModel
+    catch (Exception exception)
     {
-        [Range(1, int.MaxValue)]
-        public int EpaId { get; set; }
+      _errorMessage = exception.Message;
     }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task AddCriterionAsync()
+  {
+    await RefreshFormAsync(() => Sender.Send(new AddFormCriterionCommand(Id!.Value, _criterionModel.Prompt, EmptyToNull(_criterionModel.HelpText), _criterionModel.IsRequired)), "Criterion added.");
+    _criterionModel.Prompt = string.Empty;
+    _criterionModel.HelpText = null;
+    _criterionModel.IsRequired = true;
+  }
+
+  private Task RemoveCriterionAsync(int criterionId)
+    => RefreshFormAsync(() => Sender.Send(new RemoveFormCriterionCommand(Id!.Value, criterionId)), "Criterion removed.");
+
+  private Task LinkEpaAsync()
+    => RefreshFormAsync(() => Sender.Send(new LinkFormToEpaCommand(Id!.Value, _linkModel.EpaId)), "EPA linked.");
+
+  private Task UnlinkEpaAsync(int linkId)
+    => RefreshFormAsync(() => Sender.Send(new UnlinkFormFromEpaCommand(Id!.Value, linkId)), "EPA unlinked.");
+
+  private async Task RefreshFormAsync(Func<Task<AssessmentFormDto>> action, string successMessage)
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      _form = await action();
+      _statusMessage = successMessage;
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+  private sealed class FormModel
+  {
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    public int? InstitutionId { get; set; }
+    public int? SpecialityId { get; set; }
+    public int? SubSpecialityId { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int ScaleId { get; set; }
+
+    public bool CanDelete { get; set; } = true;
+    public bool IsActive { get; set; } = true;
+  }
+
+  private sealed class CriterionModel
+  {
+    [Required]
+    [StringLength(500)]
+    public string Prompt { get; set; } = string.Empty;
+
+    [StringLength(2000)]
+    public string? HelpText { get; set; }
+
+    public bool IsRequired { get; set; } = true;
+  }
+
+  private sealed class LinkModel
+  {
+    [Range(1, int.MaxValue)]
+    public int EpaId { get; set; }
+  }
 }
