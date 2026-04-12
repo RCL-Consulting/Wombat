@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,9 +42,6 @@ public static class DependencyInjection
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>()
         .AddDefaultTokenProviders();
-
-        services.AddAuthentication()
-            .AddIdentityCookies();
 
         services.ConfigureApplicationCookie(options =>
         {

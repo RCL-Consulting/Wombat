@@ -35,7 +35,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 - [x] T017 — Activity platform: schema, aggregates, storage
 - [x] T018 — Activity engine: generic commands, workflow runtime, credit rules
-- [ ] T019 — Activity builder UI + dynamic form renderer (v1 — visual form editor, JSON-validated workflow/credit editors, ten field types, single-condition `show_if`, draft/publish lifecycle)
+- [x] T019 — Activity builder UI + dynamic form renderer (v1 — visual form editor, JSON-validated workflow/credit editors, ten field types, single-condition `show_if`, draft/publish lifecycle)
 
 > The former T007, T008, T009 are superseded. Their files remain for history. Do not execute them.
 

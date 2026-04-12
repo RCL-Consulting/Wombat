@@ -1,0 +1,60 @@
+@page "/activities/mine"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My Activities</PageTitle>
+
+<PageHeader Title="My activities" Subtitle="Activities created for the current user.">
+  <Actions>
+    <a class="btn btn-primary" href="/activities/new">New activity</a>
+  </Actions>
+</PageHeader>
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No activities yet" EmptyBody="Create the first activity from the activity catalogue.">
+  <DataTable Items="_items">
+    <HeaderRow>
+      <tr>
+        <th>Type</th>
+        <th>State</th>
+        <th>Updated</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td>@item.ActivityTypeName</td>
+        <td>@item.CurrentState</td>
+        <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">View</a>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<ActivitySummaryDto> _items = [];
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject.ListActivitiesBySubjectQuery(userId)));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

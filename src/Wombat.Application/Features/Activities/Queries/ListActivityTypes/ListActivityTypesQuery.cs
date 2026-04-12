@@ -28,10 +28,14 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
         return await _dbContext.Set<ActivityType>()
             .AsNoTracking()
             .Where(activityType =>
-                activityType.Scope == ActivityScope.Global ||
-                (activityType.Scope == ActivityScope.Institution && institutionId.HasValue && activityType.ScopeId == institutionId.Value) ||
-                (activityType.Scope == ActivityScope.Speciality && specialityIds.Contains(activityType.ScopeId ?? 0)) ||
-                (activityType.Scope == ActivityScope.SubSpeciality && subSpecialityIds.Contains(activityType.ScopeId ?? 0)))
+                activityType.Version > 0 &&
+                activityType.IsActive &&
+                (
+                    activityType.Scope == ActivityScope.Global ||
+                    (activityType.Scope == ActivityScope.Institution && institutionId.HasValue && activityType.ScopeId == institutionId.Value) ||
+                    (activityType.Scope == ActivityScope.Speciality && specialityIds.Contains(activityType.ScopeId ?? 0)) ||
+                    (activityType.Scope == ActivityScope.SubSpeciality && subSpecialityIds.Contains(activityType.ScopeId ?? 0))
+                ))
             .OrderBy(activityType => activityType.Name)
             .Select(activityType => new ActivityTypeListItemDto(
                 activityType.Id,

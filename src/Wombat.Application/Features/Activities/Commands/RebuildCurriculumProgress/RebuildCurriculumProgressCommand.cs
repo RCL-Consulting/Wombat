@@ -29,6 +29,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
 
         var terminalActivities = await _dbContext.Set<Activity>()
             .Include(activity => activity.ActivityType)
+                .ThenInclude(activityType => activityType.Versions)
             .Include(activity => activity.Transitions)
             .ToListAsync(cancellationToken);
 
@@ -36,7 +37,13 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
 
         foreach (var activity in terminalActivities)
         {
-            var workflow = WorkflowParser.Parse(activity.ActivityType.WorkflowJson);
+            var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(version => version.Version == activity.SchemaVersion);
+            if (pinnedVersion is null)
+            {
+                continue;
+            }
+
+            var workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
             var state = workflow.States.SingleOrDefault(candidate =>
                 string.Equals(candidate.Key, activity.CurrentState, StringComparison.Ordinal));
 
@@ -45,7 +52,13 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 continue;
             }
 
-            rebuiltCount += (await _creditApplier.ApplyAsync(activity, activity.ActivityType, cancellationToken)).Count;
+            rebuiltCount += (await _creditApplier.ApplyAsync(
+                activity,
+                new ActivityType
+                {
+                    CreditRulesJson = pinnedVersion.CreditRulesJson
+                },
+                cancellationToken)).Count;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);

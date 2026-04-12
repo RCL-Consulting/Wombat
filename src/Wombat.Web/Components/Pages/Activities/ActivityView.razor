@@ -1,0 +1,90 @@
+@page "/activities/{ActivityId:int}"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Activity</PageTitle>
+
+@if (_activity is not null)
+{
+  <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentState}")" />
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
+  @if (_activity is not null)
+  {
+    <div class="details-grid">
+      <aside class="detail-card">
+        <h3>Summary</h3>
+        <p><strong>Type:</strong> @_activity.ActivityTypeName</p>
+        <p><strong>State:</strong> @_activity.CurrentState</p>
+        <p><strong>Version:</strong> @_activity.SchemaVersion</p>
+        <ActivityWorkflowActions Activity="_activity" OnTransitionRequested="HandleTransitionAsync" />
+      </aside>
+
+      <section class="detail-card">
+        <h3>Activity details</h3>
+        <ActivityDetail SchemaJson="@_activity.SchemaJson" DataJson="@_activity.DataJson" />
+      </section>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  [Parameter] public int ActivityId { get; set; }
+
+  private ActivityDto? _activity;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _error = null;
+
+    try
+    {
+      _activity = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityById.GetActivityByIdQuery(ActivityId));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task HandleTransitionAsync((string TransitionKey, string? Note) request)
+  {
+    if (_activity is null)
+    {
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      _activity = await Sender.Send(new Wombat.Application.Features.Activities.Commands.TransitionActivity.TransitionActivityCommand(
+        _activity.Id,
+        request.TransitionKey,
+        userId,
+        authState.User,
+        null,
+        request.Note));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+}

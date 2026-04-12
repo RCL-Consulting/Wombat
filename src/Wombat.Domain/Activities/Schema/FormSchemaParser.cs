@@ -272,6 +272,9 @@ public static class FormSchemaParser
             "checkbox" => FieldType.Checkbox,
             "rating" => FieldType.Rating,
             "markdown" => FieldType.Markdown,
+            "likert" => FieldType.Likert,
+            "procedure_ref" => FieldType.ProcedureRef,
+            "signature" => FieldType.Signature,
             _ => throw new SchemaParseException($"Unknown field type '{value}'.")
         };
     }
@@ -294,6 +297,9 @@ public static class FormSchemaParser
             FieldType.Checkbox => "checkbox",
             FieldType.Rating => "rating",
             FieldType.Markdown => "markdown",
+            FieldType.Likert => "likert",
+            FieldType.ProcedureRef => "procedure_ref",
+            FieldType.Signature => "signature",
             _ => throw new SchemaParseException($"Unsupported field type '{value}'.")
         };
     }

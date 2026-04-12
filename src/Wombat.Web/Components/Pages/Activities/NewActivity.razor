@@ -1,0 +1,134 @@
+@page "/activities/new"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>New Activity</PageTitle>
+
+<PageHeader Title="New activity" Subtitle="Create a draft or submit an activity from the published catalogue." />
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+<div class="form-container">
+  <div class="form-grid">
+    <FormField Label="Activity type" InputId="activity-type" Required="true">
+      <select id="activity-type" class="form-select" @bind="_selectedActivityTypeId" @bind:after="LoadSelectedTypeAsync">
+        <option value="0">Select…</option>
+        @foreach (var item in _activityTypes)
+        {
+          <option value="@item.Id">@item.Name</option>
+        }
+      </select>
+    </FormField>
+  </div>
+</div>
+
+@if (_selectedEditor is not null)
+{
+  <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)" DataJson="@_dataJson" DataJsonChanged="OnDataChanged" />
+
+  <FormActions>
+    <button type="button" class="btn btn-outline" @onclick="SaveDraftAsync">Save draft</button>
+    <button type="button" class="btn btn-primary" @onclick="SubmitAsync">Submit</button>
+  </FormActions>
+}
+
+@code {
+  private readonly List<ActivityTypeListItemDto> _activityTypes = [];
+  private ActivityTypeEditorDto? _selectedEditor;
+  private int _selectedActivityTypeId;
+  private string _dataJson = "{}";
+  private string? _error;
+  private string? _status;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _activityTypes.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(authState.User)));
+  }
+
+  private async Task LoadSelectedTypeAsync()
+  {
+    _error = null;
+    _status = null;
+
+    if (_selectedActivityTypeId <= 0)
+    {
+      _selectedEditor = null;
+      return;
+    }
+
+    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId));
+    _dataJson = "{}";
+  }
+
+  private Task OnDataChanged(string dataJson)
+  {
+    _dataJson = dataJson;
+    return Task.CompletedTask;
+  }
+
+  private async Task SaveDraftAsync()
+  {
+    await CreateOrTransitionAsync(submit: false);
+  }
+
+  private async Task SubmitAsync()
+  {
+    await CreateOrTransitionAsync(submit: true);
+  }
+
+  private async Task CreateOrTransitionAsync(bool submit)
+  {
+    if (_selectedActivityTypeId <= 0)
+    {
+      _error = "Select an activity type first.";
+      return;
+    }
+
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      var draft = await Sender.Send(new Wombat.Application.Features.Activities.Commands.CreateActivity.CreateActivityCommand(
+        _selectedActivityTypeId,
+        userId,
+        userId,
+        _dataJson,
+        authState.User));
+
+      if (submit)
+      {
+        await Sender.Send(new Wombat.Application.Features.Activities.Commands.TransitionActivity.TransitionActivityCommand(
+          draft.Id,
+          "submit",
+          userId,
+          authState.User,
+          _dataJson,
+          null));
+        _status = "Activity submitted.";
+      }
+      else
+      {
+        _status = "Draft created.";
+      }
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+}

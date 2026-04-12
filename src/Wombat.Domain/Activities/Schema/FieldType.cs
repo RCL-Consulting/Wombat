@@ -15,5 +15,8 @@ public enum FieldType
     File = 10,
     Checkbox = 11,
     Rating = 12,
-    Markdown = 13
+    Markdown = 13,
+    Likert = 14,
+    ProcedureRef = 15,
+    Signature = 16
 }

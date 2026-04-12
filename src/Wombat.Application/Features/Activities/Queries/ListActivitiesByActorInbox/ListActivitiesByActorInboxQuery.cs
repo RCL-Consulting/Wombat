@@ -27,6 +27,7 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
         var activities = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
+                .ThenInclude(activityType => activityType.Versions)
             .Include(activity => activity.Transitions)
             .OrderByDescending(activity => activity.UpdatedOn)
             .ToListAsync(cancellationToken);
@@ -34,7 +35,13 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
         return activities
             .Where(activity =>
             {
-                var workflow = WorkflowParser.Parse(activity.ActivityType.WorkflowJson);
+                var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(version => version.Version == activity.SchemaVersion);
+                if (pinnedVersion is null)
+                {
+                    return false;
+                }
+
+                var workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
                 return workflow.Transitions.Any(transition =>
                     transition.From.Contains(activity.CurrentState, StringComparer.Ordinal) &&
                     _workflowEvaluator.Evaluate(workflow, activity, transition.Key, request.Principal).Allowed);

@@ -1,0 +1,102 @@
+@using System.Globalization
+@using Wombat.Application.Features.Activities.Dtos
+@using Wombat.Application.Features.Activities.Services
+@using Wombat.Domain.Activities
+@using Wombat.Domain.Activities.Workflow
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IWorkflowEvaluator WorkflowEvaluator
+
+@if (_actions.Count > 0)
+{
+  <div class="form-actions">
+    @foreach (var action in _actions)
+    {
+      <button type="button" class="btn btn-primary" @onclick="() => RequestTransitionAsync(action)">
+        @action.Label
+      </button>
+    }
+  </div>
+
+  @if (_selectedAction?.RequiresNote == true)
+  {
+    <div class="form-group">
+      <label for="transition-note">Transition note</label>
+      <textarea id="transition-note" class="form-control" rows="3" @bind="_note"></textarea>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" @onclick="ClearSelection">Cancel</button>
+      <button type="button" class="btn btn-primary" @onclick="ConfirmSelectedTransitionAsync">Apply</button>
+    </div>
+  }
+}
+
+@code {
+  [Parameter, EditorRequired] public ActivityDto Activity { get; set; } = default!;
+  [Parameter] public EventCallback<(string TransitionKey, string? Note)> OnTransitionRequested { get; set; }
+
+  private readonly List<AvailableAction> _actions = [];
+  private AvailableAction? _selectedAction;
+  private string? _note;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _actions.Clear();
+
+    var workflow = WorkflowParser.Parse(Activity.WorkflowJson);
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var candidate = new Activity
+    {
+      ActivityType = new ActivityType(),
+      CurrentState = Activity.CurrentState,
+      SubjectUserId = Activity.SubjectUserId,
+      CreatedByUserId = Activity.CreatedByUserId,
+      DataJson = Activity.DataJson
+    };
+
+    foreach (var transition in workflow.Transitions.Where(transition => transition.From.Contains(Activity.CurrentState, StringComparer.Ordinal)))
+    {
+      if (WorkflowEvaluator.Evaluate(workflow, candidate, transition.Key, authState.User).Allowed)
+      {
+        _actions.Add(new AvailableAction(transition.Key, ToLabel(transition.Key), transition.RequiresNote));
+      }
+    }
+  }
+
+  private async Task RequestTransitionAsync(AvailableAction action)
+  {
+    if (action.RequiresNote)
+    {
+      _selectedAction = action;
+      _note = null;
+      return;
+    }
+
+    await OnTransitionRequested.InvokeAsync((action.Key, null));
+  }
+
+  private async Task ConfirmSelectedTransitionAsync()
+  {
+    if (_selectedAction is null)
+    {
+      return;
+    }
+
+    await OnTransitionRequested.InvokeAsync((_selectedAction.Key, _note));
+    ClearSelection();
+  }
+
+  private void ClearSelection()
+  {
+    _selectedAction = null;
+    _note = null;
+  }
+
+  private static string ToLabel(string key)
+      => string.Join(" ", key.Split('-', '_')).Trim() switch
+      {
+        var value when string.IsNullOrWhiteSpace(value) => key,
+        var value => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value)
+      };
+
+  private sealed record AvailableAction(string Key, string Label, bool RequiresNote);
+}

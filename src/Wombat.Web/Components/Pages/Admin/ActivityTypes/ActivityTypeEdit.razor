@@ -1,0 +1,527 @@
+@page "/admin/activity-types/new"
+@page "/admin/activity-types/{ActivityTypeId:int}"
+@attribute [Authorize(Roles = WombatRoles.Administrator)]
+@using Wombat.Domain.Activities
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>@(_editor?.Name ?? "Activity Type")</PageTitle>
+
+<PageHeader Title="@PageTitleText" Subtitle="Build the form, workflow, and credit definition for this activity type.">
+  <Actions>
+    <a class="btn btn-outline" href="/admin/activity-types">Back to list</a>
+    <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="SaveDraftAsync">Save draft</button>
+    @if ((_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true)
+    {
+      <button type="button" class="btn btn-outline" disabled="@_busy" @onclick="DiscardDraftAsync">Discard draft</button>
+      <button type="button" class="btn btn-success" disabled="@_busy" @onclick="PublishAsync">Publish</button>
+    }
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (_publishWarnings.Count > 0)
+{
+  <Alert Kind="warning">
+    <strong>Publish warnings:</strong>
+    <ul>
+      @foreach (var warning in _publishWarnings)
+      {
+        <li>@warning</li>
+      }
+    </ul>
+  </Alert>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _editor is null)" EmptyTitle="Editor unavailable" EmptyBody="The activity type editor could not be loaded.">
+  @if (_editor is not null)
+  {
+    <div class="form-container">
+      <div class="tab-bar mb-3">
+        @foreach (var tab in Tabs)
+        {
+          <button type="button" class="tab-bar-tab @(_activeTab == tab.Key ? "is-active" : string.Empty)" @onclick="() => _activeTab = tab.Key">@tab.Label</button>
+        }
+      </div>
+
+      @if (_activeTab == "metadata")
+      {
+        <div class="form-grid">
+          <FormField Label="Key" InputId="type-key" Required="true">
+            <input id="type-key" class="form-control" @bind="_key" disabled="@IsPublished" />
+          </FormField>
+          <FormField Label="Name" InputId="type-name" Required="true">
+            <input id="type-name" class="form-control" @bind="_name" />
+          </FormField>
+          <FormField Label="Scope" InputId="type-scope" Required="true">
+            <select id="type-scope" class="form-select" @bind="_scope">
+              @foreach (var scope in Enum.GetValues<ActivityScope>())
+              {
+                <option value="@scope">@scope</option>
+              }
+            </select>
+          </FormField>
+          <FormField Label="Scope Id" InputId="type-scope-id">
+            <input id="type-scope-id" class="form-control" type="number" @bind="_scopeIdText" />
+          </FormField>
+          <FormField Label="Description" InputId="type-description" FullWidth="true">
+            <textarea id="type-description" class="form-control" rows="4" @bind="_description"></textarea>
+          </FormField>
+          <div class="form-check">
+            <input id="type-is-active" class="form-check-input" type="checkbox" @bind="_isActive" />
+            <label for="type-is-active">Active</label>
+          </div>
+        </div>
+      }
+      else if (_activeTab == "form")
+      {
+        <div class="builder-two-col">
+          <div class="detail-card">
+            <div class="header-container">
+              <div>
+                <h3>Sections</h3>
+                <p class="page-subtitle">Build the schema visually and keep the preview in sync.</p>
+              </div>
+              <div class="actions-cell">
+                <button type="button" class="btn btn-outline btn-sm" @onclick="AddSection">Add section</button>
+              </div>
+            </div>
+
+            @if (_builderSchema.Sections.Count == 0)
+            {
+              <div class="detail-card detail-card--empty">No sections yet.</div>
+            }
+            else
+            {
+              @for (var sectionIndex = 0; sectionIndex < _builderSchema.Sections.Count; sectionIndex++)
+              {
+                var formSection = _builderSchema.Sections[sectionIndex];
+                <div class="detail-card detail-card--compact mb-3">
+                  <div class="header-container">
+                    <div>
+                      <h4>@formSection.Title</h4>
+                      <p class="page-subtitle"><code>@formSection.Key</code></p>
+                    </div>
+                    <div class="actions-cell">
+                      <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectSection(sectionIndex)">Edit</button>
+                      <button type="button" class="btn btn-outline btn-sm" disabled="@(sectionIndex == 0)" @onclick="() => MoveSection(sectionIndex, -1)">Up</button>
+                      <button type="button" class="btn btn-outline btn-sm" disabled="@(sectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(sectionIndex, 1)">Down</button>
+                      <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteSection(sectionIndex)">Delete</button>
+                    </div>
+                  </div>
+
+                  @foreach (var field in formSection.Fields.Select((value, index) => (value, index)))
+                  {
+                    <div class="detail-card detail-card--interactive detail-card--compact mb-3">
+                      <div class="header-container">
+                        <div>
+                          <h5>@field.value.Label</h5>
+                          <p class="page-subtitle"><code>@field.value.Key</code> · @field.value.Type</p>
+                        </div>
+                        <div class="actions-cell">
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectField(sectionIndex, field.index)">Edit</button>
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(field.index == 0)" @onclick="() => MoveField(sectionIndex, field.index, -1)">Up</button>
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(field.index == formSection.Fields.Count - 1)" @onclick="() => MoveField(sectionIndex, field.index, 1)">Down</button>
+                          <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteField(sectionIndex, field.index)">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => AddField(sectionIndex)">Add field</button>
+                </div>
+              }
+            }
+
+            @if (_selectedSectionIndex >= 0)
+            {
+              var selectedSection = _builderSchema.Sections[_selectedSectionIndex];
+              <div class="detail-card">
+                <h4>Section editor</h4>
+                <div class="form-grid">
+                  <FormField Label="Section key" InputId="section-key" Required="true">
+                    <input id="section-key" class="form-control" @bind="selectedSection.Key" />
+                  </FormField>
+                  <FormField Label="Title" InputId="section-title" Required="true">
+                    <input id="section-title" class="form-control" @bind="selectedSection.Title" />
+                  </FormField>
+                </div>
+              </div>
+            }
+
+            @if (_selectedSectionIndex >= 0 && _selectedFieldIndex >= 0)
+            {
+              var selectedField = _builderSchema.Sections[_selectedSectionIndex].Fields[_selectedFieldIndex];
+              <div class="detail-card">
+                <h4>Field editor</h4>
+                <div class="form-grid">
+                  <FormField Label="Field key" InputId="field-key" Required="true">
+                    <input id="field-key" class="form-control" @bind="selectedField.Key" />
+                  </FormField>
+                  <FormField Label="Label" InputId="field-label" Required="true">
+                    <input id="field-label" class="form-control" @bind="selectedField.Label" />
+                  </FormField>
+                  <FormField Label="Type" InputId="field-type" Required="true">
+                    <select id="field-type" class="form-select" @bind="selectedField.Type">
+                      @foreach (var fieldType in SupportedFieldTypes)
+                      {
+                        <option value="@fieldType">@FieldTypeLabel(fieldType)</option>
+                      }
+                    </select>
+                  </FormField>
+                  <FormField Label="Help text" InputId="field-help">
+                    <input id="field-help" class="form-control" @bind="selectedField.HelpText" />
+                  </FormField>
+                  <FormField Label="Options" InputId="field-options" FullWidth="true">
+                    <textarea id="field-options" class="form-control" rows="4" @bind="selectedField.OptionsText"></textarea>
+                  </FormField>
+                  <div class="form-check">
+                    <input id="field-required" class="form-check-input" type="checkbox" @bind="selectedField.Required" />
+                    <label for="field-required">Required</label>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="detail-card">
+            <h3>Live preview</h3>
+            <ActivityForm SchemaJson="@CurrentDraftSchemaJson" DataJson="@_previewDataJson" DataJsonChanged="OnPreviewChanged" />
+          </div>
+        </div>
+      }
+      else if (_activeTab == "workflow")
+      {
+        <FormField Label="Workflow JSON" InputId="workflow-json" FullWidth="true">
+          <textarea id="workflow-json" class="form-control font-mono" rows="18" @bind="_workflowJson"></textarea>
+        </FormField>
+      }
+      else
+      {
+        <FormField Label="Credit rules JSON" InputId="credit-json" FullWidth="true">
+          <textarea id="credit-json" class="form-control font-mono" rows="18" @bind="_creditRulesJson"></textarea>
+        </FormField>
+      }
+    </div>
+  }
+</StatePanel>
+
+@code {
+  [Parameter] public int? ActivityTypeId { get; set; }
+
+  private static readonly (string Key, string Label)[] Tabs =
+  [
+    ("metadata", "Metadata"),
+    ("form", "Form"),
+    ("workflow", "Workflow"),
+    ("credit", "Credit")
+  ];
+
+  private static readonly FieldType[] SupportedFieldTypes =
+  [
+    FieldType.Text,
+    FieldType.LongText,
+    FieldType.Number,
+    FieldType.Date,
+    FieldType.Choice,
+    FieldType.MultiChoice,
+    FieldType.Likert,
+    FieldType.ProcedureRef,
+    FieldType.File,
+    FieldType.Signature
+  ];
+
+  private ActivityTypeEditorDto? _editor;
+  private BuilderSchemaModel _builderSchema = new();
+  private bool _loading = true;
+  private bool _busy;
+  private string? _error;
+  private string? _status;
+  private string _activeTab = "form";
+  private string _key = string.Empty;
+  private string _name = string.Empty;
+  private string? _description;
+  private ActivityScope _scope;
+  private string _scopeIdText = string.Empty;
+  private bool _isActive = true;
+  private string _workflowJson = string.Empty;
+  private string _creditRulesJson = string.Empty;
+  private string _previewDataJson = "{}";
+  private readonly List<string> _publishWarnings = [];
+  private int _selectedSectionIndex = -1;
+  private int _selectedFieldIndex = -1;
+
+  private bool IsPublished => (_editor?.PublishedVersion ?? 0) > 0;
+  private string PageTitleText => (_editor?.Id ?? 0) > 0 ? $"Edit {_name}" : "New activity type";
+  private string CurrentDraftSchemaJson => _builderSchema.ToJson();
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _error = null;
+    _status = null;
+
+    try
+    {
+      _editor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(ActivityTypeId));
+      LoadEditorState(_editor);
+      RefreshWarnings();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private void LoadEditorState(ActivityTypeEditorDto editor)
+  {
+    _key = editor.Key;
+    _name = editor.Name;
+    _description = editor.Description;
+    _scope = editor.Scope;
+    _scopeIdText = editor.ScopeId?.ToString() ?? string.Empty;
+    _isActive = editor.IsActive;
+    _builderSchema = BuilderSchemaModel.Parse(editor.DraftSchemaJson);
+    _workflowJson = editor.DraftWorkflowJson;
+    _creditRulesJson = editor.DraftCreditRulesJson;
+    _previewDataJson = "{}";
+    _selectedSectionIndex = _builderSchema.Sections.Count > 0 ? 0 : -1;
+    _selectedFieldIndex = _selectedSectionIndex >= 0 && _builderSchema.Sections[0].Fields.Count > 0 ? 0 : -1;
+  }
+
+  private async Task SaveDraftAsync()
+  {
+    _busy = true;
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var actorUserId = await GetCurrentUserIdAsync();
+      _editor = await Sender.Send(new Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft.SaveActivityTypeDraftCommand(
+        _editor?.Id,
+        _key,
+        _name,
+        _description,
+        _scope,
+        ParseNullableInt(_scopeIdText),
+        _isActive,
+        CurrentDraftSchemaJson,
+        _workflowJson,
+        _creditRulesJson,
+        BuilderSchemaModel.BuildDisplayFieldsJson(_builderSchema),
+        actorUserId));
+
+      _status = "Draft saved.";
+      RefreshWarnings();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private async Task PublishAsync()
+  {
+    if (_editor is null || _editor.Id <= 0)
+    {
+      await SaveDraftAsync();
+    }
+
+    if (_editor is null || _editor.Id <= 0)
+    {
+      return;
+    }
+
+    _busy = true;
+    _error = null;
+
+    try
+    {
+      var actorUserId = await GetCurrentUserIdAsync();
+      _editor = await Sender.Send(new Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft.PublishActivityTypeDraftCommand(
+        _editor.Id,
+        actorUserId));
+      _status = $"Published version {_editor.PublishedVersion}.";
+      RefreshWarnings();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private async Task DiscardDraftAsync()
+  {
+    if (_editor is null || _editor.Id <= 0)
+    {
+      return;
+    }
+
+    _busy = true;
+    _error = null;
+
+    try
+    {
+      _editor = await Sender.Send(new Wombat.Application.Features.Activities.Commands.DiscardActivityTypeDraft.DiscardActivityTypeDraftCommand(_editor.Id));
+      LoadEditorState(_editor);
+      _status = "Draft discarded.";
+      RefreshWarnings();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private void AddSection()
+  {
+    _builderSchema.Sections.Add(new BuilderSectionModel
+    {
+      Key = $"section_{_builderSchema.Sections.Count + 1}",
+      Title = $"Section {_builderSchema.Sections.Count + 1}",
+      Fields =
+      [
+        new BuilderFieldModel
+        {
+          Key = $"field_{_builderSchema.Sections.Count + 1}",
+          Label = "New field"
+        }
+      ]
+    });
+    SelectSection(_builderSchema.Sections.Count - 1);
+    SelectField(_builderSchema.Sections.Count - 1, 0);
+    RefreshWarnings();
+  }
+
+  private void SelectSection(int sectionIndex)
+  {
+    _selectedSectionIndex = sectionIndex;
+    _selectedFieldIndex = _builderSchema.Sections[sectionIndex].Fields.Count > 0 ? 0 : -1;
+  }
+
+  private void AddField(int sectionIndex)
+  {
+    var section = _builderSchema.Sections[sectionIndex];
+    section.Fields.Add(new BuilderFieldModel
+    {
+      Key = $"field_{section.Fields.Count + 1}",
+      Label = "New field"
+    });
+    SelectField(sectionIndex, section.Fields.Count - 1);
+    RefreshWarnings();
+  }
+
+  private void SelectField(int sectionIndex, int fieldIndex)
+  {
+    _selectedSectionIndex = sectionIndex;
+    _selectedFieldIndex = fieldIndex;
+  }
+
+  private void MoveSection(int sectionIndex, int delta)
+  {
+    var targetIndex = sectionIndex + delta;
+    if (targetIndex < 0 || targetIndex >= _builderSchema.Sections.Count)
+    {
+      return;
+    }
+
+    (_builderSchema.Sections[sectionIndex], _builderSchema.Sections[targetIndex]) = (_builderSchema.Sections[targetIndex], _builderSchema.Sections[sectionIndex]);
+    _selectedSectionIndex = targetIndex;
+    RefreshWarnings();
+  }
+
+  private void DeleteSection(int sectionIndex)
+  {
+    _builderSchema.Sections.RemoveAt(sectionIndex);
+    _selectedSectionIndex = _builderSchema.Sections.Count > 0 ? Math.Min(sectionIndex, _builderSchema.Sections.Count - 1) : -1;
+    _selectedFieldIndex = _selectedSectionIndex >= 0 && _builderSchema.Sections[_selectedSectionIndex].Fields.Count > 0 ? 0 : -1;
+    RefreshWarnings();
+  }
+
+  private void MoveField(int sectionIndex, int fieldIndex, int delta)
+  {
+    var fields = _builderSchema.Sections[sectionIndex].Fields;
+    var targetIndex = fieldIndex + delta;
+    if (targetIndex < 0 || targetIndex >= fields.Count)
+    {
+      return;
+    }
+
+    (fields[fieldIndex], fields[targetIndex]) = (fields[targetIndex], fields[fieldIndex]);
+    _selectedFieldIndex = targetIndex;
+    RefreshWarnings();
+  }
+
+  private void DeleteField(int sectionIndex, int fieldIndex)
+  {
+    var fields = _builderSchema.Sections[sectionIndex].Fields;
+    fields.RemoveAt(fieldIndex);
+    _selectedFieldIndex = fields.Count > 0 ? Math.Min(fieldIndex, fields.Count - 1) : -1;
+    RefreshWarnings();
+  }
+
+  private Task OnPreviewChanged(string dataJson)
+  {
+    _previewDataJson = dataJson;
+    return Task.CompletedTask;
+  }
+
+  private void RefreshWarnings()
+  {
+    _publishWarnings.Clear();
+
+    try
+    {
+      _publishWarnings.AddRange(BuilderSchemaModel.GetPublishWarnings(_editor?.PublishedSchemaJson, CurrentDraftSchemaJson));
+    }
+    catch
+    {
+      // The draft may be temporarily invalid while the admin is typing.
+    }
+  }
+
+  private async Task<string> GetCurrentUserIdAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
+  }
+
+  private static int? ParseNullableInt(string? value)
+    => int.TryParse(value, out var parsed) ? parsed : null;
+
+  private static string FieldTypeLabel(FieldType fieldType)
+    => fieldType switch
+    {
+      FieldType.LongText => "Long text",
+      FieldType.MultiChoice => "Multi-choice",
+      FieldType.ProcedureRef => "Procedure reference",
+      _ => fieldType.ToString()
+    };
+}

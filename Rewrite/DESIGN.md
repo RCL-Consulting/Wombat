@@ -269,6 +269,23 @@ Each dashboard card is a `.detail-card` (optionally `.detail-card--interactive` 
 
 T011 mandates this grid for every role dashboard — do not hand-roll a different one per role.
 
+## Builder layout
+
+T019 introduces a small builder-specific extension to the shared system:
+
+```css
+.tab-bar          /* horizontal tab strip with pill-like tab buttons */
+.tab-bar-tab      /* inactive tab button */
+.tab-bar-tab.is-active
+
+.builder-two-col  /* admin builder split view: editor rail + live preview */
+```
+
+- `.tab-bar` sits directly below `PageHeader` inside the surrounding `.form-container`.
+- `.builder-two-col` is `grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr)` with the normal `var(--space-lg)` gap and collapses to a single column below `900px`.
+- The left column uses stacked `.detail-card` sections and field rows. The right column is always the live preview rendered by the shared `ActivityForm.razor`.
+- New builder affordances still reuse the existing button, card, form, alert, and validation classes. The builder does not get its own parallel design language.
+
 ## Alerts, validation, empty states
 
 ```css

@@ -37,6 +37,23 @@ body {
   margin: 0;
 }
 
+.auth-page-shell {
+  align-items: stretch;
+  background:
+    radial-gradient(circle at top left, rgb(52 152 219 / 0.12), transparent 32%),
+    linear-gradient(135deg, rgb(248 249 250) 0%, rgb(241 243 245) 100%);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.auth-page-main {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
 a {
   color: var(--link-color);
 }
@@ -325,9 +342,19 @@ a:focus-visible {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 10px 25px var(--shadow-color);
-  margin: 4rem auto;
-  max-width: 400px;
+  margin: auto;
+  max-width: 30rem;
+  width: min(100%, 30rem);
   padding: 2.5rem;
+}
+
+.account-form-container h2 {
+  font-size: 2rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.account-form-container form {
+  margin-top: var(--space-lg);
 }
 
 /* ── Alerts ────────────────────────────────────────── */
@@ -442,6 +469,36 @@ a:focus-visible {
   grid-column: span 3;
 }
 
+/* ── Builder ───────────────────────────────────────── */
+.tab-bar {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.tab-bar-tab {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+}
+
+.tab-bar-tab.is-active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: var(--surface-color);
+}
+
+.builder-two-col {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr);
+}
+
 /* ── Details grid ─────────────────────────────────── */
 .details-grid {
   display: grid;
@@ -451,6 +508,10 @@ a:focus-visible {
 
 @media (max-width: 900px) {
   .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .builder-two-col {
     grid-template-columns: 1fr;
   }
 
@@ -563,6 +624,10 @@ a:focus-visible {
 
 .mt-3 {
   margin-top: 1rem;
+}
+
+.font-mono {
+  font-family: Consolas, "Courier New", monospace;
 }
 
 .visually-hidden {

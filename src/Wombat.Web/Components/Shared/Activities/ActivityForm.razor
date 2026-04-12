@@ -1,0 +1,222 @@
+@using System.Globalization
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Wombat.Domain.Activities.Schema
+
+@if (!string.IsNullOrWhiteSpace(_loadError))
+{
+  <Alert Kind="danger">@_loadError</Alert>
+}
+else if (_schema is not null)
+{
+  <div class="form-container">
+    @foreach (var formSection in _schema.Sections)
+    {
+      if (!IsVisible(formSection.ShowIf))
+      {
+        continue;
+      }
+
+      <fieldset class="detail-card detail-card--compact mb-3">
+        <legend>@formSection.Title</legend>
+
+        <div class="form-grid">
+          @foreach (var field in formSection.Fields)
+          {
+            if (!IsVisible(field.ShowIf))
+            {
+              continue;
+            }
+
+            <FormField Label="@field.Label" InputId="@field.Key" HelpText="@field.HelpText" Required="@field.Required">
+              @switch (field.Type)
+              {
+                case FieldType.Text:
+                case FieldType.Signature:
+                case FieldType.ProcedureRef:
+                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  break;
+                case FieldType.LongText:
+                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
+                  break;
+                case FieldType.Number:
+                case FieldType.Likert:
+                case FieldType.Scale:
+                case FieldType.Rating:
+                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  break;
+                case FieldType.Date:
+                  <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  break;
+                case FieldType.Choice:
+                  <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                    <option value="">Select…</option>
+                    @foreach (var option in field.Options)
+                    {
+                      <option value="@option" selected="@string.Equals(GetString(field.Key), option, StringComparison.Ordinal)">@option</option>
+                    }
+                  </select>
+                  break;
+                case FieldType.MultiChoice:
+                  <div class="full-width">
+                    @foreach (var option in field.Options)
+                    {
+                      <div class="form-check">
+                        <input
+                          id="@($"{field.Key}-{option}")"
+                          class="form-check-input"
+                          type="checkbox"
+                          checked="@GetMultiChoiceValues(field.Key).Contains(option, StringComparer.Ordinal)"
+                          disabled="@ReadOnly"
+                          @onchange="args => ToggleMultiChoice(field.Key, option, args.Value is bool checkedValue && checkedValue)" />
+                        <label for="@($"{field.Key}-{option}")">@option</label>
+                      </div>
+                    }
+                  </div>
+                  break;
+                case FieldType.File:
+                  <div class="detail-card detail-card--empty-compact">
+                    File uploads are represented in the schema, but storage wiring lands in a later pass.
+                  </div>
+                  break;
+                default:
+                  <div class="detail-card detail-card--empty-compact">
+                    Unsupported field type: @field.Type
+                  </div>
+                  break;
+              }
+            </FormField>
+          }
+        </div>
+      </fieldset>
+    }
+  </div>
+}
+
+@code {
+  [Parameter, EditorRequired] public string SchemaJson { get; set; } = default!;
+  [Parameter] public string DataJson { get; set; } = "{}";
+  [Parameter] public bool ReadOnly { get; set; }
+  [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
+
+  private FormSchema? _schema;
+  private JsonObject _data = [];
+  private string? _loadError;
+
+  protected override void OnParametersSet()
+  {
+    try
+    {
+      _schema = FormSchemaParser.Parse(SchemaJson);
+      _data = JsonNode.Parse(string.IsNullOrWhiteSpace(DataJson) ? "{}" : DataJson)?.AsObject() ?? [];
+      _loadError = null;
+    }
+    catch (Exception exception)
+    {
+      _loadError = exception.Message;
+      _schema = null;
+      _data = [];
+    }
+  }
+
+  private string GetString(string key)
+  {
+    if (!_data.TryGetPropertyValue(key, out var value) || value is null)
+    {
+      return string.Empty;
+    }
+
+    return value switch
+    {
+      JsonValue jsonValue => jsonValue.TryGetValue<string>(out var stringValue) ? stringValue ?? string.Empty : jsonValue.ToJsonString(),
+      JsonArray jsonArray => string.Join(", ", jsonArray.Select(item => item?.GetValue<string>() ?? string.Empty)),
+      _ => value.ToJsonString()
+    };
+  }
+
+  private IReadOnlyList<string> GetMultiChoiceValues(string key)
+  {
+    if (!_data.TryGetPropertyValue(key, out var value) || value is not JsonArray array)
+    {
+      return [];
+    }
+
+    return array.Select(item => item?.GetValue<string>() ?? string.Empty)
+      .Where(item => !string.IsNullOrWhiteSpace(item))
+      .ToArray();
+  }
+
+  private bool IsVisible(VisibilityCondition? condition)
+  {
+    if (condition is null)
+    {
+      return true;
+    }
+
+    var value = GetString(condition.Field);
+    var hasValue = !string.IsNullOrWhiteSpace(value);
+    var target = condition.Value ?? string.Empty;
+
+    return condition.Operator switch
+    {
+      "equals" => string.Equals(value, target, StringComparison.Ordinal),
+      "not equals" or "not_equals" => !string.Equals(value, target, StringComparison.Ordinal),
+      "is set" or "is_set" => hasValue,
+      "is not set" or "is_not_set" => !hasValue,
+      "greater than" or "greater_than" => CompareNumeric(value, target) > 0,
+      "less than" or "less_than" => CompareNumeric(value, target) < 0,
+      _ => true
+    };
+  }
+
+  private async Task UpdateValue(string key, string? value)
+  {
+    if (ReadOnly)
+    {
+      return;
+    }
+
+    if (string.IsNullOrWhiteSpace(value))
+    {
+      _data.Remove(key);
+    }
+    else
+    {
+      _data[key] = value;
+    }
+
+    await DataJsonChanged.InvokeAsync(_data.ToJsonString());
+  }
+
+  private async Task ToggleMultiChoice(string key, string option, bool selected)
+  {
+    if (ReadOnly)
+    {
+      return;
+    }
+
+    var values = GetMultiChoiceValues(key).ToHashSet(StringComparer.Ordinal);
+    if (selected)
+    {
+      values.Add(option);
+    }
+    else
+    {
+      values.Remove(option);
+    }
+
+    _data[key] = new JsonArray(values.Select(value => JsonValue.Create(value)).ToArray());
+    await DataJsonChanged.InvokeAsync(_data.ToJsonString());
+  }
+
+  private static int CompareNumeric(string left, string right)
+  {
+    if (!decimal.TryParse(left, NumberStyles.Number, CultureInfo.InvariantCulture, out var leftValue) ||
+        !decimal.TryParse(right, NumberStyles.Number, CultureInfo.InvariantCulture, out var rightValue))
+    {
+      return 0;
+    }
+
+    return leftValue.CompareTo(rightValue);
+  }
+}

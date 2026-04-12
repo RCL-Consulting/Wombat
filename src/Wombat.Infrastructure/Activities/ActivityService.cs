@@ -34,6 +34,11 @@ public sealed class ActivityService : IActivityService
             .SingleOrDefaultAsync(entity => entity.Id == input.ActivityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
+        if (activityType.Version <= 0 || string.IsNullOrWhiteSpace(activityType.SchemaJson) || string.IsNullOrWhiteSpace(activityType.WorkflowJson))
+        {
+            throw new InvalidOperationException("The selected activity type has not been published yet.");
+        }
+
         var schema = FormSchemaParser.Parse(activityType.SchemaJson);
         var workflow = WorkflowParser.Parse(activityType.WorkflowJson);
         var normalizedDataJson = NormalizeObjectJson(input.InitialDataJson);
@@ -72,7 +77,8 @@ public sealed class ActivityService : IActivityService
     public async Task<ActivityDto> UpdateDraftAsync(UpdateActivityDraftInput input, CancellationToken cancellationToken = default)
     {
         var activity = await LoadActivityAsync(input.ActivityId, cancellationToken);
-        var workflow = WorkflowParser.Parse(activity.ActivityType.WorkflowJson);
+        var version = GetPinnedVersion(activity);
+        var workflow = WorkflowParser.Parse(version.WorkflowJson);
         var currentState = workflow.States.Single(state => string.Equals(state.Key, activity.CurrentState, StringComparison.Ordinal));
 
         if (currentState.Terminal)
@@ -85,7 +91,7 @@ public sealed class ActivityService : IActivityService
             throw new InvalidOperationException("The current actor is not allowed to edit this activity.");
         }
 
-        var schema = FormSchemaParser.Parse(activity.ActivityType.SchemaJson);
+        var schema = FormSchemaParser.Parse(version.SchemaJson);
         var normalizedDataJson = NormalizeObjectJson(input.NewDataJson);
         ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
 
@@ -99,8 +105,9 @@ public sealed class ActivityService : IActivityService
     public async Task<ActivityDto> TransitionAsync(TransitionActivityInput input, CancellationToken cancellationToken = default)
     {
         var activity = await LoadActivityAsync(input.ActivityId, cancellationToken);
-        var schema = FormSchemaParser.Parse(activity.ActivityType.SchemaJson);
-        var workflow = WorkflowParser.Parse(activity.ActivityType.WorkflowJson);
+        var version = GetPinnedVersion(activity);
+        var schema = FormSchemaParser.Parse(version.SchemaJson);
+        var workflow = WorkflowParser.Parse(version.WorkflowJson);
         var transition = workflow.Transitions.SingleOrDefault(candidate =>
             string.Equals(candidate.Key, input.TransitionKey, StringComparison.Ordinal) &&
             candidate.From.Contains(activity.CurrentState, StringComparer.Ordinal))
@@ -128,12 +135,18 @@ public sealed class ActivityService : IActivityService
             SchemaValidationMode.Submit,
             transition.RequiresFields));
 
-        activity.ApplyTransition(input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
+        activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
         if (targetState.Terminal)
         {
-            await _creditApplier.ApplyAsync(activity, activity.ActivityType, cancellationToken);
+            await _creditApplier.ApplyAsync(
+                activity,
+                new ActivityType
+                {
+                    CreditRulesJson = version.CreditRulesJson
+                },
+                cancellationToken);
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -147,9 +160,17 @@ public sealed class ActivityService : IActivityService
     {
         return await _dbContext.Set<Activity>()
             .Include(entity => entity.ActivityType)
+                .ThenInclude(activityType => activityType.Versions)
             .Include(entity => entity.Transitions)
             .SingleOrDefaultAsync(entity => entity.Id == activityId, cancellationToken)
             ?? throw new InvalidOperationException("The activity could not be found.");
+    }
+
+    private static ActivityTypeVersion GetPinnedVersion(Activity activity)
+    {
+        return activity.ActivityType.Versions.SingleOrDefault(entity => entity.Version == activity.SchemaVersion)
+            ?? throw new InvalidOperationException(
+                $"The published activity type version '{activity.SchemaVersion}' could not be found.");
     }
 
     private static bool CanEditDraft(Activity activity, string actorUserId)
@@ -206,12 +227,17 @@ public sealed class ActivityService : IActivityService
 
     private static ActivityDto Map(Activity activity)
     {
+        var pinnedVersion = GetPinnedVersion(activity);
+
         return new ActivityDto(
             activity.Id,
             activity.ActivityTypeId,
             activity.ActivityType.Key,
             activity.ActivityType.Name,
             activity.SchemaVersion,
+            pinnedVersion.SchemaJson,
+            pinnedVersion.WorkflowJson,
+            pinnedVersion.DisplayFieldsJson,
             activity.SubjectUserId,
             activity.CreatedByUserId,
             activity.CurrentState,

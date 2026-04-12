@@ -1,0 +1,6 @@
+<ActivityForm SchemaJson="@SchemaJson" DataJson="@DataJson" ReadOnly="true" />
+
+@code {
+  [Parameter, EditorRequired] public string SchemaJson { get; set; } = default!;
+  [Parameter] public string DataJson { get; set; } = "{}";
+}

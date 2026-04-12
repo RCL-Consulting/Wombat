@@ -1,4 +1,5 @@
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Domain.Tests.Activities;
 
@@ -9,15 +10,16 @@ public sealed class ActivityApplyTransitionTests
     {
         var activity = new Activity
         {
-            ActivityType = new ActivityType
-            {
-                WorkflowJson = ActivityTestData.ValidWorkflowJson
-            },
             CurrentState = "draft",
             DataJson = "{}"
         };
 
-        activity.ApplyTransition("submit", "user-1", """{ "title": "Case" }""", "Sending for review");
+        activity.ApplyTransition(
+            WorkflowParser.Parse(ActivityTestData.ValidWorkflowJson),
+            "submit",
+            "user-1",
+            """{ "title": "Case" }""",
+            "Sending for review");
 
         Assert.Equal("submitted", activity.CurrentState);
         Assert.Equal("""{"title":"Case"}""", activity.DataJson);
@@ -34,16 +36,17 @@ public sealed class ActivityApplyTransitionTests
     {
         var activity = new Activity
         {
-            ActivityType = new ActivityType
-            {
-                WorkflowJson = ActivityTestData.ValidWorkflowJson
-            },
             CurrentState = "draft",
             DataJson = "{}"
         };
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            activity.ApplyTransition("complete", "user-1", "{}", null));
+            activity.ApplyTransition(
+                WorkflowParser.Parse(ActivityTestData.ValidWorkflowJson),
+                "complete",
+                "user-1",
+                "{}",
+                null));
 
         Assert.Contains("not declared", exception.Message, StringComparison.OrdinalIgnoreCase);
     }

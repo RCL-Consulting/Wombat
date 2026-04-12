@@ -1,0 +1,85 @@
+@page "/admin/activity-types"
+@attribute [Authorize(Roles = WombatRoles.Administrator)]
+@inject IScopedSender Sender
+
+<PageTitle>Activity Types</PageTitle>
+
+<PageHeader Title="Activity types" Subtitle="Manage draft and published activity-type definitions.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/activity-types/new">New activity type</a>
+  </Actions>
+</PageHeader>
+
+<div class="search-container shadow mb-3">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="activity-type-filter">Search</label>
+      <input id="activity-type-filter" class="search-input" @bind="_search" @bind:event="oninput" />
+    </div>
+  </div>
+</div>
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && FilteredItems.Count == 0)" EmptyTitle="No activity types" EmptyBody="Create the first activity type to start the builder.">
+  <DataTable Items="FilteredItems" Caption="Configured activity types">
+    <HeaderRow>
+      <tr>
+        <th>Name</th>
+        <th>Key</th>
+        <th>Scope</th>
+        <th>Published</th>
+        <th>Draft</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td>@item.Name</td>
+        <td><code>@item.Key</code></td>
+        <td>@item.Scope</td>
+        <td>v@(item.PublishedVersion)</td>
+        <td>@(item.HasDraft ? "Draft saved" : "None")</td>
+        <td>@(item.IsActive ? "Active" : "Inactive")</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")">Edit</a>
+        </td>
+      </tr>
+    </Row>
+    <Empty>
+      <div class="detail-card detail-card--empty">
+        No activity types match the current filter.
+      </div>
+    </Empty>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<ActivityTypeAdminListItemDto> _items = [];
+  private bool _loading = true;
+  private string? _error;
+  private string? _search;
+
+  private IReadOnlyList<ActivityTypeAdminListItemDto> FilteredItems =>
+    _items
+      .Where(item =>
+        string.IsNullOrWhiteSpace(_search) ||
+        item.Name.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        item.Key.Contains(_search, StringComparison.OrdinalIgnoreCase))
+      .ToList();
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery()));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

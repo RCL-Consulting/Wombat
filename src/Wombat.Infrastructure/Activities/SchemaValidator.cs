@@ -76,11 +76,13 @@ public sealed class SchemaValidator : ISchemaValidator
             case FieldType.Markdown:
             case FieldType.User:
             case FieldType.File:
+            case FieldType.Signature:
                 ValidateStringField(field, value, errors);
                 break;
             case FieldType.Number:
             case FieldType.Rating:
             case FieldType.Scale:
+            case FieldType.Likert:
                 ValidateNumericField(field, value, errors);
                 break;
             case FieldType.Date:
@@ -96,6 +98,7 @@ public sealed class SchemaValidator : ISchemaValidator
                 ValidateMultiChoiceField(field, value, errors);
                 break;
             case FieldType.Epa:
+            case FieldType.ProcedureRef:
                 ValidateIntegerLikeField(field, value, errors);
                 break;
             case FieldType.Checkbox:

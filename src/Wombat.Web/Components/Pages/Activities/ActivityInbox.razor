@@ -1,0 +1,56 @@
+@page "/activities/inbox"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Activity Inbox</PageTitle>
+
+<PageHeader Title="Activity inbox" Subtitle="Activities that the current user can act on." />
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="Inbox clear" EmptyBody="There are no activities waiting for your action.">
+  <DataTable Items="_items">
+    <HeaderRow>
+      <tr>
+        <th>Type</th>
+        <th>Subject</th>
+        <th>State</th>
+        <th>Updated</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td>@item.ActivityTypeName</td>
+        <td>@item.SubjectUserId</td>
+        <td>@item.CurrentState</td>
+        <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">Open</a>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<ActivitySummaryDto> _items = [];
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQuery(authState.User)));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

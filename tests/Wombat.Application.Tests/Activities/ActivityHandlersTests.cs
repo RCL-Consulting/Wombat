@@ -100,13 +100,14 @@ public sealed class ActivityHandlersTests
             WindowMonths = 12
         });
 
-        dbContext.ActivityTypes.Add(new ActivityType
+        var activityType = new ActivityType
         {
             Id = 200,
             Key = "hello_world",
             Name = "Hello World",
             Scope = ActivityScope.Institution,
             ScopeId = 10,
+            Version = 1,
             SchemaJson = """
                 {
                   "version": 1,
@@ -160,9 +161,24 @@ public sealed class ActivityHandlersTests
                   ]
                 }
                 """,
+            DisplayFieldsJson = """["title","score"]""",
             OwnerUserId = "admin-1",
             CreatedOn = DateTime.UtcNow
+        };
+
+        activityType.Versions.Add(new ActivityTypeVersion
+        {
+            ActivityTypeId = 200,
+            Version = 1,
+            SchemaJson = activityType.SchemaJson!,
+            WorkflowJson = activityType.WorkflowJson!,
+            CreditRulesJson = activityType.CreditRulesJson!,
+            DisplayFieldsJson = activityType.DisplayFieldsJson,
+            PublishedByUserId = "admin-1",
+            PublishedOn = DateTime.UtcNow
         });
+
+        dbContext.ActivityTypes.Add(activityType);
 
         dbContext.SaveChanges();
     }

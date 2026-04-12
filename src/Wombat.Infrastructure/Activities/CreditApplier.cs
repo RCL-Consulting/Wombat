@@ -25,6 +25,7 @@ public sealed class CreditApplier : ICreditApplier
     {
         ArgumentNullException.ThrowIfNull(completedActivity);
         ArgumentNullException.ThrowIfNull(activityType);
+        ArgumentException.ThrowIfNullOrWhiteSpace(activityType.CreditRulesJson);
 
         var rules = CreditRulesParser.Parse(activityType.CreditRulesJson);
         if (rules.CountsFor.Count == 0)

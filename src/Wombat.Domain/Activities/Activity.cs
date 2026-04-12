@@ -20,20 +20,15 @@ public sealed class Activity
     public ActivityType ActivityType { get; set; } = null!;
     public ICollection<ActivityTransition> Transitions { get; set; } = [];
 
-    public void ApplyTransition(string transitionKey, string actorUserId, string newDataJson, string? note)
+    public void ApplyTransition(Workflow.Workflow workflow, string transitionKey, string actorUserId, string newDataJson, string? note)
     {
+        ArgumentNullException.ThrowIfNull(workflow);
         ArgumentException.ThrowIfNullOrWhiteSpace(transitionKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(actorUserId);
         ArgumentException.ThrowIfNullOrWhiteSpace(newDataJson);
 
-        if (ActivityType is null)
-        {
-            throw new InvalidOperationException("ActivityType must be loaded before applying a transition.");
-        }
-
         using var snapshotDocument = JsonDocument.Parse(newDataJson);
         var normalizedDataJson = JsonUtilities.Normalize(snapshotDocument.RootElement);
-        var workflow = WorkflowParser.Parse(ActivityType.WorkflowJson);
         var transition = workflow.Transitions.SingleOrDefault(candidate =>
             string.Equals(candidate.Key, transitionKey, StringComparison.Ordinal) &&
             candidate.From.Contains(CurrentState, StringComparer.Ordinal));

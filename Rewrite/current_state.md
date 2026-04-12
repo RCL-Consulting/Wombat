@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T019 — Activity builder UI + dynamic form renderer** (not started)
+**T020 — Seed initial activity types** (not started)
 
-Next session: read `Tasks/T019-activity-builder-ui.md` and build on top of the T018 runtime now in Application + Infrastructure.
+Next session: read `Tasks/T020-seed-activity-types.md` and seed the first real activity catalogue on top of the T019 builder/runtime now in place.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,55 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T019 completed:
+- Added activity-type draft/publish infrastructure:
+  - `ActivityType` now has staging columns for schema/workflow/credit/display fields plus draft metadata timestamps
+  - added `ActivityTypeVersion` history rows so published schemas/workflows/credit rules remain available for activities pinned to older versions
+  - updated runtime services and queries to resolve activities against their pinned published version instead of assuming the current `ActivityType` payload is always correct
+  - generated the `ActivityTypeDrafts` EF Core migration
+- Added the application slice for the builder:
+  - queries: `GetActivityTypeEditorQuery`, `ListActivityTypesAdminQuery`
+  - commands: `SaveActivityTypeDraftCommand`, `PublishActivityTypeDraftCommand`, `DiscardActivityTypeDraftCommand`
+  - kept the builder UI bound to raw schema/workflow/credit JSON via these contracts rather than duplicating publish rules in Razor
+- Extended the schema vocabulary for the T019 field set:
+  - parser/validator support now includes `likert`, `procedure_ref`, and `signature`
+  - existing activity handler tests were updated to seed a real published version row
+- Added the shared runtime activity components under `src/Wombat.Web/Components/Shared/Activities/`:
+  - `ActivityForm`
+  - `ActivityDetail`
+  - `ActivityWorkflowActions`
+- Added the admin builder pages:
+  - `Admin/ActivityTypes/ActivityTypesList.razor`
+  - `Admin/ActivityTypes/ActivityTypeEdit.razor`
+  - supporting builder models under `Admin/ActivityTypes/BuilderModels.cs`
+  - the editor now supports metadata, a visual form tab with sections/fields and live preview, plus JSON workflow/credit tabs
+- Added the first runtime activity pages:
+  - `Activities/NewActivity.razor`
+  - `Activities/MyActivities.razor`
+  - `Activities/ActivityInbox.razor`
+  - `Activities/ActivityView.razor`
+  - updated nav routes to point at the real activity pages and admin builder
+- Extended the design system for the builder:
+  - added `.tab-bar`, `.tab-bar-tab`, `.builder-two-col`, and `.font-mono` to `app.css`
+  - updated `DESIGN.md` to document the builder layout contract
+- Folded in the auth-shell fixes discovered right after T010:
+  - added `AuthLayout`
+  - moved anonymous account pages off the main app shell
+  - switched the app shell to direct `/app.css` and related asset paths so the global styles load reliably in local dev
+- Added T019 verification tests:
+  - `tests/Wombat.Web.Tests/Activities/BuilderPreviewParityTests.cs`
+  - `tests/Wombat.Web.Tests/Activities/RuntimeRendererTests.cs`
+  - `tests/Wombat.Web.Tests/Activities/DraftPublishLifecycleTests.cs`
+- Verified:
+  - `dotnet build Wombat.sln -c Release --no-restore` passes with 0 warnings and 0 errors.
+  - `dotnet test Wombat.sln -c Release --no-restore` passes for discovered tests:
+    - Domain: 15/15
+    - Application: 24/24
+    - Web: 19/19
+  - The T019 design-system grep checks for inline styles, primitive tables, Bootstrap outline variants, Bootstrap icon tags, and raw hex values under the builder/runtime component trees all return zero matches.
+- Follow-up note:
+  - `tests/Wombat.Architecture.Tests` and `tests/Wombat.Integration.Tests` still exit successfully with zero discovered tests, so those projects remain coverage gaps rather than meaningful verification.
 
 T010 completed:
 - Added the shared web design system foundation for `Wombat.Web`:
@@ -285,7 +334,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`ee178e7` — T010: web layout, navigation, auth, and the design system
+`pending` — update after the T019 commit is created in this session
 
 ## Open questions
 
