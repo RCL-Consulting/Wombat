@@ -285,7 +285,7 @@ T006 completed:
 
 ## Last known-good commit
 
-`pending` — update after the T010 commit is created in this session
+`ee178e7` — T010: web layout, navigation, auth, and the design system
 
 ## Open questions
 
