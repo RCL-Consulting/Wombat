@@ -1,0 +1,88 @@
+@using Wombat.Application.Features.Dashboards.Assessor
+@attribute [Authorize(Roles = "Assessor")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Pending requests" Icon="inbox" Emphasis="true">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@_vm.PendingRequestCount</span>
+          <span class="dashboard-metric-label">assessments awaiting review</span>
+        </div>
+        <div class="dashboard-card-footer">
+          <a href="/activities/inbox" class="btn btn-sm btn-primary">Review inbox &rarr;</a>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Accepted, needing action" Icon="alert-triangle"
+                     Warning="@_vm.AcceptedActivities.Any(a => a.IsOverdue)">
+        @if (_vm.AcceptedActivities.Count == 0)
+        {
+          <p class="muted">No accepted assessments pending action.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.AcceptedActivities)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span class="badge badge-accepted">@(item.IsOverdue ? "overdue" : "accepted")</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Recent decisions" Icon="check">
+        @if (_vm.RecentDecisions.Count == 0)
+        {
+          <p class="muted">No decisions yet.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.RecentDecisions)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span class="badge badge-@item.FinalState">@item.FinalState</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Actions" Icon="plus">
+        <a href="/activities/inbox" class="btn btn-outline">Open my inbox &rarr;</a>
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private AssessorDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetAssessorDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

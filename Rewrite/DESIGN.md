@@ -243,6 +243,8 @@ PagerControls
 .detail-card--interactive     /* hover: translateY(-2px), bigger shadow, cursor pointer */
 .detail-card--empty           /* dashed border, centred muted text, var(--space-xl) */
 .detail-card--empty-compact   /* dashed border, centred, var(--space-md) */
+.detail-card--emphasis        /* left 4px solid accent stripe, --secondary-color */
+.detail-card--warning         /* left 4px solid accent stripe, --warning-color */
 ```
 
 - `.detail-card h3` has a bottom border and primary colour — gives the card a titled strip.
@@ -263,6 +265,18 @@ Dashboards use one shared grid so every role page looks like the same product.
 
 .dashboard-span-2 { grid-column: span 2; }
 .dashboard-span-3 { grid-column: span 3; }
+```
+
+Dashboard widget classes (added in T011):
+
+```css
+.dashboard-metric         /* flex column, gap xs */
+.dashboard-metric-value   /* 2rem bold, --primary-color */
+.dashboard-metric-label   /* 0.9rem, --muted-text */
+
+.progress-bar             /* 0.5rem tall, rounded, --hover-bg background */
+.progress-bar-fill        /* fills parent height, --secondary-color */
+.progress-bar-fill.is-complete  /* --success-color */
 ```
 
 Each dashboard card is a `.detail-card` (optionally `.detail-card--interactive` if it links somewhere). Below `~900px` the auto-fit collapses everything to a single column.
@@ -321,6 +335,30 @@ T019 introduces a small builder-specific extension to the shared system:
 ```
 
 `Skeleton.razor` renders `<div class="skeleton" style="width:@Width;height:@Height">`. Dashboards and list pages render a handful of skeletons while `IScopedSender.Send(...)` resolves. The viewport should not shift when real data lands.
+
+## Badges
+
+```css
+.badge           /* inline pill, 0.75rem, bold, 999px radius */
+.badge-draft     /* --hover-bg bg, --muted-text text */
+.badge-submitted /* --info-bg bg, --secondary-color text */
+.badge-accepted  /* --warning-bg bg, --warning-color text */
+.badge-completed /* --success-bg bg, --success-color text */
+.badge-declined  /* --danger-bg bg, --danger-color text */
+```
+
+Used on activity state indicators in dashboard list cards and activity tables.
+
+## Status dots
+
+```css
+.status-dot      /* 0.6rem circle, inline-block, margin-right sm */
+.status-dot.ok   /* --success-color */
+.status-dot.warn /* --warning-color */
+.status-dot.err  /* --danger-color */
+```
+
+Used in the Administrator dashboard system-health card to show service status at a glance.
 
 ## Pager
 

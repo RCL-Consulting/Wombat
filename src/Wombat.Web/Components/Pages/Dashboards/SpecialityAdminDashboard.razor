@@ -1,0 +1,75 @@
+@using Wombat.Application.Features.Dashboards.SpecialityAdmin
+@attribute [Authorize(Roles = "SpecialityAdmin")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Pending reviews" Icon="inbox" Emphasis="true">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@_vm.PendingReviewCount</span>
+          <span class="dashboard-metric-label">activities in review</span>
+        </div>
+        <div class="dashboard-card-footer">
+          <a href="/activities/inbox" class="btn btn-sm btn-primary">Review queue &rarr;</a>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Trainees in programme" Icon="users">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@_vm.ActiveTraineeCount</span>
+          <span class="dashboard-metric-label">active / @_vm.InactiveTraineeCount inactive</span>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Curriculum coverage" Icon="book" Span="2">
+        @if (_vm.CurriculumCoverage.Count == 0)
+        {
+          <p class="muted">No curriculum data available.</p>
+        }
+        else
+        {
+          @foreach (var item in _vm.CurriculumCoverage)
+          {
+            <div style="margin-bottom:var(--space-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
+                <span>@item.EpaTitle</span>
+                <span class="muted">@item.AverageCompletionPercent%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill @(item.AverageCompletionPercent >= 100 ? "is-complete" : "")"
+                     style="width:@Math.Min(100, item.AverageCompletionPercent)%"></div>
+              </div>
+            </div>
+          }
+        }
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private SpecialityAdminDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetSpecialityAdminDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

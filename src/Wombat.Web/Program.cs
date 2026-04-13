@@ -23,6 +23,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<IScopedSender, ScopedSender>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -105,6 +106,24 @@ app.MapPost("/account/logout", async (SignInManager<WombatIdentityUser> signInMa
 {
     await signInManager.SignOutAsync();
     return Results.LocalRedirect("/account/login");
+});
+
+app.MapGet("/dashboard/switch/{role}", (string role, HttpContext httpContext) =>
+{
+    if (Wombat.Web.Navigation.DashboardPriority.ValidRoles.Contains(role))
+    {
+        httpContext.Response.Cookies.Append(
+            Wombat.Web.Navigation.DashboardPriority.CookieName,
+            role,
+            new CookieOptions
+            {
+                SameSite = SameSiteMode.Lax,
+                HttpOnly = true,
+                Secure = !httpContext.Request.Host.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase),
+                MaxAge = TimeSpan.FromDays(30)
+            });
+    }
+    return Results.LocalRedirect("/");
 });
 
 await using (var scope = app.Services.CreateAsyncScope())

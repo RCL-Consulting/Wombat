@@ -26,6 +26,7 @@ public static class DependencyInjection
         }
 
         services.Configure<WombatOptions>(configuration.GetSection(WombatOptions.SectionName));
+        services.Configure<DashboardThresholds>(configuration.GetSection(DashboardThresholds.SectionName));
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());

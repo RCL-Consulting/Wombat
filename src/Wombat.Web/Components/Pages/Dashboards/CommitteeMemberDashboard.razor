@@ -1,0 +1,77 @@
+@using Wombat.Application.Features.Dashboards.CommitteeMember
+@attribute [Authorize(Roles = "CommitteeMember")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Trainees approaching completion" Icon="users" Emphasis="true">
+        @if (_vm.TraineesNearCompletion.Count == 0)
+        {
+          <p class="muted">No trainees near the completion threshold.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.TraineesNearCompletion)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <span>@item.TraineeName</span>
+                <span class="badge badge-completed">@item.OverallCompletionPercent%</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Programme overview" Icon="book" Span="2">
+        @if (_vm.ProgrammeProgress.Count == 0)
+        {
+          <p class="muted">No programme data available.</p>
+        }
+        else
+        {
+          @foreach (var item in _vm.ProgrammeProgress)
+          {
+            <div style="margin-bottom:var(--space-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
+                <span>@item.EpaTitle</span>
+                <span class="muted">@item.AverageCompletionPercent%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill @(item.AverageCompletionPercent >= 100 ? "is-complete" : "")"
+                     style="width:@Math.Min(100, item.AverageCompletionPercent)%"></div>
+              </div>
+            </div>
+          }
+        }
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private CommitteeMemberDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetCommitteeMemberDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

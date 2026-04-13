@@ -1,0 +1,51 @@
+@{
+    var css = "detail-card";
+    if (Emphasis) css += " detail-card--emphasis";
+    if (Warning) css += " detail-card--warning";
+    if (!string.IsNullOrEmpty(Href)) css += " detail-card--interactive";
+    if (Span == 2) css += " dashboard-span-2";
+    if (Span == 3) css += " dashboard-span-3";
+}
+
+@if (!string.IsNullOrEmpty(Href))
+{
+  <a href="@Href" class="@css" style="text-decoration:none;color:inherit;">
+    <h3>
+      @if (!string.IsNullOrEmpty(Icon))
+      {
+        <Icon Name="@Icon" Size="18" />
+        @(" ")
+      }
+      @Title
+    </h3>
+    <div class="dashboard-card-body">
+      @ChildContent
+    </div>
+  </a>
+}
+else
+{
+  <div class="@css">
+    <h3>
+      @if (!string.IsNullOrEmpty(Icon))
+      {
+        <Icon Name="@Icon" Size="18" />
+        @(" ")
+      }
+      @Title
+    </h3>
+    <div class="dashboard-card-body">
+      @ChildContent
+    </div>
+  </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = default!;
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public bool Emphasis { get; set; }
+    [Parameter] public bool Warning { get; set; }
+    [Parameter] public int Span { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

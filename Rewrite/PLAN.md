@@ -60,23 +60,23 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 ### Phase 5 — Web & messaging
 
 - [x] T010 — Web layout, auth, navigation, role-gated routing
-- [ ] T011 — Role dashboards (widgets query generically over activities)
-- [ ] T012 — Email infrastructure
-- [ ] T024 — Scheduled nudges & digest emails
+- [x] T011 — Role dashboards (widgets query generically over activities) — **Opus** *(design judgment: 7+ role-specific views querying the activity platform generically)*
+- [ ] T012 — Email infrastructure — **Sonnet** *(standard MailKit setup + templates, well-trodden pattern)*
+- [ ] T024 — Scheduled nudges & digest emails — **Opus** *(job scheduler + multiple domain jobs + cron + admin UI, touches many layers)*
 
 ### Phase 6 — Cross-cutting operations
 
-- [ ] T023 — Portfolio PDF export
-- [ ] T025 — Admin audit log (pipeline behaviour)
-- [ ] T026 — Data subject rights (POPIA/GDPR self-service)
-- [ ] T027 — Institutional SSO (OIDC)
+- [ ] T023 — Portfolio PDF export — **Opus** *(QuestPDF layout + heterogeneous activity aggregation + branding + integrity signatures)*
+- [ ] T025 — Admin audit log (pipeline behaviour) — **Sonnet** *(known MediatR pipeline pattern + append-only table + query UI)*
+- [ ] T026 — Data subject rights (POPIA/GDPR self-service) — **Opus** *(regulatory nuance: pseudonymisation, retention exceptions, approval flows)*
+- [ ] T027 — Institutional SSO (OIDC) — **Opus** *(dynamic OIDC with group-to-role mapping across multiple identity providers)*
 
 ### Phase 7 — Quality & ship
 
-- [ ] T013 — Architecture tests *(extended to cover the activity platform invariants)*
-- [ ] T014 — Seeding & first-run bootstrap
-- [ ] T015 — Linode deployment
-- [ ] T016 — Smoke test, handover, delete old Wombat source
+- [ ] T013 — Architecture tests *(extended to cover the activity platform invariants)* — **Sonnet** *(mechanical NetArchTest rules against known conventions)*
+- [ ] T014 — Seeding & first-run bootstrap — **Sonnet** *(idempotent data insertion, repetitive but not complex)*
+- [ ] T015 — Linode deployment — **Sonnet** *(checklist execution: systemd, Caddy, PostgreSQL config/scripting)*
+- [ ] T016 — Smoke test, handover, delete old Wombat source — **Opus** *(full-system understanding needed to verify every workflow end-to-end)*
 
 ## Dependency graph
 

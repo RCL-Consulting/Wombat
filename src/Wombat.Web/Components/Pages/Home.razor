@@ -1,30 +1,60 @@
 @page "/"
+@using Wombat.Web.Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard — Wombat</PageTitle>
 
 <AuthorizeView Context="homeAuth">
   <Authorized Context="state">
     @{
-      var role = ResolvePrimaryRole(state.User);
       var displayName = state.User.Identity?.Name ?? "User";
+      var resolvedRole = ResolvePreferredRole(state.User);
+      var otherRoles = GetOtherRoles(state.User, resolvedRole);
     }
 
-    <PageHeader Title="@($"Welcome back, {displayName}")" Subtitle="@($"Your current role: {role}")" />
+    <PageHeader Title="@($"Welcome, {displayName}")" Subtitle="@($"Viewing as {resolvedRole}")" />
 
-    <div class="dashboard-grid">
-      <div class="detail-card">
-        <h3>Dashboard</h3>
-        <p>Role-specific dashboards land in T011.</p>
-      </div>
-      <div class="detail-card">
-        <h3>Workflow</h3>
-        <p>Activity workflow surfaces land in T019 and later tasks.</p>
-      </div>
-      <div class="detail-card detail-card--empty">
-        <div class="state-panel-title">Coming soon</div>
-        <div class="state-panel-copy">This stub confirms the authenticated layout, navigation, and design system are working end-to-end.</div>
-      </div>
-    </div>
+    @if (otherRoles.Count > 0)
+    {
+      <p class="muted" style="margin-top:calc(-1 * var(--space-sm));margin-bottom:var(--space-md)">
+        You also act as @string.Join(", ", otherRoles).
+        Switch view:
+        @foreach (var other in otherRoles)
+        {
+          <a href="/dashboard/switch/@other" style="margin-left:var(--space-xs)">@other</a>
+        }
+      </p>
+    }
+
+    @switch (resolvedRole)
+    {
+      case WombatRoles.Administrator:
+        <Wombat.Web.Components.Pages.Dashboards.AdministratorDashboard />
+        break;
+      case WombatRoles.InstitutionalAdmin:
+        <Wombat.Web.Components.Pages.Dashboards.InstitutionalAdminDashboard />
+        break;
+      case WombatRoles.SpecialityAdmin:
+        <Wombat.Web.Components.Pages.Dashboards.SpecialityAdminDashboard />
+        break;
+      case WombatRoles.SubSpecialityAdmin:
+        <Wombat.Web.Components.Pages.Dashboards.SubSpecialityAdminDashboard />
+        break;
+      case WombatRoles.CommitteeMember:
+        <Wombat.Web.Components.Pages.Dashboards.CommitteeMemberDashboard />
+        break;
+      case WombatRoles.Coordinator:
+        <Wombat.Web.Components.Pages.Dashboards.CoordinatorDashboard />
+        break;
+      case WombatRoles.Assessor:
+        <Wombat.Web.Components.Pages.Dashboards.AssessorDashboard />
+        break;
+      case WombatRoles.PendingTrainee:
+      case WombatRoles.Trainee:
+      default:
+        <Wombat.Web.Components.Pages.Dashboards.TraineeDashboard />
+        break;
+    }
   </Authorized>
   <NotAuthorized Context="anonymousHome">
     <RedirectToLogin />
@@ -32,16 +62,30 @@
 </AuthorizeView>
 
 @code {
-  private static string ResolvePrimaryRole(System.Security.Claims.ClaimsPrincipal user)
+  private string ResolvePreferredRole(System.Security.Claims.ClaimsPrincipal user)
   {
-    foreach (var role in WombatRoles.All)
+    var cookieValue = HttpContextAccessor.HttpContext?.Request.Cookies[DashboardPriority.CookieName];
+    if (!string.IsNullOrEmpty(cookieValue) &&
+        DashboardPriority.ValidRoles.Contains(cookieValue) &&
+        user.IsInRole(cookieValue))
     {
-      if (user.IsInRole(role))
-      {
-        return role;
-      }
+      return cookieValue;
     }
 
-    return "Authenticated";
+    foreach (var role in DashboardPriority.Order)
+    {
+      if (user.IsInRole(role))
+        return role;
+    }
+
+    return WombatRoles.Trainee;
   }
+
+  private static IReadOnlyList<string> GetOtherRoles(System.Security.Claims.ClaimsPrincipal user, string currentRole)
+  {
+    return DashboardPriority.Order
+      .Where(r => !string.Equals(r, currentRole, StringComparison.Ordinal) && user.IsInRole(r))
+      .ToList();
+  }
+
 }

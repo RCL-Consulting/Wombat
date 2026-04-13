@@ -1,0 +1,73 @@
+@using Wombat.Application.Features.Dashboards.Administrator
+@attribute [Authorize(Roles = "Administrator")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="System health" Icon="settings">
+        <ul class="list-unstyled">
+          <li style="padding:var(--space-xs) 0">
+            <span class="status-dot @(_vm.DatabaseHealthy ? "ok" : "err")"></span>
+            Database connection
+          </li>
+          <li style="padding:var(--space-xs) 0">
+            <span class="status-dot warn"></span>
+            Email queue <span class="muted">(T012)</span>
+          </li>
+          <li style="padding:var(--space-xs) 0">
+            <span class="status-dot warn"></span>
+            Last nightly job <span class="muted">(T024)</span>
+          </li>
+        </ul>
+      </DashboardCard>
+
+      <DashboardCard Title="Users across institutions" Icon="users" Emphasis="true">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@_vm.TotalUserCount</span>
+          <span class="dashboard-metric-label">registered users</span>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Maintenance" Icon="settings">
+        <ul class="list-unstyled">
+          <li style="padding:var(--space-xs) 0">
+            <a href="/admin/activity-types">Activity types</a>
+          </li>
+          <li style="padding:var(--space-xs) 0">
+            <a href="/admin/users">Users</a>
+          </li>
+          <li style="padding:var(--space-xs) 0">
+            <a href="/admin/institutions">Institutions</a>
+          </li>
+        </ul>
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private AdministratorDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetAdministratorDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

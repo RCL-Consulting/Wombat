@@ -1,0 +1,139 @@
+@using Wombat.Application.Features.Dashboards.Trainee
+@attribute [Authorize(Roles = "Trainee,PendingTrainee")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null && _vm.IsPendingTrainee)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Awaiting admission" Icon="info" Emphasis="true" Span="3">
+        <p>You are registered and waiting to be admitted to a curriculum by your programme administrator.</p>
+        <div class="dashboard-card-footer">
+          <a href="/account/manage" class="btn btn-sm btn-outline">Complete your profile &rarr;</a>
+        </div>
+      </DashboardCard>
+    </div>
+  }
+  else if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Curriculum progress" Icon="book" Href="/curriculum" Emphasis="true" Span="2">
+        @if (_vm.CurriculumProgress.Count == 0)
+        {
+          <p class="muted">No curriculum items assigned yet.</p>
+        }
+        else
+        {
+          @foreach (var item in _vm.CurriculumProgress)
+          {
+            <div style="margin-bottom:var(--space-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
+                <span>@item.EpaTitle</span>
+                <span class="muted">@item.CompletedCount / @item.RequiredCount</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill @(item.IsComplete ? "is-complete" : "")"
+                     style="width:@(item.RequiredCount > 0 ? Math.Min(100, item.CompletedCount * 100 / item.RequiredCount) : 0)%"></div>
+              </div>
+            </div>
+          }
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Activity inbox" Icon="inbox" Href="/activities/inbox">
+        @if (_vm.Inbox.Count == 0)
+        {
+          <p class="muted">No pending items.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.Inbox)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span class="badge badge-@item.CurrentState">@item.CurrentState</span>
+              </li>
+            }
+          </ul>
+        }
+        <div class="dashboard-card-footer">
+          <a href="/activities/inbox" class="btn btn-sm btn-outline">Open inbox &rarr;</a>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Recent activities" Icon="file-text">
+        @if (_vm.RecentActivities.Count == 0)
+        {
+          <p class="muted">No activities yet.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.RecentActivities)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span class="badge badge-@item.CurrentState">@item.CurrentState</span>
+              </li>
+            }
+          </ul>
+        }
+        <div class="dashboard-card-footer">
+          <a href="/activities/mine" class="btn btn-sm btn-outline">All activities &rarr;</a>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Upcoming deadlines" Icon="calendar">
+        @if (_vm.UpcomingDeadlines.Count == 0)
+        {
+          <p class="muted">No deadlines in the next 14 days.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.UpcomingDeadlines)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span class="muted">@item.DueDate.ToString("d MMM")</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Actions" Icon="plus">
+        <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
+          <a href="/activities/new" class="btn btn-primary">Log an activity</a>
+          <a href="/activities/new?type=mini_cex" class="btn btn-outline">Request an assessment</a>
+        </div>
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private TraineeDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetTraineeDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

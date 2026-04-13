@@ -1,0 +1,73 @@
+@using Wombat.Application.Features.Dashboards.InstitutionalAdmin
+@attribute [Authorize(Roles = "InstitutionalAdmin")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Users" Icon="users" Emphasis="true">
+        @if (_vm.UsersByRole.Count == 0)
+        {
+          <p class="muted">No users found.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.UsersByRole)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <span>@item.Role</span>
+                <span class="dashboard-metric-value" style="font-size:1rem">@item.Count</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Specialities &amp; sub-specialities" Icon="book">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@_vm.SpecialityCount</span>
+          <span class="dashboard-metric-label">specialities</span>
+        </div>
+        <div class="dashboard-metric" style="margin-top:var(--space-sm)">
+          <span class="dashboard-metric-value">@_vm.SubSpecialityCount</span>
+          <span class="dashboard-metric-label">sub-specialities</span>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard Title="Quick links" Icon="settings">
+        <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
+          <a href="/admin/institutions" class="btn btn-outline">Institutions</a>
+          <a href="/admin/users" class="btn btn-outline">Users</a>
+          <a href="/admin/specialities" class="btn btn-outline">Specialities</a>
+        </div>
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private InstitutionalAdminDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetInstitutionalAdminDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

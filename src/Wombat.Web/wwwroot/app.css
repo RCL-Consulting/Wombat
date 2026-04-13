@@ -469,6 +469,118 @@ a:focus-visible {
   grid-column: span 3;
 }
 
+/* ── Dashboard widgets ────────────────────────────── */
+.dashboard-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.dashboard-metric-value {
+  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard-metric-label {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  background: var(--hover-bg);
+  border-radius: 4px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background: var(--secondary-color);
+  height: 100%;
+}
+
+.progress-bar-fill.is-complete {
+  background: var(--success-color);
+}
+
+.dashboard-card-body {
+  margin-top: var(--space-sm);
+}
+
+.dashboard-card-footer {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+}
+
+.detail-card--emphasis {
+  border-left: 4px solid var(--secondary-color);
+}
+
+.detail-card--warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+/* ── Badges ───────────────────────────────────────── */
+.badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+}
+
+.badge-draft {
+  background: var(--hover-bg);
+  color: var(--muted-text);
+}
+
+.badge-submitted {
+  background: var(--info-bg);
+  color: var(--secondary-color);
+}
+
+.badge-accepted {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+.badge-completed {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.badge-declined {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+/* ── Status dots ──────────────────────────────────── */
+.status-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 0.6rem;
+  margin-right: var(--space-sm);
+  vertical-align: middle;
+  width: 0.6rem;
+}
+
+.status-dot.ok {
+  background: var(--success-color);
+}
+
+.status-dot.warn {
+  background: var(--warning-color);
+}
+
+.status-dot.err {
+  background: var(--danger-color);
+}
+
 /* ── Builder ───────────────────────────────────────── */
 .tab-bar {
   border-bottom: 1px solid var(--border-color);
@@ -628,6 +740,16 @@ a:focus-visible {
 
 .font-mono {
   font-family: Consolas, "Courier New", monospace;
+}
+
+.list-unstyled {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.muted {
+  color: var(--muted-text);
 }
 
 .visually-hidden {

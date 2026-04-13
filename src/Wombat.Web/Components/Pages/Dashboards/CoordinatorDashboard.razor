@@ -1,0 +1,77 @@
+@using Wombat.Application.Features.Dashboards.Coordinator
+@attribute [Authorize(Roles = "Coordinator")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="Stalled requests" Icon="alert-triangle" Warning="@(_vm.StalledRequests.Count > 0)">
+        @if (_vm.StalledRequests.Count == 0)
+        {
+          <p class="muted">No stalled requests.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.StalledRequests)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <span>@item.ActivityTypeName &mdash; @item.SubjectName</span>
+                <span class="muted">@item.RequestedOn.ToString("d MMM")</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Invitations nearing expiry" Icon="calendar">
+        @if (_vm.ExpiringInvitations.Count == 0)
+        {
+          <p class="muted">No invitations expiring soon.</p>
+        }
+        else
+        {
+          <ul class="list-unstyled">
+            @foreach (var item in _vm.ExpiringInvitations)
+            {
+              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+                <span>@item.Email (@item.TargetRole)</span>
+                <span class="muted">expires @item.ExpiresOn.ToString("d MMM")</span>
+              </li>
+            }
+          </ul>
+        }
+      </DashboardCard>
+
+      <DashboardCard Title="Quick action" Icon="plus">
+        <a href="/admin/invitations/new" class="btn btn-primary">Issue invitation</a>
+      </DashboardCard>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private CoordinatorDashboardSummaryDto? _vm;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _vm = await Sender.Send(new GetCoordinatorDashboardSummaryQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _error = ex.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}
