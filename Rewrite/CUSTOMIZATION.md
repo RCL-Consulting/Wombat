@@ -232,7 +232,7 @@ The staging is deliberate. Each follow-up ships as an independent task, each mea
 Not everything survives the pivot to schema-driven. These stay hardcoded because the cost of making them data-driven exceeds the benefit:
 
 1. **Identity, roles, and scope claims.** These are the foundation everything else checks against. Making them data means "who can edit the data that decides who can edit" — recursive and dangerous.
-2. **Multi-source feedback.** Anonymity requires specific implementation: respondent tokens, aggregated views that don't allow de-anonymisation by counting, carefully audited viewing. Cannot be expressed as "a form with a workflow".
+2. **Multi-source feedback.** Anonymity requires specific implementation: respondent tokens, aggregated views that don't allow de-anonymisation by counting, carefully audited viewing. Cannot be expressed as "a form with a workflow". Response links and respondent emails are short-lived operational data; after campaign close and aggregation, the implementation hashes the respondent email and nulls the raw address so the released report cannot be traced back to a person through the application data model.
 3. **Committee decisions.** These are legally consequential (appeals, regulatory scrutiny) and their shape is determined by external rules, not the institution. They need dedicated domain code with strict invariants.
 4. **Audit log.** The audit log must be append-only, tamper-evident, and cannot itself be editable by admins. Making it customizable would defeat its purpose.
 5. **Data subject rights.** POPIA/GDPR compliance is a regulatory obligation; it must be predictable and testable. Hardcoded.

@@ -1,0 +1,284 @@
+@page "/msf/campaigns/new"
+@page "/msf/campaigns/{CampaignId:int}"
+@attribute [Authorize(Roles = "Coordinator,Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>MSF Campaign</PageTitle>
+
+<PageHeader Title="MSF campaign" Subtitle="Create a campaign, add respondents, then open the anonymous response window." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<div class="details-grid">
+  <section class="detail-card">
+    <h3>Quick template</h3>
+    <EditForm Model="_template" OnValidSubmit="CreateTemplateAsync" FormName="msf-template">
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
+      <div class="form-grid">
+        <FormField Label="Template name" InputId="msf-template-name" Required="true">
+          <InputText id="msf-template-name" class="form-control" @bind-Value="_template.Name" />
+        </FormField>
+        <FormField Label="Scale question" InputId="msf-template-scale" Required="true">
+          <InputText id="msf-template-scale" class="form-control" @bind-Value="_template.ScalePrompt" />
+        </FormField>
+        <FormField Label="Comment question" InputId="msf-template-comment" Required="true">
+          <InputText id="msf-template-comment" class="form-control" @bind-Value="_template.CommentPrompt" />
+        </FormField>
+      </div>
+      <FormActions>
+        <button type="submit" class="btn btn-outline">Add template</button>
+      </FormActions>
+    </EditForm>
+  </section>
+
+  <section class="detail-card">
+    <h3>@(CampaignId.HasValue ? "Campaign details" : "Create campaign")</h3>
+    @if (!CampaignId.HasValue)
+    {
+      <EditForm Model="_campaign" OnValidSubmit="CreateCampaignAsync" FormName="msf-campaign">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          <FormField Label="Subject user id" InputId="msf-subject" Required="true">
+            <InputText id="msf-subject" class="form-control" @bind-Value="_campaign.SubjectUserId" />
+          </FormField>
+          <FormField Label="Template" InputId="msf-template-id" Required="true">
+            <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId">
+              <option value="">Select template</option>
+              @foreach (var template in _templates)
+              {
+                <option value="@template.Id">@template.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+          <FormField Label="Opens on" InputId="msf-opens" Required="true">
+            <InputDate id="msf-opens" class="form-control" @bind-Value="_campaign.OpensOn" />
+          </FormField>
+          <FormField Label="Closes on" InputId="msf-closes" Required="true">
+            <InputDate id="msf-closes" class="form-control" @bind-Value="_campaign.ClosesOn" />
+          </FormField>
+          <FormField Label="Minimum responses" InputId="msf-min-responses" Required="true">
+            <InputNumber id="msf-min-responses" class="form-control" @bind-Value="_campaign.MinimumResponses" />
+          </FormField>
+          <FormField Label="Minimum category responses" InputId="msf-min-category" Required="true">
+            <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
+          </FormField>
+        </div>
+        <FormActions>
+          <button type="submit" class="btn btn-primary">Create campaign</button>
+        </FormActions>
+      </EditForm>
+    }
+    else
+    {
+      <p>Add invitees, then open the campaign to send anonymous response links.</p>
+      <EditForm Model="_invitee" OnValidSubmit="AddInviteeAsync" FormName="msf-invitee">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
+            <InputText id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
+          </FormField>
+          <FormField Label="Category" InputId="msf-respondent-category" Required="true">
+            <InputSelect id="msf-respondent-category" class="form-select" @bind-Value="_invitee.Category">
+              @foreach (var category in Enum.GetValues<MsfRespondentCategory>())
+              {
+                <option value="@category">@category</option>
+              }
+            </InputSelect>
+          </FormField>
+        </div>
+        <FormActions>
+          <button type="submit" class="btn btn-outline">Add invitee</button>
+          <button type="button" class="btn btn-primary" @onclick="OpenCampaignAsync">Open campaign</button>
+        </FormActions>
+      </EditForm>
+    }
+  </section>
+</div>
+
+@code {
+  [Parameter] public int? CampaignId { get; set; }
+
+  private readonly List<MsfTemplateDto> _templates = [];
+  private string? _status;
+  private string? _error;
+  private TemplateFormModel _template = new();
+  private CampaignFormModel _campaign = new();
+  private InviteeFormModel _invitee = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadTemplatesAsync();
+  }
+
+  protected override async Task OnParametersSetAsync()
+  {
+    await LoadTemplatesAsync();
+  }
+
+  private async Task LoadTemplatesAsync()
+  {
+    _templates.Clear();
+    _templates.AddRange(await Sender.Send(new ListMsfTemplatesQuery()));
+  }
+
+  private async Task CreateTemplateAsync()
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      await Sender.Send(new CreateMsfTemplateCommand(
+        _template.Name,
+        null,
+        _template.AllowPatientResponses,
+        [
+          new CreateMsfTemplateQuestionItem(_template.ScalePrompt, MsfQuestionType.Scale, null, true),
+          new CreateMsfTemplateQuestionItem(_template.CommentPrompt, MsfQuestionType.LongText, null, false)
+        ]));
+
+      _template = new();
+      await LoadTemplatesAsync();
+      _status = "Template created.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task CreateCampaignAsync()
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var result = await Sender.Send(new CreateMsfCampaignCommand(
+        _campaign.SubjectUserId,
+        _campaign.TemplateId ?? 0,
+        _campaign.OpensOn,
+        _campaign.ClosesOn,
+        _campaign.MinimumResponses,
+        _campaign.MinimumCategoryResponses,
+        await GetCurrentUserIdAsync()));
+
+      NavigationManager.NavigateTo($"/msf/campaigns/{result.Id}");
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task AddInviteeAsync()
+  {
+    if (!CampaignId.HasValue)
+    {
+      return;
+    }
+
+    _error = null;
+    _status = null;
+
+    try
+    {
+      await Sender.Send(new AddMsfInvitationCommand(CampaignId.Value, _invitee.Email, _invitee.Category));
+      _invitee = new();
+      _status = "Invitee added.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task OpenCampaignAsync()
+  {
+    if (!CampaignId.HasValue)
+    {
+      return;
+    }
+
+    _error = null;
+    _status = null;
+
+    try
+    {
+      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, "/msf/respond"));
+      _status = "Campaign opened and respondent links issued to the logging email sender.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private sealed class TemplateFormModel
+  {
+    [Required]
+    [MaxLength(200)]
+    public string Name { get; set; } = "Default MSF";
+
+    [Required]
+    [MaxLength(1000)]
+    public string ScalePrompt { get; set; } = "Rates the trainee's overall professional performance.";
+
+    [Required]
+    [MaxLength(1000)]
+    public string CommentPrompt { get; set; } = "What should the trainee keep doing or improve?";
+
+    public bool AllowPatientResponses { get; set; }
+  }
+
+  private sealed class CampaignFormModel
+  {
+    [Required]
+    public string SubjectUserId { get; set; } = string.Empty;
+
+    [Required]
+    public int? TemplateId { get; set; }
+
+    [Required]
+    public DateOnly OpensOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+    [Required]
+    public DateOnly ClosesOn { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(14));
+
+    [Range(1, 100)]
+    public int MinimumResponses { get; set; } = 8;
+
+    [Range(1, 100)]
+    public int MinimumCategoryResponses { get; set; } = 3;
+  }
+
+  private sealed class InviteeFormModel
+  {
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public MsfRespondentCategory Category { get; set; } = MsfRespondentCategory.PeerDoctor;
+  }
+
+  private async Task<string> GetCurrentUserIdAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
+  }
+}

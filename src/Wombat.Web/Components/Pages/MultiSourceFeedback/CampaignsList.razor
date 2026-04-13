@@ -1,0 +1,63 @@
+@page "/msf/campaigns"
+@attribute [Authorize(Roles = "Coordinator,Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>MSF Campaigns</PageTitle>
+
+<PageHeader Title="MSF campaigns" Subtitle="Create and review multi-source feedback campaigns.">
+  <Actions>
+    <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
+  </Actions>
+</PageHeader>
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No MSF campaigns" EmptyBody="Create the first MSF campaign to start respondent outreach.">
+  <DataTable Items="_items" Caption="MSF campaigns">
+    <HeaderRow>
+      <tr>
+        <th>Subject</th>
+        <th>Template</th>
+        <th>State</th>
+        <th>Invitations</th>
+        <th>Responses</th>
+        <th>Closes</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td><code>@item.SubjectUserId</code></td>
+        <td>@item.TemplateName</td>
+        <td>@item.State</td>
+        <td>@item.InvitationCount</td>
+        <td>@item.ResponseCount</td>
+        <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")">Edit</a>
+          <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")">Report</a>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<MsfCampaignSummaryDto> _items = [];
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      _items.AddRange(await Sender.Send(new ListMsfCampaignsForCoordinatorQuery()));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

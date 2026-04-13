@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T021 — Multi-source feedback** (next)
+**T021 — Multi-source feedback** (core implementation landed; manual verification + polish next)
 
-T020 is committed. Next session: read `Tasks/T021-multi-source-feedback.md` and build the first hardcoded non-builder activity type on top of the seeded starter catalogue now in place.
+The dedicated MSF slice now exists in Domain/Application/Infrastructure/Web/API, including anonymisation on close, suppressed aggregate reporting, token-gated anonymous response submission, a migration, and coordinator/trainee pages. Next session: run the manual walkthrough from `Tasks/T021-multi-source-feedback.md`, verify the `/msf/respond` API flow against a live local database, and decide whether to finish T012 first or keep using the logging sender for MSF invite links.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,48 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T021 core implementation completed (automated verification green; manual walkthrough still pending):
+- Added the dedicated MSF domain slice under `src/Wombat.Domain/MultiSourceFeedback/`:
+  - `MsfCampaign`, `MsfTemplate`, `MsfQuestion`, `MsfInvitation`, `MsfResponse`, `MsfResponseAnswer`
+  - enums for campaign state, question type, and respondent category
+- Added EF Core persistence for MSF:
+  - new DbSets on `ApplicationDbContext`
+  - configurations under `src/Wombat.Infrastructure/Persistence/Configurations/MultiSourceFeedback/`
+  - migration `20260413095239_MultiSourceFeedback`
+- Added the application slice under `src/Wombat.Application/Features/MultiSourceFeedback/`:
+  - commands: `CreateMsfTemplate`, `CreateMsfCampaign`, `AddMsfInvitation`, `OpenMsfCampaign`, `CloseMsfCampaign`, `ReleaseMsfCampaign`, `WithdrawMsfCampaign`, `SubmitMsfResponse`
+  - queries: `ListMsfTemplates`, `ListMsfCampaignsForCoordinator`, `ListMsfCampaignsForTrainee`, `GetCampaignAggregateReport`, `GetMsfResponseForm`
+  - `MsfAggregationService` for category-level suppression and aggregate shaping
+  - `MsfCampaignRules` for token validation, payload validation, and anonymisation
+- Added the anonymous API endpoint in `src/Wombat.Api/Endpoints/MsfRespond.cs`:
+  - `GET /msf/respond?token=...` returns the anonymous response form payload
+  - `POST /msf/respond?token=...` submits answers
+  - endpoint is anonymous and rate-limited
+- Added the first coordinator/trainee web pages under `src/Wombat.Web/Components/Pages/MultiSourceFeedback/`:
+  - `CampaignsList.razor`
+  - `CampaignEdit.razor`
+  - `CampaignReport.razor`
+  - `MyMsfReports.razor`
+  - added nav links for coordinator and trainee surfaces
+- Added application tests under `tests/Wombat.Application.Tests/Features/MultiSourceFeedback/` covering:
+  - anonymity on close (`RespondentEmail` cleared and replaced with hash)
+  - suppression of categories below `MinimumCategoryResponses`
+  - aggregate visibility once the threshold is met
+  - token rejection for expired / revoked / already-used links
+  - anonymous response submission persisting answers and marking invitations used
+- Verified:
+  - `dotnet build Wombat.sln -c Release --no-restore` passes.
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build --filter Msf` passes with 6/6 MSF tests green.
+  - `dotnet test Wombat.sln -c Release --no-build --no-restore` passes for discovered tests:
+    - Domain: 15/15
+    - Application: 31/31
+    - Infrastructure: 3/3
+    - Web: 19/19
+- Scope caveats / follow-up notes:
+  - The anonymous `/msf/respond` surface is currently JSON-first (API payloads) rather than a dedicated rendered HTML form.
+  - `CampaignEdit.razor` currently uses a minimal bootstrap flow (quick-template creation + subject user id text entry) rather than a richer user-picker/template-builder UX.
+  - The manual task-file walkthrough using real email delivery is still blocked on T012 unless the logging sender is accepted for local verification.
 
 T020 completed:
 - Added the starter activity catalogue under `src/Wombat.Infrastructure/Activities/Seeds/`:

@@ -71,10 +71,21 @@ None of these fit the Activity platform's grammar cleanly. Implementing them as 
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — anonymity tests and suppression tests green.
+- [x] `dotnet build` clean.
+- [x] `dotnet test` — anonymity tests and suppression tests green.
 - [ ] Manual: coordinator creates a campaign for a demo trainee, adds 8 respondents across 3 categories, opens it. Emails land in MailHog. Open 4 of the tokens, submit responses. Close the campaign. Aggregator runs. Coordinator releases. Trainee sees the aggregated view. **Confirm individual respondent identity is not visible anywhere in the UI or API.**
 - [ ] Attempt an admin "god view" to see individual responses — should fail because no such view exists.
+
+## Session notes
+
+- 2026-04-13: Implemented the core MSF slice across Domain/Application/Infrastructure/Web/API.
+- Added the dedicated aggregate model, persistence configuration, and EF migration `20260413095239_MultiSourceFeedback`.
+- Added aggregate-report generation with category suppression and invitation anonymisation on close.
+- Added anonymous token-backed response endpoints under `Wombat.Api/Endpoints/MsfRespond.cs` with rate limiting.
+- Added coordinator/trainee pages under `src/Wombat.Web/Components/Pages/MultiSourceFeedback/`.
+- Added application tests covering anonymity, suppression, expired/revoked/used token rejection, and response submission persistence.
+- Deliberate scope note: the anonymous respondent surface is currently API-first JSON rather than a rendered HTML page, and the coordinator UI is a minimal bootstrap flow rather than a polished picker-driven workflow.
+- Remaining work for full task completion: manual walkthrough against a live local database plus final decision on whether T012 lands before MailHog-backed MSF verification.
 
 ## Notes & gotchas
 

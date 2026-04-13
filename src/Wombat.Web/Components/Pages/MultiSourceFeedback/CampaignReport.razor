@@ -1,0 +1,158 @@
+@page "/msf/reports/{CampaignId:int}"
+@attribute [Authorize(Roles = "Coordinator,Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>MSF Report</PageTitle>
+
+<PageHeader Title="MSF report" Subtitle="Review aggregate results and release them to the trainee." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _report is null)" EmptyTitle="Report unavailable" EmptyBody="The selected report could not be loaded.">
+  @if (_report is not null)
+  {
+    <div class="details-grid">
+      <section class="detail-card">
+        <h3>Summary</h3>
+        <p><strong>Template:</strong> @_report.TemplateName</p>
+        <p><strong>State:</strong> @_report.State</p>
+        <p><strong>Total responses:</strong> @_report.TotalResponses</p>
+        <p><strong>Minimum responses:</strong> @_report.MinimumResponses</p>
+        <p><strong>Minimum category responses:</strong> @_report.MinimumCategoryResponses</p>
+      </section>
+
+      <section class="detail-card">
+        <h3>Coordinator actions</h3>
+        <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
+          <FormField Label="Narrative" InputId="msf-narrative">
+            <InputTextArea id="msf-narrative" class="form-control" @bind-Value="_review.Narrative" />
+          </FormField>
+          <FormActions>
+            @if (_report.State == MsfCampaignState.Open)
+            {
+              <button type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
+            }
+            @if (_report.State == MsfCampaignState.UnderReview)
+            {
+              <button type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
+            }
+          </FormActions>
+        </EditForm>
+      </section>
+    </div>
+
+    @foreach (var category in _report.Categories)
+    {
+      <section class="detail-card">
+        <h3>@category.Category</h3>
+        @if (category.IsSuppressed)
+        {
+          <Alert Kind="warning">Insufficient responses in this category. Results are suppressed.</Alert>
+        }
+        else
+        {
+          @foreach (var question in category.Questions)
+          {
+            <div class="mb-3">
+              <strong>@question.Prompt</strong>
+              @if (question.Type == MsfQuestionType.Scale && question.Scale is not null)
+              {
+                <p>Average: @question.Scale.Average.ToString("0.00") from @question.Scale.ResponseCount responses.</p>
+              }
+              else
+              {
+                <ul>
+                  @foreach (var comment in question.Comments)
+                  {
+                    <li>@comment</li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        }
+      </section>
+    }
+  }
+</StatePanel>
+
+@code {
+  [Parameter] public int CampaignId { get; set; }
+
+  private MsfCampaignAggregateReportDto? _report;
+  private ReviewFormModel _review = new();
+  private bool _loading = true;
+  private string? _status;
+  private string? _error;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _error = null;
+
+    try
+    {
+      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId));
+      _review.Narrative = _report.CoordinatorNarrative;
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task CloseAsync()
+  {
+    try
+    {
+      _report = await Sender.Send(new CloseMsfCampaignCommand(CampaignId));
+      _status = "Campaign closed and anonymised for review.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task ReleaseAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "coordinator";
+      await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _review.Narrative));
+      await LoadAsync();
+      _status = "Report released to the trainee.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private sealed class ReviewFormModel
+  {
+    [MaxLength(4000)]
+    public string? Narrative { get; set; }
+  }
+}

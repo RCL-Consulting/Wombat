@@ -1,0 +1,120 @@
+@page "/msf/my-reports"
+@page "/msf/my-reports/{CampaignId:int}"
+@attribute [Authorize(Roles = "Trainee,Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My MSF Reports</PageTitle>
+
+<PageHeader Title="My MSF reports" Subtitle="Released aggregate feedback only. Individual responses are never shown." />
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<div class="details-grid">
+  <section class="detail-card">
+    <h3>Released reports</h3>
+    <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _reports.Count == 0)" EmptyTitle="No released reports" EmptyBody="Released multi-source feedback will appear here.">
+      <DataTable Items="_reports">
+        <HeaderRow>
+          <tr>
+            <th>Template</th>
+            <th>Released</th>
+            <th>Responses</th>
+            <th></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="item">
+          <tr>
+            <td>@item.TemplateName</td>
+            <td>@item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@item.ResponseCount</td>
+            <td class="actions-cell">
+              <a class="btn btn-outline btn-sm" href="@($"/msf/my-reports/{item.Id}")">View</a>
+            </td>
+          </tr>
+        </Row>
+      </DataTable>
+    </StatePanel>
+  </section>
+
+  @if (_report is not null)
+  {
+    <section class="detail-card">
+      <h3>Selected report</h3>
+      <p><strong>Template:</strong> @_report.TemplateName</p>
+      <p><strong>Narrative:</strong> @_report.CoordinatorNarrative</p>
+      @foreach (var category in _report.Categories.Where(category => !category.IsSuppressed))
+      {
+        <div class="mb-3">
+          <strong>@category.Category</strong>
+          @foreach (var question in category.Questions)
+          {
+            @if (question.Type == MsfQuestionType.Scale && question.Scale is not null)
+            {
+              <p>@question.Prompt: @question.Scale.Average.ToString("0.00")</p>
+            }
+            else if (question.Comments.Count > 0)
+            {
+              <p>@question.Prompt</p>
+              <ul>
+                @foreach (var comment in question.Comments)
+                {
+                  <li>@comment</li>
+                }
+              </ul>
+            }
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
+
+@code {
+  [Parameter] public int? CampaignId { get; set; }
+
+  private readonly List<MsfCampaignSummaryDto> _reports = [];
+  private MsfCampaignAggregateReportDto? _report;
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _error = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      _reports.Clear();
+      _reports.AddRange(await Sender.Send(new ListMsfCampaignsForTraineeQuery(userId)));
+
+      if (CampaignId.HasValue)
+      {
+        _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId.Value));
+        if (_report.State != MsfCampaignState.Released || _report.SubjectUserId != userId)
+        {
+          throw new InvalidOperationException("The selected report is not available to the current trainee.");
+        }
+      }
+      else
+      {
+        _report = null;
+      }
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

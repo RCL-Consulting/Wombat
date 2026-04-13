@@ -8,6 +8,7 @@ using Wombat.Domain.Forms;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
+using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Persistence;
@@ -40,6 +41,12 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<ActivityTransition> ActivityTransitions => Set<ActivityTransition>();
     public DbSet<ActivityPermissionRule> ActivityPermissionRules => Set<ActivityPermissionRule>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<MsfTemplate> MsfTemplates => Set<MsfTemplate>();
+    public DbSet<MsfQuestion> MsfQuestions => Set<MsfQuestion>();
+    public DbSet<MsfCampaign> MsfCampaigns => Set<MsfCampaign>();
+    public DbSet<MsfInvitation> MsfInvitations => Set<MsfInvitation>();
+    public DbSet<MsfResponse> MsfResponses => Set<MsfResponse>();
+    public DbSet<MsfResponseAnswer> MsfResponseAnswers => Set<MsfResponseAnswer>();
     public DbSet<TraineeProfile> TraineeProfiles => Set<TraineeProfile>();
     public DbSet<AssessorProfile> AssessorProfiles => Set<AssessorProfile>();
 
