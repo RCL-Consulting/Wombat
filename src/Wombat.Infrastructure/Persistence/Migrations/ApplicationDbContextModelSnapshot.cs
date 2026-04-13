@@ -889,6 +889,36 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("Institutions", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.Institutions.InstitutionBrand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InstitutionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LogoBase64")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrimaryColorHex")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("SecondaryColorHex")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstitutionId")
+                        .IsUnique();
+
+                    b.ToTable("InstitutionBrands", (string)null);
+                });
+
             modelBuilder.Entity("Wombat.Domain.Institutions.Speciality", b =>
                 {
                     b.Property<int>("Id")
@@ -1252,6 +1282,129 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("MsfTemplates", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.Reporting.PortfolioExport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ExportedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("ExportedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("FilterFromDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("FilterToDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TraineeUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContentHash");
+
+                    b.HasIndex("TraineeUserId");
+
+                    b.ToTable("PortfolioExports", (string)null);
+                });
+
+            modelBuilder.Entity("Wombat.Domain.Scheduling.ScheduledJobDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CronExpression")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledJobDefinitions", (string)null);
+                });
+
+            modelBuilder.Entity("Wombat.Domain.Scheduling.ScheduledJobRun", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TriggeredBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key");
+
+                    b.HasIndex("StartedAt");
+
+                    b.HasIndex("Key", "StartedAt");
+
+                    b.ToTable("ScheduledJobRuns", (string)null);
+                });
+
             modelBuilder.Entity("Wombat.Infrastructure.Identity.WombatIdentityUser", b =>
                 {
                     b.Property<string>("Id")
@@ -1593,6 +1746,17 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Navigation("Epa");
 
                     b.Navigation("Form");
+                });
+
+            modelBuilder.Entity("Wombat.Domain.Institutions.InstitutionBrand", b =>
+                {
+                    b.HasOne("Wombat.Domain.Institutions.Institution", "Institution")
+                        .WithOne()
+                        .HasForeignKey("Wombat.Domain.Institutions.InstitutionBrand", "InstitutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Institution");
                 });
 
             modelBuilder.Entity("Wombat.Domain.Identity.AssessorProfile", b =>

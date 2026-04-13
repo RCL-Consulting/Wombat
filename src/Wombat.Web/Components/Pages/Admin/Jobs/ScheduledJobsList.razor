@@ -1,0 +1,161 @@
+@page "/admin/jobs"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Scheduled jobs</PageTitle>
+
+<PageHeader Title="Scheduled jobs" Subtitle="View and manage background jobs. Toggle jobs on or off, trigger manual runs, and view run history.">
+  <Actions>
+    <a class="btn btn-outline" href="/admin/jobs/runs">
+      <Icon Name="clock" />
+      Run history
+    </a>
+  </Actions>
+</PageHeader>
+
+<StatePanel IsLoading="@(_jobs is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_jobs?.Count == 0)" EmptyTitle="No jobs registered" EmptyBody="No scheduled jobs have been registered in the system.">
+  @if (_jobs is not null)
+  {
+    <DataTable TItem="Wombat.Application.Features.Scheduling.ScheduledJobDto" Items="_jobs" Caption="Scheduled jobs">
+      <HeaderRow>
+        <tr>
+          <th>Job</th>
+          <th>Schedule</th>
+          <th>Last run</th>
+          <th>Status</th>
+          <th>Next run</th>
+          <th>Enabled</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="job">
+        <tr>
+          <td>
+            <strong>@job.Key</strong>
+            <div class="text-muted text-sm">@job.Description</div>
+          </td>
+          <td><code>@job.CronExpression</code></td>
+          <td>@(job.LastRunAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+          <td>
+            @if (job.LastRunStatus is not null)
+            {
+              <span class="badge @StatusBadgeClass(job.LastRunStatus)">@job.LastRunStatus</span>
+            }
+            else
+            {
+              <span>—</span>
+            }
+          </td>
+          <td>@(job.NextRunAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+          <td>
+            <button class="btn btn-outline btn-sm" @onclick="() => ToggleAsync(job)" disabled="@_actionInProgress">
+              @(job.IsEnabled ? "Disable" : "Enable")
+            </button>
+          </td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn btn-outline btn-sm" @onclick="() => RunNowAsync(job)" disabled="@(_actionInProgress || !job.IsEnabled)">
+                Run now
+              </button>
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
+
+@if (!string.IsNullOrWhiteSpace(_actionMessage))
+{
+  <div class="alert @(_actionSuccess ? "alert-success" : "alert-danger")">@_actionMessage</div>
+}
+
+@code {
+  private IReadOnlyList<Wombat.Application.Features.Scheduling.ScheduledJobDto>? _jobs;
+  private string? _errorMessage;
+  private bool _actionInProgress;
+  private string? _actionMessage;
+  private bool _actionSuccess;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadJobsAsync();
+  }
+
+  private async Task LoadJobsAsync()
+  {
+    try
+    {
+      _jobs = await Sender.Send(new Wombat.Application.Features.Scheduling.Queries.GetScheduledJobStatus.GetScheduledJobStatusQuery());
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private async Task ToggleAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
+  {
+    _actionInProgress = true;
+    _actionMessage = null;
+
+    try
+    {
+      if (job.IsEnabled)
+      {
+        await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.DisableScheduledJob.DisableScheduledJobCommand(job.Key));
+        _actionMessage = $"Job '{job.Key}' disabled.";
+      }
+      else
+      {
+        await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.EnableScheduledJob.EnableScheduledJobCommand(job.Key));
+        _actionMessage = $"Job '{job.Key}' enabled.";
+      }
+      _actionSuccess = true;
+      await LoadJobsAsync();
+    }
+    catch (Exception ex)
+    {
+      _actionMessage = ex.Message;
+      _actionSuccess = false;
+    }
+    finally
+    {
+      _actionInProgress = false;
+    }
+  }
+
+  private async Task RunNowAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
+  {
+    _actionInProgress = true;
+    _actionMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+      await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.RunScheduledJobNow.RunScheduledJobNowCommand(job.Key, userId));
+      _actionMessage = $"Job '{job.Key}' dispatched.";
+      _actionSuccess = true;
+      await LoadJobsAsync();
+    }
+    catch (Exception ex)
+    {
+      _actionMessage = ex.Message;
+      _actionSuccess = false;
+    }
+    finally
+    {
+      _actionInProgress = false;
+    }
+  }
+
+  private static string StatusBadgeClass(string status) => status switch
+  {
+    "Succeeded" => "badge-success",
+    "Failed" => "badge-danger",
+    "Running" => "badge-warning",
+    _ => ""
+  };
+}

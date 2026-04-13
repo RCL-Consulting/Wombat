@@ -6,10 +6,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Reporting;
+using Wombat.Application.Scheduling;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Email;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Reporting;
+using Wombat.Infrastructure.Scheduling;
+using Wombat.Infrastructure.Scheduling.Jobs;
 
 namespace Wombat.Infrastructure;
 
@@ -78,9 +83,33 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
         services.AddScoped<ICreditApplier, CreditApplier>();
 
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        services.AddScoped<IPortfolioPdfService, PortfolioPdfService>();
+
         services.AddScoped<RoleSeeder>();
         services.AddScoped<AdminSeeder>();
         services.AddScoped<DataSeeder>();
+
+        services.AddScheduledJob<ActivityDraftNudgeJob>();
+        services.AddScheduledJob<AssessorPendingNudgeJob>();
+        services.AddScheduledJob<MsfCampaignAutoCloseJob>();
+        services.AddScheduledJob<MsfInvitationExpiryReminderJob>();
+        services.AddScheduledJob<WeeklyCoordinatorDigestJob>();
+        services.AddScheduledJob<PortfolioExportCleanupJob>();
+        services.AddScheduledJob<AuditLogRetentionJob>();
+        services.AddScheduledJob<ScheduledJobRunRetentionJob>();
+
+        services.AddSingleton<IScheduledJobRegistry>(provider =>
+        {
+            var registry = new ScheduledJobRegistry();
+            foreach (var job in provider.GetServices<IScheduledJob>())
+            {
+                registry.Register(job);
+            }
+            return registry;
+        });
+        services.AddSingleton<IScheduledJobDispatcher, ScheduledJobDispatcher>();
+        services.AddHostedService<ScheduledJobHost>();
 
         return services;
     }

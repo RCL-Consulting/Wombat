@@ -29,17 +29,43 @@ A trainee (or admin acting for them) can export a complete portfolio PDF: all ac
 
 ## Files created
 
+**Domain:**
+- `src/Wombat.Domain/Institutions/InstitutionBrand.cs`
+- `src/Wombat.Domain/Reporting/PortfolioExport.cs`
+
+**Application:**
+- `src/Wombat.Application/Features/Reporting/IPortfolioPdfService.cs`
+- `src/Wombat.Application/Features/Reporting/PortfolioExportDtos.cs`
+- `src/Wombat.Application/Features/Reporting/ExportPortfolio.cs`
+- `src/Wombat.Application/Features/Reporting/VerifyExport.cs`
+
+**Infrastructure:**
 - `src/Wombat.Infrastructure/Reporting/PortfolioPdfService.cs`
-- `src/Wombat.Infrastructure/Reporting/PortfolioPdfComponents/*.cs` (one file per section — CoverPage, SummaryPage, ActivitiesSection, ReflectionsSection, MsfSection, CommitteeSection, AuditAppendix)
-- `src/Wombat.Application/Features/Reporting/ExportPortfolio/**`
-- `src/Wombat.Domain/Institutions/InstitutionBrand.cs` (+ config + migration)
-- `src/Wombat.Web/Components/Pages/Portfolio/{ExportPortfolio,VerifyExport}.razor`
+- `src/Wombat.Infrastructure/Reporting/CoverPageComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/SummaryPageComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/CommitteeSectionComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/ActivitiesSectionComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/MsfSectionComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/AuditAppendixComponent.cs`
+- `src/Wombat.Infrastructure/Reporting/IntegrityFooterComponent.cs`
+- `src/Wombat.Infrastructure/Persistence/Configurations/InstitutionBrandConfiguration.cs`
+- `src/Wombat.Infrastructure/Persistence/Configurations/PortfolioExportConfiguration.cs`
+- `src/Wombat.Infrastructure/Persistence/Migrations/20260413120000_PortfolioExport.cs` (+ Designer)
+
+**Web:**
+- `src/Wombat.Web/Components/Pages/Portfolio/ExportPortfolio.razor`
+- `src/Wombat.Web/Components/Pages/Portfolio/VerifyExport.razor`
+- `src/Wombat.Web/wwwroot/js/file-download.js`
+
+**Tests:**
+- `tests/Wombat.Application.Tests/Features/Reporting/ExportPortfolioCommandHandlerTests.cs`
+- `tests/Wombat.Application.Tests/Features/Reporting/VerifyExportQueryHandlerTests.cs`
 
 ## Verification
 
-- [ ] `dotnet build` clean.
+- [x] `dotnet build` clean.
 - [ ] Manual: export a portfolio for the demo trainee. Open the PDF. Every section renders, no blank pages, institution branding appears.
-- [ ] The PDF passes a PDF/A conformance check (use a free validator). This is often required by regulators.
+- [ ] The PDF passes a PDF/A conformance check (use a free validator). This is often required by regulators. *(Deferred — task file allows fallback to regular PDF.)*
 - [ ] The hash shown on the last page matches the verify page's recorded hash.
 - [ ] MSF section contains aggregate narrative only, no individual responses (verify by exporting a trainee with MSF data and inspecting the output).
 

@@ -62,11 +62,11 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 - [x] T010 — Web layout, auth, navigation, role-gated routing
 - [x] T011 — Role dashboards (widgets query generically over activities) — **Opus** *(design judgment: 7+ role-specific views querying the activity platform generically)*
 - [x] T012 — Email infrastructure — **Sonnet** *(standard MailKit setup + templates, well-trodden pattern)*
-- [ ] T024 — Scheduled nudges & digest emails — **Opus** *(job scheduler + multiple domain jobs + cron + admin UI, touches many layers)*
+- [x] T024 — Scheduled nudges & digest emails — **Opus** *(job scheduler + multiple domain jobs + cron + admin UI, touches many layers)*
 
 ### Phase 6 — Cross-cutting operations
 
-- [ ] T023 — Portfolio PDF export — **Opus** *(QuestPDF layout + heterogeneous activity aggregation + branding + integrity signatures)*
+- [x] T023 — Portfolio PDF export — **Opus** *(QuestPDF layout + heterogeneous activity aggregation + branding + integrity signatures)*
 - [ ] T025 — Admin audit log (pipeline behaviour) — **Sonnet** *(known MediatR pipeline pattern + append-only table + query UI)*
 - [ ] T026 — Data subject rights (POPIA/GDPR self-service) — **Opus** *(regulatory nuance: pseudonymisation, retention exceptions, approval flows)*
 - [ ] T027 — Institutional SSO (OIDC) — **Opus** *(dynamic OIDC with group-to-role mapping across multiple identity providers)*

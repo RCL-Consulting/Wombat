@@ -58,8 +58,8 @@ Both work, both are heavier than we need. Wombat runs on a single node (for now)
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — scheduler fake-clock tests and job unit tests green.
+- [x] `dotnet build` clean (0 warnings, 0 errors).
+- [x] `dotnet test` — 74 passed in Application tests (was 54; 20 new scheduling tests), 17 Domain, 33 Web.
 - [ ] Manual: set `ActivityDraftNudgeJob` cron to `*/1 * * * *` for testing, confirm it fires within a minute, confirm email lands in MailHog, confirm a `ScheduledJobRun` row is written with `Succeeded`.
 - [ ] Disable a job via the UI, confirm it stops firing. Re-enable, confirm it resumes.
 - [ ] Run a job manually via "Run now", confirm it executes regardless of schedule.

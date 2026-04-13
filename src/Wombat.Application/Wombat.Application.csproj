@@ -4,6 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cronos" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="MediatR" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />

@@ -52,10 +52,11 @@ Wombat/
 │   │   └── Features/              ← feature folders: Activities, Dashboards, Institutions, …
 │   ├── Wombat.Infrastructure/     ← EF Core, Identity, email, external services
 │   │   ├── Persistence/           ← DbContext, configurations, migrations
-│   │   └── Activities/            ← SchemaValidator, WorkflowEvaluator, CreditApplier
+│   │   ├── Activities/            ← SchemaValidator, WorkflowEvaluator, CreditApplier
+│   │   └── Reporting/             ← PortfolioPdfService, QuestPDF section components
 │   ├── Wombat.Api/                ← thin REST controllers (webhooks, integration)
 │   └── Wombat.Web/                ← Blazor Interactive Server app
-│       ├── Components/Pages/      ← Admin/*, Activities/*, Account/*
+│       ├── Components/Pages/      ← Admin/*, Activities/*, Account/*, Portfolio/*
 │       ├── Components/Layout/     ← MainLayout, NavMenu
 │       ├── Components/Shared/     ← Icon, PageHeader, DataTable, FormField, …
 │       └── wwwroot/               ← app.css (design system), icons/

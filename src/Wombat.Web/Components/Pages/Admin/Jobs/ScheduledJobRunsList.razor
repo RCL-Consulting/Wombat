@@ -1,0 +1,125 @@
+@page "/admin/jobs/runs"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Job run history</PageTitle>
+
+<PageHeader Title="Job run history" Subtitle="View the execution history of scheduled jobs.">
+  <Actions>
+    <a class="btn btn-outline" href="/admin/jobs">
+      <Icon Name="arrow-left" />
+      Back to jobs
+    </a>
+  </Actions>
+</PageHeader>
+
+<div class="form-row" style="margin-bottom: var(--space-4); display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap;">
+  <div>
+    <label class="form-label">Job key</label>
+    <input type="text" class="form-input" @bind="_filterKey" @bind:event="oninput" placeholder="Filter by key..." style="max-width: 200px;" />
+  </div>
+  <div>
+    <label class="form-label">Status</label>
+    <select class="form-input" @bind="_filterStatus" style="max-width: 150px;">
+      <option value="">All</option>
+      <option value="Succeeded">Succeeded</option>
+      <option value="Failed">Failed</option>
+      <option value="Running">Running</option>
+    </select>
+  </div>
+  <div>
+    <label class="form-label">From</label>
+    <input type="date" class="form-input" @bind="_filterFrom" style="max-width: 160px;" />
+  </div>
+  <div>
+    <label class="form-label">To</label>
+    <input type="date" class="form-input" @bind="_filterTo" style="max-width: 160px;" />
+  </div>
+  <div>
+    <button class="btn btn-primary" @onclick="LoadRunsAsync">Filter</button>
+  </div>
+</div>
+
+<StatePanel IsLoading="@(_runs is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_runs?.Count == 0)" EmptyTitle="No runs found" EmptyBody="No job runs match the selected filters.">
+  @if (_runs is not null)
+  {
+    <DataTable TItem="Wombat.Application.Features.Scheduling.ScheduledJobRunDto" Items="_runs" Caption="Job runs">
+      <HeaderRow>
+        <tr>
+          <th>Key</th>
+          <th>Started</th>
+          <th>Finished</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Triggered by</th>
+          <th>Error</th>
+        </tr>
+      </HeaderRow>
+      <Row Context="run">
+        <tr>
+          <td>@run.Key</td>
+          <td>@run.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+          <td>@(run.FinishedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</td>
+          <td>@FormatDuration(run.StartedAt, run.FinishedAt)</td>
+          <td><span class="badge @StatusBadgeClass(run.Status)">@run.Status</span></td>
+          <td>@(run.TriggeredBy ?? "scheduler")</td>
+          <td>
+            @if (!string.IsNullOrWhiteSpace(run.ErrorMessage))
+            {
+              <span class="text-danger text-sm" title="@run.ErrorMessage">@Truncate(run.ErrorMessage, 80)</span>
+            }
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
+
+@code {
+  private IReadOnlyList<Wombat.Application.Features.Scheduling.ScheduledJobRunDto>? _runs;
+  private string? _errorMessage;
+  private string? _filterKey;
+  private string? _filterStatus;
+  private DateOnly? _filterFrom;
+  private DateOnly? _filterTo;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadRunsAsync();
+  }
+
+  private async Task LoadRunsAsync()
+  {
+    _errorMessage = null;
+    try
+    {
+      _runs = await Sender.Send(new Wombat.Application.Features.Scheduling.Queries.GetScheduledJobRuns.GetScheduledJobRunsQuery(
+          Key: string.IsNullOrWhiteSpace(_filterKey) ? null : _filterKey.Trim(),
+          Status: string.IsNullOrWhiteSpace(_filterStatus) ? null : _filterStatus,
+          From: _filterFrom,
+          To: _filterTo));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private static string StatusBadgeClass(string status) => status switch
+  {
+    "Succeeded" => "badge-success",
+    "Failed" => "badge-danger",
+    "Running" => "badge-warning",
+    _ => ""
+  };
+
+  private static string FormatDuration(DateTime started, DateTime? finished)
+  {
+    if (finished is null) return "—";
+    var duration = finished.Value - started;
+    return duration.TotalSeconds < 1 ? $"{duration.TotalMilliseconds:F0}ms" : $"{duration.TotalSeconds:F1}s";
+  }
+
+  private static string Truncate(string value, int maxLength)
+    => value.Length <= maxLength ? value : value[..maxLength] + "…";
+}

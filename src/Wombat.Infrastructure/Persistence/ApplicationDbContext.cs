@@ -10,6 +10,8 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Domain.Reporting;
+using Wombat.Domain.Scheduling;
 using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Persistence;
@@ -56,6 +58,10 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<MsfResponseAnswer> MsfResponseAnswers => Set<MsfResponseAnswer>();
     public DbSet<TraineeProfile> TraineeProfiles => Set<TraineeProfile>();
     public DbSet<AssessorProfile> AssessorProfiles => Set<AssessorProfile>();
+    public DbSet<InstitutionBrand> InstitutionBrands => Set<InstitutionBrand>();
+    public DbSet<PortfolioExport> PortfolioExports => Set<PortfolioExport>();
+    public DbSet<ScheduledJobDefinition> ScheduledJobDefinitions => Set<ScheduledJobDefinition>();
+    public DbSet<ScheduledJobRun> ScheduledJobRuns => Set<ScheduledJobRun>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
