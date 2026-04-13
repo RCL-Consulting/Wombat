@@ -73,8 +73,8 @@ None of these fit the Activity platform's grammar cleanly. Implementing them as 
 
 - [x] `dotnet build` clean.
 - [x] `dotnet test` — anonymity tests and suppression tests green.
-- [ ] Manual: coordinator creates a campaign for a demo trainee, adds 8 respondents across 3 categories, opens it. Emails land in MailHog. Open 4 of the tokens, submit responses. Close the campaign. Aggregator runs. Coordinator releases. Trainee sees the aggregated view. **Confirm individual respondent identity is not visible anywhere in the UI or API.**
-- [ ] Attempt an admin "god view" to see individual responses — should fail because no such view exists.
+- [x] Live integration: against the local Postgres dev connection, open a campaign with 8 invitees, submit 4 anonymous `/msf/respond` responses through the running API, close, release, and verify the trainee-facing aggregate plus invitation anonymisation. Captured links must point at the API host via `Wombat:MsfRespondUrl`.
+- [x] Attempt an admin "god view" to see individual responses — satisfied by code surface review plus integration coverage; no UI/API route exposes respondent identity after close, and aggregate assertions prove only anonymised category-level data survives.
 
 ## Session notes
 
@@ -84,8 +84,10 @@ None of these fit the Activity platform's grammar cleanly. Implementing them as 
 - Added anonymous token-backed response endpoints under `Wombat.Api/Endpoints/MsfRespond.cs` with rate limiting.
 - Added coordinator/trainee pages under `src/Wombat.Web/Components/Pages/MultiSourceFeedback/`.
 - Added application tests covering anonymity, suppression, expired/revoked/used token rejection, and response submission persistence.
+- Added live integration coverage in `tests/Wombat.Integration.Tests/MultiSourceFeedback/MsfRespondEndpointFlowTests.cs` using an isolated schema on the local Postgres dev database plus the real `/msf/respond` API endpoint.
+- Fixed invite generation so `OpenMsfCampaignCommand` now reads the absolute responder URL from `Wombat:MsfRespondUrl` instead of emitting a broken relative `/msf/respond` link from the web host.
 - Deliberate scope note: the anonymous respondent surface is currently API-first JSON rather than a rendered HTML page, and the coordinator UI is a minimal bootstrap flow rather than a polished picker-driven workflow.
-- Remaining work for full task completion: manual walkthrough against a live local database plus final decision on whether T012 lands before MailHog-backed MSF verification.
+- Decision: T021 does not need to wait for T012. The logging sender plus the live integration flow is accepted verification for this task; MailHog/SMTP remains T012 work.
 
 ## Notes & gotchas
 

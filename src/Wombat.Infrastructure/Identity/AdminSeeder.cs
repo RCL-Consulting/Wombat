@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Options;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Infrastructure.Identity;

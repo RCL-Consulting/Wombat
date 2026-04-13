@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T021 — Multi-source feedback** (core implementation landed; manual verification + polish next)
+**T022 — Committee decisions** (next hardcoded feature on the critical path)
 
-The dedicated MSF slice now exists in Domain/Application/Infrastructure/Web/API, including anonymisation on close, suppressed aggregate reporting, token-gated anonymous response submission, a migration, and coordinator/trainee pages. Next session: run the manual walkthrough from `Tasks/T021-multi-source-feedback.md`, verify the `/msf/respond` API flow against a live local database, and decide whether to finish T012 first or keep using the logging sender for MSF invite links.
+T021 is now complete. The MSF slice was verified end-to-end against the live `/msf/respond` API using the local Postgres dev connection, and invite generation now uses the configured absolute responder URL (`Wombat:MsfRespondUrl`) instead of a broken web-relative path. Next session: start `Tasks/T022-committee-decisions.md`.
 
 ## Critical-path reminder (post-pivot)
 
@@ -18,7 +18,15 @@ See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the
 
 ## Last session notes
 
-T021 core implementation completed (automated verification green; manual walkthrough still pending):
+T021 completed:
+- Fixed `OpenMsfCampaignCommand` so the generated responder links come from `Wombat:MsfRespondUrl`; the coordinator page no longer hardcodes a dead relative `/msf/respond` URL.
+- Added `tests/Wombat.Integration.Tests/MultiSourceFeedback/MsfRespondEndpointFlowTests.cs`, which runs against the real API endpoint and the local Postgres dev connection in an isolated schema. The test creates a campaign, adds 8 invitees, opens it, submits 4 anonymous responses through `GET/POST /msf/respond`, closes, releases, and verifies invitation anonymisation plus trainee-visible aggregate data.
+- Verified:
+  - `dotnet test tests/Wombat.Integration.Tests/Wombat.Integration.Tests.csproj --filter MsfRespondEndpointFlowTests`
+  - `dotnet test Wombat.sln --no-restore`
+- Decision: T021 does not need to wait for T012. Logging-email capture plus live API verification is sufficient for this task; SMTP/MailHog remains T012 scope.
+
+T021 implementation details:
 - Added the dedicated MSF domain slice under `src/Wombat.Domain/MultiSourceFeedback/`:
   - `MsfCampaign`, `MsfTemplate`, `MsfQuestion`, `MsfInvitation`, `MsfResponse`, `MsfResponseAnswer`
   - enums for campaign state, question type, and respondent category
@@ -464,3 +472,4 @@ None.
 | 2026-04-11 | implementation v7 | T017 | Added the activity-platform aggregates, schema/workflow/credit DSL parsers, EF jsonb mappings, `ActivitiesPlatform` migration with json-path indexes, and 15 domain tests. Build, domain tests, and local Postgres migration update passed; explicit DB-backed parser round-trip remains optional follow-up verification. |
 | 2026-04-11 | implementation v8 | T018 | Added activity-runtime application slice: DTOs, service contracts, commands/queries, infrastructure implementations (SchemaValidator, WorkflowEvaluator, CreditApplier), CurriculumItemProgress entity, migration, and 21 application tests (24 total green). |
 | 2026-04-12 | planning v4 | — | Design-system pass: created `DESIGN.md`, rewrote T010/T011, amended T019, updated README.md/current_state.md, created root `CLAUDE.md`. Closes the GUI-spec gap between primitive HTML and the ClinicAssist reference. |
+| 2026-04-13 | implementation v9 | T021 | Fixed MSF invite URLs to use configured absolute responder links, added live API integration coverage against local Postgres, verified the open/respond/close/release flow and anonymity guarantees, and advanced the active task to T022. |

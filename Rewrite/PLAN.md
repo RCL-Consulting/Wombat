@@ -54,7 +54,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 ### Phase 4 — Hardcoded domain features (things that cannot be no-code)
 
-- [ ] T021 — Multi-source feedback (MSF/360) with anonymity
+- [x] T021 — Multi-source feedback (MSF/360) with anonymity
 - [ ] T022 — Committee decisions (ARCP equivalent)
 
 ### Phase 5 — Web & messaging

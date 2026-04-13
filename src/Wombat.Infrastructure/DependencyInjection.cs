@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Email;

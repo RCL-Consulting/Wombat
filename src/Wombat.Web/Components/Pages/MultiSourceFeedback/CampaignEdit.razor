@@ -218,7 +218,7 @@
 
     try
     {
-      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, "/msf/respond"));
+      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value));
       _status = "Campaign opened and respondent links issued to the logging email sender.";
     }
     catch (Exception exception)

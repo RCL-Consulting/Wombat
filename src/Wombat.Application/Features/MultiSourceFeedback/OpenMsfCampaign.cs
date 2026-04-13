@@ -1,28 +1,37 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-public sealed record OpenMsfCampaignCommand(int CampaignId, string BaseRespondUrl) : IRequest;
+public sealed record OpenMsfCampaignCommand(int CampaignId) : IRequest;
 
 public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampaignCommand>
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IEmailSender _emailSender;
     private readonly IInvitationTokenService _tokenService;
+    private readonly WombatOptions _options;
 
-    public OpenMsfCampaignCommandHandler(IApplicationDbContext dbContext, IEmailSender emailSender, IInvitationTokenService tokenService)
+    public OpenMsfCampaignCommandHandler(
+        IApplicationDbContext dbContext,
+        IEmailSender emailSender,
+        IInvitationTokenService tokenService,
+        IOptions<WombatOptions> options)
     {
         _dbContext = dbContext;
         _emailSender = emailSender;
         _tokenService = tokenService;
+        _options = options.Value;
     }
 
     public async Task Handle(OpenMsfCampaignCommand request, CancellationToken cancellationToken)
     {
+        var respondUrl = GetRespondUrl();
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .Include(candidate => candidate.Invitations)
@@ -48,7 +57,7 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
                 You have been invited to provide anonymous multi-source feedback.
 
                 Submit your response:
-                {request.BaseRespondUrl}?token={Uri.EscapeDataString(token)}
+                {respondUrl}?token={Uri.EscapeDataString(token)}
 
                 This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
                 """,
@@ -56,5 +65,20 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private string GetRespondUrl()
+    {
+        if (string.IsNullOrWhiteSpace(_options.MsfRespondUrl))
+        {
+            throw new InvalidOperationException("Wombat:MsfRespondUrl must be configured before opening an MSF campaign.");
+        }
+
+        if (!Uri.TryCreate(_options.MsfRespondUrl, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException("Wombat:MsfRespondUrl must be an absolute URL.");
+        }
+
+        return uri.ToString().TrimEnd('/');
     }
 }
