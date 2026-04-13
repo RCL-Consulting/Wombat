@@ -57,7 +57,19 @@ public static class DependencyInjection
         });
 
         services.AddWombatAuthorization();
-        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.AddSingleton<EmailQueue>();
+        services.AddTransient<ISmtpSender, MailKitEmailSender>();
+        var smtpHost = configuration[$"{EmailSettings.SectionName}:SmtpHost"];
+        if (string.IsNullOrWhiteSpace(smtpHost))
+        {
+            services.AddScoped<IEmailSender, LoggingEmailSender>();
+        }
+        else
+        {
+            services.AddScoped<IEmailSender, QueuedEmailSender>();
+            services.AddHostedService<EmailWorker>();
+        }
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
         services.AddScoped<IActivityService, ActivityService>();

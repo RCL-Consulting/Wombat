@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
@@ -50,17 +51,24 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
             var token = _tokenService.GenerateToken();
             invitation.TokenHash = _tokenService.HashToken(token);
 
-            await _emailSender.SendAsync(
-                invitation.RespondentEmail!,
-                $"MSF request: {campaign.Template.Name}",
-                $"""
-                You have been invited to provide anonymous multi-source feedback.
+            var submitUrl = $"{respondUrl}?token={Uri.EscapeDataString(token)}";
+            await _emailSender.SendAsync(new EmailMessage(
+                To: invitation.RespondentEmail!,
+                Subject: $"MSF request: {campaign.Template.Name}",
+                HtmlBody: $"""
+                    <p>You have been invited to provide anonymous multi-source feedback for <strong>{System.Net.WebUtility.HtmlEncode(campaign.Template.Name)}</strong>.</p>
+                    <p><a href="{System.Net.WebUtility.HtmlEncode(submitUrl)}">Submit your response</a></p>
+                    <p>This link expires on <strong>{invitation.ExpiresOn:yyyy-MM-dd}</strong>.</p>
+                    """,
+                TextBody: $"""
+                    You have been invited to provide anonymous multi-source feedback.
 
-                Submit your response:
-                {respondUrl}?token={Uri.EscapeDataString(token)}
+                    Submit your response:
+                    {submitUrl}
 
-                This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
-                """,
+                    This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
+                    """,
+                Tags: ["msf-invite", $"campaign:{campaign.Id}"]),
                 cancellationToken);
         }
 

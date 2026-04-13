@@ -61,7 +61,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 - [x] T010 — Web layout, auth, navigation, role-gated routing
 - [x] T011 — Role dashboards (widgets query generically over activities) — **Opus** *(design judgment: 7+ role-specific views querying the activity platform generically)*
-- [ ] T012 — Email infrastructure — **Sonnet** *(standard MailKit setup + templates, well-trodden pattern)*
+- [x] T012 — Email infrastructure — **Sonnet** *(standard MailKit setup + templates, well-trodden pattern)*
 - [ ] T024 — Scheduled nudges & digest emails — **Opus** *(job scheduler + multiple domain jobs + cron + admin UI, touches many layers)*
 
 ### Phase 6 — Cross-cutting operations

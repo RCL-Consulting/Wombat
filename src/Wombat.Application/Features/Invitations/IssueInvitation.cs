@@ -1,7 +1,10 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Invitations;
 
@@ -31,12 +34,18 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
     private readonly IApplicationDbContext _dbContext;
     private readonly IInvitationTokenService _tokenService;
     private readonly IEmailSender _emailSender;
+    private readonly WombatOptions _options;
 
-    public IssueInvitationCommandHandler(IApplicationDbContext dbContext, IInvitationTokenService tokenService, IEmailSender emailSender)
+    public IssueInvitationCommandHandler(
+        IApplicationDbContext dbContext,
+        IInvitationTokenService tokenService,
+        IEmailSender emailSender,
+        IOptions<WombatOptions> options)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
         _emailSender = emailSender;
+        _options = options.Value;
     }
 
     public async Task<IssuedInvitationResult> Handle(IssueInvitationCommand request, CancellationToken cancellationToken)
@@ -76,17 +85,10 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
         _dbContext.Set<Invitation>().Add(invitation);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        var baseUrl = (_options.BaseUrl ?? string.Empty).TrimEnd('/');
+        var registrationUrl = $"{baseUrl}/account/register?token={Uri.EscapeDataString(token)}";
         await _emailSender.SendAsync(
-            invitation.Email,
-            "Your Wombat invitation",
-            $"""
-            You have been invited to register for Wombat as {invitation.TargetRole}.
-
-            Complete registration:
-            /account/register?token={token}
-
-            This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
-            """,
+            InvitationEmail.Build(invitation.Email, invitation.TargetRole, registrationUrl, invitation.ExpiresOn),
             cancellationToken);
 
         return new IssuedInvitationResult(invitation.Id, token);

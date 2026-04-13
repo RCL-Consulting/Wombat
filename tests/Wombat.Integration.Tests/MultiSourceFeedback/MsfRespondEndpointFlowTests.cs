@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using Wombat.Api.Endpoints;
+using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.MultiSourceFeedback;
@@ -102,11 +103,11 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         await SendAsync(new OpenMsfCampaignCommand(campaign.Id));
 
         _factory.EmailSender.Messages.Should().HaveCount(8);
-        _factory.EmailSender.Messages.Should().OnlyContain(message => message.Body.Contains("http://localhost/msf/respond?token=", StringComparison.Ordinal));
+        _factory.EmailSender.Messages.Should().OnlyContain(message => message.TextBody.Contains("http://localhost/msf/respond?token=", StringComparison.Ordinal));
 
         foreach (var message in _factory.EmailSender.Messages.Take(4))
         {
-            var token = ExtractToken(message.Body);
+            var token = ExtractToken(message.TextBody);
 
             var formResponse = await _client.GetAsync($"/msf/respond?token={Uri.EscapeDataString(token)}");
             formResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -255,14 +256,12 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
     public sealed class CapturingEmailSender : IEmailSender
     {
-        public List<CapturedEmail> Messages { get; } = [];
+        public List<EmailMessage> Messages { get; } = [];
 
-        public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken = default)
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
-            Messages.Add(new CapturedEmail(toEmail, subject, body));
+            Messages.Add(message);
             return Task.CompletedTask;
         }
     }
-
-    public sealed record CapturedEmail(string ToEmail, string Subject, string Body);
 }
