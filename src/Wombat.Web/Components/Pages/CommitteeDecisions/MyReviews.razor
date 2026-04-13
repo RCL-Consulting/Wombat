@@ -1,0 +1,142 @@
+@page "/committee/my-reviews"
+@attribute [Authorize(Roles = "Trainee,Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My Reviews</PageTitle>
+
+<PageHeader Title="My committee reviews" Subtitle="Ratified decisions, appeal status, and final outcomes." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No decisions yet" EmptyBody="Ratified committee outcomes will appear here.">
+  <DataTable Items="_reviews">
+    <HeaderRow>
+      <tr>
+        <th>Panel</th>
+        <th>Period</th>
+        <th>State</th>
+        <th>Decision</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td>@item.PanelName</td>
+        <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@item.State</td>
+        <td>@(item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
+        <td class="actions-cell">
+          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenReviewAsync(item.Id)">View</button>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@if (_selectedReview is not null)
+{
+  <section class="detail-card">
+    <h3>Review detail</h3>
+    <p><strong>Panel:</strong> @_selectedReview.PanelName</p>
+    <p><strong>State:</strong> @_selectedReview.State</p>
+
+    @if (_selectedReview.Decisions.Count > 0)
+    {
+      <article class="stack-card">
+        <h4>@_selectedReview.Decisions[0].Category</h4>
+        <p>@_selectedReview.Decisions[0].Rationale</p>
+      </article>
+    }
+
+    @if (_selectedReview.State == CommitteeReviewState.Ratified)
+    {
+      <EditForm Model="_appeal" OnValidSubmit="LodgeAppealAsync" FormName="trainee-appeal">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <FormField Label="Appeal reason" InputId="trainee-appeal-reason" Required="true">
+          <InputTextArea id="trainee-appeal-reason" class="form-control" @bind-Value="_appeal.Reason" />
+        </FormField>
+        <FormActions>
+          <button type="submit" class="btn btn-primary">Lodge appeal</button>
+        </FormActions>
+      </EditForm>
+    }
+  </section>
+}
+
+@code {
+  private readonly List<CommitteeReviewListItemDto> _reviews = [];
+  private CommitteeReviewDetailDto? _selectedReview;
+  private bool _loading = true;
+  private string? _status;
+  private string? _error;
+  private AppealFormModel _appeal = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      _reviews.AddRange(await Sender.Send(new ListReviewsForTraineeQuery(userId)));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task OpenReviewAsync(int reviewId)
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _selectedReview = await Sender.Send(new GetCommitteeReviewByIdQuery(reviewId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task LodgeAppealAsync()
+  {
+    if (_selectedReview is null)
+    {
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _selectedReview = await Sender.Send(new LodgeAppealCommand(_selectedReview.Id, _appeal.Reason, authState.User));
+      _appeal = new();
+      _status = "Appeal lodged.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private sealed class AppealFormModel
+  {
+    [Required]
+    public string Reason { get; set; } = string.Empty;
+  }
+}

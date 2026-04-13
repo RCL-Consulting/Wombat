@@ -1,0 +1,172 @@
+@page "/committee/panels/new"
+@page "/committee/panels/{PanelId:int}"
+@attribute [Authorize(Roles = "Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]
+@inject IScopedSender Sender
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Decision Panel</PageTitle>
+
+<PageHeader Title="Decision panel" Subtitle="Panels hold the named members who can review, ratify, and resolve appeals." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<div class="details-grid">
+  <section class="detail-card">
+    <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="committee-panel">
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
+      <div class="form-grid">
+        @if (!PanelId.HasValue)
+        {
+          <FormField Label="Panel name" InputId="panel-name" Required="true">
+            <InputText id="panel-name" class="form-control" @bind-Value="_model.Name" />
+          </FormField>
+          <FormField Label="Scope" InputId="panel-scope" Required="true">
+            <InputSelect id="panel-scope" class="form-select" @bind-Value="_model.Scope">
+              @foreach (var scope in Enum.GetValues<DecisionPanelScope>())
+              {
+                <option value="@scope">@scope</option>
+              }
+            </InputSelect>
+          </FormField>
+          <FormField Label="Institution id" InputId="panel-institution">
+            <InputNumber id="panel-institution" class="form-control" @bind-Value="_model.InstitutionId" />
+          </FormField>
+          <FormField Label="Speciality id" InputId="panel-speciality">
+            <InputNumber id="panel-speciality" class="form-control" @bind-Value="_model.SpecialityId" />
+          </FormField>
+        }
+        <FormField Label="Chair user id" InputId="panel-chair" Required="true">
+          <InputText id="panel-chair" class="form-control" @bind-Value="_model.ChairUserId" />
+        </FormField>
+        <FormField Label="Member user ids" InputId="panel-members">
+          <InputTextArea id="panel-members" class="form-control" @bind-Value="_model.MemberUserIds" />
+        </FormField>
+        <FormField Label="External user ids" InputId="panel-external">
+          <InputTextArea id="panel-external" class="form-control" @bind-Value="_model.ExternalUserIds" />
+        </FormField>
+      </div>
+      <FormActions>
+        <button type="submit" class="btn btn-primary">Save panel</button>
+      </FormActions>
+    </EditForm>
+  </section>
+</div>
+
+@code {
+  [Parameter] public int? PanelId { get; set; }
+
+  private string? _status;
+  private string? _error;
+  private PanelFormModel _model = new();
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (!PanelId.HasValue)
+    {
+      return;
+    }
+
+    try
+    {
+      var panel = await Sender.Send(new GetDecisionPanelByIdQuery(PanelId.Value));
+      _model = new PanelFormModel
+      {
+        Name = panel.Name,
+        Scope = panel.Scope,
+        InstitutionId = panel.InstitutionId,
+        SpecialityId = panel.SpecialityId,
+        ChairUserId = panel.Members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair)?.UserId ?? string.Empty,
+        MemberUserIds = string.Join(Environment.NewLine, panel.Members.Where(member => member.Role == DecisionPanelMemberRole.Member).Select(member => member.UserId)),
+        ExternalUserIds = string.Join(Environment.NewLine, panel.Members.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.UserId))
+      };
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task SaveAsync()
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var members = BuildMembers();
+
+      if (PanelId.HasValue)
+      {
+        await Sender.Send(new UpdateDecisionPanelCommand(PanelId.Value, members, authState.User));
+        _status = "Panel members updated.";
+      }
+      else
+      {
+        var result = await Sender.Send(new CreateDecisionPanelCommand(
+          _model.Name,
+          _model.Scope,
+          _model.InstitutionId,
+          _model.SpecialityId,
+          members,
+          authState.User));
+
+        NavigationManager.NavigateTo($"/committee/panels/{result.Id}");
+      }
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private IReadOnlyList<DecisionPanelMemberInput> BuildMembers()
+  {
+    var members = new List<DecisionPanelMemberInput>();
+
+    if (!string.IsNullOrWhiteSpace(_model.ChairUserId))
+    {
+      members.Add(new DecisionPanelMemberInput(_model.ChairUserId.Trim(), DecisionPanelMemberRole.Chair));
+    }
+
+    members.AddRange(ParseUserIds(_model.MemberUserIds).Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.Member)));
+    members.AddRange(ParseUserIds(_model.ExternalUserIds).Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.External)));
+    return members;
+  }
+
+  private static IReadOnlyList<string> ParseUserIds(string? value)
+      => (value ?? string.Empty)
+          .Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+          .Distinct(StringComparer.Ordinal)
+          .ToArray();
+
+  private sealed class PanelFormModel
+  {
+    [Required]
+    [MaxLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    public DecisionPanelScope Scope { get; set; } = DecisionPanelScope.Speciality;
+
+    public int? InstitutionId { get; set; }
+    public int? SpecialityId { get; set; }
+
+    [Required]
+    public string ChairUserId { get; set; } = string.Empty;
+
+    public string? MemberUserIds { get; set; }
+    public string? ExternalUserIds { get; set; }
+  }
+}

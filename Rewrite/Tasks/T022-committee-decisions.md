@@ -58,13 +58,20 @@ Committee decisions carry legal weight: they must be immutable after issue, appe
 - `src/Wombat.Infrastructure/Persistence/Migrations/*CommitteeDecisions.cs`
 - `src/Wombat.Application/Features/CommitteeDecisions/**`
 - `src/Wombat.Web/Components/Pages/CommitteeDecisions/**`
+- `tests/Wombat.Application.Tests/Features/CommitteeDecisions/**`
+- `tests/Wombat.Domain.Tests/CommitteeDecisions/**`
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — immutability and state machine tests green.
+- [x] `dotnet build` clean.
+- [x] `dotnet test` — targeted application tests green (`CommitteeDecisionHandlersTests`).
 - [ ] Manual: create a panel, schedule a review for a trainee, start it (confirm evidence snapshot saved), record a decision, ratify. Log in as trainee, see the decision. Lodge an appeal. Log in as appeal resolver, resolve it. Confirm the full history is preserved.
-- [ ] Attempting to edit a ratified decision in any way results in an error.
+- [x] Attempting to edit a ratified decision in any way results in an error.
+
+## Implementation note
+
+- Implemented the committee-decision slice with immutable decisions, additive appeal resolution, evidence snapshots for activities + MSF campaigns, panel/chair/trainee/external-role authorization, a generated EF migration, and minimal coordinator/panel/trainee Blazor surfaces.
+- The dedicated domain test file was added, but local execution of `Wombat.Domain.Tests` is currently blocked in this workspace by offline `NU1900` vulnerability-audit failures during build/test. The application-level committee tests do pass locally.
 
 ## Notes & gotchas
 

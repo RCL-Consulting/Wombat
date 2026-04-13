@@ -1,0 +1,161 @@
+@page "/committee/reviews"
+@attribute [Authorize(Roles = "Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin,CommitteeMember")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Committee Reviews</PageTitle>
+
+<PageHeader Title="Committee reviews" Subtitle="Schedule progression reviews and open existing ones.">
+  <Actions>
+    <button type="button" class="btn btn-primary" @onclick="ToggleCreateForm">Schedule review</button>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (_showCreateForm)
+{
+  <section class="detail-card">
+    <h3>Schedule review</h3>
+    <EditForm Model="_model" OnValidSubmit="CreateAsync" FormName="committee-review">
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
+      <div class="form-grid">
+        <FormField Label="Trainee user id" InputId="review-trainee" Required="true">
+          <InputText id="review-trainee" class="form-control" @bind-Value="_model.TraineeUserId" />
+        </FormField>
+        <FormField Label="Panel" InputId="review-panel" Required="true">
+          <InputSelect id="review-panel" class="form-select" @bind-Value="_model.PanelId">
+            <option value="">Select panel</option>
+            @foreach (var panel in _panels)
+            {
+              <option value="@panel.Id">@panel.Name</option>
+            }
+          </InputSelect>
+        </FormField>
+        <FormField Label="Review period from" InputId="review-from" Required="true">
+          <InputDate id="review-from" class="form-control" @bind-Value="_model.ReviewPeriodFrom" />
+        </FormField>
+        <FormField Label="Review period to" InputId="review-to" Required="true">
+          <InputDate id="review-to" class="form-control" @bind-Value="_model.ReviewPeriodTo" />
+        </FormField>
+        <FormField Label="Scheduled on" InputId="review-scheduled" Required="true">
+          <InputDate id="review-scheduled" class="form-control" @bind-Value="_model.ScheduledOn" />
+        </FormField>
+      </div>
+      <FormActions>
+        <button type="submit" class="btn btn-primary">Create review</button>
+      </FormActions>
+    </EditForm>
+  </section>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No reviews yet" EmptyBody="Schedule the first committee review to start the progression record.">
+  <DataTable Items="_reviews">
+    <HeaderRow>
+      <tr>
+        <th>Trainee</th>
+        <th>Panel</th>
+        <th>Period</th>
+        <th>State</th>
+        <th>Decision</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td><code>@item.TraineeUserId</code></td>
+        <td>@item.PanelName</td>
+        <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@item.State</td>
+        <td>@(item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")">Open</a>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<DecisionPanelSummaryDto> _panels = [];
+  private readonly List<CommitteeReviewListItemDto> _reviews = [];
+  private bool _loading = true;
+  private bool _showCreateForm;
+  private string? _error;
+  private ReviewFormModel _model = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    try
+    {
+      _panels.Clear();
+      _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery()));
+
+      _reviews.Clear();
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _reviews.AddRange(await Sender.Send(new ListReviewsForPanelQuery(authState.User)));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private void ToggleCreateForm()
+  {
+    _showCreateForm = !_showCreateForm;
+  }
+
+  private async Task CreateAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var review = await Sender.Send(new ScheduleCommitteeReviewCommand(
+        _model.TraineeUserId,
+        _model.PanelId ?? 0,
+        _model.ReviewPeriodFrom,
+        _model.ReviewPeriodTo,
+        _model.ScheduledOn,
+        authState.User));
+
+      NavigationManager.NavigateTo($"/committee/reviews/{review.Id}");
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private sealed class ReviewFormModel
+  {
+    [Required]
+    public string TraineeUserId { get; set; } = string.Empty;
+
+    [Required]
+    public int? PanelId { get; set; }
+
+    [Required]
+    public DateOnly ReviewPeriodFrom { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
+
+    [Required]
+    public DateOnly ReviewPeriodTo { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+    [Required]
+    public DateOnly ScheduledOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+  }
+}

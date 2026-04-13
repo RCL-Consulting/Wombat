@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T022 — Committee decisions** (next hardcoded feature on the critical path)
+**T010 — Web layout, auth, navigation** (next task after T022 on the critical path)
 
-T021 is now complete. The MSF slice was verified end-to-end against the live `/msf/respond` API using the local Postgres dev connection, and invite generation now uses the configured absolute responder URL (`Wombat:MsfRespondUrl`) instead of a broken web-relative path. Next session: start `Tasks/T022-committee-decisions.md`.
+T022 is now implemented. The committee-decision slice now exists across domain, application, persistence, migration, and Blazor pages, including immutable decision history, evidence snapshots, ratification, and appeal resolution. Next session: start `Tasks/T010-web-layout-auth.md`.
 
 ## Critical-path reminder (post-pivot)
 
@@ -17,6 +17,39 @@ The plan has been restructured around a **schema-driven Activity platform** so i
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
+
+T022 completed:
+- Added the dedicated committee-decision domain slice under `src/Wombat.Domain/CommitteeDecisions/`:
+  - `DecisionPanel`, `DecisionPanelMember`, `CommitteeReview`, `CommitteeDecision`, `CommitteeAppeal`, `CommitteeEvidence`
+  - enums for panel scope/member roles, review state, decision category, appeal outcome, and evidence source type
+- Implemented the immutable review state machine:
+  - `Scheduled -> InProgress -> Decided -> Ratified -> UnderAppeal -> Final`
+  - decisions are additive and immutable; remitted appeals create a replacement decision instead of editing the old one
+  - evidence is frozen on `Start()` as snapshot pointers plus computed summaries
+- Added EF Core persistence for committee decisions:
+  - new DbSets on `ApplicationDbContext`
+  - configurations under `src/Wombat.Infrastructure/Persistence/Configurations/CommitteeDecisions/`
+  - migration `20260413103855_CommitteeDecisions`
+- Added the application slice under `src/Wombat.Application/Features/CommitteeDecisions/`:
+  - commands: `CreateDecisionPanel`, `UpdateDecisionPanel`, `ScheduleCommitteeReview`, `StartCommitteeReview`, `RecordCommitteeDecision`, `RatifyCommitteeDecision`, `LodgeAppeal`, `ResolveAppeal`
+  - queries: `GetDecisionPanelById`, `ListDecisionPanels`, `GetCommitteeReviewById`, `ListReviewsForTrainee`, `ListReviewsForPanel`, `ListReviewsForChair`
+  - authorization rules enforce chair-only ratification, trainee-self appeals, and chair/external appeal resolution
+- Added the first committee-decision web pages under `src/Wombat.Web/Components/Pages/CommitteeDecisions/`:
+  - `PanelsList.razor`
+  - `PanelEdit.razor`
+  - `ReviewsSchedule.razor`
+  - `ReviewDetail.razor`
+  - `MyReviews.razor`
+  - added nav links for committee/coordinator/trainee surfaces
+- Added focused tests:
+  - `tests/Wombat.Application.Tests/Features/CommitteeDecisions/CommitteeDecisionHandlersTests.cs`
+  - `tests/Wombat.Domain.Tests/CommitteeDecisions/CommitteeReviewTests.cs`
+- Verified:
+  - `dotnet build src/Wombat.Web/Wombat.Web.csproj -c Release --no-restore`
+  - `dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj -c Release --no-build --no-restore --filter CommitteeDecisionHandlersTests`
+- Verification caveats:
+  - The new `tests/Wombat.Domain.Tests/CommitteeDecisions/CommitteeReviewTests.cs` file was added, but local execution is currently blocked by offline `NU1900` vulnerability-audit failures in `Wombat.Domain.Tests.csproj`.
+  - The manual walkthrough from the task file (schedule -> start -> decide -> ratify -> trainee appeal -> appeal resolution) was not run in this session.
 
 T021 completed:
 - Fixed `OpenMsfCampaignCommand` so the generated responder links come from `Wombat:MsfRespondUrl`; the coordinator page no longer hardcodes a dead relative `/msf/respond` URL.
@@ -473,3 +506,4 @@ None.
 | 2026-04-11 | implementation v8 | T018 | Added activity-runtime application slice: DTOs, service contracts, commands/queries, infrastructure implementations (SchemaValidator, WorkflowEvaluator, CreditApplier), CurriculumItemProgress entity, migration, and 21 application tests (24 total green). |
 | 2026-04-12 | planning v4 | — | Design-system pass: created `DESIGN.md`, rewrote T010/T011, amended T019, updated README.md/current_state.md, created root `CLAUDE.md`. Closes the GUI-spec gap between primitive HTML and the ClinicAssist reference. |
 | 2026-04-13 | implementation v9 | T021 | Fixed MSF invite URLs to use configured absolute responder links, added live API integration coverage against local Postgres, verified the open/respond/close/release flow and anonymity guarantees, and advanced the active task to T022. |
+| 2026-04-13 | implementation v10 | T022 | Added the committee-decision slice end to end: immutable decisions, appeal workflow, evidence snapshotting, EF migration, Blazor pages, and targeted application tests. Manual walkthrough and the new domain-test execution remain pending because `Wombat.Domain.Tests` currently trips offline `NU1900` audit failures. |

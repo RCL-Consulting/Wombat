@@ -1,0 +1,251 @@
+@page "/committee/reviews/{ReviewId:int}"
+@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Committee Review</PageTitle>
+
+<PageHeader Title="Committee review" Subtitle="Evidence bundle, decision record, ratification, and appeals in one place." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (_review is not null)
+{
+  <div class="details-grid">
+    <section class="detail-card">
+      <h3>Review</h3>
+      <dl class="details-list">
+        <div><dt>Trainee</dt><dd><code>@_review.TraineeUserId</code></dd></div>
+        <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
+        <div><dt>Period</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
+        <div><dt>State</dt><dd>@_review.State</dd></div>
+      </dl>
+      <FormActions>
+        @if (_review.State == CommitteeReviewState.Scheduled)
+        {
+          <button type="button" class="btn btn-primary" @onclick="StartAsync">Start review</button>
+        }
+        @if (_review.State == CommitteeReviewState.Decided)
+        {
+          <button type="button" class="btn btn-primary" @onclick="RatifyAsync">Ratify</button>
+        }
+      </FormActions>
+    </section>
+
+    <section class="detail-card">
+      <h3>Decision</h3>
+      <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          <FormField Label="Category" InputId="decision-category" Required="true">
+            <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
+              @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+              {
+                <option value="@category">@category</option>
+              }
+            </InputSelect>
+          </FormField>
+          <FormField Label="Rationale" InputId="decision-rationale" Required="true">
+            <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
+          </FormField>
+          <FormField Label="Conditions" InputId="decision-conditions">
+            <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
+          </FormField>
+        </div>
+        <FormActions>
+          @if (_review.State == CommitteeReviewState.InProgress)
+          {
+            <button type="submit" class="btn btn-primary">Record decision</button>
+          }
+        </FormActions>
+      </EditForm>
+
+      @if (_review.Decisions.Count > 0)
+      {
+        <div class="stack-list">
+          @foreach (var decision in _review.Decisions)
+          {
+            <article class="stack-card">
+              <h4>@decision.Category</h4>
+              <p>@decision.Rationale</p>
+              @if (!string.IsNullOrWhiteSpace(decision.Conditions))
+              {
+                <p><strong>Conditions:</strong> @decision.Conditions</p>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="detail-card">
+      <h3>Evidence snapshot</h3>
+      @if (_review.EvidenceItems.Count == 0)
+      {
+        <p>No evidence has been frozen yet. Starting the review captures the current bundle.</p>
+      }
+      else
+      {
+        <ul class="plain-list">
+          @foreach (var item in _review.EvidenceItems)
+          {
+            <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="detail-card">
+      <h3>Appeals</h3>
+      <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
+            <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
+              @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
+              {
+                <option value="@outcome">@outcome</option>
+              }
+            </InputSelect>
+          </FormField>
+          @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
+          {
+            <FormField Label="Replacement category" InputId="appeal-category" Required="true">
+              <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                {
+                  <option value="@category">@category</option>
+                }
+              </InputSelect>
+            </FormField>
+            <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
+              <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+            </FormField>
+          }
+        </div>
+        <FormActions>
+          @if (_review.State == CommitteeReviewState.UnderAppeal)
+          {
+            <button type="submit" class="btn btn-primary">Resolve appeal</button>
+          }
+        </FormActions>
+      </EditForm>
+
+      @if (_review.Appeals.Count > 0)
+      {
+        <ul class="plain-list">
+          @foreach (var appeal in _review.Appeals)
+          {
+            <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome?.ToString() ?? "Open"))</li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}
+
+@code {
+  [Parameter] public int ReviewId { get; set; }
+
+  private CommitteeReviewDetailDto? _review;
+  private string? _status;
+  private string? _error;
+  private DecisionFormModel _decision = new();
+  private AppealResolutionModel _appeal = new();
+
+  protected override async Task OnParametersSetAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task StartAsync()
+  {
+    await ExecuteAsync(user => Sender.Send(new StartCommitteeReviewCommand(ReviewId, user)), "Review started.");
+  }
+
+  private async Task RecordDecisionAsync()
+  {
+    await ExecuteAsync(
+      user => Sender.Send(new RecordCommitteeDecisionCommand(ReviewId, _decision.Category, _decision.Rationale, _decision.Conditions, user)),
+      "Decision recorded.");
+  }
+
+  private async Task RatifyAsync()
+  {
+    await ExecuteAsync(user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)), "Decision ratified.");
+  }
+
+  private async Task ResolveAppealAsync()
+  {
+    await ExecuteAsync(
+      user => Sender.Send(new ResolveAppealCommand(
+        ReviewId,
+        _appeal.Outcome,
+        _appeal.RemittedCategory,
+        _appeal.RemittedRationale,
+        _appeal.RemittedConditions,
+        user)),
+      "Appeal resolved.");
+  }
+
+  private async Task ExecuteAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _review = await action(authState.User);
+      _status = status;
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private sealed class DecisionFormModel
+  {
+    [Required]
+    public CommitteeDecisionCategory Category { get; set; } = CommitteeDecisionCategory.SatisfactoryProgress;
+
+    [Required]
+    public string Rationale { get; set; } = string.Empty;
+
+    public string? Conditions { get; set; }
+  }
+
+  private sealed class AppealResolutionModel
+  {
+    [Required]
+    public CommitteeAppealOutcome Outcome { get; set; } = CommitteeAppealOutcome.Dismissed;
+
+    public CommitteeDecisionCategory? RemittedCategory { get; set; }
+    public string? RemittedRationale { get; set; }
+    public string? RemittedConditions { get; set; }
+  }
+}

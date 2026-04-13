@@ -1,0 +1,56 @@
+@page "/committee/panels"
+@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]
+@inject IScopedSender Sender
+
+<PageTitle>Decision Panels</PageTitle>
+
+<PageHeader Title="Decision panels" Subtitle="Reusable committees for progression reviews.">
+  <Actions>
+    <a class="btn btn-primary" href="/committee/panels/new">New panel</a>
+  </Actions>
+</PageHeader>
+
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No decision panels" EmptyBody="Create a panel before scheduling reviews.">
+  <DataTable Items="_items">
+    <HeaderRow>
+      <tr>
+        <th>Name</th>
+        <th>Scope</th>
+        <th>Members</th>
+        <th></th>
+      </tr>
+    </HeaderRow>
+    <Row Context="item">
+      <tr>
+        <td>@item.Name</td>
+        <td>@item.Scope</td>
+        <td>@item.MemberCount</td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")">Edit</a>
+        </td>
+      </tr>
+    </Row>
+  </DataTable>
+</StatePanel>
+
+@code {
+  private readonly List<DecisionPanelSummaryDto> _items = [];
+  private bool _loading = true;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      _items.AddRange(await Sender.Send(new ListDecisionPanelsQuery()));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}
