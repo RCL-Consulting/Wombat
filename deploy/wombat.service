@@ -1,0 +1,28 @@
+[Unit]
+Description=Wombat Web
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/wombat/app
+ExecStart=/usr/bin/dotnet /opt/wombat/app/Wombat.Web.dll
+Restart=always
+RestartSec=5
+User=wombat
+Group=wombat
+EnvironmentFile=/opt/wombat/config/wombat.env
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+KillSignal=SIGINT
+TimeoutStartSec=60
+TimeoutStopSec=30
+SyslogIdentifier=wombat
+ProtectSystem=strict
+ReadWritePaths=/opt/wombat/data
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

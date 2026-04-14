@@ -1,0 +1,17 @@
+# Wombat Caddyfile stanza — append into /etc/caddy/Caddyfile on the server.
+# Replace wombat.example.com with your actual domain.
+#
+# IMPORTANT: flush_interval -1 is required for Blazor Server (SignalR) streaming.
+# Omitting it causes the UI to hang on first interaction.
+
+wombat.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:5080 {
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        flush_interval -1
+    }
+    log {
+        output file /var/log/caddy/wombat.log
+    }
+}

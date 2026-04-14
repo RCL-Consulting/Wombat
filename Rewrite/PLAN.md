@@ -75,7 +75,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 
 - [x] T013 — Architecture tests *(extended to cover the activity platform invariants)* — **Sonnet** *(mechanical NetArchTest rules against known conventions)*
 - [x] T014 — Seeding & first-run bootstrap — **Sonnet** *(idempotent data insertion, repetitive but not complex)*
-- [ ] T015 — Linode deployment — **Sonnet** *(checklist execution: systemd, Caddy, PostgreSQL config/scripting)*
+- [x] T015 — Linode deployment — **Sonnet** *(checklist execution: systemd, Caddy, PostgreSQL config/scripting)*
 - [ ] T016 — Smoke test, handover, delete old Wombat source — **Opus** *(full-system understanding needed to verify every workflow end-to-end)*
 
 ## Dependency graph

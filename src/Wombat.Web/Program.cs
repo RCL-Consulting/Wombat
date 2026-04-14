@@ -21,6 +21,8 @@ using Wombat.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSystemd();
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
@@ -60,6 +62,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<IScopedSender, ScopedSender>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHealthChecks();
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -70,6 +74,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
@@ -329,6 +335,12 @@ await using (var scope = app.Services.CreateAsyncScope())
     var adminSeeder = scope.ServiceProvider.GetRequiredService<AdminSeeder>();
 
     await dbContext.Database.MigrateAsync();
+
+    if (args.Contains("--migrate", StringComparer.Ordinal))
+    {
+        return;
+    }
+
     await roleSeeder.SeedAsync();
     await adminSeeder.SeedAsync();
     await dataSeeder.SeedAsync();
