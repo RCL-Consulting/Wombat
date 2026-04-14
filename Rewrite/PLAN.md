@@ -69,7 +69,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 - [x] T023 — Portfolio PDF export — **Opus** *(QuestPDF layout + heterogeneous activity aggregation + branding + integrity signatures)*
 - [x] T025 — Admin audit log (pipeline behaviour) — **Sonnet** *(known MediatR pipeline pattern + append-only table + query UI)*
 - [x] T026 — Data subject rights (POPIA/GDPR self-service) — **Opus** *(regulatory nuance: pseudonymisation, retention exceptions, approval flows)*
-- [ ] T027 — Institutional SSO (OIDC) — **Opus** *(dynamic OIDC with group-to-role mapping across multiple identity providers)*
+- [x] T027 — Institutional SSO (OIDC) — **Opus** *(dynamic OIDC with group-to-role mapping across multiple identity providers)*
 
 ### Phase 7 — Quality & ship
 

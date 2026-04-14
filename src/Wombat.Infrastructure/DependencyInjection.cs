@@ -38,6 +38,7 @@ public static class DependencyInjection
 
         services.Configure<WombatOptions>(configuration.GetSection(WombatOptions.SectionName));
         services.Configure<DashboardThresholds>(configuration.GetSection(DashboardThresholds.SectionName));
+        services.Configure<SsoOptions>(configuration.GetSection(SsoOptions.SectionName));
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -84,6 +85,8 @@ public static class DependencyInjection
             services.AddHostedService<EmailWorker>();
         }
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
+        services.AddScoped<SsoGroupMapper>();
+        services.AddScoped<ExternalLoginHandler>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IActivityReferenceDataService, ActivityReferenceDataService>();

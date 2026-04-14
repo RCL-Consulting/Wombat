@@ -35,7 +35,7 @@ evaluators, and renderers.
 | MediatR | v12.x maximum — **do not upgrade to paid v13** |
 | Clinical dates | `DateOnly` for calendar dates; `DateTime` only for timestamps and audit events |
 | PDF generation | QuestPDF (portfolio export in T023) |
-| Auth | ASP.NET Core Identity; 9 roles (see below); admin-controlled onboarding via invitations |
+| Auth | ASP.NET Core Identity; 9 roles (see below); admin-controlled onboarding via invitations; institutional SSO via OIDC (T027) |
 | Icons | Inline SVGs from Lucide via a shared `Icon.razor` component. **Bootstrap Icons font is not loaded** — `<i class="bi bi-*">` renders nothing |
 | Security | CSP with nonce-backed `script-src`; `X-Content-Type-Options: nosniff`; rate-limited login |
 | Dependency licensing | GPLv3-compatible additions only |
@@ -52,6 +52,7 @@ Wombat/
 │   │   └── Features/              ← feature folders: Activities, Dashboards, Institutions, …
 │   ├── Wombat.Infrastructure/     ← EF Core, Identity, email, external services
 │   │   ├── Persistence/           ← DbContext, configurations, migrations
+│   │   ├── Identity/              ← WombatIdentityUser, ExternalLoginHandler, SsoGroupMapper
 │   │   ├── Activities/            ← SchemaValidator, WorkflowEvaluator, CreditApplier
 │   │   └── Reporting/             ← PortfolioPdfService, QuestPDF section components
 │   ├── Wombat.Api/                ← thin REST controllers (webhooks, integration)
@@ -115,7 +116,10 @@ Wombat has 9 roles, checked via ASP.NET Core Identity:
 8. **Trainee** — the learner working through a curriculum.
 9. **PendingTrainee** — invited but not yet admitted by admin.
 
-Users can hold multiple roles. Onboarding is admin-controlled via invitations only.
+Users can hold multiple roles. Onboarding is admin-controlled via invitations or SSO
+provisioning. SSO-provisioned users get roles from group-to-role mappings; if no groups
+match, they land as PendingTrainee. The Administrator role **cannot** be assigned via SSO —
+it always requires explicit manual assignment.
 
 ## Activity platform (the schema-driven pivot)
 

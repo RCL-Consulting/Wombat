@@ -11,6 +11,12 @@ public class WombatIdentityUser : IdentityUser
     public bool OptOutOfOptionalProcessing { get; set; }
     public bool OptOutOfDigestEmails { get; set; }
 
+    /// <summary>
+    /// When false, the user cannot set a password and the local login form refuses them.
+    /// Defaults to true for invitation-provisioned users, false for SSO-provisioned users.
+    /// </summary>
+    public bool AllowLocalPassword { get; set; } = true;
+
     public WombatUser ToDomainUser()
         => new()
         {

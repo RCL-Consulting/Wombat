@@ -1,0 +1,269 @@
+@page "/admin/sso/group-mappings"
+@attribute [Authorize(Policy = "Administrator")]
+@using Microsoft.Extensions.Options
+@using Wombat.Application.Common.Options
+@using Wombat.Application.Features.Sso
+@inject IScopedSender Sender
+@inject IOptions<SsoOptions> SsoOptions
+
+<PageTitle>SSO Group Mappings</PageTitle>
+
+<PageHeader Title="SSO Group Mappings" Subtitle="Map external identity provider groups to Wombat roles. Changes take effect on the next login for each user." />
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+<div class="details-grid">
+  @if (SsoOptions.Value.Providers.Count > 0)
+  {
+    <section class="detail-card">
+      <h3>Add mapping</h3>
+      <EditForm Model="_model" OnValidSubmit="CreateAsync" FormName="create-sso-mapping">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+
+        <div class="form-grid form-grid--wide">
+          <FormField Label="Provider" InputId="mapping-provider" Required="true">
+            <InputSelect id="mapping-provider" class="form-select" @bind-Value="_model.ProviderKey">
+              @foreach (var provider in SsoOptions.Value.Providers)
+              {
+                <option value="@provider.Key">@provider.DisplayName</option>
+              }
+            </InputSelect>
+          </FormField>
+
+          <FormField Label="External Group ID" InputId="mapping-group-id" Required="true">
+            <InputText id="mapping-group-id" class="form-control" @bind-Value="_model.ExternalGroupId" />
+            <ValidationMessage For="() => _model.ExternalGroupId" />
+          </FormField>
+
+          <FormField Label="Group Display Name" InputId="mapping-group-name" Required="true">
+            <InputText id="mapping-group-name" class="form-control" @bind-Value="_model.ExternalGroupDisplayName" />
+            <ValidationMessage For="() => _model.ExternalGroupDisplayName" />
+          </FormField>
+
+          <FormField Label="Wombat Role" InputId="mapping-role" Required="true">
+            <InputSelect id="mapping-role" class="form-select" @bind-Value="_model.WombatRole">
+              @foreach (var role in _assignableRoles)
+              {
+                <option value="@role">@role</option>
+              }
+            </InputSelect>
+          </FormField>
+
+          <FormField Label="Institution" InputId="mapping-institution" Required="true">
+            <InputSelect id="mapping-institution" class="form-select" @bind-Value="_model.InstitutionId">
+              <option value="">Select institution</option>
+              @foreach (var institution in _institutions)
+              {
+                <option value="@institution.Id">@institution.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+
+          <FormField Label="Speciality" InputId="mapping-speciality">
+            <InputSelect id="mapping-speciality" class="form-select" @bind-Value="_model.SpecialityId">
+              <option value="">None</option>
+              @foreach (var speciality in FilteredSpecialities)
+              {
+                <option value="@speciality.Id">@speciality.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+
+          <FormField Label="Sub-speciality" InputId="mapping-sub-speciality">
+            <InputSelect id="mapping-sub-speciality" class="form-select" @bind-Value="_model.SubSpecialityId">
+              <option value="">None</option>
+              @foreach (var subSpeciality in FilteredSubSpecialities)
+              {
+                <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+        </div>
+
+        <FormActions>
+          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Adding..." : "Add mapping")</button>
+        </FormActions>
+      </EditForm>
+    </section>
+  }
+  else
+  {
+    <section class="detail-card">
+      <p>No SSO providers are configured. Add providers to the <code>Sso:Providers</code> section in application settings and restart.</p>
+    </section>
+  }
+
+  <section class="detail-card">
+    <h3>Current mappings</h3>
+    <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_mappings.Count == 0)" EmptyTitle="No group mappings" EmptyBody="Add a mapping above to link external groups to Wombat roles.">
+      <DataTable TItem="SsoGroupMappingDto" Items="_mappings" Caption="SSO group mappings">
+        <HeaderRow>
+          <tr>
+            <th>Provider</th>
+            <th>External Group</th>
+            <th>Wombat Role</th>
+            <th>Institution</th>
+            <th>Speciality</th>
+            <th>Sub-speciality</th>
+            <th></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="mapping">
+          <tr>
+            <td>@mapping.ProviderKey</td>
+            <td title="@mapping.ExternalGroupId">@mapping.ExternalGroupDisplayName</td>
+            <td>@mapping.WombatRole</td>
+            <td>@mapping.InstitutionName</td>
+            <td>@mapping.SpecialityName</td>
+            <td>@mapping.SubSpecialityName</td>
+            <td><button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(mapping.Id)">Delete</button></td>
+          </tr>
+        </Row>
+      </DataTable>
+    </StatePanel>
+  </section>
+</div>
+
+@code {
+  // Administrator cannot be SSO-assigned — exclude from the dropdown
+  private static readonly string[] _assignableRoles =
+  [
+    WombatRoles.InstitutionalAdmin,
+    WombatRoles.SpecialityAdmin,
+    WombatRoles.SubSpecialityAdmin,
+    WombatRoles.Coordinator,
+    WombatRoles.CommitteeMember,
+    WombatRoles.Assessor,
+    WombatRoles.Trainee,
+    WombatRoles.PendingTrainee
+  ];
+
+  private MappingFormModel _model = new();
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+  private IReadOnlyList<SsoGroupMappingDto> _mappings = [];
+  private string? _statusMessage;
+  private string? _errorMessage;
+  private bool _loading = true;
+  private bool _saving;
+
+  private IEnumerable<SpecialityDto> FilteredSpecialities
+    => _specialities.Where(entity => _model.InstitutionId.HasValue && entity.InstitutionId == _model.InstitutionId.Value);
+
+  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
+    => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _errorMessage = null;
+
+    try
+    {
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      _mappings = await Sender.Send(new ListSsoGroupMappingsQuery());
+
+      if (SsoOptions.Value.Providers.Count > 0)
+      {
+        _model.ProviderKey = SsoOptions.Value.Providers[0].Key;
+      }
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task CreateAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new CreateSsoGroupMappingCommand(
+        _model.ProviderKey,
+        _model.ExternalGroupId,
+        _model.ExternalGroupDisplayName,
+        _model.WombatRole,
+        _model.InstitutionId ?? 0,
+        _model.SpecialityId,
+        _model.SubSpecialityId));
+
+      _statusMessage = $"Mapping added for group '{_model.ExternalGroupDisplayName}'.";
+      _model = new MappingFormModel
+      {
+        ProviderKey = SsoOptions.Value.Providers.Count > 0 ? SsoOptions.Value.Providers[0].Key : string.Empty
+      };
+      _mappings = await Sender.Send(new ListSsoGroupMappingsQuery());
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task DeleteAsync(int mappingId)
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new DeleteSsoGroupMappingCommand(mappingId));
+      _statusMessage = "Mapping deleted.";
+      _mappings = await Sender.Send(new ListSsoGroupMappingsQuery());
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
+
+  private sealed class MappingFormModel
+  {
+    [Required]
+    public string ProviderKey { get; set; } = string.Empty;
+
+    [Required]
+    public string ExternalGroupId { get; set; } = string.Empty;
+
+    [Required]
+    public string ExternalGroupDisplayName { get; set; } = string.Empty;
+
+    [Required]
+    public string WombatRole { get; set; } = WombatRoles.InstitutionalAdmin;
+
+    [Required]
+    public int? InstitutionId { get; set; }
+
+    public int? SpecialityId { get; set; }
+    public int? SubSpecialityId { get; set; }
+  }
+}

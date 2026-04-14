@@ -166,6 +166,12 @@ public sealed class ErasureExecutor : IErasureExecutor
         foreach (var invitation in invitations)
             invitation.IssuedByUserId = pseudonym;
 
+        // --- UserRoleAssignment: remove SSO/manual role tracking records ---
+        var roleAssignments = await _dbContext.Set<UserRoleAssignment>()
+            .Where(a => a.UserId == userId)
+            .ToListAsync(cancellationToken);
+        _dbContext.Set<UserRoleAssignment>().RemoveRange(roleAssignments);
+
         // --- Audit entries: RETAINED unchanged (legitimate interest / legal obligation) ---
         retentionReasons.Add("audit_log");
 

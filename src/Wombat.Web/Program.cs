@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MediatR;
 using Wombat.Application;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
@@ -22,6 +26,36 @@ builder.Logging.AddConsole();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Register OIDC providers from configuration
+var ssoOptions = builder.Configuration.GetSection(SsoOptions.SectionName).Get<SsoOptions>();
+if (ssoOptions?.Providers is { Count: > 0 } providers)
+{
+    var authBuilder = builder.Services.AddAuthentication();
+    foreach (var provider in providers)
+    {
+        authBuilder.AddOpenIdConnect(provider.Key, provider.DisplayName, options =>
+        {
+            options.Authority = provider.Authority;
+            options.ClientId = provider.ClientId;
+            options.ClientSecret = provider.ClientSecret;
+            options.ResponseType = OpenIdConnectResponseType.Code;
+            options.SaveTokens = false;
+            options.GetClaimsFromUserInfoEndpoint = true;
+            options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(2);
+
+            options.Scope.Clear();
+            foreach (var scope in provider.Scopes)
+            {
+                options.Scope.Add(scope);
+            }
+
+            options.CallbackPath = $"/signin-oidc-{provider.Key}";
+            options.SignedOutCallbackPath = $"/signout-oidc-{provider.Key}";
+        });
+    }
+}
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<IScopedSender, ScopedSender>();
@@ -55,6 +89,13 @@ app.MapPost("/account/login/submit", async (
 
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
+
+    // Block local login for SSO-only users
+    var loginUser = await userManager.FindByEmailAsync(request.Email.Trim());
+    if (loginUser is not null && !loginUser.AllowLocalPassword)
+    {
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "This account uses institutional sign-in. Please use the SSO button below."));
+    }
 
     var result = await signInManager.PasswordSignInAsync(
         request.Email.Trim(),
@@ -134,6 +175,108 @@ app.MapPost("/account/register/submit", async (
     {
         return Results.LocalRedirect(BuildRegisterUrl(request.Token, exception.Message));
     }
+})
+.AllowAnonymous()
+;
+
+app.MapGet("/account/sso-challenge/{providerKey}", (
+    string providerKey,
+    [FromQuery] string? returnUrl,
+    IOptions<SsoOptions> ssoOpts) =>
+{
+    var provider = ssoOpts.Value.Providers.FirstOrDefault(
+        p => string.Equals(p.Key, providerKey, StringComparison.Ordinal));
+
+    if (provider is null)
+    {
+        return Results.LocalRedirect(BuildLoginUrl(null, "Unknown SSO provider."));
+    }
+
+    var properties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+    {
+        RedirectUri = $"/account/sso-callback?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}"
+    };
+    properties.Items["LoginProvider"] = providerKey;
+
+    return Results.Challenge(properties, [providerKey]);
+})
+.AllowAnonymous()
+;
+
+app.MapGet("/account/sso-callback", async (
+    SignInManager<WombatIdentityUser> signInManager,
+    ExternalLoginHandler externalLoginHandler,
+    HttpContext httpContext,
+    [FromQuery] string? returnUrl) =>
+{
+    var loginInfo = await signInManager.GetExternalLoginInfoAsync();
+    if (loginInfo is null)
+    {
+        return Results.LocalRedirect(BuildLoginUrl(returnUrl, "External login information was not available."));
+    }
+
+    var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
+    var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
+
+    var result = await externalLoginHandler.HandleCallbackAsync(loginInfo, ip, ua);
+
+    if (result.Succeeded)
+    {
+        return Results.LocalRedirect(GetSafeLocalUrl(returnUrl));
+    }
+
+    if (result.RequiresLinking)
+    {
+        var linkUrl = $"/account/link-external?email={Uri.EscapeDataString(result.Email ?? "")}" +
+                      $"&provider={Uri.EscapeDataString(result.ProviderKey ?? "")}" +
+                      $"&externalId={Uri.EscapeDataString(result.ExternalSubjectId ?? "")}" +
+                      $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}";
+        return Results.LocalRedirect(linkUrl);
+    }
+
+    return Results.LocalRedirect(BuildLoginUrl(returnUrl, result.ErrorMessage ?? "SSO login failed."));
+})
+.AllowAnonymous()
+;
+
+app.MapPost("/account/link-external/submit", async (
+    SignInManager<WombatIdentityUser> signInManager,
+    ExternalLoginHandler externalLoginHandler,
+    HttpContext httpContext,
+    [FromForm] LinkExternalRequest request) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+    {
+        return Results.LocalRedirect(
+            $"/account/link-external?email={Uri.EscapeDataString(request.Email ?? "")}" +
+            $"&provider={Uri.EscapeDataString(request.ProviderKey ?? "")}" +
+            $"&externalId={Uri.EscapeDataString(request.ExternalSubjectId ?? "")}" +
+            $"&error={Uri.EscapeDataString("Email and password are required.")}");
+    }
+
+    var loginInfo = await signInManager.GetExternalLoginInfoAsync();
+    if (loginInfo is null)
+    {
+        return Results.LocalRedirect(BuildLoginUrl(null, "External login session expired. Please try again."));
+    }
+
+    var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
+    var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
+
+    var result = await externalLoginHandler.LinkAndSignInAsync(
+        request.Email, request.Password, request.ProviderKey ?? "", request.ExternalSubjectId ?? "",
+        loginInfo, ip, ua);
+
+    if (result.Succeeded)
+    {
+        return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
+    }
+
+    return Results.LocalRedirect(
+        $"/account/link-external?email={Uri.EscapeDataString(request.Email ?? "")}" +
+        $"&provider={Uri.EscapeDataString(request.ProviderKey ?? "")}" +
+        $"&externalId={Uri.EscapeDataString(request.ExternalSubjectId ?? "")}" +
+        $"&error={Uri.EscapeDataString(result.ErrorMessage ?? "Linking failed.")}");
 })
 .AllowAnonymous()
 ;
@@ -263,4 +406,13 @@ internal sealed class RegisterRequest
     public string? LastName { get; init; }
     public string? Password { get; init; }
     public string? ConfirmPassword { get; init; }
+}
+
+internal sealed class LinkExternalRequest
+{
+    public string? Email { get; init; }
+    public string? Password { get; init; }
+    public string? ProviderKey { get; init; }
+    public string? ExternalSubjectId { get; init; }
+    public string? ReturnUrl { get; init; }
 }

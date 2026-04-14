@@ -357,6 +357,37 @@ a:focus-visible {
   margin-top: var(--space-lg);
 }
 
+/* ── SSO ──────────────────────────────────────────── */
+.sso-divider {
+  align-items: center;
+  display: flex;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0;
+}
+
+.sso-divider::before,
+.sso-divider::after {
+  border-top: 1px solid var(--border-color);
+  content: "";
+  flex: 1;
+}
+
+.sso-divider span {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.sso-providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sso-button {
+  text-align: center;
+  width: 100%;
+}
+
 /* ── Alerts ────────────────────────────────────────── */
 .alert {
   border-radius: 6px;

@@ -69,6 +69,8 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<DataRightsRequest> DataRightsRequests => Set<DataRightsRequest>();
     public DbSet<DataRightsRectification> DataRightsRectifications => Set<DataRightsRectification>();
     public DbSet<DataRightsErasureRecord> DataRightsErasureRecords => Set<DataRightsErasureRecord>();
+    public DbSet<SsoGroupRoleMapping> SsoGroupRoleMappings => Set<SsoGroupRoleMapping>();
+    public DbSet<UserRoleAssignment> UserRoleAssignments => Set<UserRoleAssignment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

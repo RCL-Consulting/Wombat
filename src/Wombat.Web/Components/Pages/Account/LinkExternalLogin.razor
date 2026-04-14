@@ -1,0 +1,52 @@
+@page "/account/link-external"
+@attribute [AllowAnonymous]
+@layout Layout.AuthLayout
+
+<PageTitle>Link your account - Wombat</PageTitle>
+
+<div class="account-form-container shadow">
+  <h2>Link your account</h2>
+  <p class="page-subtitle">
+    A Wombat account with the email <strong>@Email</strong> already exists.
+    Enter your current password to link your institutional sign-in.
+  </p>
+
+  @if (!string.IsNullOrWhiteSpace(Error))
+  {
+    <Alert Kind="danger">@Error</Alert>
+  }
+
+  <form method="post" action="/account/link-external/submit">
+    <AntiforgeryToken />
+    <input type="hidden" name="Email" value="@Email" />
+    <input type="hidden" name="ProviderKey" value="@Provider" />
+    <input type="hidden" name="ExternalSubjectId" value="@ExternalId" />
+    <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+    <div class="mb-3 password-wrapper">
+      <label for="link-password">Password</label>
+      <input id="link-password" class="form-control" type="password" name="Password" required autofocus />
+      <PasswordToggleButton For="link-password" />
+    </div>
+    <FormActions>
+      <button type="submit" class="btn btn-primary">Link &amp; sign in</button>
+      <a href="/account/login" class="btn btn-outline">Cancel</a>
+    </FormActions>
+  </form>
+</div>
+
+@code {
+  [SupplyParameterFromQuery(Name = "email")]
+  public string? Email { get; set; }
+
+  [SupplyParameterFromQuery(Name = "provider")]
+  public string? Provider { get; set; }
+
+  [SupplyParameterFromQuery(Name = "externalId")]
+  public string? ExternalId { get; set; }
+
+  [SupplyParameterFromQuery(Name = "returnUrl")]
+  public string? ReturnUrl { get; set; }
+
+  [SupplyParameterFromQuery(Name = "error")]
+  public string? Error { get; set; }
+}

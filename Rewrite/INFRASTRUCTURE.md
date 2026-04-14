@@ -181,6 +181,65 @@ Run this once, post-migration. It does not need to be re-applied on upgrades.
 
 The default is 2 years active + 5 years archive = 7 years total. Regulators may require longer retention. If an institution's governing body specifies a different window, adjust the `AuditLogRetentionJob` configuration (the 2-year cutoff is the only parameter). The cold-storage script uses the archive table as its source and can run as often as needed.
 
+## SSO (OIDC) provider configuration
+
+Wombat supports institutional single sign-on via OpenID Connect. Providers are configured in `appsettings` (or, for secrets, in environment variables). Adding a new provider is a config edit + app restart — no redeployment.
+
+### appsettings structure
+
+```json
+"Sso": {
+  "Providers": [
+    {
+      "Key": "uct",
+      "DisplayName": "University of Cape Town",
+      "InstitutionId": 1,
+      "Authority": "https://login.microsoftonline.com/<tenant-id>/v2.0",
+      "ClientId": "<from Azure AD app registration>",
+      "ClientSecret": "<from environment variable>",
+      "Scopes": ["openid", "profile", "email"],
+      "GroupsClaim": "groups",
+      "EnableFederatedLogout": false
+    }
+  ]
+}
+```
+
+### Environment variables for secrets
+
+Client secrets must not be stored in `appsettings.Production.json`. Use the environment file:
+
+```
+Sso__Providers__0__ClientSecret=REDACTED
+```
+
+The double-underscore `__` with array index `0` maps to `Sso:Providers[0]:ClientSecret`.
+
+### Provider-specific notes
+
+| Provider | Notes |
+|----------|-------|
+| **Microsoft Entra ID** | Groups claim emits object IDs by default, not display names. Map by object ID in `SsoGroupRoleMappings`; keep display names for admin UX. Enable "Group claims" in the app registration's Token Configuration. |
+| **Google Workspace** | No native groups claim. Use Google Directory API to populate groups, or map by domain/OU. |
+| **Shibboleth** | SAML at the wire level. Point an OIDC bridge (Keycloak, Auth0, or a SAML-to-OIDC adapter) at the Shibboleth IdP. Wombat talks to the bridge over OIDC. Do not implement SAML directly. |
+
+### Security invariants
+
+- `state` and `nonce` parameters are enforced by ASP.NET Core's OIDC handler.
+- Valid issuer list is strictly from configured authorities.
+- Clock skew tolerance: 2 minutes.
+- **Administrator role cannot be assigned via SSO.** Even if the mapping table maps a group to Administrator, the `SsoGroupMapper` logs a warning and skips it. Administrator requires explicit manual assignment.
+- SSO-provisioned users have `AllowLocalPassword = false` — they cannot set a local password and are refused by the local login form.
+- Break-glass: at least two local-password Administrator accounts must exist independent of SSO.
+
+### Callback URLs
+
+Each provider gets its own callback path: `/signin-oidc-{key}` (e.g. `/signin-oidc-uct`). Register this as the redirect URI in the IdP's app registration.
+
+### Group-to-role mapping
+
+Managed by administrators at `/admin/sso/group-mappings`. Each mapping links a provider + external group ID to a Wombat role, institution, and optional speciality/sub-speciality scope. Changes take effect on the next login for each user.
+
 ## Backups
 
 - **Database**: nightly `pg_dump` to `/var/backups/wombat/`, then `rsync` off-host (or Linode Object Storage). Retain 14 daily, 4 weekly, 6 monthly.

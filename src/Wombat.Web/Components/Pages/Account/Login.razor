@@ -1,6 +1,9 @@
 @page "/account/login"
 @attribute [AllowAnonymous]
 @layout Layout.AuthLayout
+@using Microsoft.Extensions.Options
+@using Wombat.Application.Common.Options
+@inject IOptions<SsoOptions> SsoOptions
 
 <PageTitle>Sign in - Wombat</PageTitle>
 
@@ -33,6 +36,23 @@
     </FormActions>
   </form>
 
+  @if (SsoProviders.Count > 0)
+  {
+    <div class="sso-divider">
+      <span>or</span>
+    </div>
+
+    <div class="sso-providers">
+      @foreach (var provider in SsoProviders)
+      {
+        <a href="/account/sso-challenge/@provider.Key?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")"
+           class="btn btn-outline sso-button">
+          Sign in with @provider.DisplayName
+        </a>
+      }
+    </div>
+  }
+
   <p class="page-subtitle mt-3">Forgotten your password? <a href="/account/forgot-password">Reset it</a>.</p>
 </div>
 
@@ -42,4 +62,6 @@
 
   [SupplyParameterFromQuery(Name = "error")]
   public string? Error { get; set; }
+
+  private IReadOnlyList<SsoProviderOptions> SsoProviders => SsoOptions.Value.Providers;
 }
