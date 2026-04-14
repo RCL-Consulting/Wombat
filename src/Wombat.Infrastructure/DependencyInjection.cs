@@ -9,6 +9,9 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Reporting;
 using Wombat.Application.Scheduling;
+using Wombat.Application.Features.DataRights;
+using Wombat.Application.Features.DataRights.Commands;
+using Wombat.Application.Features.DataRights.Queries;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Email;
@@ -16,6 +19,7 @@ using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
 using Wombat.Infrastructure.Scheduling;
+using Wombat.Infrastructure.DataRights;
 using Wombat.Infrastructure.Scheduling.Jobs;
 
 namespace Wombat.Infrastructure;
@@ -89,6 +93,10 @@ public static class DependencyInjection
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddScoped<IPortfolioPdfService, PortfolioPdfService>();
+        services.AddScoped<IErasureExecutor, ErasureExecutor>();
+        services.AddScoped<IAccessReportBuilder, AccessReportBuilder>();
+        services.AddScoped<IObjectionFlagUpdater, ObjectionFlagService>();
+        services.AddScoped<IObjectionFlagReader, ObjectionFlagService>();
 
         services.AddScoped<RoleSeeder>();
         services.AddScoped<AdminSeeder>();

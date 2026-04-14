@@ -120,9 +120,12 @@ Wombat__Email__FromName=Wombat
 Wombat__BaseUrl=https://wombat.example.com
 Wombat__SeedAdminEmail=renier@rcl.co.za
 Wombat__SeedAdminPassword=REDACTED
+Wombat__PseudonymSalt=REDACTED
 ```
 
 The double-underscore syntax is ASP.NET Core's convention for nesting. Never commit this file.
+
+**`Wombat__PseudonymSalt`** — used by the erasure executor (T026) to generate deterministic pseudonyms for erased users (`deleted_user_<hex>`). This is a deployment secret. **Do not rotate it** — rotating the salt breaks pseudonym stability across exports and makes previously-issued pseudonyms unlinkable to erasure records.
 
 ## Deployment process
 
@@ -198,6 +201,7 @@ Script contents live in the repo under `deploy/wombat-backup.sh`.
 - No secrets in `appsettings.Production.json`.
 - Secrets live in `/opt/wombat/config/wombat.env` on the server, mode 600, owner wombat.
 - Rotation: edit the env file, `systemctl restart wombat`. That's the whole rotation story for Phase 1.
+- **Exception:** `Wombat__PseudonymSalt` must **never** be rotated — see the Environment file section above.
 
 ## Observability
 

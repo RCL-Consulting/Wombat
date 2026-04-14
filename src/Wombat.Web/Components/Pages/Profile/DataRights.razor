@@ -1,0 +1,260 @@
+@page "/account/data-rights"
+@attribute [Authorize]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Data rights</PageTitle>
+
+<PageHeader Title="Your data rights" Subtitle="Request access to your data, correct it, export it, manage processing preferences, or request erasure." />
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+<div class="details-grid">
+  <section class="detail-card">
+    <h3>Processing preferences</h3>
+    <p class="text-muted text-sm">
+      You may opt out of processing that is not required for your training programme.
+      You cannot object to processing required for programme operation, assessment records, or regulatory compliance.
+    </p>
+
+    <StatePanel IsLoading="_loadingFlags" IsEmpty="false">
+      <div class="form-grid">
+        <div class="form-check-group">
+          <label class="form-check-label">
+            <input type="checkbox" class="form-check-input" @bind="_optOutOfOptionalProcessing" />
+            Opt out of optional processing (e.g. analytics)
+          </label>
+        </div>
+        <div class="form-check-group">
+          <label class="form-check-label">
+            <input type="checkbox" class="form-check-input" @bind="_optOutOfDigestEmails" />
+            Opt out of digest emails
+          </label>
+        </div>
+      </div>
+      <FormActions>
+        <button type="button" class="btn btn-primary" disabled="@_savingFlags" @onclick="SaveFlagsAsync">
+          @(_savingFlags ? "Saving..." : "Save preferences")
+        </button>
+      </FormActions>
+    </StatePanel>
+  </section>
+
+  <section class="detail-card">
+    <h3>Submit a request</h3>
+    <p class="text-muted text-sm">
+      Under data protection law, you have the right to access, export, correct, or request erasure of your personal data.
+    </p>
+
+    <div class="form-grid">
+      <FormField Label="Request type" InputId="dr-type" Required="true">
+        <select id="dr-type" class="form-control" @bind="_newRequestType">
+          <option value="@DataRightsRequestType.Access">Access — download everything we hold about you</option>
+          <option value="@DataRightsRequestType.Export">Export — machine-readable data export</option>
+          <option value="@DataRightsRequestType.Rectification">Rectification — correct inaccurate data</option>
+          <option value="@DataRightsRequestType.Erasure">Erasure — request deletion of your data</option>
+        </select>
+      </FormField>
+
+      <FormField Label="Reason" InputId="dr-reason" Required="true">
+        <textarea id="dr-reason" class="form-control" rows="3" @bind="_newRequestReason" placeholder="Describe what you need and why..."></textarea>
+      </FormField>
+    </div>
+
+    <FormActions>
+      <button type="button" class="btn btn-primary" disabled="@_submitting" @onclick="SubmitRequestAsync">
+        @(_submitting ? "Submitting..." : "Submit request")
+      </button>
+    </FormActions>
+  </section>
+</div>
+
+<h3 class="section-heading">Your requests</h3>
+
+<StatePanel IsLoading="_loadingRequests" IsEmpty="@(_requests is not null && _requests.Count == 0)" EmptyTitle="No requests" EmptyBody="You have not submitted any data rights requests yet.">
+  @if (_requests is not null && _requests.Count > 0)
+  {
+    <DataTable TItem="DataRightsRequestSummaryDto" Items="_requests" Caption="Your data rights requests">
+      <HeaderRow>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="req">
+        <tr>
+          <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
+          <td>@req.Type</td>
+          <td><span class="badge @StatusBadge(req.Status)">@req.Status</span></td>
+          <td>
+            @if (req.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
+            {
+              <button class="btn btn-outline btn-sm" @onclick="() => WithdrawAsync(req.Id)">Withdraw</button>
+            }
+            @if (req.Status == DataRightsRequestStatus.Completed &&
+                 req.Type is DataRightsRequestType.Access or DataRightsRequestType.Export)
+            {
+              <a class="btn btn-outline btn-sm" href="/account/data-rights/download/@req.Id">Download</a>
+            }
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
+
+@code {
+  private IReadOnlyList<DataRightsRequestSummaryDto>? _requests;
+  private bool _loadingRequests = true;
+  private bool _loadingFlags = true;
+  private bool _savingFlags;
+  private bool _submitting;
+  private string? _errorMessage;
+  private string? _statusMessage;
+
+  private bool _optOutOfOptionalProcessing;
+  private bool _optOutOfDigestEmails;
+
+  private DataRightsRequestType _newRequestType = DataRightsRequestType.Access;
+  private string _newRequestReason = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var principal = authState.User;
+
+    try
+    {
+      var flags = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Queries.GetObjectionFlagsQuery(principal));
+      _optOutOfOptionalProcessing = flags.OptOutOfOptionalProcessing;
+      _optOutOfDigestEmails = flags.OptOutOfDigestEmails;
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _loadingFlags = false;
+    }
+
+    try
+    {
+      _requests = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(principal));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _loadingRequests = false;
+    }
+  }
+
+  private async Task SaveFlagsAsync()
+  {
+    _savingFlags = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.UpdateObjectionFlagsCommand(
+        _optOutOfOptionalProcessing,
+        _optOutOfDigestEmails,
+        authState.User));
+      _statusMessage = "Processing preferences saved.";
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _savingFlags = false;
+    }
+  }
+
+  private async Task SubmitRequestAsync()
+  {
+    if (string.IsNullOrWhiteSpace(_newRequestReason))
+    {
+      _errorMessage = "Please provide a reason for your request.";
+      return;
+    }
+
+    _submitting = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.SubmitDataRightsRequestCommand(
+        _newRequestType,
+        _newRequestReason,
+        authState.User));
+
+      _statusMessage = "Request submitted. You will be notified when it is reviewed.";
+      _newRequestReason = string.Empty;
+
+      // Reload requests
+      _requests = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _submitting = false;
+    }
+  }
+
+  private async Task WithdrawAsync(Guid requestId)
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.WithdrawDataRightsRequestCommand(
+        requestId, authState.User));
+
+      _statusMessage = "Request withdrawn.";
+      _requests = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private static string StatusBadge(DataRightsRequestStatus status) => status switch
+  {
+    DataRightsRequestStatus.Submitted => "badge-info",
+    DataRightsRequestStatus.UnderReview => "badge-warning",
+    DataRightsRequestStatus.Approved => "badge-success",
+    DataRightsRequestStatus.Rejected => "badge-danger",
+    DataRightsRequestStatus.Completed => "badge-success",
+    DataRightsRequestStatus.Withdrawn => "",
+    _ => ""
+  };
+}

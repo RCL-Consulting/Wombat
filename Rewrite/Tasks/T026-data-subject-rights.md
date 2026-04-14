@@ -74,8 +74,8 @@ Make Wombat compliant with the data-subject rights the institutions we care abou
 
 ## Verification
 
-- [ ] `dotnet build` clean.
-- [ ] `dotnet test` — erasure tests confirm every table is handled (or an exception is thrown on approval if a new table was added without updating the executor).
+- [x] `dotnet build` clean.
+- [x] `dotnet test` — erasure tests confirm every table is handled (or an exception is thrown on approval if a new table was added without updating the executor).
 - [ ] Manual: create a demo user, add activities, MSF response, a committee decision. Submit an erasure request. Approve. Confirm:
   - The user's profile fields are cleared.
   - The user can no longer log in.
@@ -84,8 +84,8 @@ Make Wombat compliant with the data-subject rights the institutions we care abou
   - The audit log shows the full original username in entries written before the erasure, and shows `DataRights` category entries for the request and the execution.
   - The `DataRightsErasureRecord` lists the retention reasons.
 - [ ] Access request returns a downloadable ZIP with a complete JSON + a PDF summary.
-- [ ] Rejection writes a decision note visible to the requester.
-- [ ] The erasure executor throws a coverage-test exception when a new `UserId`-referencing table is added without being handled — i.e., write a reflection-based test that enumerates every `UserId` FK in the model and fails if the executor doesn't touch it.
+- [x] Rejection writes a decision note visible to the requester.
+- [x] The erasure executor throws a coverage-test exception when a new `UserId`-referencing table is added without being handled — i.e., write a reflection-based test that enumerates every `UserId` FK in the model and fails if the executor doesn't touch it.
 
 ## Notes & gotchas
 

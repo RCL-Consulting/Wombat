@@ -9,4 +9,5 @@ public sealed class WombatOptions
     public string? MsfRespondUrl { get; set; }
     public string? SeedAdminEmail { get; set; }
     public string? SeedAdminPassword { get; set; }
+    public string? PseudonymSalt { get; set; }
 }

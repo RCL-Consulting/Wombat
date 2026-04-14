@@ -1,0 +1,152 @@
+@page "/admin/data-rights"
+@attribute [Authorize(Roles = "Administrator,Coordinator")]
+@inject IScopedSender Sender
+
+<PageTitle>Data rights requests</PageTitle>
+
+<PageHeader Title="Data rights requests" Subtitle="Review and act on data subject rights requests.">
+  <Actions>
+    <button class="btn btn-outline" @onclick="ApplyFilters">
+      <Icon Name="search" />
+      Apply filters
+    </button>
+  </Actions>
+</PageHeader>
+
+<div class="filter-bar">
+  <div class="filter-row">
+    <div class="filter-field">
+      <label>Type</label>
+      <select class="form-control" @bind="_filterType">
+        <option value="">All</option>
+        @foreach (var type in Enum.GetValues<DataRightsRequestType>())
+        {
+          <option value="@type">@type</option>
+        }
+      </select>
+    </div>
+    <div class="filter-field">
+      <label>Status</label>
+      <select class="form-control" @bind="_filterStatus">
+        <option value="">All</option>
+        @foreach (var status in Enum.GetValues<DataRightsRequestStatus>())
+        {
+          <option value="@status">@status</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+<StatePanel IsLoading="@(_result is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_result?.Items.Count == 0)" EmptyTitle="No requests" EmptyBody="No data rights requests match the current filters.">
+  @if (_result is not null)
+  {
+    <DataTable TItem="DataRightsRequestSummaryDto" Items="_result.Items" Caption="Data rights requests">
+      <HeaderRow>
+        <tr>
+          <th>Date</th>
+          <th>Requester</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="req">
+        <tr>
+          <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
+          <td>@req.RequesterDisplayName</td>
+          <td><span class="badge @TypeBadge(req.Type)">@req.Type</span></td>
+          <td><span class="badge @StatusBadge(req.Status)">@req.Status</span></td>
+          <td>
+            <a class="btn btn-outline btn-sm" href="/admin/data-rights/@req.Id">Review</a>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+
+    <div class="pagination-row">
+      <span class="text-muted text-sm">
+        Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
+      </span>
+      <div class="pagination-controls">
+        <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
+        <span class="text-sm">Page @_page</span>
+        <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
+      </div>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private PagedDataRightsResult? _result;
+  private string? _errorMessage;
+  private int _page = 1;
+  private const int _pageSize = 25;
+
+  private string _filterType = "";
+  private string _filterStatus = "";
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task ApplyFilters()
+  {
+    _page = 1;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _result = null;
+    _errorMessage = null;
+
+    try
+    {
+      DataRightsRequestType? type = Enum.TryParse<DataRightsRequestType>(_filterType, out var t) ? t : null;
+      DataRightsRequestStatus? status = Enum.TryParse<DataRightsRequestStatus>(_filterStatus, out var s) ? s : null;
+
+      _result = await Sender.Send(new Wombat.Application.Features.DataRights.Queries.ListDataRightsRequestsQuery(
+        Type: type,
+        Status: status,
+        RequesterUserId: null,
+        Page: _page,
+        PageSize: _pageSize));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private async Task PreviousPage()
+  {
+    if (_page > 1) { _page--; await LoadAsync(); }
+  }
+
+  private async Task NextPage()
+  {
+    _page++;
+    await LoadAsync();
+  }
+
+  private static string TypeBadge(DataRightsRequestType type) => type switch
+  {
+    DataRightsRequestType.Erasure => "badge-danger",
+    DataRightsRequestType.Rectification => "badge-warning",
+    DataRightsRequestType.Access or DataRightsRequestType.Export => "badge-info",
+    _ => ""
+  };
+
+  private static string StatusBadge(DataRightsRequestStatus status) => status switch
+  {
+    DataRightsRequestStatus.Submitted => "badge-info",
+    DataRightsRequestStatus.UnderReview => "badge-warning",
+    DataRightsRequestStatus.Approved => "badge-success",
+    DataRightsRequestStatus.Rejected => "badge-danger",
+    DataRightsRequestStatus.Completed => "badge-success",
+    DataRightsRequestStatus.Withdrawn => "",
+    _ => ""
+  };
+}

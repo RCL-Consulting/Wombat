@@ -25,6 +25,12 @@
             My Account
           </NavLink>
         </div>
+        <div class="nav-item px-3">
+          <NavLink class="nav-link" href="/account/data-rights">
+            <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+            Data Rights
+          </NavLink>
+        </div>
 
         <AuthorizeView Roles="@($"{WombatRoles.Trainee},{WombatRoles.PendingTrainee}")" Context="traineeAuth">
           <div class="nav-item px-3">
@@ -79,6 +85,12 @@
             <NavLink class="nav-link" href="/admin/invitations">
               <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
               Invitations
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/data-rights">
+              <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+              Data Rights
             </NavLink>
           </div>
           <div class="nav-item px-3">
@@ -193,6 +205,12 @@
             <NavLink class="nav-link" href="/admin/audit">
               <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
               Audit Log
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/data-rights">
+              <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+              Data Rights
             </NavLink>
           </div>
           <div class="nav-item px-3">

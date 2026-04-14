@@ -1,0 +1,187 @@
+@page "/admin/data-rights/{Id:guid}"
+@attribute [Authorize(Roles = "Administrator,Coordinator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Data rights request</PageTitle>
+
+<PageHeader Title="Data rights request" Subtitle="Review and act on this request.">
+  <Actions>
+    <a class="btn btn-outline" href="/admin/data-rights">
+      <Icon Name="arrow-left" />
+      Back to list
+    </a>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+<StatePanel IsLoading="@(_request is null && string.IsNullOrWhiteSpace(_errorMessage))" IsEmpty="@(_request is null)" EmptyTitle="Not found" EmptyBody="The data rights request was not found.">
+  @if (_request is not null)
+  {
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h3>Request</h3>
+        <dl class="detail-list">
+          <dt>Requester</dt><dd>@_request.RequesterDisplayName</dd>
+          <dt>User ID</dt><dd><code class="text-sm">@_request.RequesterUserId</code></dd>
+          <dt>Submitted</dt><dd><code>@_request.RequestedOn.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
+          <dt>Type</dt><dd><span class="badge @TypeBadge(_request.Type)">@_request.Type</span></dd>
+          <dt>Status</dt><dd><span class="badge @StatusBadge(_request.Status)">@_request.Status</span></dd>
+          <dt>Reason</dt><dd>@_request.Reason</dd>
+        </dl>
+      </div>
+
+      @if (_request.DecisionNote is not null)
+      {
+        <div class="detail-section">
+          <h3>Decision</h3>
+          <dl class="detail-list">
+            <dt>Decided by</dt><dd><code class="text-sm">@_request.DecidedByUserId</code></dd>
+            <dt>Decided on</dt><dd><code>@_request.DecidedOn?.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
+            <dt>Note</dt><dd>@_request.DecisionNote</dd>
+            @if (_request.CompletedOn is not null)
+            {
+              <dt>Completed on</dt><dd><code>@_request.CompletedOn?.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
+            }
+          </dl>
+        </div>
+      }
+    </div>
+
+    @if (_request.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
+    {
+      <div class="detail-section mt-4">
+        <h3>Action</h3>
+
+        <FormField Label="Decision note" InputId="decision-note" Required="true">
+          <textarea id="decision-note" class="form-control" rows="3" @bind="_decisionNote"
+            placeholder="Document your decision and any relevant context..."></textarea>
+        </FormField>
+
+        <FormActions>
+          <button type="button" class="btn btn-primary" disabled="@_processing" @onclick="ApproveAsync">
+            @(_processing ? "Processing..." : "Approve")
+          </button>
+          <button type="button" class="btn btn-outline" disabled="@_processing" @onclick="RejectAsync">
+            Reject
+          </button>
+        </FormActions>
+      </div>
+    }
+  }
+</StatePanel>
+
+@code {
+  [Parameter]
+  public Guid Id { get; set; }
+
+  private DataRightsRequestDto? _request;
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private string _decisionNote = string.Empty;
+  private bool _processing;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _request = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Queries.GetDataRightsRequestByIdQuery(Id, authState.User));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private async Task ApproveAsync()
+  {
+    if (string.IsNullOrWhiteSpace(_decisionNote))
+    {
+      _errorMessage = "A decision note is required.";
+      return;
+    }
+
+    _processing = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _request = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Commands.ApproveDataRightsRequestCommand(
+          Id, _decisionNote, authState.User));
+      _statusMessage = "Request approved.";
+      _decisionNote = string.Empty;
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _processing = false;
+    }
+  }
+
+  private async Task RejectAsync()
+  {
+    if (string.IsNullOrWhiteSpace(_decisionNote))
+    {
+      _errorMessage = "A decision note is required.";
+      return;
+    }
+
+    _processing = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _request = await Sender.Send(
+        new Wombat.Application.Features.DataRights.Commands.RejectDataRightsRequestCommand(
+          Id, _decisionNote, authState.User));
+      _statusMessage = "Request rejected.";
+      _decisionNote = string.Empty;
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _processing = false;
+    }
+  }
+
+  private static string TypeBadge(DataRightsRequestType type) => type switch
+  {
+    DataRightsRequestType.Erasure => "badge-danger",
+    DataRightsRequestType.Rectification => "badge-warning",
+    DataRightsRequestType.Access or DataRightsRequestType.Export => "badge-info",
+    _ => ""
+  };
+
+  private static string StatusBadge(DataRightsRequestStatus status) => status switch
+  {
+    DataRightsRequestStatus.Submitted => "badge-info",
+    DataRightsRequestStatus.UnderReview => "badge-warning",
+    DataRightsRequestStatus.Approved => "badge-success",
+    DataRightsRequestStatus.Rejected => "badge-danger",
+    DataRightsRequestStatus.Completed => "badge-success",
+    DataRightsRequestStatus.Withdrawn => "",
+    _ => ""
+  };
+}

@@ -4,61 +4,60 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T026 — Data subject rights (POPIA/GDPR self-service)** (next task on the critical path after T025) — **Model: Opus**
+**T027 — Institutional SSO (OIDC)** (next task on the critical path after T026) — **Model: Opus**
 
-T025 is now implemented. Next session: start `Tasks/T026-data-subject-rights.md`.
+T026 is now implemented. Next session: start `Tasks/T027-institutional-sso.md`.
 
 ## Critical-path reminder (post-pivot)
 
 The plan has been restructured around a **schema-driven Activity platform** so institutions can add new activity types without code. The old per-type tasks (T007 Assessment, T008 Workflow, T009 STAR) are **superseded** — read their banners. The new critical path after the core domain is:
 
-> T001 → T002 → T003 → T004 → T005 → T006 → **T017 → T018 → T019 → T020** → T021 → T022 → T010 → ~~T011~~ → ~~T012~~ → ~~T023~~ → ~~T024~~ → ~~T025~~ → T026 → T027 → T013 → T014 → T015 → T016
+> T001 → T002 → T003 → T004 → T005 → T006 → **T017 → T018 → T019 → T020** → T021 → T022 → T010 → ~~T011~~ → ~~T012~~ → ~~T023~~ → ~~T024~~ → ~~T025~~ → ~~T026~~ → T027 → T013 → T014 → T015 → T016
 
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
 
-T025 completed:
+T026 completed:
 - Domain layer:
-  - `AuditEntry` entity (Guid v7 PK, append-only via `AuditEntry.Create()` factory, no mutation methods)
-  - `AuditEntryArchive` entity (same schema + `ArchivedAt`, no trigger)
-  - `AuditCategory` enum (Command, Authentication, Permission, Committee, Msf, Export, DataRights, Job, ActivityType)
+  - `DataRightsRequest` entity (Guid v7 PK, factory `Create()`, workflow methods: Review, Approve, Reject, Complete, Withdraw)
+  - `DataRightsRectification` entity (child of request; records before/after values for corrections)
+  - `DataRightsErasureRecord` entity (one per erased user; pseudonym, retention reasons as jsonb)
+  - `DataRightsRequestType` enum (Access, Rectification, Export, Objection, Erasure)
+  - `DataRightsRequestStatus` enum (Submitted, UnderReview, Approved, Rejected, Completed, Withdrawn)
 - Application layer:
-  - `IAuditWriter` interface — single `WriteAsync` method
-  - `IAuditContextProvider` interface — UserId, UserDisplay, IpAddress, UserAgent
-  - `IAuditedCommand` marker interface — opt-in for non-`*Command` named requests
-  - `RedactAttribute` — marks command properties for scrubbing before SummaryJson serialisation
-  - `AuditPayloadSerializer` — reflects over command properties, replaces `[Redact]` values with "[REDACTED]", serialises to camelCase JSON
-  - `AuditPipelineBehavior<TRequest, TResponse>` — outermost MediatR behaviour; audits requests named `*Command` or implementing `IAuditedCommand`; skips queries
-  - Queries: `ListAuditEntriesQuery` (filterable by category/action/actor/subject/date/success, server-side pagination), `GetAuditEntryByIdQuery`
-  - DTOs: `AuditEntryDto`, `PagedAuditResult`
-  - Registered `AuditPipelineBehavior` as first (outermost) behaviour in Application DI
+  - Commands: `SubmitDataRightsRequestCommand` (blocks erasure if active committee review), `WithdrawDataRightsRequestCommand` (owner-only), `ApproveDataRightsRequestCommand` (auto-executes erasure/access/objection on approval), `RejectDataRightsRequestCommand`, `ApplyRectificationCommand` (SpecialityAdmin+), `CompleteRectificationRequestCommand`, `UpdateObjectionFlagsCommand`
+  - Queries: `ListDataRightsRequestsQuery` (paginated, filterable by type/status/requester), `GetDataRightsRequestByIdQuery` (owner or admin), `GetMyDataRightsRequestsQuery`, `GetObjectionFlagsQuery`, `DownloadAccessReportQuery`
+  - Interfaces: `IErasureExecutor`, `IAccessReportBuilder`, `IObjectionFlagUpdater`, `IObjectionFlagReader`
+  - DTOs: `DataRightsRequestDto`, `DataRightsRequestSummaryDto`, `DataRightsRectificationDto`, `DataRightsErasureRecordDto`, `PagedDataRightsResult`, `AccessExportResult`, `ObjectionFlagsDto`
+  - PseudonymSalt added to `WombatOptions`
 - Infrastructure:
-  - `AuditWriter` — scoped service; adds entry and calls `SaveChangesAsync`
-  - `HttpAuditContextProvider` — reads current user from `IHttpContextAccessor`, truncates IP (/24 IPv4, /48 IPv6)
-  - `AuditEntryConfiguration`, `AuditEntryArchiveConfiguration` — EF fluent config with jsonb column, GIN index on SummaryJson
-  - `AuditLogRetentionJob` — real implementation: archives entries older than 2 years in batches of 1000 into `AuditEntryArchives`, runs daily at 03:00 UTC
-  - Migration `20260414120000_AuditLog` with Designer + snapshot updated; includes PostgreSQL trigger `audit_entries_immutable` that raises exception on UPDATE/DELETE
-  - DbSets added to `ApplicationDbContext`
-  - `IAuditWriter` and `IAuditContextProvider` registered in Infrastructure DI
-- Web (Program.cs):
-  - Login handler: writes `Login`/`LoginFailed` audit entries; failed login doesn't leak user existence
-  - Logout handler: writes `Logout` audit entry with user ID
-  - `TruncateLoginIp` helper
+  - `ErasureExecutor` — pseudonymises all UserId references across: Activity (subject/creator), ActivityTransition (actor), ActivityType (owner/staging), ActivityTypeVersion (publisher), CommitteeReview (trainee/started-by/ratified-by), CommitteeDecision (chair), CommitteeAppeal (lodged-by/resolved-by), DecisionPanelMember, MsfCampaign (subject/creator/reviewer), CurriculumItemProgress, PortfolioExport, TraineeProfile, AssessorProfile, Invitation (issued-by). Clears Identity user PII, disables login, removes roles and scope associations. Retains audit entries unchanged. Generates deterministic pseudonym via SHA-256(salt + userId).
+  - `AccessReportBuilder` — builds ZIP with JSON data export + PDF portfolio summary. Covers profile, activities, committee reviews, MSF campaigns, curriculum progress, audit entries, portfolio exports.
+  - `ObjectionFlagService` — reads/writes opt-out flags on WombatIdentityUser
+  - EF configurations for DataRightsRequest, DataRightsRectification, DataRightsErasureRecord
+  - OptOutOfOptionalProcessing, OptOutOfDigestEmails added to WombatIdentityUser
+  - Migration `20260414134415_DataRights` with Designer + snapshot (auto-generated via `dotnet ef`)
+  - DbSets added to ApplicationDbContext
+  - All services registered in Infrastructure DI
 - Web (Blazor):
-  - `AuditList.razor` at `/admin/audit` — filterable by category/action/actor/subject/date/success; server-side pagination; 50-entry pages
-  - `AuditDetail.razor` at `/admin/audit/{Id}` — full entry detail; raw JSON visible to Administrators only
-  - NavMenu: "Audit Log" link under Administrator section
-- Tests: 12 new tests
-  - 4 `AuditPipelineBehaviorTests` (command audit, query skip, failure capture, IAuditedCommand marker)
-  - 4 `AuditPayloadSerializerTests` (plain command, single redact, multiple redact, empty command)
-  - 4 `ListAuditEntriesQueryHandlerTests` (default 24h, category filter, success filter, pagination)
+  - `Profile/DataRights.razor` at `/account/data-rights` — user self-service: processing preferences (opt-out checkboxes), submit requests (type + reason), view own requests with withdraw/download actions
+  - `Admin/DataRights/RequestsList.razor` at `/admin/data-rights` — filterable by type/status, paginated, links to detail
+  - `Admin/DataRights/RequestDetail.razor` at `/admin/data-rights/{Id}` — full request detail, approve/reject with decision note
+  - NavMenu: "Data Rights" link for all authenticated users + admin/coordinator sections
+- Tests: 25 new tests (111 total, was 86)
+  - 7 `DataRightsRequestTests` (domain entity workflow: create, approve, reject, complete, withdraw, invalid transitions)
+  - 6 `DataRightsCommandHandlerTests` (submit, erasure block, withdraw own/other, reject as admin/non-admin)
+  - 7 `DataRightsQueryHandlerTests` (my requests, list filter, pagination, get-by-id as owner/other/admin)
+  - 5 `ErasurePseudonymTests` (deterministic, prefix, different salt/user, expected length)
+  - 1 `ErasureCoverageTests` — **reflection-based test** that enumerates all Domain entities with UserId-like string properties and fails if ErasureExecutor doesn't handle them
 - Verification:
   - `dotnet build Wombat.sln -c Release` — clean (0 warnings, 0 errors)
-  - `dotnet test Application.Tests` — 86 passed (was 74)
+  - `dotnet test Application.Tests` — 111 passed (was 86)
   - `dotnet test Web.Tests` — 33 passed
   - `dotnet test Domain.Tests` — 17 passed
 - Verification caveats:
-  - Append-only trigger not tested end-to-end — requires running PostgreSQL
-  - GRANT (REVOKE UPDATE, DELETE) not applied in migration — must be done manually post-deployment (documented in migration comment)
-  - Audit browsing UI not tested against running app
+  - Erasure not tested end-to-end against running PostgreSQL
+  - The auto-generated migration also creates Committee tables (DecisionPanels, CommitteeReviews, etc.) that were in the snapshot but had empty migrations before — this is correct, they are needed for the first real deployment
+  - Data rights UI not tested against running app
+  - Access report download endpoint not yet wired (the query exists but no download page)
