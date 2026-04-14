@@ -1,0 +1,212 @@
+@page "/admin/audit"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+
+<PageTitle>Audit log</PageTitle>
+
+<PageHeader Title="Audit log" Subtitle="Append-only record of every consequential action. Default view: last 24 hours.">
+  <Actions>
+    <button class="btn btn-outline" @onclick="ApplyFilters">
+      <Icon Name="search" />
+      Apply filters
+    </button>
+  </Actions>
+</PageHeader>
+
+<div class="filter-bar">
+  <div class="filter-row">
+    <div class="filter-field">
+      <label>Category</label>
+      <select class="form-control" @bind="_filterCategory">
+        <option value="">All</option>
+        @foreach (var cat in Enum.GetValues<AuditCategory>())
+        {
+          <option value="@cat">@cat</option>
+        }
+      </select>
+    </div>
+    <div class="filter-field">
+      <label>Action</label>
+      <input class="form-control" type="text" placeholder="e.g. CreateInstitutionCommand" @bind="_filterAction" />
+    </div>
+    <div class="filter-field">
+      <label>Actor user ID</label>
+      <input class="form-control" type="text" @bind="_filterActorUserId" />
+    </div>
+    <div class="filter-field">
+      <label>Subject type</label>
+      <input class="form-control" type="text" placeholder="e.g. CommitteeReview" @bind="_filterSubjectType" />
+    </div>
+    <div class="filter-field">
+      <label>From (UTC)</label>
+      <input class="form-control" type="datetime-local" @bind="_filterFrom" />
+    </div>
+    <div class="filter-field">
+      <label>To (UTC)</label>
+      <input class="form-control" type="datetime-local" @bind="_filterTo" />
+    </div>
+    <div class="filter-field">
+      <label>Result</label>
+      <select class="form-control" @bind="_filterSuccess">
+        <option value="">All</option>
+        <option value="true">Success only</option>
+        <option value="false">Failures only</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<StatePanel IsLoading="@(_result is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_result?.Items.Count == 0)" EmptyTitle="No entries" EmptyBody="No audit entries match the current filters.">
+  @if (_result is not null)
+  {
+    <DataTable TItem="AuditEntryDto" Items="_result.Items" Caption="Audit entries">
+      <HeaderRow>
+        <tr>
+          <th>When (UTC)</th>
+          <th>Category</th>
+          <th>Action</th>
+          <th>Actor</th>
+          <th>Subject</th>
+          <th>Result</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="entry">
+        <tr>
+          <td><code>@entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</code></td>
+          <td><span class="badge @CategoryBadgeClass(entry.Category)">@entry.Category</span></td>
+          <td>
+            <span class="text-sm">@entry.Action</span>
+          </td>
+          <td>
+            @if (entry.ActorDisplay is not null)
+            {
+              <span>@entry.ActorDisplay</span>
+              <div class="text-muted text-sm">@entry.ActorIpAddress</div>
+            }
+            else
+            {
+              <span class="text-muted">system</span>
+            }
+          </td>
+          <td>
+            @if (entry.SubjectType is not null)
+            {
+              <span>@entry.SubjectType</span>
+              @if (entry.SubjectId is not null)
+              {
+                <div class="text-muted text-sm">@entry.SubjectId</div>
+              }
+            }
+          </td>
+          <td>
+            @if (entry.Success)
+            {
+              <span class="badge badge-success">OK</span>
+            }
+            else
+            {
+              <span class="badge badge-danger">FAILED</span>
+            }
+          </td>
+          <td>
+            <a class="btn btn-outline btn-sm" href="/admin/audit/@entry.Id">Detail</a>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+
+    <div class="pagination-row">
+      <span class="text-muted text-sm">
+        Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
+      </span>
+      <div class="pagination-controls">
+        <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
+        <span class="text-sm">Page @_page</span>
+        <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
+      </div>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  private PagedAuditResult? _result;
+  private string? _errorMessage;
+  private int _page = 1;
+  private const int _pageSize = 50;
+
+  private string _filterCategory = "";
+  private string _filterAction = "";
+  private string _filterActorUserId = "";
+  private string _filterSubjectType = "";
+  private DateTime? _filterFrom;
+  private DateTime? _filterTo;
+  private string _filterSuccess = "";
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task ApplyFilters()
+  {
+    _page = 1;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _result = null;
+    _errorMessage = null;
+
+    try
+    {
+      AuditCategory? category = Enum.TryParse<AuditCategory>(_filterCategory, out var cat) ? cat : null;
+      bool? successOnly = _filterSuccess switch
+      {
+        "true" => true,
+        "false" => false,
+        _ => null
+      };
+
+      _result = await Sender.Send(new Wombat.Application.Features.Audit.Queries.ListAuditEntries.ListAuditEntriesQuery(
+        ActorUserId: string.IsNullOrWhiteSpace(_filterActorUserId) ? null : _filterActorUserId,
+        Category: category,
+        Action: string.IsNullOrWhiteSpace(_filterAction) ? null : _filterAction,
+        SubjectType: string.IsNullOrWhiteSpace(_filterSubjectType) ? null : _filterSubjectType,
+        From: _filterFrom.HasValue ? DateTime.SpecifyKind(_filterFrom.Value, DateTimeKind.Utc) : null,
+        To: _filterTo.HasValue ? DateTime.SpecifyKind(_filterTo.Value, DateTimeKind.Utc) : null,
+        SuccessOnly: successOnly,
+        Page: _page,
+        PageSize: _pageSize));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+
+  private async Task PreviousPage()
+  {
+    if (_page > 1)
+    {
+      _page--;
+      await LoadAsync();
+    }
+  }
+
+  private async Task NextPage()
+  {
+    _page++;
+    await LoadAsync();
+  }
+
+  private static string CategoryBadgeClass(AuditCategory category) => category switch
+  {
+    AuditCategory.Authentication => "badge-info",
+    AuditCategory.Permission => "badge-warning",
+    AuditCategory.DataRights => "badge-danger",
+    AuditCategory.Committee => "badge-primary",
+    _ => ""
+  };
+}

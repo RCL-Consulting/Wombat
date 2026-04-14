@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Reporting;
 using Wombat.Application.Scheduling;
 using Wombat.Infrastructure.Activities;
+using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Email;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -35,6 +37,8 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IAuditWriter, AuditWriter>();
+        services.AddScoped<IAuditContextProvider, HttpAuditContextProvider>();
 
         services.AddIdentity<WombatIdentityUser, IdentityRole>(options =>
         {

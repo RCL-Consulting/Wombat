@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using MediatR;
 using Wombat.Application;
+using Wombat.Application.Audit;
 using Wombat.Application.Features.Invitations;
+using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure;
 using Wombat.Infrastructure.Identity;
@@ -41,6 +43,9 @@ app.MapRazorComponents<App>()
 
 app.MapPost("/account/login/submit", async (
     SignInManager<WombatIdentityUser> signInManager,
+    UserManager<WombatIdentityUser> userManager,
+    IAuditWriter auditWriter,
+    HttpContext httpContext,
     [FromForm] LoginRequest request) =>
 {
     if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -48,15 +53,46 @@ app.MapPost("/account/login/submit", async (
         return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Email and password are required."));
     }
 
+    var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
+    var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
+
     var result = await signInManager.PasswordSignInAsync(
         request.Email.Trim(),
         request.Password,
         request.RememberMe,
         lockoutOnFailure: false);
 
-    return result.Succeeded
-        ? Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl))
-        : Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Invalid email or password."));
+    if (result.Succeeded)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        var display = user is not null ? $"{user.FirstName} {user.LastName}".Trim() : null;
+
+        await auditWriter.WriteAsync(AuditEntry.Create(
+            occurredAt: DateTime.UtcNow,
+            category: AuditCategory.Authentication,
+            action: "Login",
+            success: true,
+            actorUserId: user?.Id,
+            actorDisplay: display,
+            actorIpAddress: ip,
+            actorUserAgent: ua));
+
+        return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
+    }
+    else
+    {
+        // Record failed login without leaking whether the user account exists.
+        await auditWriter.WriteAsync(AuditEntry.Create(
+            occurredAt: DateTime.UtcNow,
+            category: AuditCategory.Authentication,
+            action: "LoginFailed",
+            success: false,
+            actorIpAddress: ip,
+            actorUserAgent: ua,
+            errorMessage: "Invalid email or password."));
+
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Invalid email or password."));
+    }
 })
 .AllowAnonymous()
 ;
@@ -102,9 +138,25 @@ app.MapPost("/account/register/submit", async (
 .AllowAnonymous()
 ;
 
-app.MapPost("/account/logout", async (SignInManager<WombatIdentityUser> signInManager) =>
+app.MapPost("/account/logout", async (
+    SignInManager<WombatIdentityUser> signInManager,
+    IAuditWriter auditWriter,
+    HttpContext httpContext) =>
 {
+    var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var display = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+
     await signInManager.SignOutAsync();
+
+    await auditWriter.WriteAsync(AuditEntry.Create(
+        occurredAt: DateTime.UtcNow,
+        category: AuditCategory.Authentication,
+        action: "Logout",
+        success: true,
+        actorUserId: userId,
+        actorDisplay: display,
+        actorIpAddress: TruncateLoginIp(httpContext.Connection.RemoteIpAddress)));
+
     return Results.LocalRedirect("/account/login");
 });
 
@@ -170,6 +222,24 @@ static string BuildLoginUrl(string? returnUrl, string error)
 
 static string BuildRegisterUrl(string token, string error)
     => $"/account/register?token={Uri.EscapeDataString(token)}&error={Uri.EscapeDataString(error)}";
+
+static string? TruncateLoginIp(System.Net.IPAddress? address)
+{
+    if (address is null) return null;
+    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+    {
+        var bytes = address.GetAddressBytes();
+        bytes[3] = 0;
+        return new System.Net.IPAddress(bytes).ToString() + "/24";
+    }
+    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+    {
+        var bytes = address.GetAddressBytes();
+        for (int i = 6; i < 16; i++) bytes[i] = 0;
+        return new System.Net.IPAddress(bytes).ToString() + "/48";
+    }
+    return address.ToString();
+}
 
 static string GetLandingPath(string role)
     => string.Equals(role, WombatRoles.Administrator, StringComparison.Ordinal)

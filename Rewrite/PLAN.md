@@ -67,7 +67,7 @@ The plan is structured in two parts: a **core** (T001–T016) that stands the pl
 ### Phase 6 — Cross-cutting operations
 
 - [x] T023 — Portfolio PDF export — **Opus** *(QuestPDF layout + heterogeneous activity aggregation + branding + integrity signatures)*
-- [ ] T025 — Admin audit log (pipeline behaviour) — **Sonnet** *(known MediatR pipeline pattern + append-only table + query UI)*
+- [x] T025 — Admin audit log (pipeline behaviour) — **Sonnet** *(known MediatR pipeline pattern + append-only table + query UI)*
 - [ ] T026 — Data subject rights (POPIA/GDPR self-service) — **Opus** *(regulatory nuance: pseudonymisation, retention exceptions, approval flows)*
 - [ ] T027 — Institutional SSO (OIDC) — **Opus** *(dynamic OIDC with group-to-role mapping across multiple identity providers)*
 

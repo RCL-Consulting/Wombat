@@ -144,6 +144,40 @@ Wrap that in a `deploy.sh` script committed to the repo. That is the whole deplo
 
 Defer the fancy path. Task T015 delivers the simple path only.
 
+## Audit log retention and cold storage
+
+Audit entries are **never deleted** from the system by admins or automated cleanup. The lifecycle is:
+
+| Age | Location | Action |
+|-----|----------|--------|
+| 0–2 years | `AuditEntries` (live table) | Queryable from the admin UI. Append-only; PostgreSQL trigger prevents UPDATE/DELETE. |
+| 2–7 years | `AuditEntryArchives` | Moved by `AuditLogRetentionJob` (daily 03:00 UTC). Not surfaced in the admin UI by default; query directly if needed. |
+| 7+ years | Cold storage (Linode Object Storage) | Exported as gzipped JSONL files and removed from the database. |
+
+### Cold storage export (7-year transition)
+
+When entries in `AuditEntryArchives` reach 7 years old, a cron job (to be configured separately, not part of the application) should:
+
+1. Export rows with `OccurredAt < NOW() - INTERVAL '7 years'` as `audit-YYYY.jsonl.gz`.
+2. Upload to a private Linode Object Storage bucket: `s3://wombat-audit-cold/{year}/`.
+3. DELETE the exported rows from `AuditEntryArchives`.
+
+The export cron is **not** part of the application binary — it is a server-level script (`/usr/local/bin/wombat-audit-cold.sh`) that connects to PostgreSQL directly. This keeps cold storage logic out of the app's attack surface.
+
+### Append-only enforcement
+
+The migration that creates `AuditEntries` also installs a PostgreSQL trigger (`audit_entries_immutable`) that raises an exception on any UPDATE or DELETE. Additionally, revoke mutation privileges from the app user after migration:
+
+```sql
+REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;
+```
+
+Run this once, post-migration. It does not need to be re-applied on upgrades.
+
+### Retention window
+
+The default is 2 years active + 5 years archive = 7 years total. Regulators may require longer retention. If an institution's governing body specifies a different window, adjust the `AuditLogRetentionJob` configuration (the 2-year cutoff is the only parameter). The cold-storage script uses the archive table as its source and can run as often as needed.
+
 ## Backups
 
 - **Database**: nightly `pg_dump` to `/var/backups/wombat/`, then `rsync` off-host (or Linode Object Storage). Retain 14 daily, 4 weekly, 6 monthly.

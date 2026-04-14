@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Audit;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -62,6 +63,8 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<PortfolioExport> PortfolioExports => Set<PortfolioExport>();
     public DbSet<ScheduledJobDefinition> ScheduledJobDefinitions => Set<ScheduledJobDefinition>();
     public DbSet<ScheduledJobRun> ScheduledJobRuns => Set<ScheduledJobRun>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<AuditEntryArchive> AuditEntryArchives => Set<AuditEntryArchive>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

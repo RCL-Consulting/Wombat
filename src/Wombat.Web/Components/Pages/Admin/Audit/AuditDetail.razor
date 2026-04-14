@@ -1,0 +1,116 @@
+@page "/admin/audit/{Id:guid}"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Audit entry</PageTitle>
+
+<PageHeader Title="Audit entry detail" Subtitle="Full audit record for a single action.">
+  <Actions>
+    <a class="btn btn-outline" href="/admin/audit">
+      <Icon Name="arrow-left" />
+      Back to log
+    </a>
+  </Actions>
+</PageHeader>
+
+@if (_entry is null && string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <p class="text-muted">Loading…</p>
+}
+else if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <div class="alert alert-danger">@_errorMessage</div>
+}
+else if (_entry is null)
+{
+  <div class="alert alert-warning">Audit entry not found.</div>
+}
+else
+{
+  <div class="detail-grid">
+    <div class="detail-section">
+      <h3>Event</h3>
+      <dl class="detail-list">
+        <dt>When (UTC)</dt><dd><code>@_entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff")</code></dd>
+        <dt>Category</dt><dd>@_entry.Category</dd>
+        <dt>Action</dt><dd><code>@_entry.Action</code></dd>
+        <dt>Result</dt>
+        <dd>
+          @if (_entry.Success)
+          {
+            <span class="badge badge-success">Success</span>
+          }
+          else
+          {
+            <span class="badge badge-danger">Failed</span>
+            @if (_entry.ErrorMessage is not null)
+            {
+              <div class="text-sm text-muted mt-1">@_entry.ErrorMessage</div>
+            }
+          }
+        </dd>
+      </dl>
+    </div>
+
+    <div class="detail-section">
+      <h3>Actor</h3>
+      <dl class="detail-list">
+        <dt>User ID</dt><dd>@(_entry.ActorUserId ?? "—")</dd>
+        <dt>Display name</dt><dd>@(_entry.ActorDisplay ?? "—")</dd>
+        <dt>IP address</dt><dd>@(_entry.ActorIpAddress ?? "—")</dd>
+      </dl>
+    </div>
+
+    @if (_entry.SubjectType is not null)
+    {
+      <div class="detail-section">
+        <h3>Subject</h3>
+        <dl class="detail-list">
+          <dt>Type</dt><dd>@_entry.SubjectType</dd>
+          <dt>ID</dt><dd>@(_entry.SubjectId?.ToString() ?? "—")</dd>
+          @if (_entry.InstitutionId is not null)
+          {
+            <dt>Institution ID</dt><dd>@_entry.InstitutionId</dd>
+          }
+          @if (_entry.SpecialityId is not null)
+          {
+            <dt>Speciality ID</dt><dd>@_entry.SpecialityId</dd>
+          }
+        </dl>
+      </div>
+    }
+  </div>
+
+  @if (_isAdmin)
+  {
+    <div class="detail-section mt-4">
+      <h3>Payload (raw JSON)</h3>
+      <pre class="code-block">@_entry.SummaryJson</pre>
+    </div>
+  }
+}
+
+@code {
+  [Parameter]
+  public Guid Id { get; set; }
+
+  private AuditEntryDto? _entry;
+  private string? _errorMessage;
+  private bool _isAdmin;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdmin = authState.User.IsInRole(Wombat.Domain.Identity.WombatRoles.Administrator);
+
+    try
+    {
+      _entry = await Sender.Send(new Wombat.Application.Features.Audit.Queries.GetAuditEntryById.GetAuditEntryByIdQuery(Id));
+    }
+    catch (Exception ex)
+    {
+      _errorMessage = ex.Message;
+    }
+  }
+}
