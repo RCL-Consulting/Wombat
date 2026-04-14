@@ -5,8 +5,12 @@ using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Domain.Activities;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Activities.Commands.DiscardActivityTypeDraft;
 
+/// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
+[NoValidator]
 public sealed record DiscardActivityTypeDraftCommand(int ActivityTypeId) : IRequest<ActivityTypeEditorDto>;
 
 public sealed class DiscardActivityTypeDraftCommandHandler : IRequestHandler<DiscardActivityTypeDraftCommand, ActivityTypeEditorDto>

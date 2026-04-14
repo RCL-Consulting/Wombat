@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Epas;
 
+/// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
+[NoValidator]
 public sealed record DeactivateEpaCommand(int Id) : IRequest;
 public sealed record ListEpasForSubSpecialityQuery(int? SubSpecialityId = null) : IRequest<IReadOnlyList<EpaDto>>;
 public sealed record GetEpaByIdQuery(int Id) : IRequest<EpaDto?>;

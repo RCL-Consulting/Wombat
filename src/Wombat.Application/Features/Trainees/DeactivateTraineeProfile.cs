@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Trainees;
 
+/// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
+[NoValidator]
 public sealed record DeactivateTraineeProfileCommand(int Id) : IRequest;
 
 public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<DeactivateTraineeProfileCommand>

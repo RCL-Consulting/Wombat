@@ -6,8 +6,12 @@ using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.Curricula;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 
+/// <summary>No validator: carries no parameters — there is nothing to validate.</summary>
+[NoValidator]
 public sealed record RebuildCurriculumProgressCommand() : IRequest<int>;
 
 public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<RebuildCurriculumProgressCommand, int>

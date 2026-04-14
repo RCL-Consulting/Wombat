@@ -7,8 +7,12 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.MultiSourceFeedback;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
+/// <summary>No validator: carries a single non-nullable int ID; handler validates campaign state transitions.</summary>
+[NoValidator]
 public sealed record OpenMsfCampaignCommand(int CampaignId) : IRequest;
 
 public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampaignCommand>

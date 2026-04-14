@@ -4,59 +4,36 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T013 — Architecture tests** (next task on the critical path after T027) — **Model: Sonnet**
+**T014 — Seeding & first-run bootstrap** (next on the critical path after T013) — **Model: Sonnet**
 
-T027 is now implemented. Next session: start `Tasks/T013-architecture-tests.md`.
+T013 is complete. Next session: start `Tasks/T014-seeding-bootstrap.md`.
 
 ## Critical-path reminder (post-pivot)
 
 The plan has been restructured around a **schema-driven Activity platform** so institutions can add new activity types without code. The old per-type tasks (T007 Assessment, T008 Workflow, T009 STAR) are **superseded** — read their banners. The new critical path after the core domain is:
 
-> T001 → T002 → T003 → T004 → T005 → T006 → **T017 → T018 → T019 → T020** → T021 → T022 → T010 → ~~T011~~ → ~~T012~~ → ~~T023~~ → ~~T024~~ → ~~T025~~ → ~~T026~~ → ~~T027~~ → T013 → T014 → T015 → T016
+> T001 → T002 → T003 → T004 → T005 → T006 → **T017 → T018 → T019 → T020** → T021 → T022 → T010 → ~~T011~~ → ~~T012~~ → ~~T023~~ → ~~T024~~ → ~~T025~~ → ~~T026~~ → ~~T027~~ → ~~T013~~ → T014 → T015 → T016
 
 See `PLAN.md` for the full phase/dependency graph and `CUSTOMIZATION.md` for the no-code model.
 
 ## Last session notes
 
-T027 completed:
-- Domain layer:
-  - `SsoGroupRoleMapping` entity (ProviderKey, ExternalGroupId, ExternalGroupDisplayName, WombatRole, InstitutionId, SpecialityId?, SubSpecialityId?)
-  - `UserRoleAssignment` entity (tracks SSO vs manual role assignment source per user+role)
-  - `RoleAssignmentSource` enum (Manual, Sso)
-- Application layer:
-  - `SsoOptions` + `SsoProviderOptions` config model (Sso:Providers section in appsettings)
-  - `CreateSsoGroupMappingCommand` (blocks Administrator role mapping)
-  - `DeleteSsoGroupMappingCommand`
-  - `ListSsoGroupMappingsQuery` (filterable by provider, joins institution/speciality names)
-  - `SsoGroupMappingDto`
-- Infrastructure:
-  - `SsoGroupMapper` — syncs Wombat roles from IdP group claims on each SSO login. Adds roles for matching groups, removes SSO-assigned roles that no longer match, never touches manually-assigned roles. Enforces Administrator guard (logs warning, skips). Also syncs speciality/sub-speciality scopes from matched mappings.
-  - `ExternalLoginHandler` — full OIDC callback handler: lookup by external login → lookup by email (offer linking) → provision new user. Provisions SSO users with AllowLocalPassword=false, EmailConfirmed=true, InstitutionId from provider config. Falls back to PendingTrainee if no group mappings match. Audit entries for SsoLogin, SsoFirstLogin, SsoAccountLinked.
-  - `LinkAndSignInAsync` — account linking flow where user confirms ownership via local password
-  - EF configurations for SsoGroupRoleMapping and UserRoleAssignment
-  - Migration `20260414140355_Sso` (SsoGroupRoleMappings table, UserRoleAssignments table, AllowLocalPassword column on AspNetUsers with backfill to true for existing users)
-  - DbSets added to ApplicationDbContext
-  - All services registered in Infrastructure DI
-  - ErasureExecutor updated to remove UserRoleAssignment records during erasure
-- Web (Blazor):
-  - `Program.cs`: config-driven OIDC provider registration loop (AddOpenIdConnect per provider), SSO challenge endpoint (`GET /account/sso-challenge/{providerKey}`), SSO callback endpoint (`GET /account/sso-callback`), account linking endpoint (`POST /account/link-external/submit`), AllowLocalPassword enforcement on local login
-  - `Login.razor`: SSO provider buttons with "or" divider when providers are configured
-  - `LinkExternalLogin.razor` at `/account/link-external` — "is this you?" page for linking existing account to SSO
-  - `Admin/Sso/GroupMappings.razor` at `/admin/sso/group-mappings` — CRUD for group-to-role mappings with institution/speciality/sub-speciality scope
-  - NavMenu: "SSO Mappings" link for Administrator
-  - `app.css`: SSO divider and button styles
-- Tests: 11 new tests (122 total Application, was 111)
-  - 7 `SsoGroupMapperTests` (matching group assigns role, overlapping groups assign multiple, no matching groups, Administrator mapping skipped, removed from group removes SSO role, manually-assigned role preserved, different provider doesn't interfere)
-  - 4 `SsoGroupMappingCommandTests` (create valid, create Administrator throws, delete existing, delete non-existent throws)
-- NuGet: `Microsoft.AspNetCore.Authentication.OpenIdConnect 10.0.3` added to Web project
+T013 completed:
+- New attribute: `Wombat.Application.Common.NoValidatorAttribute` — opt-out marker for commands that genuinely need no validator
+- 19 commands decorated with `[NoValidator]` (each with an XML comment explaining why):
+  - ID-only / no-param commands: CloseMsfCampaignCommand, DeleteSsoGroupMappingCommand, DeactivateInstitutionCommand, DeactivateSpecialityCommand, DeactivateSubSpecialityCommand, DeactivateTraineeProfileCommand, DeactivateEpaCommand, DeactivateAssessmentFormCommand, DiscardActivityTypeDraftCommand, OpenMsfCampaignCommand, RebuildCurriculumProgressCommand, RevokeInvitationCommand, WithdrawMsfCampaignCommand
+  - String-key commands (validated by job registry / caller identity): DisableScheduledJobCommand, EnableScheduledJobCommand, RunScheduledJobNowCommand
+  - Domain-validated commands: PublishActivityTypeDraftCommand (ActorUserId from Identity), SaveActivityTypeDraftCommand (domain parsers throw on malformed JSON), CreateSsoGroupMappingCommand (Administrator guard in handler)
+- Architecture.Tests.csproj: added `MediatR` package reference
+- 5 test files added under `tests/Wombat.Architecture.Tests/`:
+  - `LayerTests.cs` — 9 tests: Domain→{EF,MediatR,AspNetCore}, Application→{Infrastructure,AspNetCore}, handler DbContext guard, Infrastructure→{Api,Web}, Web.Components→EF, Api→Domain
+  - `NamingTests.cs` — 4 tests: Commands_should_end_with_Command, Queries_should_end_with_Query, CommandHandlers_should_end_with_Handler, Every_command_should_have_a_validator_or_be_opted_out
+  - `DomainInvariantTests.cs` — 1 test: All_concrete_domain_classes_should_be_sealed; No_public_setters test deferred (EF-friendly public setters are intentional — ~380 properties, tracked as future work)
+  - `RegistrationTests.cs` — 2 tests: All_Application_handlers_are_registered_by_MediatR, All_Application_handlers_are_public_concrete_and_non_generic
+  - `ModelConfigurationTests.cs` — 2 tests: All_entity_configurations_are_EF_discoverable, Every_Domain_entity_with_a_DbSet_has_a_configuration (Identity-owned types excluded — configured inline in OnModelCreating)
 - Verification:
   - `dotnet build Wombat.sln -c Release` — clean (0 warnings, 0 errors)
-  - `dotnet test Application.Tests` — 122 passed (was 111)
+  - `dotnet test Architecture.Tests` — 19 passed
+  - `dotnet test Application.Tests` — 122 passed (no regressions)
   - `dotnet test Web.Tests` — 33 passed
   - `dotnet test Domain.Tests` — 17 passed
-- Verification caveats:
-  - No real OIDC IdP tested — requires a stub OpenIddict server or a test Azure AD tenant
-  - Login page SSO buttons not tested against running app
-  - Admin group mappings page not tested against running app
-  - Account linking flow not end-to-end tested
-  - Federated logout not yet wired (RP-initiated OIDC logout is per-provider opt-in, documented but not connected)

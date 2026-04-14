@@ -5,8 +5,16 @@ using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Domain.Activities;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
 
+/// <summary>
+/// No validator: the domain-layer parsers (FormSchemaParser, WorkflowParser, CreditRulesParser)
+/// validate the JSON content and throw on malformed input. The Blazor form pre-validates before
+/// dispatch. A separate FluentValidation validator would duplicate those checks without adding value.
+/// </summary>
+[NoValidator]
 public sealed record SaveActivityTypeDraftCommand(
     int? ActivityTypeId,
     string Key,

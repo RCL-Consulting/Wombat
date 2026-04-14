@@ -1,11 +1,14 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Forms;
 
 namespace Wombat.Application.Features.Forms;
 
+/// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
+[NoValidator]
 public sealed record DeactivateAssessmentFormCommand(int Id) : IRequest;
 public sealed record AddFormCriterionCommand(int FormId, string Prompt, string? HelpText, bool IsRequired) : IRequest<AssessmentFormDto>;
 public sealed record RemoveFormCriterionCommand(int FormId, int CriterionId) : IRequest<AssessmentFormDto>;

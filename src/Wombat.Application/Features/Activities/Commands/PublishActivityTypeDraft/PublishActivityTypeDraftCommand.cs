@@ -5,8 +5,15 @@ using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Domain.Activities;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft;
 
+/// <summary>
+/// No validator: ActivityTypeId is a non-nullable int (structural guarantee); ActorUserId is
+/// the authenticated user's ID set by the caller — validated by Identity middleware, not here.
+/// </summary>
+[NoValidator]
 public sealed record PublishActivityTypeDraftCommand(
     int ActivityTypeId,
     string ActorUserId) : IRequest<ActivityTypeEditorDto>;

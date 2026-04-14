@@ -2,8 +2,15 @@ using MediatR;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
+using Wombat.Application.Common;
+
 namespace Wombat.Application.Features.Sso;
 
+/// <summary>
+/// No validator: the handler enforces the Administrator-role guard (the only non-trivial
+/// business constraint). All string parameters are required by the Blazor form before dispatch.
+/// </summary>
+[NoValidator]
 public sealed record CreateSsoGroupMappingCommand(
     string ProviderKey,
     string ExternalGroupId,
