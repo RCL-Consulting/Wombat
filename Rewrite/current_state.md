@@ -43,6 +43,10 @@ The core artefact of Block 1: a per-trainee-per-EPA summative entrustment decisi
 - `EPA Book/critique.md` — literature-backed reasoning for practical-plan compromises
 - `Rewrite/book-fidelity-plan.md` — superseded; kept only because `critique.md` cites it
 
-## Last verified commit
+## Last verified commits
 
-T016 commit — 864ad3b.
+- `dc506d1` — T028 (rename `star_reflection` → `reflective_note`)
+- `bf583ee` — MailKit 4.16.0 security bump (closes GHSA-9j88-vvj5-vhgr)
+- `864ad3b` — T016 (rewrite-complete baseline)
+
+Build + tests green at `dc506d1`: 194 tests across Domain, Application, Architecture, Web, and Infrastructure. Integration tests require Docker; skipped in Windows-dev environment per CLAUDE.md.

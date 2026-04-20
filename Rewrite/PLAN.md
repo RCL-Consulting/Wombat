@@ -116,3 +116,7 @@ This plan replaces an earlier draft in which T007–T009 built concrete typed ag
 - Reference ClinicAssist freely for architecture questions, but understand the activity platform is a deliberate departure that ClinicAssist does not have. Do not copy ClinicAssist on anything that touches the activity model — that's where Wombat diverges.
 - Platform stays generic. Resist the urge to add a typed aggregate for "that one annoying case". The annoying case is almost always another schema.
 - Hardcoded exceptions (MSF, committee decisions, audit, data rights, SSO) stay in their own folders and do not leak into the activity platform. The line between platform and hardcoded is explicit and documented in `CUSTOMIZATION.md`.
+
+## Status: complete
+
+T001–T027 landed (last verified at T016 commit `864ad3b`). Post-rewrite work continues under `Rewrite/practical-plan.md` — four blocks of pragmatic enhancements (T028–T036) oriented around a hospital's training-programme operations, not academic fidelity. The academic alternative that was drafted and then superseded is `Rewrite/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it.

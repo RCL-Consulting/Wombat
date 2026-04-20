@@ -216,12 +216,22 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 
 ---
 
+## Progress
+
+| Task | Status | Commit |
+|---|---|---|
+| T028 — rename `star_reflection` → `reflective_note` | ✅ done | `dc506d1` |
+| T029 — `EntrustmentDecision` aggregate | active | — |
+| T030 — STAR certificate PDF + trainee authorisations panel | pending | — |
+| T031 — Formative-only committee review mode | pending | — |
+| T032 — Sampling-concentration warning | pending | — |
+| T033 — Per-trainee trajectory chart | pending | — |
+| T034 — EPA core/elective + stage-indexed supervision levels | pending | — |
+| T035 — Assessor training status field | pending | — |
+| T036 — Accreditor-specific export template | pending | — |
+
 ## Active task
 
-None of these are active yet. The plan is ready for review. When approved:
-
-1. Start Block 1 with T028 — `star_reflection` rename
-2. Write `Rewrite/Tasks/T028-rename-star-reflection.md` first, then T029, then T030
-3. Update `current_state.md` to point at T028 when it starts
+**T029 — `EntrustmentDecision` aggregate.** Model: Opus. Live state in `Rewrite/current_state.md`.
 
 Commit after every completed task, per `Rewrite/WORKFLOW.md`.
