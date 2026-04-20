@@ -122,7 +122,7 @@ The post-evaluation pivot introduces a generic `Activity` aggregate that replace
 - `ActivityTransition` — audit row per state change; holds a snapshot of `Data` at the moment of transition.
 - `ActivityPermissionRule` — who can fire which transition on which activity type.
 
-The concrete "Assessment" aggregate described earlier in this document is replaced by activity types `mini_cex`, `dops`, `cbd`, `acat` seeded in T020. The "StarReflection" aggregate is replaced by the activity type `star_reflection`. The domain method `Assessment.Complete(...)` becomes a transition named `complete` in the activity type's workflow JSON, executed by the generic `TransitionActivityCommand` handler.
+The concrete "Assessment" aggregate described earlier in this document is replaced by activity types `mini_cex`, `dops`, `cbd`, `acat` seeded in T020. The "StarReflection" aggregate is replaced by the activity type `reflective_note` (renamed from `star_reflection` in T028 to free the STAR acronym for the formal entrustment artefact). The domain method `Assessment.Complete(...)` becomes a transition named `complete` in the activity type's workflow JSON, executed by the generic `TransitionActivityCommand` handler.
 
 What is **not** replaced: identity, roles, scope claims, institution hierarchy, curriculum structure, invitation flow, profile data. Those remain concrete aggregates. Also not replaced: MSF (anonymity requirement), committee decisions (legal weight), audit log (append-only requirement). See the "What stays in code" section of `CUSTOMIZATION.md`.
 

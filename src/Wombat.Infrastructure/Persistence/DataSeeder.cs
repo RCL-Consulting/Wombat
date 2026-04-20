@@ -17,7 +17,7 @@ public sealed class DataSeeder
         new("dops", "DOPS", "Direct observation of procedural skills.", ActivityScope.Speciality),
         new("cbd", "Case-based Discussion", "Structured case-based discussion.", ActivityScope.Speciality),
         new("acat", "ACAT", "Acute care assessment tool.", ActivityScope.Speciality),
-        new("star_reflection", "STAR Reflection", "Situation-task-action-result reflection.", ActivityScope.Speciality),
+        new("reflective_note", "Reflective Note", "Structured reflective note using the situation-task-action-result frame.", ActivityScope.Speciality),
         new("procedure_log", "Procedure Log", "Self-logged procedural experience.", ActivityScope.Speciality),
         new("research_output", "Research Output", "Publication, poster, or presentation evidence.", ActivityScope.Speciality),
         new("teaching_session", "Teaching Session", "Teaching activity delivered by the trainee.", ActivityScope.Speciality),

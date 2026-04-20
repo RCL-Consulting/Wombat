@@ -25,7 +25,7 @@ Four entities replace most of the per-feature aggregates:
 Admin-defined catalogue entry.
 
 - `Id`
-- `Key` — stable short code (`mini_cex`, `dops`, `star_reflection`, `research_output`). Immutable once used.
+- `Key` — stable short code (`mini_cex`, `dops`, `reflective_note`, `research_output`). Immutable once used.
 - `Name`, `Description`
 - `Scope` — global / institution / speciality / sub-speciality. Determines who sees it in their pickers.
 - `FormSchema` — jsonb. The form definition (see below).

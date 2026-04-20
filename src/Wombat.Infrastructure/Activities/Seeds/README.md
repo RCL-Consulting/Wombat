@@ -12,7 +12,7 @@ Seeded types:
 - `dops`: Generic direct observation of procedural skills. Uses the seeded `procedure_catalogue` for the procedure picker and also captures an EPA for current curriculum crediting.
 - `cbd`: Generic case-based discussion mapped to an EPA and scored on the seeded `or_scale`.
 - `acat`: Generic acute-care assessment mapped to an EPA and scored on the seeded `or_scale`.
-- `star_reflection`: Situation-task-action-result reflection with speciality-admin approval and no direct credit.
+- `reflective_note`: Structured reflective note using the situation-task-action-result frame, with speciality-admin approval and no direct credit. (The STAR acronym is reserved for the formal Statement of Awarded Responsibility artefact — see the `EntrustmentDecision` aggregate.)
 - `procedure_log`: Self-logged procedure record using the seeded `procedure_catalogue`.
 - `research_output`: Publication/poster/presentation capture with speciality-admin verification.
 - `teaching_session`: Teaching log with basic acceptance workflow.
