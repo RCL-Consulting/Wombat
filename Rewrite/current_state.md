@@ -63,7 +63,7 @@ Second Block 1 task. Produce a QuestPDF certificate for any `Active` entrustment
 
 ## Last verified commits
 
-- T029 commit — pending (this session will produce it)
+- `91ff841` — T029 (EntrustmentDecision aggregate / STAR)
 - `dc506d1` — T028 (rename `star_reflection` → `reflective_note`)
 - `bf583ee` — MailKit 4.16.0 security bump (closes GHSA-9j88-vvj5-vhgr)
 - `864ad3b` — T016 (rewrite-complete baseline)
