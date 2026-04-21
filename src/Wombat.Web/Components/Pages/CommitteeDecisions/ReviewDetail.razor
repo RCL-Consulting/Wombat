@@ -17,6 +17,43 @@
   <Alert Kind="danger">@_error</Alert>
 }
 
+@if (_samplingReport is { AnyWarning: true })
+{
+  <Alert Kind="warning" Dismissible="true">
+    <div>
+      <h3>Sampling concentration warnings</h3>
+      <p class="muted">
+        @_samplingReport.TotalRatedActivities rated observation@(_samplingReport.TotalRatedActivities == 1 ? string.Empty : "s")
+        from @_samplingReport.DistinctAssessorCount distinct assessor@(_samplingReport.DistinctAssessorCount == 1 ? string.Empty : "s")
+        in the review window. Acknowledge in the decision rationale if these warnings are relevant.
+      </p>
+      <ul class="plain-list">
+        @foreach (var epa in _samplingReport.PerEpa)
+        {
+          <li>
+            <strong>@epa.EpaCode — @epa.EpaTitle</strong>
+            <span>@epa.RatingCount rating@(epa.RatingCount == 1 ? string.Empty : "s") · @epa.DistinctAssessorCount assessor@(epa.DistinctAssessorCount == 1 ? string.Empty : "s") · @epa.DistinctSourceCount source@(epa.DistinctSourceCount == 1 ? string.Empty : "s")</span>
+            <ul class="plain-list">
+              @if (epa.OneAssessorOverHalf)
+              {
+                <li>One assessor contributed @epa.DominantAssessorCount of @epa.RatingCount ratings (&gt; 50%).</li>
+              }
+              @if (epa.SingleSource)
+              {
+                <li>All ratings came from a single source of evidence.</li>
+              }
+              @if (epa.FewerThanThreeAssessors)
+              {
+                <li>Fewer than three distinct assessors across this EPA's evidence.</li>
+              }
+            </ul>
+          </li>
+        }
+      </ul>
+    </div>
+  </Alert>
+}
+
 @if (_review is not null)
 {
   <div class="details-grid">
@@ -252,6 +289,7 @@
   private IReadOnlyList<PendingEntrustmentDecisionDto> _pendingDecisions = Array.Empty<PendingEntrustmentDecisionDto>();
   private IReadOnlyList<EpaDto> _epas = Array.Empty<EpaDto>();
   private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
+  private SamplingConcentrationReportDto? _samplingReport;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -265,6 +303,7 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId));
       if (_epas.Count == 0)
       {
         _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());

@@ -4,55 +4,53 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T032 — Sampling-concentration warning on review detail.** Model: Sonnet.
+**Block 2 complete.** Next up: **T033 — Per-trainee per-EPA trajectory chart** (Block 3, first task). Model: Sonnet.
 
-Second Block 2 task. A single query executed from `ReviewDetail.razor` that reports on the evidence distribution for the trainee under review: one-assessor-over-50%, single-source-only, fewer-than-three-distinct-assessors. Rendered as a dismissible warning panel. No new aggregate, no projection table. See scope in `Rewrite/practical-plan.md` §T032. 1–2 days.
+Server-side SVG trajectory line chart (one dot per observation, rating on Y, date on X), rendered on the trainee EPA detail view and `ReviewDetail.razor`. No JS dep, no cohort comparison. Scope in `Rewrite/practical-plan.md` §T033. 2 days.
 
 ## This session at a glance
 
-Block 1 closed and Block 2 half done. Three tasks shipped back-to-back on `master`:
+Block 2 closed. T032 shipped on `master`:
 
-- **T029 — `EntrustmentDecision` aggregate (STAR)** — `91ff841`
-- **T030 — STAR certificate PDF + authorisations UI** — `10f7e55`
-- **T031 — formative-only committee review mode** — `ac4fdb9`
+- **T032 — Sampling-concentration warning on review detail** — (commit hash pending)
 
-Hospital now has an end-to-end defensible entrustment record: committees ratify, decisions issue atomically, trainees download QuestPDF certificates, admins revoke with audit, and interim formative check-ins run without producing binding paperwork.
+Hospital now has: defensible entrustment records end-to-end (Block 1), plus formative review mode (T031) and per-EPA sampling warnings that surface assessor concentration, single-source bias, and thin assessor pools before the committee records a decision.
 
 ## Last completed
 
-**T031 — Formative-only committee review mode.**
+**T032 — Sampling-concentration warning on review detail.**
 
-- `CommitteeReview.IsFormative` bool + `Close(actor, utcNow)` domain method. Formative reviews transition `Scheduled` → `InProgress` → `Final` via `Close`; they cannot `RecordDecision` or `Ratify` (both throw).
-- Migration `20260421152754_FormativeCommitteeReviews` adds the boolean column (default false).
-- `ScheduleCommitteeReviewCommand` gained an `IsFormative` parameter (default false, non-breaking); new `CloseFormativeReviewCommand` uses `DemandChairAccess`.
-- `StagePendingEntrustmentDecisionCommand` now rejects formative reviews up front — entrustment decisions cannot be issued against interim check-ins.
-- Review detail DTOs propagate `IsFormative` through all list queries (panel, trainee, chair).
-- UI: `ReviewsSchedule.razor` has a "Formative only" checkbox and the listing shows a Mode column. `ReviewDetail.razor` hides the decision-recording, pending-entrustment, and appeals sections for formative reviews and replaces Ratify with a "Close review" button that fires from `InProgress`.
-- 5 new Domain tests (Close happy path, RecordDecision/Ratify throw, summative cannot Close, cannot Close from Scheduled) + 5 new Application handler tests (schedule persists flag, close from InProgress, non-chair rejected, record decision blocked, staging pending blocked).
+- New MediatR query `GetSamplingConcentrationWarningsQuery(ReviewId)` in `Wombat.Application.Features.CommitteeDecisions`. Returns a `SamplingConcentrationReportDto` with per-EPA flags (`OneAssessorOverHalf`, `SingleSource`, `FewerThanThreeAssessors`) plus review-level totals. Handler parses `DataJson` client-side after pulling activities by trainee+period, so it works under both PostgreSQL and the in-memory provider used in tests.
+- Source classification maps the four rated seed keys to the book's four-sources taxonomy: `mini_cex`/`dops` → DirectObservation, `cbd`/`acat` → Conversation. Only those four keys are treated as "rated" (they carry `epa_id` + `assessor_user_id` in their schema). Product/longitudinal seeds are ignored for this check.
+- `ReviewDetail.razor` loads the report alongside the review and renders a dismissible `<Alert Kind="warning">` above the details grid when any EPA has a warning flag. Reuses the existing `Alert.Dismissible` affordance — no new CSS, no new component.
+- 7 Application tests: all-clear path, no-data path, each of the three flags in isolation, period-window filter, unrated-activity-type exclusion.
+- No new aggregate, no projection table, no migration. Single query, single component — matches the §T032 scope verbatim.
 
 ## Plan this session works against
 
-`Rewrite/practical-plan.md` — the pragmatic post-rewrite plan. Four blocks, nine tasks (T028–T036). Block 1 done. Block 2 has two tasks: T031 done, T032 remaining.
+`Rewrite/practical-plan.md` — Block 2 complete; Block 3 (T033, T034) is next.
 
-## Block 2 sequence
+## Block 3 sequence
 
-1. ✅ T031 — formative-only committee review mode
-2. T032 — sampling-concentration warning on review detail (active)
+1. T033 — per-trainee per-EPA trajectory chart (active)
+2. T034 — EPA core/elective + stage-indexed supervision levels
 
 ## Test status at handoff
 
 - `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
-- Domain tests — 38/38 pass (5 new for formative)
-- Application tests — 139/139 pass (5 new for formative)
+- Domain tests — 38/38 pass
+- Application tests — 146/146 pass (7 new for sampling concentration)
 - Architecture tests — 19/19 pass
 - Web tests — 33/33 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
 
-## Known T031 compromises
+## Known T032 compromises
 
-- **`Close` reuses `CommitteeReviewState.Final`** rather than adding a `Closed` state. The state enum was not expanded; `IsFormative` tells you whether `Final` was reached via ratification or via a formative close. Adding a `Closed` state later is additive and non-breaking.
-- **Domain changes reverted by a Razor-format linter during editing.** `ReviewDetail.razor` was rewritten in full rather than edited incrementally because sequential `Edit` calls kept hitting "file modified since read" failures from a format pass after each edit. Future Razor edits should consider a single Write or pre-read immediately before each Edit.
+- **MSF is not included in per-EPA sampling stats.** MSF is a cross-cutting longitudinal-observation instrument and is not currently linked to a specific EPA. A committee reading the warnings gets the assessor/source breakdown from direct-observation and conversation instruments only. If MSF respondents should count toward distinct-assessor/source counts for each EPA later, the query can be extended without changing the DTO shape.
+- **Single-source warning can only trigger for DirectObservation-only or Conversation-only evidence.** With only four rated seed types across two sources, flagging "all ratings from one source" captures the realistic book-sense warning. Once more source-diverse seeds arrive (product-eval instruments with assessor + epa), the `SourceByActivityKey` map in `GetSamplingConcentrationWarnings.cs` is the single point to extend.
+- **One-assessor-over-half is suppressed for single-rating EPAs.** A one-rating EPA is always "100% from one assessor" — that information is redundant with the fewer-than-three-assessors warning, so the flag requires ≥2 ratings to fire.
+- **Dismiss state is session-local.** The `Alert` component's built-in dismiss sets a component-level bool; no server persistence. Re-opening the review re-shows the warning. Intentional: committees should see it on every visit.
 
 ## What remains (operational, not code — carried forward from T016)
 
