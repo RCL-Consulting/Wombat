@@ -1,0 +1,68 @@
+@page "/portfolio/progress"
+@attribute [Authorize(Roles = "Trainee")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My progress</PageTitle>
+
+<PageHeader Title="My progress" Subtitle="Rating trajectory for each EPA you have evidence against." />
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (_trajectories is null)
+{
+  <p class="muted">Loading trajectories…</p>
+}
+else if (_trajectories.Count == 0)
+{
+  <section class="detail-card">
+    <p>No rated observations on file yet.</p>
+    <p class="muted">Mini-CEX, DOPS, CbD, and ACAT assessments will appear here as your supervisors complete them.</p>
+  </section>
+}
+else
+{
+  <div class="details-grid">
+    @foreach (var trajectory in _trajectories)
+    {
+      <section class="detail-card">
+        <h3>@trajectory.EpaCode — @trajectory.EpaTitle</h3>
+        <p class="muted">
+          @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
+          from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").
+        </p>
+        <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+                         AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
+      </section>
+    }
+  </div>
+}
+
+@code {
+  private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
+  private string? _error;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("Current user identifier missing.");
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
+    => trajectory.Points
+      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source))
+      .ToArray();
+}

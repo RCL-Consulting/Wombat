@@ -1,0 +1,122 @@
+@using System.Globalization
+
+@if (Points.Count == 0)
+{
+  <p class="muted">No observations to plot.</p>
+}
+else
+{
+  <svg class="trajectory-chart"
+       viewBox="0 0 @Width @Height"
+       role="img"
+       aria-label="@AriaLabel"
+       preserveAspectRatio="xMidYMid meet">
+    <g class="trajectory-chart-grid">
+      @for (var yValue = MinRating; yValue <= MaxRating; yValue++)
+      {
+        var y = YScale(yValue);
+        <line x1="@Fmt(PlotLeftPx)" y1="@Fmt(y)"
+              x2="@Fmt(Width - RightMargin)" y2="@Fmt(y)" />
+        @RenderYAxisLabel(y, yValue)
+      }
+    </g>
+
+    <line class="trajectory-chart-axis"
+          x1="@Fmt(PlotLeftPx)" y1="@Fmt(PlotTopPx)"
+          x2="@Fmt(PlotLeftPx)" y2="@Fmt(PlotBottomPx)" />
+    <line class="trajectory-chart-axis"
+          x1="@Fmt(PlotLeftPx)" y1="@Fmt(PlotBottomPx)"
+          x2="@Fmt(Width - RightMargin)" y2="@Fmt(PlotBottomPx)" />
+
+    @if (Points.Count > 1)
+    {
+      <polyline class="trajectory-chart-line"
+                points="@BuildPolylinePoints()" />
+    }
+
+    @foreach (var point in Points)
+    {
+      var cx = XScale(point.Date);
+      var cy = YScale(point.Rating);
+      <circle class="trajectory-chart-dot"
+              cx="@Fmt(cx)"
+              cy="@Fmt(cy)"
+              r="4">
+        <title>@point.Date.ToString("yyyy-MM-dd") · Rating @point.Rating@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")</title>
+      </circle>
+    }
+
+    @RenderXAxisLabel(PlotLeftPx, EarliestDate.ToString("yyyy-MM-dd"), "start")
+    @RenderXAxisLabel(Width - RightMargin, LatestDate.ToString("yyyy-MM-dd"), "end")
+  </svg>
+}
+
+@code {
+  [Parameter, EditorRequired] public IReadOnlyList<ChartPoint> Points { get; set; } = Array.Empty<ChartPoint>();
+  [Parameter] public string AriaLabel { get; set; } = "Rating trajectory";
+  [Parameter] public int Width { get; set; } = 600;
+  [Parameter] public int Height { get; set; } = 200;
+  [Parameter] public int MinRating { get; set; } = 1;
+  [Parameter] public int MaxRating { get; set; } = 5;
+
+  private const int LeftMargin = 40;
+  private const int RightMargin = 12;
+  private const int TopMargin = 12;
+  private const int BottomMargin = 28;
+
+  private double PlotLeftPx => LeftMargin;
+  private double PlotTopPx => TopMargin;
+  private double PlotBottomPx => Height - BottomMargin;
+
+  private DateOnly EarliestDate => Points.Min(point => point.Date);
+  private DateOnly LatestDate => Points.Max(point => point.Date);
+
+  private double XScale(DateOnly date)
+  {
+    var plotWidth = Width - LeftMargin - RightMargin;
+    var totalDays = LatestDate.DayNumber - EarliestDate.DayNumber;
+    if (totalDays <= 0)
+    {
+      return LeftMargin + plotWidth / 2.0;
+    }
+
+    var offsetDays = date.DayNumber - EarliestDate.DayNumber;
+    return LeftMargin + plotWidth * ((double)offsetDays / totalDays);
+  }
+
+  private double YScale(double rating)
+  {
+    var plotHeight = PlotBottomPx - PlotTopPx;
+    var range = MaxRating - MinRating;
+    if (range <= 0)
+    {
+      return PlotTopPx + plotHeight / 2.0;
+    }
+
+    var normalized = (rating - MinRating) / range;
+    return PlotBottomPx - plotHeight * normalized;
+  }
+
+  private string BuildPolylinePoints()
+  {
+    var ordered = Points
+      .OrderBy(point => point.Date)
+      .ThenBy(point => point.Sequence)
+      .ToArray();
+    return string.Join(" ", ordered.Select(point =>
+      FormattableString.Invariant($"{XScale(point.Date):0.##},{YScale(point.Rating):0.##}")));
+  }
+
+  private static string Fmt(double value)
+    => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+  private MarkupString RenderYAxisLabel(double y, int value)
+    => new(FormattableString.Invariant(
+      $"<text class=\"trajectory-chart-y-label\" x=\"{PlotLeftPx - 6:0.##}\" y=\"{y + 4:0.##}\" text-anchor=\"end\">{value}</text>"));
+
+  private MarkupString RenderXAxisLabel(double x, string content, string anchor)
+    => new(FormattableString.Invariant(
+      $"<text class=\"trajectory-chart-x-label\" x=\"{x:0.##}\" y=\"{PlotBottomPx + 18:0.##}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>"));
+
+  public sealed record ChartPoint(DateOnly Date, int Rating, int Sequence = 0, string? Label = null);
+}

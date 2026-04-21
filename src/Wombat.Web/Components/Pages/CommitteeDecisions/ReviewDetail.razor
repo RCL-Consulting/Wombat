@@ -224,6 +224,28 @@
       }
     </section>
 
+    <section class="detail-card">
+      <h3>Rating trajectory by EPA</h3>
+      @if (_trajectories.Count == 0)
+      {
+        <p class="muted">No rated observations on file for this trainee.</p>
+      }
+      else
+      {
+        <div class="stack-list">
+          @foreach (var trajectory in _trajectories)
+          {
+            <article class="stack-card">
+              <h4>@trajectory.EpaCode — @trajectory.EpaTitle</h4>
+              <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
+              <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+                               AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
+            </article>
+          }
+        </div>
+      }
+    </section>
+
     @if (!_review.IsFormative)
     {
       <section class="detail-card">
@@ -290,6 +312,7 @@
   private IReadOnlyList<EpaDto> _epas = Array.Empty<EpaDto>();
   private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
   private SamplingConcentrationReportDto? _samplingReport;
+  private IReadOnlyList<EpaTrajectoryDto> _trajectories = Array.Empty<EpaTrajectoryDto>();
 
   protected override async Task OnParametersSetAsync()
   {
@@ -304,6 +327,7 @@
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId));
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId));
       if (_epas.Count == 0)
       {
         _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
@@ -399,6 +423,11 @@
       _error = exception.Message;
     }
   }
+
+  private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
+    => trajectory.Points
+      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source))
+      .ToArray();
 
   private async Task ExecuteAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
   {

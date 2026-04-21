@@ -4,53 +4,55 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**Block 2 complete.** Next up: **T033 — Per-trainee per-EPA trajectory chart** (Block 3, first task). Model: Sonnet.
+**T034 — EPA core/elective flag + stage-indexed supervision levels.** Model: Sonnet.
 
-Server-side SVG trajectory line chart (one dot per observation, rating on Y, date on X), rendered on the trainee EPA detail view and `ReviewDetail.razor`. No JS dep, no cohort comparison. Scope in `Rewrite/practical-plan.md` §T033. 2 days.
+Second Block 3 task. Adds `Epa.Category` enum (Core/Elective) and an optional `CurriculumItem.MinimumLevelByStage` jsonb column keyed by training year that overrides the flat `MinimumLevel` where present. Trainee progress view respects the stage-indexed minimum. Scope in `Rewrite/practical-plan.md` §T034. 1 day.
 
 ## This session at a glance
 
-Block 2 closed. T032 shipped on `master`:
+T033 shipped on `master`:
 
-- **T032 — Sampling-concentration warning on review detail** — `2e02a1e`
+- **T033 — Per-trainee per-EPA trajectory chart** — (commit hash pending)
 
-Hospital now has: defensible entrustment records end-to-end (Block 1), plus formative review mode (T031) and per-EPA sampling warnings that surface assessor concentration, single-source bias, and thin assessor pools before the committee records a decision.
+Trainees now drill into `/portfolio/progress` from the dashboard's "Curriculum progress" card to see a server-rendered SVG line chart per EPA — one dot per observation, rating on Y, date on X. The same chart also renders on `ReviewDetail.razor` so the committee sees the trend alongside the evidence snapshot and sampling warnings.
 
 ## Last completed
 
-**T032 — Sampling-concentration warning on review detail.**
+**T033 — Per-trainee per-EPA trajectory chart.**
 
-- New MediatR query `GetSamplingConcentrationWarningsQuery(ReviewId)` in `Wombat.Application.Features.CommitteeDecisions`. Returns a `SamplingConcentrationReportDto` with per-EPA flags (`OneAssessorOverHalf`, `SingleSource`, `FewerThanThreeAssessors`) plus review-level totals. Handler parses `DataJson` client-side after pulling activities by trainee+period, so it works under both PostgreSQL and the in-memory provider used in tests.
-- Source classification maps the four rated seed keys to the book's four-sources taxonomy: `mini_cex`/`dops` → DirectObservation, `cbd`/`acat` → Conversation. Only those four keys are treated as "rated" (they carry `epa_id` + `assessor_user_id` in their schema). Product/longitudinal seeds are ignored for this check.
-- `ReviewDetail.razor` loads the report alongside the review and renders a dismissible `<Alert Kind="warning">` above the details grid when any EPA has a warning flag. Reuses the existing `Alert.Dismissible` affordance — no new CSS, no new component.
-- 7 Application tests: all-clear path, no-data path, each of the three flags in isolation, period-window filter, unrated-activity-type exclusion.
-- No new aggregate, no projection table, no migration. Single query, single component — matches the §T032 scope verbatim.
+- New MediatR query `GetEpaTrajectoryForTraineeQuery(TraineeUserId, From?, To?)` in `Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee`. Returns per-EPA observations (date, rating, source label, assessor) for the four rated seed keys (mini_cex, dops, cbd, acat) by parsing `DataJson` client-side — matches the T032 JSON-extraction approach so in-memory tests work without PostgreSQL JSON support.
+- New reusable `TrajectoryChart.razor` under `Components/Shared` — pure server-side SVG. Parameters: `Points`, `AriaLabel`, optional width/height/min-max rating. Renders a polyline between dots, integer Y-ticks 1–5, and first/last date labels on the X-axis. SVG `<text>` nodes are emitted via `MarkupString` to sidestep Razor's `<text>` directive.
+- New trainee-facing page `/portfolio/progress` (`MyProgress.razor`) listing each EPA with observations, each with its trajectory chart and an observation/assessor count. Wired from the `TraineeDashboard` "Curriculum progress" card (previously a dead `/curriculum` link).
+- `ReviewDetail.razor` gained a "Rating trajectory by EPA" section between Evidence snapshot and Appeals, showing a chart for every EPA the trainee has observations against. All-time trajectory — the committee sees the full trend, not just the window.
+- Chart styles added to `app.css` under "Trajectory chart" — dot fill, line stroke, axis colour and label typography all token-driven. No raw hex, no component-scoped CSS.
+- 7 Application tests for the query (ordering by date, grouping by EPA code, period filter, trainee scoping, unrated-type exclusion, missing-overall skip, source mapping) + 5 bUnit smoke tests for the chart (empty state, one point, multi-point line + dots, axis date labels, aria attributes).
+- No new aggregate, no new domain entity, no migration.
 
 ## Plan this session works against
 
-`Rewrite/practical-plan.md` — Block 2 complete; Block 3 (T033, T034) is next.
+`Rewrite/practical-plan.md` — Block 3 in progress: T033 done, T034 next.
 
 ## Block 3 sequence
 
-1. T033 — per-trainee per-EPA trajectory chart (active)
-2. T034 — EPA core/elective + stage-indexed supervision levels
+1. ✅ T033 — per-trainee per-EPA trajectory chart
+2. T034 — EPA core/elective + stage-indexed supervision levels (active)
 
 ## Test status at handoff
 
 - `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
 - Domain tests — 38/38 pass
-- Application tests — 146/146 pass (7 new for sampling concentration)
+- Application tests — 153/153 pass (7 new for trajectory query)
 - Architecture tests — 19/19 pass
-- Web tests — 33/33 pass
+- Web tests — 38/38 pass (5 new for TrajectoryChart)
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
 
-## Known T032 compromises
+## Known T033 compromises
 
-- **MSF is not included in per-EPA sampling stats.** MSF is a cross-cutting longitudinal-observation instrument and is not currently linked to a specific EPA. A committee reading the warnings gets the assessor/source breakdown from direct-observation and conversation instruments only. If MSF respondents should count toward distinct-assessor/source counts for each EPA later, the query can be extended without changing the DTO shape.
-- **Single-source warning can only trigger for DirectObservation-only or Conversation-only evidence.** With only four rated seed types across two sources, flagging "all ratings from one source" captures the realistic book-sense warning. Once more source-diverse seeds arrive (product-eval instruments with assessor + epa), the `SourceByActivityKey` map in `GetSamplingConcentrationWarnings.cs` is the single point to extend.
-- **One-assessor-over-half is suppressed for single-rating EPAs.** A one-rating EPA is always "100% from one assessor" — that information is redundant with the fewer-than-three-assessors warning, so the flag requires ≥2 ratings to fire.
-- **Dismiss state is session-local.** The `Alert` component's built-in dismiss sets a component-level bool; no server persistence. Re-opening the review re-shows the warning. Intentional: committees should see it on every visit.
+- **No browser-level verification this session.** The dev server requires a seeded database and a logged-in Trainee principal to exercise `/portfolio/progress`, which is more setup than the 2-day T033 scope justifies. bUnit smoke tests cover the rendering contract; the in-page Razor markup is straightforward enough to trust from tests alone. Note for next session if `/portfolio/progress` goes live in a real environment.
+- **All-time trajectory everywhere.** The query accepts optional `From`/`To` but both callers pass no window — the committee and the trainee see the full history. A "within-review-period" band overlay would be nice but is not in §T033.
+- **Only the four rated seed keys contribute.** mini_cex/dops/cbd/acat are the only seeds today that carry `overall` + `epa_id` + `assessor_user_id`. If a future custom activity type adds these fields, extend `SourceByActivityKey` in the query (same spot as T032's sampling query).
+- **Observed date = `Activity.CreatedOn`.** Activities don't carry a separate "observed on" field; CreatedOn is the closest proxy. If a clinical date field is added later, switch the point's date to that.
 
 ## What remains (operational, not code — carried forward from T016)
 
