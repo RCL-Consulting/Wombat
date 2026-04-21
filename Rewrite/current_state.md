@@ -12,7 +12,7 @@ Server-side SVG trajectory line chart (one dot per observation, rating on Y, dat
 
 Block 2 closed. T032 shipped on `master`:
 
-- **T032 — Sampling-concentration warning on review detail** — (commit hash pending)
+- **T032 — Sampling-concentration warning on review detail** — `2e02a1e`
 
 Hospital now has: defensible entrustment records end-to-end (Block 1), plus formative review mode (T031) and per-EPA sampling warnings that surface assessor concentration, single-source bias, and thin assessor pools before the committee records a decision.
 
@@ -68,6 +68,7 @@ Hospital now has: defensible entrustment records end-to-end (Block 1), plus form
 
 ## Last verified commits
 
+- `2e02a1e` — T032 (sampling-concentration warning on review detail)
 - `ac4fdb9` — T031 (formative-only committee review mode)
 - `c9b00d0` — docs: record T030 commit hash
 - `10f7e55` — T030 (STAR certificate PDF + authorisations UI)

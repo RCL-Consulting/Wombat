@@ -224,7 +224,7 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | T029 — `EntrustmentDecision` aggregate | ✅ done | `91ff841` |
 | T030 — STAR certificate PDF + trainee authorisations panel | ✅ done | `10f7e55` |
 | T031 — Formative-only committee review mode | ✅ done | `ac4fdb9` |
-| T032 — Sampling-concentration warning | ✅ done | (pending) |
+| T032 — Sampling-concentration warning | ✅ done | `2e02a1e` |
 | T033 — Per-trainee trajectory chart | pending | — |
 | T034 — EPA core/elective + stage-indexed supervision levels | pending | — |
 | T035 — Assessor training status field | pending | — |
