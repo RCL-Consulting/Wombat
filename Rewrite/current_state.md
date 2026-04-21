@@ -4,55 +4,55 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T034 — EPA core/elective flag + stage-indexed supervision levels.** Model: Sonnet.
+**Block 3 complete.** Next up: **T035 — Assessor training status field** (Block 4, first task). Model: Sonnet.
 
-Second Block 3 task. Adds `Epa.Category` enum (Core/Elective) and an optional `CurriculumItem.MinimumLevelByStage` jsonb column keyed by training year that overrides the flat `MinimumLevel` where present. Trainee progress view respects the stage-indexed minimum. Scope in `Rewrite/practical-plan.md` §T034. 1 day.
+Adds `AssessorProfile.TrainingCompletedOn` (`DateOnly?`) and surfaces it on the admin assessor list. No blocking behaviour — just visible record. Scope in `Rewrite/practical-plan.md` §T035. ½ day.
 
 ## This session at a glance
 
-T033 shipped on `master`:
+Block 3 closed. T034 shipped on `master`:
 
-- **T033 — Per-trainee per-EPA trajectory chart** — `9910ba1`
+- **T034 — EPA core/elective + stage-indexed supervision levels** — (commit hash pending)
 
-Trainees now drill into `/portfolio/progress` from the dashboard's "Curriculum progress" card to see a server-rendered SVG line chart per EPA — one dot per observation, rating on Y, date on X. The same chart also renders on `ReviewDetail.razor` so the committee sees the trend alongside the evidence snapshot and sampling warnings.
+The curriculum now understands two EPA-programme-design primitives the plan called for: EPAs are tagged `Core` or `Elective`, and curriculum items can specify a per-training-year supervision level that overrides the flat minimum. The trainee dashboard shows the effective minimum for the trainee's current year so they know what level to hit.
 
 ## Last completed
 
-**T033 — Per-trainee per-EPA trajectory chart.**
+**T034 — EPA core/elective flag + stage-indexed supervision levels.**
 
-- New MediatR query `GetEpaTrajectoryForTraineeQuery(TraineeUserId, From?, To?)` in `Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee`. Returns per-EPA observations (date, rating, source label, assessor) for the four rated seed keys (mini_cex, dops, cbd, acat) by parsing `DataJson` client-side — matches the T032 JSON-extraction approach so in-memory tests work without PostgreSQL JSON support.
-- New reusable `TrajectoryChart.razor` under `Components/Shared` — pure server-side SVG. Parameters: `Points`, `AriaLabel`, optional width/height/min-max rating. Renders a polyline between dots, integer Y-ticks 1–5, and first/last date labels on the X-axis. SVG `<text>` nodes are emitted via `MarkupString` to sidestep Razor's `<text>` directive.
-- New trainee-facing page `/portfolio/progress` (`MyProgress.razor`) listing each EPA with observations, each with its trajectory chart and an observation/assessor count. Wired from the `TraineeDashboard` "Curriculum progress" card (previously a dead `/curriculum` link).
-- `ReviewDetail.razor` gained a "Rating trajectory by EPA" section between Evidence snapshot and Appeals, showing a chart for every EPA the trainee has observations against. All-time trajectory — the committee sees the full trend, not just the window.
-- Chart styles added to `app.css` under "Trajectory chart" — dot fill, line stroke, axis colour and label typography all token-driven. No raw hex, no component-scoped CSS.
-- 7 Application tests for the query (ordering by date, grouping by EPA code, period filter, trainee scoping, unrated-type exclusion, missing-overall skip, source mapping) + 5 bUnit smoke tests for the chart (empty state, one point, multi-point line + dots, axis date labels, aria attributes).
-- No new aggregate, no new domain entity, no migration.
+- New `EpaCategory` enum (`Core=0`, `Elective=1`) plus `Epa.Category` property (defaults `Core` via column default on migration). `CreateEpaCommand` takes an optional `Category` parameter (defaults `Core` — non-breaking); `UpdateEpaCommand` takes it positionally. `EpaDto` surfaces it to the admin UI.
+- `CurriculumItem.MinimumLevelByStageJson` optional string column carrying a JSON object keyed by training year (e.g. `{"1":2,"2":3,"3":4}`). Lookup helper `GetMinimumLevelForStage(int?)` returns the override for the stage if present, otherwise the flat `MinimumLevelOrder`. `ParseStageOverrides` drops entries with non-integer keys, keys ≤ 0, levels outside 1–20, or non-integer/non-string values. `NormalizeStageOverridesJson` canonicalises to ordered keys and returns `null` for empty input so `{}` doesn't round-trip.
+- `AddCurriculumItemCommand` and `UpdateCurriculumItemCommand` take an optional `MinimumLevelByStageJson`; validators reject malformed JSON or objects whose entries all drop during parse. Normalised before persist.
+- Migration `20260421170000_EpaCategoryAndStageLevels` — hand-written with Designer.cs and matching `ApplicationDbContextModelSnapshot` updates. Up: `Epas.Category` (`integer NOT NULL` default 0) + `CurriculumItems.MinimumLevelByStageJson` (`text` nullable). Down: drops both.
+- Admin UI: EPA form has a Category dropdown; curriculum items table has a "Per-stage minima" column with an inline JSON editor (textbox with placeholder `{"1":2,"2":3}`). The add form includes a full-width labelled field with guidance text.
+- Trainee dashboard's "Curriculum progress" card now shows `Minimum level N (year X) · reached M / R` beneath each progress bar, using the trainee's current year computed from `ProgrammeStartDate`. `GetTraineeDashboardSummaryQueryHandler.ComputeTraineeStage(start, today)` is public for test coverage and returns `null` for programmes that have not yet started.
+- 7 Domain tests for `CurriculumItem` helpers (stage override lookup, invalid-entry parse behaviour, normaliser ordering, empty-object returns null). 5 Application tests for handlers (EPA Category default, create-with-Elective, update persists, CurriculumItem stage overrides round-trip, validator rejects bad JSON). 7 Application tests for the dashboard stage override (year-3 override applied, year-6 falls back to flat, stage theory for day-0/day-364/day-365/day-730, null when programme starts in future).
 
 ## Plan this session works against
 
-`Rewrite/practical-plan.md` — Block 3 in progress: T033 done, T034 next.
+`Rewrite/practical-plan.md` — Block 3 done. Block 4 (T035, T036) is the final block.
 
-## Block 3 sequence
+## Block 4 sequence
 
-1. ✅ T033 — per-trainee per-EPA trajectory chart
-2. T034 — EPA core/elective + stage-indexed supervision levels (active)
+1. T035 — Assessor training status field (active)
+2. T036 — Accreditor-specific export template
 
 ## Test status at handoff
 
 - `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
-- Domain tests — 38/38 pass
-- Application tests — 153/153 pass (7 new for trajectory query)
+- Domain tests — 45/45 pass (7 new for stage-override helpers)
+- Application tests — 165/165 pass (12 new: 5 EPA/curriculum handlers + 7 dashboard stage override)
 - Architecture tests — 19/19 pass
-- Web tests — 38/38 pass (5 new for TrajectoryChart)
+- Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
 
-## Known T033 compromises
+## Known T034 compromises
 
-- **No browser-level verification this session.** The dev server requires a seeded database and a logged-in Trainee principal to exercise `/portfolio/progress`, which is more setup than the 2-day T033 scope justifies. bUnit smoke tests cover the rendering contract; the in-page Razor markup is straightforward enough to trust from tests alone. Note for next session if `/portfolio/progress` goes live in a real environment.
-- **All-time trajectory everywhere.** The query accepts optional `From`/`To` but both callers pass no window — the committee and the trainee see the full history. A "within-review-period" band overlay would be nice but is not in §T033.
-- **Only the four rated seed keys contribute.** mini_cex/dops/cbd/acat are the only seeds today that carry `overall` + `epa_id` + `assessor_user_id`. If a future custom activity type adds these fields, extend `SourceByActivityKey` in the query (same spot as T032's sampling query).
-- **Observed date = `Activity.CreatedOn`.** Activities don't carry a separate "observed on" field; CreatedOn is the closest proxy. If a clinical date field is added later, switch the point's date to that.
+- **JSON-textbox admin editor, not a per-row form.** The stage-override editor is a single text input that expects a JSON object. A row-per-year editor would be friendlier but doubles the UI complexity for an admin-only tool. The validator covers malformed input; bad entries reject with a clear message.
+- **Stage override does not affect CreditApplier.** Credit-at-minimum-level decisions still compare against `CurriculumItem.MinimumLevelOrder` when an activity completes — which is the right behaviour for the stage at activity time (the flat value is what the programme considered baseline). Changing this to time-travel through stage overrides on retroactive credit was intentionally out of scope. The dashboard reads the effective minimum live so the trainee and committee see the right target today.
+- **Year boundaries are simple day-math.** `ComputeTraineeStage` uses `daysElapsed / 365` — no leap-year correction, no academic-year calendar. Close enough for a UI hint. Programmes that need exact academic-year boundaries can migrate to a stage-field on `TraineeProfile` later.
+- **No data migration for existing EPAs.** Every EPA lands on `Category = Core` because the column default is 0. Admins adjust via the EPA edit form if needed.
 
 ## What remains (operational, not code — carried forward from T016)
 

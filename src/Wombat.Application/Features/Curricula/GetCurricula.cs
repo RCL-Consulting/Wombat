@@ -38,7 +38,7 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
                 true,
                 entity.Items
                     .OrderBy(item => item.Epa.Code)
-                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight))
+                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson))
                     .ToList()))
             .ToListAsync(cancellationToken);
 }
@@ -69,7 +69,7 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
                 true,
                 entity.Items
                     .OrderBy(item => item.Epa.Code)
-                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight))
+                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson))
                     .ToList()))
             .SingleOrDefaultAsync(cancellationToken);
 }

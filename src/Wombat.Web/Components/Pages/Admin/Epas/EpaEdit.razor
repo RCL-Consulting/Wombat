@@ -58,6 +58,15 @@
           <ValidationMessage For="() => _model.RequiredKnowledgeSkills" />
         </FormField>
 
+        <FormField Label="Category" InputId="epa-category" Required="true">
+          <InputSelect id="epa-category" class="form-select" @bind-Value="_model.Category">
+            @foreach (var category in Enum.GetValues<EpaCategory>())
+            {
+              <option value="@category">@category</option>
+            }
+          </InputSelect>
+        </FormField>
+
         @if (!IsNew)
         {
           <FormField Label="Status" InputId="epa-active">
@@ -134,6 +143,7 @@
       _model.Title = epa.Title;
       _model.Description = epa.Description;
       _model.RequiredKnowledgeSkills = epa.RequiredKnowledgeSkills;
+      _model.Category = epa.Category;
       _model.IsActive = epa.IsActive;
     }
     catch (Exception exception)
@@ -158,12 +168,12 @@
 
       if (IsNew)
       {
-        epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills)));
+        epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category));
         Navigation.NavigateTo($"/admin/epas/{epa.Id}");
         return;
       }
 
-      epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.IsActive));
+      epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive));
       _model.IsActive = epa.IsActive;
       _statusMessage = "EPA saved.";
     }
@@ -219,6 +229,8 @@
 
     [StringLength(8000)]
     public string? RequiredKnowledgeSkills { get; set; }
+
+    public EpaCategory Category { get; set; } = EpaCategory.Core;
 
     public bool IsActive { get; set; } = true;
   }

@@ -13,6 +13,7 @@ public sealed record UpdateEpaCommand(
     string Title,
     string? Description,
     string? RequiredKnowledgeSkills,
+    EpaCategory Category,
     bool IsActive) : IRequest<EpaDto>;
 
 public sealed class UpdateEpaCommandValidator : AbstractValidator<UpdateEpaCommand>
@@ -25,6 +26,7 @@ public sealed class UpdateEpaCommandValidator : AbstractValidator<UpdateEpaComma
         RuleFor(command => command.Title).NotEmpty().MaximumLength(200);
         RuleFor(command => command.Description).MaximumLength(4000);
         RuleFor(command => command.RequiredKnowledgeSkills).MaximumLength(8000);
+        RuleFor(command => command.Category).IsInEnum();
     }
 }
 
@@ -62,6 +64,7 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         epa.Title = request.Title.Trim();
         epa.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         epa.RequiredKnowledgeSkills = string.IsNullOrWhiteSpace(request.RequiredKnowledgeSkills) ? null : request.RequiredKnowledgeSkills.Trim();
+        epa.Category = request.Category;
         epa.IsActive = request.IsActive;
 
         try
@@ -73,6 +76,6 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("An EPA with the same code already exists for this sub-speciality.", exception);
         }
 
-        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpecialityName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.IsActive, epa.CreatedOn);
+        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpecialityName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
     }
 }

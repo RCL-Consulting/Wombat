@@ -68,6 +68,7 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
                 entity.Title,
                 entity.Description,
                 entity.RequiredKnowledgeSkills,
+                entity.Category,
                 entity.IsActive,
                 entity.CreatedOn))
             .ToListAsync(cancellationToken);
@@ -94,6 +95,7 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
                 entity.Title,
                 entity.Description,
                 entity.RequiredKnowledgeSkills,
+                entity.Category,
                 entity.IsActive,
                 entity.CreatedOn))
             .SingleOrDefaultAsync(cancellationToken);

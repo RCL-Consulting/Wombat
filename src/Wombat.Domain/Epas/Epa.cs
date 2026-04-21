@@ -8,6 +8,7 @@ public sealed class Epa
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? RequiredKnowledgeSkills { get; set; }
+    public EpaCategory Category { get; set; } = EpaCategory.Core;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
 

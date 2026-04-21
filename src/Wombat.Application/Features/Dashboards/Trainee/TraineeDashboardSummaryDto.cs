@@ -11,7 +11,10 @@ public sealed record CurriculumProgressItem(
     string EpaTitle,
     int CompletedCount,
     int RequiredCount,
-    bool IsComplete);
+    bool IsComplete,
+    int EffectiveMinimumLevelOrder,
+    int MinimumLevelReachedCount,
+    int? TraineeStage);
 
 public sealed record ActivityInboxItem(
     int ActivityId,

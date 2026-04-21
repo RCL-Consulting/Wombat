@@ -37,6 +37,9 @@
                 <div class="progress-bar-fill @(item.IsComplete ? "is-complete" : "")"
                      style="width:@(item.RequiredCount > 0 ? Math.Min(100, item.CompletedCount * 100 / item.RequiredCount) : 0)%"></div>
               </div>
+              <div class="muted" style="font-size:0.85rem;margin-top:var(--space-xs)">
+                Minimum level @item.EffectiveMinimumLevelOrder@(item.TraineeStage.HasValue ? $" (year {item.TraineeStage})" : string.Empty) · reached @item.MinimumLevelReachedCount / @item.RequiredCount
+              </div>
             </div>
           }
         }

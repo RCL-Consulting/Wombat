@@ -11,7 +11,8 @@ public sealed record AddCurriculumItemCommand(
     int RequiredCount,
     int MinimumLevelOrder,
     int WindowMonths,
-    double? Weight) : IRequest<CurriculumDto>;
+    double? Weight,
+    string? MinimumLevelByStageJson = null) : IRequest<CurriculumDto>;
 
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
@@ -20,7 +21,8 @@ public sealed record UpdateCurriculumItemCommand(
     int RequiredCount,
     int MinimumLevelOrder,
     int WindowMonths,
-    double? Weight) : IRequest<CurriculumDto>;
+    double? Weight,
+    string? MinimumLevelByStageJson = null) : IRequest<CurriculumDto>;
 
 public sealed record RemoveCurriculumItemCommand(int CurriculumId, int ItemId) : IRequest<CurriculumDto>;
 
@@ -33,6 +35,9 @@ public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCur
         RuleFor(command => command.RequiredCount).GreaterThan(0);
         RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
         RuleFor(command => command.WindowMonths).GreaterThan(0);
+        RuleFor(command => command.MinimumLevelByStageJson)
+            .Must(StageOverridesValidation.BeValidStageOverridesJson)
+            .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
     }
 }
 
@@ -46,6 +51,9 @@ public sealed class UpdateCurriculumItemCommandValidator : AbstractValidator<Upd
         RuleFor(command => command.RequiredCount).GreaterThan(0);
         RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
         RuleFor(command => command.WindowMonths).GreaterThan(0);
+        RuleFor(command => command.MinimumLevelByStageJson)
+            .Must(StageOverridesValidation.BeValidStageOverridesJson)
+            .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
     }
 }
 
@@ -55,6 +63,38 @@ public sealed class RemoveCurriculumItemCommandValidator : AbstractValidator<Rem
     {
         RuleFor(command => command.CurriculumId).GreaterThan(0);
         RuleFor(command => command.ItemId).GreaterThan(0);
+    }
+}
+
+internal static class StageOverridesValidation
+{
+    public static bool BeValidStageOverridesJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return true;
+        }
+
+        try
+        {
+            var parsed = CurriculumItem.ParseStageOverrides(json);
+            // If the caller provided something non-trivial but parsing dropped everything, reject.
+            using var document = System.Text.Json.JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return false;
+            }
+            var declared = 0;
+            foreach (var _ in document.RootElement.EnumerateObject())
+            {
+                declared++;
+            }
+            return declared == 0 || parsed.Count == declared;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
     }
 }
 
@@ -83,7 +123,8 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             RequiredCount = request.RequiredCount,
             MinimumLevelOrder = request.MinimumLevelOrder,
             WindowMonths = request.WindowMonths,
-            Weight = request.Weight
+            Weight = request.Weight,
+            MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson)
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -123,6 +164,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         item.MinimumLevelOrder = request.MinimumLevelOrder;
         item.WindowMonths = request.WindowMonths;
         item.Weight = request.Weight;
+        item.MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

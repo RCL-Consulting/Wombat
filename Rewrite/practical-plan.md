@@ -226,12 +226,12 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | T031 — Formative-only committee review mode | ✅ done | `ac4fdb9` |
 | T032 — Sampling-concentration warning | ✅ done | `2e02a1e` |
 | T033 — Per-trainee trajectory chart | ✅ done | `9910ba1` |
-| T034 — EPA core/elective + stage-indexed supervision levels | pending | — |
+| T034 — EPA core/elective + stage-indexed supervision levels | ✅ done | (pending) |
 | T035 — Assessor training status field | pending | — |
 | T036 — Accreditor-specific export template | pending | — |
 
 ## Active task
 
-**T034 — EPA core/elective + stage-indexed supervision levels.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**T035 — Assessor training status field.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
 
 Commit after every completed task, per `Rewrite/WORKFLOW.md`.

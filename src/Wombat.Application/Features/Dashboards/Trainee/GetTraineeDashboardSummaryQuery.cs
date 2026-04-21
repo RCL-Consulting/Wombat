@@ -39,18 +39,44 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
             .FirstOrDefaultAsync(p => p.UserId == userId && p.IsActive, cancellationToken);
 
         var curriculumProgress = new List<CurriculumProgressItem>();
+        int? traineeStage = null;
         if (profile is not null)
         {
-            curriculumProgress = await _dbContext.Set<CurriculumItemProgress>()
+            traineeStage = ComputeTraineeStage(profile.ProgrammeStartDate, DateOnly.FromDateTime(DateTime.UtcNow));
+
+            var progressRows = await _dbContext.Set<CurriculumItemProgress>()
                 .AsNoTracking()
                 .Where(p => p.TraineeUserId == userId &&
                             p.CurriculumItem.CurriculumId == profile.CurriculumId)
-                .Select(p => new CurriculumProgressItem(
+                .Select(p => new
+                {
                     p.CurriculumItem.Epa.Title,
                     p.CountsSoFar,
+                    p.MinimumLevelReachedCount,
                     p.CurriculumItem.RequiredCount,
-                    p.CountsSoFar >= p.CurriculumItem.RequiredCount))
+                    p.CurriculumItem.MinimumLevelOrder,
+                    p.CurriculumItem.MinimumLevelByStageJson
+                })
                 .ToListAsync(cancellationToken);
+
+            foreach (var row in progressRows)
+            {
+                var item = new CurriculumItem
+                {
+                    MinimumLevelOrder = row.MinimumLevelOrder,
+                    MinimumLevelByStageJson = row.MinimumLevelByStageJson
+                };
+                var effectiveMinimum = item.GetMinimumLevelForStage(traineeStage);
+
+                curriculumProgress.Add(new CurriculumProgressItem(
+                    row.Title,
+                    row.CountsSoFar,
+                    row.RequiredCount,
+                    row.CountsSoFar >= row.RequiredCount,
+                    effectiveMinimum,
+                    row.MinimumLevelReachedCount,
+                    traineeStage));
+            }
         }
 
         var inbox = await _dbContext.Set<Activity>()
@@ -118,5 +144,17 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
             recentActivities,
             upcomingDeadlines.OrderBy(d => d.DueDate).Take(5).ToList(),
             IsPendingTrainee: false);
+    }
+
+    public static int? ComputeTraineeStage(DateOnly programmeStart, DateOnly today)
+    {
+        if (today < programmeStart)
+        {
+            return null;
+        }
+
+        var daysElapsed = today.DayNumber - programmeStart.DayNumber;
+        var yearsElapsed = daysElapsed / 365;
+        return yearsElapsed + 1;
     }
 }

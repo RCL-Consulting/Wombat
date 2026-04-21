@@ -34,6 +34,7 @@
               <th>EPA</th>
               <th>Required count</th>
               <th>Minimum level</th>
+              <th>Per-stage minima</th>
               <th>Window months</th>
               <th>Weight</th>
               <th></th>
@@ -55,6 +56,7 @@
                   </td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
+                  <td><InputText class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3}' /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.Weight" /></td>
                   <td>
@@ -69,6 +71,7 @@
                   <td>@item.EpaCode - @item.EpaTitle</td>
                   <td>@item.RequiredCount</td>
                   <td>@item.MinimumLevelOrder</td>
+                  <td>@(item.MinimumLevelByStageJson ?? "—")</td>
                   <td>@item.WindowMonths</td>
                   <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
                   <td>
@@ -107,6 +110,11 @@
 
           <FormField Label="Minimum level" InputId="curriculum-item-level">
             <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" />
+          </FormField>
+
+          <FormField Label="Per-stage minima (JSON)" InputId="curriculum-item-stage-levels" FullWidth="true">
+            <InputText id="curriculum-item-stage-levels" class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3,"3":4}' />
+            <small class="muted">Optional JSON object keyed by training year. Overrides the flat minimum level when the trainee is at that year.</small>
           </FormField>
 
           <FormField Label="Window months" InputId="curriculum-item-window">
@@ -171,7 +179,7 @@
 
   private async Task AddItemAsync()
   {
-    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item added.");
+    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson))), "Curriculum item added.");
     ResetItemModel();
   }
 
@@ -183,6 +191,7 @@
     _itemModel.MinimumLevelOrder = item.MinimumLevelOrder;
     _itemModel.WindowMonths = item.WindowMonths;
     _itemModel.Weight = item.Weight;
+    _itemModel.MinimumLevelByStageJson = item.MinimumLevelByStageJson;
   }
 
   private void CancelEdit()
@@ -198,7 +207,7 @@
       return;
     }
 
-    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight)), "Curriculum item saved.");
+    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson))), "Curriculum item saved.");
     _editingItemId = null;
     ResetItemModel();
   }
@@ -236,7 +245,11 @@
     _itemModel.MinimumLevelOrder = 4;
     _itemModel.WindowMonths = 12;
     _itemModel.Weight = null;
+    _itemModel.MinimumLevelByStageJson = null;
   }
+
+  private static string? EmptyToNull(string? value)
+    => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
   private sealed class CurriculumItemFormModel
   {
@@ -253,5 +266,8 @@
     public int WindowMonths { get; set; }
 
     public double? Weight { get; set; }
+
+    [StringLength(1000)]
+    public string? MinimumLevelByStageJson { get; set; }
   }
 }

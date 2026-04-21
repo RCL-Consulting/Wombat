@@ -22,4 +22,5 @@ public sealed record CurriculumItemDto(
     int RequiredCount,
     int MinimumLevelOrder,
     int WindowMonths,
-    double? Weight);
+    double? Weight,
+    string? MinimumLevelByStageJson);
