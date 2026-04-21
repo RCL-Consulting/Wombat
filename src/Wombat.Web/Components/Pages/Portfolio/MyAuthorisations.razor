@@ -1,0 +1,124 @@
+@page "/portfolio/authorisations"
+@attribute [Authorize(Roles = "Trainee")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+
+<PageTitle>My authorisations</PageTitle>
+
+<PageHeader Title="My authorisations" Subtitle="Your active Statements of Awarded Responsibility (STAR)." />
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+@if (_decisions is null)
+{
+  <p class="muted">Loading authorisations…</p>
+}
+else if (_decisions.Count == 0)
+{
+  <section class="detail-card">
+    <p>You do not currently hold any active entrustment decisions.</p>
+    <p class="muted">When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.</p>
+  </section>
+}
+else
+{
+  <div class="details-grid">
+    @foreach (var decision in _decisions)
+    {
+      <section class="detail-card">
+        <h3>@decision.EpaCode — @decision.EpaTitle</h3>
+        <dl class="details-list">
+          <div><dt>Authorised level</dt><dd>@decision.AuthorisedLevelOrder. @decision.AuthorisedLevelLabel</dd></div>
+          <div><dt>Issued</dt><dd>@decision.IssuedOn.ToString("d MMMM yyyy")</dd></div>
+          <div>
+            <dt>Expires</dt>
+            <dd>
+              @if (decision.ExpiresOn.HasValue)
+              {
+                <span>@decision.ExpiresOn.Value.ToString("d MMMM yyyy")</span>
+                @if (IsExpiringSoon(decision.ExpiresOn.Value))
+                {
+                  <span class="badge badge-warning">Expires in @((decision.ExpiresOn.Value.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber)) days</span>
+                }
+              }
+              else
+              {
+                <span>No expiry</span>
+              }
+            </dd>
+          </div>
+        </dl>
+        <p class="muted">@decision.Rationale</p>
+        <FormActions>
+          <button type="button" class="btn btn-primary" @onclick="() => DownloadAsync(decision.Id, decision.EpaCode)" disabled="@_downloading">
+            @if (_downloading && _downloadingId == decision.Id)
+            {
+              <span>Generating…</span>
+            }
+            else
+            {
+              <span>Download certificate</span>
+            }
+          </button>
+        </FormActions>
+      </section>
+    }
+  </div>
+}
+
+@code {
+  private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
+  private string? _error;
+  private bool _downloading;
+  private int? _downloadingId;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("Current user identifier missing.");
+      _decisions = await Sender.Send(new GetActiveDecisionsForTraineeQuery(userId));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task DownloadAsync(int decisionId, string epaCode)
+  {
+    _error = null;
+    _downloading = true;
+    _downloadingId = decisionId;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var result = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
+      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _downloading = false;
+      _downloadingId = null;
+    }
+  }
+
+  private static bool IsExpiringSoon(DateOnly expiresOn)
+  {
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var daysRemaining = expiresOn.DayNumber - today.DayNumber;
+    return daysRemaining is >= 0 and <= 30;
+  }
+}

@@ -15,6 +15,7 @@ using Wombat.Application.Features.DataRights.Queries;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Email;
+using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
@@ -96,6 +97,7 @@ public static class DependencyInjection
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddScoped<IPortfolioPdfService, PortfolioPdfService>();
+        services.AddScoped<IEntrustmentCertificatePdfService, EntrustmentCertificatePdfService>();
         services.AddScoped<IErasureExecutor, ErasureExecutor>();
         services.AddScoped<IAccessReportBuilder, AccessReportBuilder>();
         services.AddScoped<IObjectionFlagUpdater, ObjectionFlagService>();

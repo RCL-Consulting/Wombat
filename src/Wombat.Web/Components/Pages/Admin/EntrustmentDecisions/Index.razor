@@ -1,0 +1,191 @@
+@page "/admin/entrustment-decisions"
+@attribute [Authorize(Roles = "Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+
+<PageTitle>Entrustment decisions</PageTitle>
+
+<PageHeader Title="Entrustment decisions" Subtitle="Issued Statements of Awarded Responsibility across the programme." />
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+  <Alert Kind="success">@_status</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">@_error</Alert>
+}
+
+<section class="detail-card">
+  <div class="form-grid">
+    <FormField Label="Trainee user id" InputId="filter-trainee">
+      <input id="filter-trainee" class="form-control" @bind="_traineeFilter" @bind:event="oninput" placeholder="Filter by trainee user id" />
+    </FormField>
+    <FormField Label="Status" InputId="filter-status">
+      <InputSelect id="filter-status" class="form-select" @bind-Value="_statusFilter">
+        <option value="">All</option>
+        @foreach (var status in Enum.GetValues<EntrustmentDecisionStatus>())
+        {
+          <option value="@status">@status</option>
+        }
+      </InputSelect>
+    </FormField>
+  </div>
+  <FormActions>
+    <button type="button" class="btn btn-primary" @onclick="LoadAsync">Apply filters</button>
+  </FormActions>
+</section>
+
+@if (_decisions is null)
+{
+  <p class="muted">Loading…</p>
+}
+else if (_decisions.Count == 0)
+{
+  <section class="detail-card">
+    <p>No entrustment decisions match the current filter.</p>
+  </section>
+}
+else
+{
+  <section class="detail-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Trainee</th>
+          <th>EPA</th>
+          <th>Level</th>
+          <th>Issued</th>
+          <th>Expires</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var decision in _decisions)
+        {
+          <tr>
+            <td><code>@decision.TraineeUserId</code></td>
+            <td>@decision.EpaCode — @decision.EpaTitle</td>
+            <td>@decision.AuthorisedLevelOrder. @decision.AuthorisedLevelLabel</td>
+            <td>@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
+            <td>@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
+            <td><span class="badge badge-@decision.Status.ToString().ToLowerInvariant()">@decision.Status</span></td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline" @onclick="() => DownloadAsync(decision.Id)">Download</button>
+              @if (decision.Status == EntrustmentDecisionStatus.Active)
+              {
+                <button type="button" class="btn btn-sm btn-danger" @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+}
+
+@if (_revokingDecision is not null)
+{
+  <section class="detail-card">
+    <h3>Revoke entrustment decision</h3>
+    <p>
+      You are about to revoke the entrustment decision for
+      <strong>@_revokingDecision.EpaCode — @_revokingDecision.EpaTitle</strong>
+      held by <code>@_revokingDecision.TraineeUserId</code>.
+      Revocation is immediate and irreversible. The trainee is notified.
+    </p>
+    <FormField Label="Revocation reason" InputId="revoke-reason" Required="true">
+      <InputTextArea id="revoke-reason" class="form-control" @bind-Value="_revokeReason" />
+    </FormField>
+    <FormActions>
+      <button type="button" class="btn btn-danger" @onclick="ConfirmRevokeAsync" disabled="@string.IsNullOrWhiteSpace(_revokeReason)">Confirm revocation</button>
+      <button type="button" class="btn btn-outline" @onclick="CancelRevoke">Cancel</button>
+    </FormActions>
+  </section>
+}
+
+@code {
+  private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
+  private string? _error;
+  private string? _status;
+  private string _traineeFilter = string.Empty;
+  private EntrustmentDecisionStatus? _statusFilter;
+  private EntrustmentDecisionDto? _revokingDecision;
+  private string _revokeReason = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    try
+    {
+      _error = null;
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var trainee = string.IsNullOrWhiteSpace(_traineeFilter) ? null : _traineeFilter.Trim();
+      _decisions = await Sender.Send(new ListEntrustmentDecisionsForAdminQuery(trainee, _statusFilter, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task DownloadAsync(int decisionId)
+  {
+    try
+    {
+      _error = null;
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var result = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
+      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private void OpenRevokeDialog(EntrustmentDecisionDto decision)
+  {
+    _revokingDecision = decision;
+    _revokeReason = string.Empty;
+    _status = null;
+    _error = null;
+  }
+
+  private void CancelRevoke()
+  {
+    _revokingDecision = null;
+    _revokeReason = string.Empty;
+  }
+
+  private async Task ConfirmRevokeAsync()
+  {
+    if (_revokingDecision is null || string.IsNullOrWhiteSpace(_revokeReason))
+    {
+      return;
+    }
+
+    try
+    {
+      _error = null;
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new RevokeEntrustmentDecisionCommand(_revokingDecision.Id, _revokeReason.Trim(), authState.User));
+      _status = $"Entrustment decision for {_revokingDecision.EpaCode} revoked.";
+      _revokingDecision = null;
+      _revokeReason = string.Empty;
+      await LoadAsync();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+}
