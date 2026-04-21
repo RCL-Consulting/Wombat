@@ -12,7 +12,7 @@ Adds `AssessorProfile.TrainingCompletedOn` (`DateOnly?`) and surfaces it on the 
 
 Block 3 closed. T034 shipped on `master`:
 
-- **T034 — EPA core/elective + stage-indexed supervision levels** — (commit hash pending)
+- **T034 — EPA core/elective + stage-indexed supervision levels** — `dd18b66`
 
 The curriculum now understands two EPA-programme-design primitives the plan called for: EPAs are tagged `Core` or `Elective`, and curriculum items can specify a per-training-year supervision level that overrides the flat minimum. The trainee dashboard shows the effective minimum for the trainee's current year so they know what level to hit.
 
@@ -70,6 +70,7 @@ The curriculum now understands two EPA-programme-design primitives the plan call
 
 ## Last verified commits
 
+- `dd18b66` — T034 (EPA core/elective + stage-indexed supervision levels)
 - `9910ba1` — T033 (per-trainee per-EPA trajectory chart)
 - `2e02a1e` — T032 (sampling-concentration warning on review detail)
 - `ac4fdb9` — T031 (formative-only committee review mode)
