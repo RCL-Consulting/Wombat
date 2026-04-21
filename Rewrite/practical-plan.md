@@ -227,7 +227,7 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | T032 — Sampling-concentration warning | ✅ done | `2e02a1e` |
 | T033 — Per-trainee trajectory chart | ✅ done | `9910ba1` |
 | T034 — EPA core/elective + stage-indexed supervision levels | ✅ done | `dd18b66` |
-| T035 — Assessor training status field | ✅ done | (pending) |
+| T035 — Assessor training status field | ✅ done | `9d60cd7` |
 | T036 — Accreditor-specific export template | pending | — |
 
 ## Active task

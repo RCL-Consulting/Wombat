@@ -12,7 +12,7 @@ Final task of the practical plan. A variant of the T023 portfolio PDF shaped for
 
 T035 shipped on `master`:
 
-- **T035 — Assessor training status field** — (commit hash pending)
+- **T035 — Assessor training status field** — `9d60cd7`
 
 Admins can now record and see whether each assessor has completed formal assessor training, giving an accreditor the answer to "do your assessors have training?" at a glance. No blocking behaviour — visibility only, as §T035 intended.
 
@@ -67,6 +67,7 @@ Admins can now record and see whether each assessor has completed formal assesso
 
 ## Last verified commits
 
+- `9d60cd7` — T035 (assessor training status field)
 - `dd18b66` — T034 (EPA core/elective + stage-indexed supervision levels)
 - `9910ba1` — T033 (per-trainee per-EPA trajectory chart)
 - `2e02a1e` — T032 (sampling-concentration warning on review detail)
