@@ -72,6 +72,11 @@
             <InputTextArea id="assessor-qualifications" class="form-control" @bind-Value="_model.Qualifications" />
             <ValidationMessage For="() => _model.Qualifications" />
           </FormField>
+
+          <FormField Label="Assessor training completed" InputId="assessor-training-completed">
+            <InputDate id="assessor-training-completed" class="form-control" @bind-Value="_model.TrainingCompletedOn" />
+            <small class="muted">Date the assessor completed assessor training. Leave blank if unrecorded.</small>
+          </FormField>
         </div>
 
         <FormActions>
@@ -127,7 +132,8 @@
           InstitutionId = profile.InstitutionId,
           SpecialityId = profile.SpecialityId,
           SubSpecialityId = profile.SubSpecialityId,
-          Qualifications = profile.Qualifications
+          Qualifications = profile.Qualifications,
+          TrainingCompletedOn = profile.TrainingCompletedOn
         };
       }
       else
@@ -166,7 +172,8 @@
         _model.Qualifications,
         _model.InstitutionId,
         _model.SpecialityId,
-        _model.SubSpecialityId));
+        _model.SubSpecialityId,
+        _model.TrainingCompletedOn));
 
       _statusMessage = "Assessor profile saved.";
       _isExisting = true;
@@ -196,5 +203,7 @@
     [Required]
     [MaxLength(4000)]
     public string Qualifications { get; set; } = string.Empty;
+
+    public DateOnly? TrainingCompletedOn { get; set; }
   }
 }

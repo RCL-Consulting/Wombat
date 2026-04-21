@@ -27,6 +27,7 @@
         <th>Institution</th>
         <th>Speciality</th>
         <th>Sub-speciality</th>
+        <th>Training completed</th>
         <th></th>
       </tr>
     </HeaderRow>
@@ -37,6 +38,7 @@
         <td>@assessor.InstitutionName</td>
         <td>@(assessor.SpecialityName ?? "All")</td>
         <td>@(assessor.SubSpecialityName ?? "All")</td>
+        <td>@(assessor.TrainingCompletedOn?.ToString("yyyy-MM-dd") ?? "Not recorded")</td>
         <td><a class="btn btn-outline btn-sm" href="@($"/admin/assessors/edit?id={assessor.Id}")">Edit</a></td>
       </tr>
     </Row>

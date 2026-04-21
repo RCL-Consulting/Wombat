@@ -12,4 +12,5 @@ public sealed record AssessorProfileDto(
     int? SpecialityId,
     string? SpecialityName,
     int? SubSpecialityId,
-    string? SubSpecialityName);
+    string? SubSpecialityName,
+    DateOnly? TrainingCompletedOn);

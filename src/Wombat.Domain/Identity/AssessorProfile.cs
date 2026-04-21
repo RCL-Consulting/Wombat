@@ -10,6 +10,7 @@ public sealed class AssessorProfile
     public int InstitutionId { get; set; }
     public int? SpecialityId { get; set; }
     public int? SubSpecialityId { get; set; }
+    public DateOnly? TrainingCompletedOn { get; set; }
 
     public Institution Institution { get; set; } = null!;
     public Speciality? Speciality { get; set; }

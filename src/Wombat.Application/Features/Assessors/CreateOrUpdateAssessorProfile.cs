@@ -12,7 +12,8 @@ public sealed record CreateOrUpdateAssessorProfileCommand(
     string Qualifications,
     int InstitutionId,
     int? SpecialityId,
-    int? SubSpecialityId) : IRequest<AssessorProfileDto>;
+    int? SubSpecialityId,
+    DateOnly? TrainingCompletedOn = null) : IRequest<AssessorProfileDto>;
 
 public sealed class CreateOrUpdateAssessorProfileCommandValidator : AbstractValidator<CreateOrUpdateAssessorProfileCommand>
 {
@@ -98,6 +99,7 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
         profile.InstitutionId = request.InstitutionId;
         profile.SpecialityId = request.SpecialityId;
         profile.SubSpecialityId = request.SubSpecialityId;
+        profile.TrainingCompletedOn = request.TrainingCompletedOn;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -120,6 +122,7 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
             speciality?.Id,
             speciality?.Name,
             subSpeciality?.Id,
-            subSpeciality?.Name);
+            subSpeciality?.Name,
+            profile.TrainingCompletedOn);
     }
 }
