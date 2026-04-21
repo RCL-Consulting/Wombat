@@ -12,7 +12,7 @@ Second Block 3 task. Adds `Epa.Category` enum (Core/Elective) and an optional `C
 
 T033 shipped on `master`:
 
-- **T033 — Per-trainee per-EPA trajectory chart** — (commit hash pending)
+- **T033 — Per-trainee per-EPA trajectory chart** — `9910ba1`
 
 Trainees now drill into `/portfolio/progress` from the dashboard's "Curriculum progress" card to see a server-rendered SVG line chart per EPA — one dot per observation, rating on Y, date on X. The same chart also renders on `ReviewDetail.razor` so the committee sees the trend alongside the evidence snapshot and sampling warnings.
 
@@ -70,6 +70,7 @@ Trainees now drill into `/portfolio/progress` from the dashboard's "Curriculum p
 
 ## Last verified commits
 
+- `9910ba1` — T033 (per-trainee per-EPA trajectory chart)
 - `2e02a1e` — T032 (sampling-concentration warning on review detail)
 - `ac4fdb9` — T031 (formative-only committee review mode)
 - `c9b00d0` — docs: record T030 commit hash
