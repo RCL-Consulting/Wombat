@@ -222,7 +222,7 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 |---|---|---|
 | T028 — rename `star_reflection` → `reflective_note` | ✅ done | `dc506d1` |
 | T029 — `EntrustmentDecision` aggregate | ✅ done | `91ff841` |
-| T030 — STAR certificate PDF + trainee authorisations panel | ✅ done | — |
+| T030 — STAR certificate PDF + trainee authorisations panel | ✅ done | `10f7e55` |
 | T031 — Formative-only committee review mode | active | — |
 | T032 — Sampling-concentration warning | pending | — |
 | T033 — Per-trainee trajectory chart | pending | — |

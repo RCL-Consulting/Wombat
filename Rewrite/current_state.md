@@ -62,7 +62,7 @@ First Block 2 task. Small extension to `CommitteeReview` — add an `IsFormative
 
 ## Last verified commits
 
-- T030 commit — pending (this session will produce it)
+- `10f7e55` — T030 (STAR certificate PDF + authorisations UI)
 - `21f7959` — docs: record T029 commit hash in current_state handoff
 - `91ff841` — T029 (EntrustmentDecision aggregate / STAR)
 - `dc506d1` — T028 (rename `star_reflection` → `reflective_note`)
