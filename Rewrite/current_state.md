@@ -60,7 +60,7 @@ Second Block 2 task. A single query executed from `ReviewDetail.razor` that repo
 
 ## Last verified commits
 
-- T031 commit — pending (this session will produce it)
+- `ac4fdb9` — T031 (formative-only committee review mode)
 - `c9b00d0` — docs: record T030 commit hash
 - `10f7e55` — T030 (STAR certificate PDF + authorisations UI)
 - `21f7959` — docs: record T029 commit hash in current_state handoff
