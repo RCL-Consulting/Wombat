@@ -10,11 +10,14 @@ Final task of the practical plan. A variant of the T023 portfolio PDF shaped for
 
 ## This session at a glance
 
-T035 shipped on `master`:
+Four tasks shipped back-to-back on `master`, closing Block 2, all of Block 3, and the first half of Block 4:
 
+- **T032 — Sampling-concentration warning on review detail** — `2e02a1e`
+- **T033 — Per-trainee per-EPA trajectory chart** — `9910ba1`
+- **T034 — EPA core/elective + stage-indexed supervision levels** — `dd18b66`
 - **T035 — Assessor training status field** — `9d60cd7`
 
-Admins can now record and see whether each assessor has completed formal assessor training, giving an accreditor the answer to "do your assessors have training?" at a glance. No blocking behaviour — visibility only, as §T035 intended.
+Committees now see per-EPA sampling warnings and a rating trajectory alongside the evidence bundle; trainees have a `/portfolio/progress` view of their EPA trajectories; programme directors can tag EPAs as Core or Elective and set per-year supervision-level targets; admins have a visible record of who has completed assessor training. Only T036 (the accreditor-specific export template) remains on the practical plan, and it is blocked pending confirmation of the target accreditor's format spec.
 
 ## Last completed
 
