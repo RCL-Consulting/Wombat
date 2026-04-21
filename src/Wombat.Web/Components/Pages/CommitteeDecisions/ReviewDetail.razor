@@ -26,12 +26,17 @@
         <div><dt>Trainee</dt><dd><code>@_review.TraineeUserId</code></dd></div>
         <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
         <div><dt>Period</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
+        <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
         <div><dt>State</dt><dd>@_review.State</dd></div>
       </dl>
       <FormActions>
         @if (_review.State == CommitteeReviewState.Scheduled)
         {
           <button type="button" class="btn btn-primary" @onclick="StartAsync">Start review</button>
+        }
+        @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative)
+        {
+          <button type="button" class="btn btn-primary" @onclick="CloseFormativeAsync">Close review</button>
         }
         @if (_review.State == CommitteeReviewState.Decided)
         {
@@ -40,127 +45,130 @@
       </FormActions>
     </section>
 
-    <section class="detail-card">
-      <h3>Decision</h3>
-      <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-        <div class="form-grid">
-          <FormField Label="Category" InputId="decision-category" Required="true">
-            <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
-              @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-              {
-                <option value="@category">@category</option>
-              }
-            </InputSelect>
-          </FormField>
-          <FormField Label="Rationale" InputId="decision-rationale" Required="true">
-            <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
-          </FormField>
-          <FormField Label="Conditions" InputId="decision-conditions">
-            <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
-          </FormField>
-        </div>
-        <FormActions>
-          @if (_review.State == CommitteeReviewState.InProgress)
-          {
-            <button type="submit" class="btn btn-primary">Record decision</button>
-          }
-        </FormActions>
-      </EditForm>
-
-      @if (_review.Decisions.Count > 0)
-      {
-        <div class="stack-list">
-          @foreach (var decision in _review.Decisions)
-          {
-            <article class="stack-card">
-              <h4>@decision.Category</h4>
-              <p>@decision.Rationale</p>
-              @if (!string.IsNullOrWhiteSpace(decision.Conditions))
-              {
-                <p><strong>Conditions:</strong> @decision.Conditions</p>
-              }
-            </article>
-          }
-        </div>
-      }
-    </section>
-
-    <section class="detail-card">
-      <h3>Pending entrustment decisions</h3>
-      <p class="muted">
-        Decisions staged here are issued atomically when the committee review is ratified.
-        They become formal Statements of Awarded Responsibility (STAR) at that point.
-      </p>
-
-      @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
-      {
-        <EditForm Model="_pending" OnValidSubmit="StagePendingAsync" FormName="pending-entrustment">
+    @if (!_review.IsFormative)
+    {
+      <section class="detail-card">
+        <h3>Decision</h3>
+        <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
           <DataAnnotationsValidator />
           <ValidationSummary class="validation-summary-errors" />
           <div class="form-grid">
-            <FormField Label="EPA" InputId="pending-epa" Required="true">
-              <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId">
-                <option value="0">Select an EPA…</option>
-                @foreach (var epa in _epas)
+            <FormField Label="Category" InputId="decision-category" Required="true">
+              <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
+                @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
                 {
-                  <option value="@epa.Id">@epa.Code — @epa.Title</option>
+                  <option value="@category">@category</option>
                 }
               </InputSelect>
             </FormField>
-            <FormField Label="Authorised level" InputId="pending-level" Required="true">
-              <InputSelect id="pending-level" class="form-select" @bind-Value="_pending.AuthorisedLevelId">
-                <option value="0">Select a level…</option>
-                @foreach (var scale in _scales)
-                {
-                  <optgroup label="@scale.Name">
-                    @foreach (var level in scale.Levels)
-                    {
-                      <option value="@level.Id">@level.Order. @level.Label</option>
-                    }
-                  </optgroup>
-                }
-              </InputSelect>
+            <FormField Label="Rationale" InputId="decision-rationale" Required="true">
+              <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
             </FormField>
-            <FormField Label="Issued on" InputId="pending-issued" Required="true">
-              <InputDate id="pending-issued" class="form-control" @bind-Value="_pending.IssuedOn" />
-            </FormField>
-            <FormField Label="Expires on" InputId="pending-expires">
-              <InputDate id="pending-expires" class="form-control" @bind-Value="_pending.ExpiresOn" />
-            </FormField>
-            <FormField Label="Rationale" InputId="pending-rationale" Required="true">
-              <InputTextArea id="pending-rationale" class="form-control" @bind-Value="_pending.Rationale" />
+            <FormField Label="Conditions" InputId="decision-conditions">
+              <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
             </FormField>
           </div>
           <FormActions>
-            <button type="submit" class="btn btn-primary">Stage pending decision</button>
+            @if (_review.State == CommitteeReviewState.InProgress)
+            {
+              <button type="submit" class="btn btn-primary">Record decision</button>
+            }
           </FormActions>
         </EditForm>
-      }
 
-      @if (_pendingDecisions.Count == 0)
-      {
-        <p>No pending entrustment decisions have been staged for this review.</p>
-      }
-      else
-      {
-        <ul class="plain-list">
-          @foreach (var pending in _pendingDecisions)
-          {
-            <li>
-              <strong>@pending.EpaCode — @pending.EpaTitle</strong>
-              <span>@pending.AuthorisedLevelLabel · issued @pending.IssuedOn.ToString("yyyy-MM-dd")@(pending.ExpiresOn.HasValue ? $" · expires {pending.ExpiresOn:yyyy-MM-dd}" : string.Empty)</span>
-              <p>@pending.Rationale</p>
-              @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
-              {
-                <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
-              }
-            </li>
-          }
-        </ul>
-      }
-    </section>
+        @if (_review.Decisions.Count > 0)
+        {
+          <div class="stack-list">
+            @foreach (var decision in _review.Decisions)
+            {
+              <article class="stack-card">
+                <h4>@decision.Category</h4>
+                <p>@decision.Rationale</p>
+                @if (!string.IsNullOrWhiteSpace(decision.Conditions))
+                {
+                  <p><strong>Conditions:</strong> @decision.Conditions</p>
+                }
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="detail-card">
+        <h3>Pending entrustment decisions</h3>
+        <p class="muted">
+          Decisions staged here are issued atomically when the committee review is ratified.
+          They become formal Statements of Awarded Responsibility (STAR) at that point.
+        </p>
+
+        @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+        {
+          <EditForm Model="_pending" OnValidSubmit="StagePendingAsync" FormName="pending-entrustment">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary-errors" />
+            <div class="form-grid">
+              <FormField Label="EPA" InputId="pending-epa" Required="true">
+                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId">
+                  <option value="0">Select an EPA…</option>
+                  @foreach (var epa in _epas)
+                  {
+                    <option value="@epa.Id">@epa.Code — @epa.Title</option>
+                  }
+                </InputSelect>
+              </FormField>
+              <FormField Label="Authorised level" InputId="pending-level" Required="true">
+                <InputSelect id="pending-level" class="form-select" @bind-Value="_pending.AuthorisedLevelId">
+                  <option value="0">Select a level…</option>
+                  @foreach (var scale in _scales)
+                  {
+                    <optgroup label="@scale.Name">
+                      @foreach (var level in scale.Levels)
+                      {
+                        <option value="@level.Id">@level.Order. @level.Label</option>
+                      }
+                    </optgroup>
+                  }
+                </InputSelect>
+              </FormField>
+              <FormField Label="Issued on" InputId="pending-issued" Required="true">
+                <InputDate id="pending-issued" class="form-control" @bind-Value="_pending.IssuedOn" />
+              </FormField>
+              <FormField Label="Expires on" InputId="pending-expires">
+                <InputDate id="pending-expires" class="form-control" @bind-Value="_pending.ExpiresOn" />
+              </FormField>
+              <FormField Label="Rationale" InputId="pending-rationale" Required="true">
+                <InputTextArea id="pending-rationale" class="form-control" @bind-Value="_pending.Rationale" />
+              </FormField>
+            </div>
+            <FormActions>
+              <button type="submit" class="btn btn-primary">Stage pending decision</button>
+            </FormActions>
+          </EditForm>
+        }
+
+        @if (_pendingDecisions.Count == 0)
+        {
+          <p>No pending entrustment decisions have been staged for this review.</p>
+        }
+        else
+        {
+          <ul class="plain-list">
+            @foreach (var pending in _pendingDecisions)
+            {
+              <li>
+                <strong>@pending.EpaCode — @pending.EpaTitle</strong>
+                <span>@pending.AuthorisedLevelLabel · issued @pending.IssuedOn.ToString("yyyy-MM-dd")@(pending.ExpiresOn.HasValue ? $" · expires {pending.ExpiresOn:yyyy-MM-dd}" : string.Empty)</span>
+                <p>@pending.Rationale</p>
+                @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+                {
+                  <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
 
     <section class="detail-card">
       <h3>Evidence snapshot</h3>
@@ -179,53 +187,56 @@
       }
     </section>
 
-    <section class="detail-card">
-      <h3>Appeals</h3>
-      <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-        <div class="form-grid">
-          <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
-            <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
-              @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
-              {
-                <option value="@outcome">@outcome</option>
-              }
-            </InputSelect>
-          </FormField>
-          @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
-          {
-            <FormField Label="Replacement category" InputId="appeal-category" Required="true">
-              <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
-                @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+    @if (!_review.IsFormative)
+    {
+      <section class="detail-card">
+        <h3>Appeals</h3>
+        <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
+          <div class="form-grid">
+            <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
+              <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
+                @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
                 {
-                  <option value="@category">@category</option>
+                  <option value="@outcome">@outcome</option>
                 }
               </InputSelect>
             </FormField>
-            <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
-              <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
-            </FormField>
-          }
-        </div>
-        <FormActions>
-          @if (_review.State == CommitteeReviewState.UnderAppeal)
-          {
-            <button type="submit" class="btn btn-primary">Resolve appeal</button>
-          }
-        </FormActions>
-      </EditForm>
+            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
+            {
+              <FormField Label="Replacement category" InputId="appeal-category" Required="true">
+                <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                  @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                  {
+                    <option value="@category">@category</option>
+                  }
+                </InputSelect>
+              </FormField>
+              <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
+                <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+              </FormField>
+            }
+          </div>
+          <FormActions>
+            @if (_review.State == CommitteeReviewState.UnderAppeal)
+            {
+              <button type="submit" class="btn btn-primary">Resolve appeal</button>
+            }
+          </FormActions>
+        </EditForm>
 
-      @if (_review.Appeals.Count > 0)
-      {
-        <ul class="plain-list">
-          @foreach (var appeal in _review.Appeals)
-          {
-            <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome?.ToString() ?? "Open"))</li>
-          }
-        </ul>
-      }
-    </section>
+        @if (_review.Appeals.Count > 0)
+        {
+          <ul class="plain-list">
+            @foreach (var appeal in _review.Appeals)
+            {
+              <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome?.ToString() ?? "Open"))</li>
+            }
+          </ul>
+        }
+      </section>
+    }
   </div>
 }
 
@@ -284,6 +295,11 @@
   private async Task RatifyAsync()
   {
     await ExecuteAsync(user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)), "Decision ratified.");
+  }
+
+  private async Task CloseFormativeAsync()
+  {
+    await ExecuteAsync(user => Sender.Send(new CloseFormativeReviewCommand(ReviewId, user)), "Formative review closed.");
   }
 
   private async Task ResolveAppealAsync()

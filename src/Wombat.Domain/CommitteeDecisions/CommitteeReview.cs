@@ -8,6 +8,7 @@ public sealed class CommitteeReview
     public DateOnly ReviewPeriodFrom { get; set; }
     public DateOnly ReviewPeriodTo { get; set; }
     public DateOnly ScheduledOn { get; set; }
+    public bool IsFormative { get; set; }
     public CommitteeReviewState State { get; private set; } = CommitteeReviewState.Scheduled;
     public DateTime? StartedOn { get; private set; }
     public string? StartedByUserId { get; private set; }
@@ -53,6 +54,11 @@ public sealed class CommitteeReview
         string actorUserId,
         DateTime utcNow)
     {
+        if (IsFormative)
+        {
+            throw new InvalidOperationException("Formative reviews cannot record binding committee decisions. Close the review instead.");
+        }
+
         if (State != CommitteeReviewState.InProgress)
         {
             throw new InvalidOperationException("Only in-progress reviews can record a decision.");
@@ -64,8 +70,36 @@ public sealed class CommitteeReview
         return decision;
     }
 
+    public void Close(string actorUserId, DateTime utcNow)
+    {
+        if (!IsFormative)
+        {
+            throw new InvalidOperationException("Only formative reviews can be closed without a ratified decision. Record a decision and ratify instead.");
+        }
+
+        if (State != CommitteeReviewState.InProgress)
+        {
+            throw new InvalidOperationException("Only in-progress formative reviews can be closed.");
+        }
+
+        if (string.IsNullOrWhiteSpace(actorUserId))
+        {
+            throw new InvalidOperationException("The closing user is required.");
+        }
+
+        RatifiedByUserId = actorUserId.Trim();
+        RatifiedOn = utcNow;
+        FinalizedOn = utcNow;
+        State = CommitteeReviewState.Final;
+    }
+
     public void Ratify(string actorUserId, DateTime utcNow)
     {
+        if (IsFormative)
+        {
+            throw new InvalidOperationException("Formative reviews are not ratified. Close the review instead.");
+        }
+
         if (State != CommitteeReviewState.Decided)
         {
             throw new InvalidOperationException("Only decided reviews can be ratified.");

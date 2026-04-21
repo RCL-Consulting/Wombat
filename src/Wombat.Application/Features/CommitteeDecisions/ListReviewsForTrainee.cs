@@ -38,7 +38,8 @@ public sealed class ListReviewsForTraineeQueryHandler : IRequestHandler<ListRevi
                 review.ScheduledOn,
                 review.State,
                 review.Decisions.OrderByDescending(decision => decision.DecidedOn).Select(decision => (CommitteeDecisionCategory?)decision.Category).FirstOrDefault(),
-                review.RatifiedOn))
+                review.RatifiedOn,
+                review.IsFormative))
             .ToListAsync(cancellationToken);
     }
 }

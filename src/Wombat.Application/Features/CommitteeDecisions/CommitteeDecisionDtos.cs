@@ -35,7 +35,8 @@ public sealed record CommitteeReviewListItemDto(
     DateOnly ScheduledOn,
     CommitteeReviewState State,
     CommitteeDecisionCategory? CurrentDecisionCategory,
-    DateTime? RatifiedOn);
+    DateTime? RatifiedOn,
+    bool IsFormative = false);
 
 public sealed record CommitteeDecisionDto(
     int Id,
@@ -81,4 +82,5 @@ public sealed record CommitteeReviewDetailDto(
     DateTime? FinalizedOn,
     IReadOnlyList<CommitteeDecisionDto> Decisions,
     IReadOnlyList<CommitteeAppealDto> Appeals,
-    IReadOnlyList<CommitteeEvidenceDto> EvidenceItems);
+    IReadOnlyList<CommitteeEvidenceDto> EvidenceItems,
+    bool IsFormative = false);

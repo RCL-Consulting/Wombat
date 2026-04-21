@@ -223,8 +223,8 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | T028 — rename `star_reflection` → `reflective_note` | ✅ done | `dc506d1` |
 | T029 — `EntrustmentDecision` aggregate | ✅ done | `91ff841` |
 | T030 — STAR certificate PDF + trainee authorisations panel | ✅ done | `10f7e55` |
-| T031 — Formative-only committee review mode | active | — |
-| T032 — Sampling-concentration warning | pending | — |
+| T031 — Formative-only committee review mode | ✅ done | — |
+| T032 — Sampling-concentration warning | active | — |
 | T033 — Per-trainee trajectory chart | pending | — |
 | T034 — EPA core/elective + stage-indexed supervision levels | pending | — |
 | T035 — Assessor training status field | pending | — |
@@ -232,6 +232,6 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 
 ## Active task
 
-**T031 — Formative-only committee review mode.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**T032 — Sampling-concentration warning on review detail.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
 
 Commit after every completed task, per `Rewrite/WORKFLOW.md`.

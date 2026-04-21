@@ -58,6 +58,11 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
+        if (review.IsFormative)
+        {
+            throw new InvalidOperationException("Formative reviews cannot issue entrustment decisions.");
+        }
+
         if (review.State is not CommitteeReviewState.InProgress and not CommitteeReviewState.Decided)
         {
             throw new InvalidOperationException("Pending entrustment decisions may only be staged on an in-progress or decided review.");

@@ -46,6 +46,12 @@
         <FormField Label="Scheduled on" InputId="review-scheduled" Required="true">
           <InputDate id="review-scheduled" class="form-control" @bind-Value="_model.ScheduledOn" />
         </FormField>
+        <FormField Label="Formative only" InputId="review-formative">
+          <label class="checkbox-label">
+            <InputCheckbox id="review-formative" @bind-Value="_model.IsFormative" />
+            <span>Formative review — closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins.</span>
+          </label>
+        </FormField>
       </div>
       <FormActions>
         <button type="submit" class="btn btn-primary">Create review</button>
@@ -61,6 +67,7 @@
         <th>Trainee</th>
         <th>Panel</th>
         <th>Period</th>
+        <th>Mode</th>
         <th>State</th>
         <th>Decision</th>
         <th></th>
@@ -71,8 +78,9 @@
         <td><code>@item.TraineeUserId</code></td>
         <td>@item.PanelName</td>
         <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.State</td>
-        <td>@(item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
+        <td>@(item.IsFormative ? "—" : item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")">Open</a>
         </td>
@@ -131,7 +139,8 @@
         _model.ReviewPeriodFrom,
         _model.ReviewPeriodTo,
         _model.ScheduledOn,
-        authState.User));
+        authState.User,
+        _model.IsFormative));
 
       NavigationManager.NavigateTo($"/committee/reviews/{review.Id}");
     }
@@ -157,5 +166,7 @@
 
     [Required]
     public DateOnly ScheduledOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+    public bool IsFormative { get; set; }
   }
 }
