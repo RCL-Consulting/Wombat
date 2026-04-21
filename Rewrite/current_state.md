@@ -8,6 +8,16 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 Second Block 2 task. A single query executed from `ReviewDetail.razor` that reports on the evidence distribution for the trainee under review: one-assessor-over-50%, single-source-only, fewer-than-three-distinct-assessors. Rendered as a dismissible warning panel. No new aggregate, no projection table. See scope in `Rewrite/practical-plan.md` §T032. 1–2 days.
 
+## This session at a glance
+
+Block 1 closed and Block 2 half done. Three tasks shipped back-to-back on `master`:
+
+- **T029 — `EntrustmentDecision` aggregate (STAR)** — `91ff841`
+- **T030 — STAR certificate PDF + authorisations UI** — `10f7e55`
+- **T031 — formative-only committee review mode** — `ac4fdb9`
+
+Hospital now has an end-to-end defensible entrustment record: committees ratify, decisions issue atomically, trainees download QuestPDF certificates, admins revoke with audit, and interim formative check-ins run without producing binding paperwork.
+
 ## Last completed
 
 **T031 — Formative-only committee review mode.**
