@@ -221,8 +221,8 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | Task | Status | Commit |
 |---|---|---|
 | T028 — rename `star_reflection` → `reflective_note` | ✅ done | `dc506d1` |
-| T029 — `EntrustmentDecision` aggregate | active | — |
-| T030 — STAR certificate PDF + trainee authorisations panel | pending | — |
+| T029 — `EntrustmentDecision` aggregate | ✅ done | — |
+| T030 — STAR certificate PDF + trainee authorisations panel | active | — |
 | T031 — Formative-only committee review mode | pending | — |
 | T032 — Sampling-concentration warning | pending | — |
 | T033 — Per-trainee trajectory chart | pending | — |
@@ -232,6 +232,6 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 
 ## Active task
 
-**T029 — `EntrustmentDecision` aggregate.** Model: Opus. Live state in `Rewrite/current_state.md`.
+**T030 — STAR certificate PDF + trainee "My authorisations" panel.** Model: Opus. Live state in `Rewrite/current_state.md`.
 
 Commit after every completed task, per `Rewrite/WORKFLOW.md`.

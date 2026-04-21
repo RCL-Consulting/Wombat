@@ -113,6 +113,7 @@ public static class DependencyInjection
         services.AddScheduledJob<PortfolioExportCleanupJob>();
         services.AddScheduledJob<AuditLogRetentionJob>();
         services.AddScheduledJob<ScheduledJobRunRetentionJob>();
+        services.AddScheduledJob<EntrustmentDecisionExpiryJob>();
 
         services.AddSingleton<IScheduledJobRegistry>(provider =>
         {

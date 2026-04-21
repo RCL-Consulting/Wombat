@@ -51,13 +51,28 @@ In the rewrite, this cleans up to:
 - `Assessment` (was `LoggedAssessment`) — the aggregate. Exists in one of: `Requested`, `Accepted`, `Declined`, `Cancelled`, `Completed`. Has a collection of `CriterionResponse`. State transitions are methods on the aggregate, not service methods.
 - The workflow aggregate absorbs `AssessmentRequest` and `AssessmentEvent`. The state machine lives in `Assessment` itself; events are produced as a by-product of state transitions and stored for audit.
 
-### STAR reflection
+### STAR reflection (legacy terminology)
 
-STAR in this codebase is a **written reflection** the trainee submits against an EPA, using the Situation-Task-Action-Result framing. It is *not* a rating — it is a portfolio item that an admin approves or declines with feedback. It lives alongside WBAs as evidence of competence but is a separate aggregate with a different state model:
+Historically Wombat used STAR to mean a **written reflection** the trainee submits against an EPA, using the Situation-Task-Action-Result framing. After T028, that activity type was renamed to `reflective_note` and the STAR acronym was reclaimed for the formal entrustment artefact defined below. The reflective-note activity is still structured around the Situation-Task-Action-Result frame and follows the same `Draft` → `Submitted` → `Approved` / `Declined` lifecycle; it is just no longer called a STAR anywhere in code or UI.
 
-- `StarReflection` — aggregate. Belongs to a Trainee and an EPA. Has items (Situation, Task, Action, Result) and responses. Lifecycle: `Draft` → `Submitted` → `Approved` / `Declined` (with feedback). Resubmission after decline is allowed.
+The original collapse of `STARApplication` / `STARApplicationForm` / `STARItem` / `STARResponse` now lands inside the activity platform (schema-driven form + workflow) rather than as a dedicated aggregate. See `CUSTOMIZATION.md` and the `reflective_note` seed directory for the current shape.
 
-Wombat's current `STARApplication` / `STARApplicationForm` / `STARItem` / `STARResponse` collapse into `StarReflection` + `StarSection` + `StarResponse`. The word "Application" in the current code is misleading — you are not *applying* for anything, you are reflecting on an experience.
+### Entrustment decision (STAR — Statement of Awarded Responsibility)
+
+After the reflective-note rename in T028, **STAR** in Wombat now refers to the **Statement of Awarded Responsibility**: the formal, per-trainee-per-EPA authorisation record that a committee issues on the back of a ratified review. Introduced in T029.
+
+- `EntrustmentDecision` — aggregate root. Immutable after issue. Properties: `TraineeUserId`, `EpaId`, `AuthorisedLevelId` (references `EntrustmentLevel` — the 1–5 scale), `IssuedOn` (`DateOnly`), `ExpiresOn?` (`DateOnly?`), `IssuedByCommitteeReviewId`, `IssuedByChairUserId`, `Rationale`, `Status` (`Active`, `Expired`, `Revoked`, `Superseded`), revocation tuple (`RevokedOn`, `RevokedByUserId`, `RevocationReason`), `SupersededByDecisionId?`.
+- `EntrustmentEvidenceLink` — child. Snapshot-style pointer to the activities, MSF campaigns, or committee reviews that grounded the decision. Parallel to `CommitteeEvidence` on `CommitteeReview`.
+- Domain methods: `static Issue(...)`, `Revoke(reason, actor, utcNow)`, `MarkExpired(utcNow)`, `SupersedeBy(newDecisionId)`. `Amend()` throws — mirrors `CommitteeDecision`.
+- `PendingEntrustmentDecision` — chair-staging state attached to a `CommitteeReview`. Holds the intended decision (EPA, level, issue/expiry, rationale, evidence links as jsonb) until the review is ratified. On ratification, each pending row is materialised atomically into an `EntrustmentDecision` with `IssuedByCommitteeReviewId` pointing at the parent review. Pending rows are cleared as part of the same transaction.
+
+**Why this is hard-coded.** Entrustment decisions carry regulatory and medico-legal weight: immutable once issued, appealable through committee machinery, defensible to a regulator, produced by a named chair on behalf of a named panel. They are not an activity type — an admin must not be able to reshape them in the builder. Same reasoning as `CommitteeDecision`.
+
+**Auto-supersession.** When a new `Active` decision is issued for the same `(TraineeUserId, EpaId)` pair, any prior `Active` decision for that pair is automatically marked `Superseded` with `SupersededByDecisionId` pointing at the new row. Only one `Active` decision per `(trainee, EPA)` exists at a time.
+
+**Expiry.** A daily background job (`EntrustmentDecisionExpiryJob`, 03:30 UTC) flips `Active` decisions past `ExpiresOn` to `Expired`, emails the trainee, and sends a 30-day expiry-reminder pass tracked via `LastExpiryReminderSentOn` to avoid repeat spam.
+
+The PDF certificate ("STAR certificate") is produced by T030.
 
 ## Role hierarchy
 

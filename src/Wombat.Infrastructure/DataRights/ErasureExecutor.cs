@@ -7,6 +7,7 @@ using Wombat.Application.Features.DataRights;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Invitations;
@@ -117,6 +118,26 @@ public sealed class ErasureExecutor : IErasureExecutor
             .ToListAsync(cancellationToken);
         foreach (var member in panelMembers)
             member.UserId = pseudonym;
+
+        // --- Entrustment decisions (STAR): pseudonymise trainee, chair, revoker references ---
+        // All three columns are private set on the aggregate; use raw SQL.
+        var entrustmentCount = await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"EntrustmentDecisions\" SET \"TraineeUserId\" = {pseudonym} WHERE \"TraineeUserId\" = {userId}",
+            cancellationToken);
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"EntrustmentDecisions\" SET \"IssuedByChairUserId\" = {pseudonym} WHERE \"IssuedByChairUserId\" = {userId}",
+            cancellationToken);
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"EntrustmentDecisions\" SET \"RevokedByUserId\" = {pseudonym} WHERE \"RevokedByUserId\" = {userId}",
+            cancellationToken);
+
+        if (entrustmentCount > 0)
+            retentionReasons.Add("entrustment_decision");
+
+        // --- Pending entrustment decisions: chair-staging transient state ---
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"PendingEntrustmentDecisions\" SET \"StagedByUserId\" = {pseudonym} WHERE \"StagedByUserId\" = {userId}",
+            cancellationToken);
 
         // --- MSF campaigns: pseudonymise subject, creator, reviewer ---
         var campaigns = await _dbContext.Set<MsfCampaign>()

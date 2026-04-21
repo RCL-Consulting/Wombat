@@ -88,6 +88,81 @@
     </section>
 
     <section class="detail-card">
+      <h3>Pending entrustment decisions</h3>
+      <p class="muted">
+        Decisions staged here are issued atomically when the committee review is ratified.
+        They become formal Statements of Awarded Responsibility (STAR) at that point.
+      </p>
+
+      @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+      {
+        <EditForm Model="_pending" OnValidSubmit="StagePendingAsync" FormName="pending-entrustment">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
+          <div class="form-grid">
+            <FormField Label="EPA" InputId="pending-epa" Required="true">
+              <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId">
+                <option value="0">Select an EPA…</option>
+                @foreach (var epa in _epas)
+                {
+                  <option value="@epa.Id">@epa.Code — @epa.Title</option>
+                }
+              </InputSelect>
+            </FormField>
+            <FormField Label="Authorised level" InputId="pending-level" Required="true">
+              <InputSelect id="pending-level" class="form-select" @bind-Value="_pending.AuthorisedLevelId">
+                <option value="0">Select a level…</option>
+                @foreach (var scale in _scales)
+                {
+                  <optgroup label="@scale.Name">
+                    @foreach (var level in scale.Levels)
+                    {
+                      <option value="@level.Id">@level.Order. @level.Label</option>
+                    }
+                  </optgroup>
+                }
+              </InputSelect>
+            </FormField>
+            <FormField Label="Issued on" InputId="pending-issued" Required="true">
+              <InputDate id="pending-issued" class="form-control" @bind-Value="_pending.IssuedOn" />
+            </FormField>
+            <FormField Label="Expires on" InputId="pending-expires">
+              <InputDate id="pending-expires" class="form-control" @bind-Value="_pending.ExpiresOn" />
+            </FormField>
+            <FormField Label="Rationale" InputId="pending-rationale" Required="true">
+              <InputTextArea id="pending-rationale" class="form-control" @bind-Value="_pending.Rationale" />
+            </FormField>
+          </div>
+          <FormActions>
+            <button type="submit" class="btn btn-primary">Stage pending decision</button>
+          </FormActions>
+        </EditForm>
+      }
+
+      @if (_pendingDecisions.Count == 0)
+      {
+        <p>No pending entrustment decisions have been staged for this review.</p>
+      }
+      else
+      {
+        <ul class="plain-list">
+          @foreach (var pending in _pendingDecisions)
+          {
+            <li>
+              <strong>@pending.EpaCode — @pending.EpaTitle</strong>
+              <span>@pending.AuthorisedLevelLabel · issued @pending.IssuedOn.ToString("yyyy-MM-dd")@(pending.ExpiresOn.HasValue ? $" · expires {pending.ExpiresOn:yyyy-MM-dd}" : string.Empty)</span>
+              <p>@pending.Rationale</p>
+              @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+              {
+                <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="detail-card">
       <h3>Evidence snapshot</h3>
       @if (_review.EvidenceItems.Count == 0)
       {
@@ -162,6 +237,10 @@
   private string? _error;
   private DecisionFormModel _decision = new();
   private AppealResolutionModel _appeal = new();
+  private PendingDecisionFormModel _pending = new();
+  private IReadOnlyList<PendingEntrustmentDecisionDto> _pendingDecisions = Array.Empty<PendingEntrustmentDecisionDto>();
+  private IReadOnlyList<EpaDto> _epas = Array.Empty<EpaDto>();
+  private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
 
   protected override async Task OnParametersSetAsync()
   {
@@ -174,6 +253,15 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      if (_epas.Count == 0)
+      {
+        _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
+      }
+      if (_scales.Count == 0)
+      {
+        _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+      }
     }
     catch (Exception exception)
     {
@@ -209,6 +297,52 @@
         _appeal.RemittedConditions,
         user)),
       "Appeal resolved.");
+  }
+
+  private async Task StagePendingAsync()
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new StagePendingEntrustmentDecisionCommand(
+        ReviewId,
+        null,
+        _pending.EpaId,
+        _pending.AuthorisedLevelId,
+        _pending.IssuedOn,
+        _pending.ExpiresOn,
+        _pending.Rationale,
+        Array.Empty<EntrustmentEvidenceLinkInput>(),
+        authState.User));
+      _pending = new PendingDecisionFormModel();
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      _status = "Pending entrustment decision staged.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task RemovePendingAsync(int pendingId)
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      _status = "Pending entrustment decision removed.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
   }
 
   private async Task ExecuteAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
@@ -247,5 +381,22 @@
     public CommitteeDecisionCategory? RemittedCategory { get; set; }
     public string? RemittedRationale { get; set; }
     public string? RemittedConditions { get; set; }
+  }
+
+  private sealed class PendingDecisionFormModel
+  {
+    [Range(1, int.MaxValue, ErrorMessage = "Select an EPA.")]
+    public int EpaId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Select an entrustment level.")]
+    public int AuthorisedLevelId { get; set; }
+
+    [Required]
+    public DateOnly IssuedOn { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    public DateOnly? ExpiresOn { get; set; }
+
+    [Required]
+    public string Rationale { get; set; } = string.Empty;
   }
 }
