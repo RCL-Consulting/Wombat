@@ -8,26 +8,13 @@
 
 <PageHeader Title="My progress" Subtitle="Rating trajectory for each EPA you have evidence against." />
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
-
-@if (_trajectories is null)
-{
-  <p class="muted">Loading trajectories…</p>
-}
-else if (_trajectories.Count == 0)
-{
-  <section class="detail-card">
-    <p>No rated observations on file yet.</p>
-    <p class="muted">Mini-CEX, DOPS, CbD, and ACAT assessments will appear here as your supervisors complete them.</p>
-  </section>
-}
-else
-{
+<StatePanel IsLoading="@(_trajectories is null && _error is null)"
+            LoadError="@_error"
+            IsEmpty="@(_trajectories is { Count: 0 })"
+            EmptyTitle="No rated observations on file yet"
+            EmptyBody="Mini-CEX, DOPS, CbD, and ACAT assessments will appear here as your supervisors complete them.">
   <div class="details-grid">
-    @foreach (var trajectory in _trajectories)
+    @foreach (var trajectory in _trajectories!)
     {
       <section class="detail-card">
         <h3>@trajectory.EpaCode — @trajectory.EpaTitle</h3>
@@ -40,7 +27,7 @@ else
       </section>
     }
   </div>
-}
+</StatePanel>
 
 @code {
   private IReadOnlyList<EpaTrajectoryDto>? _trajectories;

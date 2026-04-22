@@ -9,26 +9,18 @@
 
 <PageHeader Title="My authorisations" Subtitle="Your active Statements of Awarded Responsibility (STAR)." />
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrWhiteSpace(_downloadError))
 {
-  <Alert Kind="danger">@_error</Alert>
+  <Alert Kind="danger">@_downloadError</Alert>
 }
 
-@if (_decisions is null)
-{
-  <p class="muted">Loading authorisations…</p>
-}
-else if (_decisions.Count == 0)
-{
-  <section class="detail-card">
-    <p>You do not currently hold any active entrustment decisions.</p>
-    <p class="muted">When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.</p>
-  </section>
-}
-else
-{
+<StatePanel IsLoading="@(_decisions is null && _loadError is null)"
+            LoadError="@_loadError"
+            IsEmpty="@(_decisions is { Count: 0 })"
+            EmptyTitle="No active authorisations yet"
+            EmptyBody="When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.">
   <div class="details-grid">
-    @foreach (var decision in _decisions)
+    @foreach (var decision in _decisions!)
     {
       <section class="detail-card">
         <h3>@decision.EpaCode — @decision.EpaTitle</h3>
@@ -69,11 +61,12 @@ else
       </section>
     }
   </div>
-}
+</StatePanel>
 
 @code {
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
-  private string? _error;
+  private string? _loadError;
+  private string? _downloadError;
   private bool _downloading;
   private int? _downloadingId;
 
@@ -88,13 +81,13 @@ else
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
   }
 
   private async Task DownloadAsync(int decisionId, string epaCode)
   {
-    _error = null;
+    _downloadError = null;
     _downloading = true;
     _downloadingId = decisionId;
 
@@ -106,7 +99,7 @@ else
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _downloadError = exception.Message;
     }
     finally
     {

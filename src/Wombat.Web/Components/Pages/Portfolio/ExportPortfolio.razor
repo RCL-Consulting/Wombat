@@ -11,91 +11,91 @@
 
 @if (!string.IsNullOrWhiteSpace(_error))
 {
-    <div class="alert alert-danger">@_error</div>
+  <Alert Kind="danger">@_error</Alert>
 }
 
 @if (_success)
 {
-    <div class="alert alert-success">Portfolio exported successfully. The download should start automatically.</div>
+  <Alert Kind="success">Portfolio exported successfully. The download should start automatically.</Alert>
 }
 
 <div class="form-container">
-    <div class="form-grid">
-        <FormField Label="From date" InputId="fromDate">
-            <input type="date" id="fromDate" class="form-control" @bind="_fromDate" />
-        </FormField>
-        <FormField Label="To date" InputId="toDate">
-            <input type="date" id="toDate" class="form-control" @bind="_toDate" />
-        </FormField>
-    </div>
+  <div class="form-grid">
+    <FormField Label="From date" InputId="fromDate">
+      <input type="date" id="fromDate" class="form-control" @bind="_fromDate" />
+    </FormField>
+    <FormField Label="To date" InputId="toDate">
+      <input type="date" id="toDate" class="form-control" @bind="_toDate" />
+    </FormField>
+  </div>
 
-    <div class="form-actions">
-        <button class="btn btn-primary" @onclick="ExportAsync" disabled="@_exporting">
-            @if (_exporting)
-            {
-                <span>Generating...</span>
-            }
-            else
-            {
-                <span>Export PDF</span>
-            }
-        </button>
-    </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" @onclick="ExportAsync" disabled="@_exporting">
+      @if (_exporting)
+      {
+        <span>Generating...</span>
+      }
+      else
+      {
+        <span>Export PDF</span>
+      }
+    </button>
+  </div>
 </div>
 
 @code {
-    [Parameter] public string? TraineeUserId { get; set; }
+  [Parameter] public string? TraineeUserId { get; set; }
 
-    private DateOnly? _fromDate = DateOnly.FromDateTime(DateTime.Today.AddMonths(-12));
-    private DateOnly? _toDate = DateOnly.FromDateTime(DateTime.Today);
-    private bool _exporting;
-    private bool _success;
-    private string? _error;
+  private DateOnly? _fromDate = DateOnly.FromDateTime(DateTime.Today.AddMonths(-12));
+  private DateOnly? _toDate = DateOnly.FromDateTime(DateTime.Today);
+  private bool _exporting;
+  private bool _success;
+  private string? _error;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    if (string.IsNullOrWhiteSpace(TraineeUserId))
     {
-        if (string.IsNullOrWhiteSpace(TraineeUserId))
-        {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            TraineeUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        }
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      TraineeUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    }
+  }
+
+  private async Task ExportAsync()
+  {
+    if (string.IsNullOrWhiteSpace(TraineeUserId))
+    {
+      _error = "No trainee specified.";
+      return;
     }
 
-    private async Task ExportAsync()
+    _exporting = true;
+    _error = null;
+    _success = false;
+
+    try
     {
-        if (string.IsNullOrWhiteSpace(TraineeUserId))
-        {
-            _error = "No trainee specified.";
-            return;
-        }
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var result = await Sender.Send(new Wombat.Application.Features.Reporting.ExportPortfolioCommand(
+        TraineeUserId,
+        _fromDate,
+        _toDate,
+        authState.User));
 
-        _exporting = true;
-        _error = null;
-        _success = false;
-
-        try
-        {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var result = await Sender.Send(new Wombat.Application.Features.Reporting.ExportPortfolioCommand(
-                TraineeUserId,
-                _fromDate,
-                _toDate,
-                authState.User));
-
-            await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
-            _success = true;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            _error = "You are not authorized to export this portfolio.";
-        }
-        catch (Exception exception)
-        {
-            _error = exception.Message;
-        }
-        finally
-        {
-            _exporting = false;
-        }
+      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
+      _success = true;
     }
+    catch (UnauthorizedAccessException)
+    {
+      _error = "You are not authorized to export this portfolio.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _exporting = false;
+    }
+  }
 }
