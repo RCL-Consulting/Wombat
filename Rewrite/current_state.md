@@ -6,7 +6,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 **T038 — Trainee surface (GUI review cluster 2).** Model: Sonnet.
 
-Browser-verify and polish: `TraineeDashboard`, `Portfolio/MyProgress`, `Portfolio/MyAuthorisations`, `Activities/MyActivities`, `Portfolio/ExportPortfolio`, `Portfolio/VerifyExport`. Apply the rubric in `Rewrite/gui-review-plan.md`. **Local dev DB is currently broken** — see "Open blocker" below — start by unblocking that, since this task needs the app running in a browser.
+Browser-verify and polish: `TraineeDashboard`, `Portfolio/MyProgress`, `Portfolio/MyAuthorisations`, `Activities/MyActivities`, `Portfolio/ExportPortfolio`, `Portfolio/VerifyExport`. Apply the rubric in `Rewrite/gui-review-plan.md`. Dev server is unblocked (see "This session at a glance"); a Trainee-role login is needed to exercise the cluster — `pwd_DO_NOT_COMMIT.txt` carries the seeded admin only, so a Trainee account either has to be invited from the admin UI or seeded.
 
 ## This session at a glance
 
@@ -14,30 +14,34 @@ Practical plan closed. **T036 (accreditor-specific export template) deferred ind
 
 New plan: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 pages + 15 shared components, six clusters (T037–T042), ~8 working days.
 
-T037 shipped — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide SVGs (shield, clock, key). Deleted the duplicate icon mechanism. Build + 270 tests green. **Browser verification of T037 was blocked** because the dev server fails on startup with `ActivityTypes."Title"` not existing — the T028 data migration's UPDATE references a column the local DB doesn't have. Pre-existing infra issue, unrelated to T037; recorded under "Open blocker" so the next session picks it up first.
+T037 shipped — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide SVGs (shield, clock, key). Deleted the duplicate icon mechanism. Build + 270 tests green. Browser verification confirmed: all 13 nav icons render correctly under the Administrator role at `http://localhost:5080/` and follow `currentColor` (active "Home" item highlights as expected).
 
-## Open blocker
+Dev-server startup blocker uncovered during T037 verification and fixed: T028's `RenameStarReflection` migration referenced an `ActivityTypes."Title"` column that has never existed (the column is `Name`). Edited the migration in place (no Designer change — data-only) and committed as `a413ddc`. The migration would have failed on any first-time MigrateAsync run; fortunately it had never succeeded anywhere before. T029–T035 were all written and tested without anyone running the dev server end-to-end against this migration.
 
-Dev server (`dotnet run --project src/Wombat.Web/Wombat.Web.csproj`) crashes during `MigrateAsync()` with:
+## Possible follow-ups (not opened as tasks)
 
-```
-42703: column "Title" of relation "ActivityTypes" does not exist
-SQL: UPDATE "ActivityTypes" SET "Key" = 'reflective_note', "Title" = 'Reflective Note' WHERE "Key" = 'star_reflection';
-```
-
-Source: T028 (commit `dc506d1`) data-migration step. Either the migration is wrong or the local DB is at a schema state from before `Title` was added (or it lives under a different name like `Name`/`DisplayName` here). Diagnose by reading the T028 migration, the `ActivityType` entity + its EF configuration, and whichever earlier migration introduced the title column. Decide whether to amend the migration, write a corrective hand-written migration, or rebuild the local DB.
-
-This blocks browser verification on every GUI-review cluster until resolved.
+- The h1 on the Administrator dashboard (e.g. "Welcome, admin@wombat.local") shows a black focus-ring rectangle on initial render. Pre-existing; flag for the cluster that owns admin dashboards (T040).
+- Nav-link text shows the default `<a>` underline. Pre-existing in `NavMenu.razor.css`; not introduced by T037. Decide during T037-area follow-up or T040 whether to add `text-decoration: none` to `.nav-item ::deep .nav-link`.
+- `pwd_DO_NOT_COMMIT.txt` is not in `.gitignore` — only kept out of commits by manual care. Worth adding an explicit ignore entry.
 
 ## Last completed
 
-**T037 — Consolidate NavMenu icons to `Icon.razor`.**
+**T037 — Consolidate NavMenu icons to `Icon.razor`** (commit `1d25995`) **+ T028 migration fix** (commit `a413ddc`).
 
+T037:
 - `NavMenu.razor` — replaced 31 `<span class="bi bi-*-nav-menu">` invocations with `<Icon Name="..." />` (home, user, shield, calendar, file-text, book, inbox, users, alert-triangle, settings, clock, key, log-out).
 - `NavMenu.razor.css` — deleted the `.bi` and 10 `.bi-*-nav-menu` background-image blocks. Added a single `.nav-item ::deep .icon` rule sizing icons to 1.25rem with the previous left/right margins; `flex-shrink: 0` prevents collapse on narrow nav.
 - New SVGs: `wwwroot/icons/shield.svg`, `clock.svg`, `key.svg` (Lucide, single `<svg id="i">` matching the existing convention).
-- Side benefit: nav icons now follow `currentColor` from `.nav-link` color, so they recolour on hover/active instead of staying hardcoded white.
-- **Verification: build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38). Browser verification not performed — blocked by the pre-existing dev-server migration error described above.**
+- Side benefit: nav icons follow `currentColor` from `.nav-link` color, so they recolour on hover/active instead of staying hardcoded white.
+
+T028 migration fix (`fix(T028)`):
+- `RenameStarReflection.cs` Up/Down SQL: `"Title"` → `"Name"` (the column never existed under the wrong name).
+- Edited in place — migration had never run successfully anywhere, only does data updates, no Designer/snapshot impact.
+
+Verification:
+- Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
+- Dev server starts cleanly past `MigrateAsync()` after the fix.
+- Login + Administrator dashboard load at `http://localhost:5080/`; all 13 NavMenu icons render with correct sizing/spacing and `currentColor` flow.
 
 ## Plan this session works against
 
@@ -47,8 +51,8 @@ This blocks browser verification on every GUI-review cluster until resolved.
 
 ## GUI review sequence
 
-1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser verification deferred)
-2. T038 — Trainee surface (active — 1.5 d, blocked on dev DB)
+1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified)
+2. T038 — Trainee surface (active — 1.5 d)
 3. T039 — Committee flow (1.5 d)
 4. T040 — Admin hierarchy (2 d)
 5. T041 — Activity platform (2 d)
@@ -90,7 +94,9 @@ This blocks browser verification on every GUI-review cluster until resolved.
 
 ## Last verified commits
 
-- `1d25995` — T037 (consolidate NavMenu icons to Icon.razor; browser verification deferred)
+- `a413ddc` — fix(T028): correct ActivityTypes column name in RenameStarReflection migration
+- `ba8d20b` — docs: record T037 commit hash in handoff
+- `1d25995` — T037 (consolidate NavMenu icons to Icon.razor; browser-verified Administrator role)
 - `ba7c7d8` — docs: defer T036, open GUI review plan (T037–T042)
 - `9d60cd7` — T035 (assessor training status field)
 - `dd18b66` — T034 (EPA core/elective + stage-indexed supervision levels)
