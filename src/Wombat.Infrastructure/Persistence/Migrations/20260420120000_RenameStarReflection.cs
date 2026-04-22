@@ -12,7 +12,7 @@ namespace Wombat.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.Sql(
                 "UPDATE \"ActivityTypes\" " +
-                "SET \"Key\" = 'reflective_note', \"Title\" = 'Reflective Note' " +
+                "SET \"Key\" = 'reflective_note', \"Name\" = 'Reflective Note' " +
                 "WHERE \"Key\" = 'star_reflection';");
         }
 
@@ -21,7 +21,7 @@ namespace Wombat.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.Sql(
                 "UPDATE \"ActivityTypes\" " +
-                "SET \"Key\" = 'star_reflection', \"Title\" = 'STAR Reflection' " +
+                "SET \"Key\" = 'star_reflection', \"Name\" = 'STAR Reflection' " +
                 "WHERE \"Key\" = 'reflective_note';");
         }
     }
