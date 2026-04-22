@@ -366,3 +366,10 @@ ClinicAssist.NET_ref_DO_NOT_COMMIT/
 Wombat_ref_old_DO_NOT_COMMIT/
 Rewrite/.dotnet/
 EPA Book/chapters/
+
+# Browser-verification artifacts (Playwright MCP cache + ad-hoc screenshots)
+.playwright-mcp/
+/*.png
+
+# Local dev credentials — kept out of commits manually until now
+pwd_DO_NOT_COMMIT.txt
