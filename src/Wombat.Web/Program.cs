@@ -344,6 +344,12 @@ await using (var scope = app.Services.CreateAsyncScope())
     await roleSeeder.SeedAsync();
     await adminSeeder.SeedAsync();
     await dataSeeder.SeedAsync();
+
+    if (app.Environment.IsDevelopment())
+    {
+        var devUserSeeder = scope.ServiceProvider.GetRequiredService<DevUserSeeder>();
+        await devUserSeeder.SeedAsync();
+    }
 }
 
 if (args.Contains("--seed", StringComparer.Ordinal))
