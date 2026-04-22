@@ -90,6 +90,8 @@ This blocks browser verification on every GUI-review cluster until resolved.
 
 ## Last verified commits
 
+- `1d25995` — T037 (consolidate NavMenu icons to Icon.razor; browser verification deferred)
+- `ba7c7d8` — docs: defer T036, open GUI review plan (T037–T042)
 - `9d60cd7` — T035 (assessor training status field)
 - `dd18b66` — T034 (EPA core/elective + stage-indexed supervision levels)
 - `9910ba1` — T033 (per-trainee per-EPA trajectory chart)
