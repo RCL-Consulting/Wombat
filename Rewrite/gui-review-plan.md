@@ -39,15 +39,23 @@ Each cluster is **verified in a browser**, not just read. `Rewrite/DESIGN.md` is
 
 ---
 
-## T037 — NavMenu icon hotfix
+## T037 — Consolidate NavMenu icons to `Icon.razor`
 
-Known drift. `NavMenu.razor` uses 31 `<span class="bi bi-*">` references. CLAUDE.md states the Bootstrap Icons font is not loaded — these render nothing.
+The icons render today, but via a bespoke mechanism: `NavMenu.razor.css` defines a `.bi-*-nav-menu` class per icon with an inline-SVG `background-image` data URI. Two parallel icon systems now exist in the app — `Icon.razor` everywhere else, this ad-hoc CSS here. Problems:
 
-- Replace every `<span class="bi bi-*">` with `<Icon Name="..." />`
-- Map each `bi-*` class to a Lucide icon; add any missing SVGs to `src/Wombat.Web/wwwroot/icons/`
-- Verify each authenticated role's nav renders icons in the browser
+- The `bi-` prefix implies Bootstrap Icons, which this project does not use; false positive on the CLAUDE.md guidance and a maintenance hazard
+- Strokes are hardcoded to `white` in the data URIs, so they can't follow `currentColor` on hover/active states
+- Adding a new nav entry requires writing a second icon in a second place
 
-**Effort:** ½ day. Blocks the visible polish on every cluster below — run it first so browser verification on T038+ is meaningful.
+Work:
+
+- Replace every `<span class="bi bi-*-nav-menu">` with `<Icon Name="..." />`
+- Add missing Lucide SVGs to `src/Wombat.Web/wwwroot/icons/` (shield, clock, key)
+- Delete the `.bi` and `.bi-*-nav-menu` blocks from `NavMenu.razor.css`
+- Add a minimal rule to space the `Icon` inside `.nav-link` so layout matches the current design
+- Verify each authenticated role's nav renders in the browser; confirm hover/active states still visually distinguish the icon
+
+**Effort:** ½ day. Runs first to make browser verification on every subsequent cluster meaningful.
 
 ## T038 — Trainee surface
 
@@ -134,8 +142,8 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 
 | Task | Status | Commit |
 |---|---|---|
-| T037 — NavMenu icon hotfix | pending | — |
-| T038 — Trainee surface | pending | — |
+| T037 — Consolidate NavMenu icons to `Icon.razor` | ✅ done (browser verification deferred) | — |
+| T038 — Trainee surface | active (blocked on dev DB) | — |
 | T039 — Committee flow | pending | — |
 | T040 — Admin hierarchy | pending | — |
 | T041 — Activity platform | pending | — |
@@ -143,4 +151,4 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 
 ## Active task
 
-**T037 — NavMenu icon hotfix.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**T038 — Trainee surface.** Model: Sonnet. Live state in `Rewrite/current_state.md` (note: blocked on a dev-server DB-migration issue that surfaced during T037).

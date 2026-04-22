@@ -4,26 +4,40 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T037 — NavMenu icon hotfix (GUI review cluster 1).** Model: Sonnet.
+**T038 — Trainee surface (GUI review cluster 2).** Model: Sonnet.
 
-First task of the GUI review plan. `NavMenu.razor` has 31 `<span class="bi bi-*">` references that render nothing (Bootstrap Icons font is not loaded per CLAUDE.md). Replace with `<Icon Name="..." />` + Lucide SVGs; add any missing icons to `src/Wombat.Web/wwwroot/icons/`; verify in a browser for each authenticated role. Scope in `Rewrite/gui-review-plan.md` §T037. ½ day.
+Browser-verify and polish: `TraineeDashboard`, `Portfolio/MyProgress`, `Portfolio/MyAuthorisations`, `Activities/MyActivities`, `Portfolio/ExportPortfolio`, `Portfolio/VerifyExport`. Apply the rubric in `Rewrite/gui-review-plan.md`. **Local dev DB is currently broken** — see "Open blocker" below — start by unblocking that, since this task needs the app running in a browser.
 
 ## This session at a glance
 
 Practical plan closed. **T036 (accreditor-specific export template) deferred indefinitely** — WBA is new locally, no accreditor format spec is forthcoming, and a speculative generic template would likely be rewritten when a real spec lands. T023's portfolio PDF covers the trainee-facing export in the meantime.
 
-New plan drafted: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 pages + 15 shared components, split into six clusters (T037–T042). Rubric + per-cluster page list + suggested sequencing inside. ~8 working days total. T037 (NavMenu icon hotfix) runs first because it's cheap and makes browser verification on every other cluster meaningful.
+New plan: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 pages + 15 shared components, six clusters (T037–T042), ~8 working days.
+
+T037 shipped — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide SVGs (shield, clock, key). Deleted the duplicate icon mechanism. Build + 270 tests green. **Browser verification of T037 was blocked** because the dev server fails on startup with `ActivityTypes."Title"` not existing — the T028 data migration's UPDATE references a column the local DB doesn't have. Pre-existing infra issue, unrelated to T037; recorded under "Open blocker" so the next session picks it up first.
+
+## Open blocker
+
+Dev server (`dotnet run --project src/Wombat.Web/Wombat.Web.csproj`) crashes during `MigrateAsync()` with:
+
+```
+42703: column "Title" of relation "ActivityTypes" does not exist
+SQL: UPDATE "ActivityTypes" SET "Key" = 'reflective_note', "Title" = 'Reflective Note' WHERE "Key" = 'star_reflection';
+```
+
+Source: T028 (commit `dc506d1`) data-migration step. Either the migration is wrong or the local DB is at a schema state from before `Title` was added (or it lives under a different name like `Name`/`DisplayName` here). Diagnose by reading the T028 migration, the `ActivityType` entity + its EF configuration, and whichever earlier migration introduced the title column. Decide whether to amend the migration, write a corrective hand-written migration, or rebuild the local DB.
+
+This blocks browser verification on every GUI-review cluster until resolved.
 
 ## Last completed
 
-**T035 — Assessor training status field.**
+**T037 — Consolidate NavMenu icons to `Icon.razor`.**
 
-- `AssessorProfile.TrainingCompletedOn` — nullable `DateOnly`. No behaviour change.
-- Hand-written migration `20260421180000_AssessorTrainingStatus` (+ Designer.cs + `ApplicationDbContextModelSnapshot` updates) adds `AssessorProfiles.TrainingCompletedOn date NULL`.
-- `AssessorProfileDto`, `CreateOrUpdateAssessorProfileCommand`, `GetAssessorProfileByIdQuery`, and `ListAssessorsForSpecialityQuery` carry the new field. Command parameter defaults to `null` so existing callers stay non-breaking.
-- `AssessorsList.razor` gained a "Training completed" column rendering the date in `yyyy-MM-dd` or `Not recorded`. `AssessorProfileEdit.razor` has a date picker with a short guidance blurb. Form model round-trips the value.
-- 3 Application tests cover the round-trip: create/update persists the date, get-by-id surfaces it, and a list query returns the training status for a mixed-population (recorded + blank) set.
-- No enforcement anywhere; the field is visibility-only, consistent with the §T035 "answers 'do your assessors have training?' with a list" intent.
+- `NavMenu.razor` — replaced 31 `<span class="bi bi-*-nav-menu">` invocations with `<Icon Name="..." />` (home, user, shield, calendar, file-text, book, inbox, users, alert-triangle, settings, clock, key, log-out).
+- `NavMenu.razor.css` — deleted the `.bi` and 10 `.bi-*-nav-menu` background-image blocks. Added a single `.nav-item ::deep .icon` rule sizing icons to 1.25rem with the previous left/right margins; `flex-shrink: 0` prevents collapse on narrow nav.
+- New SVGs: `wwwroot/icons/shield.svg`, `clock.svg`, `key.svg` (Lucide, single `<svg id="i">` matching the existing convention).
+- Side benefit: nav icons now follow `currentColor` from `.nav-link` color, so they recolour on hover/active instead of staying hardcoded white.
+- **Verification: build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38). Browser verification not performed — blocked by the pre-existing dev-server migration error described above.**
 
 ## Plan this session works against
 
@@ -33,8 +47,8 @@ New plan drafted: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 p
 
 ## GUI review sequence
 
-1. T037 — NavMenu icon hotfix (active — ½ day)
-2. T038 — Trainee surface (1.5 d)
+1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser verification deferred)
+2. T038 — Trainee surface (active — 1.5 d, blocked on dev DB)
 3. T039 — Committee flow (1.5 d)
 4. T040 — Admin hierarchy (2 d)
 5. T041 — Activity platform (2 d)

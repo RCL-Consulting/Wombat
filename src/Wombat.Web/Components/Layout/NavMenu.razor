@@ -12,7 +12,7 @@
   <nav class="flex-column">
     <div class="nav-item px-3">
       <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-        <span class="bi bi-home-nav-menu" aria-hidden="true"></span>
+        <Icon Name="home" />
         Home
       </NavLink>
     </div>
@@ -21,13 +21,13 @@
       <Authorized Context="navUser">
         <div class="nav-item px-3">
           <NavLink class="nav-link" href="/account/profile">
-            <span class="bi bi-user-nav-menu" aria-hidden="true"></span>
+            <Icon Name="user" />
             My Account
           </NavLink>
         </div>
         <div class="nav-item px-3">
           <NavLink class="nav-link" href="/account/data-rights">
-            <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+            <Icon Name="shield" />
             Data Rights
           </NavLink>
         </div>
@@ -35,31 +35,31 @@
         <AuthorizeView Roles="@($"{WombatRoles.Trainee},{WombatRoles.PendingTrainee}")" Context="traineeAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/activities/new">
-              <span class="bi bi-calendar-nav-menu" aria-hidden="true"></span>
+              <Icon Name="calendar" />
               Activities
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/activities/mine">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               My Activities
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/msf/my-reports">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               MSF Reports
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/committee/my-reviews">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               Committee Reviews
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/my-curriculum">
-              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              <Icon Name="book" />
               My Curriculum
             </NavLink>
           </div>
@@ -68,13 +68,13 @@
         <AuthorizeView Roles="@WombatRoles.Assessor" Context="assessorAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/activities/inbox">
-              <span class="bi bi-inbox-nav-menu" aria-hidden="true"></span>
+              <Icon Name="inbox" />
               Activity Inbox
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/recent-activities">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               Recent Activities
             </NavLink>
           </div>
@@ -83,31 +83,31 @@
         <AuthorizeView Roles="@WombatRoles.Coordinator" Context="coordinatorAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/invitations">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Invitations
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/data-rights">
-              <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+              <Icon Name="shield" />
               Data Rights
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/msf/campaigns">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               MSF Campaigns
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/committee/reviews">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               Committee Reviews
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/stalled-activities">
-              <span class="bi bi-alert-triangle-nav-menu" aria-hidden="true"></span>
+              <Icon Name="alert-triangle" />
               Stalled Activities
             </NavLink>
           </div>
@@ -116,19 +116,19 @@
         <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin},{WombatRoles.CommitteeMember}")" Context="programmeAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/programme-trainees">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Programme Trainees
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/committee/panels">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Decision Panels
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/committee/reviews">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               Committee Reviews
             </NavLink>
           </div>
@@ -137,13 +137,13 @@
         <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin}")" Context="curriculumAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/curricula">
-              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              <Icon Name="book" />
               Curriculum
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/star-review-queue">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               STAR Review Queue
             </NavLink>
           </div>
@@ -152,19 +152,19 @@
         <AuthorizeView Roles="@WombatRoles.InstitutionalAdmin" Context="institutionAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/institutions">
-              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              <Icon Name="settings" />
               Institution
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/specialities">
-              <span class="bi bi-book-nav-menu" aria-hidden="true"></span>
+              <Icon Name="book" />
               Specialities
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/users">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Users
             </NavLink>
           </div>
@@ -173,55 +173,55 @@
         <AuthorizeView Roles="@WombatRoles.Administrator" Context="adminAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/institutions">
-              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              <Icon Name="settings" />
               Institutions
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/invitations">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Invitations
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/users">
-              <span class="bi bi-users-nav-menu" aria-hidden="true"></span>
+              <Icon Name="users" />
               Users
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/activity-types">
-              <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span>
+              <Icon Name="file-text" />
               Activity Types
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/jobs">
-              <span class="bi bi-clock-nav-menu" aria-hidden="true"></span>
+              <Icon Name="clock" />
               Scheduled Jobs
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/sso/group-mappings">
-              <span class="bi bi-key-nav-menu" aria-hidden="true"></span>
+              <Icon Name="key" />
               SSO Mappings
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/audit">
-              <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+              <Icon Name="shield" />
               Audit Log
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/admin/data-rights">
-              <span class="bi bi-shield-nav-menu" aria-hidden="true"></span>
+              <Icon Name="shield" />
               Data Rights
             </NavLink>
           </div>
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/placeholder/system">
-              <span class="bi bi-settings-nav-menu" aria-hidden="true"></span>
+              <Icon Name="settings" />
               System
             </NavLink>
           </div>
@@ -231,7 +231,7 @@
           <form action="/account/logout" method="post">
             <AntiforgeryToken />
             <button type="submit" class="nav-link nav-logout-button">
-              <span class="bi bi-log-out-nav-menu" aria-hidden="true"></span>
+              <Icon Name="log-out" />
               Logout
             </button>
           </form>
@@ -240,7 +240,7 @@
       <NotAuthorized Context="anonymousNav">
         <div class="nav-item px-3">
           <NavLink class="nav-link" href="/account/login">
-            <span class="bi bi-user-nav-menu" aria-hidden="true"></span>
+            <Icon Name="user" />
             Sign in
           </NavLink>
         </div>
