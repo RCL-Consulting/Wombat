@@ -29,24 +29,30 @@ Four pieces of work shipped this session:
 
 ## Last completed
 
-**T038 — Trainee surface polish** (commit `88f5cf4`).
+**T038 — Trainee surface polish** (commit `88f5cf4`) **+ DevUserSeeder** (commit `e132765`).
 
-- `ExportPortfolio.razor` — raw `<div class="alert alert-danger">` and `<div class="alert alert-success">` swapped for `<Alert Kind="...">`. Re-indented 4-space → 2-space.
-- `VerifyExport.razor` — same Alert swap for the no-match warning. Kept inline `style="margin-top: var(--space-lg);"` on the wrapper (CLAUDE.md only bans `<style>` blocks; the attribute references a design token). Re-indented 4-space → 2-space.
-- `MyProgress.razor` — manual "Loading…" + empty card replaced with `StatePanel` (Skeleton during load, `detail-card--empty` for no data). Same loading/empty pattern as `TraineeDashboard` / `MyActivities`.
-- `MyAuthorisations.razor` — same `StatePanel` switch. Split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (rendered above-the-fold via `<Alert Kind="danger">`) so a download failure no longer blanks the loaded list.
+T038 fixes:
+- `ExportPortfolio.razor` and `VerifyExport.razor` — raw `<div class="alert alert-...">` Bootstrap markup swapped for `<Alert Kind="...">`; 4-space indentation normalized to 2-space.
+- `MyProgress.razor` and `MyAuthorisations.razor` — manual "Loading…" + empty cards refactored to `StatePanel` for consistency with `TraineeDashboard`/`MyActivities`.
+- `MyAuthorisations.razor` — split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (rendered above-the-fold via Alert) so a download failure no longer blanks the loaded list.
 - `TraineeDashboard.razor` and `MyActivities.razor` — no changes; both already pass the rubric.
-- Browser-verified `/activities/mine`, `/portfolio/export`, `/portfolio/verify` (with `?hash=` to trigger the warning) under Administrator at `http://localhost:5080/`. The 3 trainee-role pages (`/`, `/portfolio/progress`, `/portfolio/authorisations`) were not browser-verified — see "Open question" above.
+
+DevUserSeeder closed the role-gap that initially blocked T038 verification:
+- Idempotent dev-only seeder. Runs after `DataSeeder` only when `app.Environment.IsDevelopment()`.
+- Creates `trainee@wombat.local` (Trainee + TraineeProfile linked to the Demo curriculum) and `committee@wombat.local` (CommitteeMember).
+- Hardcoded `ChangeThisTrainee123!` / `ChangeThisCommittee123!` — obvious in source so a careless production deploy is loud.
+
+Verification:
+- All 6 T038 pages browser-rendered cleanly: `/activities/mine`, `/portfolio/export`, `/portfolio/verify?hash=…` (warning Alert) under Administrator; `/`, `/portfolio/progress`, `/portfolio/authorisations` under the seeded Trainee.
+- Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
 
 Earlier in the same session:
 - **T037** (commit `1d25995`) — NavMenu icons consolidated to `Icon.razor`. Browser-verified.
 - **T028 migration fix** (commit `a413ddc`) — `ActivityTypes."Title"` → `"Name"` in `RenameStarReflection`. Unblocked the dev server.
 
-Test status across all three: build clean, 270/270 pass (Domain 45, Application 168, Architecture 19, Web 38).
-
 ## Plan this session works against
 
-`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. Cluster 1 (T037) active.
+`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037 and T038 done; T039 (committee flow) active.
 
 `Rewrite/practical-plan.md` — closed: T035 done, T036 deferred indefinitely.
 
@@ -68,11 +74,12 @@ Test status across all three: build clean, 270/270 pass (Domain 45, Application 
 
 - `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
 - Domain tests — 45/45 pass
-- Application tests — 168/168 pass (3 new for training status round-trip)
+- Application tests — 168/168 pass
 - Architecture tests — 19/19 pass
 - Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
+- Browser verification — T037 (Administrator nav) and T038 (all 6 pages, mixed Administrator + seeded Trainee) at `http://localhost:5080/`
 
 ## Known T035 compromises
 
