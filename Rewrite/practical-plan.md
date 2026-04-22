@@ -151,19 +151,14 @@ The items an accreditor asks for which Wombat does not currently document.
 
 **Effort:** ½ day.
 
-### T036 — Accreditor-specific export template
+### T036 — Accreditor-specific export template — **deferred indefinitely**
 
-One export template for the accreditor the hospital actually works with (HPCSA / CMSA / RCS / etc. — confirmed before starting).
-
-- Variant of the T023 portfolio PDF with sections shaped to the accreditor's expected layout
-- Admin page to trigger it for a trainee
-
-**Effort:** 2 days, contingent on the accreditor's format spec being available.
+WBA is new locally and no accreditor has issued a format spec. Building a speculative generic template risks shipping the wrong shape and rewriting later. Deferred until a real consumer exists — the T023 portfolio PDF already covers the trainee-facing export in the meantime. See the Deferred-indefinitely table below.
 
 ### Block 4 exit criteria
 
 - Every assessor record shows training status
-- Programme director can export a portfolio in the accreditor's expected shape
+- (T036 deferred — portfolio export covered by T023 until an accreditor spec lands)
 
 ---
 
@@ -203,6 +198,7 @@ Items considered and explicitly not planned. Kept here so "why didn't we build X
 | Structured dissent logging on `CommitteeDecision` | Committees do not dissent on paper. Rationale field carries what gets written down. |
 | Excellence flag on decision category | No programme has asked for it. |
 | Validity-framework documentation in UI | Nobody reads it. Belongs in user guide at most. |
+| T036 — Accreditor-specific export template | WBA is new locally; no accreditor format spec is forthcoming. Speculative generic template would be rewritten once a real spec landed. Revisit when a target accreditor confirms layout. |
 
 ## Known compromises (the defensibility answer)
 
@@ -228,10 +224,10 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 | T033 — Per-trainee trajectory chart | ✅ done | `9910ba1` |
 | T034 — EPA core/elective + stage-indexed supervision levels | ✅ done | `dd18b66` |
 | T035 — Assessor training status field | ✅ done | `9d60cd7` |
-| T036 — Accreditor-specific export template | pending | — |
+| T036 — Accreditor-specific export template | deferred | — |
 
 ## Active task
 
-**T036 — Accreditor-specific export template.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+Practical plan closed (T035 shipped; T036 deferred). Follow-up work now lives in `Rewrite/gui-review-plan.md`. Live state in `Rewrite/current_state.md`.
 
 Commit after every completed task, per `Rewrite/WORKFLOW.md`.

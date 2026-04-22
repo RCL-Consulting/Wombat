@@ -4,20 +4,15 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T036 — Accreditor-specific export template.** Model: Sonnet.
+**T037 — NavMenu icon hotfix (GUI review cluster 1).** Model: Sonnet.
 
-Final task of the practical plan. A variant of the T023 portfolio PDF shaped for the accreditor the hospital actually works with (HPCSA / CMSA / RCS / etc.), plus an admin page to trigger it. Scope and blockers in `Rewrite/practical-plan.md` §T036 — **needs the target accreditor's format spec confirmed before starting**. 2 days once spec is on hand.
+First task of the GUI review plan. `NavMenu.razor` has 31 `<span class="bi bi-*">` references that render nothing (Bootstrap Icons font is not loaded per CLAUDE.md). Replace with `<Icon Name="..." />` + Lucide SVGs; add any missing icons to `src/Wombat.Web/wwwroot/icons/`; verify in a browser for each authenticated role. Scope in `Rewrite/gui-review-plan.md` §T037. ½ day.
 
 ## This session at a glance
 
-Four tasks shipped back-to-back on `master`, closing Block 2, all of Block 3, and the first half of Block 4:
+Practical plan closed. **T036 (accreditor-specific export template) deferred indefinitely** — WBA is new locally, no accreditor format spec is forthcoming, and a speculative generic template would likely be rewritten when a real spec lands. T023's portfolio PDF covers the trainee-facing export in the meantime.
 
-- **T032 — Sampling-concentration warning on review detail** — `2e02a1e`
-- **T033 — Per-trainee per-EPA trajectory chart** — `9910ba1`
-- **T034 — EPA core/elective + stage-indexed supervision levels** — `dd18b66`
-- **T035 — Assessor training status field** — `9d60cd7`
-
-Committees now see per-EPA sampling warnings and a rating trajectory alongside the evidence bundle; trainees have a `/portfolio/progress` view of their EPA trajectories; programme directors can tag EPAs as Core or Elective and set per-year supervision-level targets; admins have a visible record of who has completed assessor training. Only T036 (the accreditor-specific export template) remains on the practical plan, and it is blocked pending confirmation of the target accreditor's format spec.
+New plan drafted: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 pages + 15 shared components, split into six clusters (T037–T042). Rubric + per-cluster page list + suggested sequencing inside. ~8 working days total. T037 (NavMenu icon hotfix) runs first because it's cheap and makes browser verification on every other cluster meaningful.
 
 ## Last completed
 
@@ -32,12 +27,23 @@ Committees now see per-EPA sampling warnings and a rating trajectory alongside t
 
 ## Plan this session works against
 
-`Rewrite/practical-plan.md` — Block 4 in progress: T035 done, T036 remaining.
+`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. Cluster 1 (T037) active.
 
-## Block 4 sequence
+`Rewrite/practical-plan.md` — closed: T035 done, T036 deferred indefinitely.
+
+## GUI review sequence
+
+1. T037 — NavMenu icon hotfix (active — ½ day)
+2. T038 — Trainee surface (1.5 d)
+3. T039 — Committee flow (1.5 d)
+4. T040 — Admin hierarchy (2 d)
+5. T041 — Activity platform (2 d)
+6. T042 — Account & auth shell (1 d)
+
+## Block 4 / practical-plan sequence (closed)
 
 1. ✅ T035 — Assessor training status field
-2. T036 — Accreditor-specific export template (active — **accreditor format spec needed**)
+2. 🚫 T036 — Accreditor-specific export template (deferred — WBA new locally, no accreditor spec)
 
 ## Test status at handoff
 
