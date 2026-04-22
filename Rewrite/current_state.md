@@ -4,44 +4,53 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T038 — Trainee surface (GUI review cluster 2).** Model: Sonnet.
+**T039 — Committee flow (GUI review cluster 3).** Model: Sonnet.
 
-Browser-verify and polish: `TraineeDashboard`, `Portfolio/MyProgress`, `Portfolio/MyAuthorisations`, `Activities/MyActivities`, `Portfolio/ExportPortfolio`, `Portfolio/VerifyExport`. Apply the rubric in `Rewrite/gui-review-plan.md`. Dev server is unblocked (see "This session at a glance"); a Trainee-role login is needed to exercise the cluster — `pwd_DO_NOT_COMMIT.txt` carries the seeded admin only, so a Trainee account either has to be invited from the admin UI or seeded.
+Browser-verify and polish the committee surface (densest recent work, T031–T033 all landed here): `Committee/PanelsList`, `PanelEdit`, `MyReviews`, `ReviewsSchedule`, `ReviewDetail`, plus `CommitteeMemberDashboard`. Apply the rubric in `Rewrite/gui-review-plan.md`. Dev server is unblocked; admin can browse most committee pages, but `MyReviews` is `[Authorize(Roles = "CommitteeMember,…")]` so committee-role login may be needed — see "Open question" below.
 
 ## This session at a glance
 
-Practical plan closed. **T036 (accreditor-specific export template) deferred indefinitely** — WBA is new locally, no accreditor format spec is forthcoming, and a speculative generic template would likely be rewritten when a real spec lands. T023's portfolio PDF covers the trainee-facing export in the meantime.
+Practical plan closed. **T036 deferred indefinitely** (no accreditor format spec forthcoming). New plan: `Rewrite/gui-review-plan.md` — six clusters T037–T042, ~8 working days.
 
-New plan: `Rewrite/gui-review-plan.md`. Design-system audit across ~65 pages + 15 shared components, six clusters (T037–T042), ~8 working days.
+Three clusters' worth of work shipped this session:
 
-T037 shipped — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide SVGs (shield, clock, key). Deleted the duplicate icon mechanism. Build + 270 tests green. Browser verification confirmed: all 13 nav icons render correctly under the Administrator role at `http://localhost:5080/` and follow `currentColor` (active "Home" item highlights as expected).
+- **T037** — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide shield/clock/key SVGs. Browser-verified under Administrator: 13 nav icons render and follow `currentColor`.
+- **T028 hotfix** — `RenameStarReflection` migration's SQL referenced a non-existent `ActivityTypes."Title"` column; corrected to `"Name"` in place (data-only migration, never ran successfully anywhere before). This unblocked the dev server, which had been silently broken since T028 landed.
+- **T038** — Trainee-surface polish. `ExportPortfolio` and `VerifyExport`: raw `<div class="alert alert-...">` Bootstrap markup swapped for `<Alert Kind="...">`; 4-space indentation normalized to 2-space. `MyProgress` and `MyAuthorisations`: manual loading text + empty cards refactored to `StatePanel` for consistency with `TraineeDashboard`/`MyActivities`. `MyAuthorisations`: split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (above-the-fold Alert) so a download failure no longer blanks the loaded list. `TraineeDashboard` and `MyActivities` already passed the rubric — no changes. Browser-verified the 3 admin-accessible pages; the 3 trainee-only pages were not browser-verified (see Open question).
+- **chore** — `.gitignore` hardened against the artifacts this session generated: `.playwright-mcp/`, `/*.png`, `pwd_DO_NOT_COMMIT.txt`.
 
-Dev-server startup blocker uncovered during T037 verification and fixed: T028's `RenameStarReflection` migration referenced an `ActivityTypes."Title"` column that has never existed (the column is `Name`). Edited the migration in place (no Designer change — data-only) and committed as `a413ddc`. The migration would have failed on any first-time MigrateAsync run; fortunately it had never succeeded anywhere before. T029–T035 were all written and tested without anyone running the dev server end-to-end against this migration.
+## Open question for next session
+
+T038 left three pages browser-unverified because they're role-gated to `Trainee`/`PendingTrainee` (`/`, `/portfolio/progress`, `/portfolio/authorisations`) and the local instance has only the seeded Administrator account. T039 may have the same gap for committee-role pages. Options before starting cluster verification:
+
+1. Seed a Trainee + CommitteeMember in `DataSeeder.cs` for dev-only use (one PR, plays nicely with `--seed`).
+2. Use the admin invitation flow to create both roles end-to-end (closer to the real onboarding path; verifies invitation UI as a side effect).
+3. Accept static review only for role-gated pages and rely on the bUnit suite.
+
+Option 2 is most informative but slowest; option 1 is the cleanest pre-cluster setup if multiple clusters are about to need non-admin roles.
 
 ## Possible follow-ups (not opened as tasks)
 
-- The h1 on the Administrator dashboard (e.g. "Welcome, admin@wombat.local") shows a black focus-ring rectangle on initial render. Pre-existing; flag for the cluster that owns admin dashboards (T040).
-- Nav-link text shows the default `<a>` underline. Pre-existing in `NavMenu.razor.css`; not introduced by T037. Decide during T037-area follow-up or T040 whether to add `text-decoration: none` to `.nav-item ::deep .nav-link`.
-- `pwd_DO_NOT_COMMIT.txt` is not in `.gitignore` — only kept out of commits by manual care. Worth adding an explicit ignore entry.
+- The h1 on every page (e.g. "Welcome, admin@wombat.local", "My activities") shows a black focus-ring rectangle on initial render — Blazor likely focuses the h1 after navigation for screen-reader announcement. Worth verifying intent before suppressing; if intentional, `h1:focus { outline: none; }` or `h1:focus-visible { outline: none; }` on the inert case.
+- Nav-link text shows the default `<a>` underline. Pre-existing in `NavMenu.razor.css`. Decide during a NavMenu follow-up or T040 whether to add `text-decoration: none` to `.nav-item ::deep .nav-link`.
+- `TraineeDashboard.razor` uses ~8 inline `style="..."` attributes for flex layouts; each references design tokens (`var(--space-xs)` etc.). CLAUDE.md doesn't ban inline `style="..."`, only `<style>` blocks, so they're not a violation — flagged for a future utility-class pass if the same patterns surface in other dashboards.
 
 ## Last completed
 
-**T037 — Consolidate NavMenu icons to `Icon.razor`** (commit `1d25995`) **+ T028 migration fix** (commit `a413ddc`).
+**T038 — Trainee surface polish** (commit `88f5cf4`).
 
-T037:
-- `NavMenu.razor` — replaced 31 `<span class="bi bi-*-nav-menu">` invocations with `<Icon Name="..." />` (home, user, shield, calendar, file-text, book, inbox, users, alert-triangle, settings, clock, key, log-out).
-- `NavMenu.razor.css` — deleted the `.bi` and 10 `.bi-*-nav-menu` background-image blocks. Added a single `.nav-item ::deep .icon` rule sizing icons to 1.25rem with the previous left/right margins; `flex-shrink: 0` prevents collapse on narrow nav.
-- New SVGs: `wwwroot/icons/shield.svg`, `clock.svg`, `key.svg` (Lucide, single `<svg id="i">` matching the existing convention).
-- Side benefit: nav icons follow `currentColor` from `.nav-link` color, so they recolour on hover/active instead of staying hardcoded white.
+- `ExportPortfolio.razor` — raw `<div class="alert alert-danger">` and `<div class="alert alert-success">` swapped for `<Alert Kind="...">`. Re-indented 4-space → 2-space.
+- `VerifyExport.razor` — same Alert swap for the no-match warning. Kept inline `style="margin-top: var(--space-lg);"` on the wrapper (CLAUDE.md only bans `<style>` blocks; the attribute references a design token). Re-indented 4-space → 2-space.
+- `MyProgress.razor` — manual "Loading…" + empty card replaced with `StatePanel` (Skeleton during load, `detail-card--empty` for no data). Same loading/empty pattern as `TraineeDashboard` / `MyActivities`.
+- `MyAuthorisations.razor` — same `StatePanel` switch. Split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (rendered above-the-fold via `<Alert Kind="danger">`) so a download failure no longer blanks the loaded list.
+- `TraineeDashboard.razor` and `MyActivities.razor` — no changes; both already pass the rubric.
+- Browser-verified `/activities/mine`, `/portfolio/export`, `/portfolio/verify` (with `?hash=` to trigger the warning) under Administrator at `http://localhost:5080/`. The 3 trainee-role pages (`/`, `/portfolio/progress`, `/portfolio/authorisations`) were not browser-verified — see "Open question" above.
 
-T028 migration fix (`fix(T028)`):
-- `RenameStarReflection.cs` Up/Down SQL: `"Title"` → `"Name"` (the column never existed under the wrong name).
-- Edited in place — migration had never run successfully anywhere, only does data updates, no Designer/snapshot impact.
+Earlier in the same session:
+- **T037** (commit `1d25995`) — NavMenu icons consolidated to `Icon.razor`. Browser-verified.
+- **T028 migration fix** (commit `a413ddc`) — `ActivityTypes."Title"` → `"Name"` in `RenameStarReflection`. Unblocked the dev server.
 
-Verification:
-- Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
-- Dev server starts cleanly past `MigrateAsync()` after the fix.
-- Login + Administrator dashboard load at `http://localhost:5080/`; all 13 NavMenu icons render with correct sizing/spacing and `currentColor` flow.
+Test status across all three: build clean, 270/270 pass (Domain 45, Application 168, Architecture 19, Web 38).
 
 ## Plan this session works against
 
@@ -51,9 +60,9 @@ Verification:
 
 ## GUI review sequence
 
-1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified)
-2. T038 — Trainee surface (active — 1.5 d)
-3. T039 — Committee flow (1.5 d)
+1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified Administrator)
+2. ✅ T038 — Trainee surface (3/6 pages browser-verified; 3 trainee-only pages static-reviewed only)
+3. T039 — Committee flow (active — 1.5 d)
 4. T040 — Admin hierarchy (2 d)
 5. T041 — Activity platform (2 d)
 6. T042 — Account & auth shell (1 d)
@@ -94,6 +103,9 @@ Verification:
 
 ## Last verified commits
 
+- `e7e9abb` — chore: gitignore browser-verification artifacts and pwd file
+- `88f5cf4` — T038 (trainee surface polish — Alert + StatePanel consolidation)
+- `2b82f7e` — docs: record T037 browser verification + T028 fix in handoff
 - `a413ddc` — fix(T028): correct ActivityTypes column name in RenameStarReflection migration
 - `ba8d20b` — docs: record T037 commit hash in handoff
 - `1d25995` — T037 (consolidate NavMenu icons to Icon.razor; browser-verified Administrator role)

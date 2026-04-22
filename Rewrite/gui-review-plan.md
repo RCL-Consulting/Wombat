@@ -143,12 +143,12 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 | Task | Status | Commit |
 |---|---|---|
 | T037 — Consolidate NavMenu icons to `Icon.razor` | ✅ done (browser-verified Administrator role) | `1d25995` |
-| T038 — Trainee surface | active | — |
-| T039 — Committee flow | pending | — |
+| T038 — Trainee surface | ✅ done (3/6 browser-verified; 3 trainee-only pages static-reviewed) | `88f5cf4` |
+| T039 — Committee flow | active | — |
 | T040 — Admin hierarchy | pending | — |
 | T041 — Activity platform | pending | — |
 | T042 — Account & auth shell | pending | — |
 
 ## Active task
 
-**T038 — Trainee surface.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**T039 — Committee flow.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
