@@ -224,6 +224,19 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/* Blazor's <FocusOnNavigate Selector="h1" /> programmatically focuses the
+   page h1 after every navigation so screen readers announce the new page.
+   That hands the h1 a `tabindex="-1"` and triggers the browser's default
+   focus outline — a black rectangle that looks like a bug. `tabindex="-1"`
+   means the element is explicitly removed from the tab order, so no
+   keyboard user can reach it anyway; suppressing the focus outline
+   entirely keeps the screen-reader announcement working (Blazor still
+   focuses the h1 to fire the accessibility event) without showing a
+   visual ring that confuses sighted users. */
+h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
 .btn-primary {
   background-color: var(--secondary-color);
   color: var(--surface-color);
