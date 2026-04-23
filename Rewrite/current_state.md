@@ -4,17 +4,24 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. T047 backfilled the utility-class drift; every razor class now resolves.**
+**None. T048 closed the h1 focus-ring. Only two follow-ups remain.**
 
 Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
 1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-2. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
-3. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
+2. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
 
-`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
+`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed. Every cosmetic/housekeeping follow-up surfaced by the GUI review sequence (T037–T042) has landed.
 
 ## This session at a glance
+
+**T048 — h1 programmatic-focus ring suppression** (commit `dcf76bb`). Closed the "h1 focus-ring rectangle on initial render" backlog item that had been open since T037.
+
+Root cause: `Routes.razor:17` has `<FocusOnNavigate Selector="h1" />`, which adds `tabindex="-1"` and programmatically focuses the page h1 after every navigation for screen-reader announcement. Chrome's `:focus-visible` heuristic matched on the programmatic focus after a form submit (`h1.matches(':focus-visible')` returned true), so the browser drew its default outline — the black rectangle seen since T037.
+
+First-attempt rule `h1[tabindex="-1"]:focus:not(:focus-visible)` didn't work because `:focus-visible` was matching. Unconditional `outline: none` is correct here: `tabindex="-1"` explicitly removes the element from keyboard tab order, so there is no legitimate keyboard path to focus the h1. The screen-reader announcement is fired by the `.focus()` call itself; the visual ring was never serving any user.
+
+Browser-verified ring-free on `/`, `/admin/audit`, `/admin/institutions`.
 
 **T047 — Utility-class backfill in `app.css`** (commit `f38a880`). Closed the "Bootstrap utility drift in AuditDetail + RequestDetail" backlog item. Discovered the drift was wider than the item implied: `text-sm`, `text-muted`, `mt-1`, `mt-4`, and one orphan `text-danger` were referenced across 7 razor files (DataRights, Admin/DataRights × 2, Admin/Audit × 2, Admin/Jobs × 2). Added 5 one-line rules to the existing Utilities section; `.muted` and `.text-muted` share one rule via a combined selector so the dashboard `.muted` pattern keeps working unchanged. Spacing follows the existing literal-rem convention (matches `.mt-3`, `.mb-3` already in the section); color uses tokens (`var(--muted-text)`, `var(--danger-color)`). Browser-verified on a pre-existing failed audit entry — error message ("text-sm text-muted mt-1") now renders smaller + muted + with small top offset, and the "Payload (raw JSON)" detail-card has the expected 1.5rem top margin. Bonus: the Payload JSON on that entry shows `"principal": "[PRINCIPAL]"`, confirming T045's audit-serializer fix is visible in persisted audit data.
 
@@ -108,12 +115,18 @@ Across six clusters:
 - **~~Dashboard inline `style="..."` for flex layouts.~~** Standing policy documented in DESIGN.md by T044: token-backed per-instance inline styles are fine; consolidate only when a pattern surfaces in 4+ dashboards.
 - **~~Seed-pipeline claims gap.~~** Fixed in T046 (`cef4efc`).
 - **~~Remaining Bootstrap utility drift~~** (`text-sm`, `text-muted`, `mt-4`, `mt-1`, `text-danger`). Fixed in T047 (`f38a880`). Turned out to span 7 files not 2.
-- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 2 above.
-- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 3 above.
+- **~~h1 focus-ring rectangle on initial render.~~** Fixed in T048 (`dcf76bb`).
+- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 2 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T048 — h1 programmatic-focus ring suppression** (commit `dcf76bb`).
+
+One CSS rule (`h1[tabindex="-1"]:focus { outline: none; }`) with a comment explaining the Blazor `FocusOnNavigate` context. No code path changes; screen-reader announcement still works. Closes the pre-existing cosmetic issue that has been noted in handoffs since T037.
+
+## Previous session
 
 **T047 — Utility-class backfill** (commit `f38a880`).
 
@@ -200,6 +213,8 @@ Verification:
 
 ## Last verified commits
 
+- `dcf76bb` — T048 (suppress programmatic-focus outline on page h1)
+- `448f230` — docs: record T047 utility-class backfill, reprioritise backlog
 - `f38a880` — T047 (backfill mt-1/mt-4/text-muted/text-sm/text-danger utilities in app.css)
 - `9f7d6f8` — docs: record T046 findings, update backlog
 - `cef4efc` — T046 (fix seed-claims gap in DevUserSeeder + Versions include in ActivityService.CreateDraftAsync; populated ActivityView verified)
