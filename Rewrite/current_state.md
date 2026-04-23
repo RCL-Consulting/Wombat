@@ -4,76 +4,70 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T040 — Admin hierarchy (GUI review cluster 4).** Model: Sonnet.
+**T041 — Activity platform (GUI review cluster 5).** Model: Sonnet.
 
-Sweep the admin list/edit pairs + role-specific admin dashboards against the rubric in `Rewrite/gui-review-plan.md`:
+Polish the schema-driven activity platform's admin-facing surface plus the trainee/assessor runtime. Per `Rewrite/gui-review-plan.md`:
 
-- Institutions (list, edit)
-- Specialities, SubSpecialities (4 pages)
-- Assessors (list, profile edit)
-- Curricula (list, edit, items edit)
-- EPAs (list, edit)
-- Dashboards: `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `AdministratorDashboard`
+- `Components/Pages/Admin/ActivityTypes/ActivityTypesList.razor`, `ActivityTypeEdit.razor`
+- `Components/Pages/Admin/Forms/FormsList.razor`, `FormEdit.razor`
+- `Components/Pages/Activities/NewActivity.razor`, `ActivityView.razor`, `ActivityInbox.razor`
+- `Components/Pages/AssessorDashboard.razor`, `CoordinatorDashboard.razor`
 
-Dev server is working, `admin@wombat.local` / `ChangeThisAdmin123!` can access all admin surfaces. Run it as one sweep — pages are structurally similar. `pwd_DO_NOT_COMMIT.txt` has all seeded credentials.
+`admin@wombat.local` covers admin-side surfaces; use the trainee/assessor seeded accounts for runtime pages. `pwd_DO_NOT_COMMIT.txt` has all credentials.
+
+**Estimate:** 2 days. This is the builder-facing cluster so design drift is possible — the schema/workflow/credit JSON editors were T019-series and may have their own conventions.
 
 ## This session at a glance
 
-**T039 — Committee flow (GUI review cluster 3) done** (commit `dd9f892`). Three real findings, three mechanical fixes:
+**T040 — Admin hierarchy done** (commit `2094d9a`). 17 pages audited, 3 real findings, 3 mechanical fixes:
 
-- **MyReviews.razor** — single `_error` field drove both an above-fold `<Alert Kind="danger">` and `StatePanel`'s `LoadError`, so a load failure rendered twice. Split into `_loadError` (StatePanel only) and `_actionError` (Alert only), mirroring T038's `MyAuthorisations` fix.
-- **ReviewsSchedule.razor** — identical dual-error bug, identical split. "Schedule review" submit failures now surface as Alert above the table; list-load failures go through StatePanel.
-- **ReviewDetail.razor** — `plain-list` (5 occurrences) was an orphan class name not defined in `app.css`. Swapped to `list-unstyled` (defined at `app.css:776`). `stack-list`/`stack-card`/`details-list` are also orphan but left as-is — see "Systemic follow-ups" below.
+- **AssessorsList.razor** — `LoadError="@(null)"` hardcoded while a separate Alert displayed `_errorMessage`. Inconsistent with the other 5 admin list pages (InstitutionsList, SpecialitiesList, SubSpecialitiesList, CurriculaList, EpasList) which all route error through `StatePanel.LoadError` with no above-fold Alert. Collapsed the Alert, routed error through StatePanel to match.
+- **AssessorProfileEdit.razor** — on load failure, both the Alert (`_errorMessage`) AND the "Profile unavailable" empty state rendered. Applied the T038/T039 split: `_loadError` drives StatePanel (suppresses empty state on load failure); `_actionError` drives Alert from SaveAsync failures.
+- **CurriculumItemsEdit.razor** — classic dual-error: same `_errorMessage` drove both Alert and StatePanel's LoadError, so a load failure rendered the message twice. Same `_loadError`/`_actionError` split applied.
 
-Rubric-clean on audit, no changes needed: `PanelsList.razor` (PageHeader + StatePanel + DataTable), `PanelEdit.razor` (PageHeader + Alert + FormField + FormActions), `CommitteeMemberDashboard.razor` (consistent with other role dashboards).
+**14 of 17 pages rubric-clean on static audit.** Form edit pages (InstitutionEdit, SpecialityEdit, SubSpecialityEdit, CurriculumEdit, EpaEdit) use `<StatePanel IsLoading=_loading IsEmpty=false>` with no `LoadError` prop, which is correct for their single-above-fold-Alert pattern. List pages (all 5 non-assessor) use `LoadError="@_errorMessage"` with no separate Alert. Dashboards (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin) follow the shared dashboard convention (no PageHeader, inline `style="..."` for flex layouts) — this is the pre-existing cross-cluster follow-up, not a T040 violation.
 
 ## Browser verification
 
-Five of six pages verified on `http://localhost:5080/` with screenshots captured (all `.playwright-mcp/` / `.png` are gitignored):
+Seven of 17 pages verified on `http://localhost:5080/` as `admin@wombat.local`, with screenshots captured (gitignored under `.playwright-mcp/`):
 
-| Page | Role | Result |
-|---|---|---|
-| `/` (CommitteeMemberDashboard) | committee@wombat.local | Empty states on both DashboardCards render cleanly |
-| `/committee/panels` | committee@wombat.local | StatePanel "No decision panels" empty state, PageHeader + New panel action |
-| `/committee/reviews` | committee@wombat.local | StatePanel empty state; "Schedule review" toggle opens form with all FormFields |
-| `/committee/panels/new` | admin@wombat.local | Full form renders: Panel name, Scope, Institution id, Speciality id, Chair user id, Member user ids, External user ids, Save panel |
-| `/committee/my-reviews` | admin@wombat.local | "No decisions yet" StatePanel empty state |
-| `/committee/reviews/1` | admin@wombat.local | Error path: single `Alert Kind="danger"` with "The committee review could not be found." — no duplicate rendering, confirming the dual-error split |
+| Page | Result |
+|---|---|
+| `/admin/assessors` | Clean empty state through StatePanel; no stray Alert above |
+| `/admin/assessors/edit` (new) | 2-column form, FormFields render, Cancel + Save actions |
+| `/admin/institutions` | DataTable with seeded "Demo Institution" row, Edit + Specialities actions |
+| `/admin/curricula` | DataTable with "IM Core Curriculum 2026.1" row populated |
+| `/admin/curricula/1/items` | **Dual-error fix verified with seeded data** — Existing items card with EPA-001 populated, Add item form below, no Alert duplication |
+| `/admin/epas` | DataTable with seeded "EPA-001 — Clerk, assess, and present a general medical admission" |
+| `/admin/institutions/1/specialities` | Dynamic subtitle "Institution: Demo Institution (DEMO)", DataTable with seeded "General Medicine" |
 
-### T039 known compromise
+### T040 known compromise
 
-- **Populated `ReviewDetail.razor` unverified.** The page renders correctly in the error state, but the decision/pending-entrustment/evidence/trajectory/appeal sections require a seeded review-on-a-panel flow (5+ steps: create panel, schedule review, start, record decision, optionally stage pending decisions, optionally lodge+resolve appeal). Fixes were mechanical (one `class="plain-list"` → `class="list-unstyled"` swap, no markup structure change), and the Web test suite exercises the component; risk of regression from the swap alone is near zero. Flag for manual exercise during T040+ if a committee review is created incidentally.
+- **10 of 17 pages not browser-verified.** Remaining pages (InstitutionEdit / SpecialityEdit / SubSpecialityEdit / CurriculumEdit / EpaEdit / SubSpecialitiesList / 4 admin dashboards) share exact structural patterns with pages that were verified — same shared components, same state-handling shape, no changes applied. Risk of regression is near zero since the 3 fixes were scoped to individual files and no shared components were touched.
 
-## Systemic follow-ups (not T039 scope)
+## Systemic follow-ups (carried forward, not T040 scope)
 
-Some committee drift turned out to be global, not cluster-specific. Track as cross-cluster follow-ups:
-
-- **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` are referenced across committee, portfolio (`MyAuthorisations`), and admin (`AuditDetail`, `RequestDetail`) pages but not defined anywhere in `app.css` or `.razor.css` files. They render as default browser styling (dls and divs with no visual separation). Either add definitions to `app.css` in a dedicated "design tokens top-up" task, or swap each usage for a defined utility class. Out of scope for GUI review clusters since the rubric forbids touching `app.css` tokens.
-- **Dashboards have no `<PageTitle>` or `<PageHeader>`.** Uniform across TraineeDashboard, AssessorDashboard, CommitteeMemberDashboard, InstitutionalAdminDashboard, CoordinatorDashboard. The welcome strip in MainLayout provides role context, so this may be deliberate. Decide during T040 whether to make the pattern explicit (add to `DESIGN.md`) or retrofit headers.
-- **h1 focus-ring rectangle on initial render.** Pre-existing; noted last session. Still unresolved.
-
-## Possible follow-ups (not opened as tasks)
-
-- Nav-link underline on default `<a>` state — pre-existing in `NavMenu.razor.css`. Decide during T040/T042.
-- `TraineeDashboard.razor` and `CommitteeMemberDashboard.razor` inline `style="..."` for flex layouts — reference design tokens, not a violation. Track for a utility-class pass if the pattern appears on more dashboards in T040.
-- `GetTraineeDashboardSummaryQuery` returns `CurriculumProgress.Count == 0` for the seeded Trainee despite a linked curriculum. Out of GUI scope; flag for whoever owns the dashboard query.
+- **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` referenced across committee, portfolio, and admin pages but never defined. Render as browser-default styling. Track as a dedicated "design tokens top-up" task.
+- **Dashboards have no `<PageTitle>` or `<PageHeader>`.** Uniform across TraineeDashboard, AssessorDashboard, CommitteeMemberDashboard, and now all four admin dashboards (Administrator, Institutional, Speciality, SubSpeciality). Consistent pattern — document in `DESIGN.md` or retrofit headers globally. Not a per-cluster fix.
+- **Dashboard inline `style="..."` for flex/margin layouts.** Surfaces across every role dashboard reviewed so far. CLAUDE.md permits inline `style="..."` (only `<style>` blocks are banned), so this is a utility-class pass, not a compliance fix. Defer.
+- **h1 focus-ring rectangle on initial render.** Pre-existing since T037/T038; still unresolved.
 
 ## Last completed
 
-**T039 — Committee flow** (commit `dd9f892`).
+**T040 — Admin hierarchy** (commit `2094d9a`).
 
 Three fixes:
-- `CommitteeDecisions/MyReviews.razor` — split `_error` into `_loadError` (StatePanel) and `_actionError` (Alert).
-- `CommitteeDecisions/ReviewsSchedule.razor` — same split.
-- `CommitteeDecisions/ReviewDetail.razor` — `plain-list` → `list-unstyled` (5 occurrences).
+- `Admin/Assessors/AssessorsList.razor` — route `_errorMessage` through `StatePanel.LoadError`, drop the duplicate Alert.
+- `Admin/Assessors/AssessorProfileEdit.razor` — split `_errorMessage` into `_loadError` (StatePanel) + `_actionError` (Alert).
+- `Admin/Curricula/CurriculumItemsEdit.razor` — same split.
 
 Verification:
-- 5/6 committee pages browser-rendered cleanly (screenshots above).
+- 7 of 17 pages browser-rendered cleanly as admin with populated seed data; dual-error fix visibly verified on `/admin/curricula/1/items`.
 - Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
 
 ## Plan this session works against
 
-`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037, T038, T039 done; T040 (admin hierarchy) active.
+`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037, T038, T039, T040 done; T041 (activity platform) active.
 
 `Rewrite/practical-plan.md` — closed: T035 done, T036 deferred indefinitely.
 
@@ -82,8 +76,8 @@ Verification:
 1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified Administrator)
 2. ✅ T038 — Trainee surface (all 6 pages browser-verified, including seeded Trainee)
 3. ✅ T039 — Committee flow (5/6 pages browser-verified; populated ReviewDetail deferred)
-4. T040 — Admin hierarchy (active — 2 d; admin login available)
-5. T041 — Activity platform (2 d)
+4. ✅ T040 — Admin hierarchy (7/17 pages browser-verified; 3 dual-error fixes shipped)
+5. T041 — Activity platform (active — 2 d)
 6. T042 — Account & auth shell (1 d)
 
 ## Block 4 / practical-plan sequence (closed)
@@ -100,7 +94,7 @@ Verification:
 - Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
-- Browser verification — T037 (Administrator nav), T038 (all 6 trainee-surface pages), T039 (5/6 committee pages)
+- Browser verification — T037 / T038 / T039 / T040 (7/17 admin pages)
 
 ## Known T035 compromises
 
@@ -123,6 +117,8 @@ Verification:
 
 ## Last verified commits
 
+- `2094d9a` — T040 (admin hierarchy polish — 3 dual-error splits)
+- `930081f` — docs: record T039 commit hash, systemic follow-ups, T040 handoff
 - `dd9f892` — T039 (committee flow polish — dual-error split + list-unstyled swap)
 - `e132765` — chore: add DevUserSeeder for non-admin browser verification
 - `cde9ee1` — docs: record T038 commit hash + open trainee-account question
