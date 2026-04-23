@@ -24,9 +24,9 @@
   <Alert Kind="success">@_status</Alert>
 }
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_error</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
 @if (_publishWarnings.Count > 0)
@@ -42,7 +42,7 @@
   </Alert>
 }
 
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _editor is null)" EmptyTitle="Editor unavailable" EmptyBody="The activity type editor could not be loaded.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _editor is null)" EmptyTitle="Editor unavailable" EmptyBody="The activity type editor could not be loaded.">
   @if (_editor is not null)
   {
     <div class="form-container">
@@ -250,7 +250,8 @@
   private BuilderSchemaModel _builderSchema = new();
   private bool _loading = true;
   private bool _busy;
-  private string? _error;
+  private string? _loadError;
+  private string? _actionError;
   private string? _status;
   private string _activeTab = "form";
   private string _key = string.Empty;
@@ -273,7 +274,8 @@
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
-    _error = null;
+    _loadError = null;
+    _actionError = null;
     _status = null;
 
     try
@@ -284,7 +286,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -311,7 +313,7 @@
   private async Task SaveDraftAsync()
   {
     _busy = true;
-    _error = null;
+    _actionError = null;
     _status = null;
 
     try
@@ -336,7 +338,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {
@@ -357,7 +359,7 @@
     }
 
     _busy = true;
-    _error = null;
+    _actionError = null;
 
     try
     {
@@ -370,7 +372,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {
@@ -386,7 +388,7 @@
     }
 
     _busy = true;
-    _error = null;
+    _actionError = null;
 
     try
     {
@@ -397,7 +399,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {

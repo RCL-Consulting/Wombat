@@ -10,12 +10,12 @@
   <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentState}")" />
 }
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_error</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
   @if (_activity is not null)
   {
     <div class="details-grid">
@@ -40,12 +40,14 @@
 
   private ActivityDto? _activity;
   private bool _loading = true;
-  private string? _error;
+  private string? _loadError;
+  private string? _actionError;
 
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
-    _error = null;
+    _loadError = null;
+    _actionError = null;
 
     try
     {
@@ -53,7 +55,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -67,6 +69,8 @@
     {
       return;
     }
+
+    _actionError = null;
 
     try
     {
@@ -84,7 +88,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
   }
 }
