@@ -13,12 +13,7 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
-
-<StatePanel IsLoading="_loading" IsEmpty="@(_assessors.Count == 0)" EmptyTitle="No assessor profiles" EmptyBody="Create the first assessor profile to make assessors selectable in the workflow." LoadError="@(null)">
+<StatePanel IsLoading="_loading" IsEmpty="@(_assessors.Count == 0)" EmptyTitle="No assessor profiles" EmptyBody="Create the first assessor profile to make assessors selectable in the workflow." LoadError="@_errorMessage">
   <DataTable TItem="AssessorProfileDto" Items="_assessors" Caption="Assessor profiles">
     <HeaderRow>
       <tr>

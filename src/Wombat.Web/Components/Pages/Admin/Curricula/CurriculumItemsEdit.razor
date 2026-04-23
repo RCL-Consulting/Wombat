@@ -17,12 +17,12 @@
   <Alert Kind="success">@_statusMessage</Alert>
 }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_errorMessage</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
-<StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@(string.IsNullOrWhiteSpace(_errorMessage) ? null : _errorMessage)">
+<StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@_loadError">
   @if (_curriculum is not null)
   {
     <div class="detail-card">
@@ -142,7 +142,8 @@
   private IReadOnlyList<EpaDto> _epas = [];
   private readonly CurriculumItemFormModel _itemModel = new();
   private int? _editingItemId;
-  private string? _errorMessage;
+  private string? _loadError;
+  private string? _actionError;
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
@@ -152,7 +153,8 @@
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
-    _errorMessage = null;
+    _loadError = null;
+    _actionError = null;
     _statusMessage = null;
 
     try
@@ -169,7 +171,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -220,7 +222,7 @@
   private async Task RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
   {
     _saving = true;
-    _errorMessage = null;
+    _actionError = null;
     _statusMessage = null;
 
     try
@@ -230,7 +232,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {

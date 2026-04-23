@@ -10,9 +10,9 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_errorMessage</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_statusMessage))
@@ -20,7 +20,7 @@
   <Alert Kind="success">@_statusMessage</Alert>
 }
 
-<StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The assessor profile could not be loaded." LoadError="@(null)">
+<StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The assessor profile could not be loaded." LoadError="@_loadError">
   @if (_model is not null)
   {
     <div class="form-container">
@@ -100,7 +100,8 @@
   private bool _loading = true;
   private bool _saving;
   private bool _isExisting;
-  private string? _errorMessage;
+  private string? _loadError;
+  private string? _actionError;
   private string? _statusMessage;
 
   private IEnumerable<SpecialityDto> FilteredSpecialities
@@ -112,7 +113,8 @@
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
-    _errorMessage = null;
+    _loadError = null;
+    _actionError = null;
     _statusMessage = null;
 
     try
@@ -146,7 +148,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -162,7 +164,7 @@
     }
 
     _saving = true;
-    _errorMessage = null;
+    _actionError = null;
     _statusMessage = null;
 
     try
@@ -180,7 +182,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {
