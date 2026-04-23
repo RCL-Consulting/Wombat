@@ -31,6 +31,7 @@ public sealed class ActivityService : IActivityService
     public async Task<ActivityDto> CreateDraftAsync(CreateActivityInput input, CancellationToken cancellationToken = default)
     {
         var activityType = await _dbContext.Set<ActivityType>()
+            .Include(entity => entity.Versions)
             .SingleOrDefaultAsync(entity => entity.Id == input.ActivityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 

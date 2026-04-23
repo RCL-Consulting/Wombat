@@ -52,13 +52,15 @@ public sealed class DevUserSeeder
             return;
         }
 
+        var subSpecialityId = demoCurriculum.SubSpecialityId;
+        var specialityId = demoCurriculum.SubSpeciality.SpecialityId;
         var institutionId = demoCurriculum.SubSpeciality.Speciality.InstitutionId;
 
-        await EnsureTraineeAsync(demoCurriculum.Id, institutionId, cancellationToken);
-        await EnsureCommitteeMemberAsync(institutionId, cancellationToken);
+        await EnsureTraineeAsync(demoCurriculum.Id, institutionId, specialityId, subSpecialityId, cancellationToken);
+        await EnsureCommitteeMemberAsync(institutionId, specialityId, subSpecialityId, cancellationToken);
     }
 
-    private async Task EnsureTraineeAsync(int curriculumId, int institutionId, CancellationToken cancellationToken)
+    private async Task EnsureTraineeAsync(int curriculumId, int institutionId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)
     {
         var existingUser = await _userManager.FindByEmailAsync(TraineeEmail);
         if (existingUser is null)
@@ -76,6 +78,8 @@ public sealed class DevUserSeeder
             await CreateUserAsync(existingUser, TraineePassword, WombatRoles.Trainee);
             _logger.LogInformation("Seeded dev trainee user {Email}.", TraineeEmail);
         }
+
+        await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
 
         var hasProfile = await _dbContext.TraineeProfiles
             .AnyAsync(profile => profile.UserId == existingUser.Id, cancellationToken);
@@ -96,26 +100,58 @@ public sealed class DevUserSeeder
         }
     }
 
-    private async Task EnsureCommitteeMemberAsync(int institutionId, CancellationToken cancellationToken)
+    private async Task EnsureCommitteeMemberAsync(int institutionId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)
     {
         var existingUser = await _userManager.FindByEmailAsync(CommitteeMemberEmail);
-        if (existingUser is not null)
+        if (existingUser is null)
         {
-            return;
+            existingUser = new WombatIdentityUser
+            {
+                UserName = CommitteeMemberEmail,
+                Email = CommitteeMemberEmail,
+                EmailConfirmed = true,
+                FirstName = "Demo",
+                LastName = "Committee",
+                InstitutionId = institutionId
+            };
+
+            await CreateUserAsync(existingUser, CommitteeMemberPassword, WombatRoles.CommitteeMember);
+            _logger.LogInformation("Seeded dev committee member user {Email}.", CommitteeMemberEmail);
         }
 
-        var user = new WombatIdentityUser
-        {
-            UserName = CommitteeMemberEmail,
-            Email = CommitteeMemberEmail,
-            EmailConfirmed = true,
-            FirstName = "Demo",
-            LastName = "Committee",
-            InstitutionId = institutionId
-        };
+        await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
+    }
 
-        await CreateUserAsync(user, CommitteeMemberPassword, WombatRoles.CommitteeMember);
-        _logger.LogInformation("Seeded dev committee member user {Email}.", CommitteeMemberEmail);
+    private async Task EnsureScopesAsync(string userId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)
+    {
+        var hasSpeciality = await _dbContext.UserSpecialityScopes
+            .AnyAsync(scope => scope.UserId == userId && scope.SpecialityId == specialityId, cancellationToken);
+
+        if (!hasSpeciality)
+        {
+            _dbContext.UserSpecialityScopes.Add(new WombatIdentityUserSpecialityScope
+            {
+                UserId = userId,
+                SpecialityId = specialityId
+            });
+        }
+
+        var hasSubSpeciality = await _dbContext.UserSubSpecialityScopes
+            .AnyAsync(scope => scope.UserId == userId && scope.SubSpecialityId == subSpecialityId, cancellationToken);
+
+        if (!hasSubSpeciality)
+        {
+            _dbContext.UserSubSpecialityScopes.Add(new WombatIdentityUserSubSpecialityScope
+            {
+                UserId = userId,
+                SubSpecialityId = subSpecialityId
+            });
+        }
+
+        if (!hasSpeciality || !hasSubSpeciality)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task CreateUserAsync(WombatIdentityUser user, string password, string role)
