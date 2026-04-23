@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Security.Claims;
 using System.Text.Json;
 using Wombat.Application.Audit;
 
@@ -50,6 +51,26 @@ public sealed class AuditPayloadSerializerTests
         json.Should().Be("{}");
     }
 
+    [Fact]
+    public void Serialize_CommandWithClaimsPrincipal_ReplacesWithPrincipalMarker()
+    {
+        // ClaimsPrincipal has a Claims[].Subject cycle that blew up System.Text.Json
+        // before this was handled explicitly. The actor identity is captured separately
+        // on AuditEntry so a placeholder here is the correct summary.
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "user-1"),
+            new Claim(ClaimTypes.Name, "alice"),
+        }, "test"));
+        var command = new CommandWithPrincipal("hello", principal);
+
+        var json = AuditPayloadSerializer.Serialize(command);
+        var doc = JsonDocument.Parse(json);
+
+        doc.RootElement.GetProperty("message").GetString().Should().Be("hello");
+        doc.RootElement.GetProperty("actor").GetString().Should().Be("[PRINCIPAL]");
+    }
+
     // Test DTOs — use property form so [Redact] is on a property, not a ctor param
     private sealed record PlainCommand(string Email, int Count);
 
@@ -69,4 +90,6 @@ public sealed class AuditPayloadSerializerTests
     }
 
     private sealed record EmptyCommand;
+
+    private sealed record CommandWithPrincipal(string Message, ClaimsPrincipal Actor);
 }

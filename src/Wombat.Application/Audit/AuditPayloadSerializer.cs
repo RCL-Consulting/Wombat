@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Wombat.Application.Audit;
@@ -29,6 +30,15 @@ public static class AuditPayloadSerializer
             if (prop.GetCustomAttribute<RedactAttribute>() is not null)
             {
                 dict[prop.Name] = "[REDACTED]";
+            }
+            else if (typeof(ClaimsPrincipal).IsAssignableFrom(prop.PropertyType) ||
+                     typeof(ClaimsIdentity).IsAssignableFrom(prop.PropertyType))
+            {
+                // ClaimsPrincipal / ClaimsIdentity have self-referencing Claim.Subject graphs
+                // that blow up System.Text.Json's cycle detection. The actor's identity is
+                // captured separately on AuditEntry (ActorUserId / ActorDisplay), so nothing
+                // useful is lost by summarising it here.
+                dict[prop.Name] = "[PRINCIPAL]";
             }
             else
             {
