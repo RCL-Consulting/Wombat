@@ -4,19 +4,31 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. GUI review sequence (T037–T042) complete.**
+**None. GUI review sequence (T037–T042) complete, plus T043 follow-up (orphan CSS classes) landed.**
 
-The six-cluster design-system audit of ~65 Blazor pages is done. Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
+Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
-1. **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` referenced in committee, portfolio, and admin pages but never defined. Either define minimal rules in `app.css` or swap each usage for a defined utility. Cross-cluster — touches ReviewDetail, MyAuthorisations, AuditDetail, RequestDetail. **Suggested model:** Sonnet, ~half day.
-2. **Dashboard design decision.** All seven role dashboards (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember, Coordinator, Assessor, Trainee) lack `<PageTitle>`/`<PageHeader>` and use inline `style="..."` for flex layouts. Consistent but undocumented. Decide: document the pattern in `DESIGN.md`, or retrofit PageHeader + utility classes globally. **Suggested model:** Opus for the decision, Sonnet for the refactor if chosen.
-3. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-4. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
+1. **Dashboard design decision.** All seven role dashboards (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember, Coordinator, Assessor, Trainee) lack `<PageTitle>`/`<PageHeader>` and use inline `style="..."` for flex layouts. Consistent but undocumented. Decide: document the pattern in `DESIGN.md`, or retrofit PageHeader + utility classes globally. **Suggested model:** Opus for the decision, Sonnet for the refactor if chosen.
+2. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+3. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
+4. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
 5. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
 
-`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed. The next session should start by picking one of the above, or by the user raising something new.
+`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
 
 ## This session at a glance
+
+**T043 — Orphan CSS classes done** (commit `3b87eee`). Three new utilities defined + three swaps to existing ones:
+
+- **Defined in `app.css`**: `.details-list` (div-wrapped dt/dd rows for key-value display in committee + portfolio), `.detail-list` (flat dt/dd siblings for admin detail pages), `.stack-list` (vertical card stack primitive). Each has a responsive breakpoint that collapses to single-column at ≤640.98px.
+- **Swapped to existing utilities**: `stack-card` → `detail-card detail-card--compact` (3 usages, committee flow); `detail-grid` → `details-grid` (4 usages, admin detail pages); `detail-section` → `detail-card` (5 usages, same files).
+- **Task file**: `Rewrite/Tasks/T043-define-orphan-css-classes.md` records scope and rationale.
+
+**Browser verification:** AuditDetail with 14 seeded audit entries renders cleanly — 2-column `details-grid`, bordered `detail-card` wrappers, `detail-list` dt labels aligned left in muted color with dd values in the adjacent grid column. All three swapped classes now apply correctly with real data. RequestDetail uses identical markup structure, so the proof carries.
+
+**Not fixed (flagged for item 4 above):** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined in AuditDetail + RequestDetail. Cosmetic leftover from copy-pasted Bootstrap markup; structural rendering is unaffected.
+
+## Previous session
 
 **T042 — Account & auth shell done** (commit `b109e7c`). 12 pages audited, 2 real findings:
 
@@ -63,25 +75,32 @@ Across six clusters:
 - **Clean build, 270/270 tests pass** throughout
 - **One systemic finding opened as a follow-up**: orphan list/dl helpers (`details-list`, `stack-list`, `stack-card`, `detail-list`, `plain-list`) referenced but never defined. Touches committee, portfolio, and admin surfaces. See the top of this file for the suggested next task.
 
-## Systemic follow-ups (not opened as tasks yet)
+## Systemic follow-ups (carried forward)
 
-- **Orphan list/dl helper classes in `app.css`.** See item 1 above.
-- **Dashboards lack `<PageTitle>` / `<PageHeader>`.** Uniform across 7 role dashboards. See item 2 above.
+- **~~Orphan list/dl helper classes in `app.css`.~~** Fixed in T043 (`3b87eee`).
+- **Dashboards lack `<PageTitle>` / `<PageHeader>`.** Uniform across 7 role dashboards. See item 1 above.
 - **Dashboard inline `style="..."` for flex layouts.** Not a rubric violation but a utility-class pass would be tidier.
+- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 4 above.
 - **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 5 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
 
-**T042 — Account & auth shell** (commit `b109e7c`).
+**T043 — Orphan CSS helper classes** (commit `3b87eee`).
 
-Two fixes:
-- `Account/Profile.razor` — split `_errorMessage` into `_loadError` (StatePanel) + `_actionError` (Alert) across OnInitializedAsync + SaveAsync.
-- `Layout/MainLayout.razor` — remove undefined `px-4` class from the top-row and article wrappers.
+Defined 3 new utilities in `app.css`:
+- `.details-list` — `<dl>` with div-wrapped `<dt>` + `<dd>` rows (used in committee + portfolio).
+- `.detail-list` — `<dl>` with flat `<dt>` / `<dd>` siblings (used in admin detail pages).
+- `.stack-list` — vertical card stack primitive.
+
+Swapped 3 more orphans to existing defined utilities:
+- `stack-card` → `detail-card detail-card--compact` (3 usages across ReviewDetail + MyReviews)
+- `detail-grid` → `details-grid` (4 usages across AuditDetail + RequestDetail)
+- `detail-section` → `detail-card` (5 usages across AuditDetail + RequestDetail)
 
 Verification:
-- 8 of 12 pages browser-rendered cleanly (admin + anonymous). Horizontal padding preserved after px-4 removal.
+- AuditDetail browser-verified with populated seed data (14 audit entries). The 2-column details-grid, bordered detail-card wrappers, and detail-list dt/dd alignment all render correctly. RequestDetail uses identical markup — proof carries.
 - Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
 
 ## Test status at handoff
@@ -122,6 +141,8 @@ Verification:
 
 ## Last verified commits
 
+- `3b87eee` — T043 (define orphan CSS helpers — details-list/detail-list/stack-list + 3 swaps to existing utilities)
+- `5169466` — docs: close T037-T042 GUI review, record follow-up backlog
 - `b109e7c` — T042 (account & auth shell polish — Profile dual-error split + MainLayout px-4 removal)
 - `e6c8ad7` — docs: record T041 commit hash, T042 handoff
 - `ae1a316` — T041 (activity platform polish — dual-error split on ActivityTypeEdit + ActivityView)
