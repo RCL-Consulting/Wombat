@@ -4,18 +4,29 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. T045 closed with one bug fix + one new upstream finding.**
+**None. T046 closed seed-claims + a second bug surfaced during verification.**
 
 Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
 1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-2. **Seed-pipeline claims gap.** `admin@wombat.local` and the `DevUserSeeder`-created `trainee@wombat.local` both lack the `SpecialityIds` / `SubSpecialityIds` / `InstitutionId` claims on their principals. This silently breaks `ListActivityTypesQuery` (empty selector on `/activities/new`) and `GetTraineeDashboardSummaryQuery` (`CurriculumProgress.Count == 0` on the trainee dashboard). Fix lives in the claims-stamping path at sign-in or the seeder itself — not in any razor/query. Populates the trainee-through-activity-type flow, unblocks populated ActivityView verification if anyone cares. **Suggested model:** Opus for the investigation (where claims should come from — AuditContextProvider? custom claims transformer?), Sonnet for the implementation.
-3. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
-4. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
+2. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
+3. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
+4. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
 
 `Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
 
 ## This session at a glance
+
+**T046 — Seed-claims gap + ActivityService draft-create bug** (commit `cef4efc`). Closed backlog item #2 and unblocked trainee activity creation end-to-end. Two related fixes:
+
+- **DevUserSeeder** now writes `WombatIdentityUserSpecialityScope` + `WombatIdentityUserSubSpecialityScope` rows for the seeded trainee and committee users. Previously only `InstitutionId` was set, so `WombatUserClaimsPrincipalFactory` produced principals with zero speciality/sub-speciality claims → every scope-filtered query returned empty for those users. The idempotent ensure-scopes helper tops up existing users on next startup too.
+- **`ActivityService.CreateDraftAsync`** was missing `.Include(Versions)` on the ActivityType query. `Map(activity)` calls `GetPinnedVersion` which reads `ActivityType.Versions`; without the Include the collection was empty and Map threw "published activity type version '1' could not be found". One-line fix; the Update/Transition/Get paths already did this via `LoadActivityAsync`.
+
+Both bugs surfaced during verification of backlog item #2. First DevUserSeeder fix unblocked the `/activities/new` type selector. Then the trainee's Save draft revealed the ActivityService bug. Second fix unblocked the persist. Then populated `/activities/2` rendered cleanly (PageHeader + Summary aside + Activity details with schema-driven data).
+
+**Populated ActivityView verification: complete.** Together with T045 (ReviewDetail), this closes both halves of the original "populated rendering" backlog item.
+
+Standing follow-up noted: trainee dashboard "No curriculum items assigned yet" — needs evidence beyond the profile-curriculum link. Cosmetic; flagged in backlog item #4.
 
 **T045 — Populated rendering verification** (commit `d97eb9a`). Closed backlog item #2 and surfaced one real bug + one new upstream follow-up.
 
@@ -94,13 +105,22 @@ Across six clusters:
 - **~~Orphan list/dl helper classes in `app.css`.~~** Fixed in T043 (`3b87eee`).
 - **~~Dashboards lack `<PageTitle>` / `<PageHeader>`.~~** Documented in T044 as the intended composition pattern (Home.razor owns the header).
 - **~~Dashboard inline `style="..."` for flex layouts.~~** Standing policy documented in DESIGN.md by T044: token-backed per-instance inline styles are fine; consolidate only when a pattern surfaces in 4+ dashboards.
-- **Seed-pipeline claims gap.** Seeded users lack `SpecialityIds`/`SubSpecialityIds`/`InstitutionId` claims → `ListActivityTypesQuery` returns empty for every seeded user → `/activities/new` type selector is empty → populated ActivityView unverifiable through the UI. Surfaced by T045. See item 2 above.
-- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 3 above.
-- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 4 above.
+- **~~Seed-pipeline claims gap.~~** Fixed in T046 (`cef4efc`).
+- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 2 above.
+- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 3 above.
+- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 4 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T046 — Seed-claims gap + ActivityService Versions include fix** (commit `cef4efc`).
+
+Two fixes that together unblocked trainee activity creation end-to-end. DevUserSeeder now stamps `WombatIdentityUserSpecialityScope` + `WombatIdentityUserSubSpecialityScope` rows (idempotent — tops up existing users). ActivityService.CreateDraftAsync now `.Include(Versions)` — the Map/GetPinnedVersion path was throwing otherwise. Populated `ActivityView` verified in the browser.
+
+271/271 tests pass (unchanged count — no new tests added).
+
+## Previous session
 
 **T045 — Populated rendering verification + audit-serializer fix** (commit `d97eb9a`).
 
@@ -173,6 +193,8 @@ Verification:
 
 ## Last verified commits
 
+- `cef4efc` — T046 (fix seed-claims gap in DevUserSeeder + Versions include in ActivityService.CreateDraftAsync; populated ActivityView verified)
+- `e886d10` — docs: record T045 findings, update backlog
 - `d97eb9a` — T045 (fix ClaimsPrincipal cycle in audit-summary serializer; populated ReviewDetail verified)
 - `e434ec2` — docs: record T044 commit hash
 - `5a4491f` — T044 (document dashboard composition pattern in DESIGN.md — docs-only)
