@@ -12,12 +12,12 @@
   <Alert Kind="success">@_status</Alert>
 }
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_error</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No decisions yet" EmptyBody="Ratified committee outcomes will appear here.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No decisions yet" EmptyBody="Ratified committee outcomes will appear here.">
   <DataTable Items="_reviews">
     <HeaderRow>
       <tr>
@@ -78,7 +78,8 @@
   private CommitteeReviewDetailDto? _selectedReview;
   private bool _loading = true;
   private string? _status;
-  private string? _error;
+  private string? _loadError;
+  private string? _actionError;
   private AppealFormModel _appeal = new();
 
   protected override async Task OnInitializedAsync()
@@ -93,7 +94,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -103,6 +104,9 @@
 
   private async Task OpenReviewAsync(int reviewId)
   {
+    _actionError = null;
+    _status = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -110,7 +114,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
   }
 
@@ -121,6 +125,9 @@
       return;
     }
 
+    _actionError = null;
+    _status = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -130,7 +137,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
     }
   }
 

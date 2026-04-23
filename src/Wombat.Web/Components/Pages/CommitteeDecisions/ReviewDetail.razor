@@ -27,13 +27,13 @@
         from @_samplingReport.DistinctAssessorCount distinct assessor@(_samplingReport.DistinctAssessorCount == 1 ? string.Empty : "s")
         in the review window. Acknowledge in the decision rationale if these warnings are relevant.
       </p>
-      <ul class="plain-list">
+      <ul class="list-unstyled">
         @foreach (var epa in _samplingReport.PerEpa)
         {
           <li>
             <strong>@epa.EpaCode — @epa.EpaTitle</strong>
             <span>@epa.RatingCount rating@(epa.RatingCount == 1 ? string.Empty : "s") · @epa.DistinctAssessorCount assessor@(epa.DistinctAssessorCount == 1 ? string.Empty : "s") · @epa.DistinctSourceCount source@(epa.DistinctSourceCount == 1 ? string.Empty : "s")</span>
-            <ul class="plain-list">
+            <ul class="list-unstyled">
               @if (epa.OneAssessorOverHalf)
               {
                 <li>One assessor contributed @epa.DominantAssessorCount of @epa.RatingCount ratings (&gt; 50%).</li>
@@ -189,7 +189,7 @@
         }
         else
         {
-          <ul class="plain-list">
+          <ul class="list-unstyled">
             @foreach (var pending in _pendingDecisions)
             {
               <li>
@@ -215,7 +215,7 @@
       }
       else
       {
-        <ul class="plain-list">
+        <ul class="list-unstyled">
           @foreach (var item in _review.EvidenceItems)
           {
             <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
@@ -287,7 +287,7 @@
 
         @if (_review.Appeals.Count > 0)
         {
-          <ul class="plain-list">
+          <ul class="list-unstyled">
             @foreach (var appeal in _review.Appeals)
             {
               <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome?.ToString() ?? "Open"))</li>
