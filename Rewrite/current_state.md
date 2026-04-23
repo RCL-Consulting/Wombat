@@ -17,7 +17,7 @@ Recommended next items, in rough priority order — pick one and open a new task
 
 ## This session at a glance
 
-**T044 — Dashboard composition documented** (commit TBD). Closed backlog item #1 by updating `Rewrite/DESIGN.md`:
+**T044 — Dashboard composition documented** (commit `5a4491f`). Closed backlog item #1 by updating `Rewrite/DESIGN.md`:
 
 - Replaced the "Dashboard page" pattern section with a composition description: `Home.razor` is the one routed page at `/` and owns the `<PageHeader>`; role dashboards are child components under `Components/Pages/Dashboards/` and must NOT declare their own `@page` / `<PageTitle>` / `<PageHeader>`; `/dashboard/switch/{role}` is a cookie-setting redirect, not a routed surface.
 - Added the dashboard file skeleton (StatePanel + dashboard-grid + DashboardCard).
@@ -95,7 +95,7 @@ Across six clusters:
 
 ## Last completed
 
-**T044 — Dashboard composition pattern documented** (commit TBD).
+**T044 — Dashboard composition pattern documented** (commit `5a4491f`).
 
 Doc-only change to `Rewrite/DESIGN.md`:
 - "Dashboard page" pattern section rewritten as composition: Home owns the PageHeader; role dashboards are child components without their own header.
@@ -158,6 +158,8 @@ Verification:
 
 ## Last verified commits
 
+- `5a4491f` — T044 (document dashboard composition pattern in DESIGN.md — docs-only)
+- `65b48d7` — docs: record T043 orphan-CSS fix + drop item from backlog
 - `3b87eee` — T043 (define orphan CSS helpers — details-list/detail-list/stack-list + 3 swaps to existing utilities)
 - `5169466` — docs: close T037-T042 GUI review, record follow-up backlog
 - `b109e7c` — T042 (account & auth shell polish — Profile dual-error split + MainLayout px-4 removal)
