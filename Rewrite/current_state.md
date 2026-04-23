@@ -4,16 +4,21 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. T048 closed the h1 focus-ring. Only two follow-ups remain.**
+**None. All cosmetic/housekeeping follow-ups from the GUI review sequence are closed.**
 
-Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
+Only one backlog item remains — the big one that has been deferred since T016:
 
 1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-2. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
 
-`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed. Every cosmetic/housekeeping follow-up surfaced by the GUI review sequence (T037–T042) has landed.
+`Rewrite/PLAN.md`, `gui-review-plan.md`, and `practical-plan.md` are all complete. Every cosmetic/housekeeping follow-up surfaced between T037 and T049 has landed.
 
 ## This session at a glance
+
+**T049 — Clarify trainee dashboard curriculum-progress empty copy** (commit `ec649d5`). Closed the last cosmetic follow-up from the GUI review sweep.
+
+Investigated the "No curriculum items assigned yet" message the seeded trainee sees. Root cause is correct-by-design behavior, not a bug: `GetTraineeDashboardSummaryQuery` reads `CurriculumItemProgress` rows, and those are lazily created by `CreditApplier.ApplyAsync` when a terminal-state activity credits a curriculum item. A brand-new trainee with zero completed activities correctly has zero progress rows. The message was misleading — items ARE assigned via the profile-curriculum link, just no progress accrued yet.
+
+Fixed the copy only: "No curriculum items assigned yet." → "No curriculum progress yet. Complete and submit activities to start tracking." No query change; that's a product/UX call for another time.
 
 **T048 — h1 programmatic-focus ring suppression** (commit `dcf76bb`). Closed the "h1 focus-ring rectangle on initial render" backlog item that had been open since T037.
 
@@ -116,11 +121,17 @@ Across six clusters:
 - **~~Seed-pipeline claims gap.~~** Fixed in T046 (`cef4efc`).
 - **~~Remaining Bootstrap utility drift~~** (`text-sm`, `text-muted`, `mt-4`, `mt-1`, `text-danger`). Fixed in T047 (`f38a880`). Turned out to span 7 files not 2.
 - **~~h1 focus-ring rectangle on initial render.~~** Fixed in T048 (`dcf76bb`).
-- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 2 above.
+- **~~Trainee dashboard curriculum progress stays empty.~~** T049 clarified the empty-state copy (`ec649d5`). Behavior is correct — progress rows are lazy; copy was misleading.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T049 — Clarify trainee dashboard curriculum-progress empty copy** (commit `ec649d5`).
+
+One-line razor edit: "No curriculum items assigned yet." → "No curriculum progress yet. Complete and submit activities to start tracking." No code or test changes.
+
+## Previous session
 
 **T048 — h1 programmatic-focus ring suppression** (commit `dcf76bb`).
 
@@ -213,6 +224,8 @@ Verification:
 
 ## Last verified commits
 
+- `ec649d5` — T049 (clarify trainee dashboard curriculum-progress empty copy)
+- `87b3fdf` — docs: record T048 h1-focus-ring fix, shrink backlog to 2
 - `dcf76bb` — T048 (suppress programmatic-focus outline on page h1)
 - `448f230` — docs: record T047 utility-class backfill, reprioritise backlog
 - `f38a880` — T047 (backfill mt-1/mt-4/text-muted/text-sm/text-danger utilities in app.css)
