@@ -118,7 +118,7 @@
           <div class="stack-list">
             @foreach (var decision in _review.Decisions)
             {
-              <article class="stack-card">
+              <article class="detail-card detail-card--compact">
                 <h4>@decision.Category</h4>
                 <p>@decision.Rationale</p>
                 @if (!string.IsNullOrWhiteSpace(decision.Conditions))
@@ -235,7 +235,7 @@
         <div class="stack-list">
           @foreach (var trajectory in _trajectories)
           {
-            <article class="stack-card">
+            <article class="detail-card detail-card--compact">
               <h4>@trajectory.EpaCode — @trajectory.EpaTitle</h4>
               <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
               <TrajectoryChart Points="@BuildChartPoints(trajectory)"

@@ -28,8 +28,8 @@ else if (_entry is null)
 }
 else
 {
-  <div class="detail-grid">
-    <div class="detail-section">
+  <div class="details-grid">
+    <div class="detail-card">
       <h3>Event</h3>
       <dl class="detail-list">
         <dt>When (UTC)</dt><dd><code>@_entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff")</code></dd>
@@ -53,7 +53,7 @@ else
       </dl>
     </div>
 
-    <div class="detail-section">
+    <div class="detail-card">
       <h3>Actor</h3>
       <dl class="detail-list">
         <dt>User ID</dt><dd>@(_entry.ActorUserId ?? "—")</dd>
@@ -64,7 +64,7 @@ else
 
     @if (_entry.SubjectType is not null)
     {
-      <div class="detail-section">
+      <div class="detail-card">
         <h3>Subject</h3>
         <dl class="detail-list">
           <dt>Type</dt><dd>@_entry.SubjectType</dd>
@@ -84,7 +84,7 @@ else
 
   @if (_isAdmin)
   {
-    <div class="detail-section mt-4">
+    <div class="detail-card mt-4">
       <h3>Payload (raw JSON)</h3>
       <pre class="code-block">@_entry.SummaryJson</pre>
     </div>

@@ -556,6 +556,64 @@ a:focus-visible {
   border-left: 4px solid var(--warning-color);
 }
 
+/* ── Detail / stack lists ─────────────────────────── */
+/* details-list: <dl> with <div><dt>label</dt><dd>value</dd></div> rows. */
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.details-list > div {
+  align-items: baseline;
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+}
+
+.details-list dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.details-list dd {
+  margin: 0;
+}
+
+/* detail-list: <dl> with flat <dt> / <dd> siblings (admin detail pages). */
+.detail-list {
+  align-items: baseline;
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+@media (max-width: 640.98px) {
+  .details-list > div,
+  .detail-list {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+}
+
+/* stack-list: vertical stack of cards with consistent gap. */
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
 /* ── Badges ───────────────────────────────────────── */
 .badge {
   border-radius: 999px;

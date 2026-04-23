@@ -27,8 +27,8 @@
 <StatePanel IsLoading="@(_request is null && string.IsNullOrWhiteSpace(_errorMessage))" IsEmpty="@(_request is null)" EmptyTitle="Not found" EmptyBody="The data rights request was not found.">
   @if (_request is not null)
   {
-    <div class="detail-grid">
-      <div class="detail-section">
+    <div class="details-grid">
+      <div class="detail-card">
         <h3>Request</h3>
         <dl class="detail-list">
           <dt>Requester</dt><dd>@_request.RequesterDisplayName</dd>
@@ -42,7 +42,7 @@
 
       @if (_request.DecisionNote is not null)
       {
-        <div class="detail-section">
+        <div class="detail-card">
           <h3>Decision</h3>
           <dl class="detail-list">
             <dt>Decided by</dt><dd><code class="text-sm">@_request.DecidedByUserId</code></dd>
@@ -59,7 +59,7 @@
 
     @if (_request.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
     {
-      <div class="detail-section mt-4">
+      <div class="detail-card mt-4">
         <h3>Action</h3>
 
         <FormField Label="Decision note" InputId="decision-note" Required="true">
