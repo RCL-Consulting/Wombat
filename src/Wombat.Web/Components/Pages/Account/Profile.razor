@@ -7,9 +7,9 @@
 
 <PageHeader Title="My account" Subtitle="Update your name and review your assigned roles." />
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
+@if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_errorMessage</Alert>
+  <Alert Kind="danger">@_actionError</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_statusMessage))
@@ -17,7 +17,7 @@
   <Alert Kind="success">@_statusMessage</Alert>
 }
 
-<StatePanel IsLoading="_loading" LoadError="@(_loading ? null : _errorMessage)" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
   @if (_model is not null)
   {
     <div class="details-grid">
@@ -66,7 +66,8 @@
   private EditContext? _editContext;
   private bool _loading = true;
   private bool _saving;
-  private string? _errorMessage;
+  private string? _loadError;
+  private string? _actionError;
   private string? _statusMessage;
 
   protected override async Task OnInitializedAsync()
@@ -89,7 +90,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -115,7 +116,7 @@
     }
 
     _saving = true;
-    _errorMessage = null;
+    _actionError = null;
     _statusMessage = null;
 
     try
@@ -131,7 +132,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _actionError = exception.Message;
     }
     finally
     {
