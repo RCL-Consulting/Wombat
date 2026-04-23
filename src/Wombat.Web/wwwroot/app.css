@@ -823,8 +823,16 @@ a:focus-visible {
   margin-bottom: 1rem;
 }
 
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
 .mt-3 {
   margin-top: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
 }
 
 .font-mono {
@@ -837,8 +845,17 @@ a:focus-visible {
   padding: 0;
 }
 
-.muted {
+.muted,
+.text-muted {
   color: var(--muted-text);
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.text-danger {
+  color: var(--danger-color);
 }
 
 .visually-hidden {
