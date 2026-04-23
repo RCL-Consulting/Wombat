@@ -147,8 +147,8 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 | T039 — Committee flow | ✅ done (5/6 browser-verified; populated ReviewDetail unverified — see current_state.md) | `dd9f892` |
 | T040 — Admin hierarchy | ✅ done (7/17 browser-verified incl. 3 changed pages; remainder rubric-clean on static audit) | `2094d9a` |
 | T041 — Activity platform | ✅ done (6/9 browser-verified incl. ActivityTypeEdit builder with seed data + ActivityView error path) | `ae1a316` |
-| T042 — Account & auth shell | active | — |
+| T042 — Account & auth shell | ✅ done (8/12 browser-verified incl. Profile dual-error fix + MainLayout px-4 removal) | `b109e7c` |
 
 ## Active task
 
-**T042 — Account & auth shell.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**None — GUI review sequence T037–T042 complete.** See `Rewrite/current_state.md` for the follow-up backlog and next open item.

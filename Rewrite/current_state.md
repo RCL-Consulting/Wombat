@@ -4,84 +4,85 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T042 — Account & auth shell (GUI review cluster 6).** Model: Sonnet.
+**None. GUI review sequence (T037–T042) complete.**
 
-Final GUI review cluster. Low-churn, small surface — wrap-up pass per `Rewrite/gui-review-plan.md`:
+The six-cluster design-system audit of ~65 Blazor pages is done. Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
-- `Components/Pages/Account/Login.razor`, `Register.razor`, `ForgotPassword.razor`, `ChangePassword.razor`, `Profile.razor`
-- `Components/Pages/AccessDenied.razor`, `Error.razor`, `NotFound.razor`
-- `Components/Pages/Home.razor`, `PlaceholderPage.razor`
-- Layout: `Components/Layout/MainLayout.razor`, `AuthLayout.razor`, `ReconnectModal.razor` (focus on the reconnect affordance)
+1. **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` referenced in committee, portfolio, and admin pages but never defined. Either define minimal rules in `app.css` or swap each usage for a defined utility. Cross-cluster — touches ReviewDetail, MyAuthorisations, AuditDetail, RequestDetail. **Suggested model:** Sonnet, ~half day.
+2. **Dashboard design decision.** All seven role dashboards (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember, Coordinator, Assessor, Trainee) lack `<PageTitle>`/`<PageHeader>` and use inline `style="..."` for flex layouts. Consistent but undocumented. Decide: document the pattern in `DESIGN.md`, or retrofit PageHeader + utility classes globally. **Suggested model:** Opus for the decision, Sonnet for the refactor if chosen.
+3. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+4. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
+5. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
 
-**Estimate:** 1 day. Anonymous / lightly-authenticated pages plus the global layout affordances. After this, the full GUI review sequence (T037–T042) is closed.
+`Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed. The next session should start by picking one of the above, or by the user raising something new.
 
 ## This session at a glance
 
-**T041 — Activity platform done** (commit `ae1a316`). 9 pages audited, 2 real findings, both the same dual-error pattern:
+**T042 — Account & auth shell done** (commit `b109e7c`). 12 pages audited, 2 real findings:
 
-- **ActivityTypeEdit.razor** — `_error` drove both an above-fold Alert and `StatePanel.LoadError`. On load failure both the Alert and the "Editor unavailable" empty state rendered. Split into `_loadError` (StatePanel) + `_actionError` (Alert) across all three action methods (SaveDraft, Publish, Discard) plus the OnParametersSetAsync load.
-- **ActivityView.razor** — same dual-error; split across OnParametersSetAsync + HandleTransitionAsync.
+- **Profile.razor** — `_errorMessage` drove both an above-fold Alert and `StatePanel.LoadError` (via a ternary that only checked `_loading`). On load failure both surfaces rendered the same message. Split into `_loadError` + `_actionError` — matches the T038/T039/T040/T041 pattern across every dual-error bug the review surfaced.
+- **MainLayout.razor** — `class="top-row px-4 auth"` and `class="content px-4"` both referenced `px-4`, which was **never defined** anywhere in `app.css` or any `.razor.css` isolation file. Pure Bootstrap utility leftover. The actual horizontal padding is applied by `MainLayout.razor.css` at `(min-width: 641px)` via `padding-left: 2rem !important; padding-right: 1.5rem !important;` on `.top-row` and `article`. Removed both `px-4` references; browser-verified the padding didn't regress.
 
-**7 of 9 pages rubric-clean on static audit.** Every builder class referenced (`tab-bar`, `tab-bar-tab`, `builder-two-col`, `font-mono`, `search-container`, `search-grid`, `search-field`, `search-input`, `header-container`, `page-subtitle`, `detail-card--interactive`, `detail-card--empty-compact`) is defined in `app.css`. `FormEdit.razor` uses `<StatePanel IsLoading=_loading IsEmpty=false>` with no `LoadError` prop — single-Alert pattern, no dual-error. `ActivityInbox.razor` uses LoadError-only, no separate Alert — clean. `NewActivity.razor` has no StatePanel LoadError, only Alerts — clean.
+**10 of 12 pages rubric-clean on static audit.** Every referenced class (`account-form-container`, `sso-divider`, `sso-providers`, `sso-button`, `password-wrapper`, `state-panel-title`, `state-panel-copy`, `form-group`, `form-actions`, `auth-page-shell`, `auth-page-main`, `validation-summary-errors`) is defined in `app.css`. ReconnectModal uses Blazor's built-in `components-*` classes tied to the server-side reconnection JS — not Wombat CSS, out of scope.
 
-`AssessorDashboard.razor` and `CoordinatorDashboard.razor` follow the shared dashboard convention (no PageHeader, inline `style="..."` for flex item layouts) — pre-existing cross-cluster pattern, not a T041 violation.
+**Not fixed (noted only):**
+- `#blazor-error-ui` in MainLayout uses the `🗙` emoji and raw `lightyellow`/`rgba(0,0,0,0.2)` colors. Standard Blazor template scaffolding; pre-existing.
+- `ChangePassword.razor` uses raw `<div class="form-group"><label>...<input>` instead of the `FormField` component used elsewhere. Functional; cosmetic consistency follow-up.
 
 ## Browser verification
 
-Six of 9 pages verified on `http://localhost:5080/` as `admin@wombat.local`. Screenshots in `.playwright-mcp/` (gitignored):
+Eight of 12 pages verified on `http://localhost:5080/`. Screenshots in `.playwright-mcp/` (gitignored):
 
-| Page | Result |
-|---|---|
-| `/admin/activity-types` | 10 seeded activity types in DataTable (ACAT, CBD, DOPS, Journal Club, Mini-CEX, Procedure Log, QI Project, Reflective Note, Research Output, Teaching Session); search filter renders |
-| `/admin/activity-types/1` | **Builder UI fully populated** — Mini-CEX loaded with Request / EPA / Assessment / Document / Feedback sections; Live preview pane renders the schema-driven form; Section + Field editor panels at bottom |
-| `/admin/forms` | Clean "No assessment forms yet" StatePanel empty state |
-| `/activities/inbox` | "Inbox clear" empty state |
-| `/activities/new` | PageHeader + Activity type select renders |
-| `/activities/1` | **Dual-error fix verified** — load failure shows a single message via `StatePanel.LoadError`; no duplicate Alert above |
+| Page | Context | Result |
+|---|---|---|
+| `/account/login` | AuthLayout, anonymous | Centered `account-form-container` card with Email / Password / Remember me / Sign in |
+| `/account/forgot-password` | AuthLayout, anonymous | Info Alert "Password reset is not wired yet" + Back to sign in |
+| `/not-found` | MainLayout, anonymous | PageHeader + "Nothing to show" detail-card, padding preserved after px-4 removal |
+| `/` | MainLayout, Administrator | Dashboard renders with correct 2rem horizontal padding — px-4 removal verified |
+| `/account/profile` | MainLayout, Administrator | **Changed page** — PageHeader + Account summary + Profile details rendered; no dual-error (happy path) |
+| `/account/change-password` | MainLayout, Administrator | PageHeader + 3 password fields with Show buttons + Cancel/Change actions |
+| `/access-denied` | MainLayout, any auth | PageHeader + warning Alert + Back to home — `actions-cell` class used for single button, minor style-choice note |
+| `/placeholder/users` | MainLayout, Administrator | PageHeader + 3 detail-cards (Planned surface / Next task / Coming soon empty card) |
 
-### T041 known compromises
+### T042 known compromises
 
-- **3 of 9 pages not browser-verified.** FormEdit and the two dashboards (AssessorDashboard, CoordinatorDashboard) render rubric-clean on static audit but weren't exercised in the browser. Low risk: FormEdit matches other admin edit pages (no changes applied), and the dashboards follow the shared pattern that's been browser-verified in T037/T040.
-- **Populated `ActivityView` with real activity unverified.** Would need to seed or submit an activity first. The changed file's happy path uses the same `details-grid` + `detail-card` shell as ReviewDetail (verified in T039) and ActivityTypeEdit's preview pane (verified in this cluster). Risk of regression from the mechanical `_error` → `_loadError`/`_actionError` split is near zero.
+- **4 of 12 pages not browser-verified.** Register (needs an invitation token to preview), Error (only triggered via unhandled exception path), AuthLayout (only verified indirectly via Login/ForgotPassword), ReconnectModal (only shown on circuit disconnect). All are rubric-clean on static audit and the ones exercised via their hosting pages rendered correctly.
 
-## Systemic follow-ups (carried forward, not T041 scope)
+## GUI review sequence — closed
 
-- **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` referenced in committee, portfolio, and admin pages but never defined. Track as a dedicated "design tokens top-up" task.
-- **Dashboards have no `<PageTitle>` or `<PageHeader>`.** Uniform across TraineeDashboard, AssessorDashboard, CommitteeMemberDashboard, CoordinatorDashboard, and all four admin dashboards. Consistent pattern; decide during T042 or after whether to document in `DESIGN.md` or retrofit.
-- **Dashboard inline `style="..."` for flex/margin layouts.** Not a rubric violation (CLAUDE.md bans `<style>` blocks only), but a cosmetic utility-class pass would be worth opening as a follow-up task.
-- **h1 focus-ring rectangle on initial render.** Pre-existing since T037/T038; still unresolved.
+1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (`1d25995`)
+2. ✅ T038 — Trainee surface (`88f5cf4`)
+3. ✅ T039 — Committee flow (`dd9f892`)
+4. ✅ T040 — Admin hierarchy (`2094d9a`)
+5. ✅ T041 — Activity platform (`ae1a316`)
+6. ✅ T042 — Account & auth shell (`b109e7c`)
+
+Across six clusters:
+- **~65 Blazor pages audited** against the DESIGN.md rubric
+- **13 shipped fixes** — the recurring theme was the dual-error bug (`_error` driving both Alert and StatePanel.LoadError). Split into `_loadError`/`_actionError` on 8 pages across the clusters. Remaining fixes: NavMenu icon consolidation, orphan class swap (`plain-list` → `list-unstyled`), redundant Alert collapse (AssessorsList), Bootstrap utility removal (MainLayout `px-4`).
+- **Clean build, 270/270 tests pass** throughout
+- **One systemic finding opened as a follow-up**: orphan list/dl helpers (`details-list`, `stack-list`, `stack-card`, `detail-list`, `plain-list`) referenced but never defined. Touches committee, portfolio, and admin surfaces. See the top of this file for the suggested next task.
+
+## Systemic follow-ups (not opened as tasks yet)
+
+- **Orphan list/dl helper classes in `app.css`.** See item 1 above.
+- **Dashboards lack `<PageTitle>` / `<PageHeader>`.** Uniform across 7 role dashboards. See item 2 above.
+- **Dashboard inline `style="..."` for flex layouts.** Not a rubric violation but a utility-class pass would be tidier.
+- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 5 above.
+- **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
+- **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
 
-**T041 — Activity platform** (commit `ae1a316`).
+**T042 — Account & auth shell** (commit `b109e7c`).
 
 Two fixes:
-- `Admin/ActivityTypes/ActivityTypeEdit.razor` — split `_error` into `_loadError` (StatePanel) + `_actionError` (Alert) across OnParametersSetAsync, SaveDraft, Publish, Discard.
-- `Activities/ActivityView.razor` — same split across OnParametersSetAsync + HandleTransitionAsync.
+- `Account/Profile.razor` — split `_errorMessage` into `_loadError` (StatePanel) + `_actionError` (Alert) across OnInitializedAsync + SaveAsync.
+- `Layout/MainLayout.razor` — remove undefined `px-4` class from the top-row and article wrappers.
 
 Verification:
-- 6 of 9 pages browser-rendered cleanly as admin with populated seed data; dual-error fix visibly verified on `/activities/1` (single "could not be found" message, no duplicate).
+- 8 of 12 pages browser-rendered cleanly (admin + anonymous). Horizontal padding preserved after px-4 removal.
 - Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
-
-## Plan this session works against
-
-`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037 / T038 / T039 / T040 / T041 done; T042 (account & auth shell) active.
-
-`Rewrite/practical-plan.md` — closed: T035 done, T036 deferred indefinitely.
-
-## GUI review sequence
-
-1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified Administrator)
-2. ✅ T038 — Trainee surface (all 6 pages browser-verified, including seeded Trainee)
-3. ✅ T039 — Committee flow (5/6 pages browser-verified; populated ReviewDetail deferred)
-4. ✅ T040 — Admin hierarchy (7/17 pages browser-verified; 3 dual-error fixes shipped)
-5. ✅ T041 — Activity platform (6/9 pages browser-verified; 2 dual-error fixes shipped)
-6. T042 — Account & auth shell (active — 1 d)
-
-## Block 4 / practical-plan sequence (closed)
-
-1. ✅ T035 — Assessor training status field
-2. 🚫 T036 — Accreditor-specific export template (deferred — WBA new locally, no accreditor spec)
 
 ## Test status at handoff
 
@@ -92,7 +93,13 @@ Verification:
 - Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
-- Browser verification — T037 / T038 / T039 / T040 / T041 (6/9 activity platform pages)
+- Browser verification — T037 / T038 / T039 / T040 / T041 / T042 (8/12 account+auth+layout pages)
+
+## Plans status
+
+- `Rewrite/gui-review-plan.md` — **closed**. All six clusters complete.
+- `Rewrite/practical-plan.md` — **closed**: T035 done, T036 deferred indefinitely.
+- `Rewrite/PLAN.md` — complete for the rewrite baseline. Remaining items are the operational deployment block carried from T016.
 
 ## Known T035 compromises
 
@@ -115,6 +122,8 @@ Verification:
 
 ## Last verified commits
 
+- `b109e7c` — T042 (account & auth shell polish — Profile dual-error split + MainLayout px-4 removal)
+- `e6c8ad7` — docs: record T041 commit hash, T042 handoff
 - `ae1a316` — T041 (activity platform polish — dual-error split on ActivityTypeEdit + ActivityView)
 - `17fe16d` — docs: record T040 commit hash, T041 handoff
 - `2094d9a` — T040 (admin hierarchy polish — 3 dual-error splits)
