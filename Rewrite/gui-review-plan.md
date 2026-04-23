@@ -146,9 +146,9 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 | T038 — Trainee surface | ✅ done (all 6 browser-verified, incl. seeded Trainee) | `88f5cf4` |
 | T039 — Committee flow | ✅ done (5/6 browser-verified; populated ReviewDetail unverified — see current_state.md) | `dd9f892` |
 | T040 — Admin hierarchy | ✅ done (7/17 browser-verified incl. 3 changed pages; remainder rubric-clean on static audit) | `2094d9a` |
-| T041 — Activity platform | active | — |
-| T042 — Account & auth shell | pending | — |
+| T041 — Activity platform | ✅ done (6/9 browser-verified incl. ActivityTypeEdit builder with seed data + ActivityView error path) | `ae1a316` |
+| T042 — Account & auth shell | active | — |
 
 ## Active task
 
-**T041 — Activity platform.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
+**T042 — Account & auth shell.** Model: Sonnet. Live state in `Rewrite/current_state.md`.
