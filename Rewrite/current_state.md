@@ -4,64 +4,85 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T039 — Committee flow (GUI review cluster 3).** Model: Sonnet.
+**T040 — Admin hierarchy (GUI review cluster 4).** Model: Sonnet.
 
-Browser-verify and polish the committee surface (densest recent work, T031–T033 all landed here): `Committee/PanelsList`, `PanelEdit`, `MyReviews`, `ReviewsSchedule`, `ReviewDetail`, plus `CommitteeMemberDashboard`. Apply the rubric in `Rewrite/gui-review-plan.md`. Dev server is unblocked and `committee@wombat.local` / `ChangeThisCommittee123!` is now seeded in Development for committee-role verification (see DevUserSeeder under "This session at a glance"). `pwd_DO_NOT_COMMIT.txt` carries the credentials.
+Sweep the admin list/edit pairs + role-specific admin dashboards against the rubric in `Rewrite/gui-review-plan.md`:
+
+- Institutions (list, edit)
+- Specialities, SubSpecialities (4 pages)
+- Assessors (list, profile edit)
+- Curricula (list, edit, items edit)
+- EPAs (list, edit)
+- Dashboards: `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `AdministratorDashboard`
+
+Dev server is working, `admin@wombat.local` / `ChangeThisAdmin123!` can access all admin surfaces. Run it as one sweep — pages are structurally similar. `pwd_DO_NOT_COMMIT.txt` has all seeded credentials.
 
 ## This session at a glance
 
-Practical plan closed. **T036 deferred indefinitely** (no accreditor format spec forthcoming). New plan: `Rewrite/gui-review-plan.md` — six clusters T037–T042, ~8 working days.
+**T039 — Committee flow (GUI review cluster 3) done** (commit `dd9f892`). Three real findings, three mechanical fixes:
 
-Four pieces of work shipped this session:
+- **MyReviews.razor** — single `_error` field drove both an above-fold `<Alert Kind="danger">` and `StatePanel`'s `LoadError`, so a load failure rendered twice. Split into `_loadError` (StatePanel only) and `_actionError` (Alert only), mirroring T038's `MyAuthorisations` fix.
+- **ReviewsSchedule.razor** — identical dual-error bug, identical split. "Schedule review" submit failures now surface as Alert above the table; list-load failures go through StatePanel.
+- **ReviewDetail.razor** — `plain-list` (5 occurrences) was an orphan class name not defined in `app.css`. Swapped to `list-unstyled` (defined at `app.css:776`). `stack-list`/`stack-card`/`details-list` are also orphan but left as-is — see "Systemic follow-ups" below.
 
-- **T037** — NavMenu's bespoke `.bi-*-nav-menu` background-image CSS replaced with `Icon.razor`. Added Lucide shield/clock/key SVGs. Browser-verified under Administrator: 13 nav icons render and follow `currentColor`.
-- **T028 hotfix** — `RenameStarReflection` migration's SQL referenced a non-existent `ActivityTypes."Title"` column; corrected to `"Name"` in place (data-only migration, never ran successfully anywhere before). This unblocked the dev server, which had been silently broken since T028 landed.
-- **T038** — Trainee-surface polish. `ExportPortfolio` and `VerifyExport`: raw `<div class="alert alert-...">` Bootstrap markup swapped for `<Alert Kind="...">`; 4-space indentation normalized to 2-space. `MyProgress` and `MyAuthorisations`: manual loading text + empty cards refactored to `StatePanel` for consistency with `TraineeDashboard`/`MyActivities`. `MyAuthorisations`: split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (above-the-fold Alert) so a download failure no longer blanks the loaded list. `TraineeDashboard` and `MyActivities` already passed the rubric — no changes. **All 6 pages browser-verified** (3 as Administrator, 3 as the seeded Trainee).
-- **DevUserSeeder** (commit `e132765`) — new `Wombat.Infrastructure.Identity.DevUserSeeder`, run after `DataSeeder` only when `app.Environment.IsDevelopment()`. Idempotent. Creates `trainee@wombat.local` (Trainee role + TraineeProfile linked to the Demo curriculum) and `committee@wombat.local` (CommitteeMember role). Hardcoded `ChangeThisTrainee123!` / `ChangeThisCommittee123!` passwords — obvious in source so a careless production deploy is loud. Resolves the "non-admin role" gap that T038 surfaced; T039 onwards can browser-verify role-gated pages without rebuilding the invitation flow each cluster.
-- **chore** — `.gitignore` hardened against artifacts this session generated: `.playwright-mcp/`, `/*.png`, `pwd_DO_NOT_COMMIT.txt`. The pwd file now also carries trainee + committee credentials alongside the existing admin entry.
+Rubric-clean on audit, no changes needed: `PanelsList.razor` (PageHeader + StatePanel + DataTable), `PanelEdit.razor` (PageHeader + Alert + FormField + FormActions), `CommitteeMemberDashboard.razor` (consistent with other role dashboards).
+
+## Browser verification
+
+Five of six pages verified on `http://localhost:5080/` with screenshots captured (all `.playwright-mcp/` / `.png` are gitignored):
+
+| Page | Role | Result |
+|---|---|---|
+| `/` (CommitteeMemberDashboard) | committee@wombat.local | Empty states on both DashboardCards render cleanly |
+| `/committee/panels` | committee@wombat.local | StatePanel "No decision panels" empty state, PageHeader + New panel action |
+| `/committee/reviews` | committee@wombat.local | StatePanel empty state; "Schedule review" toggle opens form with all FormFields |
+| `/committee/panels/new` | admin@wombat.local | Full form renders: Panel name, Scope, Institution id, Speciality id, Chair user id, Member user ids, External user ids, Save panel |
+| `/committee/my-reviews` | admin@wombat.local | "No decisions yet" StatePanel empty state |
+| `/committee/reviews/1` | admin@wombat.local | Error path: single `Alert Kind="danger"` with "The committee review could not be found." — no duplicate rendering, confirming the dual-error split |
+
+### T039 known compromise
+
+- **Populated `ReviewDetail.razor` unverified.** The page renders correctly in the error state, but the decision/pending-entrustment/evidence/trajectory/appeal sections require a seeded review-on-a-panel flow (5+ steps: create panel, schedule review, start, record decision, optionally stage pending decisions, optionally lodge+resolve appeal). Fixes were mechanical (one `class="plain-list"` → `class="list-unstyled"` swap, no markup structure change), and the Web test suite exercises the component; risk of regression from the swap alone is near zero. Flag for manual exercise during T040+ if a committee review is created incidentally.
+
+## Systemic follow-ups (not T039 scope)
+
+Some committee drift turned out to be global, not cluster-specific. Track as cross-cluster follow-ups:
+
+- **Orphan list/dl helper classes in `app.css`.** `details-list`, `detail-list`, `stack-list`, `stack-card` are referenced across committee, portfolio (`MyAuthorisations`), and admin (`AuditDetail`, `RequestDetail`) pages but not defined anywhere in `app.css` or `.razor.css` files. They render as default browser styling (dls and divs with no visual separation). Either add definitions to `app.css` in a dedicated "design tokens top-up" task, or swap each usage for a defined utility class. Out of scope for GUI review clusters since the rubric forbids touching `app.css` tokens.
+- **Dashboards have no `<PageTitle>` or `<PageHeader>`.** Uniform across TraineeDashboard, AssessorDashboard, CommitteeMemberDashboard, InstitutionalAdminDashboard, CoordinatorDashboard. The welcome strip in MainLayout provides role context, so this may be deliberate. Decide during T040 whether to make the pattern explicit (add to `DESIGN.md`) or retrofit headers.
+- **h1 focus-ring rectangle on initial render.** Pre-existing; noted last session. Still unresolved.
 
 ## Possible follow-ups (not opened as tasks)
 
-- The h1 on every page (e.g. "Welcome, admin@wombat.local", "My activities") shows a black focus-ring rectangle on initial render — Blazor likely focuses the h1 after navigation for screen-reader announcement. Worth verifying intent before suppressing; if intentional, `h1:focus { outline: none; }` or `h1:focus-visible { outline: none; }` on the inert case.
-- Nav-link text shows the default `<a>` underline. Pre-existing in `NavMenu.razor.css`. Decide during a NavMenu follow-up or T040 whether to add `text-decoration: none` to `.nav-item ::deep .nav-link`.
-- `TraineeDashboard.razor` uses ~8 inline `style="..."` attributes for flex layouts; each references design tokens (`var(--space-xs)` etc.). CLAUDE.md doesn't ban inline `style="..."`, only `<style>` blocks, so they're not a violation — flagged for a future utility-class pass if the same patterns surface in other dashboards.
-- `GetTraineeDashboardSummaryQuery` returns `CurriculumProgress.Count == 0` for the seeded Trainee even though `TraineeProfile.CurriculumId` points to "IM Core Curriculum 2026.1" which has one CurriculumItem. The query is stricter than just the profile-curriculum link — likely needs evidence (Activities) or institutional scope. Out of GUI-review scope; flag for whoever owns the dashboard query.
+- Nav-link underline on default `<a>` state — pre-existing in `NavMenu.razor.css`. Decide during T040/T042.
+- `TraineeDashboard.razor` and `CommitteeMemberDashboard.razor` inline `style="..."` for flex layouts — reference design tokens, not a violation. Track for a utility-class pass if the pattern appears on more dashboards in T040.
+- `GetTraineeDashboardSummaryQuery` returns `CurriculumProgress.Count == 0` for the seeded Trainee despite a linked curriculum. Out of GUI scope; flag for whoever owns the dashboard query.
 
 ## Last completed
 
-**T038 — Trainee surface polish** (commit `88f5cf4`) **+ DevUserSeeder** (commit `e132765`).
+**T039 — Committee flow** (commit `dd9f892`).
 
-T038 fixes:
-- `ExportPortfolio.razor` and `VerifyExport.razor` — raw `<div class="alert alert-...">` Bootstrap markup swapped for `<Alert Kind="...">`; 4-space indentation normalized to 2-space.
-- `MyProgress.razor` and `MyAuthorisations.razor` — manual "Loading…" + empty cards refactored to `StatePanel` for consistency with `TraineeDashboard`/`MyActivities`.
-- `MyAuthorisations.razor` — split `_error` into `_loadError` (drives StatePanel) and `_downloadError` (rendered above-the-fold via Alert) so a download failure no longer blanks the loaded list.
-- `TraineeDashboard.razor` and `MyActivities.razor` — no changes; both already pass the rubric.
-
-DevUserSeeder closed the role-gap that initially blocked T038 verification:
-- Idempotent dev-only seeder. Runs after `DataSeeder` only when `app.Environment.IsDevelopment()`.
-- Creates `trainee@wombat.local` (Trainee + TraineeProfile linked to the Demo curriculum) and `committee@wombat.local` (CommitteeMember).
-- Hardcoded `ChangeThisTrainee123!` / `ChangeThisCommittee123!` — obvious in source so a careless production deploy is loud.
+Three fixes:
+- `CommitteeDecisions/MyReviews.razor` — split `_error` into `_loadError` (StatePanel) and `_actionError` (Alert).
+- `CommitteeDecisions/ReviewsSchedule.razor` — same split.
+- `CommitteeDecisions/ReviewDetail.razor` — `plain-list` → `list-unstyled` (5 occurrences).
 
 Verification:
-- All 6 T038 pages browser-rendered cleanly: `/activities/mine`, `/portfolio/export`, `/portfolio/verify?hash=…` (warning Alert) under Administrator; `/`, `/portfolio/progress`, `/portfolio/authorisations` under the seeded Trainee.
+- 5/6 committee pages browser-rendered cleanly (screenshots above).
 - Build clean, 270/270 tests pass (Domain 45, Application 168, Architecture 19, Web 38).
-
-Earlier in the same session:
-- **T037** (commit `1d25995`) — NavMenu icons consolidated to `Icon.razor`. Browser-verified.
-- **T028 migration fix** (commit `a413ddc`) — `ActivityTypes."Title"` → `"Name"` in `RenameStarReflection`. Unblocked the dev server.
 
 ## Plan this session works against
 
-`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037 and T038 done; T039 (committee flow) active.
+`Rewrite/gui-review-plan.md` — design-system audit of ~65 pages + 15 shared components. T037, T038, T039 done; T040 (admin hierarchy) active.
 
 `Rewrite/practical-plan.md` — closed: T035 done, T036 deferred indefinitely.
 
 ## GUI review sequence
 
 1. ✅ T037 — Consolidate NavMenu icons to Icon.razor (browser-verified Administrator)
-2. ✅ T038 — Trainee surface (all 6 pages browser-verified, including via the seeded Trainee)
-3. T039 — Committee flow (active — 1.5 d; CommitteeMember login seeded)
-4. T040 — Admin hierarchy (2 d)
+2. ✅ T038 — Trainee surface (all 6 pages browser-verified, including seeded Trainee)
+3. ✅ T039 — Committee flow (5/6 pages browser-verified; populated ReviewDetail deferred)
+4. T040 — Admin hierarchy (active — 2 d; admin login available)
 5. T041 — Activity platform (2 d)
 6. T042 — Account & auth shell (1 d)
 
@@ -79,12 +100,12 @@ Earlier in the same session:
 - Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
 - Integration tests — Docker-gated; not run locally
-- Browser verification — T037 (Administrator nav) and T038 (all 6 pages, mixed Administrator + seeded Trainee) at `http://localhost:5080/`
+- Browser verification — T037 (Administrator nav), T038 (all 6 trainee-surface pages), T039 (5/6 committee pages)
 
 ## Known T035 compromises
 
 - **No validation that the date is plausible.** The date picker accepts any `DateOnly?` — a far-future date would be stored as-is. The field is information-only and admin-only, so the risk is cosmetic; add a sanity guard if a programme starts filling in future placeholder dates.
-- **No browser-level verification this session.** List/edit wiring is a direct column-through, identical in shape to existing profile fields; trusted from the Application-layer round-trip tests.
+- **No browser-level verification that session.** List/edit wiring is a direct column-through, identical in shape to existing profile fields; trusted from the Application-layer round-trip tests.
 
 ## What remains (operational, not code — carried forward from T016)
 
@@ -102,6 +123,7 @@ Earlier in the same session:
 
 ## Last verified commits
 
+- `dd9f892` — T039 (committee flow polish — dual-error split + list-unstyled swap)
 - `e132765` — chore: add DevUserSeeder for non-admin browser verification
 - `cde9ee1` — docs: record T038 commit hash + open trainee-account question
 - `e7e9abb` — chore: gitignore browser-verification artifacts and pwd file
