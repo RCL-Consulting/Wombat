@@ -4,18 +4,24 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. GUI review sequence (T037–T042) complete; T043 (orphan CSS classes) and T044 (dashboard composition docs) landed.**
+**None. T045 closed with one bug fix + one new upstream finding.**
 
 Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
 1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-2. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
+2. **Seed-pipeline claims gap.** `admin@wombat.local` and the `DevUserSeeder`-created `trainee@wombat.local` both lack the `SpecialityIds` / `SubSpecialityIds` / `InstitutionId` claims on their principals. This silently breaks `ListActivityTypesQuery` (empty selector on `/activities/new`) and `GetTraineeDashboardSummaryQuery` (`CurriculumProgress.Count == 0` on the trainee dashboard). Fix lives in the claims-stamping path at sign-in or the seeder itself — not in any razor/query. Populates the trainee-through-activity-type flow, unblocks populated ActivityView verification if anyone cares. **Suggested model:** Opus for the investigation (where claims should come from — AuditContextProvider? custom claims transformer?), Sonnet for the implementation.
 3. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
 4. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
 
 `Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
 
 ## This session at a glance
+
+**T045 — Populated rendering verification** (commit `d97eb9a`). Closed backlog item #2 and surfaced one real bug + one new upstream follow-up.
+
+- **Bug fixed:** `AuditPayloadSerializer` reflected over MediatR command properties and called `JsonSerializer.Serialize` on each value. Committee commands carry an `Actor: ClaimsPrincipal`, and `ClaimsPrincipal.Claims[].Subject` is a self-referencing graph → `System.Text.Json` cycle exception aborted every committee write path (CreateDecisionPanel, ScheduleCommitteeReview, StartCommitteeReview, etc.). Fix: type-check for `ClaimsPrincipal`/`ClaimsIdentity` and substitute `[PRINCIPAL]`. Actor identity is already captured on `AuditEntry` separately. Regression test added. This bug had been in place since the committee feature shipped — it's exactly why T039 deferred populated ReviewDetail verification ("seeding fails").
+- **Populated ReviewDetail verified:** Seeded panel "T045 Test Panel" → scheduled review against the trainee → opened `/committee/reviews/1`. All 6 sections render correctly in Scheduled state (Review summary with T043's `details-list` applied, Decision form inactive, Pending entrustments empty, Evidence snapshot empty, Rating trajectory empty, Appeals form). Clicked **Start review** → success Alert routed through `_status`, state flipped to InProgress, Record decision button appeared on the Decision card, Stage pending decision form appeared. Conditional block rendering confirmed across two states.
+- **Populated ActivityView blocked** by a separate upstream issue — `/activities/new`'s type selector is empty for every seeded user because `ListActivityTypesQuery` filters by `specialityIds.Contains(...)` and the seeded users have no such claims. Not a T041 regression; a seed-pipeline claims gap. Opened as new backlog item #2.
 
 **T044 — Dashboard composition documented** (commit `5a4491f`). Closed backlog item #1 by updating `Rewrite/DESIGN.md`:
 
@@ -88,12 +94,21 @@ Across six clusters:
 - **~~Orphan list/dl helper classes in `app.css`.~~** Fixed in T043 (`3b87eee`).
 - **~~Dashboards lack `<PageTitle>` / `<PageHeader>`.~~** Documented in T044 as the intended composition pattern (Home.razor owns the header).
 - **~~Dashboard inline `style="..."` for flex layouts.~~** Standing policy documented in DESIGN.md by T044: token-backed per-instance inline styles are fine; consolidate only when a pattern surfaces in 4+ dashboards.
+- **Seed-pipeline claims gap.** Seeded users lack `SpecialityIds`/`SubSpecialityIds`/`InstitutionId` claims → `ListActivityTypesQuery` returns empty for every seeded user → `/activities/new` type selector is empty → populated ActivityView unverifiable through the UI. Surfaced by T045. See item 2 above.
 - **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 3 above.
 - **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 4 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T045 — Populated rendering verification + audit-serializer fix** (commit `d97eb9a`).
+
+One bug found and fixed (audit-summary JSON cycle on `ClaimsPrincipal`), one seeding blocker verified (seeded Review → populated ReviewDetail renders cleanly in both Scheduled and InProgress states), one new upstream finding surfaced (seed-claims gap blocks `ActivityView` populated verification via a separate code path).
+
+Tests: 270/270 → 271/271 pass (new regression test added for the serializer).
+
+## Previous session
 
 **T044 — Dashboard composition pattern documented** (commit `5a4491f`).
 
@@ -124,7 +139,7 @@ Verification:
 
 - `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
 - Domain tests — 45/45 pass
-- Application tests — 168/168 pass
+- Application tests — 169/169 pass
 - Architecture tests — 19/19 pass
 - Web tests — 38/38 pass
 - Infrastructure tests — `SeedParseTests` pre-existing parallel-run flakiness; passes in isolation
@@ -158,6 +173,8 @@ Verification:
 
 ## Last verified commits
 
+- `d97eb9a` — T045 (fix ClaimsPrincipal cycle in audit-summary serializer; populated ReviewDetail verified)
+- `e434ec2` — docs: record T044 commit hash
 - `5a4491f` — T044 (document dashboard composition pattern in DESIGN.md — docs-only)
 - `65b48d7` — docs: record T043 orphan-CSS fix + drop item from backlog
 - `3b87eee` — T043 (define orphan CSS helpers — details-list/detail-list/stack-list + 3 swaps to existing utilities)
