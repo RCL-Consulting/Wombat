@@ -4,18 +4,19 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. T046 closed seed-claims + a second bug surfaced during verification.**
+**None. T047 backfilled the utility-class drift; every razor class now resolves.**
 
 Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
 1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-2. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
-3. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
-4. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
+2. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
+3. **Trainee dashboard "No curriculum items assigned yet".** The claims fix in T046 did not populate this. `GetTraineeDashboardSummaryQuery` likely joins to activities/evidence beyond the profile-curriculum link; probably needs at least one activity rated against a curriculum item before it counts as progress. Worth a quick look the next time someone's in the dashboard query area. Not urgent.
 
 `Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
 
 ## This session at a glance
+
+**T047 — Utility-class backfill in `app.css`** (commit `f38a880`). Closed the "Bootstrap utility drift in AuditDetail + RequestDetail" backlog item. Discovered the drift was wider than the item implied: `text-sm`, `text-muted`, `mt-1`, `mt-4`, and one orphan `text-danger` were referenced across 7 razor files (DataRights, Admin/DataRights × 2, Admin/Audit × 2, Admin/Jobs × 2). Added 5 one-line rules to the existing Utilities section; `.muted` and `.text-muted` share one rule via a combined selector so the dashboard `.muted` pattern keeps working unchanged. Spacing follows the existing literal-rem convention (matches `.mt-3`, `.mb-3` already in the section); color uses tokens (`var(--muted-text)`, `var(--danger-color)`). Browser-verified on a pre-existing failed audit entry — error message ("text-sm text-muted mt-1") now renders smaller + muted + with small top offset, and the "Payload (raw JSON)" detail-card has the expected 1.5rem top margin. Bonus: the Payload JSON on that entry shows `"principal": "[PRINCIPAL]"`, confirming T045's audit-serializer fix is visible in persisted audit data.
 
 **T046 — Seed-claims gap + ActivityService draft-create bug** (commit `cef4efc`). Closed backlog item #2 and unblocked trainee activity creation end-to-end. Two related fixes:
 
@@ -106,13 +107,19 @@ Across six clusters:
 - **~~Dashboards lack `<PageTitle>` / `<PageHeader>`.~~** Documented in T044 as the intended composition pattern (Home.razor owns the header).
 - **~~Dashboard inline `style="..."` for flex layouts.~~** Standing policy documented in DESIGN.md by T044: token-backed per-instance inline styles are fine; consolidate only when a pattern surfaces in 4+ dashboards.
 - **~~Seed-pipeline claims gap.~~** Fixed in T046 (`cef4efc`).
-- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 2 above.
-- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 3 above.
-- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 4 above.
+- **~~Remaining Bootstrap utility drift~~** (`text-sm`, `text-muted`, `mt-4`, `mt-1`, `text-danger`). Fixed in T047 (`f38a880`). Turned out to span 7 files not 2.
+- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 2 above.
+- **Trainee dashboard curriculum progress stays empty.** T046 unblocked claims but `GetTraineeDashboardSummaryQuery` needs more than the profile-curriculum link. See item 3 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T047 — Utility-class backfill** (commit `f38a880`).
+
+Added 5 one-line utilities (`mt-1`, `mt-4`, `text-muted` as alias of existing `.muted`, `text-sm`, `text-danger`) to the existing Utilities section of `app.css`. Zero code/tests impact; pure CSS addition. Closes the last remaining class-drift backlog item from the post-GUI-review survey.
+
+## Previous session
 
 **T046 — Seed-claims gap + ActivityService Versions include fix** (commit `cef4efc`).
 
@@ -193,6 +200,8 @@ Verification:
 
 ## Last verified commits
 
+- `f38a880` — T047 (backfill mt-1/mt-4/text-muted/text-sm/text-danger utilities in app.css)
+- `9f7d6f8` — docs: record T046 findings, update backlog
 - `cef4efc` — T046 (fix seed-claims gap in DevUserSeeder + Versions include in ActivityService.CreateDraftAsync; populated ActivityView verified)
 - `e886d10` — docs: record T045 findings, update backlog
 - `d97eb9a` — T045 (fix ClaimsPrincipal cycle in audit-summary serializer; populated ReviewDetail verified)
