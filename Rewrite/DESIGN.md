@@ -29,6 +29,7 @@ src/Wombat.Web/
         ├── ConfirmDialog.razor
         ├── PagerControls.razor                   ← .pager .pager-actions .pager-page-size
         ├── StatePanel.razor                      ← empty / loading / error state shells
+        ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card
         └── Skeleton.razor                        ← <div class="skeleton" />
 ```
 
@@ -279,7 +280,7 @@ Dashboard widget classes (added in T011):
 .progress-bar-fill.is-complete  /* --success-color */
 ```
 
-Each dashboard card is a `.detail-card` (optionally `.detail-card--interactive` if it links somewhere). Below `~900px` the auto-fit collapses everything to a single column.
+Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. Below `~900px` the `.dashboard-grid` auto-fit collapses everything to a single column.
 
 T011 mandates this grid for every role dashboard — do not hand-roll a different one per role.
 
@@ -463,18 +464,36 @@ else
 
 ### Dashboard page
 
-```
-<PageHeader Title="Welcome back, @name" Subtitle="Your current role: @role" />
+Dashboards are a composition, not a standalone page pattern.
 
-<div class="dashboard-grid">
-  <div class="detail-card"> card 1 </div>
-  <div class="detail-card"> card 2 </div>
-  <div class="detail-card detail-card--empty"> nothing yet </div>
-  <div class="detail-card dashboard-span-2"> wide card </div>
-</div>
+- **`Home.razor`** is the one routed page at `/`. It owns the `<PageHeader Title="Welcome, {name}" Subtitle="Viewing as {role}" />`, resolves the active role (via a cookie plus `DashboardPriority.Order`), renders the "You also act as … Switch view:" link row if the user holds multiple roles, and picks one of the role dashboards to render inside.
+- **Role dashboards** live under `Components/Pages/Dashboards/` (`AdministratorDashboard`, `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `CommitteeMemberDashboard`, `CoordinatorDashboard`, `AssessorDashboard`, `TraineeDashboard`). Each one is a child component — **no `@page` directive**, **no `<PageTitle>`**, **no `<PageHeader>`**. Adding any of those would duplicate Home's header.
+- **`/dashboard/switch/{role}`** (defined in `Program.cs`) is a minimal-API endpoint that writes the preferred-role cookie and 302s back to `/`. It never renders UI directly. Every way a user reaches a dashboard goes through Home.
+
+So a dashboard `.razor` file looks like this:
+
+```razor
+@using Wombat.Application.Features.Dashboards.{RoleName}
+@attribute [Authorize(Roles = "{RoleName}")]
+@rendermode InteractiveServer
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<StatePanel IsLoading="_loading" LoadError="@_error">
+  @if (_vm is not null)
+  {
+    <div class="dashboard-grid">
+      <DashboardCard Title="…" Icon="…"> … </DashboardCard>
+      <DashboardCard Title="…" Icon="…" Emphasis="true"> … </DashboardCard>
+      <DashboardCard Title="…" Icon="…" Span="2"> … </DashboardCard>
+    </div>
+  }
+</StatePanel>
 ```
 
-Every dashboard in T011 uses this shape.
+Inline `style="..."` is acceptable inside a dashboard's list items — `style="display:flex;justify-content:space-between;padding:var(--space-xs) 0"` for a badge-row, `style="width:@percent%"` for a progress bar fill — because these are per-instance layout values, not a reusable utility. Keep them token-backed (`var(--space-*)`, never raw px). If the same inline-style pattern starts appearing in four or more dashboards, promote it to a named utility in `app.css`.
+
+Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metric` / `.progress-bar` / `.status-dot` primitives. Role-specific content lives inside the cards; the grid and card shapes do not.
 
 ### Account / auth page
 

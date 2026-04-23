@@ -4,19 +4,27 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. GUI review sequence (T037–T042) complete, plus T043 follow-up (orphan CSS classes) landed.**
+**None. GUI review sequence (T037–T042) complete; T043 (orphan CSS classes) and T044 (dashboard composition docs) landed.**
 
 Recommended next items, in rough priority order — pick one and open a new task file in `Rewrite/Tasks/` before starting:
 
-1. **Dashboard design decision.** All seven role dashboards (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember, Coordinator, Assessor, Trainee) lack `<PageTitle>`/`<PageHeader>` and use inline `style="..."` for flex layouts. Consistent but undocumented. Decide: document the pattern in `DESIGN.md`, or retrofit PageHeader + utility classes globally. **Suggested model:** Opus for the decision, Sonnet for the refactor if chosen.
-2. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-3. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
-4. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
-5. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
+1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+2. **Populated `ReviewDetail` and `ActivityView` browser verification.** T039 and T041 both deferred the populated-data rendering check (requires seeding a review-on-a-panel and submitting an activity respectively). Low-value unless a bug is actually suspected — the mechanical dual-error split is well-tested by now.
+3. **Remaining Bootstrap utility drift in AuditDetail + RequestDetail.** `text-sm`, `text-muted`, `mt-4`, `mt-1` still undefined. Cosmetic — doesn't break structural rendering. Either define the utilities (trivial — one-line rules each) or strip them from the razor files. Deferred from T043. **Suggested model:** Sonnet, ~1 hour.
+4. **h1 focus-ring rectangle on initial render.** Pre-existing cosmetic issue noted since T037. Decide intent (screen-reader announcement vs unwanted styling) before suppressing.
 
 `Rewrite/PLAN.md` is otherwise complete. The practical-plan and gui-review-plan are both closed.
 
 ## This session at a glance
+
+**T044 — Dashboard composition documented** (commit TBD). Closed backlog item #1 by updating `Rewrite/DESIGN.md`:
+
+- Replaced the "Dashboard page" pattern section with a composition description: `Home.razor` is the one routed page at `/` and owns the `<PageHeader>`; role dashboards are child components under `Components/Pages/Dashboards/` and must NOT declare their own `@page` / `<PageTitle>` / `<PageHeader>`; `/dashboard/switch/{role}` is a cookie-setting redirect, not a routed surface.
+- Added the dashboard file skeleton (StatePanel + dashboard-grid + DashboardCard).
+- Documented the inline-style policy: token-backed `style="..."` on per-instance list items and progress-bar fills is acceptable; promote to a named utility only when the pattern surfaces in 4+ dashboards. This downgrades the secondary "dashboard inline-style" follow-up into standing policy.
+- Added `DashboardCard.razor` to the shared-files tree and updated the "Dashboard layout grid" section to reference `<DashboardCard>` as the primary card building block (previously said raw `.detail-card`).
+
+Zero Blazor source changes. Zero `app.css` changes. The "dashboards lack PageHeader" observation from the T041/T042 audit was a category error — every rendered dashboard page already has a header via Home; the file-level absence is the correct composition.
 
 **T043 — Orphan CSS classes done** (commit `3b87eee`). Three new utilities defined + three swaps to existing ones:
 
@@ -78,14 +86,23 @@ Across six clusters:
 ## Systemic follow-ups (carried forward)
 
 - **~~Orphan list/dl helper classes in `app.css`.~~** Fixed in T043 (`3b87eee`).
-- **Dashboards lack `<PageTitle>` / `<PageHeader>`.** Uniform across 7 role dashboards. See item 1 above.
-- **Dashboard inline `style="..."` for flex layouts.** Not a rubric violation but a utility-class pass would be tidier.
-- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 4 above.
-- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 5 above.
+- **~~Dashboards lack `<PageTitle>` / `<PageHeader>`.~~** Documented in T044 as the intended composition pattern (Home.razor owns the header).
+- **~~Dashboard inline `style="..."` for flex layouts.~~** Standing policy documented in DESIGN.md by T044: token-backed per-instance inline styles are fine; consolidate only when a pattern surfaces in 4+ dashboards.
+- **Remaining Bootstrap utility drift** (`text-sm`, `text-muted`, `mt-4`, `mt-1`) in AuditDetail + RequestDetail. See item 3 above.
+- **h1 focus-ring rectangle on initial render.** Pre-existing since T037. See item 4 above.
 - **Blazor default `#blazor-error-ui`** uses emoji and raw colors (standard template).
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T044 — Dashboard composition pattern documented** (commit TBD).
+
+Doc-only change to `Rewrite/DESIGN.md`:
+- "Dashboard page" pattern section rewritten as composition: Home owns the PageHeader; role dashboards are child components without their own header.
+- Inline-style policy documented (token-backed + per-instance is fine; consolidate at 4+ repetitions).
+- `DashboardCard.razor` added to the design-system file tree; "Dashboard layout grid" section updated to reference it.
+
+Zero code changes; tests unaffected.
 
 **T043 — Orphan CSS helper classes** (commit `3b87eee`).
 
