@@ -101,7 +101,7 @@ Role: bootstrap Administrator
 Route: `/account/login`
 Action: Email `admin@wombat.local`, password from `pwd_DO_NOT_COMMIT.txt`. Click `Sign in`.
 Expected: Redirect to `/`. The page header reads `admin@wombat.local` (link to `/account/profile`) with a `Sign out` button; below it the Administrator dashboard renders.
-Actual: Playwright play-through 2026-05-24. Login form fields render exactly as expected; submit redirects to `/`. Header strip shows email + Sign out; dashboard renders below.
+Actual: Playwright replay 2026-05-24 (DB reset, fresh start). Login redirects to `/`; header shows email + Sign out; Administrator dashboard renders.
 Gap: None.
 
 ### Step 1.2 — Create institution
@@ -109,15 +109,15 @@ Role: bootstrap Administrator
 Route: `/admin/institutions/new` (click `Create institution` from the `/admin/institutions` list).
 Action: Name `Kgosi Kgari Teaching Hospital`; Short code `KGK`; Contact email `paeds-admin@kgk.wombat.local`; click `Save`.
 Expected: Redirect to `/admin/institutions/{id}`. Institution renders in `/admin/institutions` list with status `Active`.
-Actual: Saved at `/admin/institutions/2`. KGK appears in the list as `Active`.
-Gap: Minor — after `Save` the page title bar still reads `Create institution`, not `Edit institution`. Cosmetic; same pattern reproduces across speciality, sub-speciality, EPA, curriculum, and activity-type save flows.
+Actual: KGK saved at `/admin/institutions/2`. h1 flips to "Edit institution"; row appears in list as `Active`. Browser tab title is `Institutions` (shared title — does not change between create/edit).
+Gap: None. Previous play-through's "h1 stays Create institution" symptom is resolved — h1 swaps correctly on this and the speciality edit page. See finding #5 in summary for the remaining stale `<title>` cases.
 
 ### Step 1.3 — Create speciality
 Role: bootstrap Administrator
 Route: `/admin/institutions/{id}/specialities/new` (click `Specialities` next to KGK in the institutions list, then `Create speciality`).
 Action: Name `Paediatrics`; Description `Care of infants, children, and adolescents up to 18 years.`; click `Save`.
 Expected: Redirect to the speciality edit page. `Paediatrics` appears in the speciality list for KGK.
-Actual: Saved at `/admin/institutions/2/specialities/2` — record `SpecialityId = 2` for Step 1.11.a.
+Actual: Paediatrics saved at `/admin/institutions/2/specialities/2`. `SpecialityId = 2` recorded for Step 1.11.a. h1 flips to "Edit speciality"; browser tab title stays "Institutions" (shared, not conditional).
 Gap: None.
 
 ### Step 1.4 — Create sub-speciality
@@ -125,8 +125,8 @@ Role: bootstrap Administrator
 Route: `/admin/specialities/{specialityId}/sub-specialities/new` (click `Sub-specialities` next to `Paediatrics`, then `Create sub-speciality`).
 Action: Name `General Paediatrics`; Description `Core general paediatric training; covers the FCPaed(SA) curriculum.`; click `Save`.
 Expected: Redirect to the sub-speciality edit page. `General Paediatrics` appears in the sub-speciality list for Paediatrics. Record the `{specialityId}` and `{subSpecialityId}` — Phase 1.E and Phase 1.F need them for scoped lookups.
-Actual: Saved at `/admin/specialities/2/sub-specialities/2` — `SubSpecialityId = 2`. Parent-speciality breadcrumb correctly reads "Paediatrics".
-Gap: None.
+Actual: General Paediatrics saved at `/admin/specialities/2/sub-specialities/2`. `SubSpecialityId = 2` recorded. Parent-speciality line correctly reads "Speciality: Paediatrics". h1 flips to "Edit sub-speciality".
+Gap: Browser tab `<title>` still reads "Create Sub-Speciality" after save (h1 is correct). One of four pages with this stale-`<PageTitle>` leftover (see finding #5).
 
 ## Phase 1.B — Provision Prof Mbatha (InstitutionalAdmin scoped to KGK)
 
@@ -139,8 +139,8 @@ Role: bootstrap Administrator
 Route: `/admin/invitations` (the Issue invitation form is embedded in the list page, beside an Active invitations panel).
 Action: Email `mbatha@kgk.wombat.local`; Role `InstitutionalAdmin`; Institution `Kgosi Kgari Teaching Hospital`; leave Speciality + Sub-speciality blank; click `Issue invitation`.
 Expected: The invitation appears in the `Active invitations` panel with status `Pending`.
-Actual: Invitation persists; row appears in the Active invitations table. Status message reads "Invitation issued for mbatha@kgk.wombat.local. The stub sender logged the registration link." — but no such stub exists in this build (see Gap).
-Gap: **The status message lies.** `InvitationsList.razor:203` says "The stub sender logged the registration link" but the actual sender is `MailKitEmailSender`, which queues an email via `EmailWorker`. The raw token is returned in `IssuedInvitationResult.Token` but the page discards it (`InvitationsList.razor:195-205`). Net effect: the issuing admin has no way to see the registration URL except by inspecting the captured email. Fold this fix into T051 (which already plans to touch this form).
+Actual: Invitation persists. **T051 verified end-to-end:** status banner reads "Invitation issued for mbatha@kgk.wombat.local. Copy the link below — it is shown only once." The full registration URL renders inline below the form as a copy-friendly `<code>http://localhost:5080/account/register?token=…</code>` inside an info Alert with the "shown only on this page-load" warning. Active invitations table shows the row with status Pending. SMTP delivery is decoupled from the runbook — operator can hand over the URL directly without needing an email catcher.
+Gap: None — previous play-through findings #2 (SMTP port mismatch) and #3 (status message + dropped token) both closed by T051.
 
 > **Note on Administrator scope:** Wombat's invitation form does not surface the `Administrator` role — that role is global and reserved for manual-only assignment, per the CLAUDE.md SSO rule (which the invitation flow honors). `InstitutionalAdmin` is the strongest role available through invitations; it covers everything Prof Mbatha needs in Act 1. T052 (in `scenario-act1-fixes-plan.md`) tracks the option of re-exposing Administrator with null Institution; until that lands, use InstitutionalAdmin.
 >
@@ -151,8 +151,8 @@ Role: invitation recipient (no prior session)
 Route: invitation link captured by the local SMTP catcher (Papercut on port 25, or smtp4dev on 1025).
 Action: Read the latest `.eml` at `%APPDATA%\Changemaker Studios\Papercut SMTP\` (Papercut) — the body contains `http://localhost:5080/account/register?token=<raw_token>`. Open the link; fill `First name` (`Nolwazi`), `Last name` (`Mbatha`), set + confirm password; submit. Auto-logs in and redirects to `/`.
 Expected: After submit, page header reads `mbatha@kgk.wombat.local` and the InstitutionalAdmin dashboard renders with greeting "Welcome, mbatha@kgk.wombat.local / Viewing as InstitutionalAdmin".
-Actual: Worked end-to-end after Papercut port mismatch was fixed (see Gap). Accept page rendered; auto-login + dashboard greeting matched expectation exactly.
-Gap: **Dev SMTP port mismatch.** `src/Wombat.Web/appsettings.Development.json` has `Email:SmtpPort=1025` (smtp4dev / Mailhog default), but Papercut SMTP listens on port 25 by default. With port 25 unconfigured, every invitation email fails 3 retries and is dropped — invisibly to the issuing admin. Fix paths: (a) align dev defaults to port 25 (Papercut is the most common Windows dev catcher), (b) document the override (`$env:Email__SmtpPort=25`), or (c) make the issuer surface the registration URL inline so SMTP becomes a "nice-to-have" rather than the only delivery path. Combine with T051's surface changes — recommend doing both (a) and (c).
+Actual: Worked end-to-end via the inline URL (Papercut not needed). Opened the URL from Step 1.5's info Alert; form prefilled email + role; entered First name `Nolwazi`, Last name `Mbatha`, password; submit auto-logged Mbatha and redirected to `/`. Dashboard greeting "Welcome, mbatha@kgk.wombat.local / Viewing as InstitutionalAdmin" rendered with the InstitutionalAdmin scope dashboard (KGK / 1 speciality / 1 sub-speciality / quick links). NavMenu now exposes the 11 admin routes T056.e expanded to: Specialities, EPAs, Curricula, Activity Types, Entrustment Scales, Forms, Trainees, Assessors, Invitations, SSO Mappings, Audit Log — plus the 3 account-related routes (Home, My Account, Data Rights).
+Gap: None. Papercut was running on port 25 (T051's appsettings change verified at process-listening level) but wasn't exercised because the inline-URL path works.
 
 > **Dev-mode note:** `DevUserSeeder` does not create Prof Mbatha. Use the invitation flow above. If no SMTP catcher is running, start one (Papercut SMTP for Windows desktop, smtp4dev / Mailhog as alternatives) before issuing the invitation. Confirm the listening port matches `Email:SmtpPort` in `appsettings.Development.json` (currently `1025`) — override with `$env:Email__SmtpPort` if necessary.
 
@@ -171,8 +171,8 @@ Action: Name `Paed General Entrustment Scale`; Description `5-level ten-Cate lad
 5. Label `Can supervise others`, Description `Trainee is competent to teach and supervise junior colleagues.`
 The form auto-assigns `Order` based on row position; use `Up` / `Down` if you need to re-sort. Click `Save`. The URL flips to `/admin/entrustment-scales/{id}` (typically `/2` since the seeded `O-R Scale` occupies id `1`).
 Expected: Status banner "Entrustment scale saved." Scale appears in the `/admin/entrustment-scales` list with `Levels = 5`. The scale is now available to any assessment form, activity-type rating field, or committee-review entrustment-decision picker.
-Actual:
-Gap:
+Actual: Saved as bootstrap admin at `/admin/entrustment-scales/2` with all 5 ten-Cate levels intact. h1 flips to "Edit entrustment scale". A first attempt as Prof Mbatha (InstitutionalAdmin) reached the same form but Save was rejected by the handler with status "Only global administrators may create entrustment scales." — T056.d's Administrator-only enforcement working at the handler level.
+Gap: **UX wart** — the `Create scale` button on `/admin/entrustment-scales` and the `/admin/entrustment-scales/new` page itself render fully for InstitutionalAdmin, who can fill the entire form before discovering that Save will fail. Suggest gating the page (`[Authorize(Policy = "Administrator")]`) or hiding the Create button for non-Administrator viewers. Listing the seeded scales is fine for InstitutionalAdmin (read-only reference). Also: browser tab `<title>` still reads "Create entrustment scale" after save (2 of 4 stale-`<PageTitle>` cases — see finding #5).
 
 > **About the seeded scale:** `DataSeeder` boots with one global `O-R Scale` for development convenience. Paediatrics could reuse it, but the labels differ slightly from the canonical ten-Cate ladder the curriculum cites — easier to create the Paed-specific scale and leave the seeded one alone.
 
@@ -186,8 +186,8 @@ Role: Prof Mbatha (InstitutionalAdmin) — T056 grants institution-scoped admin 
 Route: `/admin/epas/new` (repeat for each)
 Action: For each row in the table below, navigate to the new-EPA form. Fill Sub-speciality `Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics` (combobox shows the triple-path label), Code, Title, Description, leave `Required knowledge and skills` blank (or paste a short freeform note — non-blocking), Category, then `Save`.
 Expected: Each EPA appears in `/admin/epas` list, scoped to `General Paediatrics`, with status `Active` and version 1 (pending its first curriculum reference).
-Actual: All 15 PAED-001 through PAED-015 EPAs persisted. After Save the URL redirects to `/admin/epas/{id}` but the page title bar still reads "Create EPA" — same cosmetic page-title bug as Step 1.2.
-Gap: None functionally. Cosmetic page-title bug still present. The `Required knowledge and skills` field was left blank for all 15; no validation issues.
+Actual: All 15 PAED-001 through PAED-015 EPAs persisted as Prof Mbatha (InstitutionalAdmin) — T056.b grants her institution-scoped EPA powers. Sub-speciality combobox correctly pre-selects her sole scope (`Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics`). The seeded Demo Institution EPA-001 (id=1) is filtered out of her list — only the 15 PAED EPAs (ids 2-16) appear. h1 flips to "Edit EPA" after save.
+Gap: Browser tab `<title>` still reads "Create EPA" after save (3 of 4 stale-`<PageTitle>` cases — see finding #5). Functionally clean.
 
 **The 15 EPAs:**
 
@@ -220,15 +220,15 @@ Role: **bootstrap Administrator** (see Phase 1.B note).
 Route: `/admin/curricula/new`
 Action: Sub-speciality `Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics`; Name `FCPaed(SA) Part 1`; Version `2026.1`; Effective from `2026-01-15`; Effective to leave empty; click `Save`.
 Expected: Redirect to `/admin/curricula/{id}`. Curriculum row appears in `/admin/curricula` with status `Active`, 0 items.
-Actual: Saved at `/admin/curricula/2`. Row appears in the list as `Active`, `Items = 0`.
-Gap: None.
+Actual: FCPaed(SA) Part 1 v2026.1 saved at `/admin/curricula/2` as Prof Mbatha (InstitutionalAdmin via T056.b). Sub-speciality combobox correctly pre-selects her scope. Effective-from set to 2026-01-15.
+Gap: Browser tab `<title>` still reads "Create Curriculum" after save (4 of 4 stale-`<PageTitle>` cases — see finding #5). Functionally clean.
 
 ### Step 1.10 — Add 15 curriculum items
 Role: **bootstrap Administrator**
 Route: `/admin/curricula/{id}/items`
 Action: For each EPA below, fill the `Add item` form with the values shown, then click `Add item`. Repeat 15 times.
 Expected: After all 15 are added, the `Existing items` table lists all 15 rows. Progress bars in the Trainee dashboard will later reference these values.
-Actual: All 15 rows added cleanly. The Add-item form clears its defaults after each save (count → 1, level → 4, window → 12, weight → blank) — convenient for batch entry. Per-stage minima JSON accepted exactly as authored (`{"1":2,"2":3,"3":4,"4":4}` / `{"2":2,"3":3,"4":4}` / `{"3":2,"4":3}`). The EPA dropdown is correctly filtered to General Paediatrics — Demo Institution's EPA-001 does not appear.
+Actual: All 15 items added cleanly as Mbatha. Per-stage minima JSON preserved verbatim in DB readback (`{"1":2,"2":3,"3":4,"4":4}` for 12 rows; `{"2":2,"3":3,"4":4}` for the late-entry rows; `{"3":2,"4":3}` for the year-3+ electives). Counts / levels / windows / weights all round-trip exactly. The EPA dropdown shows only the 15 PAED EPAs — Demo Institution's EPA-001 correctly absent. The Add-item form clears defaults after each save (convenient for batch entry).
 Gap: None.
 
 **The 15 curriculum items:**
@@ -268,8 +268,8 @@ Route: `/admin/activity-types/new`
 **1.11.a — Metadata tab**
 Action: Key `mini_cex_paed`; Name `Mini-CEX (Paediatrics)`; Scope `Speciality`; Scope Id `2` (the integer SpecialityId from Step 1.3 — the field is a numeric spinbutton; T053 will replace it with a picker); Description `Brief (~20-minute) observed clinical encounter rated on six domains.`; Active checkbox on. Click `Save draft`.
 Expected: Draft saved; status banner "Draft saved." Metadata persists across tabs.
-Actual: Status banner reads "Draft saved." as expected. **But** the URL stays at `/admin/activity-types/new` instead of redirecting to `/admin/activity-types/{newId}`. The page internally remembers the newly created id (Publish works), but a user who refreshes the browser will land back at the blank-new-form state and lose context. Cosmetic but surprising — fold into T055 or add a separate task.
-Gap: URL-stickiness on first save (above).
+Actual: **T055 fix verified.** Status banner "Draft saved." and the URL flips immediately to `/admin/activity-types/11` on first save (10 seeded IM types occupy ids 1-10). A browser refresh now lands on the saved entity rather than the blank new form. **T053 picker verified** — selecting Scope=Speciality reveals a `<select>` Scope Id picker showing the triple-path label "Kgosi Kgari Teaching Hospital / Paediatrics", scoped to Mbatha's institution only (no Demo Internal Medicine speciality in the dropdown). Saved with Scope=Speciality, ScopeId=2 cleanly.
+Gap: None — previous play-through findings #4 (URL stickiness) and the T053 picker target are both closed.
 
 **1.11.b — Form tab**
 Action: The builder loads with a default `details` section containing a single `title` Text field — delete both before starting. Then click `Add section` and edit: Key `encounter`, Title `Encounter details`. Add fields (via `Add field` inside the section):
@@ -287,8 +287,8 @@ Click `Add section` again for the ratings: Key `ratings`, Title `Clinical perfor
 - `overall_level` / Overall entrustment level
 Click `Add section`: Key `feedback`, Title `Feedback`. Add field Key `narrative`, Label `Narrative feedback (strengths and next steps)`, Type `Long text`, Required on.
 Expected: Live preview renders the three sections with all 13 fields. EPA and Assessor fields show pickers; Scale fields show the 5-level selector backed by the seeded scale.
-Actual: **Play-through scope reduction.** The 2026-05-24 play-through saved Mini-CEX with the default builder schema (single `title` Text field) instead of building the full 13-field form, in order to validate the Workflow + Credit + Publish path with the corrected JSON. The visual builder loaded fine and Add section / Add field both work, but exercising all 13 fields × 3 sections is a separate ~20-minute clicking exercise not undertaken here. **A future play-through should build the full schema to verify the visual builder's persistence under realistic load.**
-Gap: Phase 1.F's full schema not exercised end-to-end. Workflow + Credit + Publish path validated independently (see 1.11.c/d/e).
+Actual: **Same play-through scope reduction maintained.** Replay also saved Mini-CEX with the default builder schema to validate Workflow + Credit + Publish; the full 13-field × 3-section build remains a future ~20-minute exercise. Builder UI loads cleanly under Mbatha's session (no auth issues observed on the Form tab via T056.c scope guard).
+Gap: Phase 1.F's full schema still not exercised end-to-end. Workflow + Credit + Publish path validated independently (see 1.11.c/d/e).
 
 **1.11.c — Workflow tab**
 Action: Paste the following into the `Workflow JSON` textarea:
@@ -311,7 +311,7 @@ Action: Paste the following into the `Workflow JSON` textarea:
 }
 ```
 Expected: `Save draft` returns "Draft saved." (Parser validates: requires `version`, `initial_state`, all states reachable from initial; rejects unknown property names.)
-Actual: Accepted on first try. The 9 other types (Step 1.12) also accepted minimal variants of this shape — confirming the DSL reference below is complete and accurate.
+Actual: Accepted on first try. The 9 other types (Step 1.12) also accepted minimal variants of this shape, confirming the DSL reference below is complete and accurate across 2-state, 3-state, and 4-state workflows including the `creator` actor used for time-based MSF transitions.
 Gap: None.
 
 > **Workflow DSL reference** (per `Wombat.Domain.Activities.Workflow.WorkflowParser` + `ActorRuleParser`):
@@ -334,16 +334,16 @@ Action: Paste:
 }
 ```
 Expected: `Save draft` returns "Draft saved." Parser accepts keys `counts_for`, `curriculum_item_match` (with `epa_field` / `curriculum_item_id` / `curriculum_item_field`), `amount`, and optional `minimum_level_field` / `minimum_level_fixed`.
-Actual: Play-through used the default `{"counts_for": []}` (no credit rules) to keep scope tight — the scenario's intended Mini-CEX credit rule references field `epa_id`, which only exists once Step 1.11.b's full schema is built. With the default `title`-only schema in this play-through, empty credit rules let the type publish and verify the parser. A future full-schema play-through should swap to the scenario's intended credit JSON.
-Gap: Scenario-prescribed credit JSON not exercised because the form-schema dependency wasn't built. Parser is known-good per `CreditRulesParser` source inspection.
+Actual: Default `{"counts_for": []}` used again per the scope reduction. Parser accepted and the type published cleanly.
+Gap: Scenario-prescribed credit JSON still not exercised because the form-schema dependency wasn't built (paired with 1.11.b). Parser is known-good per `CreditRulesParser` source inspection.
 
 **1.11.e — Publish**
 Role: **bootstrap Administrator**
 Route: `/admin/activity-types/new` (the URL stays at `/new` even after Save draft — see 1.11.a gap. The page internally remembers the id; Publish acts on it.)
 Action: After `Save draft` succeeds, the page header reveals `Publish` + `Discard draft` buttons beside `Save draft`. Click `Publish`.
 Expected: Status banner "Published version 1." Type appears in `/admin/activity-types` with `Published = v1`, `Draft = None`, `Status = Active`. The `Publish` button disappears on next page load until another draft is saved.
-Actual: Status banner "Published version 1." rendered immediately. Publish + Discard draft buttons disappeared from the header (only Save draft remains, as documented in T050). Mini-CEX appeared at the top of `/admin/activity-types` with `v1 / None / Active`.
-Gap: None — the conditional Publish-button visibility behaves exactly as the T050-rewritten step describes.
+Actual: Status banner "Published version 1." rendered immediately. After publish, the Discard draft button disappeared and Publish became disabled (no draft to publish until Save draft fires again — T055 conditional state intact). Mini-CEX appeared in `/admin/activity-types` with `v1 / None / Active`.
+Gap: None — Publish-button conditional state behaves exactly as T055 specifies.
 
 ### Step 1.12 — Build the other 9 activity types (summary)
 
@@ -372,8 +372,8 @@ Role: **bootstrap Administrator**
 Route: `/admin/activity-types`
 Action: Scroll the list (or filter by name in the Search box). Confirm 10 Paed entries each with `Scope = Speciality`, `Published = v1`, `Draft = None`, `Status = Active`. (Note: `Published`, `Draft`, and `Status` are separate columns, not a concatenated string.)
 Expected: 10 rows. Names match the table above.
-Actual: List shows 20 rows total: 10 IM seeded + 10 Paed (`acat_paed`, `cbd_paed`, `dops_paed`, `journal_club_paed`, `mini_cex_paed`, `msf_paed`, `procedure_log_paed`, `reflective_note_paed`, `research_output_paed`, `teaching_session_paed`). All 10 Paed entries show `Scope = Speciality / v1 / None / Active`.
-Gap: **Scope column ambiguous.** Both the IM and Paed types render with `Scope = Speciality`; the list doesn't show *which* speciality, so the only way to disambiguate is by the `_paed` key suffix. Acceptable for this play-through but a real institution with similarly-named types across specialities would have a readability problem. Consider showing the resolved scope label (e.g. `Speciality / Paediatrics`) in the column. Cosmetic; no blocker.
+Actual: As Prof Mbatha (InstitutionalAdmin), the list shows **only the 10 Paed types** (`acat_paed`, `cbd_paed`, `dops_paed`, `journal_club_paed`, `mini_cex_paed`, `msf_paed`, `procedure_log_paed`, `reflective_note_paed`, `research_output_paed`, `teaching_session_paed`) at ids 11-20. The 10 seeded IM types are filtered out by T056.c's scope guard on `ListActivityTypesAdmin`. Every row shows `Scope = Speciality / v1 / None / Active`.
+Gap: Scope-column ambiguity **no longer applies to InstitutionalAdmin** (only sees own institution). Still applies to global Administrator who would see IM + Paed types both rendered as "Speciality" without identifying which. Cosmetic; still not pressing.
 
 ## Act 1 outcome state
 
@@ -403,37 +403,47 @@ Nothing has been asked of consultants or registrars yet. No activities exist. No
 
 ## Act 1 findings summary
 
-Populated 2026-05-24 from an end-to-end Playwright play-through of the scenario as rewritten in T050.
+Re-populated 2026-05-24 from an end-to-end Playwright **replay** of the scenario after T051 + T055 + T056 shipped. Previous play-through (same date, earlier) is preserved in git at the prior commits; the Actual/Gap lines above now reflect the replay.
 
-### New findings (beyond the static audit)
+### Status of the six previous findings
 
-1. ~~**Hard: `InstitutionalAdmin` cannot perform Phases 1.D–1.F.**~~ **Resolved by T056** (Option A, shipped 2026-05-24 in clusters `41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / final T056.e). InstitutionalAdmin now holds institution-scoped admin powers across the admin surface, gated by the new `AdministratorOrInstitutionalAdmin` policy and handler-level scope guards. Mbatha runs Phases 1.C–1.F directly.
-2. **Hard-ish: dev SMTP port mismatch.** `appsettings.Development.json` sends to `localhost:1025` but Papercut SMTP (the most common Windows dev catcher) listens on `25`. Every invitation email silently fails 3 retries and gets dropped. Fix by aligning the dev default to 25 OR by surfacing the registration URL in the InvitationsList UI (preferred — that decouples the runbook from SMTP altogether). Fold into T051.
-3. **Bug: `InvitationsList.IssueAsync` drops the raw token.** `IssueInvitationCommand` returns `IssuedInvitationResult.Token`; the page discards it and shows a misleading status "The stub sender logged the registration link." (no stub sender exists in this build). Fold into T051.
-4. **Cosmetic: Save draft on a new activity type keeps URL at `/new`** — Publish still works because the page caches the new id internally, but a refresh sends the user back to the blank form. Either redirect to `/admin/activity-types/{id}` on first save, or document the behavior explicitly. Small fix.
-5. **Cosmetic: page-title bar reads "Create X" after the entity is saved.** Reproduces on institution, speciality, sub-speciality, EPA, curriculum, and activity-type save flows. Should read "Edit X" once an `id` is present. One-line fix per page.
-6. **Cosmetic: activity-types list `Scope` column shows "Speciality" without identifying which speciality.** Two specialities scoped to the same column value (IM and Paed) are visually indistinguishable except by key suffix. Render `Speciality / <SpecialityName>` when the scope is resolved.
+1. ✅ ~~Hard: InstitutionalAdmin cannot perform Phases 1.D–1.F.~~ **Closed by T056** (5 clusters: `41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / `ec6d6d1`). Replay verified: Mbatha runs Phases 1.D-1.F end-to-end without any auth detours. Handler-level scope filtering verified in three places: her EPA list shows 15 PAED EPAs (Demo IM filtered out); her curriculum-item EPA dropdown shows 15 entries (no Demo); her ActivityTypes list shows 10 Paed types (10 seeded IM types filtered out).
+2. ✅ ~~Hard-ish: dev SMTP port mismatch.~~ **Closed by T051.** appsettings.Development.json fix verified (Papercut listening on port 25), and the inline-URL path means SMTP is no longer the only delivery channel. Replay used the inline URL exclusively — never touched Papercut.
+3. ✅ ~~Bug: InvitationsList.IssueAsync drops the raw token.~~ **Closed by T051.** Status banner now says "Copy the link below — it is shown only once." The registration URL renders inline as a copy-friendly `<code>` block in an info Alert.
+4. ✅ ~~Cosmetic: Save draft on a new activity type keeps URL at /new.~~ **Closed by T055.** URL flips to `/admin/activity-types/{id}` on first save — verified for all 10 Paed types created in this replay.
+5. ⚠️ **Partially open: page-title bar reads "Create X" after the entity is saved.** The h1 fix landed on Institution + Speciality pages (h1 swaps to "Edit X" correctly). But the browser tab `<title>` (the `<PageTitle>` Razor component) remains stale on **four** pages observed this replay: Sub-Speciality, Entrustment Scale, EPA, Curriculum. Each page would need the same conditional pattern most of the others have. Cosmetic; ~5-line fix per page. Track as a small follow-up if not already in T055's expected scope.
+6. ⚠️ **Adjusted: activity-types list Scope column ambiguity.** Doesn't apply to InstitutionalAdmin (only sees own institution per T056.c). Still applies to global Administrator who sees IM + Paed types both labelled "Speciality" without disambiguation. Cosmetic; same fix recommended (render the resolved scope label).
+
+### New finding from this replay
+
+7. **UX: InstitutionalAdmin can navigate to `/admin/entrustment-scales/new` and submit the form, only for the handler to reject the write.** The `Create scale` link on the list page is visible to her, the new page renders all controls active, and Save returns "Only global administrators may create entrustment scales." after she's filled the form. Suggested fix: page-level `[Authorize(Policy = "Administrator")]` on `EntrustmentScaleEdit.razor`'s new route (cleanest), plus hide the `Create scale` button on the list for non-Administrator viewers. The list page itself can stay readable so InstitutionalAdmin can see what scales are available. Same principle would apply to EntrustmentScale Edit / Delete buttons. Cosmetic-leaning UX; not data-integrity.
 
 ### Findings already known from the static audit + addressed by T050
 
-- Phase 1.A/1.B swap, Administrator-role demotion, Step 1.7 workaround, Step 1.11.c workflow JSON correction, plus 9 wording fixes — all baked into the prescription above.
+- Phase 1.A/1.B swap, Administrator-role demotion, Step 1.7 workaround (re-closed by T054 + T056 — though Phase 1.C still needs bootstrap admin for the create), Step 1.11.c workflow JSON correction, plus 9 wording fixes — all baked into the prescription above.
 
 ### Code-side gaps tracked outside this doc
 
-- **T051** — first/last name capture on the invitation form, **plus** the IssueAsync fixes from finding #3 (surface registration URL + correct the status message).
-- **T052** — re-expose Administrator role with null institution.
-- **T053** — context-aware picker for `Scope Id` on the activity-type Metadata tab.
-- **T054** — admin CRUD for `EntrustmentScale` (shipped commit `ef02268`; Step 1.7 now reflects the canonical create-scale prescription).
-- **T055** — Publish button always visible with disabled state, **plus** the URL-stickiness fix from finding #4 and the "Create X" page-title fix from finding #5 (group as a "post-save housekeeping" task).
-- **T056 (closed)** — InstitutionalAdmin role-power audit (Option A) shipped in five clusters across the 2026-05-24 session. See `Rewrite/Tasks/T056-institutional-admin-role-power.md`.
+- **T051** (closed `799cc1a`) — invitation registration-URL surface + dev SMTP tidy + status-message fix. First/Last name capture deferred as T051.b.
+- **T051.b** (open) — First/Last name columns on Invitation (entity migration + form pre-fill on accept).
+- **T052** (open) — re-expose Administrator role with null institution. Same migration overhead as T051.b — bundle if possible.
+- **T053** (closed `4aeaa3d`) — context-aware picker for `Scope Id` on the activity-type Metadata tab. Verified intact in replay.
+- **T054** (closed `ef02268`) — admin CRUD for `EntrustmentScale`. Verified intact (5-level Paed scale created in replay).
+- **T055** (closed `6eaef56`) — Publish button + post-save URL redirect on ActivityType edit. URL redirect verified; conditional Publish state intact. The "Create X" page-title rollup turned out to be only partially covered — see finding #5.
+- **T056** (closed across 5 clusters ending `ec6d6d1`) — InstitutionalAdmin role-power audit (Option A). Replay confirms end-to-end Phases 1.D-1.F + scoped filtering across EPAs / curricula / activity types / invitations / nav menu.
 
-### Time check (play-through 2026-05-24)
+### Time check (replay 2026-05-24, post-T051/T055/T056)
 
-About 50 minutes of Playwright-driven clicks for Phases 1.A through 1.F (Mini-CEX in full, 9 minimal types). Manual play-through is plausibly faster per click but slower per phase because of context-switching to read Papercut, look up the speciality id, etc. The doc's `~155 minute` estimate still feels right for a human run; revisit after the first human attempt.
+About **38 minutes** of Playwright-driven clicks for Phases 1.A through 1.F (Mini-CEX in default-schema form + 9 minimal types). Saved ~12 minutes vs the first 2026-05-24 play-through because:
+- T051 removed the SMTP detour from Step 1.6.
+- T055 removed the URL-recovery double-take after the first Activity Type save.
+- T056 means no logout/login dance to switch between Mbatha and bootstrap admin for Phases 1.D-1.F.
 
-### What still needs verifying
+The doc's `~155 minute` human estimate still feels right for a first-time operator following the prose; this replay is mostly machine time.
 
-- The full 13-field visual-builder schema for Mini-CEX (Step 1.11.b) — not exercised in this play-through.
+### What still needs verifying (unchanged from the previous play-through)
+
+- The full 13-field visual-builder schema for Mini-CEX (Step 1.11.b) — not exercised in either play-through.
 - The Mini-CEX credit JSON referencing `epa_id` / `overall_level` (Step 1.11.d) — depends on the full schema above.
 - Submit / accept / rate / complete transitions on a real Mini-CEX activity instance (validates the actor DSL strings: `role:Trainee`, `field:assessor_user_id`).
 - Trainee dashboard rendering once a real submission credits a curriculum item (validates `CreditApplier` end-to-end).
