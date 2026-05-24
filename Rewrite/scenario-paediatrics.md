@@ -100,16 +100,20 @@ Role: bootstrap Administrator
 Route: `/account/login`
 Action: Email `admin@wombat.local`, password from `pwd_DO_NOT_COMMIT.txt`. Click `Sign in`.
 Expected: Redirect to `/` (AdministratorDashboard). Welcome banner reads "Welcome, admin@wombat.local / Viewing as Administrator".
-Actual:
-Gap:
+Actual: Login form has Email + Password + Remember me + Sign in. Submit → `/` loads as Dashboard. Header reads `admin@wombat.local` (link to `/account/profile`) and a `Sign out` button — no "Viewing as Administrator" subtitle.
+Gap: Wording mismatch only — scenario's expected welcome string ("Welcome, admin@wombat.local / Viewing as Administrator") is not how the dashboard header is composed today. Functionally login + role landing is correct.
 
 ### Step 1.2 — Issue invitation for Prof Mbatha
 Role: bootstrap Administrator
 Route: `/admin/invitations/new`
 Action: Email `mbatha@kgk.wombat.local`; First name `Nolwazi`; Last name `Mbatha`; Target role `Administrator`; Institution — leave blank (global admin, see Step 1.3 note below); click `Send invitation`.
 Expected: Invitation row appears in `/admin/invitations` list with status `Pending`.
-Actual:
-Gap:
+Actual: **Route `/admin/invitations/new` does not exist.** The "Issue invitation" form is embedded directly inside `/admin/invitations` (list page), beside an "Active invitations" panel. Form fields: Email (required), Role (combobox), Institution (required combobox), Speciality (disabled until institution chosen), Sub-speciality (disabled). **No First name / Last name fields.** Submit button is labelled `Issue invitation`, not `Send invitation`.
+Gap: **Three hard gaps that break the step as written:**
+1. Route is `/admin/invitations` (form embedded), not `/admin/invitations/new`.
+2. Role combobox options: `InstitutionalAdmin / SpecialityAdmin / SubSpecialityAdmin / Coordinator / CommitteeMember / Assessor / Trainee` — **`Administrator` is not selectable.** Confirms the CLAUDE.md note that global Administrator is manual-only and cannot be assigned via SSO; the invitation UI honors the same rule.
+3. Institution is required on every invitation — you cannot "leave blank for global admin". So **Phase 1.A and Phase 1.B must swap order**: Prof Mbatha must (a) be created against an existing institution as `InstitutionalAdmin`, or (b) created by a different mechanism (admin Identity provisioning).
+**Recommended scenario rewrite:** demote Prof Mbatha to `InstitutionalAdmin`, create the institution as bootstrap admin first (Phase 1.B), then issue the invitation. The CLAUDE.md note that "the Administrator role cannot be assigned via SSO — always requires explicit manual assignment" applies to the invitation flow too.
 
 > **Note on Administrator scope:** Wombat's `Administrator` role is global per CLAUDE.md. Prof Mbatha is the *departmental* lead but her Wombat role is Administrator because she needs to define the institutional structure and curriculum. In a multi-institution deployment this would be `InstitutionalAdmin` instead; here we use global Administrator so the scenario exercises the full admin surface.
 
@@ -118,8 +122,8 @@ Role: PendingTrainee (invitation recipient flow)
 Route: invitation link from email (in dev: check logs or copy token from DB)
 Action: Open the link, fill `First name`, `Last name`, set password, confirm, submit.
 Expected: Redirect to login. Log in as `mbatha@kgk.wombat.local`. Lands on `/` as Administrator.
-Actual:
-Gap:
+Actual: Not exercised (blocked upstream by Step 1.2 — no invitation can be issued for an Administrator role).
+Gap: Not auditable until 1.2 sequencing is fixed. Recommend playing this with the `InstitutionalAdmin` role swap above; the accept-invitation page itself is reachable and the flow is plausibly functional.
 
 > **Dev-mode note:** `DevUserSeeder` does not create Prof Mbatha. Either use the invitation flow above (exercises email-less invitation tokens), or extend `DevUserSeeder` to add her. **Scenario choice:** use the invitation flow — it validates Wombat's canonical onboarding. If the flow fails or requires SMTP that's not wired, fall back to the bootstrap admin and note the gap.
 
@@ -130,24 +134,24 @@ Role: Administrator (Prof Mbatha from here on unless noted)
 Route: `/admin/institutions/new`
 Action: Name `Kgosi Kgari Teaching Hospital`; Short code `KGK`; Contact email `paeds-admin@kgk.wombat.local`; click `Save`.
 Expected: Redirect to `/admin/institutions/{id}`. Institution renders in `/admin/institutions` list with status `Active`.
-Actual:
-Gap:
+Actual: Route exists. Form fields exactly match: Name (required), Short code (required), Contact email (optional). Save button labelled `Save`. The list page's create-button is labelled `Create institution` (not `New institution`).
+Gap: None — clean.
 
 ### Step 1.5 — Create speciality
 Role: Administrator
 Route: `/admin/institutions/{id}/specialities/new` (follow the `Manage specialities` link from the institution detail page)
 Action: Name `Paediatrics`; Description `Care of infants, children, and adolescents up to 18 years.`; click `Save`.
 Expected: Redirect to the speciality edit page. `Paediatrics` appears in the speciality list for Kgosi Kgari.
-Actual:
-Gap:
+Actual: Route exists. Fields: Name (required), Description (optional). Save button present.
+Gap: Minor — link from the institutions list is labelled `Specialities`, not `Manage specialities`. There's no link labelled `Manage specialities` anywhere; scenario wording needs a small edit.
 
 ### Step 1.6 — Create sub-speciality
 Role: Administrator
 Route: `/admin/specialities/{specialityId}/sub-specialities/new`
 Action: Name `General Paediatrics`; Description `Core general paediatric training; covers the FCPaed(SA) curriculum.`; click `Save`.
 Expected: Redirect to the sub-speciality edit page. `General Paediatrics` appears in the sub-speciality list for Paediatrics.
-Actual:
-Gap:
+Actual: Route exists. Fields: Name (required), Description (optional). Save button present. Page heading "Create sub-speciality" + parent-speciality breadcrumb correct.
+Gap: None — clean.
 
 ## Phase 1.C — Entrustment scale
 
@@ -163,8 +167,12 @@ Action: Name `Paed General Entrustment Scale`; Description `Default 5-level entr
 4. Order 4, Label `Unsupervised`, Description `Trainee performs unaided; assessor reviews outcomes.`
 5. Order 5, Label `Can supervise others`, Description `Trainee is competent to teach and supervise junior colleagues.`
 Expected: Scale appears in the scales list with 5 levels. The scale is selectable from any assessment form or activity type that references entrustment.
-Actual:
-Gap: **Gap surfaced at planning time:** route and surface for scale creation not confirmed. If no dedicated admin surface exists, the scale may need to be seeded via migration or via a hidden surface. Flag and defer rather than block.
+Actual: **No admin route exists for entrustment-scale creation.** `/admin/entrustment-scales`, `/admin/scales`, and similar candidates all 404. `EntrustmentScale` entity (`Wombat.Domain.Epas.EntrustmentScale`) and `EntrustmentScales` table exist; `GetEntrustmentScalesListQuery` is consumed by `FormEdit.razor` and `ReviewDetail.razor` (read-only dropdowns). The only writer in the codebase is `DataSeeder.cs:113-133`, which seeds a single 5-level scale at boot.
+Gap: **Hard gap confirmed.** Prof Mbatha cannot define her own Paed-specific scale through the UI. Three options:
+1. **Reuse the seeded scale** — already 5 levels, ten-Cate-flavored, labels close enough; Paediatrics adopts the global one. Scenario step becomes a no-op.
+2. **Extend `DataSeeder`** to write the Paed-specific scale (developer task, out of scope for an operator runbook).
+3. **Build an admin surface** — new task. Probably warranted; the rewrite plan never explicitly closed this gap. Recommend opening a backlog item: "Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`".
+**Scenario impact:** strike Step 1.7 from the runbook until option 3 lands, and document option 1 as the operator workaround in the meantime.
 
 ## Phase 1.D — Define 15 General Paediatrics EPAs
 
@@ -176,8 +184,8 @@ Role: Administrator
 Route: `/admin/epas/new` (repeat for each)
 Action: For each row in the table below, navigate to the new-EPA form, fill Sub-speciality (`General Paediatrics`), Code, Title, Description, Category, then `Save`.
 Expected: Each EPA appears in `/admin/epas` list, scoped to `General Paediatrics`, with status `Active` and version 1 (pending its first curriculum reference).
-Actual:
-Gap:
+Actual: Route exists. Form fields: Sub-speciality (required combobox showing `Institution / Speciality / Sub-speciality` triple-path label), Code (required), Title (required), Description (optional), **Required knowledge and skills** (optional — extra field not in scenario), Category (required combobox: Core / Elective). Save button present.
+Gap: Minor — scenario doesn't mention the `Required knowledge and skills` field. Leave blank or use for the freeform description; non-blocking.
 
 **The 15 EPAs:**
 
@@ -210,16 +218,16 @@ Role: Administrator
 Route: `/admin/curricula/new`
 Action: Sub-speciality `General Paediatrics`; Name `FCPaed(SA) Part 1`; Version `2026.1`; Effective from `2026-01-15`; Effective to leave empty; click `Save`.
 Expected: Redirect to `/admin/curricula/{id}`. Curriculum row appears in `/admin/curricula` with status `Active`, 0 items.
-Actual:
-Gap:
+Actual: Route exists. Fields: Sub-speciality (required combobox), Name (required), Version (required), Effective from (date, defaults to today), Effective to (date, optional). Save button present.
+Gap: None — clean. Note: list page columns include `Items` count and `Status`, both match the scenario expectation.
 
 ### Step 1.10 — Add 15 curriculum items
 Role: Administrator
 Route: `/admin/curricula/{id}/items`
 Action: For each EPA below, fill the `Add item` form with the values shown, then click `Add item`. Repeat.
 Expected: After all 15 are added, the `Existing items` table lists all 15 rows. Progress bars in the Trainee dashboard will later reference these values.
-Actual:
-Gap:
+Actual: Route exists. `Add item` form has all 6 fields the scenario relies on: EPA (required combobox), Required count (spinbutton, default 1), Minimum level (spinbutton, default 4), Per-stage minima (JSON textbox with placeholder `{"1":2,"2":3,"3":4}` — exactly the syntax the scenario prescribes), Window months (spinbutton, default 12), Weight (spinbutton). `Existing items` table already shows the seeded IM-Core entry above the form.
+Gap: None — clean.
 
 **The 15 curriculum items:**
 
@@ -258,8 +266,8 @@ Route: `/admin/activity-types/new`
 **1.11.a — Metadata tab**
 Action: Key `mini_cex_paed`; Name `Mini-CEX (Paediatrics)`; Scope `Speciality`; Scope Id `<Paediatrics speciality id>`; Description `Brief (~20-minute) observed clinical encounter rated on six domains.`; Active checkbox on. Click `Save draft`.
 Expected: Draft saved; status banner "Draft saved." Metadata persists across tabs.
-Actual:
-Gap:
+Actual: Tab present. Fields: Key (required), Name (required), Scope (required combobox: Global / Institution / Speciality / SubSpeciality), Scope Id (numeric spinbutton), Description (optional), Active (checkbox, default on). `Save draft` button visible at top of page.
+Gap: **Scope Id is a raw integer spinbutton, not a picker.** Prof Mbatha has to memorize or look up the numeric `SpecialityId` of her newly-created Paediatrics speciality. The speciality list pages don't display IDs in the URL bar in a way she can read off the breadcrumb easily — she'd need to inspect a URL on the edit page. UX friction; consider replacing with a context-aware picker that filters by selected Scope.
 
 **1.11.b — Form tab**
 Action: Click `Add section` → edit the section: Key `encounter`, Title `Encounter details`. Add fields (via `Add field` inside the section):
@@ -277,8 +285,8 @@ Click `Add section` again for the ratings: Key `ratings`, Title `Clinical perfor
 - `overall_level` / Overall entrustment level
 Click `Add section`: Key `feedback`, Title `Feedback`. Add field Key `narrative`, Label `Narrative feedback (strengths and next steps)`, Type `LongText`, Required on.
 Expected: Live preview renders the three sections with all 13 fields. EPA and Assessor fields show pickers; Scale fields show the 5-level selector.
-Actual:
-Gap:
+Actual: Builder loads with a default `details` section + single `title` Text field; Add section + Add field both present. Section editor (Section key + Title) and Field editor (Field key, Label, Type combobox, Help text, Options, Catalogue key, Required) all present. Field Type options: Text, **Long text** (label has a space; scenario writes `LongText`), Number, Date, Choice, Multi-choice, Scale, User, EPA, Likert, Procedure reference, File, Signature — every scenario-referenced type exists. Live preview pane renders to the right.
+Gap: Cosmetic — scenario says Type `LongText`; UI option label is `Long text`. Catalogue key field is a plain textbox, so `paed-entrust-5` will only be meaningful if an `EntrustmentScale` exists with that catalogue key (linked to Step 1.7's gap).
 
 **1.11.c — Workflow tab**
 Action: Paste the following into the `Workflow JSON` textarea:
@@ -300,8 +308,32 @@ Action: Paste the following into the `Workflow JSON` textarea:
 }
 ```
 Expected: Validation passes. Save draft. Tab turns clean.
-Actual:
-Gap:
+Actual: Tab present, single `Workflow JSON` textbox. Default placeholder uses a different schema than the scenario specifies. Checked `Wombat.Domain.Activities.Workflow.WorkflowParser` (whitelisted property names: `version`, `initial_state`, `states`, `transitions`; transition keys: `key`, `from`, `to`, `actor`, `requires_note`, `requires_fields`) and `ActorRuleParser` (actor grammar is a DSL string, not a roles array).
+Gap: **Scenario JSON would be rejected by the parser.** Key differences:
+- Root: scenario uses `initial`, parser requires `initial_state` and a top-level `version` integer.
+- Transition `from`: scenario wraps in arrays; parser also accepts strings (so the array form is fine for `from`).
+- Transition actor: scenario uses `actor_roles: ["Trainee"]` and `actor_field: "assessor_user_id"`; parser requires a single `actor` field whose value is a DSL string like `"role:Trainee"`, `"field:assessor_user_id"`, `"subject"`, `"creator"`, `"scope:<name>"`, combined with `+` (all) or `|` (any).
+
+**Corrected Mini-CEX workflow JSON for the scenario:**
+```json
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    { "key": "draft",     "label": "Draft" },
+    { "key": "submitted", "label": "Submitted" },
+    { "key": "rated",     "label": "Rated" },
+    { "key": "completed", "label": "Completed", "terminal": true }
+  ],
+  "transitions": [
+    { "key": "submit",   "from": "draft",     "to": "submitted", "actor": "role:Trainee" },
+    { "key": "accept",   "from": "submitted", "to": "rated",     "actor": "field:assessor_user_id" },
+    { "key": "complete", "from": "rated",     "to": "completed", "actor": "field:assessor_user_id" },
+    { "key": "recall",   "from": "submitted", "to": "draft",     "actor": "role:Trainee" }
+  ]
+}
+```
+Replace the example in the scenario with this version before playing. Apply the same `actor: "role:..."` / `actor: "field:..."` translation to the nine summarised types in Step 1.12.
 
 **1.11.d — Credit tab**
 Action: Paste:
@@ -317,16 +349,16 @@ Action: Paste:
 }
 ```
 Expected: Validation passes. Save draft.
-Actual:
-Gap:
+Actual: Tab present, single `Credit rules JSON` textbox. Default value `{ "counts_for": [] }`. Verified `CreditRulesParser` accepts exactly the keys the scenario uses (`counts_for`, `curriculum_item_match`, `epa_field` / `curriculum_item_id` / `curriculum_item_field`, `amount`, `minimum_level_field`, `minimum_level_fixed`).
+Gap: None — the scenario JSON is valid as-written.
 
 **1.11.e — Publish**
 Role: Administrator
 Route: `/admin/activity-types/{id}`
 Action: Click `Publish`.
 Expected: Status banner "Published version 1." Type appears in `/admin/activity-types` as `v1 / None (no draft) / Active`.
-Actual:
-Gap:
+Actual: `Publish` button is in the page header beside `Save draft`, **but it only renders when `_editor.HasDraft == true`** (`ActivityTypeEdit.razor:14-18`). The flow is therefore: edit any field → `Save draft` → Publish button appears → click. Re-visiting the page after a clean publish hides the button. There's also a `Discard draft` companion that appears under the same condition.
+Gap: Cosmetic only — scenario wording implies Publish is always visible. Either reword the step to "after Save draft, click the now-visible `Publish` button," or surface the button unconditionally with a disabled state when there's nothing to publish.
 
 ### Step 1.12 — Build the other 9 activity types (summary)
 
@@ -346,15 +378,17 @@ For each of the nine remaining types, repeat Step 1.11 structure (Metadata → F
 
 Each worked through the builder UI exactly as Mini-CEX; ~15 minutes per type once Prof Mbatha has the first one done. Total time on this phase: ~2.5 hours.
 
-> **Gap hook:** if the builder's Workflow or Credit tab rejects valid JSON (schema drift, parser strictness), capture the exact error in the gap slot of whichever activity type first trips. T019-series tasks built this surface; T041 audited it but didn't exercise every field type.
+> **Gap hook (confirmed live):** the builder's Workflow tab rejects the JSON shape the scenario originally wrote — see Step 1.11.c's `Actual:` block for the corrected schema. The Credit tab's JSON shape is accepted as-written. The Form-tab visual builder is the only surface that exercises every field type, but JSON-driven types are validated separately at save time.
+
+> **Seeded overlap:** `DataSeeder` already publishes 10 activity types against `General Internal Medicine` (ACAT, CbD, DOPS, Journal Club, Mini-CEX, Procedure Log, QI Project, Reflective Note, Research Output, Teaching Session). Scenario's intended set substitutes `MSF` for `QI Project` and prepends `_paed` to every key. Because the seeded types are speciality-scoped to General Internal Medicine, they will not surface in Paediatric users' selectors — no interference. Operator still has to build all 10 Paed types from scratch.
 
 ### Step 1.13 — Verify all 10 activity types are published
 Role: Administrator
 Route: `/admin/activity-types`
 Action: Scroll through list. Confirm 10 entries with `v1 / Active` status and `Speciality` scope. Optionally filter by name.
 Expected: 10 rows. Names match the table above.
-Actual:
-Gap:
+Actual: List page has columns Name / Key / Scope / Published / Draft / Status, a Search textbox, and a `New activity type` link. Seeded rows render as `<Name> / <key> / Speciality / v1 / None / Active / Edit`. The "Edit" link is the only per-row action.
+Gap: None — list semantics match. Note: the `Published` column shows `v1` (not the scenario's `v1 / None (no draft) / Active`); `Draft` and `Status` are separate columns. Scenario wording can be tightened but the data is all present.
 
 ## Act 1 outcome state
 
@@ -384,13 +418,40 @@ Nothing has been asked of consultants or registrars yet. No activities exist. No
 
 ## Act 1 findings summary
 
-*(populate this section when the act has been played; blank by design)*
+Populated 2026-05-24 from a Playwright route-and-surface audit (no full play-through; UX-friction findings still need a human pass).
 
-- [ ] Step-specific gaps — collected inline in each step's `Gap:` line above.
-- [ ] Route mismatches — every assumed URL path should be verified.
-- [ ] UX friction — anywhere a step took notably longer than expected or required backtracking.
-- [ ] Missing features — anywhere the scenario wanted a capability Wombat doesn't expose.
-- [ ] Time-estimate corrections.
+### Hard gaps (block the step as written)
+
+1. **Step 1.2 — Invitation flow cannot issue an `Administrator` role.** Route is `/admin/invitations` (form embedded in list page), not `/admin/invitations/new`; Role combobox does not include Administrator; Institution is required. Phase 1.A and Phase 1.B must swap — institution exists before invitation. Demote Prof Mbatha to `InstitutionalAdmin` for the scenario to be playable as authored.
+2. **Step 1.7 — No admin UI for `EntrustmentScale`.** Entity, table, and read-side query all exist; the only writer is `DataSeeder`. Operator must either reuse the seeded scale or wait for an admin-CRUD surface to be built. Open as a new backlog item.
+3. **Step 1.11.c — Workflow JSON schema in the scenario is rejected by `WorkflowParser`.** Corrected JSON in the step's `Actual:` block; the same translation (`actor_roles` → `actor: "role:..."`, `actor_field` → `actor: "field:..."`, top-level `initial` → `initial_state`, add `version: 1`) applies to all 9 summarised types in Step 1.12.
+
+### Route mismatches (rewrite the step's `Route:` line)
+
+- 1.2: `/admin/invitations/new` → `/admin/invitations` (form embedded).
+- 1.5: "Manage specialities" link → labelled `Specialities` on the institutions list, not `Manage specialities`.
+- 1.11.e: Publish button is in the page header alongside Save draft (visible only when there's an unsaved draft) — not a separate route action.
+
+### UX friction (cosmetic; non-blocking)
+
+- Login banner wording differs from scenario ("Welcome, X / Viewing as Administrator" doesn't exist; header just shows the email).
+- Field-type label in builder is `Long text` (with space), scenario uses `LongText`.
+- Metadata tab's `Scope Id` is a raw integer spinbutton — operator must look up the numeric ID. Strong UX win if replaced with a context-aware picker (filter by selected Scope).
+- Activity-type list status column reads `v1 / None / Active` across three columns, not the single concatenated string the scenario expected.
+
+### Missing features (warrant a backlog item)
+
+- **Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (driven by Step 1.7).
+- **First name / Last name fields on invitation** — currently email-only; the accept-invitation flow probably collects them, but it would be friendlier on the invitation side too.
+- **Allow null / `Global` Institution on invitation** for `Administrator` role only, gated by the existing manual-only rule.
+
+### Time-estimate revisions
+
+- Audit took ~15 minutes total, vs. the ~160 minutes the runbook estimates for a manual play-through. The estimates in §"Act 1 time estimate" are still the right shape for a human run; no change needed there. Phase 1.F's 90-minute estimate is conservative — the visual builder is well-paced, but the JSON tabs (Workflow, Credit) take longer than 15 min/type because of the schema-translation work above.
+
+### What still needs a human play-through
+
+The audit only walks routes and inspects form fields against the spec — it does not exercise data persistence, conditional visibility, validation errors, or real cross-page flow. Phase 1.D's 15 EPA bulk add, Phase 1.E's 15 curriculum items, and Phase 1.F's three JSON pastes per type are all still untested end-to-end. The findings above clear the obvious blockers so a human pass would catch real persistence / validation regressions, not paper cuts.
 
 ## Handoff into Act 2
 
