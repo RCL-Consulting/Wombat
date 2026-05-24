@@ -41,7 +41,16 @@ Add `FirstName` + `LastName` columns (nullable text) to `Invitation`. Surface in
 ### T052 — Invitation form: allow `Administrator` role + global scope
 Re-add `Administrator` to the role combobox. When selected, Institution combobox becomes optional and Speciality / Sub-speciality dropdowns hide. Server-side guard: invitations with `role=Administrator` and `institutionId=null` accepted only when the issuing user holds the Administrator role themselves (already true for the bootstrap admin). Regression test asserts a non-Administrator cannot issue an Administrator invitation. Update CLAUDE.md's "Administrator role cannot be assigned via SSO" note to also call out the invitation rule.
 
-**Effort:** ~3 hours. Touches auth rules. Suggested model: **Opus** — cost of getting auth wrong is high.
+**Schema change required.** `Invitation.InstitutionId` is currently `int` (NOT NULL with FK to Institutions); for global-Administrator invitations it must become `int?`. That's:
+- `Invitation.cs`: `int InstitutionId` → `int? InstitutionId`
+- Hand-written migration: `ALTER COLUMN "InstitutionId" DROP NOT NULL` (Up) + restore-NOT-NULL (Down), plus FK behaviour preserved
+- Designer file + `ApplicationDbContextModelSnapshot` update for the nullability
+- `IssueInvitationCommand`: accept `int?` and route the Administrator path through `InvitationRules.ValidateScope` with the new "Administrator requires null scope" branch
+- `InvitedUserProvisioner.ProvisionAsync`: accept `int? institutionId` (the WombatIdentityUser column is already nullable)
+- `AcceptInvitation`/`GetInvitationPreview` handlers: tolerate the null
+- Tests covering: (a) Administrator can issue an Administrator invitation, (b) InstitutionalAdmin cannot, (c) accepting an Administrator invitation provisions a user with no institution claim
+
+**Effort:** ~3 hours. Touches auth rules + schema. Suggested model: **Opus** — cost of getting auth wrong is high.
 
 ### T053 — Activity-type Metadata: Scope Id picker
 Replace the raw `Scope Id` integer spinbutton on the activity-type Metadata tab with a context-aware picker. When Scope=Institution → list institutions; Speciality → list specialities scoped to what the editing user can see; SubSpeciality → likewise. When Scope=Global → hide the field entirely (Scope Id is meaningless).

@@ -6,9 +6,11 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 **T056 complete + T051 (URL surface / SMTP / status message) shipped this session.** InstitutionalAdmin has institution-scoped admin powers; the invitation page now reveals the registration URL on issuance so SMTP is optional. Remaining:
 
-1. **T051.b** — Invitation form: First/Last name capture (entity migration + form + accept pre-fill). Deferred because the registration form already collects names; columns only enable pre-fill. ~2h, **Sonnet**.
-2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**).
+1. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**). Requires making `Invitation.InstitutionId` nullable — hand-written migration + Designer + snapshot update + handler + provisioner changes + tests. Plan doc in `scenario-act1-fixes-plan.md` spells out the exact file list.
+2. **T051.b** — Invitation form: First/Last name capture (entity migration + form + accept pre-fill). Same migration overhead as T052. ~2h, **Sonnet**. Could be bundled with T052 to share the migration cost.
 3. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+
+**Suggestion:** bundle T051.b + T052 in one session — they touch the same Invitation entity and would share the migration / Designer / snapshot cost. Net effort ~3.5h.
 
 ## This session at a glance
 
