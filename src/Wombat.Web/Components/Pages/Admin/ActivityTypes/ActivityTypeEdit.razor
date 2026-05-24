@@ -4,6 +4,7 @@
 @using Wombat.Domain.Activities
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 <PageTitle>@(_editor?.Name ?? "Activity Type")</PageTitle>
 
@@ -14,8 +15,8 @@
     @if ((_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true)
     {
       <button type="button" class="btn btn-outline" disabled="@_busy" @onclick="DiscardDraftAsync">Discard draft</button>
-      <button type="button" class="btn btn-success" disabled="@_busy" @onclick="PublishAsync">Publish</button>
     }
+    <button type="button" class="btn btn-success" disabled="@(_busy || !CanPublish)" title="@(CanPublish ? null : "Save a draft to publish.")" @onclick="PublishAsync">Publish</button>
   </Actions>
 </PageHeader>
 
@@ -268,6 +269,7 @@
   private int _selectedFieldIndex = -1;
 
   private bool IsPublished => (_editor?.PublishedVersion ?? 0) > 0;
+  private bool CanPublish => (_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true;
   private string PageTitleText => (_editor?.Id ?? 0) > 0 ? $"Edit {_name}" : "New activity type";
   private string CurrentDraftSchemaJson => _builderSchema.ToJson();
 
@@ -319,6 +321,7 @@
     try
     {
       var actorUserId = await GetCurrentUserIdAsync();
+      var wasNew = (_editor?.Id ?? 0) == 0;
       _editor = await Sender.Send(new Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft.SaveActivityTypeDraftCommand(
         _editor?.Id,
         _key,
@@ -335,6 +338,11 @@
 
       _status = "Draft saved.";
       RefreshWarnings();
+
+      if (wasNew && _editor.Id > 0)
+      {
+        Navigation.NavigateTo($"/admin/activity-types/{_editor.Id}", forceLoad: false);
+      }
     }
     catch (Exception exception)
     {

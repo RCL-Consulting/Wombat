@@ -4,21 +4,24 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** The 2026-05-24 Playwright play-through of Act 1 just landed. The runbook now has populated Actual:/Gap: lines on every step + a refreshed findings summary. One new task surfaced — T056 — which dominates the open backlog because it changes Phase 1.B's premise.
+**None.** T055 (post-save housekeeping on ActivityType edit) just landed; T056 chosen as Option A (grant scope-aware admin powers) per 2026-05-24 user direction. Remaining triage:
 
-Open backlog (in `Rewrite/scenario-act1-fixes-plan.md` triage order):
-
-1. **T056 (new, blocking the others)** — InstitutionalAdmin role-power audit. Option A: grant institution-scoped admin powers (~12–16h, **Opus**, touches ~25 pages + handlers + tests). Option B: accept the model and revise scenario so bootstrap admin runs Act 1 (~3h, **Opus** — doc rewrite + cast restructure). Pick A or B before doing T051/T052.
-2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped by play-through).
-3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, depends on T056 outcome).
-4. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win, independent).
-5. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap).
-6. **T055** — Post-save housekeeping bundle: Publish button always visible + redirect to /{id} after first save + fix "Create X" page-title on 6 edit pages (~1h, **Sonnet**, scope bumped by play-through).
-7. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
-
-Recommended next: **T056 decision discussion** — Option A vs B has to be settled before T051/T052 do useful work. If pressed for a code-only pick, T053 or T054 can ship in parallel without waiting on T056.
+1. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win, independent of T056). **Recommended next**.
+2. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap; independent of T056).
+3. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope.
+4. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
+5. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
+6. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
+
+**T055 — Publish button + post-save redirect on ActivityType edit** (commit pending). Two of three originally-bundled items shipped; the third turned out to be a Playwright snapshot-timing false alarm. Touched only `ActivityTypeEdit.razor`. Browser-verified end-to-end.
+
+- `Publish` now renders unconditionally on `/admin/activity-types/{new|id}`, with `disabled` + tooltip "Save a draft to publish." until a draft exists. `Discard draft` still gates on having a draft.
+- First `Save draft` on a brand-new type now navigates to `/admin/activity-types/{id}` (SPA-style, `forceLoad: false`). Previously the URL stuck at `/new`, so a refresh wiped the just-saved type from view.
+- The "Create X" page-title finding was a false alarm — 5 of 6 admin edit pages already have the correct `IsNew ? "Create X" : "Edit X"` pattern; the play-through screenshots captured a pre-render snapshot. Verified by direct navigation showing "Edit Institution" in the tab title.
+
+Build clean, 38/38 Web tests pass.
 
 **2026-05-24 Act 1 play-through** (commit `d8a7557`). End-to-end Playwright run of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated.
 
@@ -155,6 +158,10 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T055 — Publish button + post-save redirect on ActivityType edit** (commit pending).
+
+One Razor file touched. Publish renders unconditionally with disabled+tooltip until a draft exists; first Save draft on a brand-new type SPA-redirects to `/admin/activity-types/{id}`. Browser-verified end-to-end. The originally-bundled "Create X" page-title fix was dropped — 5/6 admin edit pages already have the correct conditional `<PageTitle>` and direct navigation shows "Edit Institution" correctly; the play-through screenshots had been a Playwright snapshot-timing race. Build clean, 38/38 Web tests pass.
 
 **2026-05-24 Act 1 play-through** (commit `d8a7557`).
 
