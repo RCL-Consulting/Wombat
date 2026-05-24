@@ -4,7 +4,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056 complete** — all five clusters shipped this session (`41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / T056.e pending commit). InstitutionalAdmin now has institution-scoped admin powers across the entire admin surface (except Scheduled Jobs, Institutions list/create, and Data Rights — all Administrator-only by design). Remaining:
+**T056 complete** — all five clusters shipped this session (`41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / `ec6d6d1`). InstitutionalAdmin now has institution-scoped admin powers across the entire admin surface (except Scheduled Jobs, Institutions list/create, and Data Rights — all Administrator-only by design). Remaining:
 
 1. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**).
 2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**).
@@ -207,6 +207,8 @@ Across six clusters:
 
 ## Last completed
 
+**T056.e — Audit + SSO + NavMenu refresh + scenario-doc revert** (commit `ec6d6d1`). Audit handlers (`ListAuditEntriesQuery`, `GetAuditEntryByIdQuery`) and SSO handlers (`ListSsoGroupMappings`, `CreateSsoGroupMapping`, `DeleteSsoGroupMapping`) all principal-aware. Audit filters by `AuditEntry.InstitutionId` (InstitutionalAdmin sees own institution + global no-institution events). SSO filters by `SsoGroupRoleMapping.InstitutionId`. NavMenu InstitutionalAdmin block expanded from 3 placeholder links to 11 real routes. New `/admin/specialities` redirect page resolves the caller's institution from claims. Scenario doc: Phase 1.B warning replaced with "Resolved by T056" note, Step 1.8 role no longer says "bootstrap Administrator", finding #1 marked closed. 6 new scope tests. Application 210→216.
+
 **T056.d — Trainees/Assessors/Invitations/EntrustmentScales cluster** (commit `8ad0788`). Trainee handlers (ListPendingTrainees, ListTraineesForSpeciality, GetTraineeProfileById, AdmitTrainee, UpdateTraineeProfile, DeactivateTraineeProfile) all principal-aware and scope-filter via `TraineeProfile.Curriculum.SubSpeciality.Speciality.InstitutionId`. Assessor handlers (ListAssessorUsers, ListAssessorsForSpeciality, GetAssessorProfileById, CreateOrUpdateAssessorProfile) filter via `AssessorProfile.InstitutionId`. Invitation handlers (ListActiveInvitations, IssueInvitation, RevokeInvitation) filter via `Invitation.InstitutionId`. EntrustmentScale write commands (Create/Update/Delete) now require Administrator (global entities). 7 admin pages on AdministratorOrInstitutionalAdmin policy. 7 new scope tests. Application 203→210.
 
 **T056.c — ActivityTypes + Forms cluster** (commit `e1d3737`). ActivityType handlers (ListActivityTypesAdmin, GetActivityTypeEditor, SaveActivityTypeDraft, PublishActivityTypeDraft, DiscardActivityTypeDraft) all principal-aware. Form handlers (GetAssessmentFormsList, GetAssessmentFormById, Create, Update, Deactivate, AddCriterion, RemoveCriterion, Link/UnlinkEpa) all principal-aware. ActivityType scope rules: InstitutionalAdmin sees Global+own-institution types (read-only Global), writes blocked at handler. Form scope rules: forms scoped via InstitutionId or SpecialityId or SubSpecialityId; Global forms (all-null) are Administrator-only for writes but readable. New shared `ActivityTypeScopeGuard` static helper in `PublishActivityTypeDraft`. New `FormMappings.EnsureCallerCanWriteAsync` helper. Razor pages updated: `ActivityTypesList`, `ActivityTypeEdit`, `NewActivity` (picker callsite), `FormsList`, `FormEdit`. 4 admin pages moved to `AdministratorOrInstitutionalAdmin` policy. New scope tests: `ActivityTypeScopeGuardTests` (5) + `AssessmentFormScopeGuardTests` (5). Application 193→203. Build clean, all suites pass.
@@ -324,6 +326,7 @@ Verification:
 
 ## Last verified commits
 
+- `ec6d6d1` — T056.e (Audit + SSO + NavMenu refresh + scenario-doc revert; 20 files; 5 handlers + 3 razor pages + new MySpecialitiesRedirect page + 6 new scope tests + NavMenu expansion + scenario doc revert; Application 210/210 → 216/216, Architecture 19/19, Web 38/38, Domain 45/45)
 - `8ad0788` — T056.d (Trainees + Assessors + Invitations + EntrustmentScales scope guards; 32 files; 15 handlers + 7 razor pages + 7 new scope tests; Application 203/203 → 210/210, Architecture 19/19, Web 38/38, Domain 45/45)
 - `e1d3737` — T056.c (ActivityTypes + Forms scope guards; 20 files; 5 ActivityType + 8 Form handlers + 10 new scope tests + new ActivityTypeScopeGuard and FormMappings helpers; Application 193/193 → 203/203, Architecture 19/19, Web 38/38, Domain 45/45)
 - `9e3bc0a` — T056.b (EPAs + Curricula scope guards; 24 files; 8 EPA + 8 curriculum handlers + 10 new scope tests; Application 183/183 → 193/193, Architecture 19/19, Web 38/38, Domain 45/45)
