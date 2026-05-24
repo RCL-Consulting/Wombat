@@ -27,14 +27,16 @@ Single pass through `Rewrite/scenario-paediatrics.md` to absorb the audit's find
 
 **Effort:** ~1 hour. Pure docs. Unblocks a human play-through immediately. Suggested model: **Sonnet** — mechanical edit, no judgement.
 
-### T051 — Invitation form: capture First/Last name + surface registration URL + fix dev SMTP
-Add `FirstName` + `LastName` columns (nullable text) to `Invitation`. Surface in the `InvitationsList` issue form. Pre-fill the accept-invitation form when present. Migration + Designer file (per CLAUDE.md hand-written migration rules).
+### T051 — Invitation form: surface registration URL + fix dev SMTP + cleanup status message
+**Shipped this session.** The UI-only and config-only fixes from the play-through:
+- `InvitationsList.IssueAsync` now captures `IssuedInvitationResult.Token` and renders the registration URL `{BaseUrl}/account/register?token={token}` in a one-shot info Alert below the form. Copy-to-clipboard friendly, since the link is shown only on the page-load that issued it (the token hash is never reversible).
+- Status message replaced: the misleading "The stub sender logged the registration link" → "Invitation issued for {email}. Copy the link below — it is shown only once."
+- `appsettings.Development.json` dev SMTP default aligned to `25` (Papercut). Production deployments override via environment.
 
-**Additionally (from 2026-05-24 play-through, commit `d8a7557`):**
-- **Surface the raw registration URL on the InvitationsList page after issuance.** `IssueInvitationCommand` already returns `IssuedInvitationResult.Token` in plaintext; `InvitationsList.IssueAsync` (lines 195–205) currently discards it. Capture it, render `http://{host}/account/register?token={token}` in a copy-to-clipboard chip on the just-issued row, and replace the misleading status message ("The stub sender logged the registration link") with something honest.
-- **Align dev SMTP defaults to Papercut.** `src/Wombat.Web/appsettings.Development.json` has `Email:SmtpPort=1025` but Papercut SMTP listens on port 25 by default — every dev invitation email silently fails 3 retries and is dropped. Change the dev default to 25, or document the override `$env:Email__SmtpPort=25` in `Rewrite/INFRASTRUCTURE.md`. The UI surface change above is the more durable fix because it decouples the runbook from SMTP being configured at all.
+### T051.b — Invitation form: capture First/Last name (deferred)
+Add `FirstName` + `LastName` columns (nullable text) to `Invitation`. Surface in the `InvitationsList` issue form. Pre-fill the accept-invitation form when present. Migration + Designer file (per CLAUDE.md hand-written migration rules) + `ApplicationDbContextModelSnapshot` update. Deferred because the registration form already collects names; the columns only enable pre-fill, which is a nice-to-have. Open as T051.b when the team wants the smoother accept-invitation UX.
 
-**Effort:** ~3 hours (was 2; the URL-surface + SMTP tidy adds an hour). Suggested model: **Sonnet**.
+**Effort:** ~2 hours (entity + migration + Designer + snapshot + form + accept pre-fill + test).
 
 ### T052 — Invitation form: allow `Administrator` role + global scope
 Re-add `Administrator` to the role combobox. When selected, Institution combobox becomes optional and Speciality / Sub-speciality dropdowns hide. Server-side guard: invitations with `role=Administrator` and `institutionId=null` accepted only when the issuing user holds the Administrator role themselves (already true for the bootstrap admin). Regression test asserts a non-Administrator cannot issue an Administrator invitation. Update CLAUDE.md's "Administrator role cannot be assigned via SSO" note to also call out the invitation rule.

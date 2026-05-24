@@ -4,9 +4,9 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056 complete** — all five clusters shipped this session (`41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / `ec6d6d1`). InstitutionalAdmin now has institution-scoped admin powers across the entire admin surface (except Scheduled Jobs, Institutions list/create, and Data Rights — all Administrator-only by design). Remaining:
+**T056 complete + T051 (URL surface / SMTP / status message) shipped this session.** InstitutionalAdmin has institution-scoped admin powers; the invitation page now reveals the registration URL on issuance so SMTP is optional. Remaining:
 
-1. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**).
+1. **T051.b** — Invitation form: First/Last name capture (entity migration + form + accept pre-fill). Deferred because the registration form already collects names; columns only enable pre-fill. ~2h, **Sonnet**.
 2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**).
 3. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
@@ -206,6 +206,8 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T051 — Invitation registration-URL surface + dev SMTP tidy + status-message fix.** Commit pending. `InvitationsList.IssueAsync` now captures the `IssuedInvitationResult.Token` and renders the registration URL in a one-shot info Alert below the form (with copy-friendly `<code>` styling and a clear "shown only on this page-load" warning). The misleading "The stub sender logged the registration link" status text replaced with "Copy the link below — it is shown only once." `appsettings.Development.json` dev SMTP port aligned to Papercut's default (25 instead of 1025). FirstName/LastName columns deferred as T051.b — they require a migration + Designer + snapshot update and are nice-to-have, not blocking.
 
 **T056.e — Audit + SSO + NavMenu refresh + scenario-doc revert** (commit `ec6d6d1`). Audit handlers (`ListAuditEntriesQuery`, `GetAuditEntryByIdQuery`) and SSO handlers (`ListSsoGroupMappings`, `CreateSsoGroupMapping`, `DeleteSsoGroupMapping`) all principal-aware. Audit filters by `AuditEntry.InstitutionId` (InstitutionalAdmin sees own institution + global no-institution events). SSO filters by `SsoGroupRoleMapping.InstitutionId`. NavMenu InstitutionalAdmin block expanded from 3 placeholder links to 11 real routes. New `/admin/specialities` redirect page resolves the caller's institution from claims. Scenario doc: Phase 1.B warning replaced with "Resolved by T056" note, Step 1.8 role no longer says "bootstrap Administrator", finding #1 marked closed. 6 new scope tests. Application 210→216.
 
