@@ -14,9 +14,43 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## This session at a glance
 
-**Session 2026-05-24 (continued) — T056.a landed.** Started T056 (InstitutionalAdmin role-power audit, Option A). Realized mid-implementation that the realistic in-session turn budget couldn't carry the full 12–16h sweep cleanly, so split T056 into five clusters and landed the first one. Foundations + Institutions/Speciality/SubSpeciality scope guards are now in master; the other 9 admin surfaces (EPAs, Curricula, ActivityTypes, Forms, Trainees, Assessors, Invitations, EntrustmentScales, Audit, SSO) remain Administrator-only and are scheduled across T056.b–e.
+**Session 2026-05-24 (continued) — T056 complete + T051 (URL+SMTP+message portion) shipped.** Started T056 (InstitutionalAdmin role-power audit, Option A). Mid-implementation realized the full 12–16h sweep wouldn't fit one session cleanly, so split into five clusters and landed all five plus T051's UI/config portion. The Paediatrics scenario Act 1 now plays end-to-end as Prof Mbatha (InstitutionalAdmin) per its original intent.
 
-**T056.a — Foundations + Institutions/Speciality/SubSpec cluster.**
+**Session commits in chronological order:**
+- `41def8a` — T056.a: foundations + Institutions/Speciality/SubSpec scope guards
+- `4232d22` — docs: record T056.a hash
+- `9e3bc0a` — T056.b: EPAs + Curricula scope guards
+- `5b06def` — docs: record T056.b hash
+- `e1d3737` — T056.c: ActivityTypes + Forms scope guards
+- `d08db42` — docs: record T056.c hash
+- `8ad0788` — T056.d: Trainees + Assessors + Invitations + EntrustmentScales scope guards
+- `3a016d2` — docs: record T056.d hash
+- `3c60a71` — docs: update scenario-act1-fixes-plan
+- `ec6d6d1` — T056.e: Audit + SSO + NavMenu refresh + scenario-doc revert (T056 complete)
+- `18fcf97` — docs: record T056.e hash
+- `799cc1a` — T051: invitation registration-URL surface + dev SMTP tidy + status fix
+- `4487240` — docs: record T051 hash
+- `c8ff215` — docs: detail T052 schema-change plan + suggest bundling with T051.b
+
+**Test status at session end:** Application 174 → 216 (+42 scope tests). Domain 45, Architecture 19, Web 38 unchanged. Build clean throughout.
+
+**T056.b — EPAs + Curricula cluster** (commit `9e3bc0a`). 13 handlers updated. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. `EpaScopeGuardTests` + `CurriculumScopeGuardTests` (5+5). Razor pages: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` swapped to combined policy; call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. Application 183→193.
+
+**T056.c — ActivityTypes + Forms cluster** (commit `e1d3737`). 13 handlers. ActivityType scope rules use a new `ActivityTypeScopeGuard` static helper (Global types readable, writes Administrator-only; Institution/Speciality/SubSpec-scoped types follow caller's hierarchy). Form scope resolves via `FormMappings.EnsureCallerCanWriteAsync` helper handling all three nullable scope columns. `ActivityTypeScopeGuardTests` + `AssessmentFormScopeGuardTests` (5+5). Razor pages: `ActivityTypesList`, `ActivityTypeEdit`, `FormsList`, `FormEdit`. Application 193→203.
+
+**T056.d — Trainees + Assessors + Invitations + EntrustmentScales cluster** (commit `8ad0788`). 15 handlers. Trainee scope via `TraineeProfile.Curriculum.SubSpeciality.Speciality.InstitutionId`; assessors via `AssessorProfile.InstitutionId`; invitations via `Invitation.InstitutionId`. EntrustmentScales remain Administrator-only for writes (global resource, no institution column). 7 Razor pages swapped. `TraineeScopeGuardTests` + `InvitationScopeGuardTests` (3+3) + 1 EntrustmentScale rejection test. Application 203→210.
+
+**T056.e — Audit + SSO + NavMenu refresh + scenario-doc revert** (commit `ec6d6d1`). 5 handlers. Audit filters via `AuditEntry.InstitutionId` (InstitutionalAdmin sees own + global no-institution events). SSO filters via `SsoGroupRoleMapping.InstitutionId`. NavMenu InstitutionalAdmin block expanded from 3 placeholder links to 11 real routes. New `/admin/specialities` redirect page resolves caller's institution. Scenario doc reverted: Phase 1.B warning replaced with "Resolved by T056", Step 1.8 role no longer says bootstrap, finding #1 marked closed. `AuditScopeGuardTests` + `SsoScopeGuardTests` (3+2) + 1 added rejection test. Application 210→216.
+
+**T051 — invitation URL surface + dev SMTP + status fix** (commit `799cc1a`). Pure UI/config: `InvitationsList.IssueAsync` captures the just-issued token and renders a one-shot info Alert with the full `/account/register?token=…` URL below the form (copy-friendly `<code>`, "shown only once" warning). Status text replaced. `appsettings.Development.json` SMTP port 1025 → 25 (Papercut default). No schema change.
+
+**T051.b deferred** (FirstName/LastName columns on Invitation — needs a hand-written migration + Designer + snapshot update; only enables pre-fill on accept-invitation form, nice-to-have). Recommended to bundle with T052 which has the same migration overhead.
+
+---
+
+### T056.a session detail (kept for reference)
+
+**T056.a — Foundations + Institutions/Speciality/SubSpec cluster** (commit `41def8a`).
 
 Foundations:
 - New `AdministratorOrInstitutionalAdmin` policy in `AuthorizationPolicies.cs`.
@@ -45,21 +79,9 @@ NavMenu: deferred to T056.e — exposing nav links to half-guarded pages would m
 
 Browser verification: skipped at the request-flow level. T056 has no UI/UX changes for the Administrator role; the InstitutionalAdmin path requires T056.b/c/d/e to be testable end-to-end. Scope-guard tests assert the handler behavior at the unit-test layer.
 
-Commits in chronological order:
-- `c07b71a` — docs: record raw Playwright audit findings + first cut of `scenario-act1-fixes-plan.md` (T051–T055 sketched)
-- `96104a1` — T050: scenario doc absorbs audit findings; Phase 1.A/1.B swap; workflow JSON corrected; 9 small fixes
-- `d76c448` — docs: record T050 hash
-- `d8a7557` — docs: end-to-end Playwright play-through; raises T056 + bumps T051/T055 scope
-- `1d76c3c` — docs: record play-through hash
-- `6eaef56` — T055: always-visible Publish button + post-save SPA redirect on ActivityType edit
-- `ce6e933` — docs: record T055 hash
-- `4aeaa3d` — T053: context-aware Scope Id picker on ActivityType Metadata tab
-- `5461d02` — docs: record T053 hash
-- `ef02268` — T054: admin CRUD for `EntrustmentScale` + `EntrustmentLevel`; 5 new tests; closes the only true feature gap
-- `faea050` — docs: record T054 hash
-- `c66a5be` — docs: session-end wrap (Step 1.7 reverted to canonical create-scale, plan + handoff refreshed)
+---
 
-Test status at session end: Application 174/174, Architecture 19/19, Web 38/38, build clean.
+## Previous session (2026-05-24 — Act 1 fix-up)
 
 **T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit `ef02268`). New `/admin/entrustment-scales` list + `/admin/entrustment-scales/{new|id}` edit pages. Three MediatR commands (Create/Update/Delete) + one new query (`GetEntrustmentScaleById`). Delete enforces referential integrity across four reference paths (`AssessmentForm`, `MsfQuestion`, `PendingEntrustmentDecision`, `EntrustmentDecision`) — no soft-delete needed. Update diffs incoming levels against existing: insert new, update matched-by-id, delete removed (only if no entrustment-decision refs). Nav entry between Activity Types and Scheduled Jobs (`award` icon). 5 new Application tests cover create/dup-reject/update-with-add-rename-remove/delete-unused/delete-rejects-referenced. Build 0 warnings 0 errors; Application 169→174, Architecture 19/19, Web 38/38. Browser-verified end-to-end: created a "Paed General Entrustment Scale" with 5 ten-Cate levels, renamed a level, deleted the scale cleanly. Closes the "only true feature gap" from the Act 1 audit; Step 1.7's workaround can now be reverted to the canonical create-scale prescription as a follow-up.
 
