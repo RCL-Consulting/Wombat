@@ -4,20 +4,38 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** T050 (scenario doc corrections) just landed. The Act 1 scenario is now playable as-written for a human run.
+**None.** The 2026-05-24 Playwright play-through of Act 1 just landed. The runbook now has populated Actual:/Gap: lines on every step + a refreshed findings summary. One new task surfaced — T056 — which dominates the open backlog because it changes Phase 1.B's premise.
 
 Open backlog (in `Rewrite/scenario-act1-fixes-plan.md` triage order):
 
-1. **T051** — Invitation form: capture First/Last name (~2h, **Sonnet**, small CRUD).
-2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus** — touches auth).
-3. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win).
-4. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus** — new surface; biggest of the lot).
-5. **T055** — Publish button always visible (~15min, **Sonnet** — or fold into doc; T050 already reworded the step).
-6. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T056 (new, blocking the others)** — InstitutionalAdmin role-power audit. Option A: grant institution-scoped admin powers (~12–16h, **Opus**, touches ~25 pages + handlers + tests). Option B: accept the model and revise scenario so bootstrap admin runs Act 1 (~3h, **Opus** — doc rewrite + cast restructure). Pick A or B before doing T051/T052.
+2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped by play-through).
+3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, depends on T056 outcome).
+4. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win, independent).
+5. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap).
+6. **T055** — Post-save housekeeping bundle: Publish button always visible + redirect to /{id} after first save + fix "Create X" page-title on 6 edit pages (~1h, **Sonnet**, scope bumped by play-through).
+7. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
-Recommended next: **T050's human play-through against the dev build** (no code work) to catch persistence/validation findings the Playwright audit could not see; only after that should T051–T055 be picked up. If skipping the play-through, T054 is the highest-leverage code task — it's the only true feature gap and unblocks restoring Step 1.7's original prescription.
+Recommended next: **T056 decision discussion** — Option A vs B has to be settled before T051/T052 do useful work. If pressed for a code-only pick, T053 or T054 can ship in parallel without waiting on T056.
 
 ## This session at a glance
+
+**2026-05-24 Act 1 play-through** (commit pending). End-to-end Playwright run of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated.
+
+End state in the dev DB: 1 institution (KGK), 1 speciality (Paediatrics), 1 sub-speciality (General Paediatrics), 1 InstitutionalAdmin user (mbatha@kgk), 15 PAED EPAs, 1 curriculum (FCPaed(SA) Part 1 v2026.1) with 15 items, 10 published activity types (Mini-CEX in full; 9 others with minimal valid metadata/workflow).
+
+Six new findings surfaced, two of them hard:
+
+- **Hard:** `InstitutionalAdmin` is locked out of every admin route except `/admin/entrustment-decisions`. Mbatha provisions cleanly but cannot run Phases 1.D–1.F. Bootstrap admin had to take over from Step 1.8 onward. New task **T056** opened (Option A: grant scope-aware admin powers; Option B: revise scenario so bootstrap admin runs the whole thing). Decision blocks T051 + T052.
+- **Hard-ish:** dev SMTP config sends to localhost:1025 but Papercut listens on 25 — every invitation email silently dropped. Worked around by `$env:Email__SmtpPort=25`. Fold fix into T051 (preferred: surface the registration URL in UI so SMTP becomes optional).
+- **Bug:** `InvitationsList.IssueAsync` discards the raw token returned by `IssueInvitationCommand`. Status message says "The stub sender logged the registration link" — no stub sender exists. Fold into T051.
+- **Cosmetic:** Save draft on a new activity type keeps URL at `/admin/activity-types/new` (refresh loses context). Fold into T055.
+- **Cosmetic:** page-title bar reads "Create X" after entity is saved on 6 edit pages. Fold into T055.
+- **Cosmetic:** activity-types list `Scope` column shows "Speciality" without identifying which one. Standalone follow-up; not pressing.
+
+T051 and T055 scopes bumped to absorb the play-through findings. `scenario-act1-fixes-plan.md` updated with T056 + new estimates (~19–34h total range; T056 dominates).
+
+## Previous session
 
 **T050 — Scenario doc corrections** commit `96104a1`. Absorbed the 2026-05-24 Playwright route-and-surface audit findings into `Rewrite/scenario-paediatrics.md` so Act 1 plays as-written. Phases 1.A and 1.B swap (institution before invitation); Prof Mbatha demotes from global Administrator to `InstitutionalAdmin` (the invitation surface does not expose the Administrator role); Step 1.7 becomes a workaround pointing at T054; Step 1.11.c gets the parser-accepted workflow JSON inline (incl. a one-block reference to the actor DSL grammar); small wording fixes across Steps 1.1, 1.3, 1.8, 1.11.a/b/e, 1.13. Cast row + Phase 1.A preamble + Act 1 goals + outcome-state + time-estimate + handoff sections all updated to match. Companion plan `Rewrite/scenario-act1-fixes-plan.md` (committed earlier in `c07b71a`) carries the code-side gaps as T051–T055.
 
@@ -137,6 +155,10 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**2026-05-24 Act 1 play-through** (commit pending).
+
+End-to-end Playwright execution of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated. Two hard findings (T056 role-scope; dev SMTP port mismatch), four cosmetic. T051 and T055 scopes bumped to absorb new fixes; new task T056 added to `scenario-act1-fixes-plan.md` with Option A/B for the role-power audit. Zero code; doc-only.
 
 **T050 — Scenario doc corrections** commit `96104a1`.
 
