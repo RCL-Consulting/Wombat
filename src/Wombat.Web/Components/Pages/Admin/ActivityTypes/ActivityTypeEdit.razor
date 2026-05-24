@@ -2,6 +2,9 @@
 @page "/admin/activity-types/{ActivityTypeId:int}"
 @attribute [Authorize(Roles = WombatRoles.Administrator)]
 @using Wombat.Domain.Activities
+@using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList
+@using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList
+@using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
@@ -64,16 +67,25 @@
             <input id="type-name" class="form-control" @bind="_name" />
           </FormField>
           <FormField Label="Scope" InputId="type-scope" Required="true">
-            <select id="type-scope" class="form-select" @bind="_scope">
+            <select id="type-scope" class="form-select" value="@_scope" @onchange="OnScopeChanged">
               @foreach (var scope in Enum.GetValues<ActivityScope>())
               {
                 <option value="@scope">@scope</option>
               }
             </select>
           </FormField>
-          <FormField Label="Scope Id" InputId="type-scope-id">
-            <input id="type-scope-id" class="form-control" type="number" @bind="_scopeIdText" />
-          </FormField>
+          @if (_scope != ActivityScope.Global)
+          {
+            <FormField Label="@ScopeIdLabel" InputId="type-scope-id" Required="true">
+              <select id="type-scope-id" class="form-select" @bind="_scopeIdText">
+                <option value="">@ScopeIdPlaceholder</option>
+                @foreach (var option in ScopeIdOptions)
+                {
+                  <option value="@option.Id">@option.Label</option>
+                }
+              </select>
+            </FormField>
+          }
           <FormField Label="Description" InputId="type-description" FullWidth="true">
             <textarea id="type-description" class="form-control" rows="4" @bind="_description"></textarea>
           </FormField>
@@ -249,6 +261,9 @@
 
   private ActivityTypeEditorDto? _editor;
   private BuilderSchemaModel _builderSchema = new();
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private bool _loading = true;
   private bool _busy;
   private string? _loadError;
@@ -273,6 +288,47 @@
   private string PageTitleText => (_editor?.Id ?? 0) > 0 ? $"Edit {_name}" : "New activity type";
   private string CurrentDraftSchemaJson => _builderSchema.ToJson();
 
+  private string ScopeIdLabel => _scope switch
+  {
+    ActivityScope.Institution => "Institution",
+    ActivityScope.Speciality => "Speciality",
+    ActivityScope.SubSpeciality => "Sub-speciality",
+    _ => "Scope target"
+  };
+
+  private string ScopeIdPlaceholder => _scope switch
+  {
+    ActivityScope.Institution => "Select institution",
+    ActivityScope.Speciality => "Select speciality",
+    ActivityScope.SubSpeciality => "Select sub-speciality",
+    _ => "Select"
+  };
+
+  private IEnumerable<ScopeIdOption> ScopeIdOptions => _scope switch
+  {
+    ActivityScope.Institution => _institutions
+      .OrderBy(institution => institution.Name)
+      .Select(institution => new ScopeIdOption(institution.Id, institution.Name)),
+    ActivityScope.Speciality => from speciality in _specialities
+      join institution in _institutions on speciality.InstitutionId equals institution.Id
+      orderby institution.Name, speciality.Name
+      select new ScopeIdOption(speciality.Id, $"{institution.Name} / {speciality.Name}"),
+    ActivityScope.SubSpeciality => from subSpeciality in _subSpecialities
+      join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
+      join institution in _institutions on speciality.InstitutionId equals institution.Id
+      orderby institution.Name, speciality.Name, subSpeciality.Name
+      select new ScopeIdOption(subSpeciality.Id, $"{institution.Name} / {speciality.Name} / {subSpeciality.Name}"),
+    _ => []
+  };
+
+  private sealed record ScopeIdOption(int Id, string Label);
+
+  private void OnScopeChanged(ChangeEventArgs args)
+  {
+    _scope = Enum.TryParse<ActivityScope>(args.Value?.ToString(), out var parsed) ? parsed : ActivityScope.Global;
+    _scopeIdText = string.Empty;
+  }
+
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
@@ -283,6 +339,9 @@
     try
     {
       _editor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(ActivityTypeId));
+      _institutions = await Sender.Send(new GetInstitutionsListQuery());
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
       LoadEditorState(_editor);
       RefreshWarnings();
     }

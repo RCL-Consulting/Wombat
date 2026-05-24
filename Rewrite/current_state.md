@@ -4,16 +4,17 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** T055 (post-save housekeeping on ActivityType edit) just landed; T056 chosen as Option A (grant scope-aware admin powers) per 2026-05-24 user direction. Remaining triage:
+**None.** T053 just landed. Remaining triage:
 
-1. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win, independent of T056). **Recommended next**.
-2. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap; independent of T056).
-3. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope.
-4. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
-5. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
-6. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap; independent of T056). **Recommended next** — independent of T056 and closes Step 1.7's workaround.
+2. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope.
+3. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
+4. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
+5. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
+
+**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit pending). Replaced the raw numeric `Scope Id` spinbutton with a `<select>` whose options come from the relevant lookup list (institutions / specialities / sub-specialities) based on the selected Scope. Triple-path labels match the EPA + Curriculum edit convention. Scope=Global hides the field entirely; changing scope clears the stale id so an institution-id can't carry over into a speciality picker. Only `ActivityTypeEdit.razor` touched (markup + 3 new lookup lists + projection helpers + scope-change handler). Round-trip verified on the existing `mini_cex_paed` (Scope=Speciality, ScopeId=2) — the picker pre-selects `Kgosi Kgari Teaching Hospital / Paediatrics` cleanly. Build clean, 38/38 Web tests pass.
 
 **T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`). Two of three originally-bundled items shipped; the third turned out to be a Playwright snapshot-timing false alarm. Touched only `ActivityTypeEdit.razor`. Browser-verified end-to-end.
 
@@ -158,6 +159,8 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit pending). Single-file change in `ActivityTypeEdit.razor`. Numeric Scope Id spinbutton replaced with cascading-context `<select>`: hidden when Scope=Global, single-level picker for Institution, joined "Institution / Speciality" labels for Speciality, triple-path labels for SubSpeciality. Scope-change handler clears stale id. Round-trip on existing entity verified. Build clean, 38/38 Web tests pass.
 
 **T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`).
 
