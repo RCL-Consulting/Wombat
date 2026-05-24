@@ -90,22 +90,19 @@ Three small UI fixes that surfaced in the 2026-05-24 play-through, grouped becau
 
 ```
 T050 done (commit 96104a1)
-2026-05-24 play-through done (commit `d8a7557`) — surfaced T056, bumped T051/T055 scope
+2026-05-24 play-through done (commit d8a7557) — surfaced T056, bumped T051/T055 scope
+T055 done (commit 6eaef56) — Publish always visible + post-save SPA redirect
+T053 done (commit 4aeaa3d) — context-aware Scope Id picker
+T054 done (commit ef02268) — EntrustmentScale admin CRUD
         ↓
-T056    (decision required first — Mbatha's premise depends on it)
+T056    (Option A chosen — grant InstitutionalAdmin scope-aware admin powers)
         ↓
 T051    (invitation form: name capture + URL surface + dev SMTP tidy)
         ↓
-T052    (re-expose Administrator role on invitation; outcome depends on T056)
-        ↓
-T053    (Scope Id picker; UX win, independent of T056)
-        ↓
-T054    (EntrustmentScale admin CRUD; only true feature gap)
-        ↓
-T055    (post-save housekeeping bundle)
+T052    (re-expose Administrator role on invitation)
 ```
 
-**Recommended order: T056 first** — its Option A/B choice changes Phase 1.B's whole premise. Holding T051/T052 until after T056 avoids wasted invitation-form work. T053, T054, T055 are independent and can run in parallel.
+**Remaining order: T056 → T051 → T052.** T056 is the largest of the remaining tasks (~12–16h Option A); holding T051/T052 until after it lands avoids touching the invitation surface twice. The smaller independent tasks (T053, T054, T055) have already shipped, so the post-T054 backlog is strictly the auth and invitation work.
 
 ## Documented compromises (no code, doc only)
 
@@ -118,13 +115,13 @@ T055    (post-save housekeeping bundle)
 | Task | Effort | Status |
 |---|---|---|
 | T050 | 1h | ✅ done (commit `96104a1`) |
-| T051 | 3h | scope bumped by play-through |
-| T052 | 3h | depends on T056 outcome |
-| T053 | 2h | |
-| T054 | 6–8h | |
-| T055 | 1h | scope bumped by play-through |
-| T056 | 3h (Option B) / 12–16h (Option A) | **new — raised by play-through** |
-| **Total** | **~19–34h** (T056 dominates the range) | |
+| T053 | 2h | ✅ done (commit `4aeaa3d`) |
+| T054 | 6–8h | ✅ done (commit `ef02268`) |
+| T055 | 1h | ✅ done (commit `6eaef56`) |
+| T056 | 12–16h | ⏳ pending (Option A chosen by user 2026-05-24; Option B no longer in scope) |
+| T051 | 3h | ⏳ pending (after T056) |
+| T052 | 3h | ⏳ pending (after T056) |
+| **Total remaining** | **~18–22h** | T056 dominates |
 
 ## What this plan does *not* cover
 
@@ -134,4 +131,6 @@ T055    (post-save housekeeping bundle)
 
 ## Suggested handoff after this plan lands
 
-If all six tasks ship, the Paediatrics scenario Act 1 is playable end-to-end against a clean dev install in ~2.5 hours of clicking, and Acts 2–5 can be drafted with confidence in the same step-format / gap-finding model. If only T050 ships, the scenario is playable with documented workarounds for the two structural gaps (invitation role, entrustment scale), which is the cheapest path to having a working runbook.
+If all six tasks ship, the Paediatrics scenario Act 1 is playable end-to-end against a clean dev install in ~2.5 hours of clicking, and Acts 2–5 can be drafted with confidence in the same step-format / gap-finding model.
+
+**As of 2026-05-24:** T050, T053, T054, T055 shipped; Step 1.7 reverted to canonical create-scale prescription. Scenario plays end-to-end as bootstrap admin (Phases 1.A–1.F) — only Phase 1.B's intent (Mbatha as InstitutionalAdmin owning the rest of setup) waits on T056. Phases 1.C–1.F currently run under the bootstrap admin as a documented workaround inside the doc; T056 will let Mbatha take over from Phase 1.B as originally intended.

@@ -4,16 +4,32 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** T054 just landed. Remaining triage:
+**None.** The session that ran the audit + T050 + T053 + T054 + T055 ended after wrapping up doc updates. Remaining triage (from `Rewrite/scenario-act1-fixes-plan.md`):
 
-1. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope. **Recommended next** — largest of the remaining tasks; tackling it next means T051/T052 can build on the result.
-2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
+1. **T056** — InstitutionalAdmin role-power audit, **Option A** (chosen by user 2026-05-24): grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Largest of the remaining tasks; tackling it next means T051/T052 can build on the result. Until this lands, Phases 1.D–1.F of the Paediatrics scenario continue to run as bootstrap admin per the docs.
+2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped by play-through; after T056 to avoid double-touching the invitation surface).
 3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
 4. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
-**Note (post-T054):** Step 1.7 in `Rewrite/scenario-paediatrics.md` still describes the workaround. It can now be reverted to the canonical "create Paed General Entrustment Scale" prescription — minor follow-up, not blocking.
-
 ## This session at a glance
+
+**Session 2026-05-24 — scenario gap fix-up.** Started with a Playwright route-and-surface audit of the Paediatrics scenario, then played it end-to-end, then closed four of the six gap-fix tasks the audit + play-through surfaced. Net result: Act 1 of `scenario-paediatrics.md` plays cleanly under the bootstrap admin, with only T056 (InstitutionalAdmin role-power audit) blocking the canonical "Mbatha owns the setup" framing. The session ended after also reverting Step 1.7 to its canonical create-scale prescription (since T054 shipped the admin UI).
+
+Commits in chronological order:
+- `c07b71a` — docs: record raw Playwright audit findings + first cut of `scenario-act1-fixes-plan.md` (T051–T055 sketched)
+- `96104a1` — T050: scenario doc absorbs audit findings; Phase 1.A/1.B swap; workflow JSON corrected; 9 small fixes
+- `d76c448` — docs: record T050 hash
+- `d8a7557` — docs: end-to-end Playwright play-through; raises T056 + bumps T051/T055 scope
+- `1d76c3c` — docs: record play-through hash
+- `6eaef56` — T055: always-visible Publish button + post-save SPA redirect on ActivityType edit
+- `ce6e933` — docs: record T055 hash
+- `4aeaa3d` — T053: context-aware Scope Id picker on ActivityType Metadata tab
+- `5461d02` — docs: record T053 hash
+- `ef02268` — T054: admin CRUD for `EntrustmentScale` + `EntrustmentLevel`; 5 new tests; closes the only true feature gap
+- `faea050` — docs: record T054 hash
+- (session-end commit) — docs: revert scenario Step 1.7 to canonical create-scale prescription + plan/handoff updates
+
+Test status at session end: Application 174/174, Architecture 19/19, Web 38/38, build clean.
 
 **T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit `ef02268`). New `/admin/entrustment-scales` list + `/admin/entrustment-scales/{new|id}` edit pages. Three MediatR commands (Create/Update/Delete) + one new query (`GetEntrustmentScaleById`). Delete enforces referential integrity across four reference paths (`AssessmentForm`, `MsfQuestion`, `PendingEntrustmentDecision`, `EntrustmentDecision`) — no soft-delete needed. Update diffs incoming levels against existing: insert new, update matched-by-id, delete removed (only if no entrustment-decision refs). Nav entry between Activity Types and Scheduled Jobs (`award` icon). 5 new Application tests cover create/dup-reject/update-with-add-rename-remove/delete-unused/delete-rejects-referenced. Build 0 warnings 0 errors; Application 169→174, Architecture 19/19, Web 38/38. Browser-verified end-to-end: created a "Paed General Entrustment Scale" with 5 ten-Cate levels, renamed a level, deleted the scale cleanly. Closes the "only true feature gap" from the Act 1 audit; Step 1.7's workaround can now be reverted to the canonical create-scale prescription as a follow-up.
 

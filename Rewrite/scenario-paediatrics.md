@@ -86,7 +86,7 @@ Gap:
 **Act 1 goal:**
 1. Institution, speciality, and sub-speciality exist.
 2. Prof Mbatha holds an `InstitutionalAdmin` account scoped to KGK.
-3. The Paediatric entrustment ladder is in place (seeded global scale reused until T054).
+3. The Paed General Entrustment Scale is published with 5 ten-Cate-style levels.
 4. 15 General Paediatrics EPAs are defined.
 5. Curriculum "FCPaed(SA) Part 1 — 2026.1" is published with 15 curriculum items.
 6. 10 activity types are published and ready for registrars to submit against in Act 3.
@@ -156,17 +156,25 @@ Gap: **Dev SMTP port mismatch.** `src/Wombat.Web/appsettings.Development.json` h
 
 > **Dev-mode note:** `DevUserSeeder` does not create Prof Mbatha. Use the invitation flow above. If no SMTP catcher is running, start one (Papercut SMTP for Windows desktop, smtp4dev / Mailhog as alternatives) before issuing the invitation. Confirm the listening port matches `Email:SmtpPort` in `appsettings.Development.json` (currently `1025`) — override with `$env:Email__SmtpPort` if necessary.
 
-## Phase 1.C — Entrustment scale (workaround until T054)
+## Phase 1.C — Entrustment scale
 
-Wombat's `EntrustmentScale` entity holds the institution's rating ladder. The rewrite has not yet built an admin CRUD surface for it; the only writer today is `DataSeeder` (`src/Wombat.Infrastructure/Persistence/DataSeeder.cs:113-133`), which seeds a single 5-level scale at boot. T054 (in `scenario-act1-fixes-plan.md`) tracks building the admin surface; until it ships, Paediatrics reuses the seeded scale.
+Wombat's `EntrustmentScale` entity holds the rating ladder. Paediatrics will use a 5-level ten Cate-derived scale.
 
-### Step 1.7 — Adopt the seeded entrustment scale
-Role: bootstrap Administrator (no action; reference only)
-Route: n/a (no admin surface to visit)
-Action: None in this revision. Note in the scenario log that Paediatrics adopts the seeded `5-level` scale: `Observe only` / `Direct supervision` / `Indirect supervision` / `Independent` / `Supervises others`. These map closely enough to the ten-Cate ladder the runbook originally specified to support the rest of Act 1 without surprises.
-Expected: `GetEntrustmentScalesListQuery` returns one scale with 5 ordered levels. Form/activity-type editors that bind to a scale will pick this one up by default.
-Actual: No action taken; the seeded scale was confirmed in place per the `DataSeeder` source. Activity-type Mini-CEX schema and ratings were built without explicit catalogue keys (Step 1.11.b's `Catalogue key` field left blank) — the system did not block save or publish.
-Gap: **Open — tracked by T054.** When T054 lands, restore the original Step 1.7 (create `Paed General Entrustment Scale` with the 5 ten-Cate labels) and treat the seeded scale as a development seed only.
+### Step 1.7 — Create entrustment scale
+Role: bootstrap Administrator
+Route: `/admin/entrustment-scales/new` (click `Create scale` from the `/admin/entrustment-scales` list).
+Action: Name `Paed General Entrustment Scale`; Description `5-level ten-Cate ladder for FCPaed(SA) Part 1.`; click `Add level` until five rows are present, then fill each row:
+1. Label `Observation only`, Description `Trainee observes; does not participate actively.`
+2. Label `Direct supervision`, Description `Trainee performs with assessor physically present.`
+3. Label `Indirect supervision`, Description `Trainee performs independently; assessor available nearby.`
+4. Label `Unsupervised`, Description `Trainee performs unaided; assessor reviews outcomes.`
+5. Label `Can supervise others`, Description `Trainee is competent to teach and supervise junior colleagues.`
+The form auto-assigns `Order` based on row position; use `Up` / `Down` if you need to re-sort. Click `Save`. The URL flips to `/admin/entrustment-scales/{id}` (typically `/2` since the seeded `O-R Scale` occupies id `1`).
+Expected: Status banner "Entrustment scale saved." Scale appears in the `/admin/entrustment-scales` list with `Levels = 5`. The scale is now available to any assessment form, activity-type rating field, or committee-review entrustment-decision picker.
+Actual:
+Gap:
+
+> **About the seeded scale:** `DataSeeder` boots with one global `O-R Scale` for development convenience. Paediatrics could reuse it, but the labels differ slightly from the canonical ten-Cate ladder the curriculum cites — easier to create the Paed-specific scale and leave the seeded one alone.
 
 ## Phase 1.D — Define 15 General Paediatrics EPAs
 
@@ -270,7 +278,7 @@ Action: The builder loads with a default `details` section containing a single `
 - Key `setting`, Label `Clinical setting`, Type `Choice`, Options `Inpatient\nOutpatient\nEmergency\nHigh care\nNeonatal`, Required on.
 - Key `patient_age_months`, Label `Patient age (months)`, Type `Number`, Required on.
 - Key `presenting_complaint`, Label `Presenting complaint`, Type `Long text`, Required on.
-Click `Add section` again for the ratings: Key `ratings`, Title `Clinical performance ratings`. Add six fields each Type `Scale`, Required on, Catalogue key left blank (the seeded scale is picked up automatically; T054 will revisit this when per-institution scales become possible):
+Click `Add section` again for the ratings: Key `ratings`, Title `Clinical performance ratings`. Add six fields each Type `Scale`, Required on. Pick the appropriate `Catalogue key` if your build wires scale binding through the catalogue; otherwise leave blank to fall back to the institution's default scale (the `Paed General Entrustment Scale` created in Step 1.7):
 - `history_taking` / History taking
 - `examination` / Physical examination
 - `clinical_reasoning` / Clinical reasoning
@@ -373,7 +381,7 @@ After Act 1 completes cleanly, the database contains:
 - 1 institution (`Kgosi Kgari Teaching Hospital`).
 - 1 speciality (`Paediatrics`).
 - 1 sub-speciality (`General Paediatrics`).
-- 1 entrustment scale — the seeded global 5-level one, reused by Paediatrics until T054 ships.
+- 2 entrustment scales — the seeded `O-R Scale` (development default) plus the new `Paed General Entrustment Scale` (5 ten-Cate levels) created in Step 1.7.
 - 15 EPAs scoped to General Paediatrics.
 - 1 curriculum (`FCPaed(SA) Part 1` v2026.1) with 15 items.
 - 10 published activity types scoped to Paediatrics speciality.
@@ -387,11 +395,11 @@ Nothing has been asked of consultants or registrars yet. No activities exist. No
 |---|---|
 | 1.A: Institution + speciality + sub-speciality (bootstrap admin) | 10 |
 | 1.B: Prof Mbatha provisioned (invitation + accept) | 10 |
-| 1.C: Entrustment scale (workaround — no action) | 0 |
+| 1.C: Entrustment scale (create + 5 levels) | 8 |
 | 1.D: 15 EPAs | 25 (≈90s each) |
 | 1.E: Curriculum + 15 items | 20 |
 | 1.F: 10 activity types | 90 (15 min × 6 once the pattern is known + worked example time) |
-| **Total** | **~155 minutes** — revise in the plan after the next play-through. Phase 1.F's 90-minute estimate is conservative until the actor-DSL translations in Step 1.12 are validated; expect a 10–20-minute overhead the first time the parser rejects a transition. |
+| **Total** | **~163 minutes** — revise in the plan after the next play-through. Phase 1.F's 90-minute estimate is conservative until the actor-DSL translations in Step 1.12 are validated; expect a 10–20-minute overhead the first time the parser rejects a transition. |
 
 ## Act 1 findings summary
 
@@ -415,7 +423,7 @@ Populated 2026-05-24 from an end-to-end Playwright play-through of the scenario 
 - **T051** — first/last name capture on the invitation form, **plus** the IssueAsync fixes from finding #3 (surface registration URL + correct the status message).
 - **T052** — re-expose Administrator role with null institution.
 - **T053** — context-aware picker for `Scope Id` on the activity-type Metadata tab.
-- **T054** — admin CRUD for `EntrustmentScale`.
+- **T054** — admin CRUD for `EntrustmentScale` (shipped commit `ef02268`; Step 1.7 now reflects the canonical create-scale prescription).
 - **T055** — Publish button always visible with disabled state, **plus** the URL-stickiness fix from finding #4 and the "Create X" page-title fix from finding #5 (group as a "post-save housekeeping" task).
 - **T056 (new)** — InstitutionalAdmin role-power audit per finding #1. Biggest open question because it changes the scenario's premise.
 
