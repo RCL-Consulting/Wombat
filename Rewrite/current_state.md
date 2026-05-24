@@ -15,7 +15,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## This session at a glance
 
-**T055 — Publish button + post-save redirect on ActivityType edit** (commit pending). Two of three originally-bundled items shipped; the third turned out to be a Playwright snapshot-timing false alarm. Touched only `ActivityTypeEdit.razor`. Browser-verified end-to-end.
+**T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`). Two of three originally-bundled items shipped; the third turned out to be a Playwright snapshot-timing false alarm. Touched only `ActivityTypeEdit.razor`. Browser-verified end-to-end.
 
 - `Publish` now renders unconditionally on `/admin/activity-types/{new|id}`, with `disabled` + tooltip "Save a draft to publish." until a draft exists. `Discard draft` still gates on having a draft.
 - First `Save draft` on a brand-new type now navigates to `/admin/activity-types/{id}` (SPA-style, `forceLoad: false`). Previously the URL stuck at `/new`, so a refresh wiped the just-saved type from view.
@@ -159,7 +159,7 @@ Across six clusters:
 
 ## Last completed
 
-**T055 — Publish button + post-save redirect on ActivityType edit** (commit pending).
+**T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`).
 
 One Razor file touched. Publish renders unconditionally with disabled+tooltip until a draft exists; first Save draft on a brand-new type SPA-redirects to `/admin/activity-types/{id}`. Browser-verified end-to-end. The originally-bundled "Create X" page-title fix was dropped — 5/6 admin edit pages already have the correct conditional `<PageTitle>` and direct navigation shows "Edit Institution" correctly; the play-through screenshots had been a Playwright snapshot-timing race. Build clean, 38/38 Web tests pass.
 
@@ -264,6 +264,8 @@ Verification:
 
 ## Last verified commits
 
+- `6eaef56` — T055 (always-visible Publish button + post-save URL redirect on ActivityType edit; one Razor file; build clean, 38/38 Web tests pass)
+- `1d76c3c` — docs: record d8a7557 commit hash in handoff + plan
 - `d8a7557` — docs: Act 1 Playwright play-through findings + T056 raised (every step's Actual/Gap populated; 6 findings; T051/T055 scope bumped; new T056 = InstitutionalAdmin role-power audit)
 - `96104a1` — T050 (scenario doc corrections — Phase swap, role demotion, Step 1.7 workaround, Step 1.11.c JSON correction + actor DSL, plus 9 small wording fixes; docs-only)
 - `c07b71a` — docs: record Act 1 Playwright audit findings + scenario-act1-fixes-plan.md
