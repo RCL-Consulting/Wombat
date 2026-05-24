@@ -98,7 +98,7 @@ T054 done (commit ef02268) — EntrustmentScale admin CRUD
 T056.a  done (Option A foundations + Institutions/Speciality/SubSpec cluster)
 T056.b  done (EPAs + Curricula cluster)
 T056.c  done (ActivityTypes + Forms cluster)
-T056.d  pending (Trainees + Assessors + Invitations + EntrustmentScales cluster)
+T056.d  done (Trainees + Assessors + Invitations + EntrustmentScales cluster)
 T056.e  pending (Audit + SSO + NavMenu refresh + scenario doc revert)
         ↓
 T051    (invitation form: name capture + URL surface + dev SMTP tidy)
@@ -106,7 +106,7 @@ T051    (invitation form: name capture + URL surface + dev SMTP tidy)
 T052    (re-expose Administrator role on invitation)
 ```
 
-**Remaining order: T056.b → T056.c → T056.d → T056.e → T051 → T052.** T056 turned out to be too large to land in one session and is being landed in five clusters; each cluster ships a coherent feature group's scope guards plus tests. T051/T052 stay queued behind T056.e because they touch invitation surfaces that T056.d will already have modified.
+**Remaining order: T056.e → T051 → T052.** T056 turned out to be too large to land in one session and is being landed in five clusters; each cluster ships a coherent feature group's scope guards plus tests. T051/T052 stay queued behind T056.e because they touch invitation surfaces that T056.d will already have modified.
 
 ## Documented compromises (no code, doc only)
 
@@ -125,7 +125,7 @@ T052    (re-expose Administrator role on invitation)
 | T056.a | ~3h | ✅ done (commit `41def8a` — foundations + Institutions/Speciality/SubSpec cluster; 14 handlers + 14 pages + 9 tests) |
 | T056.b | ~3h | ✅ done (commit `9e3bc0a` — EPAs + Curricula cluster; 13 handlers + 8 pages + 10 tests) |
 | T056.c | ~3h | ✅ done (ActivityTypes + Forms cluster; 13 handlers + 5 pages + 10 tests) |
-| T056.d | ~3–4h | ⏳ pending (Trainees + Assessors + Invitations + EntrustmentScales cluster) |
+| T056.d | ~3h | ✅ done (commit `8ad0788` — Trainees + Assessors + Invitations + EntrustmentScales cluster; 15 handlers + 7 pages + 7 tests) |
 | T056.e | ~3–4h | ⏳ pending (Audit + SSO + NavMenu refresh + scenario doc revert) |
 | T051 | 3h | ⏳ pending (after T056.e) |
 | T052 | 3h | ⏳ pending (after T056.e) |
