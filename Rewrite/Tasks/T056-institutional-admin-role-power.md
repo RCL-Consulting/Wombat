@@ -33,8 +33,8 @@ on the original `[Authorize(Policy = "Administrator")]` to preserve safety.
 |---------|-------|--------|
 | **T056.a** | Foundations + Institutions / Specialities / SubSpecialities | ✅ shipped (commit `41def8a`) |
 | **T056.b** | EPAs + Curricula | ✅ shipped (commit `9e3bc0a`) |
-| **T056.c** | ActivityTypes + Forms | ✅ shipped this session |
-| T056.d | Trainees + Assessors + Invitations + EntrustmentScales | ⏳ pending |
+| **T056.c** | ActivityTypes + Forms | ✅ shipped (commit `e1d3737`) |
+| **T056.d** | Trainees + Assessors + Invitations + EntrustmentScales | ✅ shipped (commit `8ad0788`) |
 | T056.e | Audit + SSO + NavMenu refresh + docs final pass | ⏳ pending |
 
 ## Design decisions (locked in by user 2026-05-24)

@@ -4,13 +4,12 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056.a + T056.b + T056.c shipped this session.** Foundations + Institutions/Speciality/SubSpec + EPAs/Curricula + ActivityTypes/Forms clusters. Remaining work tracked in `Rewrite/Tasks/T056-institutional-admin-role-power.md`:
+**T056.a–d shipped this session** (commits `41def8a`, `9e3bc0a`, `e1d3737`, `8ad0788`). Foundations + Institutions/Speciality/SubSpec + EPAs/Curricula + ActivityTypes/Forms + Trainees/Assessors/Invitations/EntrustmentScales clusters. Remaining:
 
-1. **T056.d** — Trainees + Assessors + Invitations + EntrustmentScales cluster (~3–4h, **Opus**).
-2. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
-3. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
-4. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
-5. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
+2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
+3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
+4. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
 
@@ -209,6 +208,8 @@ Across six clusters:
 
 ## Last completed
 
+**T056.d — Trainees/Assessors/Invitations/EntrustmentScales cluster** (commit `8ad0788`). Trainee handlers (ListPendingTrainees, ListTraineesForSpeciality, GetTraineeProfileById, AdmitTrainee, UpdateTraineeProfile, DeactivateTraineeProfile) all principal-aware and scope-filter via `TraineeProfile.Curriculum.SubSpeciality.Speciality.InstitutionId`. Assessor handlers (ListAssessorUsers, ListAssessorsForSpeciality, GetAssessorProfileById, CreateOrUpdateAssessorProfile) filter via `AssessorProfile.InstitutionId`. Invitation handlers (ListActiveInvitations, IssueInvitation, RevokeInvitation) filter via `Invitation.InstitutionId`. EntrustmentScale write commands (Create/Update/Delete) now require Administrator (global entities). 7 admin pages on AdministratorOrInstitutionalAdmin policy. 7 new scope tests. Application 203→210.
+
 **T056.c — ActivityTypes + Forms cluster** (commit `e1d3737`). ActivityType handlers (ListActivityTypesAdmin, GetActivityTypeEditor, SaveActivityTypeDraft, PublishActivityTypeDraft, DiscardActivityTypeDraft) all principal-aware. Form handlers (GetAssessmentFormsList, GetAssessmentFormById, Create, Update, Deactivate, AddCriterion, RemoveCriterion, Link/UnlinkEpa) all principal-aware. ActivityType scope rules: InstitutionalAdmin sees Global+own-institution types (read-only Global), writes blocked at handler. Form scope rules: forms scoped via InstitutionId or SpecialityId or SubSpecialityId; Global forms (all-null) are Administrator-only for writes but readable. New shared `ActivityTypeScopeGuard` static helper in `PublishActivityTypeDraft`. New `FormMappings.EnsureCallerCanWriteAsync` helper. Razor pages updated: `ActivityTypesList`, `ActivityTypeEdit`, `NewActivity` (picker callsite), `FormsList`, `FormEdit`. 4 admin pages moved to `AdministratorOrInstitutionalAdmin` policy. New scope tests: `ActivityTypeScopeGuardTests` (5) + `AssessmentFormScopeGuardTests` (5). Application 193→203. Build clean, all suites pass.
 
 **T056.b — EPAs + Curricula cluster** (commit `9e3bc0a`). EPA handlers (Create, Update, Deactivate, ListEpasForSubSpeciality, GetEpaById) and Curricula handlers (GetCurriculaList, GetCurriculumById, CreateCurriculum, UpdateCurriculum, CloneCurriculumAsNewVersion, AddCurriculumItem, UpdateCurriculumItem, RemoveCurriculumItem) all take `ClaimsPrincipal Principal` and filter/reject by scope. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. Razor pages updated: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` (all five now use `AdministratorOrInstitutionalAdmin` policy), plus call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. New scope tests: `EpaScopeGuardTests` (5) + `CurriculumScopeGuardTests` (5). Application 183→193. Build clean, all suites pass.
@@ -324,6 +325,7 @@ Verification:
 
 ## Last verified commits
 
+- `8ad0788` — T056.d (Trainees + Assessors + Invitations + EntrustmentScales scope guards; 32 files; 15 handlers + 7 razor pages + 7 new scope tests; Application 203/203 → 210/210, Architecture 19/19, Web 38/38, Domain 45/45)
 - `e1d3737` — T056.c (ActivityTypes + Forms scope guards; 20 files; 5 ActivityType + 8 Form handlers + 10 new scope tests + new ActivityTypeScopeGuard and FormMappings helpers; Application 193/193 → 203/203, Architecture 19/19, Web 38/38, Domain 45/45)
 - `9e3bc0a` — T056.b (EPAs + Curricula scope guards; 24 files; 8 EPA + 8 curriculum handlers + 10 new scope tests; Application 183/183 → 193/193, Architecture 19/19, Web 38/38, Domain 45/45)
 - `41def8a` — T056.a (foundations + Institutions/Speciality/SubSpec scope guards; 56 files; new AdministratorOrInstitutionalAdmin policy, 14 principal-aware handlers, 14 razor call sites, 9 scope tests; Application 183/183, Architecture 19/19, Web 38/38, Domain 45/45)
