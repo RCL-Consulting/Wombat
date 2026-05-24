@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Sso;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
 
@@ -23,7 +24,7 @@ public sealed class SsoGroupMappingCommandTests
         var handler = new CreateSsoGroupMappingCommandHandler(db);
 
         var id = await handler.Handle(new CreateSsoGroupMappingCommand(
-            "uct", "group-1", "Surgery", WombatRoles.Trainee, 1, null, null), CancellationToken.None);
+            "uct", "group-1", "Surgery", WombatRoles.Trainee, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         id.Should().BeGreaterThan(0);
         var mapping = await db.SsoGroupRoleMappings.FindAsync(id);
@@ -39,7 +40,7 @@ public sealed class SsoGroupMappingCommandTests
         var handler = new CreateSsoGroupMappingCommandHandler(db);
 
         var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
-            "uct", "group-1", "Admins", WombatRoles.Administrator, 1, null, null), CancellationToken.None);
+            "uct", "group-1", "Admins", WombatRoles.Administrator, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*Administrator*cannot*SSO*");
@@ -60,7 +61,7 @@ public sealed class SsoGroupMappingCommandTests
         await db.SaveChangesAsync();
 
         var handler = new DeleteSsoGroupMappingCommandHandler(db);
-        await handler.Handle(new DeleteSsoGroupMappingCommand(1), CancellationToken.None);
+        await handler.Handle(new DeleteSsoGroupMappingCommand(1, TestPrincipals.Administrator()), CancellationToken.None);
 
         db.SsoGroupRoleMappings.Should().BeEmpty();
     }
@@ -71,9 +72,22 @@ public sealed class SsoGroupMappingCommandTests
         await using var db = CreateDb();
         var handler = new DeleteSsoGroupMappingCommandHandler(db);
 
-        var act = () => handler.Handle(new DeleteSsoGroupMappingCommand(999), CancellationToken.None);
+        var act = () => handler.Handle(new DeleteSsoGroupMappingCommand(999, TestPrincipals.Administrator()), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*not found*");
+    }
+
+    [Fact]
+    public async Task Create_InstitutionalAdmin_RejectsOtherInstitution()
+    {
+        await using var db = CreateDb();
+        var handler = new CreateSsoGroupMappingCommandHandler(db);
+
+        var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
+            "uct", "group-x", "Other", WombatRoles.Trainee, InstitutionId: 99, null, null, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 }

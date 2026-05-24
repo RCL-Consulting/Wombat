@@ -126,10 +126,10 @@ T052    (re-expose Administrator role on invitation)
 | T056.b | ~3h | ✅ done (commit `9e3bc0a` — EPAs + Curricula cluster; 13 handlers + 8 pages + 10 tests) |
 | T056.c | ~3h | ✅ done (ActivityTypes + Forms cluster; 13 handlers + 5 pages + 10 tests) |
 | T056.d | ~3h | ✅ done (commit `8ad0788` — Trainees + Assessors + Invitations + EntrustmentScales cluster; 15 handlers + 7 pages + 7 tests) |
-| T056.e | ~3–4h | ⏳ pending (Audit + SSO + NavMenu refresh + scenario doc revert) |
-| T051 | 3h | ⏳ pending (after T056.e) |
-| T052 | 3h | ⏳ pending (after T056.e) |
-| **Total remaining** | **~18–22h** | T056.b–e dominates |
+| T056.e | ~3h | ✅ done (Audit + SSO + NavMenu refresh + scenario doc revert; 5 handlers + 3 pages + 6 tests + NavMenu expansion) |
+| T051 | 3h | ⏳ pending |
+| T052 | 3h | ⏳ pending |
+| **Total remaining** | **~6h** | T051 + T052 only |
 
 ## What this plan does *not* cover
 

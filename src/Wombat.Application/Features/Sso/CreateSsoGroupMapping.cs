@@ -1,8 +1,9 @@
+using System.Security.Claims;
 using MediatR;
+using Wombat.Application.Common;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
-
-using Wombat.Application.Common;
 
 namespace Wombat.Application.Features.Sso;
 
@@ -18,7 +19,8 @@ public sealed record CreateSsoGroupMappingCommand(
     string WombatRole,
     int InstitutionId,
     int? SpecialityId,
-    int? SubSpecialityId) : IRequest<int>;
+    int? SubSpecialityId,
+    ClaimsPrincipal Principal) : IRequest<int>;
 
 public sealed class CreateSsoGroupMappingCommandHandler : IRequestHandler<CreateSsoGroupMappingCommand, int>
 {
@@ -31,6 +33,11 @@ public sealed class CreateSsoGroupMappingCommandHandler : IRequestHandler<Create
 
     public async Task<int> Handle(CreateSsoGroupMappingCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create SSO mappings for that institution.");
+        }
+
         if (string.Equals(request.WombatRole, WombatRoles.Administrator, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("The Administrator role cannot be assigned via SSO group mapping.");

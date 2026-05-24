@@ -1,6 +1,7 @@
 @page "/admin/audit"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Audit log</PageTitle>
 
@@ -169,7 +170,9 @@
         _ => null
       };
 
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _result = await Sender.Send(new Wombat.Application.Features.Audit.Queries.ListAuditEntries.ListAuditEntriesQuery(
+        Principal: authState.User,
         ActorUserId: string.IsNullOrWhiteSpace(_filterActorUserId) ? null : _filterActorUserId,
         Category: category,
         Action: string.IsNullOrWhiteSpace(_filterAction) ? null : _filterAction,

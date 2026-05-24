@@ -1,5 +1,5 @@
 @page "/admin/audit/{Id:guid}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -106,7 +106,7 @@ else
 
     try
     {
-      _entry = await Sender.Send(new Wombat.Application.Features.Audit.Queries.GetAuditEntryById.GetAuditEntryByIdQuery(Id));
+      _entry = await Sender.Send(new Wombat.Application.Features.Audit.Queries.GetAuditEntryById.GetAuditEntryByIdQuery(Id, authState.User));
     }
     catch (Exception ex)
     {

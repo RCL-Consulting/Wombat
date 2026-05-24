@@ -132,7 +132,7 @@ Gap: None.
 
 With KGK in place, the bootstrap admin can now issue Prof Mbatha's invitation. She joins as `InstitutionalAdmin` rather than global `Administrator`: the invitation form only exposes scoped roles, and the Administrator role is reserved for manual-only assignment (per CLAUDE.md).
 
-> **⚠ Role-power finding from 2026-05-24 play-through:** despite the name, `InstitutionalAdmin` is *not* granted the institution-scoped admin powers Phases 1.D–1.F assume. Every admin page except `/admin/entrustment-decisions` is gated by `[Authorize(Policy = "Administrator")]` or `[Authorize(Roles = WombatRoles.Administrator)]` — meaning EPAs, Curricula, Activity Types, Invitations, Audit, Jobs, Trainees, Assessors, Forms, SSO, and the edit pages for Institutions / Specialities / Sub-specialities are all closed to Mbatha. Navigating to `/admin/epas/new` as Mbatha returns `/access-denied`. **Phases 1.D, 1.E, and 1.F must therefore continue under the bootstrap admin until this is resolved.** Open as a new task (see `scenario-act1-fixes-plan.md` — this is the T056 candidate). Two acceptable resolutions: (a) grant `InstitutionalAdmin` the institution-scoped admin powers it semantically should have, with handler-level scope guards; (b) accept the current model and rewrite the scenario so the bootstrap admin runs the full setup and Mbatha never enters Act 1 at all.
+> **✅ Resolved by T056:** Prof Mbatha now runs Phases 1.C–1.F directly. T056 (Option A, shipped 2026-05-24 in five clusters) granted `InstitutionalAdmin` the institution-scoped admin powers across the admin surface, with handler-level scope guards so she only sees and edits data scoped to KGK. Scheduled Jobs, the global institutions list, and Data Rights remain Administrator-only. See `Rewrite/Tasks/T056-institutional-admin-role-power.md` for the page taxonomy.
 
 ### Step 1.5 — Issue invitation for Prof Mbatha
 Role: bootstrap Administrator
@@ -182,12 +182,12 @@ Each EPA gets a code, title, description, category (Core or Elective), and a min
 
 ### Step 1.8 — Bulk-define 15 EPAs
 
-Role: **bootstrap Administrator** (until T056 grants InstitutionalAdmin the admin scope she needs — see Phase 1.B note above).
+Role: Prof Mbatha (InstitutionalAdmin) — T056 grants institution-scoped admin powers.
 Route: `/admin/epas/new` (repeat for each)
 Action: For each row in the table below, navigate to the new-EPA form. Fill Sub-speciality `Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics` (combobox shows the triple-path label), Code, Title, Description, leave `Required knowledge and skills` blank (or paste a short freeform note — non-blocking), Category, then `Save`.
 Expected: Each EPA appears in `/admin/epas` list, scoped to `General Paediatrics`, with status `Active` and version 1 (pending its first curriculum reference).
 Actual: All 15 PAED-001 through PAED-015 EPAs persisted. After Save the URL redirects to `/admin/epas/{id}` but the page title bar still reads "Create EPA" — same cosmetic page-title bug as Step 1.2.
-Gap: None functionally. Cosmetic page-title and the bootstrap-admin role substitution noted above. The `Required knowledge and skills` field was left blank for all 15; no validation issues.
+Gap: None functionally. Cosmetic page-title bug still present. The `Required knowledge and skills` field was left blank for all 15; no validation issues.
 
 **The 15 EPAs:**
 
@@ -407,7 +407,7 @@ Populated 2026-05-24 from an end-to-end Playwright play-through of the scenario 
 
 ### New findings (beyond the static audit)
 
-1. **Hard: `InstitutionalAdmin` cannot perform Phases 1.D–1.F.** Every admin page except `/admin/entrustment-decisions` is gated to the `Administrator` role. Mbatha provisioned cleanly but is then locked out of EPAs / Curricula / Activity Types. Phases 1.D–1.F therefore proceed under the bootstrap admin. Open as a new task — call it **T056: InstitutionalAdmin role-power audit** — with two acceptable resolutions (grant institution-scoped admin powers with handler-level scope guards, or accept the model and revise the scenario so the bootstrap admin runs the whole setup and Mbatha never enters Act 1).
+1. ~~**Hard: `InstitutionalAdmin` cannot perform Phases 1.D–1.F.**~~ **Resolved by T056** (Option A, shipped 2026-05-24 in clusters `41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / final T056.e). InstitutionalAdmin now holds institution-scoped admin powers across the admin surface, gated by the new `AdministratorOrInstitutionalAdmin` policy and handler-level scope guards. Mbatha runs Phases 1.C–1.F directly.
 2. **Hard-ish: dev SMTP port mismatch.** `appsettings.Development.json` sends to `localhost:1025` but Papercut SMTP (the most common Windows dev catcher) listens on `25`. Every invitation email silently fails 3 retries and gets dropped. Fix by aligning the dev default to 25 OR by surfacing the registration URL in the InvitationsList UI (preferred — that decouples the runbook from SMTP altogether). Fold into T051.
 3. **Bug: `InvitationsList.IssueAsync` drops the raw token.** `IssueInvitationCommand` returns `IssuedInvitationResult.Token`; the page discards it and shows a misleading status "The stub sender logged the registration link." (no stub sender exists in this build). Fold into T051.
 4. **Cosmetic: Save draft on a new activity type keeps URL at `/new`** — Publish still works because the page caches the new id internally, but a refresh sends the user back to the blank form. Either redirect to `/admin/activity-types/{id}` on first save, or document the behavior explicitly. Small fix.
@@ -425,7 +425,7 @@ Populated 2026-05-24 from an end-to-end Playwright play-through of the scenario 
 - **T053** — context-aware picker for `Scope Id` on the activity-type Metadata tab.
 - **T054** — admin CRUD for `EntrustmentScale` (shipped commit `ef02268`; Step 1.7 now reflects the canonical create-scale prescription).
 - **T055** — Publish button always visible with disabled state, **plus** the URL-stickiness fix from finding #4 and the "Create X" page-title fix from finding #5 (group as a "post-save housekeeping" task).
-- **T056 (new)** — InstitutionalAdmin role-power audit per finding #1. Biggest open question because it changes the scenario's premise.
+- **T056 (closed)** — InstitutionalAdmin role-power audit (Option A) shipped in five clusters across the 2026-05-24 session. See `Rewrite/Tasks/T056-institutional-admin-role-power.md`.
 
 ### Time check (play-through 2026-05-24)
 

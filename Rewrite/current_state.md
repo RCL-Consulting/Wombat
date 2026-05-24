@@ -4,12 +4,11 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056.a–d shipped this session** (commits `41def8a`, `9e3bc0a`, `e1d3737`, `8ad0788`). Foundations + Institutions/Speciality/SubSpec + EPAs/Curricula + ActivityTypes/Forms + Trainees/Assessors/Invitations/EntrustmentScales clusters. Remaining:
+**T056 complete** — all five clusters shipped this session (`41def8a` / `9e3bc0a` / `e1d3737` / `8ad0788` / T056.e pending commit). InstitutionalAdmin now has institution-scoped admin powers across the entire admin surface (except Scheduled Jobs, Institutions list/create, and Data Rights — all Administrator-only by design). Remaining:
 
-1. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
-2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
-3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
-4. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**).
+2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**).
+3. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
 

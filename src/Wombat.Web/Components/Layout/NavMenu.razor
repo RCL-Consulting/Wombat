@@ -151,21 +151,69 @@
 
         <AuthorizeView Roles="@WombatRoles.InstitutionalAdmin" Context="institutionAuth">
           <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/institutions">
-              <Icon Name="settings" />
-              Institution
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/specialities">
+            <NavLink class="nav-link" href="/admin/specialities">
               <Icon Name="book" />
               Specialities
             </NavLink>
           </div>
           <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/users">
+            <NavLink class="nav-link" href="/admin/epas">
+              <Icon Name="file-text" />
+              EPAs
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/curricula">
+              <Icon Name="book" />
+              Curricula
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/activity-types">
+              <Icon Name="file-text" />
+              Activity Types
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/entrustment-scales">
+              <Icon Name="award" />
+              Entrustment Scales
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/forms">
+              <Icon Name="file-text" />
+              Forms
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/trainees">
               <Icon Name="users" />
-              Users
+              Trainees
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/assessors">
+              <Icon Name="users" />
+              Assessors
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/invitations">
+              <Icon Name="users" />
+              Invitations
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/sso/group-mappings">
+              <Icon Name="key" />
+              SSO Mappings
+            </NavLink>
+          </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/audit">
+              <Icon Name="shield" />
+              Audit Log
             </NavLink>
           </div>
         </AuthorizeView>

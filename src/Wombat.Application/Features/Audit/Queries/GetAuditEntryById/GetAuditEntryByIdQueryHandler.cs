@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Audit;
 using Wombat.Domain.Audit;
@@ -36,6 +37,21 @@ public sealed class GetAuditEntryByIdQueryHandler : IRequestHandler<GetAuditEntr
                 e.ErrorMessage))
             .FirstOrDefaultAsync(cancellationToken);
 
-        return entry;
+        if (entry is null)
+        {
+            return null;
+        }
+
+        if (request.Principal.IsAdministrator())
+        {
+            return entry;
+        }
+
+        // InstitutionalAdmin: visible if no institution (global event) or matches their scope.
+        if (entry.InstitutionId is null)
+        {
+            return entry;
+        }
+        return request.Principal.CanAccessInstitution(entry.InstitutionId.Value) ? entry : null;
     }
 }

@@ -1,12 +1,14 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Sso;
 
-public sealed record ListSsoGroupMappingsQuery(string? ProviderKey = null) : IRequest<IReadOnlyList<SsoGroupMappingDto>>;
+public sealed record ListSsoGroupMappingsQuery(ClaimsPrincipal Principal, string? ProviderKey = null) : IRequest<IReadOnlyList<SsoGroupMappingDto>>;
 
 public sealed class ListSsoGroupMappingsQueryHandler : IRequestHandler<ListSsoGroupMappingsQuery, IReadOnlyList<SsoGroupMappingDto>>
 {
@@ -24,6 +26,16 @@ public sealed class ListSsoGroupMappingsQueryHandler : IRequestHandler<ListSsoGr
         if (!string.IsNullOrWhiteSpace(request.ProviderKey))
         {
             mappings = mappings.Where(m => m.ProviderKey == request.ProviderKey);
+        }
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<SsoGroupMappingDto>();
+            }
+            mappings = mappings.Where(m => m.InstitutionId == scopedInstitutionId.Value);
         }
 
         var institutions = _dbContext.Set<Institution>();

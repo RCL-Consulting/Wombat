@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Audit.Queries.ListAuditEntries;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Audit;
 using Wombat.Infrastructure.Persistence;
 
@@ -28,7 +29,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ListAuditEntriesQueryHandler(db);
-        var result = await handler.Handle(new ListAuditEntriesQuery(), CancellationToken.None);
+        var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator()), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
         result.Items[0].Action.Should().Be("RecentCommand");
@@ -46,7 +47,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ListAuditEntriesQueryHandler(db);
-        var result = await handler.Handle(new ListAuditEntriesQuery(Category: AuditCategory.Authentication), CancellationToken.None);
+        var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), Category: AuditCategory.Authentication), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
         result.Items[0].Action.Should().Be("Login");
@@ -64,7 +65,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ListAuditEntriesQueryHandler(db);
-        var result = await handler.Handle(new ListAuditEntriesQuery(SuccessOnly: true), CancellationToken.None);
+        var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), SuccessOnly: true), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
         result.Items[0].Action.Should().Be("GoodCommand");
@@ -83,7 +84,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ListAuditEntriesQueryHandler(db);
-        var result = await handler.Handle(new ListAuditEntriesQuery(Page: 2, PageSize: 3), CancellationToken.None);
+        var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), Page: 2, PageSize: 3), CancellationToken.None);
 
         result.TotalCount.Should().Be(10);
         result.Items.Should().HaveCount(3);

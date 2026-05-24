@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Audit;
 
@@ -21,6 +22,18 @@ public sealed class ListAuditEntriesQueryHandler : IRequestHandler<ListAuditEntr
 
         var query = _dbContext.Set<AuditEntry>()
             .Where(e => e.OccurredAt >= from && e.OccurredAt <= to);
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return new PagedAuditResult(Array.Empty<AuditEntryDto>(), 0, request.Page, request.PageSize);
+            }
+            // InstitutionalAdmin sees their institution's entries plus global (no-institution) entries.
+            var institutionId = scopedInstitutionId.Value;
+            query = query.Where(e => e.InstitutionId == null || e.InstitutionId == institutionId);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.ActorUserId))
             query = query.Where(e => e.ActorUserId == request.ActorUserId);

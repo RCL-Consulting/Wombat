@@ -1,0 +1,31 @@
+@page "/admin/specialities"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Wombat.Application.Common.Extensions
+
+@*
+  T056.e: a tiny redirect for InstitutionalAdmin so the NavMenu "Specialities" link works
+  without knowing the user's institution id at render time. Administrators get bounced to
+  the institutions list — they pick which institution's specialities to manage from there.
+*@
+
+<StatePanel IsLoading="true" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <p class="muted">Redirecting...</p>
+</StatePanel>
+
+@code {
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var institutionId = authState.User.GetInstitutionId();
+
+    if (institutionId.HasValue)
+    {
+      Navigation.NavigateTo($"/admin/institutions/{institutionId.Value}/specialities", forceLoad: false);
+      return;
+    }
+
+    Navigation.NavigateTo("/admin/institutions", forceLoad: false);
+  }
+}

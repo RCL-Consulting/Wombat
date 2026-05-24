@@ -1,15 +1,16 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
-
-using Wombat.Application.Common;
 
 namespace Wombat.Application.Features.Sso;
 
 /// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
 [NoValidator]
-public sealed record DeleteSsoGroupMappingCommand(int Id) : IRequest;
+public sealed record DeleteSsoGroupMappingCommand(int Id, ClaimsPrincipal Principal) : IRequest;
 
 public sealed class DeleteSsoGroupMappingCommandHandler : IRequestHandler<DeleteSsoGroupMappingCommand>
 {
@@ -28,6 +29,11 @@ public sealed class DeleteSsoGroupMappingCommandHandler : IRequestHandler<Delete
         if (mapping is null)
         {
             throw new InvalidOperationException("SSO group mapping not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(mapping.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to delete this SSO mapping.");
         }
 
         _dbContext.Set<SsoGroupRoleMapping>().Remove(mapping);

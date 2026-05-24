@@ -1,9 +1,11 @@
+using System.Security.Claims;
 using MediatR;
 using Wombat.Domain.Audit;
 
 namespace Wombat.Application.Features.Audit.Queries.ListAuditEntries;
 
 public sealed record ListAuditEntriesQuery(
+    ClaimsPrincipal Principal,
     string? ActorUserId = null,
     AuditCategory? Category = null,
     string? Action = null,
