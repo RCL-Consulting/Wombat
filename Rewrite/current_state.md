@@ -211,7 +211,7 @@ Across six clusters:
 
 ## Last completed
 
-**T056.a — InstitutionalAdmin role-power foundations + Institutions/Speciality/SubSpec cluster.** Commit pending at session end. New `AdministratorOrInstitutionalAdmin` policy + `CanAccessInstitution` helper. 14 handlers in Institutions feature now principal-aware; 14 razor pages updated to pass `authState.User`; 9 new tests cover the scope guards. Application 174→183, Domain 45, Architecture 19, Web 38; build clean. T056.b–e remaining (EPAs+Curricula, ActivityTypes+Forms, Trainees+Assessors+Invitations+EntrustmentScales, Audit+SSO+NavMenu).
+**T056.a — InstitutionalAdmin role-power foundations + Institutions/Speciality/SubSpec cluster** (commit `41def8a`). New `AdministratorOrInstitutionalAdmin` policy + `CanAccessInstitution` helper. 14 handlers in Institutions feature now principal-aware; 14 razor pages updated to pass `authState.User`; 9 new tests cover the scope guards. Application 174→183, Domain 45, Architecture 19, Web 38; build clean. T056.b–e remaining (EPAs+Curricula, ActivityTypes+Forms, Trainees+Assessors+Invitations+EntrustmentScales, Audit+SSO+NavMenu).
 
 **T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit `ef02268`). 12 files added, 3 modified. Full Application + Web layer for create/edit/delete of entrustment scales with their nested levels. Delete enforces referential-integrity across `AssessmentForm` / `MsfQuestion` / `PendingEntrustmentDecision` / `EntrustmentDecision`. 5 new Application tests. Browser-verified end-to-end (create Paed scale → rename level → delete). Closes the only true feature gap from Act 1 audit. Build clean, 174 + 19 + 38 tests pass.
 
@@ -322,6 +322,7 @@ Verification:
 
 ## Last verified commits
 
+- `41def8a` — T056.a (foundations + Institutions/Speciality/SubSpec scope guards; 56 files; new AdministratorOrInstitutionalAdmin policy, 14 principal-aware handlers, 14 razor call sites, 9 scope tests; Application 183/183, Architecture 19/19, Web 38/38, Domain 45/45)
 - `ef02268` — T054 (admin CRUD for EntrustmentScale + EntrustmentLevel; 12 new files, 3 modified; browser-verified; Application 174/174, Architecture 19/19, Web 38/38)
 - `4aeaa3d` — T053 (context-aware Scope Id picker on activity-type Metadata tab; one Razor file; round-trip verified; build clean, 38/38 Web tests pass)
 - `6eaef56` — T055 (always-visible Publish button + post-save URL redirect on ActivityType edit; one Razor file; build clean, 38/38 Web tests pass)
