@@ -4,15 +4,26 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None. All cosmetic/housekeeping follow-ups from the GUI review sequence are closed.**
+**None.** T050 (scenario doc corrections) just landed. The Act 1 scenario is now playable as-written for a human run.
 
-Only one backlog item remains — the big one that has been deferred since T016:
+Open backlog (in `Rewrite/scenario-act1-fixes-plan.md` triage order):
 
-1. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T051** — Invitation form: capture First/Last name (~2h, **Sonnet**, small CRUD).
+2. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus** — touches auth).
+3. **T053** — Activity-type Metadata: `Scope Id` picker (~2h, **Sonnet**, UX win).
+4. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus** — new surface; biggest of the lot).
+5. **T055** — Publish button always visible (~15min, **Sonnet** — or fold into doc; T050 already reworded the step).
+6. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
-`Rewrite/PLAN.md`, `gui-review-plan.md`, and `practical-plan.md` are all complete. Every cosmetic/housekeeping follow-up surfaced between T037 and T049 has landed.
+Recommended next: **T050's human play-through against the dev build** (no code work) to catch persistence/validation findings the Playwright audit could not see; only after that should T051–T055 be picked up. If skipping the play-through, T054 is the highest-leverage code task — it's the only true feature gap and unblocks restoring Step 1.7's original prescription.
 
 ## This session at a glance
+
+**T050 — Scenario doc corrections** (commit pending). Absorbed the 2026-05-24 Playwright route-and-surface audit findings into `Rewrite/scenario-paediatrics.md` so Act 1 plays as-written. Phases 1.A and 1.B swap (institution before invitation); Prof Mbatha demotes from global Administrator to `InstitutionalAdmin` (the invitation surface does not expose the Administrator role); Step 1.7 becomes a workaround pointing at T054; Step 1.11.c gets the parser-accepted workflow JSON inline (incl. a one-block reference to the actor DSL grammar); small wording fixes across Steps 1.1, 1.3, 1.8, 1.11.a/b/e, 1.13. Cast row + Phase 1.A preamble + Act 1 goals + outcome-state + time-estimate + handoff sections all updated to match. Companion plan `Rewrite/scenario-act1-fixes-plan.md` (committed earlier in `c07b71a`) carries the code-side gaps as T051–T055.
+
+Zero code changes; tests unaffected. Doc-only.
+
+**Audit pre-commit** (commit `c07b71a`). Recorded the raw Playwright findings inline in each step's Actual:/Gap: lines + wrote the fixes plan. The current `scenario-paediatrics.md` overwrites the Actual:/Gap: text per scenario convention; that audit content lives in git history at `c07b71a` if needed for reference.
 
 **T049 — Clarify trainee dashboard curriculum-progress empty copy** (commit `ec649d5`). Closed the last cosmetic follow-up from the GUI review sweep.
 
@@ -127,9 +138,9 @@ Across six clusters:
 
 ## Last completed
 
-**T049 — Clarify trainee dashboard curriculum-progress empty copy** (commit `ec649d5`).
+**T050 — Scenario doc corrections** (commit pending).
 
-One-line razor edit: "No curriculum items assigned yet." → "No curriculum progress yet. Complete and submit activities to start tracking." No code or test changes.
+Doc-only rewrite of `Rewrite/scenario-paediatrics.md` to absorb the 2026-05-24 Playwright audit findings. Phase swap (1.A ↔ 1.B), role demotion (Administrator → InstitutionalAdmin), Step 1.7 workaround, Step 1.11.c JSON correction + actor DSL reference, plus small wording fixes across 9 other steps. Zero code; tests unaffected.
 
 ## Previous session
 
@@ -224,6 +235,8 @@ Verification:
 
 ## Last verified commits
 
+- (pending) — T050 (scenario doc corrections — Phase swap, role demotion, Step 1.7 workaround, Step 1.11.c JSON correction + actor DSL, plus 9 small wording fixes; docs-only)
+- `c07b71a` — docs: record Act 1 Playwright audit findings + scenario-act1-fixes-plan.md
 - `ec649d5` — T049 (clarify trainee dashboard curriculum-progress empty copy)
 - `87b3fdf` — docs: record T048 h1-focus-ring fix, shrink backlog to 2
 - `dcf76bb` — T048 (suppress programmatic-focus outline on page h1)
