@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -18,7 +19,7 @@ public sealed class EpaCategoryHandlerTests
 
         var handler = new CreateEpaCommandHandler(db);
         var result = await handler.Handle(
-            new CreateEpaCommand(1, "EPA-01", "Test EPA", null, null),
+            new CreateEpaCommand(1, "EPA-01", "Test EPA", null, null, TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.Category.Should().Be(EpaCategory.Core);
@@ -32,7 +33,7 @@ public sealed class EpaCategoryHandlerTests
 
         var handler = new CreateEpaCommandHandler(db);
         var result = await handler.Handle(
-            new CreateEpaCommand(1, "EPA-01", "Test EPA", null, null, EpaCategory.Elective),
+            new CreateEpaCommand(1, "EPA-01", "Test EPA", null, null, EpaCategory.Elective, TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.Category.Should().Be(EpaCategory.Elective);
@@ -50,7 +51,7 @@ public sealed class EpaCategoryHandlerTests
 
         var handler = new UpdateEpaCommandHandler(db);
         var result = await handler.Handle(
-            new UpdateEpaCommand(9, 1, "EPA-09", "Nine", null, null, EpaCategory.Elective, true),
+            new UpdateEpaCommand(9, 1, "EPA-09", "Nine", null, null, EpaCategory.Elective, true, TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.Category.Should().Be(EpaCategory.Elective);
@@ -71,7 +72,8 @@ public sealed class EpaCategoryHandlerTests
                 MinimumLevelOrder: 5,
                 WindowMonths: 36,
                 Weight: null,
-                MinimumLevelByStageJson: "{\"1\":2,\"2\":3,\"3\":4}"),
+                MinimumLevelByStageJson: "{\"1\":2,\"2\":3,\"3\":4}",
+                Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
         var item = result.Items.Should().ContainSingle().Subject;
@@ -82,7 +84,7 @@ public sealed class EpaCategoryHandlerTests
     public async Task AddCurriculumItem_RejectsInvalidStageOverridesJson()
     {
         var validator = new AddCurriculumItemCommandValidator();
-        var command = new AddCurriculumItemCommand(1, 7, 6, 5, 36, null, "not json");
+        var command = new AddCurriculumItemCommand(1, 7, 6, 5, 36, null, "not json", TestPrincipals.Administrator());
 
         var result = await validator.ValidateAsync(command);
 

@@ -96,7 +96,7 @@ T053 done (commit 4aeaa3d) — context-aware Scope Id picker
 T054 done (commit ef02268) — EntrustmentScale admin CRUD
         ↓
 T056.a  done (Option A foundations + Institutions/Speciality/SubSpec cluster)
-T056.b  pending (EPAs + Curricula cluster)
+T056.b  done (EPAs + Curricula cluster)
 T056.c  pending (ActivityTypes + Forms cluster)
 T056.d  pending (Trainees + Assessors + Invitations + EntrustmentScales cluster)
 T056.e  pending (Audit + SSO + NavMenu refresh + scenario doc revert)
@@ -122,8 +122,8 @@ T052    (re-expose Administrator role on invitation)
 | T053 | 2h | ✅ done (commit `4aeaa3d`) |
 | T054 | 6–8h | ✅ done (commit `ef02268`) |
 | T055 | 1h | ✅ done (commit `6eaef56`) |
-| T056.a | ~3h | ✅ done (foundations + Institutions/Speciality/SubSpec cluster; 14 handlers + 14 pages + 9 tests) |
-| T056.b | ~3–4h | ⏳ pending (EPAs + Curricula cluster) |
+| T056.a | ~3h | ✅ done (commit `41def8a` — foundations + Institutions/Speciality/SubSpec cluster; 14 handlers + 14 pages + 9 tests) |
+| T056.b | ~3h | ✅ done (EPAs + Curricula cluster; 13 handlers + 8 pages + 10 tests) |
 | T056.c | ~3–4h | ⏳ pending (ActivityTypes + Forms cluster) |
 | T056.d | ~3–4h | ⏳ pending (Trainees + Assessors + Invitations + EntrustmentScales cluster) |
 | T056.e | ~3–4h | ⏳ pending (Audit + SSO + NavMenu refresh + scenario doc revert) |

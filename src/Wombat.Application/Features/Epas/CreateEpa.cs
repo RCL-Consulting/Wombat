@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
 
@@ -12,7 +14,20 @@ public sealed record CreateEpaCommand(
     string Title,
     string? Description,
     string? RequiredKnowledgeSkills,
-    EpaCategory Category = EpaCategory.Core) : IRequest<EpaDto>;
+    EpaCategory Category,
+    ClaimsPrincipal Principal) : IRequest<EpaDto>
+{
+    public CreateEpaCommand(
+        int subSpecialityId,
+        string code,
+        string title,
+        string? description,
+        string? requiredKnowledgeSkills,
+        ClaimsPrincipal principal)
+        : this(subSpecialityId, code, title, description, requiredKnowledgeSkills, EpaCategory.Core, principal)
+    {
+    }
+}
 
 public sealed class CreateEpaCommandValidator : AbstractValidator<CreateEpaCommand>
 {
@@ -38,14 +53,19 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
 
     public async Task<EpaDto> Handle(CreateEpaCommand request, CancellationToken cancellationToken)
     {
-        var subSpecialityName = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
+        var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => entity.Name)
+            .Select(entity => new { entity.Name, entity.Speciality.InstitutionId })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (subSpecialityName is null)
+        if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create an EPA in this sub-speciality.");
         }
 
         var epa = new Epa
@@ -70,6 +90,6 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
             throw new InvalidOperationException("An EPA with the same code already exists for this sub-speciality.", exception);
         }
 
-        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpecialityName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
+        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
     }
 }

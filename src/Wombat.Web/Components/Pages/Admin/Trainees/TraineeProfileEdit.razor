@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = "Administrator")]
 @inject IScopedSender Sender
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Trainee Profile</PageTitle>
 
@@ -94,7 +95,8 @@
 
     try
     {
-      _curricula = await Sender.Send(new GetCurriculaListQuery());
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _curricula = await Sender.Send(new GetCurriculaListQuery(authState.User));
 
       if (Id.HasValue)
       {

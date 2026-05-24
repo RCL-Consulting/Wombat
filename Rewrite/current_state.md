@@ -4,15 +4,14 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056.a shipped this session.** Foundations + Institutions/Speciality/SubSpeciality cluster. Remaining work split into four follow-on clusters tracked in `Rewrite/Tasks/T056-institutional-admin-role-power.md`:
+**T056.a + T056.b shipped this session.** Foundations + Institutions/Speciality/SubSpec + EPAs/Curricula clusters. Remaining work tracked in `Rewrite/Tasks/T056-institutional-admin-role-power.md`:
 
-1. **T056.b** — EPAs + Curricula cluster (~3–4h, **Opus** — handler scope logic + many call sites).
-2. **T056.c** — ActivityTypes + Forms cluster (~3–4h, **Opus**).
-3. **T056.d** — Trainees + Assessors + Invitations + EntrustmentScales cluster (~3–4h, **Opus**).
-4. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
-5. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
-6. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
-7. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T056.c** — ActivityTypes + Forms cluster (~3–4h, **Opus**).
+2. **T056.d** — Trainees + Assessors + Invitations + EntrustmentScales cluster (~3–4h, **Opus**).
+3. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
+4. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
+5. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
+6. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
 
@@ -210,6 +209,8 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T056.b — EPAs + Curricula cluster.** Commit pending at session end. EPA handlers (Create, Update, Deactivate, ListEpasForSubSpeciality, GetEpaById) and Curricula handlers (GetCurriculaList, GetCurriculumById, CreateCurriculum, UpdateCurriculum, CloneCurriculumAsNewVersion, AddCurriculumItem, UpdateCurriculumItem, RemoveCurriculumItem) all take `ClaimsPrincipal Principal` and filter/reject by scope. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. Razor pages updated: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` (all five now use `AdministratorOrInstitutionalAdmin` policy), plus call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. New scope tests: `EpaScopeGuardTests` (5) + `CurriculumScopeGuardTests` (5). Application 183→193. Build clean, all suites pass.
 
 **T056.a — InstitutionalAdmin role-power foundations + Institutions/Speciality/SubSpec cluster** (commit `41def8a`). New `AdministratorOrInstitutionalAdmin` policy + `CanAccessInstitution` helper. 14 handlers in Institutions feature now principal-aware; 14 razor pages updated to pass `authState.User`; 9 new tests cover the scope guards. Application 174→183, Domain 45, Architecture 19, Web 38; build clean. T056.b–e remaining (EPAs+Curricula, ActivityTypes+Forms, Trainees+Assessors+Invitations+EntrustmentScales, Audit+SSO+NavMenu).
 

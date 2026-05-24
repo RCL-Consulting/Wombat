@@ -31,8 +31,8 @@ on the original `[Authorize(Policy = "Administrator")]` to preserve safety.
 
 | Cluster | Scope | Status |
 |---------|-------|--------|
-| **T056.a** | Foundations + Institutions / Specialities / SubSpecialities | ✅ shipped this session |
-| T056.b | EPAs + Curricula | ⏳ pending |
+| **T056.a** | Foundations + Institutions / Specialities / SubSpecialities | ✅ shipped (commit `41def8a`) |
+| **T056.b** | EPAs + Curricula | ✅ shipped this session |
 | T056.c | ActivityTypes + Forms | ⏳ pending |
 | T056.d | Trainees + Assessors + Invitations + EntrustmentScales | ⏳ pending |
 | T056.e | Audit + SSO + NavMenu refresh + docs final pass | ⏳ pending |

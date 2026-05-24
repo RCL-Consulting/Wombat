@@ -330,7 +330,7 @@
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId));
       if (_epas.Count == 0)
       {
-        _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
+        _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(authState.User));
       }
       if (_scales.Count == 0)
       {

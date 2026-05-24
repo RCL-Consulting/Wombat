@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 
@@ -12,7 +14,8 @@ public sealed record AddCurriculumItemCommand(
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,
-    string? MinimumLevelByStageJson = null) : IRequest<CurriculumDto>;
+    string? MinimumLevelByStageJson,
+    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
@@ -22,9 +25,10 @@ public sealed record UpdateCurriculumItemCommand(
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,
-    string? MinimumLevelByStageJson = null) : IRequest<CurriculumDto>;
+    string? MinimumLevelByStageJson,
+    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
-public sealed record RemoveCurriculumItemCommand(int CurriculumId, int ItemId) : IRequest<CurriculumDto>;
+public sealed record RemoveCurriculumItemCommand(int CurriculumId, int ItemId, ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
 public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCurriculumItemCommand>
 {
@@ -112,6 +116,11 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
+        }
+
         if (curriculum.Items.Any(entity => entity.EpaId == request.EpaId))
         {
             throw new InvalidOperationException("This curriculum already contains the selected EPA.");
@@ -147,6 +156,11 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
+
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
+        }
 
         var item = curriculum.Items.SingleOrDefault(entity => entity.Id == request.ItemId);
         if (item is null)
@@ -186,6 +200,11 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
+
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
+        }
 
         var item = curriculum.Items.SingleOrDefault(entity => entity.Id == request.ItemId);
         if (item is null)

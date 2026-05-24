@@ -1,6 +1,6 @@
 @page "/admin/epas/new"
 @page "/admin/epas/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -132,7 +132,7 @@
         return;
       }
 
-      var epa = await Sender.Send(new GetEpaByIdQuery(Id!.Value));
+      var epa = await Sender.Send(new GetEpaByIdQuery(Id!.Value, authState.User));
 
       if (epa is null)
       {
@@ -166,16 +166,17 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       EpaDto epa;
 
       if (IsNew)
       {
-        epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category));
+        epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, authState.User));
         Navigation.NavigateTo($"/admin/epas/{epa.Id}");
         return;
       }
 
-      epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive));
+      epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive, authState.User));
       _model.IsActive = epa.IsActive;
       _statusMessage = "EPA saved.";
     }
@@ -197,7 +198,8 @@
 
     try
     {
-      await Sender.Send(new DeactivateEpaCommand(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateEpaCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "EPA deactivated.";
     }

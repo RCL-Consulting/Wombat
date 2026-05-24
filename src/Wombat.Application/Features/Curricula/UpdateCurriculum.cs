@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 
@@ -13,7 +15,8 @@ public sealed record UpdateCurriculumCommand(
     string Version,
     DateOnly EffectiveFrom,
     DateOnly? EffectiveTo,
-    bool IsActive) : IRequest<CurriculumDto>;
+    bool IsActive,
+    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
 public sealed class UpdateCurriculumCommandValidator : AbstractValidator<UpdateCurriculumCommand>
 {
@@ -43,19 +46,30 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this curriculum.");
+        }
+
         var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
             .Select(entity => new
             {
                 entity.Name,
                 entity.SpecialityId,
-                SpecialityName = entity.Speciality.Name
+                SpecialityName = entity.Speciality.Name,
+                entity.Speciality.InstitutionId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to move this curriculum to that sub-speciality.");
         }
 
         curriculum.SubSpecialityId = request.SubSpecialityId;

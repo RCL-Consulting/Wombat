@@ -1,7 +1,8 @@
 @page "/admin/curricula/{Id:int}/items"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Curriculum Items</PageTitle>
 
@@ -159,14 +160,15 @@
 
     try
     {
-      _curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id, authState.User));
       if (_curriculum is null)
       {
         Navigation.NavigateTo("/not-found");
         return;
       }
 
-      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId));
+      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId, authState.User));
       ResetItemModel();
     }
     catch (Exception exception)
@@ -181,7 +183,8 @@
 
   private async Task AddItemAsync()
   {
-    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson))), "Curriculum item added.");
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User)), "Curriculum item added.");
     ResetItemModel();
   }
 
@@ -209,14 +212,16 @@
       return;
     }
 
-    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson))), "Curriculum item saved.");
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User)), "Curriculum item saved.");
     _editingItemId = null;
     ResetItemModel();
   }
 
   private async Task RemoveItemAsync(int itemId)
   {
-    await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId)), "Curriculum item removed.");
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId, authState.User)), "Curriculum item removed.");
   }
 
   private async Task RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)

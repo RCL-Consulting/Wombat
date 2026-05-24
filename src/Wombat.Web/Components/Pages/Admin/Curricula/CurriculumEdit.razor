@@ -1,6 +1,6 @@
 @page "/admin/curricula/new"
 @page "/admin/curricula/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -157,7 +157,7 @@
         return;
       }
 
-      var curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id!.Value));
+      var curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id!.Value, authState.User));
 
       if (curriculum is null)
       {
@@ -194,16 +194,17 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       CurriculumDto curriculum;
 
       if (IsNew)
       {
-        curriculum = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo));
+        curriculum = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, authState.User));
         Navigation.NavigateTo($"/admin/curricula/{curriculum.Id}");
         return;
       }
 
-      curriculum = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, _model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsActive));
+      curriculum = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, _model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsActive, authState.User));
       _model.IsActive = curriculum.IsActive;
       _statusMessage = "Curriculum saved.";
     }
@@ -225,7 +226,8 @@
 
     try
     {
-      var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo, authState.User));
       Navigation.NavigateTo($"/admin/curricula/{cloned.Id}");
     }
     catch (Exception exception)

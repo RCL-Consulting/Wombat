@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 
@@ -10,7 +12,8 @@ public sealed record CloneCurriculumAsNewVersionCommand(
     int CurriculumId,
     string Version,
     DateOnly EffectiveFrom,
-    DateOnly? EffectiveTo) : IRequest<CurriculumDto>;
+    DateOnly? EffectiveTo,
+    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
 public sealed class CloneCurriculumAsNewVersionCommandValidator : AbstractValidator<CloneCurriculumAsNewVersionCommand>
 {
@@ -36,6 +39,12 @@ public sealed class CloneCurriculumAsNewVersionCommandHandler : IRequestHandler<
     public async Task<CurriculumDto> Handle(CloneCurriculumAsNewVersionCommand request, CancellationToken cancellationToken)
     {
         var current = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
+
+        if (!request.Principal.CanAccessInstitution(current.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to clone this curriculum.");
+        }
+
         var clone = current.CloneAsNewVersion(request.Version, request.EffectiveFrom, request.EffectiveTo);
 
         _dbContext.Set<Curriculum>().Add(clone);

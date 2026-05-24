@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
 
@@ -14,7 +16,8 @@ public sealed record UpdateEpaCommand(
     string? Description,
     string? RequiredKnowledgeSkills,
     EpaCategory Category,
-    bool IsActive) : IRequest<EpaDto>;
+    bool IsActive,
+    ClaimsPrincipal Principal) : IRequest<EpaDto>;
 
 public sealed class UpdateEpaCommandValidator : AbstractValidator<UpdateEpaCommand>
 {
@@ -42,6 +45,8 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
     public async Task<EpaDto> Handle(UpdateEpaCommand request, CancellationToken cancellationToken)
     {
         var epa = await _dbContext.Set<Epa>()
+            .Include(entity => entity.SubSpeciality)
+            .ThenInclude(subSpeciality => subSpeciality.Speciality)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken);
 
         if (epa is null)
@@ -49,14 +54,24 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("The requested EPA was not found.");
         }
 
-        var subSpecialityName = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
+        if (!request.Principal.CanAccessInstitution(epa.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this EPA.");
+        }
+
+        var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => entity.Name)
+            .Select(entity => new { entity.Name, entity.Speciality.InstitutionId })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (subSpecialityName is null)
+        if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to move this EPA to that sub-speciality.");
         }
 
         epa.SubSpecialityId = request.SubSpecialityId;
@@ -76,6 +91,6 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("An EPA with the same code already exists for this sub-speciality.", exception);
         }
 
-        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpecialityName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
+        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
     }
 }

@@ -1,17 +1,21 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
-
-using Wombat.Application.Common;
 
 namespace Wombat.Application.Features.Epas;
 
 /// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
 [NoValidator]
-public sealed record DeactivateEpaCommand(int Id) : IRequest;
-public sealed record ListEpasForSubSpecialityQuery(int? SubSpecialityId = null) : IRequest<IReadOnlyList<EpaDto>>;
-public sealed record GetEpaByIdQuery(int Id) : IRequest<EpaDto?>;
+public sealed record DeactivateEpaCommand(int Id, ClaimsPrincipal Principal) : IRequest;
+public sealed record ListEpasForSubSpecialityQuery(int? SubSpecialityId, ClaimsPrincipal Principal) : IRequest<IReadOnlyList<EpaDto>>
+{
+    public ListEpasForSubSpecialityQuery(ClaimsPrincipal principal) : this(null, principal) { }
+}
+public sealed record GetEpaByIdQuery(int Id, ClaimsPrincipal Principal) : IRequest<EpaDto?>;
 public sealed record GetEntrustmentScalesListQuery() : IRequest<IReadOnlyList<EntrustmentScaleDto>>;
 public sealed record GetEntrustmentScaleByIdQuery(int Id) : IRequest<EntrustmentScaleDto?>;
 
@@ -26,11 +30,19 @@ public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaC
 
     public async Task Handle(DeactivateEpaCommand request, CancellationToken cancellationToken)
     {
-        var epa = await _dbContext.Set<Epa>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken);
+        var epa = await _dbContext.Set<Epa>()
+            .Include(entity => entity.SubSpeciality)
+            .ThenInclude(subSpeciality => subSpeciality.Speciality)
+            .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken);
 
         if (epa is null)
         {
             throw new InvalidOperationException("The requested EPA was not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(epa.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to deactivate this EPA.");
         }
 
         epa.IsActive = false;
@@ -54,6 +66,17 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
         if (request.SubSpecialityId.HasValue)
         {
             query = query.Where(entity => entity.SubSpecialityId == request.SubSpecialityId.Value);
+        }
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<EpaDto>();
+            }
+
+            query = query.Where(entity => entity.SubSpeciality.Speciality.InstitutionId == scopedInstitutionId.Value);
         }
 
         return await query
@@ -86,20 +109,38 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
     }
 
     public async Task<EpaDto?> Handle(GetEpaByIdQuery request, CancellationToken cancellationToken)
-        => await _dbContext.Set<Epa>()
+    {
+        var projection = await _dbContext.Set<Epa>()
             .Where(entity => entity.Id == request.Id)
-            .Select(entity => new EpaDto(
-                entity.Id,
-                entity.SubSpecialityId,
-                entity.SubSpeciality.Name,
-                entity.Code,
-                entity.Title,
-                entity.Description,
-                entity.RequiredKnowledgeSkills,
-                entity.Category,
-                entity.IsActive,
-                entity.CreatedOn))
+            .Select(entity => new
+            {
+                Dto = new EpaDto(
+                    entity.Id,
+                    entity.SubSpecialityId,
+                    entity.SubSpeciality.Name,
+                    entity.Code,
+                    entity.Title,
+                    entity.Description,
+                    entity.RequiredKnowledgeSkills,
+                    entity.Category,
+                    entity.IsActive,
+                    entity.CreatedOn),
+                InstitutionId = entity.SubSpeciality.Speciality.InstitutionId
+            })
             .SingleOrDefaultAsync(cancellationToken);
+
+        if (projection is null)
+        {
+            return null;
+        }
+
+        if (!request.Principal.CanAccessInstitution(projection.InstitutionId))
+        {
+            return null;
+        }
+
+        return projection.Dto;
+    }
 }
 
 public sealed class GetEntrustmentScalesListQueryHandler : IRequestHandler<GetEntrustmentScalesListQuery, IReadOnlyList<EntrustmentScaleDto>>

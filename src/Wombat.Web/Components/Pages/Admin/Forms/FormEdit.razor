@@ -256,7 +256,7 @@
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
-      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery());
+      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(authState.User));
 
       _model.ScaleId = _scales.FirstOrDefault()?.Id ?? 0;
       _linkModel.EpaId = _epas.FirstOrDefault()?.Id ?? 0;

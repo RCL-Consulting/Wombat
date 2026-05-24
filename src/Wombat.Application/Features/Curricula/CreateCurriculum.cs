@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 
@@ -11,7 +13,8 @@ public sealed record CreateCurriculumCommand(
     string Name,
     string Version,
     DateOnly EffectiveFrom,
-    DateOnly? EffectiveTo) : IRequest<CurriculumDto>;
+    DateOnly? EffectiveTo,
+    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
 public sealed class CreateCurriculumCommandValidator : AbstractValidator<CreateCurriculumCommand>
 {
@@ -43,13 +46,19 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
             {
                 entity.Name,
                 entity.SpecialityId,
-                SpecialityName = entity.Speciality.Name
+                SpecialityName = entity.Speciality.Name,
+                entity.Speciality.InstitutionId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
         {
             throw new InvalidOperationException("The selected sub-speciality was not found.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create a curriculum in this sub-speciality.");
         }
 
         var curriculum = new Curriculum
