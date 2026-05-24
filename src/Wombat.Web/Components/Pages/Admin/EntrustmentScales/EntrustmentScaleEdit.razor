@@ -1,0 +1,243 @@
+@page "/admin/entrustment-scales/new"
+@page "/admin/entrustment-scales/{Id:int}"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+@using Wombat.Application.Features.Epas
+@using Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale
+@using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale
+
+<PageTitle>@(IsNew ? "Create entrustment scale" : "Edit entrustment scale")</PageTitle>
+
+<PageHeader Title="@(IsNew ? "Create entrustment scale" : "Edit entrustment scale")" Subtitle="Define the ordered ladder of entrustment levels.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/entrustment-scales">Back to scales</a>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <div class="details-grid">
+    <section class="detail-card">
+      <h3>Scale details</h3>
+      <div class="form-grid form-grid--wide">
+        <FormField Label="Name" InputId="scale-name" Required="true">
+          <input id="scale-name" class="form-control" @bind="_name" />
+        </FormField>
+
+        <FormField Label="Description" InputId="scale-description" FullWidth="true">
+          <textarea id="scale-description" class="form-control" rows="3" @bind="_description"></textarea>
+        </FormField>
+      </div>
+    </section>
+
+    <section class="detail-card">
+      <div class="header-container">
+        <h3>Levels</h3>
+        <button type="button" class="btn btn-outline btn-sm" @onclick="AddLevel">
+          <Icon Name="plus" />
+          Add level
+        </button>
+      </div>
+
+      @if (_levels.Count == 0)
+      {
+        <div class="detail-card detail-card--empty">No levels yet. Add at least two ordered levels before saving.</div>
+      }
+      else
+      {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:6rem;">Order</th>
+              <th>Label</th>
+              <th>Description</th>
+              <th style="width:12rem;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (var i = 0; i < _levels.Count; i++)
+            {
+              var index = i;
+              var level = _levels[index];
+              <tr>
+                <td>@level.Order</td>
+                <td><input class="form-control" @bind="level.Label" /></td>
+                <td><input class="form-control" @bind="level.Description" /></td>
+                <td>
+                  <div class="actions-cell">
+                    <button type="button" class="btn btn-outline btn-sm" disabled="@(index == 0)" @onclick="() => MoveLevel(index, -1)">Up</button>
+                    <button type="button" class="btn btn-outline btn-sm" disabled="@(index == _levels.Count - 1)" @onclick="() => MoveLevel(index, 1)">Down</button>
+                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveLevel(index)">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </div>
+
+  <FormActions>
+    <a class="btn btn-outline" href="/admin/entrustment-scales">Cancel</a>
+    <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="SaveAsync">@(_saving ? "Saving..." : "Save")</button>
+  </FormActions>
+</StatePanel>
+
+@code {
+  [Parameter] public int? Id { get; set; }
+
+  private string _name = string.Empty;
+  private string? _description;
+  private readonly List<LevelModel> _levels = new();
+  private bool _loading;
+  private bool _saving;
+  private string? _loadError;
+  private string? _statusMessage;
+  private string? _errorMessage;
+
+  private bool IsNew => !Id.HasValue;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+    _loadError = null;
+    _loading = true;
+
+    try
+    {
+      if (IsNew)
+      {
+        _name = string.Empty;
+        _description = null;
+        _levels.Clear();
+        _levels.Add(new LevelModel { Order = 1, Label = string.Empty, Description = null });
+        _levels.Add(new LevelModel { Order = 2, Label = string.Empty, Description = null });
+        return;
+      }
+
+      var scale = await Sender.Send(new GetEntrustmentScaleByIdQuery(Id!.Value));
+      if (scale is null)
+      {
+        Navigation.NavigateTo("/admin/entrustment-scales");
+        return;
+      }
+
+      _name = scale.Name;
+      _description = scale.Description;
+      _levels.Clear();
+      foreach (var level in scale.Levels)
+      {
+        _levels.Add(new LevelModel
+        {
+          Id = level.Id,
+          Order = level.Order,
+          Label = level.Label,
+          Description = level.Description
+        });
+      }
+    }
+    catch (Exception exception)
+    {
+      _loadError = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private void AddLevel()
+  {
+    var nextOrder = _levels.Count == 0 ? 1 : _levels.Max(level => level.Order) + 1;
+    _levels.Add(new LevelModel { Order = nextOrder, Label = string.Empty, Description = null });
+  }
+
+  private void RemoveLevel(int index)
+  {
+    _levels.RemoveAt(index);
+    Reorder();
+  }
+
+  private void MoveLevel(int index, int delta)
+  {
+    var target = index + delta;
+    if (target < 0 || target >= _levels.Count) return;
+    (_levels[index], _levels[target]) = (_levels[target], _levels[index]);
+    Reorder();
+  }
+
+  private void Reorder()
+  {
+    for (var i = 0; i < _levels.Count; i++)
+    {
+      _levels[i].Order = i + 1;
+    }
+  }
+
+  private async Task SaveAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      if (IsNew)
+      {
+        var inputs = _levels
+          .OrderBy(level => level.Order)
+          .Select(level => new EntrustmentLevelInput(level.Order, level.Label, level.Description))
+          .ToList();
+        var created = await Sender.Send(new CreateEntrustmentScaleCommand(_name, _description, inputs));
+        Navigation.NavigateTo($"/admin/entrustment-scales/{created.Id}", forceLoad: false);
+        return;
+      }
+
+      var updates = _levels
+        .OrderBy(level => level.Order)
+        .Select(level => new EntrustmentLevelUpdate(level.Id, level.Order, level.Label, level.Description))
+        .ToList();
+      var updated = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates));
+      _levels.Clear();
+      foreach (var level in updated.Levels)
+      {
+        _levels.Add(new LevelModel
+        {
+          Id = level.Id,
+          Order = level.Order,
+          Label = level.Label,
+          Description = level.Description
+        });
+      }
+      _statusMessage = "Entrustment scale saved.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private sealed class LevelModel
+  {
+    public int? Id { get; set; }
+    public int Order { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public string? Description { get; set; }
+  }
+}

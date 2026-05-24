@@ -4,15 +4,18 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** T053 just landed. Remaining triage:
+**None.** T054 just landed. Remaining triage:
 
-1. **T054** — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel` (~6–8h, **Opus**, only true feature gap; independent of T056). **Recommended next** — independent of T056 and closes Step 1.7's workaround.
-2. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope.
-3. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
-4. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
-5. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T056** — InstitutionalAdmin role-power audit, **Option A**: grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Blocks T051's intended scope. **Recommended next** — largest of the remaining tasks; tackling it next means T051/T052 can build on the result.
+2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped; after T056 to avoid double-touching the invitation surface).
+3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
+4. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+
+**Note (post-T054):** Step 1.7 in `Rewrite/scenario-paediatrics.md` still describes the workaround. It can now be reverted to the canonical "create Paed General Entrustment Scale" prescription — minor follow-up, not blocking.
 
 ## This session at a glance
+
+**T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit pending). New `/admin/entrustment-scales` list + `/admin/entrustment-scales/{new|id}` edit pages. Three MediatR commands (Create/Update/Delete) + one new query (`GetEntrustmentScaleById`). Delete enforces referential integrity across four reference paths (`AssessmentForm`, `MsfQuestion`, `PendingEntrustmentDecision`, `EntrustmentDecision`) — no soft-delete needed. Update diffs incoming levels against existing: insert new, update matched-by-id, delete removed (only if no entrustment-decision refs). Nav entry between Activity Types and Scheduled Jobs (`award` icon). 5 new Application tests cover create/dup-reject/update-with-add-rename-remove/delete-unused/delete-rejects-referenced. Build 0 warnings 0 errors; Application 169→174, Architecture 19/19, Web 38/38. Browser-verified end-to-end: created a "Paed General Entrustment Scale" with 5 ten-Cate levels, renamed a level, deleted the scale cleanly. Closes the "only true feature gap" from the Act 1 audit; Step 1.7's workaround can now be reverted to the canonical create-scale prescription as a follow-up.
 
 **T053 — Activity-type Metadata: context-aware Scope Id picker** (commit `4aeaa3d`). Replaced the raw numeric `Scope Id` spinbutton with a `<select>` whose options come from the relevant lookup list (institutions / specialities / sub-specialities) based on the selected Scope. Triple-path labels match the EPA + Curriculum edit convention. Scope=Global hides the field entirely; changing scope clears the stale id so an institution-id can't carry over into a speciality picker. Only `ActivityTypeEdit.razor` touched (markup + 3 new lookup lists + projection helpers + scope-change handler). Round-trip verified on the existing `mini_cex_paed` (Scope=Speciality, ScopeId=2) — the picker pre-selects `Kgosi Kgari Teaching Hospital / Paediatrics` cleanly. Build clean, 38/38 Web tests pass.
 
@@ -159,6 +162,8 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit pending). 12 files added, 3 modified. Full Application + Web layer for create/edit/delete of entrustment scales with their nested levels. Delete enforces referential-integrity across `AssessmentForm` / `MsfQuestion` / `PendingEntrustmentDecision` / `EntrustmentDecision`. 5 new Application tests. Browser-verified end-to-end (create Paed scale → rename level → delete). Closes the only true feature gap from Act 1 audit. Build clean, 174 + 19 + 38 tests pass.
 
 **T053 — Activity-type Metadata: context-aware Scope Id picker** (commit `4aeaa3d`). Single-file change in `ActivityTypeEdit.razor`. Numeric Scope Id spinbutton replaced with cascading-context `<select>`: hidden when Scope=Global, single-level picker for Institution, joined "Institution / Speciality" labels for Speciality, triple-path labels for SubSpeciality. Scope-change handler clears stale id. Round-trip on existing entity verified. Build clean, 38/38 Web tests pass.
 

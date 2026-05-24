@@ -1,0 +1,97 @@
+@page "/admin/entrustment-scales"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@using Wombat.Application.Features.Epas
+@using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale
+
+<PageTitle>Entrustment Scales</PageTitle>
+
+<PageHeader Title="Entrustment scales" Subtitle="Define and maintain the rating ladders used by assessment forms and committee reviews.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/entrustment-scales/new">
+      <Icon Name="plus" />
+      Create scale
+    </a>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_actionError))
+{
+  <Alert Kind="danger">@_actionError</Alert>
+}
+
+<StatePanel IsLoading="@(_scales is null && string.IsNullOrWhiteSpace(_loadError))" LoadError="@_loadError" IsEmpty="@(_scales?.Count == 0)" EmptyTitle="No scales yet" EmptyBody="Create the first entrustment scale to back assessment ratings and entrustment decisions.">
+  @if (_scales is not null)
+  {
+    <DataTable TItem="EntrustmentScaleDto" Items="_scales" Caption="Entrustment scales">
+      <HeaderRow>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Levels</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="scale">
+        <tr>
+          <td>@scale.Name</td>
+          <td>@scale.Description</td>
+          <td>@scale.Levels.Count</td>
+          <td>
+            <div class="actions-cell">
+              <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")">Edit</a>
+              <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
+
+@code {
+  private IReadOnlyList<EntrustmentScaleDto>? _scales;
+  private string? _loadError;
+  private string? _actionError;
+  private string? _statusMessage;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loadError = null;
+    try
+    {
+      _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+    }
+    catch (Exception exception)
+    {
+      _loadError = exception.Message;
+    }
+  }
+
+  private async Task DeleteAsync(int scaleId)
+  {
+    _actionError = null;
+    _statusMessage = null;
+
+    try
+    {
+      await Sender.Send(new DeleteEntrustmentScaleCommand(scaleId));
+      _statusMessage = "Entrustment scale deleted.";
+      await LoadAsync();
+    }
+    catch (Exception exception)
+    {
+      _actionError = exception.Message;
+    }
+  }
+}

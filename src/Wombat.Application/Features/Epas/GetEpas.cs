@@ -13,6 +13,7 @@ public sealed record DeactivateEpaCommand(int Id) : IRequest;
 public sealed record ListEpasForSubSpecialityQuery(int? SubSpecialityId = null) : IRequest<IReadOnlyList<EpaDto>>;
 public sealed record GetEpaByIdQuery(int Id) : IRequest<EpaDto?>;
 public sealed record GetEntrustmentScalesListQuery() : IRequest<IReadOnlyList<EntrustmentScaleDto>>;
+public sealed record GetEntrustmentScaleByIdQuery(int Id) : IRequest<EntrustmentScaleDto?>;
 
 public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaCommand>
 {
@@ -122,4 +123,27 @@ public sealed class GetEntrustmentScalesListQueryHandler : IRequestHandler<GetEn
                     .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
                     .ToList()))
             .ToListAsync(cancellationToken);
+}
+
+public sealed class GetEntrustmentScaleByIdQueryHandler : IRequestHandler<GetEntrustmentScaleByIdQuery, EntrustmentScaleDto?>
+{
+    private readonly IApplicationDbContext _dbContext;
+
+    public GetEntrustmentScaleByIdQueryHandler(IApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<EntrustmentScaleDto?> Handle(GetEntrustmentScaleByIdQuery request, CancellationToken cancellationToken)
+        => await _dbContext.Set<EntrustmentScale>()
+            .Where(entity => entity.Id == request.Id)
+            .Select(entity => new EntrustmentScaleDto(
+                entity.Id,
+                entity.Name,
+                entity.Description,
+                entity.Levels
+                    .OrderBy(level => level.Order)
+                    .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
+                    .ToList()))
+            .SingleOrDefaultAsync(cancellationToken);
 }
