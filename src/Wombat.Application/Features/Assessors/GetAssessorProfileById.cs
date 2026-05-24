@@ -1,11 +1,13 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Assessors;
 
-public sealed record GetAssessorProfileByIdQuery(int Id) : IRequest<AssessorProfileDto>;
+public sealed record GetAssessorProfileByIdQuery(int Id, ClaimsPrincipal Principal) : IRequest<AssessorProfileDto>;
 
 public sealed class GetAssessorProfileByIdQueryHandler : IRequestHandler<GetAssessorProfileByIdQuery, AssessorProfileDto>
 {
@@ -27,6 +29,11 @@ public sealed class GetAssessorProfileByIdQueryHandler : IRequestHandler<GetAsse
             .Include(entity => entity.SubSpeciality)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException("The assessor profile could not be found.");
+
+        if (!request.Principal.CanAccessInstitution(profile.InstitutionId))
+        {
+            throw new InvalidOperationException("The assessor profile could not be found.");
+        }
 
         var user = await _userAdministrationService.GetByIdAsync(profile.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The assessor user could not be found.");

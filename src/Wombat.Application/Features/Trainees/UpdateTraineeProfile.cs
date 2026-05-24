@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -11,7 +13,8 @@ public sealed record UpdateTraineeProfileCommand(
     int Id,
     int CurriculumId,
     DateOnly ProgrammeStartDate,
-    DateOnly? ExpectedCompletionDate) : IRequest<TraineeProfileDto>;
+    DateOnly? ExpectedCompletionDate,
+    ClaimsPrincipal Principal) : IRequest<TraineeProfileDto>;
 
 public sealed class UpdateTraineeProfileCommandValidator : AbstractValidator<UpdateTraineeProfileCommand>
 {
@@ -36,8 +39,16 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
     public async Task<TraineeProfileDto> Handle(UpdateTraineeProfileCommand request, CancellationToken cancellationToken)
     {
         var profile = await _dbContext.Set<TraineeProfile>()
+            .Include(entity => entity.Curriculum)
+                .ThenInclude(entity => entity.SubSpeciality)
+                    .ThenInclude(entity => entity.Speciality)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException("The trainee profile could not be found.");
+
+        if (!request.Principal.CanAccessInstitution(profile.Curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this trainee profile.");
+        }
 
         var curriculum = await _dbContext.Set<Curriculum>()
             .Include(entity => entity.SubSpeciality)
@@ -45,6 +56,11 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
             .Include(entity => entity.Items)
             .SingleOrDefaultAsync(entity => entity.Id == request.CurriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The selected curriculum could not be found.");
+
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to move this trainee to that curriculum.");
+        }
 
         profile.CurriculumId = request.CurriculumId;
         profile.ProgrammeStartDate = request.ProgrammeStartDate;

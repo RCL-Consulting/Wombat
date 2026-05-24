@@ -8,6 +8,7 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
 using Wombat.Application.Features.Invitations;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Invitations;
@@ -34,7 +35,8 @@ public sealed class IssueInvitationCommandHandlerTests
             InstitutionId: 1,
             SpecialityId: null,
             SubSpecialityId: null,
-            IssuedByUserId: "admin-1");
+            IssuedByUserId: "admin-1",
+            Principal: TestPrincipals.Administrator());
 
         await handler.Handle(command, CancellationToken.None);
 
@@ -66,7 +68,7 @@ public sealed class IssueInvitationCommandHandlerTests
         var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, options);
 
         await handler.Handle(
-            new IssueInvitationCommand("t@e.test", WombatRoles.InstitutionalAdmin, 1, null, null, "admin-1"),
+            new IssueInvitationCommand("t@e.test", WombatRoles.InstitutionalAdmin, 1, null, null, "admin-1", TestPrincipals.Administrator()),
             CancellationToken.None);
 
         captured.Should().NotBeNull();

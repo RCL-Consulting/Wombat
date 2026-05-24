@@ -1,5 +1,5 @@
 @page "/admin/trainees"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -91,8 +91,8 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery());
-      _trainees = await Sender.Send(new ListTraineesForSpecialityQuery());
+      _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery(authState.User));
+      _trainees = await Sender.Send(new ListTraineesForSpecialityQuery(authState.User));
     }
     catch (Exception exception)
     {

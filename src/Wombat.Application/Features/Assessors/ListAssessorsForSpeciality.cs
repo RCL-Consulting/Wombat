@@ -1,11 +1,16 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Assessors;
 
-public sealed record ListAssessorsForSpecialityQuery(int? SpecialityId = null) : IRequest<IReadOnlyList<AssessorProfileDto>>;
+public sealed record ListAssessorsForSpecialityQuery(int? SpecialityId, ClaimsPrincipal Principal) : IRequest<IReadOnlyList<AssessorProfileDto>>
+{
+    public ListAssessorsForSpecialityQuery(ClaimsPrincipal principal) : this(null, principal) { }
+}
 
 public sealed class ListAssessorsForSpecialityQueryHandler : IRequestHandler<ListAssessorsForSpecialityQuery, IReadOnlyList<AssessorProfileDto>>
 {
@@ -20,12 +25,29 @@ public sealed class ListAssessorsForSpecialityQueryHandler : IRequestHandler<Lis
 
     public async Task<IReadOnlyList<AssessorProfileDto>> Handle(ListAssessorsForSpecialityQuery request, CancellationToken cancellationToken)
     {
-        var profiles = await _dbContext.Set<AssessorProfile>()
+        var query = _dbContext.Set<AssessorProfile>()
             .AsNoTracking()
             .Include(entity => entity.Institution)
             .Include(entity => entity.Speciality)
             .Include(entity => entity.SubSpeciality)
-            .Where(entity => !request.SpecialityId.HasValue || entity.SpecialityId == request.SpecialityId.Value)
+            .AsQueryable();
+
+        if (request.SpecialityId.HasValue)
+        {
+            query = query.Where(entity => entity.SpecialityId == request.SpecialityId.Value);
+        }
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<AssessorProfileDto>();
+            }
+            query = query.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
+        }
+
+        var profiles = await query
             .OrderBy(entity => entity.Speciality != null ? entity.Speciality.Name : string.Empty)
             .ThenBy(entity => entity.SubSpeciality != null ? entity.SubSpeciality.Name : string.Empty)
             .ThenBy(entity => entity.Id)

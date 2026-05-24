@@ -1,5 +1,5 @@
 @page "/admin/trainees/edit"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -100,7 +100,7 @@
 
       if (Id.HasValue)
       {
-        var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value));
+        var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value, authState.User));
         _isAdmission = false;
         _model = new TraineeProfileFormModel
         {
@@ -117,7 +117,7 @@
       else if (!string.IsNullOrWhiteSpace(UserId))
       {
         _isAdmission = true;
-        var pendingUsers = await Sender.Send(new ListPendingTraineesQuery());
+        var pendingUsers = await Sender.Send(new ListPendingTraineesQuery(authState.User));
         var pendingUser = pendingUsers.FirstOrDefault(entity => entity.UserId == UserId)
           ?? throw new InvalidOperationException("The pending trainee could not be found.");
 
@@ -175,13 +175,15 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       if (_isAdmission)
       {
         var result = await Sender.Send(new AdmitTraineeCommand(
           _model.UserId,
           _model.CurriculumId,
           _model.ProgrammeStartDate,
-          _model.ExpectedCompletionDate));
+          _model.ExpectedCompletionDate,
+          authState.User));
 
         NavigationManager.NavigateTo($"/admin/trainees/edit?id={result.Id}", forceLoad: false);
         return;
@@ -191,7 +193,8 @@
         _model.Id,
         _model.CurriculumId,
         _model.ProgrammeStartDate,
-        _model.ExpectedCompletionDate));
+        _model.ExpectedCompletionDate,
+        authState.User));
 
       _statusMessage = "Trainee profile saved.";
     }
@@ -218,7 +221,8 @@
 
     try
     {
-      await Sender.Send(new DeactivateTraineeProfileCommand(_model.Id));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateTraineeProfileCommand(_model.Id, authState.User));
       _model.IsActive = false;
       _statusMessage = "Trainee profile deactivated.";
     }

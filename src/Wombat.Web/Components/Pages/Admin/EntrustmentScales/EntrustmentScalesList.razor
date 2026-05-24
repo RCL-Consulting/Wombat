@@ -1,6 +1,7 @@
 @page "/admin/entrustment-scales"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Wombat.Application.Features.Epas
 @using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale
 
@@ -85,7 +86,8 @@
 
     try
     {
-      await Sender.Send(new DeleteEntrustmentScaleCommand(scaleId));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeleteEntrustmentScaleCommand(scaleId, authState.User));
       _statusMessage = "Entrustment scale deleted.";
       await LoadAsync();
     }

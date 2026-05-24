@@ -1,12 +1,14 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 
 namespace Wombat.Application.Features.Invitations;
 
-public sealed record ListActiveInvitationsQuery() : IRequest<IReadOnlyList<ActiveInvitationDto>>;
+public sealed record ListActiveInvitationsQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<ActiveInvitationDto>>;
 
 public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActiveInvitationsQuery, IReadOnlyList<ActiveInvitationDto>>
 {
@@ -25,8 +27,20 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
         var specialities = _dbContext.Set<Speciality>();
         var subSpecialities = _dbContext.Set<SubSpeciality>();
 
+        var invitations = _dbContext.Set<Invitation>().AsQueryable();
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<ActiveInvitationDto>();
+            }
+            invitations = invitations.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
+        }
+
         return await (
-            from invitation in _dbContext.Set<Invitation>()
+            from invitation in invitations
             join institution in institutions on invitation.InstitutionId equals institution.Id
             join speciality in specialities on invitation.SpecialityId equals speciality.Id into specialityGroup
             from speciality in specialityGroup.DefaultIfEmpty()

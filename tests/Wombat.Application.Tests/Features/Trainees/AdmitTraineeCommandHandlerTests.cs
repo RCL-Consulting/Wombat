@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Trainees;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -42,7 +43,8 @@ public sealed class AdmitTraineeCommandHandlerTests
                 "user-1",
                 3000,
                 new DateOnly(2026, 1, 15),
-                null),
+                null,
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.UserId.Should().Be("user-1");
@@ -88,7 +90,8 @@ public sealed class AdmitTraineeCommandHandlerTests
                 "user-2",
                 3000,
                 new DateOnly(2026, 1, 15),
-                null),
+                null,
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

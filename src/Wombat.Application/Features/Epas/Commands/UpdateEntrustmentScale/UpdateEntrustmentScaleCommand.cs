@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 
 namespace Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
@@ -8,4 +9,5 @@ public sealed record UpdateEntrustmentScaleCommand(
     int Id,
     string Name,
     string? Description,
-    IReadOnlyList<EntrustmentLevelUpdate> Levels) : IRequest<EntrustmentScaleDto>;
+    IReadOnlyList<EntrustmentLevelUpdate> Levels,
+    ClaimsPrincipal Principal) : IRequest<EntrustmentScaleDto>;

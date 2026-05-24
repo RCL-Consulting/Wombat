@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -17,6 +18,11 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
 
     public async Task<EntrustmentScaleDto> Handle(UpdateEntrustmentScaleCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.IsAdministrator())
+        {
+            throw new UnauthorizedAccessException("Only global administrators may update entrustment scales.");
+        }
+
         var scale = await _dbContext.Set<EntrustmentScale>()
             .Include(entity => entity.Levels)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)

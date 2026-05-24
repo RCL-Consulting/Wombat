@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using MediatR;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
@@ -10,7 +12,7 @@ public sealed record AssessorUserDto(
     string FirstName,
     string LastName);
 
-public sealed record ListAssessorUsersQuery() : IRequest<IReadOnlyList<AssessorUserDto>>;
+public sealed record ListAssessorUsersQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<AssessorUserDto>>;
 
 public sealed class ListAssessorUsersQueryHandler : IRequestHandler<ListAssessorUsersQuery, IReadOnlyList<AssessorUserDto>>
 {
@@ -24,7 +26,19 @@ public sealed class ListAssessorUsersQueryHandler : IRequestHandler<ListAssessor
     public async Task<IReadOnlyList<AssessorUserDto>> Handle(ListAssessorUsersQuery request, CancellationToken cancellationToken)
     {
         var users = await _userAdministrationService.ListUsersInRoleAsync(WombatRoles.Assessor, cancellationToken);
-        return users
+        var query = users.AsEnumerable();
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<AssessorUserDto>();
+            }
+            query = query.Where(user => user.InstitutionId == scopedInstitutionId.Value);
+        }
+
+        return query
             .Select(user => new AssessorUserDto(user.UserId, user.Email, user.FirstName, user.LastName))
             .ToArray();
     }

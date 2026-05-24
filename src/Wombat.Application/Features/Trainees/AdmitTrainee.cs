@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -11,7 +13,8 @@ public sealed record AdmitTraineeCommand(
     string UserId,
     int CurriculumId,
     DateOnly ProgrammeStartDate,
-    DateOnly? ExpectedCompletionDate) : IRequest<TraineeProfileDto>;
+    DateOnly? ExpectedCompletionDate,
+    ClaimsPrincipal Principal) : IRequest<TraineeProfileDto>;
 
 public sealed class AdmitTraineeCommandValidator : AbstractValidator<AdmitTraineeCommand>
 {
@@ -43,6 +46,12 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             throw new InvalidOperationException("Only users in the PendingTrainee role can be admitted.");
         }
 
+        // Pending trainee must be in caller's institution.
+        if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to admit this trainee.");
+        }
+
         var existingActiveProfile = await _dbContext.Set<TraineeProfile>()
             .AnyAsync(profile => profile.UserId == request.UserId && profile.IsActive, cancellationToken);
 
@@ -57,6 +66,11 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             .Include(entity => entity.Items)
             .SingleOrDefaultAsync(entity => entity.Id == request.CurriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The selected curriculum could not be found.");
+
+        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to admit a trainee into this curriculum.");
+        }
 
         var expectedCompletionDate = request.ExpectedCompletionDate
             ?? request.ProgrammeStartDate.AddMonths(GetDefaultCompletionMonths(curriculum));

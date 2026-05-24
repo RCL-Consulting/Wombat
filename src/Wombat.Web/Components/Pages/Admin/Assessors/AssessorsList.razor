@@ -1,6 +1,7 @@
 @page "/admin/assessors"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Assessors</PageTitle>
 
@@ -49,7 +50,8 @@
   {
     try
     {
-      _assessors = await Sender.Send(new ListAssessorsForSpecialityQuery());
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _assessors = await Sender.Send(new ListAssessorsForSpecialityQuery(authState.User));
     }
     catch (Exception exception)
     {

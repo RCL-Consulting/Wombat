@@ -1,8 +1,9 @@
 @page "/admin/entrustment-scales/new"
 @page "/admin/entrustment-scales/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Wombat.Application.Features.Epas
 @using Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale
 @using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale
@@ -194,13 +195,14 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       if (IsNew)
       {
         var inputs = _levels
           .OrderBy(level => level.Order)
           .Select(level => new EntrustmentLevelInput(level.Order, level.Label, level.Description))
           .ToList();
-        var created = await Sender.Send(new CreateEntrustmentScaleCommand(_name, _description, inputs));
+        var created = await Sender.Send(new CreateEntrustmentScaleCommand(_name, _description, inputs, authState.User));
         Navigation.NavigateTo($"/admin/entrustment-scales/{created.Id}", forceLoad: false);
         return;
       }
@@ -209,7 +211,7 @@
         .OrderBy(level => level.Order)
         .Select(level => new EntrustmentLevelUpdate(level.Id, level.Order, level.Label, level.Description))
         .ToList();
-      var updated = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates));
+      var updated = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates, authState.User));
       _levels.Clear();
       foreach (var level in updated.Levels)
       {

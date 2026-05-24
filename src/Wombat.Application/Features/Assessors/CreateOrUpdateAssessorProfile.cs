@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -13,7 +15,8 @@ public sealed record CreateOrUpdateAssessorProfileCommand(
     int InstitutionId,
     int? SpecialityId,
     int? SubSpecialityId,
-    DateOnly? TrainingCompletedOn = null) : IRequest<AssessorProfileDto>;
+    DateOnly? TrainingCompletedOn,
+    ClaimsPrincipal Principal) : IRequest<AssessorProfileDto>;
 
 public sealed class CreateOrUpdateAssessorProfileCommandValidator : AbstractValidator<CreateOrUpdateAssessorProfileCommand>
 {
@@ -41,6 +44,11 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
 
     public async Task<AssessorProfileDto> Handle(CreateOrUpdateAssessorProfileCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to manage assessors in that institution.");
+        }
+
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The assessor user could not be found.");
 
@@ -93,6 +101,10 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
             };
 
             _dbContext.Set<AssessorProfile>().Add(profile);
+        }
+        else if (!request.Principal.CanAccessInstitution(profile.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this assessor profile.");
         }
 
         profile.Qualifications = request.Qualifications.Trim();

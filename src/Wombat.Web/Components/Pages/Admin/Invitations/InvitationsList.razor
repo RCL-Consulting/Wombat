@@ -1,5 +1,5 @@
 @page "/admin/invitations"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -159,7 +159,7 @@
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
     }
     catch (Exception exception)
     {
@@ -199,11 +199,12 @@
         _model.InstitutionId ?? 0,
         _model.SpecialityId,
         _model.SubSpecialityId,
-        issuedByUserId));
+        issuedByUserId,
+        authState.User));
 
       _statusMessage = $"Invitation issued for {_model.Email}. The stub sender logged the registration link.";
       _model = new InvitationFormModel();
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
     }
     catch (Exception exception)
     {
@@ -222,9 +223,10 @@
 
     try
     {
-      await Sender.Send(new RevokeInvitationCommand(invitationId));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new RevokeInvitationCommand(invitationId, authState.User));
       _statusMessage = "Invitation revoked.";
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery());
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
     }
     catch (Exception exception)
     {

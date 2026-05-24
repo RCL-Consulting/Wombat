@@ -1,11 +1,13 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Trainees;
 
-public sealed record GetTraineeProfileByIdQuery(int Id) : IRequest<TraineeProfileDto>;
+public sealed record GetTraineeProfileByIdQuery(int Id, ClaimsPrincipal Principal) : IRequest<TraineeProfileDto>;
 
 public sealed class GetTraineeProfileByIdQueryHandler : IRequestHandler<GetTraineeProfileByIdQuery, TraineeProfileDto>
 {
@@ -27,6 +29,11 @@ public sealed class GetTraineeProfileByIdQueryHandler : IRequestHandler<GetTrain
                     .ThenInclude(entity => entity.Speciality)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException("The trainee profile could not be found.");
+
+        if (!request.Principal.CanAccessInstitution(profile.Curriculum.SubSpeciality.Speciality.InstitutionId))
+        {
+            throw new InvalidOperationException("The trainee profile could not be found.");
+        }
 
         var user = await _userAdministrationService.GetByIdAsync(profile.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The trainee user could not be found.");

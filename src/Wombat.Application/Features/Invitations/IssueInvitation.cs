@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Email.Templates;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
@@ -16,7 +18,8 @@ public sealed record IssueInvitationCommand(
     int InstitutionId,
     int? SpecialityId,
     int? SubSpecialityId,
-    string IssuedByUserId) : IRequest<IssuedInvitationResult>;
+    string IssuedByUserId,
+    ClaimsPrincipal Principal) : IRequest<IssuedInvitationResult>;
 
 public sealed class IssueInvitationCommandValidator : AbstractValidator<IssueInvitationCommand>
 {
@@ -50,6 +53,11 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
 
     public async Task<IssuedInvitationResult> Handle(IssueInvitationCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to issue invitations for that institution.");
+        }
+
         var scopeError = InvitationRules.ValidateScope(request.TargetRole, request.InstitutionId, request.SpecialityId, request.SubSpecialityId);
         if (scopeError is not null)
         {

@@ -4,6 +4,7 @@ using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale;
 using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
 using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Forms;
 using Wombat.Infrastructure.Persistence;
@@ -28,7 +29,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                     new EntrustmentLevelInput(3, "Indirect supervision", null),
                     new EntrustmentLevelInput(4, "Independent", null),
                     new EntrustmentLevelInput(5, "Supervises others", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.Id.Should().BeGreaterThan(0);
@@ -54,7 +56,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 [
                     new EntrustmentLevelInput(1, "A", null),
                     new EntrustmentLevelInput(2, "B", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         var second = async () => await handler.Handle(
@@ -64,7 +67,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 [
                     new EntrustmentLevelInput(1, "A", null),
                     new EntrustmentLevelInput(2, "B", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         await second.Should().ThrowAsync<InvalidOperationException>()
@@ -84,7 +88,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                     new EntrustmentLevelInput(1, "First", null),
                     new EntrustmentLevelInput(2, "Second", null),
                     new EntrustmentLevelInput(3, "Third", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         var firstId = seeded.Levels.Single(level => level.Order == 1).Id;
@@ -100,7 +105,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                     new EntrustmentLevelUpdate(firstId, 1, "First (renamed)", null),
                     new EntrustmentLevelUpdate(secondId, 2, "Second", null),
                     new EntrustmentLevelUpdate(null, 3, "Brand new", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         result.Name.Should().Be("Renamed Scale");
@@ -123,11 +129,12 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 [
                     new EntrustmentLevelInput(1, "Low", null),
                     new EntrustmentLevelInput(2, "High", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         var delete = new DeleteEntrustmentScaleCommandHandler(db);
-        await delete.Handle(new DeleteEntrustmentScaleCommand(seeded.Id), CancellationToken.None);
+        await delete.Handle(new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
 
         (await db.Set<EntrustmentScale>().AnyAsync()).Should().BeFalse();
         (await db.Set<EntrustmentLevel>().AnyAsync()).Should().BeFalse();
@@ -145,7 +152,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 [
                     new EntrustmentLevelInput(1, "Low", null),
                     new EntrustmentLevelInput(2, "High", null)
-                ]),
+                ],
+                TestPrincipals.Administrator()),
             CancellationToken.None);
 
         db.Set<AssessmentForm>().Add(new AssessmentForm
@@ -158,10 +166,30 @@ public sealed class EntrustmentScaleAdminHandlerTests
         await db.SaveChangesAsync();
 
         var delete = new DeleteEntrustmentScaleCommandHandler(db);
-        var action = async () => await delete.Handle(new DeleteEntrustmentScaleCommand(seeded.Id), CancellationToken.None);
+        var action = async () => await delete.Handle(new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
 
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*assessment forms*");
+    }
+
+    [Fact]
+    public async Task Create_InstitutionalAdmin_Rejected()
+    {
+        await using var db = CreateDb();
+        var handler = new CreateEntrustmentScaleCommandHandler(db);
+
+        var act = () => handler.Handle(
+            new CreateEntrustmentScaleCommand(
+                "Should fail",
+                null,
+                [
+                    new EntrustmentLevelInput(1, "A", null),
+                    new EntrustmentLevelInput(2, "B", null)
+                ],
+                TestPrincipals.InstitutionalAdmin(1)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     private static ApplicationDbContext CreateDb()

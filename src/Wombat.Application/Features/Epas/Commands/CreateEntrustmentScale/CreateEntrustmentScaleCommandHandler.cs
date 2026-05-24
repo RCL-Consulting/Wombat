@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
 
@@ -16,6 +17,11 @@ public sealed class CreateEntrustmentScaleCommandHandler : IRequestHandler<Creat
 
     public async Task<EntrustmentScaleDto> Handle(CreateEntrustmentScaleCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.IsAdministrator())
+        {
+            throw new UnauthorizedAccessException("Only global administrators may create entrustment scales.");
+        }
+
         var trimmedName = request.Name.Trim();
 
         var nameInUse = await _dbContext.Set<EntrustmentScale>()

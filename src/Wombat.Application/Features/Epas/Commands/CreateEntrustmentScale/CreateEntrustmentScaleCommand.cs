@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 
 namespace Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale;
@@ -7,4 +8,5 @@ public sealed record EntrustmentLevelInput(int Order, string Label, string? Desc
 public sealed record CreateEntrustmentScaleCommand(
     string Name,
     string? Description,
-    IReadOnlyList<EntrustmentLevelInput> Levels) : IRequest<EntrustmentScaleDto>;
+    IReadOnlyList<EntrustmentLevelInput> Levels,
+    ClaimsPrincipal Principal) : IRequest<EntrustmentScaleDto>;

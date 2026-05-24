@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Assessors;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -36,7 +37,8 @@ public sealed class AssessorTrainingStatusTests
                 1,
                 SpecialityId: null,
                 SubSpecialityId: null,
-                TrainingCompletedOn: completedOn),
+                TrainingCompletedOn: completedOn,
+                Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
         dto.TrainingCompletedOn.Should().Be(completedOn);
@@ -64,7 +66,7 @@ public sealed class AssessorTrainingStatusTests
             Array.Empty<int>(), Array.Empty<int>(), new[] { WombatRoles.Assessor }));
 
         var handler = new GetAssessorProfileByIdQueryHandler(db, users);
-        var dto = await handler.Handle(new GetAssessorProfileByIdQuery(5), CancellationToken.None);
+        var dto = await handler.Handle(new GetAssessorProfileByIdQuery(5, TestPrincipals.Administrator()), CancellationToken.None);
 
         dto.TrainingCompletedOn.Should().Be(new DateOnly(2025, 9, 1));
     }
@@ -84,7 +86,7 @@ public sealed class AssessorTrainingStatusTests
             new UserIdentityDetails("a2", "a2@x", "Beta", "Two", 1, Array.Empty<int>(), Array.Empty<int>(), new[] { WombatRoles.Assessor }));
 
         var handler = new ListAssessorsForSpecialityQueryHandler(db, users);
-        var dtos = await handler.Handle(new ListAssessorsForSpecialityQuery(), CancellationToken.None);
+        var dtos = await handler.Handle(new ListAssessorsForSpecialityQuery(TestPrincipals.Administrator()), CancellationToken.None);
 
         dtos.Should().HaveCount(2);
         dtos.Single(d => d.UserId == "a1").TrainingCompletedOn.Should().Be(new DateOnly(2025, 5, 5));

@@ -1,11 +1,16 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Trainees;
 
-public sealed record ListTraineesForSpecialityQuery(int? SpecialityId = null) : IRequest<IReadOnlyList<TraineeProfileDto>>;
+public sealed record ListTraineesForSpecialityQuery(int? SpecialityId, ClaimsPrincipal Principal) : IRequest<IReadOnlyList<TraineeProfileDto>>
+{
+    public ListTraineesForSpecialityQuery(ClaimsPrincipal principal) : this(null, principal) { }
+}
 
 public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<ListTraineesForSpecialityQuery, IReadOnlyList<TraineeProfileDto>>
 {
@@ -20,12 +25,29 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
 
     public async Task<IReadOnlyList<TraineeProfileDto>> Handle(ListTraineesForSpecialityQuery request, CancellationToken cancellationToken)
     {
-        var profiles = await _dbContext.Set<TraineeProfile>()
+        var query = _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Include(entity => entity.Curriculum)
                 .ThenInclude(entity => entity.SubSpeciality)
                     .ThenInclude(entity => entity.Speciality)
-            .Where(entity => !request.SpecialityId.HasValue || entity.Curriculum.SubSpeciality.SpecialityId == request.SpecialityId.Value)
+            .AsQueryable();
+
+        if (request.SpecialityId.HasValue)
+        {
+            query = query.Where(entity => entity.Curriculum.SubSpeciality.SpecialityId == request.SpecialityId.Value);
+        }
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<TraineeProfileDto>();
+            }
+            query = query.Where(entity => entity.Curriculum.SubSpeciality.Speciality.InstitutionId == scopedInstitutionId.Value);
+        }
+
+        var profiles = await query
             .OrderBy(entity => entity.Curriculum.SubSpeciality.Speciality.Name)
             .ThenBy(entity => entity.Curriculum.SubSpeciality.Name)
             .ThenBy(entity => entity.Id)
