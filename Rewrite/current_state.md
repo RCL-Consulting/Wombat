@@ -20,7 +20,7 @@ Recommended next: **T056 decision discussion** — Option A vs B has to be settl
 
 ## This session at a glance
 
-**2026-05-24 Act 1 play-through** (commit pending). End-to-end Playwright run of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated.
+**2026-05-24 Act 1 play-through** (commit `d8a7557`). End-to-end Playwright run of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated.
 
 End state in the dev DB: 1 institution (KGK), 1 speciality (Paediatrics), 1 sub-speciality (General Paediatrics), 1 InstitutionalAdmin user (mbatha@kgk), 15 PAED EPAs, 1 curriculum (FCPaed(SA) Part 1 v2026.1) with 15 items, 10 published activity types (Mini-CEX in full; 9 others with minimal valid metadata/workflow).
 
@@ -156,7 +156,7 @@ Across six clusters:
 
 ## Last completed
 
-**2026-05-24 Act 1 play-through** (commit pending).
+**2026-05-24 Act 1 play-through** (commit `d8a7557`).
 
 End-to-end Playwright execution of every Phase 1.A–1.F step against the T050-corrected scenario. All step `Actual:` / `Gap:` lines populated. Two hard findings (T056 role-scope; dev SMTP port mismatch), four cosmetic. T051 and T055 scopes bumped to absorb new fixes; new task T056 added to `scenario-act1-fixes-plan.md` with Option A/B for the role-power audit. Zero code; doc-only.
 
@@ -257,6 +257,7 @@ Verification:
 
 ## Last verified commits
 
+- `d8a7557` — docs: Act 1 Playwright play-through findings + T056 raised (every step's Actual/Gap populated; 6 findings; T051/T055 scope bumped; new T056 = InstitutionalAdmin role-power audit)
 - `96104a1` — T050 (scenario doc corrections — Phase swap, role demotion, Step 1.7 workaround, Step 1.11.c JSON correction + actor DSL, plus 9 small wording fixes; docs-only)
 - `c07b71a` — docs: record Act 1 Playwright audit findings + scenario-act1-fixes-plan.md
 - `ec649d5` — T049 (clarify trainee dashboard curriculum-progress empty copy)

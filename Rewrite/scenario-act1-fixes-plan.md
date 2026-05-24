@@ -30,7 +30,7 @@ Single pass through `Rewrite/scenario-paediatrics.md` to absorb the audit's find
 ### T051 — Invitation form: capture First/Last name + surface registration URL + fix dev SMTP
 Add `FirstName` + `LastName` columns (nullable text) to `Invitation`. Surface in the `InvitationsList` issue form. Pre-fill the accept-invitation form when present. Migration + Designer file (per CLAUDE.md hand-written migration rules).
 
-**Additionally (from 2026-05-24 play-through, commit `<TBD>`):**
+**Additionally (from 2026-05-24 play-through, commit `d8a7557`):**
 - **Surface the raw registration URL on the InvitationsList page after issuance.** `IssueInvitationCommand` already returns `IssuedInvitationResult.Token` in plaintext; `InvitationsList.IssueAsync` (lines 195–205) currently discards it. Capture it, render `http://{host}/account/register?token={token}` in a copy-to-clipboard chip on the just-issued row, and replace the misleading status message ("The stub sender logged the registration link") with something honest.
 - **Align dev SMTP defaults to Papercut.** `src/Wombat.Web/appsettings.Development.json` has `Email:SmtpPort=1025` but Papercut SMTP listens on port 25 by default — every dev invitation email silently fails 3 retries and is dropped. Change the dev default to 25, or document the override `$env:Email__SmtpPort=25` in `Rewrite/INFRASTRUCTURE.md`. The UI surface change above is the more durable fix because it decouples the runbook from SMTP being configured at all.
 
@@ -90,7 +90,7 @@ Three small UI fixes that surfaced in the 2026-05-24 play-through, grouped becau
 
 ```
 T050 done (commit 96104a1)
-2026-05-24 play-through done (commit <TBD>) — surfaced T056, bumped T051/T055 scope
+2026-05-24 play-through done (commit `d8a7557`) — surfaced T056, bumped T051/T055 scope
         ↓
 T056    (decision required first — Mbatha's premise depends on it)
         ↓
