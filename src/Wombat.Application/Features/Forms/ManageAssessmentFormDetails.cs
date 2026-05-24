@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +10,11 @@ namespace Wombat.Application.Features.Forms;
 
 /// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
 [NoValidator]
-public sealed record DeactivateAssessmentFormCommand(int Id) : IRequest;
-public sealed record AddFormCriterionCommand(int FormId, string Prompt, string? HelpText, bool IsRequired) : IRequest<AssessmentFormDto>;
-public sealed record RemoveFormCriterionCommand(int FormId, int CriterionId) : IRequest<AssessmentFormDto>;
-public sealed record LinkFormToEpaCommand(int FormId, int EpaId) : IRequest<AssessmentFormDto>;
-public sealed record UnlinkFormFromEpaCommand(int FormId, int LinkId) : IRequest<AssessmentFormDto>;
+public sealed record DeactivateAssessmentFormCommand(int Id, ClaimsPrincipal Principal) : IRequest;
+public sealed record AddFormCriterionCommand(int FormId, string Prompt, string? HelpText, bool IsRequired, ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
+public sealed record RemoveFormCriterionCommand(int FormId, int CriterionId, ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
+public sealed record LinkFormToEpaCommand(int FormId, int EpaId, ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
+public sealed record UnlinkFormFromEpaCommand(int FormId, int LinkId, ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
 
 public sealed class AddFormCriterionCommandValidator : AbstractValidator<AddFormCriterionCommand>
 {
@@ -69,6 +70,8 @@ public sealed class DeactivateAssessmentFormCommandHandler : IRequestHandler<Dea
             throw new InvalidOperationException("The requested assessment form was not found.");
         }
 
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
+
         form.IsActive = false;
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -93,6 +96,8 @@ public sealed class AddFormCriterionCommandHandler : IRequestHandler<AddFormCrit
         {
             throw new InvalidOperationException("The requested assessment form was not found.");
         }
+
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
 
         var nextOrder = form.Criteria.Count == 0 ? 1 : form.Criteria.Max(entity => entity.Order) + 1;
         form.Criteria.Add(new FormCriterion
@@ -120,6 +125,14 @@ public sealed class RemoveFormCriterionCommandHandler : IRequestHandler<RemoveFo
 
     public async Task<AssessmentFormDto> Handle(RemoveFormCriterionCommand request, CancellationToken cancellationToken)
     {
+        var form = await _dbContext.Set<AssessmentForm>()
+            .SingleOrDefaultAsync(entity => entity.Id == request.FormId, cancellationToken);
+        if (form is null)
+        {
+            throw new InvalidOperationException("The requested assessment form was not found.");
+        }
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
+
         var criterion = await _dbContext.Set<FormCriterion>()
             .SingleOrDefaultAsync(entity => entity.Id == request.CriterionId && entity.FormId == request.FormId, cancellationToken);
 
@@ -156,6 +169,8 @@ public sealed class LinkFormToEpaCommandHandler : IRequestHandler<LinkFormToEpaC
             throw new InvalidOperationException("The requested assessment form was not found.");
         }
 
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
+
         if (!await _dbContext.Set<Domain.Epas.Epa>().AnyAsync(entity => entity.Id == request.EpaId, cancellationToken))
         {
             throw new InvalidOperationException("The selected EPA was not found.");
@@ -185,6 +200,14 @@ public sealed class UnlinkFormFromEpaCommandHandler : IRequestHandler<UnlinkForm
 
     public async Task<AssessmentFormDto> Handle(UnlinkFormFromEpaCommand request, CancellationToken cancellationToken)
     {
+        var form = await _dbContext.Set<AssessmentForm>()
+            .SingleOrDefaultAsync(entity => entity.Id == request.FormId, cancellationToken);
+        if (form is null)
+        {
+            throw new InvalidOperationException("The requested assessment form was not found.");
+        }
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
+
         var link = await _dbContext.Set<FormEpaLink>()
             .SingleOrDefaultAsync(entity => entity.Id == request.LinkId && entity.FormId == request.FormId, cancellationToken);
 

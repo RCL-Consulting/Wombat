@@ -1,11 +1,12 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Domain.Activities;
-
-using Wombat.Application.Common;
 
 namespace Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
 
@@ -27,7 +28,8 @@ public sealed record SaveActivityTypeDraftCommand(
     string DraftWorkflowJson,
     string DraftCreditRulesJson,
     string DraftDisplayFieldsJson,
-    string ActorUserId) : IRequest<ActivityTypeEditorDto>;
+    string ActorUserId,
+    ClaimsPrincipal Principal) : IRequest<ActivityTypeEditorDto>;
 
 public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveActivityTypeDraftCommand, ActivityTypeEditorDto>
 {
@@ -48,6 +50,8 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
                 .Include(entity => entity.Versions)
                 .SingleOrDefaultAsync(entity => entity.Id == request.ActivityTypeId.Value, cancellationToken)
                 ?? throw new InvalidOperationException("The activity type could not be found.");
+
+            await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, activityType.Scope, activityType.ScopeId, cancellationToken);
         }
         else
         {
@@ -74,6 +78,11 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
         {
             throw new InvalidOperationException("Published activity type keys cannot be changed.");
         }
+
+        // The requested new scope (which may differ from the existing) must also be within the
+        // caller's reach — InstitutionalAdmin cannot retarget a type into another institution
+        // or up to Global.
+        await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, request.Scope, request.ScopeId, cancellationToken);
 
         activityType.Key = request.Key.Trim();
         activityType.Name = request.Name.Trim();

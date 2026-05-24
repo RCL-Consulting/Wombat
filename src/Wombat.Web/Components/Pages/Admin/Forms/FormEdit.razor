@@ -1,6 +1,6 @@
 @page "/admin/forms/new"
 @page "/admin/forms/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -268,7 +268,7 @@
         return;
       }
 
-      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id!.Value));
+      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id!.Value, authState.User));
       if (_form is null)
       {
         Navigation.NavigateTo("/not-found");
@@ -303,14 +303,15 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       if (IsNew)
       {
-        _form = await Sender.Send(new CreateAssessmentFormCommand(_model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete));
+        _form = await Sender.Send(new CreateAssessmentFormCommand(_model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete, authState.User));
         Navigation.NavigateTo($"/admin/forms/{_form.Id}");
         return;
       }
 
-      _form = await Sender.Send(new UpdateAssessmentFormCommand(Id!.Value, _model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete, _model.IsActive));
+      _form = await Sender.Send(new UpdateAssessmentFormCommand(Id!.Value, _model.Name, _model.InstitutionId, _model.SpecialityId, _model.SubSpecialityId, _model.ScaleId, _model.CanDelete, _model.IsActive, authState.User));
       _statusMessage = "Assessment form saved.";
     }
     catch (Exception exception)
@@ -331,10 +332,11 @@
 
     try
     {
-      await Sender.Send(new DeactivateAssessmentFormCommand(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateAssessmentFormCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "Assessment form deactivated.";
-      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id.Value));
+      _form = await Sender.Send(new GetAssessmentFormByIdQuery(Id.Value, authState.User));
     }
     catch (Exception exception)
     {
@@ -348,20 +350,30 @@
 
   private async Task AddCriterionAsync()
   {
-    await RefreshFormAsync(() => Sender.Send(new AddFormCriterionCommand(Id!.Value, _criterionModel.Prompt, EmptyToNull(_criterionModel.HelpText), _criterionModel.IsRequired)), "Criterion added.");
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshFormAsync(() => Sender.Send(new AddFormCriterionCommand(Id!.Value, _criterionModel.Prompt, EmptyToNull(_criterionModel.HelpText), _criterionModel.IsRequired, authState.User)), "Criterion added.");
     _criterionModel.Prompt = string.Empty;
     _criterionModel.HelpText = null;
     _criterionModel.IsRequired = true;
   }
 
-  private Task RemoveCriterionAsync(int criterionId)
-    => RefreshFormAsync(() => Sender.Send(new RemoveFormCriterionCommand(Id!.Value, criterionId)), "Criterion removed.");
+  private async Task RemoveCriterionAsync(int criterionId)
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshFormAsync(() => Sender.Send(new RemoveFormCriterionCommand(Id!.Value, criterionId, authState.User)), "Criterion removed.");
+  }
 
-  private Task LinkEpaAsync()
-    => RefreshFormAsync(() => Sender.Send(new LinkFormToEpaCommand(Id!.Value, _linkModel.EpaId)), "EPA linked.");
+  private async Task LinkEpaAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshFormAsync(() => Sender.Send(new LinkFormToEpaCommand(Id!.Value, _linkModel.EpaId, authState.User)), "EPA linked.");
+  }
 
-  private Task UnlinkEpaAsync(int linkId)
-    => RefreshFormAsync(() => Sender.Send(new UnlinkFormFromEpaCommand(Id!.Value, linkId)), "EPA unlinked.");
+  private async Task UnlinkEpaAsync(int linkId)
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await RefreshFormAsync(() => Sender.Send(new UnlinkFormFromEpaCommand(Id!.Value, linkId, authState.User)), "EPA unlinked.");
+  }
 
   private async Task RefreshFormAsync(Func<Task<AssessmentFormDto>> action, string successMessage)
   {

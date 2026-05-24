@@ -1,12 +1,15 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 
-public sealed record GetActivityTypeEditorQuery(int? ActivityTypeId = null) : IRequest<ActivityTypeEditorDto>;
+public sealed record GetActivityTypeEditorQuery(int? ActivityTypeId, ClaimsPrincipal Principal) : IRequest<ActivityTypeEditorDto>;
 
 public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActivityTypeEditorQuery, ActivityTypeEditorDto>
 {
@@ -91,8 +94,60 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
             .SingleOrDefaultAsync(entity => entity.Id == request.ActivityTypeId.Value, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
+        if (!await CanReadAsync(request.Principal, activityType, cancellationToken))
+        {
+            throw new InvalidOperationException("The activity type could not be found.");
+        }
+
         return Map(activityType);
     }
+
+    internal static async Task<bool> CanReadAsync(ClaimsPrincipal principal, ActivityType activityType, CancellationToken cancellationToken, IApplicationDbContext? dbContext = null)
+    {
+        if (principal.IsAdministrator())
+        {
+            return true;
+        }
+
+        if (!principal.IsInstitutionalAdmin())
+        {
+            return false;
+        }
+
+        var callerInstitutionId = principal.GetInstitutionId();
+        if (!callerInstitutionId.HasValue)
+        {
+            return false;
+        }
+
+        switch (activityType.Scope)
+        {
+            case ActivityScope.Global:
+                return true;
+            case ActivityScope.Institution:
+                return activityType.ScopeId == callerInstitutionId.Value;
+            case ActivityScope.Speciality:
+                if (dbContext is null || !activityType.ScopeId.HasValue)
+                {
+                    return false;
+                }
+                return await dbContext.Set<Speciality>()
+                    .AnyAsync(entity => entity.Id == activityType.ScopeId.Value && entity.InstitutionId == callerInstitutionId.Value, cancellationToken);
+            case ActivityScope.SubSpeciality:
+                if (dbContext is null || !activityType.ScopeId.HasValue)
+                {
+                    return false;
+                }
+                return await dbContext.Set<SubSpeciality>()
+                    .AnyAsync(entity => entity.Id == activityType.ScopeId.Value && entity.Speciality.InstitutionId == callerInstitutionId.Value, cancellationToken);
+            default:
+                return false;
+        }
+    }
+
+    // Wrapper kept for callsites that already have the dbContext handy.
+    public Task<bool> CanReadAsync(ClaimsPrincipal principal, ActivityType activityType, CancellationToken cancellationToken)
+        => CanReadAsync(principal, activityType, cancellationToken, _dbContext);
 
     internal static ActivityTypeEditorDto Map(ActivityType activityType)
     {

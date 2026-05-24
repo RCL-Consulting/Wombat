@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,8 @@ public sealed record UpdateAssessmentFormCommand(
     int? SubSpecialityId,
     int ScaleId,
     bool CanDelete,
-    bool IsActive) : IRequest<AssessmentFormDto>;
+    bool IsActive,
+    ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
 
 public sealed class UpdateAssessmentFormCommandValidator : AbstractValidator<UpdateAssessmentFormCommand>
 {
@@ -43,7 +45,11 @@ public sealed class UpdateAssessmentFormCommandHandler : IRequestHandler<UpdateA
             throw new InvalidOperationException("The requested assessment form was not found.");
         }
 
+        // Check both the existing scope and the requested new scope — InstitutionalAdmin can't
+        // move a form from their institution to another one, or escalate to global.
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, form.InstitutionId, form.SpecialityId, form.SubSpecialityId, cancellationToken);
         await EnsureScopeExistsAsync(request.InstitutionId, request.SpecialityId, request.SubSpecialityId, request.ScaleId, cancellationToken);
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, request.InstitutionId, request.SpecialityId, request.SubSpecialityId, cancellationToken);
 
         form.Name = request.Name.Trim();
         form.InstitutionId = request.InstitutionId;

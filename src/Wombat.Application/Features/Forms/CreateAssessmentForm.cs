@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,8 @@ public sealed record CreateAssessmentFormCommand(
     int? SpecialityId,
     int? SubSpecialityId,
     int ScaleId,
-    bool CanDelete) : IRequest<AssessmentFormDto>;
+    bool CanDelete,
+    ClaimsPrincipal Principal) : IRequest<AssessmentFormDto>;
 
 public sealed class CreateAssessmentFormCommandValidator : AbstractValidator<CreateAssessmentFormCommand>
 {
@@ -35,6 +37,7 @@ public sealed class CreateAssessmentFormCommandHandler : IRequestHandler<CreateA
     public async Task<AssessmentFormDto> Handle(CreateAssessmentFormCommand request, CancellationToken cancellationToken)
     {
         await EnsureScopeExistsAsync(request.InstitutionId, request.SpecialityId, request.SubSpecialityId, request.ScaleId, cancellationToken);
+        await FormMappings.EnsureCallerCanWriteAsync(_dbContext, request.Principal, request.InstitutionId, request.SpecialityId, request.SubSpecialityId, cancellationToken);
 
         var form = new AssessmentForm
         {

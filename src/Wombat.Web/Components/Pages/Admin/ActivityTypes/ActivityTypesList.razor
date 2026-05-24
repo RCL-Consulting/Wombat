@@ -1,6 +1,7 @@
 @page "/admin/activity-types"
-@attribute [Authorize(Roles = WombatRoles.Administrator)]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Activity Types</PageTitle>
 
@@ -71,7 +72,8 @@
   {
     try
     {
-      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery()));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery(authState.User)));
     }
     catch (Exception exception)
     {

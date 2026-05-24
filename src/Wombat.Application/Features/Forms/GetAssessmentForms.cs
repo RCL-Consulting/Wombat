@@ -1,12 +1,15 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Forms;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Forms;
 
-public sealed record GetAssessmentFormsListQuery() : IRequest<IReadOnlyList<AssessmentFormDto>>;
-public sealed record GetAssessmentFormByIdQuery(int Id) : IRequest<AssessmentFormDto?>;
+public sealed record GetAssessmentFormsListQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<AssessmentFormDto>>;
+public sealed record GetAssessmentFormByIdQuery(int Id, ClaimsPrincipal Principal) : IRequest<AssessmentFormDto?>;
 
 public sealed class GetAssessmentFormsListQueryHandler : IRequestHandler<GetAssessmentFormsListQuery, IReadOnlyList<AssessmentFormDto>>
 {
@@ -18,7 +21,38 @@ public sealed class GetAssessmentFormsListQueryHandler : IRequestHandler<GetAsse
     }
 
     public async Task<IReadOnlyList<AssessmentFormDto>> Handle(GetAssessmentFormsListQuery request, CancellationToken cancellationToken)
-        => await _dbContext.Set<AssessmentForm>()
+    {
+        var query = _dbContext.Set<AssessmentForm>().AsQueryable();
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<AssessmentFormDto>();
+            }
+
+            var institutionId = scopedInstitutionId.Value;
+            var allowedSpecialityIds = await _dbContext.Set<Speciality>()
+                .Where(entity => entity.InstitutionId == institutionId)
+                .Select(entity => entity.Id)
+                .ToListAsync(cancellationToken);
+
+            var allowedSubSpecialityIds = await _dbContext.Set<SubSpeciality>()
+                .Where(entity => entity.Speciality.InstitutionId == institutionId)
+                .Select(entity => entity.Id)
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(form =>
+                form.InstitutionId == institutionId ||
+                (form.SpecialityId != null && allowedSpecialityIds.Contains(form.SpecialityId.Value)) ||
+                (form.SubSpecialityId != null && allowedSubSpecialityIds.Contains(form.SubSpecialityId.Value)) ||
+                // Global forms (all three scope ids null) are visible — write attempts get
+                // blocked by the per-command scope guard.
+                (form.InstitutionId == null && form.SpecialityId == null && form.SubSpecialityId == null));
+        }
+
+        return await query
             .OrderBy(entity => entity.Name)
             .Select(form => new AssessmentFormDto(
                 form.Id,
@@ -39,6 +73,7 @@ public sealed class GetAssessmentFormsListQueryHandler : IRequestHandler<GetAsse
                     .Select(link => new FormEpaLinkDto(link.Id, link.EpaId, link.Epa.Code, link.Epa.Title))
                     .ToList()))
             .ToListAsync(cancellationToken);
+    }
 }
 
 public sealed class GetAssessmentFormByIdQueryHandler : IRequestHandler<GetAssessmentFormByIdQuery, AssessmentFormDto?>
@@ -50,6 +85,26 @@ public sealed class GetAssessmentFormByIdQueryHandler : IRequestHandler<GetAsses
         _dbContext = dbContext;
     }
 
-    public Task<AssessmentFormDto?> Handle(GetAssessmentFormByIdQuery request, CancellationToken cancellationToken)
-        => FormMappings.GetByIdAsync(_dbContext, request.Id, cancellationToken);
+    public async Task<AssessmentFormDto?> Handle(GetAssessmentFormByIdQuery request, CancellationToken cancellationToken)
+    {
+        var dto = await FormMappings.GetByIdAsync(_dbContext, request.Id, cancellationToken);
+        if (dto is null)
+        {
+            return null;
+        }
+
+        if (request.Principal.IsAdministrator())
+        {
+            return dto;
+        }
+
+        var scopeInstitutionId = await FormMappings.ResolveFormScopeInstitutionAsync(_dbContext, dto.InstitutionId, dto.SpecialityId, dto.SubSpecialityId, cancellationToken);
+        // Global form (no institution resolved): InstitutionalAdmin may still read.
+        if (!scopeInstitutionId.HasValue)
+        {
+            return request.Principal.IsInstitutionalAdmin() ? dto : null;
+        }
+
+        return request.Principal.CanAccessInstitution(scopeInstitutionId.Value) ? dto : null;
+    }
 }

@@ -66,7 +66,8 @@
       return;
     }
 
-    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId));
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId, authState.User));
     _dataJson = "{}";
   }
 
