@@ -14,7 +14,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## This session at a glance
 
-**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit pending). Replaced the raw numeric `Scope Id` spinbutton with a `<select>` whose options come from the relevant lookup list (institutions / specialities / sub-specialities) based on the selected Scope. Triple-path labels match the EPA + Curriculum edit convention. Scope=Global hides the field entirely; changing scope clears the stale id so an institution-id can't carry over into a speciality picker. Only `ActivityTypeEdit.razor` touched (markup + 3 new lookup lists + projection helpers + scope-change handler). Round-trip verified on the existing `mini_cex_paed` (Scope=Speciality, ScopeId=2) — the picker pre-selects `Kgosi Kgari Teaching Hospital / Paediatrics` cleanly. Build clean, 38/38 Web tests pass.
+**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit `4aeaa3d`). Replaced the raw numeric `Scope Id` spinbutton with a `<select>` whose options come from the relevant lookup list (institutions / specialities / sub-specialities) based on the selected Scope. Triple-path labels match the EPA + Curriculum edit convention. Scope=Global hides the field entirely; changing scope clears the stale id so an institution-id can't carry over into a speciality picker. Only `ActivityTypeEdit.razor` touched (markup + 3 new lookup lists + projection helpers + scope-change handler). Round-trip verified on the existing `mini_cex_paed` (Scope=Speciality, ScopeId=2) — the picker pre-selects `Kgosi Kgari Teaching Hospital / Paediatrics` cleanly. Build clean, 38/38 Web tests pass.
 
 **T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`). Two of three originally-bundled items shipped; the third turned out to be a Playwright snapshot-timing false alarm. Touched only `ActivityTypeEdit.razor`. Browser-verified end-to-end.
 
@@ -160,7 +160,7 @@ Across six clusters:
 
 ## Last completed
 
-**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit pending). Single-file change in `ActivityTypeEdit.razor`. Numeric Scope Id spinbutton replaced with cascading-context `<select>`: hidden when Scope=Global, single-level picker for Institution, joined "Institution / Speciality" labels for Speciality, triple-path labels for SubSpeciality. Scope-change handler clears stale id. Round-trip on existing entity verified. Build clean, 38/38 Web tests pass.
+**T053 — Activity-type Metadata: context-aware Scope Id picker** (commit `4aeaa3d`). Single-file change in `ActivityTypeEdit.razor`. Numeric Scope Id spinbutton replaced with cascading-context `<select>`: hidden when Scope=Global, single-level picker for Institution, joined "Institution / Speciality" labels for Speciality, triple-path labels for SubSpeciality. Scope-change handler clears stale id. Round-trip on existing entity verified. Build clean, 38/38 Web tests pass.
 
 **T055 — Publish button + post-save redirect on ActivityType edit** (commit `6eaef56`).
 
@@ -267,6 +267,7 @@ Verification:
 
 ## Last verified commits
 
+- `4aeaa3d` — T053 (context-aware Scope Id picker on activity-type Metadata tab; one Razor file; round-trip verified; build clean, 38/38 Web tests pass)
 - `6eaef56` — T055 (always-visible Publish button + post-save URL redirect on ActivityType edit; one Razor file; build clean, 38/38 Web tests pass)
 - `1d76c3c` — docs: record d8a7557 commit hash in handoff + plan
 - `d8a7557` — docs: Act 1 Playwright play-through findings + T056 raised (every step's Actual/Gap populated; 6 findings; T051/T055 scope bumped; new T056 = InstitutionalAdmin role-power audit)
