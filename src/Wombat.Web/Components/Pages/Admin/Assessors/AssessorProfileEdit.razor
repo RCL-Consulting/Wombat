@@ -1,6 +1,7 @@
 @page "/admin/assessors/edit"
 @attribute [Authorize(Policy = "Administrator")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Assessor Profile</PageTitle>
 
@@ -119,9 +120,10 @@
 
     try
     {
-      _institutions = await Sender.Send(new GetInstitutionsListQuery());
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _assessorUsers = await Sender.Send(new ListAssessorUsersQuery());
 
       if (Id.HasValue)

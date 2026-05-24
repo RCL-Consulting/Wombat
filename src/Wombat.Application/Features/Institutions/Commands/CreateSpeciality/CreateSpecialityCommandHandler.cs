@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,6 +17,11 @@ public sealed class CreateSpecialityCommandHandler : IRequestHandler<CreateSpeci
 
     public async Task<SpecialityDto> Handle(CreateSpecialityCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create a speciality for this institution.");
+        }
+
         var speciality = new Speciality
         {
             InstitutionId = request.InstitutionId,

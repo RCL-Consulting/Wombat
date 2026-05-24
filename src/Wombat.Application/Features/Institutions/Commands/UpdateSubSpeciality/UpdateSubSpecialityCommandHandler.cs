@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,8 +17,26 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
 
     public async Task<SubSpecialityDto> Handle(UpdateSubSpecialityCommand request, CancellationToken cancellationToken)
     {
-        var subSpeciality = await _dbContext.Set<SubSpeciality>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
+        var subSpeciality = await _dbContext.Set<SubSpeciality>()
+            .Include(entity => entity.Speciality)
+            .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Sub-speciality {request.Id} was not found.");
+
+        if (!request.Principal.CanAccessInstitution(subSpeciality.Speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this sub-speciality.");
+        }
+
+        var targetInstitutionId = await _dbContext.Set<Speciality>()
+            .Where(entity => entity.Id == request.SpecialityId)
+            .Select(entity => (int?)entity.InstitutionId)
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Speciality {request.SpecialityId} was not found.");
+
+        if (!request.Principal.CanAccessInstitution(targetInstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to move this sub-speciality to that speciality.");
+        }
 
         subSpeciality.SpecialityId = request.SpecialityId;
         subSpeciality.Name = request.Name.Trim();

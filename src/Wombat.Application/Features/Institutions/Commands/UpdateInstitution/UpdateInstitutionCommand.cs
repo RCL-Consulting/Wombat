@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 
 namespace Wombat.Application.Features.Institutions.Commands.UpdateInstitution;
@@ -7,4 +8,5 @@ public sealed record UpdateInstitutionCommand(
     string Name,
     string ShortCode,
     string? ContactEmail,
-    bool IsActive) : IRequest<InstitutionDto>;
+    bool IsActive,
+    ClaimsPrincipal Principal) : IRequest<InstitutionDto>;

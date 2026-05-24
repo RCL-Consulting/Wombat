@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 
 namespace Wombat.Application.Features.Institutions.Commands.CreateSpeciality;
@@ -5,4 +6,5 @@ namespace Wombat.Application.Features.Institutions.Commands.CreateSpeciality;
 public sealed record CreateSpecialityCommand(
     int InstitutionId,
     string Name,
-    string? Description) : IRequest<SpecialityDto>;
+    string? Description,
+    ClaimsPrincipal Principal) : IRequest<SpecialityDto>;

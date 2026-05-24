@@ -338,10 +338,11 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _editor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(ActivityTypeId));
-      _institutions = await Sender.Send(new GetInstitutionsListQuery());
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       LoadEditorState(_editor);
       RefreshWarnings();
     }

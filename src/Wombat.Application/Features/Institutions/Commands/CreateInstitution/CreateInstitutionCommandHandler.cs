@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,6 +17,11 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
 
     public async Task<InstitutionDto> Handle(CreateInstitutionCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.IsAdministrator())
+        {
+            throw new UnauthorizedAccessException("Only global administrators may create institutions.");
+        }
+
         var institution = new Institution
         {
             Name = request.Name.Trim(),

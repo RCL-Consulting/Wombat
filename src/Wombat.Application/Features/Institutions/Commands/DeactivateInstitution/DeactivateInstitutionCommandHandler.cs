@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,6 +17,11 @@ public sealed class DeactivateInstitutionCommandHandler : IRequestHandler<Deacti
 
     public async Task Handle(DeactivateInstitutionCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.IsAdministrator())
+        {
+            throw new UnauthorizedAccessException("Only global administrators may deactivate institutions.");
+        }
+
         var institution = await _dbContext.Set<Institution>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Institution {request.Id} was not found.");
 

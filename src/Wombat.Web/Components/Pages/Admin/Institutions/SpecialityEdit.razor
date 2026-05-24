@@ -1,8 +1,9 @@
 @page "/admin/institutions/{InstitutionId:int}/specialities/new"
 @page "/admin/institutions/{InstitutionId:int}/specialities/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>@(IsNew ? "Create Speciality" : "Edit Speciality")</PageTitle>
 
@@ -90,7 +91,8 @@
 
     try
     {
-      _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId, authState.User));
 
       if (_institution is null)
       {
@@ -104,7 +106,7 @@
         return;
       }
 
-      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId));
+      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId, authState.User));
       var specialityId = Id!.Value;
       var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
 
@@ -139,16 +141,17 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       SpecialityDto speciality;
 
       if (IsNew)
       {
-        speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description)));
+        speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description), authState.User));
         Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}");
         return;
       }
 
-      speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, InstitutionId, _model.Name, EmptyToNull(_model.Description), _model.IsActive));
+      speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, InstitutionId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, authState.User));
       _model.IsActive = speciality.IsActive;
       _statusMessage = "Speciality saved.";
     }
@@ -170,7 +173,8 @@
 
     try
     {
-      await Sender.Send(new DeactivateSpecialityCommand(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateSpecialityCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "Speciality deactivated.";
     }

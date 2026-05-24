@@ -4,16 +4,48 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**None.** The session that ran the audit + T050 + T053 + T054 + T055 ended after wrapping up doc updates. Remaining triage (from `Rewrite/scenario-act1-fixes-plan.md`):
+**T056.a shipped this session.** Foundations + Institutions/Speciality/SubSpeciality cluster. Remaining work split into four follow-on clusters tracked in `Rewrite/Tasks/T056-institutional-admin-role-power.md`:
 
-1. **T056** — InstitutionalAdmin role-power audit, **Option A** (chosen by user 2026-05-24): grant institution-scoped admin powers across ~25 pages + handlers + tests (~12–16h, **Opus**). Largest of the remaining tasks; tackling it next means T051/T052 can build on the result. Until this lands, Phases 1.D–1.F of the Paediatrics scenario continue to run as bootstrap admin per the docs.
-2. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, scope bumped by play-through; after T056 to avoid double-touching the invitation surface).
-3. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056).
-4. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
+1. **T056.b** — EPAs + Curricula cluster (~3–4h, **Opus** — handler scope logic + many call sites).
+2. **T056.c** — ActivityTypes + Forms cluster (~3–4h, **Opus**).
+3. **T056.d** — Trainees + Assessors + Invitations + EntrustmentScales cluster (~3–4h, **Opus**).
+4. **T056.e** — Audit + SSO + NavMenu refresh + scenario-doc revert (~3–4h, **Opus** — audit scoping is the tricky bit; needs Actor-institution join).
+5. **T051** — Invitation form: First/Last name capture + surface registration URL + dev SMTP tidy (~3h, **Sonnet**, after T056.e to avoid double-touching the invitation surface).
+6. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**, after T056.e).
+7. **Operational deployment (carried from T016).** Execute `deploy/README.md` against a real Linode server, configure DNS + TLS, set production secrets, seed. **Suggested model:** Opus — first-time infra work with no playbook yet.
 
 ## This session at a glance
 
-**Session 2026-05-24 — scenario gap fix-up.** Started with a Playwright route-and-surface audit of the Paediatrics scenario, then played it end-to-end, then closed four of the six gap-fix tasks the audit + play-through surfaced. Net result: Act 1 of `scenario-paediatrics.md` plays cleanly under the bootstrap admin, with only T056 (InstitutionalAdmin role-power audit) blocking the canonical "Mbatha owns the setup" framing. The session ended after also reverting Step 1.7 to its canonical create-scale prescription (since T054 shipped the admin UI).
+**Session 2026-05-24 (continued) — T056.a landed.** Started T056 (InstitutionalAdmin role-power audit, Option A). Realized mid-implementation that the realistic in-session turn budget couldn't carry the full 12–16h sweep cleanly, so split T056 into five clusters and landed the first one. Foundations + Institutions/Speciality/SubSpeciality scope guards are now in master; the other 9 admin surfaces (EPAs, Curricula, ActivityTypes, Forms, Trainees, Assessors, Invitations, EntrustmentScales, Audit, SSO) remain Administrator-only and are scheduled across T056.b–e.
+
+**T056.a — Foundations + Institutions/Speciality/SubSpec cluster.**
+
+Foundations:
+- New `AdministratorOrInstitutionalAdmin` policy in `AuthorizationPolicies.cs`.
+- Helpers on `ClaimsPrincipalExtensions`: `IsAdministrator()`, `IsInstitutionalAdmin()`, `CanAccessInstitution(int)`.
+
+Handlers fully guarded (14 total — every query+command in the three entity types):
+- Institutions: `GetInstitutionsListQuery`, `GetInstitutionByIdQuery`, `CreateInstitutionCommand`, `UpdateInstitutionCommand`, `DeactivateInstitutionCommand`.
+- Specialities: `GetSpecialitiesListQuery`, `GetSpecialitiesForInstitutionQuery`, `CreateSpecialityCommand`, `UpdateSpecialityCommand`, `DeactivateSpecialityCommand`.
+- SubSpecialities: `GetSubSpecialitiesListQuery`, `GetSubSpecialitiesForSpecialityQuery`, `CreateSubSpecialityCommand`, `UpdateSubSpecialityCommand`, `DeactivateSubSpecialityCommand`.
+
+Every query record carries `ClaimsPrincipal Principal`. Lists filter by institution when caller is not Administrator. Get-by-id returns null on out-of-scope id (404 not 403, avoids leaking other-institution ids). Commands throw `UnauthorizedAccessException` on scope mismatch. `CreateInstitution` / `DeactivateInstitution` are Administrator-only outright (creating new institutions is a global act).
+
+Razor pages updated to pass `authState.User`:
+- 6 pages in the Institutions feature itself: `InstitutionEdit`, `InstitutionsList`, `SpecialityEdit`, `SpecialitiesList`, `SubSpecialityEdit`, `SubSpecialitiesList`.
+- 8 picker-using pages outside the feature whose handlers haven't been guarded yet: `ActivityTypeEdit`, `Sso/GroupMappings`, `Curricula/CurriculaList`, `Curricula/CurriculumEdit`, `Invitations/InvitationsList`, `Epas/EpasList`, `Epas/EpaEdit`, `Forms/FormEdit`, `Assessors/AssessorProfileEdit`, `Trainees/PendingTraineesList`. These pages still `[Authorize(Policy = "Administrator")]` — the swap to the combined policy happens when their feature cluster lands.
+
+Auth swaps: only the 5 Institutions/Speciality/SubSpec pages move to `AdministratorOrInstitutionalAdmin`. `InstitutionsList` stays Administrator-only by design (listing/creating institutions is a global act; InstitutionalAdmin gets to edit own via the edit page only).
+
+Tests:
+- New `tests/Wombat.Application.Tests/TestHelpers/TestPrincipals.cs` — Administrator / InstitutionalAdmin principal builders.
+- New `tests/Wombat.Application.Tests/Features/Institutions/InstitutionalAdminScopeTests.cs` — 8 scope-guard tests.
+- `CreateInstitutionCommandHandlerTests` gained a second test asserting InstitutionalAdmin cannot create institutions.
+- Application count: 174 → 183. Domain 45, Architecture 19, Web 38 unchanged. Build clean, zero warnings.
+
+NavMenu: deferred to T056.e — exposing nav links to half-guarded pages would mislead Mbatha during dev play-through.
+
+Browser verification: skipped at the request-flow level. T056 has no UI/UX changes for the Administrator role; the InstitutionalAdmin path requires T056.b/c/d/e to be testable end-to-end. Scope-guard tests assert the handler behavior at the unit-test layer.
 
 Commits in chronological order:
 - `c07b71a` — docs: record raw Playwright audit findings + first cut of `scenario-act1-fixes-plan.md` (T051–T055 sketched)
@@ -178,6 +210,8 @@ Across six clusters:
 - **`ChangePassword.razor`** uses raw form markup instead of `FormField`. Consistency follow-up.
 
 ## Last completed
+
+**T056.a — InstitutionalAdmin role-power foundations + Institutions/Speciality/SubSpec cluster.** Commit pending at session end. New `AdministratorOrInstitutionalAdmin` policy + `CanAccessInstitution` helper. 14 handlers in Institutions feature now principal-aware; 14 razor pages updated to pass `authState.User`; 9 new tests cover the scope guards. Application 174→183, Domain 45, Architecture 19, Web 38; build clean. T056.b–e remaining (EPAs+Curricula, ActivityTypes+Forms, Trainees+Assessors+Invitations+EntrustmentScales, Audit+SSO+NavMenu).
 
 **T054 — Admin CRUD for `EntrustmentScale` + `EntrustmentLevel`** (commit `ef02268`). 12 files added, 3 modified. Full Application + Web layer for create/edit/delete of entrustment scales with their nested levels. Delete enforces referential-integrity across `AssessmentForm` / `MsfQuestion` / `PendingEntrustmentDecision` / `EntrustmentDecision`. 5 new Application tests. Browser-verified end-to-end (create Paed scale → rename level → delete). Closes the only true feature gap from Act 1 audit. Build clean, 174 + 19 + 38 tests pass.
 

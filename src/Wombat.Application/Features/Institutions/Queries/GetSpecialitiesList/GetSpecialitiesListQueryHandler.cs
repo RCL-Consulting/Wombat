@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -15,9 +16,24 @@ public sealed class GetSpecialitiesListQueryHandler : IRequestHandler<GetSpecial
     }
 
     public async Task<IReadOnlyList<SpecialityDto>> Handle(GetSpecialitiesListQuery request, CancellationToken cancellationToken)
-        => await _dbContext.Set<Speciality>()
+    {
+        var query = _dbContext.Set<Speciality>().AsQueryable();
+
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<SpecialityDto>();
+            }
+
+            query = query.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
+        }
+
+        return await query
             .OrderBy(entity => entity.Institution.Name)
             .ThenBy(entity => entity.Name)
             .Select(entity => new SpecialityDto(entity.Id, entity.InstitutionId, entity.Name, entity.Description, entity.IsActive))
             .ToListAsync(cancellationToken);
+    }
 }

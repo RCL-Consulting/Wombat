@@ -1,8 +1,9 @@
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/new"
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>@(IsNew ? "Create Sub-Speciality" : "Edit Sub-Speciality")</PageTitle>
 
@@ -86,7 +87,8 @@
 
     try
     {
-      _speciality = await FindSpecialityAsync(SpecialityId);
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _speciality = await FindSpecialityAsync(SpecialityId, authState.User);
 
       if (_speciality is null)
       {
@@ -100,7 +102,7 @@
         return;
       }
 
-      var subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId));
+      var subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId, authState.User));
       var subSpecialityId = Id!.Value;
       var subSpeciality = subSpecialities.SingleOrDefault(item => item.Id == subSpecialityId);
 
@@ -135,16 +137,17 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       SubSpecialityDto subSpeciality;
 
       if (IsNew)
       {
-        subSpeciality = await Sender.Send(new CreateSubSpecialityCommand(SpecialityId, _model.Name, EmptyToNull(_model.Description)));
+        subSpeciality = await Sender.Send(new CreateSubSpecialityCommand(SpecialityId, _model.Name, EmptyToNull(_model.Description), authState.User));
         Navigation.NavigateTo($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}");
         return;
       }
 
-      subSpeciality = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive));
+      subSpeciality = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, authState.User));
       _model.IsActive = subSpeciality.IsActive;
       _statusMessage = "Sub-speciality saved.";
     }
@@ -166,7 +169,8 @@
 
     try
     {
-      await Sender.Send(new DeactivateSubSpecialityCommand(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateSubSpecialityCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "Sub-speciality deactivated.";
     }
@@ -180,13 +184,13 @@
     }
   }
 
-  private async Task<SpecialityDto?> FindSpecialityAsync(int specialityId)
+  private async Task<SpecialityDto?> FindSpecialityAsync(int specialityId, System.Security.Claims.ClaimsPrincipal principal)
   {
-    var institutions = await Sender.Send(new GetInstitutionsListQuery());
+    var institutions = await Sender.Send(new GetInstitutionsListQuery(principal));
 
     foreach (var institution in institutions)
     {
-      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(institution.Id));
+      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(institution.Id, principal));
       var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
 
       if (speciality is not null)

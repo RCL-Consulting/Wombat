@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,6 +17,17 @@ public sealed class CreateSubSpecialityCommandHandler : IRequestHandler<CreateSu
 
     public async Task<SubSpecialityDto> Handle(CreateSubSpecialityCommand request, CancellationToken cancellationToken)
     {
+        var owningInstitutionId = await _dbContext.Set<Speciality>()
+            .Where(entity => entity.Id == request.SpecialityId)
+            .Select(entity => (int?)entity.InstitutionId)
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Speciality {request.SpecialityId} was not found.");
+
+        if (!request.Principal.CanAccessInstitution(owningInstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create a sub-speciality for this speciality.");
+        }
+
         var subSpeciality = new SubSpeciality
         {
             SpecialityId = request.SpecialityId,

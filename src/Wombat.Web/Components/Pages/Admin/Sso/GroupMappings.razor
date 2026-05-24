@@ -1,5 +1,6 @@
 @page "/admin/sso/group-mappings"
 @attribute [Authorize(Policy = "Administrator")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Microsoft.Extensions.Options
 @using Wombat.Application.Common.Options
 @using Wombat.Application.Features.Sso
@@ -175,9 +176,10 @@
 
     try
     {
-      _institutions = await Sender.Send(new GetInstitutionsListQuery());
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery());
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery());
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery());
 
       if (SsoOptions.Value.Providers.Count > 0)

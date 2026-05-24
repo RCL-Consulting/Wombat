@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -16,6 +17,11 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
 
     public async Task<InstitutionDto> Handle(UpdateInstitutionCommand request, CancellationToken cancellationToken)
     {
+        if (!request.Principal.CanAccessInstitution(request.Id))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this institution.");
+        }
+
         var institution = await _dbContext.Set<Institution>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Institution {request.Id} was not found.");
 

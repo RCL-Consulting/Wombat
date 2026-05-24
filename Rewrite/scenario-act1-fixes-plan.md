@@ -95,14 +95,18 @@ T055 done (commit 6eaef56) — Publish always visible + post-save SPA redirect
 T053 done (commit 4aeaa3d) — context-aware Scope Id picker
 T054 done (commit ef02268) — EntrustmentScale admin CRUD
         ↓
-T056    (Option A chosen — grant InstitutionalAdmin scope-aware admin powers)
+T056.a  done (Option A foundations + Institutions/Speciality/SubSpec cluster)
+T056.b  pending (EPAs + Curricula cluster)
+T056.c  pending (ActivityTypes + Forms cluster)
+T056.d  pending (Trainees + Assessors + Invitations + EntrustmentScales cluster)
+T056.e  pending (Audit + SSO + NavMenu refresh + scenario doc revert)
         ↓
 T051    (invitation form: name capture + URL surface + dev SMTP tidy)
         ↓
 T052    (re-expose Administrator role on invitation)
 ```
 
-**Remaining order: T056 → T051 → T052.** T056 is the largest of the remaining tasks (~12–16h Option A); holding T051/T052 until after it lands avoids touching the invitation surface twice. The smaller independent tasks (T053, T054, T055) have already shipped, so the post-T054 backlog is strictly the auth and invitation work.
+**Remaining order: T056.b → T056.c → T056.d → T056.e → T051 → T052.** T056 turned out to be too large to land in one session and is being landed in five clusters; each cluster ships a coherent feature group's scope guards plus tests. T051/T052 stay queued behind T056.e because they touch invitation surfaces that T056.d will already have modified.
 
 ## Documented compromises (no code, doc only)
 
@@ -118,10 +122,14 @@ T052    (re-expose Administrator role on invitation)
 | T053 | 2h | ✅ done (commit `4aeaa3d`) |
 | T054 | 6–8h | ✅ done (commit `ef02268`) |
 | T055 | 1h | ✅ done (commit `6eaef56`) |
-| T056 | 12–16h | ⏳ pending (Option A chosen by user 2026-05-24; Option B no longer in scope) |
-| T051 | 3h | ⏳ pending (after T056) |
-| T052 | 3h | ⏳ pending (after T056) |
-| **Total remaining** | **~18–22h** | T056 dominates |
+| T056.a | ~3h | ✅ done (foundations + Institutions/Speciality/SubSpec cluster; 14 handlers + 14 pages + 9 tests) |
+| T056.b | ~3–4h | ⏳ pending (EPAs + Curricula cluster) |
+| T056.c | ~3–4h | ⏳ pending (ActivityTypes + Forms cluster) |
+| T056.d | ~3–4h | ⏳ pending (Trainees + Assessors + Invitations + EntrustmentScales cluster) |
+| T056.e | ~3–4h | ⏳ pending (Audit + SSO + NavMenu refresh + scenario doc revert) |
+| T051 | 3h | ⏳ pending (after T056.e) |
+| T052 | 3h | ⏳ pending (after T056.e) |
+| **Total remaining** | **~18–22h** | T056.b–e dominates |
 
 ## What this plan does *not* cover
 
@@ -133,4 +141,4 @@ T052    (re-expose Administrator role on invitation)
 
 If all six tasks ship, the Paediatrics scenario Act 1 is playable end-to-end against a clean dev install in ~2.5 hours of clicking, and Acts 2–5 can be drafted with confidence in the same step-format / gap-finding model.
 
-**As of 2026-05-24:** T050, T053, T054, T055 shipped; Step 1.7 reverted to canonical create-scale prescription. Scenario plays end-to-end as bootstrap admin (Phases 1.A–1.F) — only Phase 1.B's intent (Mbatha as InstitutionalAdmin owning the rest of setup) waits on T056. Phases 1.C–1.F currently run under the bootstrap admin as a documented workaround inside the doc; T056 will let Mbatha take over from Phase 1.B as originally intended.
+**As of 2026-05-24:** T050, T053, T054, T055 shipped; Step 1.7 reverted to canonical create-scale prescription. T056.a shipped (foundations + Institutions/Speciality/SubSpec cluster). Mbatha can now edit her own institution + manage specialities + sub-specialities, but the remaining admin pages (EPAs, Curricula, ActivityTypes, Forms, Trainees, Assessors, Invitations, EntrustmentScales, Audit, SSO) still require Administrator. T056.b–e will progressively close the remaining gaps. Phases 1.C–1.F currently run under the bootstrap admin as a documented workaround inside the scenario doc.

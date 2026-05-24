@@ -1,8 +1,9 @@
 @page "/admin/institutions/new"
 @page "/admin/institutions/{Id:int}"
-@attribute [Authorize(Policy = "Administrator")]
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>@(IsNew ? "Create Institution" : "Edit Institution")</PageTitle>
 
@@ -98,7 +99,8 @@
 
     try
     {
-      var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value, authState.User));
 
       if (institution is null)
       {
@@ -132,16 +134,17 @@
 
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       InstitutionDto institution;
 
       if (IsNew)
       {
-        institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail)));
+        institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
         Navigation.NavigateTo($"/admin/institutions/{institution.Id}");
         return;
       }
 
-      institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), _model.IsActive));
+      institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), _model.IsActive, authState.User));
       _model.IsActive = institution.IsActive;
       _statusMessage = "Institution saved.";
     }
@@ -163,7 +166,8 @@
 
     try
     {
-      await Sender.Send(new DeactivateInstitutionCommand(Id!.Value));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateInstitutionCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "Institution deactivated.";
     }

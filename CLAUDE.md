@@ -121,6 +121,24 @@ provisioning. SSO-provisioned users get roles from group-to-role mappings; if no
 match, they land as PendingTrainee. The Administrator role **cannot** be assigned via SSO —
 it always requires explicit manual assignment.
 
+### InstitutionalAdmin scope-aware powers (T056)
+
+Pages gated `[Authorize(Policy = "AdministratorOrInstitutionalAdmin")]` accept both
+`Administrator` and `InstitutionalAdmin` callers, but their handlers filter results /
+reject commands by institution scope. An `InstitutionalAdmin` from institution A cannot
+see or edit data scoped to institution B; a global `Administrator` sees everything.
+
+Handlers reachable from such pages take `ClaimsPrincipal Principal` in their MediatR
+request record. Lists use `principal.GetInstitutionId()` to filter; get-by-id calls
+`principal.CanAccessInstitution(entityInstitutionId)` and returns null when out-of-scope
+(404, not 403, to avoid leaking the existence of other-institution ids); commands throw
+`UnauthorizedAccessException` on scope mismatch. Helper extensions live on
+`ClaimsPrincipalExtensions` (`IsAdministrator()`, `IsInstitutionalAdmin()`,
+`CanAccessInstitution(int)`).
+
+T056 is landing cluster-incrementally — see `Rewrite/Tasks/T056-institutional-admin-role-power.md`
+for which page groups have been migrated and which still require `Administrator`.
+
 ## Activity platform (the schema-driven pivot)
 
 The core departure from ClinicAssist. Instead of one aggregate per assessment type,

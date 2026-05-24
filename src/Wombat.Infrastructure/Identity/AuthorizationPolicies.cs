@@ -11,6 +11,7 @@ public static class AuthorizationPolicies
     public const string RequireSubSpecialityScope = nameof(RequireSubSpecialityScope);
     public const string RequireSpecialityAdminForCurrentInstitution = nameof(RequireSpecialityAdminForCurrentInstitution);
     public const string RequireSubSpecialityAdminForCurrentInstitution = nameof(RequireSubSpecialityAdminForCurrentInstitution);
+    public const string AdministratorOrInstitutionalAdmin = nameof(AdministratorOrInstitutionalAdmin);
 
     public static IServiceCollection AddWombatAuthorization(this IServiceCollection services)
     {
@@ -49,6 +50,9 @@ public static class AuthorizationPolicies
                 policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.InstitutionId));
                 policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.SubSpecialityId));
             });
+
+            options.AddPolicy(AdministratorOrInstitutionalAdmin, policy =>
+                policy.RequireRole(WombatRoles.Administrator, WombatRoles.InstitutionalAdmin));
         });
 
         return services;

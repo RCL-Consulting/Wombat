@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 
 namespace Wombat.Application.Features.Institutions.Commands.UpdateSpeciality;
@@ -7,4 +8,5 @@ public sealed record UpdateSpecialityCommand(
     int InstitutionId,
     string Name,
     string? Description,
-    bool IsActive) : IRequest<SpecialityDto>;
+    bool IsActive,
+    ClaimsPrincipal Principal) : IRequest<SpecialityDto>;

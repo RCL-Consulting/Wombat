@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
 
@@ -18,6 +19,16 @@ public sealed class UpdateSpecialityCommandHandler : IRequestHandler<UpdateSpeci
     {
         var speciality = await _dbContext.Set<Speciality>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Speciality {request.Id} was not found.");
+
+        if (!request.Principal.CanAccessInstitution(speciality.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update this speciality.");
+        }
+
+        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to move this speciality to that institution.");
+        }
 
         speciality.InstitutionId = request.InstitutionId;
         speciality.Name = request.Name.Trim();
