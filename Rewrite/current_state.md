@@ -27,7 +27,7 @@ Commits in chronological order:
 - `5461d02` — docs: record T053 hash
 - `ef02268` — T054: admin CRUD for `EntrustmentScale` + `EntrustmentLevel`; 5 new tests; closes the only true feature gap
 - `faea050` — docs: record T054 hash
-- (session-end commit) — docs: revert scenario Step 1.7 to canonical create-scale prescription + plan/handoff updates
+- `c66a5be` — docs: session-end wrap (Step 1.7 reverted to canonical create-scale, plan + handoff refreshed)
 
 Test status at session end: Application 174/174, Architecture 19/19, Web 38/38, build clean.
 
