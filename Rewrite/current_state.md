@@ -210,7 +210,7 @@ Across six clusters:
 
 ## Last completed
 
-**T056.b — EPAs + Curricula cluster.** Commit pending at session end. EPA handlers (Create, Update, Deactivate, ListEpasForSubSpeciality, GetEpaById) and Curricula handlers (GetCurriculaList, GetCurriculumById, CreateCurriculum, UpdateCurriculum, CloneCurriculumAsNewVersion, AddCurriculumItem, UpdateCurriculumItem, RemoveCurriculumItem) all take `ClaimsPrincipal Principal` and filter/reject by scope. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. Razor pages updated: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` (all five now use `AdministratorOrInstitutionalAdmin` policy), plus call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. New scope tests: `EpaScopeGuardTests` (5) + `CurriculumScopeGuardTests` (5). Application 183→193. Build clean, all suites pass.
+**T056.b — EPAs + Curricula cluster** (commit `9e3bc0a`). EPA handlers (Create, Update, Deactivate, ListEpasForSubSpeciality, GetEpaById) and Curricula handlers (GetCurriculaList, GetCurriculumById, CreateCurriculum, UpdateCurriculum, CloneCurriculumAsNewVersion, AddCurriculumItem, UpdateCurriculumItem, RemoveCurriculumItem) all take `ClaimsPrincipal Principal` and filter/reject by scope. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. Razor pages updated: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` (all five now use `AdministratorOrInstitutionalAdmin` policy), plus call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. New scope tests: `EpaScopeGuardTests` (5) + `CurriculumScopeGuardTests` (5). Application 183→193. Build clean, all suites pass.
 
 **T056.a — InstitutionalAdmin role-power foundations + Institutions/Speciality/SubSpec cluster** (commit `41def8a`). New `AdministratorOrInstitutionalAdmin` policy + `CanAccessInstitution` helper. 14 handlers in Institutions feature now principal-aware; 14 razor pages updated to pass `authState.User`; 9 new tests cover the scope guards. Application 174→183, Domain 45, Architecture 19, Web 38; build clean. T056.b–e remaining (EPAs+Curricula, ActivityTypes+Forms, Trainees+Assessors+Invitations+EntrustmentScales, Audit+SSO+NavMenu).
 
@@ -323,6 +323,7 @@ Verification:
 
 ## Last verified commits
 
+- `9e3bc0a` — T056.b (EPAs + Curricula scope guards; 24 files; 8 EPA + 8 curriculum handlers + 10 new scope tests; Application 183/183 → 193/193, Architecture 19/19, Web 38/38, Domain 45/45)
 - `41def8a` — T056.a (foundations + Institutions/Speciality/SubSpec scope guards; 56 files; new AdministratorOrInstitutionalAdmin policy, 14 principal-aware handlers, 14 razor call sites, 9 scope tests; Application 183/183, Architecture 19/19, Web 38/38, Domain 45/45)
 - `ef02268` — T054 (admin CRUD for EntrustmentScale + EntrustmentLevel; 12 new files, 3 modified; browser-verified; Application 174/174, Architecture 19/19, Web 38/38)
 - `4aeaa3d` — T053 (context-aware Scope Id picker on activity-type Metadata tab; one Razor file; round-trip verified; build clean, 38/38 Web tests pass)
