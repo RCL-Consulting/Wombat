@@ -207,7 +207,7 @@ Across six clusters:
 
 ## Last completed
 
-**T051 — Invitation registration-URL surface + dev SMTP tidy + status-message fix.** Commit pending. `InvitationsList.IssueAsync` now captures the `IssuedInvitationResult.Token` and renders the registration URL in a one-shot info Alert below the form (with copy-friendly `<code>` styling and a clear "shown only on this page-load" warning). The misleading "The stub sender logged the registration link" status text replaced with "Copy the link below — it is shown only once." `appsettings.Development.json` dev SMTP port aligned to Papercut's default (25 instead of 1025). FirstName/LastName columns deferred as T051.b — they require a migration + Designer + snapshot update and are nice-to-have, not blocking.
+**T051 — Invitation registration-URL surface + dev SMTP tidy + status-message fix** (commit `799cc1a`). `InvitationsList.IssueAsync` now captures the `IssuedInvitationResult.Token` and renders the registration URL in a one-shot info Alert below the form (with copy-friendly `<code>` styling and a clear "shown only on this page-load" warning). The misleading "The stub sender logged the registration link" status text replaced with "Copy the link below — it is shown only once." `appsettings.Development.json` dev SMTP port aligned to Papercut's default (25 instead of 1025). FirstName/LastName columns deferred as T051.b — they require a migration + Designer + snapshot update and are nice-to-have, not blocking.
 
 **T056.e — Audit + SSO + NavMenu refresh + scenario-doc revert** (commit `ec6d6d1`). Audit handlers (`ListAuditEntriesQuery`, `GetAuditEntryByIdQuery`) and SSO handlers (`ListSsoGroupMappings`, `CreateSsoGroupMapping`, `DeleteSsoGroupMapping`) all principal-aware. Audit filters by `AuditEntry.InstitutionId` (InstitutionalAdmin sees own institution + global no-institution events). SSO filters by `SsoGroupRoleMapping.InstitutionId`. NavMenu InstitutionalAdmin block expanded from 3 placeholder links to 11 real routes. New `/admin/specialities` redirect page resolves the caller's institution from claims. Scenario doc: Phase 1.B warning replaced with "Resolved by T056" note, Step 1.8 role no longer says "bootstrap Administrator", finding #1 marked closed. 6 new scope tests. Application 210→216.
 
@@ -328,6 +328,7 @@ Verification:
 
 ## Last verified commits
 
+- `799cc1a` — T051 (invitation registration-URL surface + dev SMTP port fix + status-message cleanup; 4 files; UI + config only, no schema change; build clean, all suites pass)
 - `ec6d6d1` — T056.e (Audit + SSO + NavMenu refresh + scenario-doc revert; 20 files; 5 handlers + 3 razor pages + new MySpecialitiesRedirect page + 6 new scope tests + NavMenu expansion + scenario doc revert; Application 210/210 → 216/216, Architecture 19/19, Web 38/38, Domain 45/45)
 - `8ad0788` — T056.d (Trainees + Assessors + Invitations + EntrustmentScales scope guards; 32 files; 15 handlers + 7 razor pages + 7 new scope tests; Application 203/203 → 210/210, Architecture 19/19, Web 38/38, Domain 45/45)
 - `e1d3737` — T056.c (ActivityTypes + Forms scope guards; 20 files; 5 ActivityType + 8 Form handlers + 10 new scope tests + new ActivityTypeScopeGuard and FormMappings helpers; Application 193/193 → 203/203, Architecture 19/19, Web 38/38, Domain 45/45)
