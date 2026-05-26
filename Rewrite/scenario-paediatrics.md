@@ -464,18 +464,893 @@ Act 2 will need from Act 1:
 
 ---
 
-# Acts 2–5 — to be drafted
+# Act 2 — Day 1: team onboarding
 
-Act 1 establishes the document shape. Once played and the format is confirmed usable, draft Acts 2–5 with the same conventions.
+**Date in scenario:** Tuesday 2026-01-13 (the morning after Act 1).
+**Who:** Prof Mbatha drives every invitation and admission as `InstitutionalAdmin`. Each invitee opens their own browser to accept and complete their profile.
+**Why:** Act 1 stood up the curriculum; Act 2 stands up the people. Until consultants and registrars are in the system, no activities can be submitted or rated.
 
-**Act 2 — Day 1 team onboarding** (est. 400 lines): invitation flow for 6 consultants + 5 registrars, admission of PendingTrainee → Trainee, profile creation, committee panel creation (depends on consultants existing).
+**Starting state:**
+- Act 1 outcome state intact: KGK / Paediatrics / General Paediatrics; entrustment scale `Paed General Entrustment Scale`; 15 EPAs; curriculum `FCPaed(SA) Part 1` v2026.1 with 15 items; 10 published Paed activity types; bootstrap admin + Prof Mbatha.
+- No consultants. No registrars. No assessor profiles, no trainee profiles, no committee panels.
 
-**Act 3 — Months 1–6 operational rhythm** (est. 800 lines, longest act): 8 sub-scenes — Mini-CEX submit/accept/rate/credit, Procedure log, DOPS, MSF cycle, stalled-assessment triage, audit-log verification, dashboard populated-state sanity.
+**Act 2 goal:**
+1. Dr Pieter Smit onboarded as `Coordinator`.
+2. Six consultants onboarded with the role combos the cast row in Act 1 prescribes (Zulu / Naidoo / Botha as `CommitteeMember + Assessor`; Patel and Khumalo as `Assessor`; van Rensburg as external `CommitteeMember` only).
+3. Five assessor profiles created (one per assessor consultant), with training-status field set per T035.
+4. Five registrars onboarded as `Trainee` role.
+5. Five `TraineeProfile` records created with curriculum + stage assignment.
+6. One committee panel created (`Paed Annual Review Panel 2026`) chaired by Dr Zulu and including Naidoo, Botha, and van Rensburg.
 
-**Act 4 — Month 12 annual review** (est. 400 lines): 5 reviews scheduled, committee evidence bundle, decisions recorded, STARs staged, ratification, one appeal.
+## Phase 2.A — Issue Coordinator + consultant invitations
 
-**Act 5 — Year 4 graduation** (est. 250 lines): final review for Dr Molefe, multiple STARs, portfolio PDF export, profile completion.
+Prof Mbatha works through `/admin/invitations` one invitation at a time. She does NOT need to switch users — she can issue seven invitations in a single session, copying each registration URL into her notes immediately because T051's inline-URL Alert renders only on the page-load it was issued on.
 
-**Appendix — cross-cutting concerns** (est. 300 lines): data rights, scheduled jobs, SSO path, mobile/accessibility spot-checks.
+### Step 2.1 — Issue Coordinator invitation (Dr Smit)
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/invitations`
+Action: In the `Issue invitation` panel, Email `smit@kgk.wombat.local`; Role `Coordinator`; Institution `Kgosi Kgari Teaching Hospital`; Speciality + Sub-speciality leave blank. Click `Issue invitation`. Copy the registration URL from the info Alert into the runbook scratchpad.
+Expected: Status banner "Invitation issued for smit@kgk.wombat.local. Copy the link below — it is shown only once." Registration URL renders below the form. New row appears in the Active invitations table with `Role = Coordinator`.
+Actual:
+Gap:
 
-Not drafted here. Draft after Act 1 has been played once and any format revisions folded back.
+### Step 2.2 — Issue six consultant invitations
+Role: Prof Mbatha
+Route: `/admin/invitations`
+Action: Repeat Step 2.1's form for each consultant below. After each, copy the registration URL before issuing the next (the previous URL is hidden by the new form submission). All institution = KGK.
+
+| Email | Role | Speciality (optional) | Note |
+|---|---|---|---|
+| `zulu@kgk.wombat.local` | `CommitteeMember` | Paediatrics | Chair-elect. Gets a second invitation in 2.A.b for the Assessor role (Wombat does not allow multi-role invitations in one form). |
+| `naidoo@kgk.wombat.local` | `CommitteeMember` | Paediatrics | Add `Assessor` separately. |
+| `botha@kgk.wombat.local` | `CommitteeMember` | Paediatrics | Add `Assessor` separately. |
+| `patel@kgk.wombat.local` | `Assessor` | Paediatrics | WBA only. |
+| `khumalo@kgk.wombat.local` | `Assessor` | Paediatrics | WBA only. |
+| `vanrensburg@sun.ac.za` | `CommitteeMember` | leave blank | External examiner; speciality blank because his Stellenbosch home institution is not in this Wombat tenancy. |
+
+Expected: All six rows in Active invitations with the correct role and institution columns. Six registration URLs captured.
+Actual:
+Gap:
+
+### Step 2.2.b — Issue secondary `Assessor` invitations for Zulu / Naidoo / Botha
+Role: Prof Mbatha
+Route: `/admin/invitations`
+Action: Three more invitations using the same emails as above but with `Role = Assessor`. The invitation system accepts a second invitation for an existing email if no user has yet registered against the first — but per the WORKFLOW reference, a single invitation token only carries one role. Three trips through the form.
+Expected: Three more rows in Active invitations. Total ten pending invitations.
+Actual:
+Gap: **Anticipated finding** — Wombat's invitation entity may not support a single email carrying two roles in one invitation. If it rejects the second invitation as "duplicate", the workaround is: complete the first registration, then have Mbatha edit the user's roles on `/admin/users/{id}` to add the second role manually. Capture in the Actual line which path the implementation takes.
+
+> **Multi-role onboarding note:** Wombat's role model lets a single user hold multiple roles, but the invitation form's `Role` field accepts only one. The cleanest pattern is to invite with the strongest role first (CommitteeMember for Zulu/Naidoo/Botha) and add the secondary `Assessor` role from the user-detail page after first login. Step 2.2.b assumes the simpler "two invitations" path; the play-through must reveal whether the entity allows it.
+
+## Phase 2.B — Consultants accept invitations
+
+Each invitee opens their own registration URL. The flow is identical to Step 1.6 (Prof Mbatha's acceptance); below it is collapsed into a single step that the play-through will repeat seven times. Capture per-user observations in the Actual line as a bulleted sub-list when played.
+
+### Step 2.3 — Each invitee completes registration
+Role: invitee (no prior session)
+Route: registration URL captured in Step 2.1 / 2.2 / 2.2.b (one per invitee)
+Action: Open URL. Confirm the form pre-fills email + role correctly. Fill First name, Last name, password (≥ 12 characters per Wombat's password policy), confirm password. Submit. Sign out at the top-right.
+Expected: After submit, the dashboard renders for the role that was on the invitation. For `Coordinator`, the `CoordinatorDashboard` shows; for `Assessor`, the `AssessorDashboard`; for `CommitteeMember`, the `CommitteeMemberDashboard`. Sign out completes cleanly.
+
+The full cast of expected dashboards on first login:
+| Email | First + Last | Roles after registration | First dashboard rendered |
+|---|---|---|---|
+| `smit@kgk.wombat.local` | Pieter Smit | Coordinator | CoordinatorDashboard |
+| `zulu@kgk.wombat.local` | Thandi Zulu | CommitteeMember (+ Assessor after Step 2.4) | CommitteeMemberDashboard |
+| `naidoo@kgk.wombat.local` | David Naidoo | CommitteeMember (+ Assessor) | CommitteeMemberDashboard |
+| `botha@kgk.wombat.local` | Sarah Botha | CommitteeMember (+ Assessor) | CommitteeMemberDashboard |
+| `patel@kgk.wombat.local` | Mohammed Patel | Assessor | AssessorDashboard |
+| `khumalo@kgk.wombat.local` | Fatima Khumalo | Assessor | AssessorDashboard |
+| `vanrensburg@sun.ac.za` | John van Rensburg | CommitteeMember | CommitteeMemberDashboard |
+
+Actual:
+Gap:
+
+### Step 2.3.b — Mbatha attaches secondary Assessor role to Zulu / Naidoo / Botha
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/users` (or `/admin/users/{id}/edit` per user)
+Action: For each of Zulu / Naidoo / Botha, open the user-detail / edit page and tick the `Assessor` role in addition to their existing `CommitteeMember` role. Click `Save`.
+Expected: Each user now holds both roles. On their next login the NavMenu shows both the Committee and Assessor sections.
+Actual:
+Gap: **Anticipated finding** — the users list / edit surface may not exist yet (a `/placeholder/users` route appears in the NavMenu per the Act 1 navigation observation). If so, the role-attachment is either deferred until the page is built, or done via direct DB / Identity-store update. Capture what the implementation actually exposes. Open this as a separate task if there's no UI for it.
+
+> **Standing follow-up note:** The Activity 1 NavMenu showed `Users → /placeholder/users` for Administrator; for InstitutionalAdmin the link does not appear. If the placeholder hasn't been replaced by Act 2's play date, Mbatha may need bootstrap admin to do the role attachment. Flag in the play-through.
+
+## Phase 2.C — Create Assessor profiles
+
+Wombat models the consultant-specific assessor metadata (training status, optional notes, EPA stage minima exposure) on a separate `AssessorProfile` entity. The user must already hold the `Assessor` role; Mbatha then creates the profile from `/admin/assessors/new`.
+
+### Step 2.4 — Create five assessor profiles
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/assessors/new` (repeat five times)
+Action: For each assessor in the table below, click `Create assessor` from `/admin/assessors`, select the user from the User dropdown (it lists users with the `Assessor` role only — five users at this point), set Speciality `Paediatrics`, Training status per the table, and click `Save`.
+
+| User | Training status (T035 field) | Note |
+|---|---|---|
+| Dr Thandi Zulu | `Trained` | Senior assessor — set as panel chair in Phase 2.G. |
+| Dr David Naidoo | `Trained` | |
+| Dr Sarah Botha | `Trained` | |
+| Dr Mohammed Patel | `In training` | Joined 2025; has assessed but needs faculty-development sign-off. |
+| Dr Fatima Khumalo | `Trained` | |
+
+Expected: Each profile appears in `/admin/assessors` with `Status = Active`, the chosen speciality, and the training status. The User dropdown narrows to remaining unprofiled assessor users after each save.
+Actual:
+Gap:
+
+> **Note on training status:** T035's `TrainingStatus` field takes one of three values (`Trained` / `In training` / `Provisional`). The play-through should confirm the exact enum values the form exposes; CLAUDE.md describes them but the form copy may differ slightly.
+
+### Step 2.4.b — External committee member: no assessor profile
+Role: Prof Mbatha
+Route: n/a
+Action: Verify Dr van Rensburg is NOT in the Assessor list (he is committee-only). Confirm `/admin/assessors` shows five rows, not six.
+Expected: 5 assessors. van Rensburg's email does not appear.
+Actual:
+Gap:
+
+## Phase 2.D — Issue registrar (Trainee) invitations
+
+The five registrars onboard as `Trainee` role. After accepting they land in the PendingTrainee list (users with the `Trainee` role but no `TraineeProfile`); Mbatha admits them in Phase 2.F by creating their profile with curriculum + stage assignment.
+
+### Step 2.5 — Issue five Trainee invitations
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/invitations`
+Action: Five invitations, one per registrar. All institution = KGK. Speciality = Paediatrics. Capture each registration URL before issuing the next.
+
+| Email | First + Last | Stage at start of 2026 |
+|---|---|---|
+| `molefe@kgk.wombat.local` | Lerato Molefe | Year 4 (graduates in Act 5) |
+| `dlamini@kgk.wombat.local` | Anele Dlamini | Year 3 |
+| `duplessis@kgk.wombat.local` | Pieter du Plessis | Year 2 |
+| `mahlangu@kgk.wombat.local` | Nomsa Mahlangu | Year 1 |
+| `ndlovu@kgk.wombat.local` | Sipho Ndlovu | Year 1 |
+
+Expected: Active invitations now lists 5 + 10 (consultants) = 15, or 5 + 7 (if Phase 2.A.b deferred to direct user-edit) = 12. Five registration URLs captured.
+Actual:
+Gap:
+
+## Phase 2.E — Registrars accept invitations
+
+### Step 2.6 — Each registrar completes registration
+Role: registrar (no prior session)
+Route: registration URL from Step 2.5
+Action: Open URL. Fill First name, Last name, password, confirm. Submit.
+Expected: After submit, the user is auto-logged-in and the trainee dashboard renders. **Crucial:** without a `TraineeProfile`, the dashboard's curriculum-progress panel will read "No curriculum progress yet" (T049 wording). This is correct-by-design — the dashboard becomes useful only after Mbatha admits the trainee in Phase 2.F.
+Actual:
+Gap:
+
+> **Verification per Activity 1 finding:** T049's empty-state copy fix shipped in `ec649d5`. If the panel still reads "No curriculum items assigned yet" instead of "No curriculum progress yet. Complete and submit activities to start tracking.", flag a regression.
+
+## Phase 2.F — Admit trainees (create TraineeProfile + assign curriculum and stage)
+
+### Step 2.7 — Admit five trainees
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/trainees/pending` (or `/admin/trainees` with a `Pending` filter, depending on which surface T056.d actually exposes)
+Action: For each registrar in the table below, click `Admit` (or open their detail and click the admission button), assign curriculum `FCPaed(SA) Part 1 v2026.1`, set the trainee's Stage and Programme start date.
+
+| User | Stage | Programme start | Notes |
+|---|---|---|---|
+| Dr Lerato Molefe | 4 | 2023-01-15 | Final year, on track for graduation Dec 2029. |
+| Dr Anele Dlamini | 3 | 2024-01-15 | |
+| Dr Pieter du Plessis | 2 | 2025-01-15 | |
+| Dr Nomsa Mahlangu | 1 | 2026-01-15 | |
+| Dr Sipho Ndlovu | 1 | 2026-01-15 | |
+
+Expected: After each admission, the user moves from the Pending list to the active `/admin/trainees` list. The trainee's dashboard now shows their curriculum items with `0 of N` completed for each and the per-stage minimum level loaded from the curriculum's `MinimumLevelByStageJson`.
+Actual:
+Gap:
+
+> **Note on dashboard population:** Per the T044 + T049 documentation, the dashboard's curriculum-progress panel reads its data from `CurriculumItemProgress` rows that `CreditApplier` writes when an activity transitions to a terminal state. Until any activity is submitted (Act 3), the dashboard correctly shows the items with zero progress. The panel is "useful" in the sense that it lists the EPA codes + targets, not in the sense of showing any completed work.
+
+## Phase 2.G — Create the Annual Review Committee panel
+
+The committee panel is the persistent group that reviews trainees yearly. It's created once and reused across reviews. Wombat models it as a `DecisionPanel` (per T039 / T029) with a Chair, ordinary Members, and possibly an External member.
+
+### Step 2.8 — Create the panel
+Role: Prof Mbatha (InstitutionalAdmin) — or Bootstrap Administrator if the panel creation surface is Administrator-only. Check T039's policy attribute and capture in Actual.
+Route: `/admin/committee-panels/new` (placeholder URL — confirm during play-through)
+Action: Name `Paed Annual Review Panel 2026`; Speciality `Paediatrics`; Sub-speciality `General Paediatrics`; Effective from `2026-01-15`; Chair `Dr Thandi Zulu`; Members `Dr David Naidoo`, `Dr Sarah Botha`, `Dr John van Rensburg`; click `Save`.
+Expected: Panel saved; appears in `/admin/committee-panels` list with `Members = 4`, status `Active`. Available as a target for `ScheduleCommitteeReview` commands in Act 4.
+Actual:
+Gap:
+
+> **Anticipated finding:** T039 + T031 + T032 + T033 all touch committee features but the route name and policy may not be exactly `/admin/committee-panels`. The play-through must discover the canonical URL by walking the NavMenu (`Committee` link should appear for Administrator + InstitutionalAdmin per T056.e). Capture the URL in Actual.
+
+## Phase 2.H — Smoke-check role-scoped dashboards
+
+After all onboarding completes, log in as one representative of each role to confirm the dashboards render without errors. This is a sanity gate before Act 3 starts dropping live activities into the system.
+
+### Step 2.9 — Login smoke checks
+Role: rotate through one user per role
+Route: `/account/login` → `/`
+Action: For each of (smit, zulu, patel, molefe, dlamini), sign in, observe the dashboard, then sign out. Capture rendered panel titles and any console errors.
+Expected:
+- `smit@kgk.wombat.local` → CoordinatorDashboard with panels for stalled assessments, pending admissions, scheduled jobs status.
+- `zulu@kgk.wombat.local` → CommitteeMemberDashboard with upcoming reviews + recent decisions panels.
+- `patel@kgk.wombat.local` → AssessorDashboard with pending ratings + my recent assessments panels.
+- `molefe@kgk.wombat.local` → TraineeDashboard with curriculum progress + my recent activities + supervisor messages panels.
+- `dlamini@kgk.wombat.local` → TraineeDashboard (same shape, different data: zero activities).
+Actual:
+Gap:
+
+## Act 2 outcome state
+
+After Act 2 completes cleanly, the database adds:
+- 7 consultants + 5 registrars + Mbatha + bootstrap admin = 14 users total.
+- 5 AssessorProfile rows (Zulu / Naidoo / Botha / Patel / Khumalo) — van Rensburg has none.
+- 5 TraineeProfile rows with `CurriculumId = FCPaed(SA) Part 1 v2026.1`, varying stages (4 / 3 / 2 / 1 / 1).
+- 1 DecisionPanel (`Paed Annual Review Panel 2026`) with 4 members.
+- 0 activities, 0 reviews, 0 decisions, 0 STARs.
+
+Nothing yet exercises the assessment lifecycle. Act 3 starts the operational rhythm by having trainees submit Mini-CEX / DOPS / etc. and consultants rate them.
+
+## Act 2 time estimate
+
+| Phase | Est. minutes |
+|---|---|
+| 2.A: 7 + (up to 3) consultant invitations | 12 |
+| 2.B: 7 invitee accepts (parallel-ish in real life, serial in a play-through) | 25 |
+| 2.C: 5 AssessorProfile rows | 12 |
+| 2.D: 5 registrar invitations | 8 |
+| 2.E: 5 registrar accepts | 18 |
+| 2.F: 5 trainee admissions | 15 |
+| 2.G: Committee panel creation | 6 |
+| 2.H: 5 smoke-check logins | 8 |
+| **Total** | **~104 minutes** |
+
+## Act 2 findings summary
+
+Not yet played. Anticipated findings flagged inline above (Step 2.2.b multi-role invite path; Step 2.3.b user-edit surface availability; Step 2.4 training-status enum values; Step 2.8 committee-panel route). The first play-through should populate this section with concrete observations.
+
+## Handoff into Act 3
+
+Act 3 needs from Act 2:
+- Trainee `UserId`s for at least Dr Molefe (year 4), Dr Dlamini (year 3), Dr du Plessis (year 2) — they're the registrars Act 3 puts through assessment cycles.
+- Assessor `UserId`s for Dr Naidoo + Dr Patel — Act 3 has Naidoo rate a Mini-CEX and Patel rate a DOPS.
+- `DecisionPanel` ID for `Paed Annual Review Panel 2026` (Act 4 attaches reviews to it).
+- TraineeProfile IDs (Act 4 cross-references them in evidence-bundle assembly).
+- Confirmation that all consultants can authenticate cleanly with their issued credentials.
+
+---
+
+# Act 3 — Months 1-6: operational rhythm
+
+**Date in scenario:** 2026-02-09 through 2026-07-30 (a six-month slice; not all of it played sequentially — Act 3 picks representative cycles).
+**Who:** All of Act 2's cast. Specifically:
+- Dr Dlamini (year 3) submits a Mini-CEX which Dr Naidoo (Assessor) rates.
+- Dr du Plessis (year 2) logs procedures.
+- Dr Mahlangu (year 1) attempts a DOPS that Dr Patel rates.
+- Dr Molefe (year 4) opens an MSF that closes 28 days later.
+- Dr Smit (Coordinator) triages a stalled assessment.
+- Bootstrap admin checks the audit log.
+- All trainees check their dashboards.
+
+**Why:** Act 1 + 2 set up the institutional skeleton. Act 3 stresses the actual operational loop: submit → accept → rate → complete → credit. The credit chain (`CreditApplier`) populates the trainee dashboards; until at least one activity completes successfully, the dashboards are useful only structurally.
+
+**Starting state:**
+- Act 2 outcome state intact: all users, profiles, and the committee panel exist. Zero activities, zero credit rows.
+
+**Act 3 goal:**
+1. At least one Mini-CEX activity completes end-to-end and credits the trainee's curriculum item PAED-001.
+2. Multiple procedure-log entries land on Dr du Plessis (≥ 5 IV-access entries to start moving PAED-011 progress).
+3. One DOPS completes for Dr Mahlangu (year 1) on PAED-010 lumbar puncture.
+4. One MSF opens, closes after the 28-day window, and produces a summary.
+5. Coordinator Dr Smit identifies and resolves a stalled-assessment case.
+6. Audit log shows entries for the new activity lifecycle events (create / submit / accept / rate / complete).
+7. Each trainee dashboard renders populated progress for at least one EPA.
+
+## Phase 3.A — Trainee submits Mini-CEX (Dr Dlamini, year 3)
+
+### Step 3.1 — Dr Dlamini logs in and creates Mini-CEX draft
+Role: Dr Anele Dlamini (Trainee, year 3)
+Route: `/account/login` → `/` → `/activities/new`
+Action: Sign in as `dlamini@kgk.wombat.local`. From the dashboard, click `New activity`. On the type-picker page, the published activity types Mbatha created in Act 1 should appear. Click `Mini-CEX (Paediatrics)`. The schema-driven form renders.
+Expected: Activity-type picker shows the 10 Paed types (mini_cex_paed / cbd_paed / dops_paed / acat_paed / procedure_log_paed / msf_paed / reflective_note_paed / journal_club_paed / research_output_paed / teaching_session_paed). Mini-CEX selection routes to `/activities/new?type=mini_cex_paed` (or `/activities/{id}` after draft creation). Form renders with the schema's three sections (Encounter details / Clinical performance ratings / Feedback).
+Actual:
+Gap: **Anticipated** — Act 1's play-through scope reduction left Mini-CEX with the default `title`-only schema. If the play-through still has only the `title` field, the trainee form will look thin. Either build out the full 13-field schema before Act 3 (in `/admin/activity-types/11` Form tab) or use the minimal schema and note that the demonstration is structural, not realistic.
+
+### Step 3.2 — Fill Mini-CEX form (assuming full schema)
+Role: Dr Dlamini
+Route: `/activities/{newId}`
+Action: Fill the form:
+- EPA `PAED-001 — Clerk, assess and present an acute general paediatric admission`
+- Assessor `Dr David Naidoo`
+- Clinical setting `Inpatient`
+- Patient age (months) `36`
+- Presenting complaint `4-day fever with cough, increased work of breathing. Initial impression: community-acquired pneumonia.`
+- Ratings (six fields, each on the 5-level Paed scale):
+  - History taking: `Indirect supervision (3)`
+  - Examination: `Indirect supervision (3)`
+  - Clinical reasoning: `Indirect supervision (3)`
+  - Communication: `Unsupervised (4)`
+  - Professionalism: `Unsupervised (4)`
+  - Overall entrustment level: `Indirect supervision (3)`
+- Narrative feedback: `Solid systematic clerking. Differential considered atypical pneumonia. Plan flagged for senior review before lumbar puncture decision. Next step: read up on the British Thoracic Society 2019 paediatric pneumonia guideline.`
+Click `Save draft`.
+Expected: Status banner "Draft saved." URL stable at `/activities/{id}`. The activity row appears on the trainee's dashboard under `My activities → Draft`.
+Actual:
+Gap:
+
+### Step 3.3 — Submit Mini-CEX to the assessor
+Role: Dr Dlamini
+Route: `/activities/{id}`
+Action: On the activity-detail page, the workflow widget should show `Submit` as the available transition (per Mini-CEX's workflow JSON: `draft → submitted, actor: role:Trainee`). Click `Submit`.
+Expected: State flips from `draft` to `submitted`. The `recall` transition becomes available (per workflow JSON). Dr Naidoo's `Pending ratings` dashboard panel shows the new submission within 5 seconds of refresh.
+Actual:
+Gap:
+
+## Phase 3.B — Assessor rates the submission (Dr Naidoo)
+
+### Step 3.4 — Dr Naidoo logs in, accepts assignment
+Role: Dr David Naidoo (Assessor + CommitteeMember)
+Route: `/account/login` → `/` → `/activities/{id}` (from the assessor dashboard's pending-ratings panel)
+Action: Sign in as `naidoo@kgk.wombat.local`. On the dashboard, click into the pending Mini-CEX entry. On the activity-detail page, click `Accept` (workflow: `submitted → rated, actor: field:assessor_user_id`).
+Expected: State flips to `rated`. The form's rating fields become editable for Dr Naidoo (he is the named assessor). The `complete` transition (`rated → completed, actor: field:assessor_user_id`) becomes available.
+Actual:
+Gap:
+
+> **Actor-DSL verification:** The Mini-CEX workflow says `actor: "field:assessor_user_id"` for the accept transition. This is the first real test of the field-actor binding — Wombat must resolve the `assessor_user_id` field from the activity's `DataJson` to a real user, then check the caller's `UserId` matches. If a different assessor (e.g., Patel) loaded this activity, the Accept button should be hidden / rejected. Test by attempting accept as Patel and confirm the rejection path.
+
+### Step 3.5 — Naidoo edits ratings then completes
+Role: Dr Naidoo
+Route: `/activities/{id}`
+Action: Optionally adjust the trainee's self-entered ratings (in this scenario, change Communication from `Unsupervised (4)` to `Indirect supervision (3)` — assessor judgment differs from trainee self-rating). Add an assessor note: "Communication was solid but used jargon when reframing the differential to the parent. Coached after the encounter." Click `Complete`.
+Expected: State flips to `completed`. The activity is now terminal. `CreditApplier.ApplyAsync` runs, finds the curriculum item for PAED-001 in `FCPaed(SA) Part 1 v2026.1`, matches the credit rule's `epa_id` / `overall_level` (3) against the requirement, and writes a `CurriculumItemProgress` row for Dr Dlamini with `+1` count toward PAED-001.
+Actual:
+Gap: **Anticipated** — credit JSON not exercised in Act 1's scope-reduction play-through. The play-through may publish Mini-CEX with `"counts_for": []` (Act 1 finding). If so, the activity completes but no credit accrues. Capture which credit JSON is active; if empty, edit the type to add the credit rule before continuing Act 3.
+
+## Phase 3.C — Verify credit on Dr Dlamini's dashboard
+
+### Step 3.6 — Dr Dlamini sees PAED-001 progress
+Role: Dr Dlamini
+Route: `/` (Trainee dashboard)
+Action: Sign back in. Scroll to the curriculum-progress panel.
+Expected: PAED-001 now reads `1 of 30` with a thin progress bar. Last activity date `2026-02-09`. Stage-minimum-level indicator shows `current: 3 / required for stage 3: 4` — Dr Dlamini is one level below the year-3 target for this EPA, which is correct (she has just completed her first Mini-CEX with overall level 3).
+Actual:
+Gap:
+
+## Phase 3.D — Procedure-log batch (Dr du Plessis, year 2)
+
+### Step 3.7 — Dr du Plessis logs five IV-access entries
+Role: Dr Pieter du Plessis (Trainee, year 2)
+Route: `/activities/new` (repeat five times)
+Action: Pick `Procedure Log (Paediatrics)` each time. The form's expected fields per the activity-type table:
+- Procedure code: `IV access` (or a Choice option matching PAED-011)
+- EPA: `PAED-011 — Obtain IV access in an infant`
+- Supervision level (Choice): vary across 5 entries — `Direct supervision` for the first two, `Indirect supervision` for the next two, `Unsupervised` for the fifth.
+- Self-rated competence: corresponds to the chosen supervision level.
+- Date: spread across `2026-02-10` to `2026-02-28` (entered manually if the form takes a date field).
+Click `Log` (the procedure_log workflow is `draft → logged (terminal), actor: role:Trainee`).
+Expected: Each entry posts directly to `logged`. The Trainee dashboard's curriculum-progress panel for PAED-011 reads `5 of 30` after all five are logged. If the credit rule conditions on supervision level meeting the stage minimum (year 2 stage min for PAED-011 is `3`), the first two `Direct supervision (2)` entries should NOT credit because they're below stage 3's minimum of `3`. The three at level ≥ 3 should credit. **Verify the credit-applier honours the stage minimum.**
+Actual:
+Gap:
+
+## Phase 3.E — DOPS for Dr Mahlangu (year 1) on PAED-010 lumbar puncture
+
+### Step 3.8 — Mahlangu submits, Patel rates
+Role: Dr Nomsa Mahlangu (Trainee, year 1) — submission; Dr Mohammed Patel (Assessor) — acceptance + rating.
+Route: same lifecycle as Steps 3.1-3.5 but on `dops_paed`.
+Action:
+- Dr Mahlangu: pick DOPS type, fill EPA `PAED-010`, Assessor `Dr Patel`, procedure code `Lumbar puncture (infant)`, indication `Suspected meningitis in 4-month-old`, complications `nil`, 5-step rating block per the DOPS schema (preparation / consent / anatomical landmarks / technique / aftercare — all at `Direct supervision (2)`, which is the year-1 stage minimum for PAED-010). Submit.
+- Dr Patel: accept, optionally adjust ratings, complete.
+Expected: PAED-010 progress on Dr Mahlangu's dashboard moves from `0 of 10` to `1 of 10`. Stage indicator shows `current: 2 / required for stage 1: 2` — meeting the year-1 target.
+Actual:
+Gap:
+
+> **Note on assessor in-training status:** Dr Patel's AssessorProfile has `TrainingStatus = In training`. Whether Wombat blocks an `In training` assessor from completing a DOPS, or just flags it on the rating record, is per T035's implementation. The play-through should observe and report.
+
+## Phase 3.F — MSF cycle (Dr Molefe, year 4)
+
+### Step 3.9 — Molefe opens an MSF
+Role: Dr Lerato Molefe (Trainee, year 4)
+Route: `/activities/new` → `Multi-Source Feedback (Paediatrics)`
+Action: Fill the MSF schema (8 invitees: a mix of peers + supervisors + allied staff). Suggested invitees from the existing cast: Naidoo, Botha, Patel, Khumalo, Smit, Zulu, Dlamini (peer), du Plessis (peer). Add self-rating. Click `Open` (workflow: `draft → open, actor: role:Trainee`).
+Expected: State `open`. Eight notification rows queued for the invitees (email or in-app — depending on what Wombat actually does for this).
+Actual:
+Gap: **Anticipated** — the MSF invitation distribution mechanism may not be fully implemented. If invitees don't receive any prompt, this is a gap to document — the cycle still progresses by manual self-submission within the 28-day window in a real workplace, but verification of the notification path requires real wiring.
+
+### Step 3.10 — System auto-progresses MSF to `closing` and then `closed`
+Role: System (no human actor)
+Route: scheduled job at `/admin/jobs` — look for `MsfClosing` or similar
+Action: Manually trigger the scheduled job (if a Run button exists) OR advance the scenario clock 28 days and verify the job ran. Workflow transitions: `open → closing, actor: creator` (Act 1 found `actor: creator` was the working stand-in for time-based events). Then `closing → closed, actor: creator`.
+Expected: After both transitions fire, the MSF activity is in `closed` (terminal). Credit applies if rules match. Dr Molefe's dashboard shows the MSF as completed.
+Actual:
+Gap: **Anticipated** — the scheduled-job system may not have a job specifically for MSF closure; the play-through may need to manually invoke the transition via API or directly through the workflow widget if the trainee can self-close after 28 days. Document the actual mechanism.
+
+## Phase 3.G — Stalled-assessment triage (Coordinator Dr Smit)
+
+### Step 3.11 — Mahlangu submits another Mini-CEX that goes stale
+Role: Dr Mahlangu — submit; nobody — leave the activity in `submitted` for the scenario clock to advance 14 days past its submission.
+Route: `/activities/new` → Mini-CEX → submit (don't notify a specific assessor with field:assessor_user_id, or pick one who will simulate not acting).
+Action: Submit on `2026-03-01`. Advance scenario clock to `2026-03-16`. The `StaleAssessmentChase` scheduled job (or equivalent) should now flag this as stalled.
+Expected: An entry appears in Dr Smit's Coordinator dashboard under `Stalled assessments` with the submission date + days-stalled count.
+Actual:
+Gap:
+
+### Step 3.12 — Smit follows up
+Role: Dr Smit (Coordinator)
+Route: `/` (Coordinator dashboard) → click into the stalled-assessments panel → `/coordinator/stalled-assessments` (placeholder URL)
+Action: Pick the stalled activity. Send a follow-up nudge to the named assessor (`Send reminder` button) OR reassign to another assessor.
+Expected: A `Reminder sent` audit entry appears against the activity. If reassigned, the original assessor's pending list shrinks and the new assessor's grows by one.
+Actual:
+Gap: **Anticipated** — the Coordinator surface and the stalled-assessment workflow are real per the CLAUDE.md roles list, but the exact UI may not be the placeholder URL above. Discover the real URL during play-through.
+
+## Phase 3.H — Audit log verification
+
+### Step 3.13 — Bootstrap admin walks the audit log
+Role: Bootstrap admin
+Route: `/admin/audit`
+Action: Scroll the audit log. Identify entries for:
+- Each invitation issued (Act 2) — `InvitationIssued`.
+- Each user registration (Act 2) — `UserRegistered`.
+- Each TraineeProfile creation (Act 2) — `TraineeAdmitted` (or similar).
+- Activity create / submit / accept / complete (Act 3) — one entry per state transition.
+- Stalled-chase reminder send (Step 3.12).
+Expected: ~30-50 audit entries in total. Each entry has `PrincipalSummary` (the `[PRINCIPAL]` token T045 substituted in) plus `InstitutionId`, `OccurredAt`, `EventType`, `Payload`.
+Actual:
+Gap:
+
+> **Verification per T045 + T046:** The `[PRINCIPAL]` substitution and the seed-claims gap fixes both ship to make populated audit entries readable. If any audit row shows a `System.Text.Json.JsonException`-shaped error in its payload (the original symptom T045 closed), it's a regression.
+
+## Phase 3.I — Dashboard populated-state sanity
+
+### Step 3.14 — Each trainee logs in to confirm populated dashboard
+Role: each trainee in turn
+Route: `/` per session
+Action: Sign in as each trainee. Capture which EPAs show progress, which still read `0 of N`, and any rendering glitches in the progress bars, stage-minimum indicators, or the activity-recency panels.
+Expected:
+- Dr Molefe (year 4): only one activity (the still-open MSF). Most EPAs still `0 of N`.
+- Dr Dlamini (year 3): one PAED-001 credit.
+- Dr du Plessis (year 2): three PAED-011 credits (the three at supervision level ≥ stage 2 minimum).
+- Dr Mahlangu (year 1): one PAED-010 credit (the DOPS).
+- Dr Ndlovu (year 1): no activities — dashboard shows the curriculum structure but zero progress everywhere.
+Actual:
+Gap:
+
+## Act 3 outcome state
+
+After Act 3 completes cleanly, the database adds:
+- 1 completed Mini-CEX (Dr Dlamini, PAED-001, overall level 3).
+- 5 procedure log entries (Dr du Plessis, PAED-011; 3 of them credit).
+- 1 completed DOPS (Dr Mahlangu, PAED-010, level 2).
+- 1 closed MSF (Dr Molefe, varies).
+- 1 stalled-then-followed-up Mini-CEX (Dr Mahlangu, submitted but the assignee never accepted).
+- ~6-8 `CurriculumItemProgress` rows depending on credit-rule fidelity.
+- 30-50 new audit entries spanning Acts 2 + 3.
+
+## Act 3 time estimate
+
+| Phase | Est. minutes |
+|---|---|
+| 3.A: Dr Dlamini submits Mini-CEX | 12 |
+| 3.B: Dr Naidoo rates and completes | 8 |
+| 3.C: Credit verification on dashboard | 4 |
+| 3.D: 5 procedure log entries | 20 |
+| 3.E: DOPS cycle (Mahlangu + Patel) | 14 |
+| 3.F: MSF open → close cycle (28-day advance simulated) | 12 |
+| 3.G: Stalled-assessment triage | 14 |
+| 3.H: Audit log walk | 10 |
+| 3.I: Dashboard sanity per trainee | 12 |
+| **Total** | **~106 minutes** |
+
+## Act 3 findings summary
+
+Not yet played. Anticipated findings flagged inline: full Mini-CEX schema (3.1), Mini-CEX credit JSON (3.5), MSF notification path (3.9), MSF scheduled-job mechanism (3.10), Coordinator stalled-assessment URL (3.12).
+
+## Handoff into Act 4
+
+Act 4 needs from Act 3:
+- A populated set of completed activities to feed into the annual review evidence bundles.
+- The MSF result (closed) — appears in Dr Molefe's evidence as a key communication-and-collaborator data source.
+- At least one stalled-then-resolved case to demonstrate the audit-trail completeness on a review.
+- Trainees with varied progress profiles so the year-end committee meeting has different decisions to make (some on track, some not).
+
+---
+
+# Act 4 — Month 12: annual review
+
+**Date in scenario:** 2027-01-08 (committee scheduled session) through 2027-02-15 (ratification + STAR delivery).
+**Who:** Prof Mbatha schedules + supervises the cycle. The committee panel (Zulu chair / Naidoo / Botha / van Rensburg) makes the calls. Each trainee receives a written outcome. One trainee (Dr Mahlangu) lodges an appeal that goes to Prof Mbatha.
+
+**Why:** The annual review is the formal gate where the committee decides whether each trainee progresses to the next stage, repeats, is referred for additional supervision, or graduates. STARs (Statement of Awarded Responsibility) are the persistent record of granted entrustment levels per EPA.
+
+**Starting state:**
+- Act 3 outcome state intact: 4-5 trainees with varied progress (~6-8 credited curriculum items distributed across the cohort).
+- Committee panel `Paed Annual Review Panel 2026` active.
+- No PendingEntrustmentDecision rows yet.
+
+**Act 4 goal:**
+1. 5 `CommitteeReview` rows scheduled (one per trainee).
+2. Evidence bundle assembled per review (activities + STARs-to-date + dashboard snapshot).
+3. Committee meets, records decisions per trainee; majority pre-graduation continues, one borderline case, one referral, Dr Molefe progresses to graduation-track.
+4. STARs staged for one EPA per trainee (where they've reached the year-end target).
+5. Ratification step records the decisions formally.
+6. Dr Mahlangu's referral triggers an appeal; Prof Mbatha reviews and either upholds or remits.
+
+## Phase 4.A — Schedule the 5 reviews
+
+### Step 4.1 — Prof Mbatha schedules each trainee's review
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/committee-reviews/new` (or `/committee/reviews/new` — discover during play-through; T039 ships the review surface)
+Action: For each trainee, create a `CommitteeReview` with:
+- Panel: `Paed Annual Review Panel 2026`
+- Trainee: pick the relevant `TraineeProfile`
+- Scheduled date: `2027-01-08`
+- Review type: `Annual progression review` (for years 1-3); `Pre-graduation review` (for Dr Molefe).
+Click `Schedule`.
+Expected: 5 reviews appear on the committee dashboard under `Upcoming reviews`. Each is in state `Scheduled` (per the committee workflow per T039).
+Actual:
+Gap:
+
+## Phase 4.B — Evidence bundles assemble
+
+### Step 4.2 — Open each review to inspect the auto-assembled evidence
+Role: Dr Thandi Zulu (Chair) — preview a few before the meeting
+Route: `/committee/reviews/{id}` per review
+Action: Open Dr Molefe's review. Verify:
+- Activities tab: lists Dr Molefe's MSF + any other activities from Act 3.
+- STAR snapshot tab: STARs awarded to date (zero at this point — first review).
+- Dashboard snapshot: a frozen snapshot of progress as of the review date.
+- Rating trajectory: T033's per-EPA chart should render.
+- Sampling concentration warning: T032 should flag if all activities are from the same supervisor (e.g., if Molefe's MSF + 2 other activities are all rated by Naidoo).
+Expected: All five tabs render. Dashboard data matches the trainee's `/` view as of `2027-01-08`.
+Actual:
+Gap:
+
+### Step 4.3 — Confirm evidence on the four other reviews
+Role: Dr Zulu
+Route: cycle through each `/committee/reviews/{id}`
+Action: Repeat Step 4.2 for Dr Dlamini, du Plessis, Mahlangu, Ndlovu. Capture any review with empty evidence (Dr Ndlovu likely — no activities in Act 3).
+Expected: Dlamini shows 1 Mini-CEX. Du Plessis shows 5 procedure logs (with 3 credited). Mahlangu shows 1 DOPS + 1 stalled-then-resolved Mini-CEX. Ndlovu shows zero activities — empty-state copy must be presentable.
+Actual:
+Gap:
+
+## Phase 4.C — Committee meeting: record decisions
+
+### Step 4.4 — Start the meeting; transition each review to `In progress`
+Role: Dr Zulu (Chair)
+Route: per review
+Action: On each review's detail page, click `Start review` (per T045's verification — that's the transition the committee panel uses).
+Expected: State flips from `Scheduled` to `InProgress`. The Decision form panel becomes active (per T045's populated ReviewDetail observation).
+Actual:
+Gap:
+
+### Step 4.5 — Record decisions per trainee
+Role: Dr Zulu, in panel session with Naidoo / Botha / van Rensburg (record the votes via the form)
+Route: per review's `/committee/reviews/{id}`
+Action: Per trainee, fill the decision form:
+
+| Trainee | Decision | Notes |
+|---|---|---|
+| Dr Molefe (yr 4) | `Progress — graduation track` | Recommend STAR for PAED-001 + PAED-006 + PAED-013 (where end-year-4 target met). Schedule final review in Nov 2029. |
+| Dr Dlamini (yr 3) | `Progress` | Strong Mini-CEX, on-track. No STARs at year-3 review (no EPAs at terminal level yet). |
+| Dr du Plessis (yr 2) | `Progress with note` | Procedure logs adequate but no formal Mini-CEX activity yet. Recommend prioritising clinical assessment WBAs in next 6 months. |
+| Dr Mahlangu (yr 1) | `Referral for review` | Insufficient activity volume. Single DOPS at stage minimum; one stalled assessment. Recommend support plan; re-review in 6 months. |
+| Dr Ndlovu (yr 1) | `Withdraw — programme not commenced` | Zero activities; needs intent-to-train confirmation. Coordinator to follow up. |
+
+Click `Record decision` on each form.
+Expected: Each review's state flips to `DecisionRecorded`. The trainee dashboards now show a `Recent committee decision` panel.
+Actual:
+Gap:
+
+## Phase 4.D — Stage STARs
+
+### Step 4.6 — Stage PendingEntrustmentDecision rows for Dr Molefe
+Role: Dr Zulu (Chair)
+Route: `/committee/reviews/{molefeReviewId}` → STAR stage form (per T029)
+Action: For each of PAED-001, PAED-006, PAED-013 — open the stage-pending-decision form, select EPA + final entrustment level (`Unsupervised (4)` for PAED-001 and PAED-006; `Indirect supervision (3)` for PAED-013). Save.
+Expected: 3 `PendingEntrustmentDecision` rows persist linked to Dr Molefe's review.
+Actual:
+Gap:
+
+### Step 4.7 — Other trainees: no STAR staging at this review
+Role: Dr Zulu
+Route: n/a
+Action: Confirm none of the year 1-3 reviews stage any STARs (they're all below graduation target).
+Expected: 0 PendingEntrustmentDecision rows for the other four reviews.
+Actual:
+Gap:
+
+## Phase 4.E — Ratification
+
+### Step 4.8 — Ratify decisions
+Role: Prof Mbatha (InstitutionalAdmin)
+Route: `/admin/committee-reviews/{id}` per review, or a batch action on `/admin/committee-reviews`
+Action: For each review, click `Ratify`. This transitions the review to its terminal state and locks the decision. For Dr Molefe's review, the 3 PendingEntrustmentDecision rows transition to `EntrustmentDecision` rows (per T029 / T030 — the STAR PDF should become generable).
+Expected: All five reviews in `Ratified` (or equivalent terminal) state. Dr Molefe's profile shows 3 awarded STARs.
+Actual:
+Gap:
+
+## Phase 4.F — Appeal
+
+### Step 4.9 — Dr Mahlangu lodges an appeal
+Role: Dr Nomsa Mahlangu (Trainee)
+Route: `/portfolio/reviews/{mahlangu_review_id}` → `Appeal` button (form on the review detail per T039's appeals form)
+Action: Click `Appeal`. Fill the appeal reason: "Single DOPS reflects start-of-year skill level. Stalled Mini-CEX was assessor-side issue, not trainee-side. Request reconsideration with attached evidence of 3 additional Mini-CEXes submitted in last 30 days." Submit.
+Expected: Appeal saved. Review's state flips from `Ratified` to `Appealed` (or appended with an appeal record — exact mechanism per T039). Prof Mbatha receives an appeal notification.
+Actual:
+Gap:
+
+### Step 4.10 — Prof Mbatha reviews the appeal
+Role: Prof Mbatha
+Route: `/admin/committee-reviews/{id}/appeals/{appealId}`
+Action: Read the appeal text. Verify the cited additional Mini-CEXes (need to have been submitted in Act 3 or appended for the scenario). Decide: in this scenario, **uphold the referral** but reduce its scope to a 3-month re-review instead of 6-month. Click `Decide`.
+Expected: Appeal disposed. Review state flips to `AppealResolved`. Trainee dashboard shows the appeal outcome.
+Actual:
+Gap:
+
+## Act 4 outcome state
+
+After Act 4 completes cleanly, the database adds:
+- 5 CommitteeReview rows (4 ratified, 1 appealed-then-resolved).
+- 3 EntrustmentDecision rows (Dr Molefe).
+- 1 AppealRecord (Dr Mahlangu).
+- All 5 trainee dashboards show their decision summaries.
+- Audit log adds ~25-40 entries (scheduling, evidence-fetch, decision-record, ratification, appeal lifecycle).
+
+## Act 4 time estimate
+
+| Phase | Est. minutes |
+|---|---|
+| 4.A: 5 reviews scheduled | 12 |
+| 4.B: Evidence-bundle preview across 5 reviews | 15 |
+| 4.C: 5 decisions recorded | 25 |
+| 4.D: STAR staging (Molefe only) | 12 |
+| 4.E: Ratification | 8 |
+| 4.F: Appeal lifecycle | 15 |
+| **Total** | **~87 minutes** |
+
+## Act 4 findings summary
+
+Not yet played. Specific items to verify: T032 sampling-concentration warning fires correctly on Molefe's bundle (likely needs ≥ 3 activities from the same assessor — may not trigger if the scenario only has the one MSF); T033's per-EPA trajectory chart renders for trainees with at least one credit; T029's PendingEntrustmentDecision lifecycle locks correctly on ratification; T031's formative-only review mode is not exercised here but the form should still allow it as an option.
+
+## Handoff into Act 5
+
+Act 5 needs from Act 4:
+- Dr Molefe's 3 EntrustmentDecision rows (PAED-001, PAED-006, PAED-013) — they'll need to be augmented with the remaining 12 EPAs at graduation.
+- The Annual Review Committee panel intact (Act 5's final review reuses it).
+- Audit log continuity (Act 5 looks back across the 4-year history).
+
+---
+
+# Act 5 — Year 4: graduation
+
+**Date in scenario:** 2029-11-18 (final committee review) through 2029-12-15 (graduation date).
+**Who:** Dr Lerato Molefe (about to graduate). The same Annual Review Panel as Act 4. Bootstrap admin signs the formal STAR documents. Prof Mbatha hands over the portfolio PDF.
+
+**Why:** Year 4 ends with Dr Molefe demonstrating that she has met or exceeded the graduation-level entrustment target for all 15 EPAs (final-year minimum mostly level 4; PAED-014/PAED-015 at level 3). The committee converts the cumulative evidence into the full STAR set, generates the portfolio PDF, and closes Dr Molefe's training programme.
+
+**Starting state:**
+- Cumulative state from Acts 2-4 plus an implicit "Act 3.5 + 4.5 + Act 4 reruns" of operational rhythm across years 2027 + 2028 + 2029. The scenario doesn't simulate those years step-by-step; assume the activity counts and credit have accrued naturally. By 2029-11-18 Dr Molefe has:
+  - 30+ Mini-CEX submissions (PAED-001 fully met at level 4).
+  - 8+ resuscitation activities (PAED-002).
+  - All other Paed EPAs met or exceeded.
+  - 3 STARs already awarded from the Act 4 review (PAED-001, PAED-006, PAED-013).
+  - Several Annual Reviews on file (one per year 2027 / 2028 / 2029).
+
+**Act 5 goal:**
+1. Final review scheduled and decision recorded: `Graduate`.
+2. PendingEntrustmentDecision rows for the remaining 12 EPAs staged + ratified into EntrustmentDecisions.
+3. Portfolio PDF generated and downloaded.
+4. Dr Molefe's TraineeProfile marked complete; her UserRoles cleaned (Trainee → Alumnus or similar).
+5. Coordinator + Mbatha can both reproduce the portfolio PDF byte-for-byte from the persisted decisions.
+
+## Phase 5.A — Schedule and run the final review
+
+### Step 5.1 — Mbatha schedules the final review
+Role: Prof Mbatha
+Route: `/admin/committee-reviews/new`
+Action: Panel `Paed Annual Review Panel 2026`; Trainee `Dr Lerato Molefe`; Scheduled date `2029-11-18`; Review type `Final review — graduation`.
+Expected: Review row appears with `Type = Final review`.
+Actual:
+Gap:
+
+### Step 5.2 — Committee meets, decision: Graduate
+Role: Dr Zulu (Chair)
+Route: `/committee/reviews/{finalReviewId}`
+Action: Start review. Confirm evidence bundle shows all 4 years of activities (~120+ rows). Stage STARs for the 12 EPAs not yet covered by previous decisions:
+- PAED-002, 003, 004, 005, 007, 008, 009, 010, 011, 012 at `Unsupervised (4)`.
+- PAED-014, 015 at `Indirect supervision (3)` (Elective EPAs, final-year target 3).
+Click `Record decision` with `Decision = Graduate`.
+Expected: 12 PendingEntrustmentDecision rows staged. Review state flips to `DecisionRecorded`.
+Actual:
+Gap:
+
+## Phase 5.B — Ratify and lock entrustment decisions
+
+### Step 5.3 — Bootstrap admin ratifies
+Role: Bootstrap admin
+Route: `/admin/committee-reviews/{finalReviewId}`
+Action: Click `Ratify`. The 12 PendingEntrustmentDecision rows lock into permanent EntrustmentDecision rows.
+Expected: Total EntrustmentDecisions on Dr Molefe = 3 (Act 4) + 12 (Act 5) = 15, covering every EPA in `FCPaed(SA) Part 1 v2026.1`.
+Actual:
+Gap:
+
+## Phase 5.C — Portfolio PDF generation
+
+### Step 5.4 — Mbatha generates Dr Molefe's portfolio PDF
+Role: Prof Mbatha
+Route: `/admin/trainees/{molefeProfileId}` → `Export portfolio` button (per T023 / T030)
+Action: Click `Export portfolio`. The QuestPDF-generated PDF downloads.
+Expected: PDF file `Dr Lerato Molefe — FCPaed(SA) Part 1 Portfolio.pdf` downloads. Open it. Verify it contains:
+- Cover page with trainee name, programme, graduation date.
+- Curriculum summary (15 EPAs with achievement levels).
+- Activities log (sorted chronologically).
+- STAR certificate section (per T030 — full-page-per-EPA certificate format).
+- Committee review history (5 reviews — Acts 2-5 — with decisions).
+- Audit trail summary (high-level event log).
+Actual:
+Gap:
+
+### Step 5.5 — Coordinator reproduces the PDF
+Role: Dr Smit (Coordinator)
+Route: same as Step 5.4
+Action: Click `Export portfolio`. Download. Compare byte-for-byte with Mbatha's version.
+Expected: Identical PDF (deterministic generation per T023). Coordinator has read-access by design.
+Actual:
+Gap:
+
+## Phase 5.D — Trainee profile closure
+
+### Step 5.6 — Mbatha marks Dr Molefe's profile complete
+Role: Prof Mbatha
+Route: `/admin/trainees/{molefeProfileId}`
+Action: Click `Mark complete`. Set Completion date `2029-12-15`. Confirm role transition: `Trainee → Alumnus` (or whatever the actual completion role is per CLAUDE.md's role list — if no Alumnus role exists, the Trainee role is removed and the user's profile is archived).
+Expected: Dr Molefe's user no longer holds the `Trainee` role. Her `/trainees` list entry moves to a "Completed" sub-tab.
+Actual:
+Gap:
+
+### Step 5.7 — Dr Molefe receives the graduation email + portfolio link
+Role: System (or Coordinator Smit)
+Route: triggered by the completion event
+Action: Verify an email arrives at `molefe@kgk.wombat.local` (Papercut catcher) containing the portfolio link and graduation congratulations.
+Expected: Email subject like "Congratulations on your FCPaed(SA) Part 1 completion" with PDF attachment or download link.
+Actual:
+Gap:
+
+## Act 5 outcome state
+
+After Act 5 completes cleanly:
+- Dr Molefe has 15 EntrustmentDecisions covering every Paed EPA.
+- Her portfolio PDF is downloadable byte-for-byte identically by Mbatha and Smit.
+- Her `Trainee` role is removed; profile is archived.
+- Audit log adds ~15-20 entries (final review lifecycle + portfolio export logs).
+- Total scenario state at this point: 1 graduated alumna, 4 active trainees (Mahlangu's 3-month post-appeal re-review status, the others on their normal tracks), 1 institution, 1 curriculum, 1 committee panel.
+
+## Act 5 time estimate
+
+| Phase | Est. minutes |
+|---|---|
+| 5.A: Final review schedule + decision | 22 |
+| 5.B: Ratification | 5 |
+| 5.C: Portfolio PDF generation + comparison | 15 |
+| 5.D: Profile closure + graduation email | 12 |
+| **Total** | **~54 minutes** |
+
+## Act 5 findings summary
+
+Not yet played. T023 (portfolio PDF) and T030 (STAR PDF) are the biggest moving parts to verify. The byte-for-byte reproducibility check (Step 5.5) requires the PDF generation to be deterministic — if QuestPDF embeds a timestamp or any non-deterministic field, that property fails. T030's STAR certificate format is fully specified per its task file; cross-check.
+
+---
+
+# Appendix — cross-cutting concerns
+
+These spot-checks don't fit neatly inside an act because they cross multiple acts' state or touch infrastructure rather than trainee lifecycle. Play them after the linear acts have established the data, or at any point where the system's state is rich enough to exercise them.
+
+## A.1 — Data rights (GDPR-style export + deletion)
+
+### Step A.1.1 — Trainee exports their own data
+Role: any active trainee (use Dr Dlamini for this run)
+Route: `/account/data-rights` → `Request export`
+Action: Click `Request export`. Confirm the request. Wait for the scheduled job to package the data.
+Expected: A `DataRightsRequest` row enters `Pending`. The scheduled job picks it up and produces a ZIP file containing the trainee's profile, activities, reviews-where-she-appears, and audit entries about her. Status flips to `Ready`; a download link is provided.
+Actual:
+Gap:
+
+### Step A.1.2 — Administrator processes a deletion request
+Role: bootstrap admin
+Route: `/admin/data-rights/{requestId}`
+Action: For a hypothetical user who has requested deletion (use a withdrawn user — Dr Ndlovu from Act 4's `Withdraw` decision), click `Process deletion`. Confirm.
+Expected: User's personally-identifiable data is removed or pseudonymised; audit-log entries retained per the retention policy. The `DataRightsRequest` flips to `Completed`.
+Actual:
+Gap: **Anticipated** — the exact deletion semantics (hard delete vs anonymise vs soft-delete) are policy-dependent. Capture what Wombat's `Process deletion` actually does to confirm it matches the documented compliance posture.
+
+## A.2 — Scheduled jobs
+
+### Step A.2.1 — Walk the scheduled-jobs admin page
+Role: bootstrap admin
+Route: `/admin/jobs`
+Action: List all registered scheduled jobs. For each, capture: name, cron schedule, last run, last status (success / failed), last run duration.
+Expected: At least these jobs (per CLAUDE.md mentions + the activity types' workflow needs):
+- `AuditRetentionPurge` — daily, prunes audit entries older than 7 years.
+- `StaleAssessmentChase` — daily, flags activities stuck in `submitted` > 14 days.
+- `MsfClosing` — daily, transitions `open` MSFs past their window.
+- `EmailWorker` — continuous, drains the outbound mail queue.
+- `DataRightsExportWorker` — picks up pending export requests.
+Actual:
+Gap:
+
+### Step A.2.2 — Manually trigger one job
+Role: bootstrap admin
+Route: `/admin/jobs/{key}/run`
+Action: Pick `StaleAssessmentChase`. Click `Run now`. Observe the run-history table.
+Expected: A new `ScheduledJobRun` row appears with timestamp, status `Success`, duration. If any stalled activities were found, side-effect rows (reminder logs / activity flagged) appear elsewhere.
+Actual:
+Gap:
+
+## A.3 — SSO path (OIDC)
+
+### Step A.3.1 — Bootstrap admin configures an OIDC provider
+Role: bootstrap admin
+Route: `/admin/sso/group-mappings`
+Action: Add a group mapping: `Group "Paeds-Consultants" → Role "Assessor"`. Save.
+Expected: New row in `SsoGroupRoleMapping`. Audit entry recorded.
+Actual:
+Gap:
+
+### Step A.3.2 — Simulate an SSO login with the mapped group
+Role: SSO-provisioned user (test username, e.g., `oidc-test@kgk.wombat.local`)
+Route: SSO callback URL (depends on OIDC config; for local dev, simulate via an integration test or by manually constructing the claims)
+Action: Authenticate. The `ExternalLoginHandler` should match the user's claimed group, assign the `Assessor` role, and create the Wombat user.
+Expected: User exists with `Assessor` role only. No Administrator role (per CLAUDE.md: Administrator is never assignable via SSO).
+Actual:
+Gap: **Anticipated** — local OIDC setup is non-trivial. If no test IdP is configured for the dev environment, this step can be deferred until a real institutional SSO is wired up in deployment. Capture in Actual which path the play-through used.
+
+### Step A.3.3 — Confirm unmatched-group fallback
+Role: another SSO-provisioned user with a group that has NO mapping
+Route: SSO callback
+Action: Authenticate.
+Expected: User created with `PendingTrainee` role (the documented fallback). Available for an admin to manually assign a role later.
+Actual:
+Gap:
+
+## A.4 — Mobile + accessibility spot-checks
+
+### Step A.4.1 — Login flow on a narrow viewport (375px wide)
+Role: Dr Mahlangu
+Route: `/account/login`
+Action: Resize Playwright viewport to 375x812 (iPhone SE-ish). Walk through login → dashboard → open a curriculum item from the progress panel.
+Expected: All elements stay tappable (≥ 44px touch targets per WCAG). No horizontal scroll. NavMenu collapses behind the hamburger toggle correctly. The dashboard's progress bars don't overflow.
+Actual:
+Gap:
+
+### Step A.4.2 — Keyboard navigation through the activity form
+Role: Dr Dlamini
+Route: `/activities/new` → Mini-CEX form
+Action: Using only keyboard (Tab / Shift+Tab / Enter / Space), navigate the form: pick the type, fill every field, submit. Capture which fields are skipped or focus-trapped.
+Expected: All form fields reachable in DOM order. The focus indicator (per T048's h1-focus-ring fix) does not draw unwanted rectangles around the page h1. Submit button reachable and triggerable via Enter on the last field.
+Actual:
+Gap:
+
+### Step A.4.3 — Screen-reader walkthrough of a populated review
+Role: Dr Zulu (use VoiceOver / NVDA / Narrator)
+Route: `/committee/reviews/{molefeReviewId}`
+Action: With a screen reader on, walk the review-detail page. Capture: which sections are announced as headings, whether the rating-trajectory chart has an alt-text fallback, whether the decision form's required-field markers are announced.
+Expected: All h2/h3 headings announced as headings. Chart has either an aria-label summary or a tabular fallback (the T033 chart implementation should provide one). Required fields announced as "required".
+Actual:
+Gap: **Anticipated** — chart accessibility is the weakest point per common Blazor + chart-library defaults. If T033 doesn't provide a text fallback, this is a real accessibility gap worth ticketing.
+
+### Step A.4.4 — Color-contrast spot-check
+Role: any user
+Route: walk the dashboards and detail pages
+Action: Use a contrast-checker (axe-core, WebAIM, or the built-in DevTools accessibility audit) on at least: NavMenu links, dashboard card text, form labels, status pills (Active / Inactive / Pending / Stalled), the entrustment-scale level swatches.
+Expected: All text-on-background pairs meet WCAG AA (4.5:1 for body, 3:1 for large text). Status pills should hit at minimum 3:1 against the page background.
+Actual:
+Gap:
+
+## Appendix outcome state
+
+The appendix doesn't accumulate scenario state — its spot-checks read existing state without modifying it (with the exception of A.1.2's deletion, which is destructive and should be done last).
+
+## Appendix time estimate
+
+| Section | Est. minutes |
+|---|---|
+| A.1 Data rights | 18 |
+| A.2 Scheduled jobs | 12 |
+| A.3 SSO | 20 (with a real test IdP); 8 (skipped to manual claims) |
+| A.4 Mobile + a11y | 25 |
+| **Total** | **~75 minutes** |
+
+## Appendix findings summary
+
+Not yet played. The A.3 SSO section has the highest deferral risk (no local IdP). A.4 likely surfaces multiple a11y findings — they should be triaged per WCAG severity, not added blindly to the active-task list.
