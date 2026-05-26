@@ -14,7 +14,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## This session at a glance
 
-**Session 2026-05-26 — Act 1 replay + T057 fixes shipped.** Replayed the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. 4 of 6 previous findings closed by those task shipments; the replay surfaced 2 still-open findings (#5 stale tab title, #7 EntrustmentScale UX wart for InstitutionalAdmin), which T057 then closed. Two commits this session: `ac53e2f` (doc-only replay record) and `d7f695c` (T057 code fixes + browser-verified).
+**Session 2026-05-26 — Act 1 replay + T057 + T058 fixes shipped.** Replayed the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. 4 of 6 previous findings closed by those task shipments; the replay surfaced 2 still-open findings (#5 stale tab title, #7 EntrustmentScale UX wart for InstitutionalAdmin), which T057 then closed. Finding #6 (Scope column ambiguity) closed by T058. **All 7 findings from the 2026-05-24 / 2026-05-26 sweep now closed.** Four commits this session: `ac53e2f` (doc-only replay record), `d7f695c` (T057), `a60ed2a` (doc update for T057), `02a167f` (T058).
 
 **Session 2026-05-24 (continued) — T056 complete + T051 (URL+SMTP+message portion) shipped.** Started T056 (InstitutionalAdmin role-power audit, Option A). Mid-implementation realized the full 12–16h sweep wouldn't fit one session cleanly, so split into five clusters and landed all five plus T051's UI/config portion. The Paediatrics scenario Act 1 now plays end-to-end as Prof Mbatha (InstitutionalAdmin) per its original intent.
 
@@ -39,6 +39,8 @@ This file is the live handoff between sessions. Every session ends by editing th
 **Session 2026-05-26 commits in chronological order:**
 - `ac53e2f` — docs: re-record Act 1 play-through after T051/T055/T056 (Actual/Gap rewrite + findings-summary rewrite)
 - `d7f695c` — T057: post-save tab-title fix + EntrustmentScale write-gate (7 files; 5 forceLoad swaps; 1 EntrustmentScaleEdit policy swap; 1 EntrustmentScalesList button-conditional refactor)
+- `a60ed2a` — docs: mark findings 5 + 7 closed by T057; update handoff
+- `02a167f` — T058: resolve activity-types list Scope column to full path (closes finding #6; 1 file; +52/-1 lines; global Administrator now sees IM and Paed types disambiguated by their full path)
 
 **Session 2026-05-24 commits in chronological order (kept for reference):**
 
@@ -239,6 +241,8 @@ Across six clusters:
 
 ## Last completed
 
+**T058 — Activity-types list Scope column path resolution** (commit `02a167f`). Finding #6 from the 2026-05-26 replay: global Administrator sees activity types from multiple specialities, all rendered as bare "Speciality" — visually indistinguishable except by key suffix. Replaced `@item.Scope` with `@FormatScope(item)` which resolves the scope-entity name via the same scope-aware GetInstitutionsListQuery / GetSpecialitiesListQuery / GetSubSpecialitiesListQuery lookups the T053 picker uses. Format: "Global", "Institution · X", "Speciality · I / S", "Sub-speciality · I / S / Sub". If a lookup row is missing (e.g. soft-deleted institution), helpers fall back to "Institution · #42" with the raw id so rows stay disambiguable. Verified as global Administrator: 20 rows split cleanly between "Speciality · Demo Institution / General Medicine" and "Speciality · Kgosi Kgari Teaching Hospital / Paediatrics". 1 file; +52/-1 lines; UI-only; Architecture 19/19, Web 38/38 pass.
+
 **T057 — Post-save tab-title fix + EntrustmentScale write-gate** (commit `d7f695c`). Two fixes from the 2026-05-26 replay's open findings. Finding #5: Blazor's `<PageTitle>` does not re-evaluate when the same route handler is re-rendered after a same-component SPA NavigateTo (h1 updates correctly via PageHeader's parameter, but document.title stayed on "Create X"). Changed `forceLoad: false` → `forceLoad: true` on the IsNew → /{id} transition on all five affected edit pages (Institution, Speciality, SubSpeciality, EntrustmentScale, Epa, Curriculum). Finding #7: `EntrustmentScalesList` now hides Create/Edit/Delete buttons behind an explicit `_isAdministrator` field check (AuthorizeView Roles= surprisingly did not gate in this page context — fell back to ClaimsPrincipalExtensions.IsAdministrator() field check loaded in OnInitializedAsync); `EntrustmentScaleEdit` page policy tightened to Administrator. Verified as Mbatha (Create/Edit/Delete hidden, direct nav to /new → /access-denied) and admin (EPA saved at /admin/epas/21 with tab title flipping cleanly to "Edit EPA"). 7 files; UI-only; no new tests needed; 318/318 pass.
 
 **Act 1 replay** (commit `ac53e2f`). Re-ran the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. Updated every Phase 1.A-1.F step's Actual/Gap lines per scenario convention and rewrote the findings summary. Confirmed 4 closures (T051 SMTP + token, T055 URL stickiness, T056 InstitutionalAdmin lockout). Surfaced 2 still-open findings (#5 tab-title, #7 EntrustmentScale UX wart) which T057 then addressed in the same session. Replay used the inline-URL invitation path exclusively; Mbatha drove Phases 1.D–1.F end-to-end with handler-level scope filtering correctly excluding seeded Demo Institution data from her pickers.
@@ -364,6 +368,8 @@ Verification:
 
 ## Last verified commits
 
+- `02a167f` — T058 (activity-types list Scope column path resolution; 1 file; Architecture 19/19, Web 38/38; browser-verified as global Administrator)
+- `a60ed2a` — docs: mark findings 5 + 7 closed by T057; update handoff (doc-only)
 - `d7f695c` — T057 (post-save tab-title fix + EntrustmentScale write-gate; 7 files; 5 forceLoad swaps on Institution/Speciality/SubSpeciality/Epa/Curriculum/EntrustmentScale edit pages + 1 EntrustmentScaleEdit policy swap + 1 EntrustmentScalesList button-conditional refactor with `_isAdministrator` field check; browser-verified as both Mbatha and admin; build clean, all 318 tests pass)
 - `ac53e2f` — docs: re-record Act 1 play-through after T051/T055/T056 (doc-only Actual/Gap + findings-summary rewrite of `Rewrite/scenario-paediatrics.md`)
 - `799cc1a` — T051 (invitation registration-URL surface + dev SMTP port fix + status-message cleanup; 4 files; UI + config only, no schema change; build clean, all suites pass)

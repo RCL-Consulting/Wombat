@@ -372,8 +372,8 @@ Role: **bootstrap Administrator**
 Route: `/admin/activity-types`
 Action: Scroll the list (or filter by name in the Search box). Confirm 10 Paed entries each with `Scope = Speciality`, `Published = v1`, `Draft = None`, `Status = Active`. (Note: `Published`, `Draft`, and `Status` are separate columns, not a concatenated string.)
 Expected: 10 rows. Names match the table above.
-Actual: As Prof Mbatha (InstitutionalAdmin), the list shows **only the 10 Paed types** (`acat_paed`, `cbd_paed`, `dops_paed`, `journal_club_paed`, `mini_cex_paed`, `msf_paed`, `procedure_log_paed`, `reflective_note_paed`, `research_output_paed`, `teaching_session_paed`) at ids 11-20. The 10 seeded IM types are filtered out by T056.c's scope guard on `ListActivityTypesAdmin`. Every row shows `Scope = Speciality / v1 / None / Active`.
-Gap: Scope-column ambiguity **no longer applies to InstitutionalAdmin** (only sees own institution). Still applies to global Administrator who would see IM + Paed types both rendered as "Speciality" without identifying which. Cosmetic; still not pressing.
+Actual: As Prof Mbatha (InstitutionalAdmin), the list shows **only the 10 Paed types** at ids 11-20 — the 10 seeded IM types are filtered out by T056.c's scope guard. Every row shows `Scope = Speciality · Kgosi Kgari Teaching Hospital / Paediatrics` (T058 resolved-path label) with `v1 / None / Active` in the other columns. As global Administrator, the same list shows 20 rows total, IM types disambiguating as `Speciality · Demo Institution / General Medicine` and Paed types as `Speciality · Kgosi Kgari Teaching Hospital / Paediatrics`.
+Gap: None.
 
 ## Act 1 outcome state
 
@@ -412,7 +412,7 @@ Re-populated 2026-05-24 from an end-to-end Playwright **replay** of the scenario
 3. ✅ ~~Bug: InvitationsList.IssueAsync drops the raw token.~~ **Closed by T051.** Status banner now says "Copy the link below — it is shown only once." The registration URL renders inline as a copy-friendly `<code>` block in an info Alert.
 4. ✅ ~~Cosmetic: Save draft on a new activity type keeps URL at /new.~~ **Closed by T055.** URL flips to `/admin/activity-types/{id}` on first save — verified for all 10 Paed types created in this replay.
 5. ✅ ~~Partially open: page-title bar reads "Create X" after the entity is saved.~~ **Closed by T057** (commit `d7f695c`). Root cause was a Blazor quirk: `<PageTitle>` does not re-evaluate its conditional expression when the same route handler is re-rendered after a same-component SPA-style NavigateTo (the h1 fired correctly because PageHeader takes the title as a parameter). Fix: changed the post-save NavigateTo from `forceLoad: false` to `forceLoad: true` on the IsNew → /{id} transition on all five affected edit pages (Institution, Speciality, Sub-Speciality, Entrustment Scale, EPA, Curriculum). Full page reload guarantees the new title takes effect; only state lost is the form state that the just-saved entity reloads from the DB anyway. Verified: saving a fresh EPA flipped the browser tab title cleanly to "Edit EPA".
-6. ⚠️ **Adjusted: activity-types list Scope column ambiguity.** Doesn't apply to InstitutionalAdmin (only sees own institution per T056.c). Still applies to global Administrator who sees IM + Paed types both labelled "Speciality" without disambiguation. Cosmetic; same fix recommended (render the resolved scope label).
+6. ✅ ~~Adjusted: activity-types list Scope column ambiguity.~~ **Closed by T058** (commit `02a167f`). The `Scope` column now resolves to the full path: "Global", "Institution · X", "Speciality · I / S", or "Sub-speciality · I / S / Sub". Verified as global Administrator: 20 rows distinguish cleanly between IM types ("Speciality · Demo Institution / General Medicine") and Paed types ("Speciality · Kgosi Kgari Teaching Hospital / Paediatrics"). Path resolution uses the same scope-aware GetInstitutionsListQuery / GetSpecialitiesListQuery / GetSubSpecialitiesListQuery lookups that the T053 picker uses.
 
 ### New finding from this replay (closed)
 
@@ -432,6 +432,7 @@ Re-populated 2026-05-24 from an end-to-end Playwright **replay** of the scenario
 - **T055** (closed `6eaef56`) — Publish button + post-save URL redirect on ActivityType edit. URL redirect verified; conditional Publish state intact. The "Create X" page-title rollup turned out to be only partially covered — see finding #5.
 - **T056** (closed across 5 clusters ending `ec6d6d1`) — InstitutionalAdmin role-power audit (Option A). Replay confirms end-to-end Phases 1.D-1.F + scoped filtering across EPAs / curricula / activity types / invitations / nav menu.
 - **T057** (closed `d7f695c`) — post-save tab-title fix (forceLoad: true on IsNew → /{id} transition across 5 edit pages) + EntrustmentScale write-gate (`_isAdministrator` field check on the list, Administrator-only page policy on the new/edit route).
+- **T058** (closed `02a167f`) — activity-types list Scope column resolves to full path ("Speciality · Institution / Speciality") so global Administrator can disambiguate types from different institutions.
 
 ### Time check (replay 2026-05-24, post-T051/T055/T056)
 
