@@ -1,5 +1,10 @@
 @page "/admin/activity-types"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Domain.Activities
+@using Wombat.Application.Features.Institutions
+@using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList
+@using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList
+@using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -37,7 +42,7 @@
       <tr>
         <td>@item.Name</td>
         <td><code>@item.Key</code></td>
-        <td>@item.Scope</td>
+        <td>@FormatScope(item)</td>
         <td>v@(item.PublishedVersion)</td>
         <td>@(item.HasDraft ? "Draft saved" : "None")</td>
         <td>@(item.IsActive ? "Active" : "Inactive")</td>
@@ -56,6 +61,9 @@
 
 @code {
   private readonly List<ActivityTypeAdminListItemDto> _items = [];
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private bool _loading = true;
   private string? _error;
   private string? _search;
@@ -74,6 +82,9 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery(authState.User)));
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
     }
     catch (Exception exception)
     {
@@ -83,5 +94,45 @@
     {
       _loading = false;
     }
+  }
+
+  private string FormatScope(ActivityTypeAdminListItemDto item) => item.Scope switch
+  {
+    ActivityScope.Global => "Global",
+    ActivityScope.Institution => InstitutionLabel(item.ScopeId),
+    ActivityScope.Speciality => SpecialityLabel(item.ScopeId),
+    ActivityScope.SubSpeciality => SubSpecialityLabel(item.ScopeId),
+    _ => item.Scope.ToString()
+  };
+
+  private string InstitutionLabel(int? institutionId)
+  {
+    if (!institutionId.HasValue) return "Institution";
+    var institution = _institutions.FirstOrDefault(i => i.Id == institutionId.Value);
+    return institution is null ? $"Institution · #{institutionId}" : $"Institution · {institution.Name}";
+  }
+
+  private string SpecialityLabel(int? specialityId)
+  {
+    if (!specialityId.HasValue) return "Speciality";
+    var speciality = _specialities.FirstOrDefault(s => s.Id == specialityId.Value);
+    if (speciality is null) return $"Speciality · #{specialityId}";
+    var institution = _institutions.FirstOrDefault(i => i.Id == speciality.InstitutionId);
+    return institution is null
+      ? $"Speciality · {speciality.Name}"
+      : $"Speciality · {institution.Name} / {speciality.Name}";
+  }
+
+  private string SubSpecialityLabel(int? subSpecialityId)
+  {
+    if (!subSpecialityId.HasValue) return "Sub-speciality";
+    var subSpeciality = _subSpecialities.FirstOrDefault(s => s.Id == subSpecialityId.Value);
+    if (subSpeciality is null) return $"Sub-speciality · #{subSpecialityId}";
+    var speciality = _specialities.FirstOrDefault(s => s.Id == subSpeciality.SpecialityId);
+    if (speciality is null) return $"Sub-speciality · {subSpeciality.Name}";
+    var institution = _institutions.FirstOrDefault(i => i.Id == speciality.InstitutionId);
+    return institution is null
+      ? $"Sub-speciality · {speciality.Name} / {subSpeciality.Name}"
+      : $"Sub-speciality · {institution.Name} / {speciality.Name} / {subSpeciality.Name}";
   }
 }
