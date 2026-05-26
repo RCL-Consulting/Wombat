@@ -14,7 +14,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## This session at a glance
 
-**Session 2026-05-26 — Act 1 replay + T057 + T058 fixes shipped.** Replayed the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. 4 of 6 previous findings closed by those task shipments; the replay surfaced 2 still-open findings (#5 stale tab title, #7 EntrustmentScale UX wart for InstitutionalAdmin), which T057 then closed. Finding #6 (Scope column ambiguity) closed by T058. **All 7 findings from the 2026-05-24 / 2026-05-26 sweep now closed.** Four commits this session: `ac53e2f` (doc-only replay record), `d7f695c` (T057), `a60ed2a` (doc update for T057), `02a167f` (T058).
+**Session 2026-05-26 — Act 1 replay + T057 + T058 fixes shipped, then replay-3 confirmed clean.** Replayed the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. 4 of 6 previous findings closed by those task shipments; the replay surfaced 2 still-open findings (#5 stale tab title, #7 EntrustmentScale UX wart for InstitutionalAdmin), which T057 then closed. Finding #6 (Scope column ambiguity) closed by T058. **All 7 findings from the 2026-05-24 / 2026-05-26 sweep now closed.** A third replay was then run to confirm the fixes stay closed under re-run — clean, no new findings, no regressions, plus exercised the Papercut SMTP delivery path (previous replays used the inline URL only). One tiny doc-fix surfaced: scenario inline note said Papercut emails land in an `Incoming` subfolder; they actually land in the parent dir.
 
 **Session 2026-05-24 (continued) — T056 complete + T051 (URL+SMTP+message portion) shipped.** Started T056 (InstitutionalAdmin role-power audit, Option A). Mid-implementation realized the full 12–16h sweep wouldn't fit one session cleanly, so split into five clusters and landed all five plus T051's UI/config portion. The Paediatrics scenario Act 1 now plays end-to-end as Prof Mbatha (InstitutionalAdmin) per its original intent.
 
@@ -41,6 +41,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `d7f695c` — T057: post-save tab-title fix + EntrustmentScale write-gate (7 files; 5 forceLoad swaps; 1 EntrustmentScaleEdit policy swap; 1 EntrustmentScalesList button-conditional refactor)
 - `a60ed2a` — docs: mark findings 5 + 7 closed by T057; update handoff
 - `02a167f` — T058: resolve activity-types list Scope column to full path (closes finding #6; 1 file; +52/-1 lines; global Administrator now sees IM and Paed types disambiguated by their full path)
+- _replay 3 (no new commit yet; doc update inbound)_ — third Act 1 replay confirmed all 7 fixes stay closed under re-run. Exercised the Papercut SMTP path; surfaced one tiny doc-fix (Papercut Incoming-subfolder claim).
 
 **Session 2026-05-24 commits in chronological order (kept for reference):**
 
