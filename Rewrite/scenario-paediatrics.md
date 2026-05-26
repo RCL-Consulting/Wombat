@@ -125,8 +125,8 @@ Role: bootstrap Administrator
 Route: `/admin/specialities/{specialityId}/sub-specialities/new` (click `Sub-specialities` next to `Paediatrics`, then `Create sub-speciality`).
 Action: Name `General Paediatrics`; Description `Core general paediatric training; covers the FCPaed(SA) curriculum.`; click `Save`.
 Expected: Redirect to the sub-speciality edit page. `General Paediatrics` appears in the sub-speciality list for Paediatrics. Record the `{specialityId}` and `{subSpecialityId}` — Phase 1.E and Phase 1.F need them for scoped lookups.
-Actual: General Paediatrics saved at `/admin/specialities/2/sub-specialities/2`. `SubSpecialityId = 2` recorded. Parent-speciality line correctly reads "Speciality: Paediatrics". h1 flips to "Edit sub-speciality".
-Gap: Browser tab `<title>` still reads "Create Sub-Speciality" after save (h1 is correct). One of four pages with this stale-`<PageTitle>` leftover (see finding #5).
+Actual: General Paediatrics saved at `/admin/specialities/2/sub-specialities/2`. `SubSpecialityId = 2` recorded. Parent-speciality line correctly reads "Speciality: Paediatrics". h1 flips to "Edit sub-speciality". After T057, browser tab title also flips to "Edit Sub-Speciality" (forceLoad on the post-save NavigateTo).
+Gap: None.
 
 ## Phase 1.B — Provision Prof Mbatha (InstitutionalAdmin scoped to KGK)
 
@@ -171,8 +171,8 @@ Action: Name `Paed General Entrustment Scale`; Description `5-level ten-Cate lad
 5. Label `Can supervise others`, Description `Trainee is competent to teach and supervise junior colleagues.`
 The form auto-assigns `Order` based on row position; use `Up` / `Down` if you need to re-sort. Click `Save`. The URL flips to `/admin/entrustment-scales/{id}` (typically `/2` since the seeded `O-R Scale` occupies id `1`).
 Expected: Status banner "Entrustment scale saved." Scale appears in the `/admin/entrustment-scales` list with `Levels = 5`. The scale is now available to any assessment form, activity-type rating field, or committee-review entrustment-decision picker.
-Actual: Saved as bootstrap admin at `/admin/entrustment-scales/2` with all 5 ten-Cate levels intact. h1 flips to "Edit entrustment scale". A first attempt as Prof Mbatha (InstitutionalAdmin) reached the same form but Save was rejected by the handler with status "Only global administrators may create entrustment scales." — T056.d's Administrator-only enforcement working at the handler level.
-Gap: **UX wart** — the `Create scale` button on `/admin/entrustment-scales` and the `/admin/entrustment-scales/new` page itself render fully for InstitutionalAdmin, who can fill the entire form before discovering that Save will fail. Suggest gating the page (`[Authorize(Policy = "Administrator")]`) or hiding the Create button for non-Administrator viewers. Listing the seeded scales is fine for InstitutionalAdmin (read-only reference). Also: browser tab `<title>` still reads "Create entrustment scale" after save (2 of 4 stale-`<PageTitle>` cases — see finding #5).
+Actual: Saved as bootstrap admin at `/admin/entrustment-scales/2` with all 5 ten-Cate levels intact. h1 and browser tab title both flip to "Edit entrustment scale" (T057 forceLoad). Page now Administrator-only — InstitutionalAdmin gets `/access-denied` if she navigates directly to `/admin/entrustment-scales/new`, and the Create / Edit / Delete buttons on the list page are hidden for non-Administrators (T057). She can still see the scales read-only on the list.
+Gap: None.
 
 > **About the seeded scale:** `DataSeeder` boots with one global `O-R Scale` for development convenience. Paediatrics could reuse it, but the labels differ slightly from the canonical ten-Cate ladder the curriculum cites — easier to create the Paed-specific scale and leave the seeded one alone.
 
@@ -186,8 +186,8 @@ Role: Prof Mbatha (InstitutionalAdmin) — T056 grants institution-scoped admin 
 Route: `/admin/epas/new` (repeat for each)
 Action: For each row in the table below, navigate to the new-EPA form. Fill Sub-speciality `Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics` (combobox shows the triple-path label), Code, Title, Description, leave `Required knowledge and skills` blank (or paste a short freeform note — non-blocking), Category, then `Save`.
 Expected: Each EPA appears in `/admin/epas` list, scoped to `General Paediatrics`, with status `Active` and version 1 (pending its first curriculum reference).
-Actual: All 15 PAED-001 through PAED-015 EPAs persisted as Prof Mbatha (InstitutionalAdmin) — T056.b grants her institution-scoped EPA powers. Sub-speciality combobox correctly pre-selects her sole scope (`Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics`). The seeded Demo Institution EPA-001 (id=1) is filtered out of her list — only the 15 PAED EPAs (ids 2-16) appear. h1 flips to "Edit EPA" after save.
-Gap: Browser tab `<title>` still reads "Create EPA" after save (3 of 4 stale-`<PageTitle>` cases — see finding #5). Functionally clean.
+Actual: All 15 PAED-001 through PAED-015 EPAs persisted as Prof Mbatha (InstitutionalAdmin) — T056.b grants her institution-scoped EPA powers. Sub-speciality combobox correctly pre-selects her sole scope (`Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics`). The seeded Demo Institution EPA-001 (id=1) is filtered out of her list — only the 15 PAED EPAs (ids 2-16) appear. h1 and browser tab title both flip to "Edit EPA" after save (T057 forceLoad).
+Gap: None.
 
 **The 15 EPAs:**
 
@@ -220,8 +220,8 @@ Role: **bootstrap Administrator** (see Phase 1.B note).
 Route: `/admin/curricula/new`
 Action: Sub-speciality `Kgosi Kgari Teaching Hospital / Paediatrics / General Paediatrics`; Name `FCPaed(SA) Part 1`; Version `2026.1`; Effective from `2026-01-15`; Effective to leave empty; click `Save`.
 Expected: Redirect to `/admin/curricula/{id}`. Curriculum row appears in `/admin/curricula` with status `Active`, 0 items.
-Actual: FCPaed(SA) Part 1 v2026.1 saved at `/admin/curricula/2` as Prof Mbatha (InstitutionalAdmin via T056.b). Sub-speciality combobox correctly pre-selects her scope. Effective-from set to 2026-01-15.
-Gap: Browser tab `<title>` still reads "Create Curriculum" after save (4 of 4 stale-`<PageTitle>` cases — see finding #5). Functionally clean.
+Actual: FCPaed(SA) Part 1 v2026.1 saved at `/admin/curricula/2` as Prof Mbatha (InstitutionalAdmin via T056.b). Sub-speciality combobox correctly pre-selects her scope. Effective-from set to 2026-01-15. h1 and browser tab title both flip correctly after save (T057 forceLoad).
+Gap: None.
 
 ### Step 1.10 — Add 15 curriculum items
 Role: **bootstrap Administrator**
@@ -411,12 +411,12 @@ Re-populated 2026-05-24 from an end-to-end Playwright **replay** of the scenario
 2. ✅ ~~Hard-ish: dev SMTP port mismatch.~~ **Closed by T051.** appsettings.Development.json fix verified (Papercut listening on port 25), and the inline-URL path means SMTP is no longer the only delivery channel. Replay used the inline URL exclusively — never touched Papercut.
 3. ✅ ~~Bug: InvitationsList.IssueAsync drops the raw token.~~ **Closed by T051.** Status banner now says "Copy the link below — it is shown only once." The registration URL renders inline as a copy-friendly `<code>` block in an info Alert.
 4. ✅ ~~Cosmetic: Save draft on a new activity type keeps URL at /new.~~ **Closed by T055.** URL flips to `/admin/activity-types/{id}` on first save — verified for all 10 Paed types created in this replay.
-5. ⚠️ **Partially open: page-title bar reads "Create X" after the entity is saved.** The h1 fix landed on Institution + Speciality pages (h1 swaps to "Edit X" correctly). But the browser tab `<title>` (the `<PageTitle>` Razor component) remains stale on **four** pages observed this replay: Sub-Speciality, Entrustment Scale, EPA, Curriculum. Each page would need the same conditional pattern most of the others have. Cosmetic; ~5-line fix per page. Track as a small follow-up if not already in T055's expected scope.
+5. ✅ ~~Partially open: page-title bar reads "Create X" after the entity is saved.~~ **Closed by T057** (commit `d7f695c`). Root cause was a Blazor quirk: `<PageTitle>` does not re-evaluate its conditional expression when the same route handler is re-rendered after a same-component SPA-style NavigateTo (the h1 fired correctly because PageHeader takes the title as a parameter). Fix: changed the post-save NavigateTo from `forceLoad: false` to `forceLoad: true` on the IsNew → /{id} transition on all five affected edit pages (Institution, Speciality, Sub-Speciality, Entrustment Scale, EPA, Curriculum). Full page reload guarantees the new title takes effect; only state lost is the form state that the just-saved entity reloads from the DB anyway. Verified: saving a fresh EPA flipped the browser tab title cleanly to "Edit EPA".
 6. ⚠️ **Adjusted: activity-types list Scope column ambiguity.** Doesn't apply to InstitutionalAdmin (only sees own institution per T056.c). Still applies to global Administrator who sees IM + Paed types both labelled "Speciality" without disambiguation. Cosmetic; same fix recommended (render the resolved scope label).
 
-### New finding from this replay
+### New finding from this replay (closed)
 
-7. **UX: InstitutionalAdmin can navigate to `/admin/entrustment-scales/new` and submit the form, only for the handler to reject the write.** The `Create scale` link on the list page is visible to her, the new page renders all controls active, and Save returns "Only global administrators may create entrustment scales." after she's filled the form. Suggested fix: page-level `[Authorize(Policy = "Administrator")]` on `EntrustmentScaleEdit.razor`'s new route (cleanest), plus hide the `Create scale` button on the list for non-Administrator viewers. The list page itself can stay readable so InstitutionalAdmin can see what scales are available. Same principle would apply to EntrustmentScale Edit / Delete buttons. Cosmetic-leaning UX; not data-integrity.
+7. ✅ ~~UX: InstitutionalAdmin can navigate to `/admin/entrustment-scales/new` and submit the form, only for the handler to reject the write.~~ **Closed by T057** (commit `d7f695c`). Three-part fix on the EntrustmentScales surface: `EntrustmentScalesList` hides Create / Edit / Delete buttons behind an `_isAdministrator` field check populated from `AuthenticationStateProvider` in `OnInitializedAsync` (AuthorizeView Roles= surprisingly did not gate the buttons in this page context — switched to an explicit IsAdministrator() field check via ClaimsPrincipalExtensions). `EntrustmentScaleEdit` page policy changed from `AdministratorOrInstitutionalAdmin` to `Administrator` so direct URL navigation now redirects InstitutionalAdmin to /access-denied. InstitutionalAdmin can still see scales read-only on the list page. Verified as Mbatha: Create/Edit/Delete buttons hidden, direct nav to /admin/entrustment-scales/new redirects to /access-denied.
 
 ### Findings already known from the static audit + addressed by T050
 
@@ -431,6 +431,7 @@ Re-populated 2026-05-24 from an end-to-end Playwright **replay** of the scenario
 - **T054** (closed `ef02268`) — admin CRUD for `EntrustmentScale`. Verified intact (5-level Paed scale created in replay).
 - **T055** (closed `6eaef56`) — Publish button + post-save URL redirect on ActivityType edit. URL redirect verified; conditional Publish state intact. The "Create X" page-title rollup turned out to be only partially covered — see finding #5.
 - **T056** (closed across 5 clusters ending `ec6d6d1`) — InstitutionalAdmin role-power audit (Option A). Replay confirms end-to-end Phases 1.D-1.F + scoped filtering across EPAs / curricula / activity types / invitations / nav menu.
+- **T057** (closed `d7f695c`) — post-save tab-title fix (forceLoad: true on IsNew → /{id} transition across 5 edit pages) + EntrustmentScale write-gate (`_isAdministrator` field check on the list, Administrator-only page policy on the new/edit route).
 
 ### Time check (replay 2026-05-24, post-T051/T055/T056)
 

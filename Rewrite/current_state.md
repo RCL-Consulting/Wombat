@@ -4,7 +4,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T056 complete + T051 (URL surface / SMTP / status message) shipped this session.** InstitutionalAdmin has institution-scoped admin powers; the invitation page now reveals the registration URL on issuance so SMTP is optional. Remaining:
+**Act 1 replay run + T057 (post-save tab-title + EntrustmentScale write-gate) shipped this session.** Replay (commit `ac53e2f`) re-ran every Phase 1.A–1.F step against the T051/T055/T056-fixed code; closed 4 of 6 previous findings, partially closed #5 (titles), surfaced #7 (UX wart for InstitutionalAdmin on EntrustmentScale create). T057 (commit `d7f695c`) then closed both #5 and #7. Remaining:
 
 1. **T052** — Invitation form: allow `Administrator` role with null institution (~3h, **Opus**). Requires making `Invitation.InstitutionId` nullable — hand-written migration + Designer + snapshot update + handler + provisioner changes + tests. Plan doc in `scenario-act1-fixes-plan.md` spells out the exact file list.
 2. **T051.b** — Invitation form: First/Last name capture (entity migration + form + accept pre-fill). Same migration overhead as T052. ~2h, **Sonnet**. Could be bundled with T052 to share the migration cost.
@@ -13,6 +13,8 @@ This file is the live handoff between sessions. Every session ends by editing th
 **Suggestion:** bundle T051.b + T052 in one session — they touch the same Invitation entity and would share the migration / Designer / snapshot cost. Net effort ~3.5h.
 
 ## This session at a glance
+
+**Session 2026-05-26 — Act 1 replay + T057 fixes shipped.** Replayed the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. 4 of 6 previous findings closed by those task shipments; the replay surfaced 2 still-open findings (#5 stale tab title, #7 EntrustmentScale UX wart for InstitutionalAdmin), which T057 then closed. Two commits this session: `ac53e2f` (doc-only replay record) and `d7f695c` (T057 code fixes + browser-verified).
 
 **Session 2026-05-24 (continued) — T056 complete + T051 (URL+SMTP+message portion) shipped.** Started T056 (InstitutionalAdmin role-power audit, Option A). Mid-implementation realized the full 12–16h sweep wouldn't fit one session cleanly, so split into five clusters and landed all five plus T051's UI/config portion. The Paediatrics scenario Act 1 now plays end-to-end as Prof Mbatha (InstitutionalAdmin) per its original intent.
 
@@ -32,7 +34,13 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `4487240` — docs: record T051 hash
 - `c8ff215` — docs: detail T052 schema-change plan + suggest bundling with T051.b
 
-**Test status at session end:** Application 174 → 216 (+42 scope tests). Domain 45, Architecture 19, Web 38 unchanged. Build clean throughout.
+**Test status at session end:** Domain 45, Application 216, Architecture 19, Web 38 — all unchanged from 2026-05-24. T057 is UI-only (no handler changes) so no new tests needed. Build clean.
+
+**Session 2026-05-26 commits in chronological order:**
+- `ac53e2f` — docs: re-record Act 1 play-through after T051/T055/T056 (Actual/Gap rewrite + findings-summary rewrite)
+- `d7f695c` — T057: post-save tab-title fix + EntrustmentScale write-gate (7 files; 5 forceLoad swaps; 1 EntrustmentScaleEdit policy swap; 1 EntrustmentScalesList button-conditional refactor)
+
+**Session 2026-05-24 commits in chronological order (kept for reference):**
 
 **T056.b — EPAs + Curricula cluster** (commit `9e3bc0a`). 13 handlers updated. EPAs scoped via `SubSpeciality.Speciality.InstitutionId`; curricula via `Curriculum.SubSpeciality.Speciality.InstitutionId`. `EpaScopeGuardTests` + `CurriculumScopeGuardTests` (5+5). Razor pages: `EpasList`, `EpaEdit`, `CurriculaList`, `CurriculumEdit`, `CurriculumItemsEdit` swapped to combined policy; call-site updates in `FormEdit`, `ReviewDetail`, `TraineeProfileEdit`. Application 183→193.
 
@@ -231,6 +239,10 @@ Across six clusters:
 
 ## Last completed
 
+**T057 — Post-save tab-title fix + EntrustmentScale write-gate** (commit `d7f695c`). Two fixes from the 2026-05-26 replay's open findings. Finding #5: Blazor's `<PageTitle>` does not re-evaluate when the same route handler is re-rendered after a same-component SPA NavigateTo (h1 updates correctly via PageHeader's parameter, but document.title stayed on "Create X"). Changed `forceLoad: false` → `forceLoad: true` on the IsNew → /{id} transition on all five affected edit pages (Institution, Speciality, SubSpeciality, EntrustmentScale, Epa, Curriculum). Finding #7: `EntrustmentScalesList` now hides Create/Edit/Delete buttons behind an explicit `_isAdministrator` field check (AuthorizeView Roles= surprisingly did not gate in this page context — fell back to ClaimsPrincipalExtensions.IsAdministrator() field check loaded in OnInitializedAsync); `EntrustmentScaleEdit` page policy tightened to Administrator. Verified as Mbatha (Create/Edit/Delete hidden, direct nav to /new → /access-denied) and admin (EPA saved at /admin/epas/21 with tab title flipping cleanly to "Edit EPA"). 7 files; UI-only; no new tests needed; 318/318 pass.
+
+**Act 1 replay** (commit `ac53e2f`). Re-ran the scenario end-to-end against a freshly reset dev DB now that T051/T055/T056 had landed. Updated every Phase 1.A-1.F step's Actual/Gap lines per scenario convention and rewrote the findings summary. Confirmed 4 closures (T051 SMTP + token, T055 URL stickiness, T056 InstitutionalAdmin lockout). Surfaced 2 still-open findings (#5 tab-title, #7 EntrustmentScale UX wart) which T057 then addressed in the same session. Replay used the inline-URL invitation path exclusively; Mbatha drove Phases 1.D–1.F end-to-end with handler-level scope filtering correctly excluding seeded Demo Institution data from her pickers.
+
 **T051 — Invitation registration-URL surface + dev SMTP tidy + status-message fix** (commit `799cc1a`). `InvitationsList.IssueAsync` now captures the `IssuedInvitationResult.Token` and renders the registration URL in a one-shot info Alert below the form (with copy-friendly `<code>` styling and a clear "shown only on this page-load" warning). The misleading "The stub sender logged the registration link" status text replaced with "Copy the link below — it is shown only once." `appsettings.Development.json` dev SMTP port aligned to Papercut's default (25 instead of 1025). FirstName/LastName columns deferred as T051.b — they require a migration + Designer + snapshot update and are nice-to-have, not blocking.
 
 **T056.e — Audit + SSO + NavMenu refresh + scenario-doc revert** (commit `ec6d6d1`). Audit handlers (`ListAuditEntriesQuery`, `GetAuditEntryByIdQuery`) and SSO handlers (`ListSsoGroupMappings`, `CreateSsoGroupMapping`, `DeleteSsoGroupMapping`) all principal-aware. Audit filters by `AuditEntry.InstitutionId` (InstitutionalAdmin sees own institution + global no-institution events). SSO filters by `SsoGroupRoleMapping.InstitutionId`. NavMenu InstitutionalAdmin block expanded from 3 placeholder links to 11 real routes. New `/admin/specialities` redirect page resolves the caller's institution from claims. Scenario doc: Phase 1.B warning replaced with "Resolved by T056" note, Step 1.8 role no longer says "bootstrap Administrator", finding #1 marked closed. 6 new scope tests. Application 210→216.
@@ -352,6 +364,8 @@ Verification:
 
 ## Last verified commits
 
+- `d7f695c` — T057 (post-save tab-title fix + EntrustmentScale write-gate; 7 files; 5 forceLoad swaps on Institution/Speciality/SubSpeciality/Epa/Curriculum/EntrustmentScale edit pages + 1 EntrustmentScaleEdit policy swap + 1 EntrustmentScalesList button-conditional refactor with `_isAdministrator` field check; browser-verified as both Mbatha and admin; build clean, all 318 tests pass)
+- `ac53e2f` — docs: re-record Act 1 play-through after T051/T055/T056 (doc-only Actual/Gap + findings-summary rewrite of `Rewrite/scenario-paediatrics.md`)
 - `799cc1a` — T051 (invitation registration-URL surface + dev SMTP port fix + status-message cleanup; 4 files; UI + config only, no schema change; build clean, all suites pass)
 - `ec6d6d1` — T056.e (Audit + SSO + NavMenu refresh + scenario-doc revert; 20 files; 5 handlers + 3 razor pages + new MySpecialitiesRedirect page + 6 new scope tests + NavMenu expansion + scenario doc revert; Application 210/210 → 216/216, Architecture 19/19, Web 38/38, Domain 45/45)
 - `8ad0788` — T056.d (Trainees + Assessors + Invitations + EntrustmentScales scope guards; 32 files; 15 handlers + 7 razor pages + 7 new scope tests; Application 203/203 → 210/210, Architecture 19/19, Web 38/38, Domain 45/45)
