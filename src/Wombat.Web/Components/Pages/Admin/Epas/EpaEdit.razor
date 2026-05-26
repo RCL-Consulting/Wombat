@@ -172,7 +172,7 @@
       if (IsNew)
       {
         epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, authState.User));
-        Navigation.NavigateTo($"/admin/epas/{epa.Id}");
+        Navigation.NavigateTo($"/admin/epas/{epa.Id}", forceLoad: true);
         return;
       }
 

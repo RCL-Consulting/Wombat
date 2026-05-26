@@ -143,7 +143,7 @@
       if (IsNew)
       {
         subSpeciality = await Sender.Send(new CreateSubSpecialityCommand(SpecialityId, _model.Name, EmptyToNull(_model.Description), authState.User));
-        Navigation.NavigateTo($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}");
+        Navigation.NavigateTo($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}", forceLoad: true);
         return;
       }
 

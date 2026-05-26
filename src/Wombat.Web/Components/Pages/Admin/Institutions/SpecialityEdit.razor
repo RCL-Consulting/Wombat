@@ -147,7 +147,7 @@
       if (IsNew)
       {
         speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description), authState.User));
-        Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}");
+        Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}", forceLoad: true);
         return;
       }
 

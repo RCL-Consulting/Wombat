@@ -140,7 +140,7 @@
       if (IsNew)
       {
         institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
-        Navigation.NavigateTo($"/admin/institutions/{institution.Id}");
+        Navigation.NavigateTo($"/admin/institutions/{institution.Id}", forceLoad: true);
         return;
       }
 

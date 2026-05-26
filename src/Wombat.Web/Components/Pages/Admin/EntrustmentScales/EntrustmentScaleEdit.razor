@@ -1,6 +1,6 @@
 @page "/admin/entrustment-scales/new"
 @page "/admin/entrustment-scales/{Id:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@attribute [Authorize(Policy = "Administrator")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -203,7 +203,7 @@
           .Select(level => new EntrustmentLevelInput(level.Order, level.Label, level.Description))
           .ToList();
         var created = await Sender.Send(new CreateEntrustmentScaleCommand(_name, _description, inputs, authState.User));
-        Navigation.NavigateTo($"/admin/entrustment-scales/{created.Id}", forceLoad: false);
+        Navigation.NavigateTo($"/admin/entrustment-scales/{created.Id}", forceLoad: true);
         return;
       }
 

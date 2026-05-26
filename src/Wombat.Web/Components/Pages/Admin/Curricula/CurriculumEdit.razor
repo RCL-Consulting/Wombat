@@ -200,7 +200,7 @@
       if (IsNew)
       {
         curriculum = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, authState.User));
-        Navigation.NavigateTo($"/admin/curricula/{curriculum.Id}");
+        Navigation.NavigateTo($"/admin/curricula/{curriculum.Id}", forceLoad: true);
         return;
       }
 
@@ -228,7 +228,7 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo, authState.User));
-      Navigation.NavigateTo($"/admin/curricula/{cloned.Id}");
+      Navigation.NavigateTo($"/admin/curricula/{cloned.Id}", forceLoad: true);
     }
     catch (Exception exception)
     {

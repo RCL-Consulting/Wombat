@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@using Wombat.Application.Common.Extensions
 @using Wombat.Application.Features.Epas
 @using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale
 
@@ -9,10 +10,13 @@
 
 <PageHeader Title="Entrustment scales" Subtitle="Define and maintain the rating ladders used by assessment forms and committee reviews.">
   <Actions>
-    <a class="btn btn-primary" href="/admin/entrustment-scales/new">
-      <Icon Name="plus" />
-      Create scale
-    </a>
+    @if (_isAdministrator)
+    {
+      <a class="btn btn-primary" href="/admin/entrustment-scales/new">
+        <Icon Name="plus" />
+        Create scale
+      </a>
+    }
   </Actions>
 </PageHeader>
 
@@ -44,10 +48,13 @@
           <td>@scale.Description</td>
           <td>@scale.Levels.Count</td>
           <td>
-            <div class="actions-cell">
-              <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")">Edit</a>
-              <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
-            </div>
+            @if (_isAdministrator)
+            {
+              <div class="actions-cell">
+                <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")">Edit</a>
+                <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
+              </div>
+            }
           </td>
         </tr>
       </Row>
@@ -60,9 +67,12 @@
   private string? _loadError;
   private string? _actionError;
   private string? _statusMessage;
+  private bool _isAdministrator;
 
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdministrator = authState.User.IsAdministrator();
     await LoadAsync();
   }
 
