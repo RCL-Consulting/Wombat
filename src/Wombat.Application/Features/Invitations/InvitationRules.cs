@@ -38,8 +38,8 @@ internal static class InvitationRules
         {
             WombatRoles.InstitutionalAdmin when specialityId.HasValue || subSpecialityId.HasValue
                 => "Institutional administrators may only be scoped to an institution.",
-            WombatRoles.SpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember when !specialityId.HasValue
-                => "The selected role requires a speciality scope.",
+            WombatRoles.SpecialityAdmin when !specialityId.HasValue
+                => "Speciality administrators must be scoped to a speciality.",
             WombatRoles.SpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember when subSpecialityId.HasValue
                 => "The selected role may not be scoped to a sub-speciality.",
             WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor or WombatRoles.Trainee when !specialityId.HasValue || !subSpecialityId.HasValue

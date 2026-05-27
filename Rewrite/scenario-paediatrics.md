@@ -489,10 +489,10 @@ Prof Mbatha works through `/admin/invitations` one invitation at a time. She doe
 ### Step 2.1 — Issue Coordinator invitation (Dr Smit)
 Role: Prof Mbatha (InstitutionalAdmin)
 Route: `/admin/invitations`
-Action: In the `Issue invitation` panel, Email `smit@kgk.wombat.local`; Role `Coordinator`; Institution `Kgosi Kgari Teaching Hospital`; Speciality `Paediatrics` (the validator rejects Coordinator with no speciality scope — see Gap); Sub-speciality blank. Click `Issue invitation`. Copy the registration URL from the info Alert into the runbook scratchpad.
+Action: In the `Issue invitation` panel, Email `smit@kgk.wombat.local`; Role `Coordinator`; Institution `Kgosi Kgari Teaching Hospital`; Speciality + Sub-speciality leave blank. Click `Issue invitation`. Copy the registration URL from the info Alert into the runbook scratchpad.
 Expected: Status banner "Invitation issued for smit@kgk.wombat.local. Copy the link below — it is shown only once." Registration URL renders below the form. New row appears in the Active invitations table with `Role = Coordinator`.
-Actual: Initial submit with Speciality blank rejected with inline error "The selected role requires a speciality scope." Re-tried with Speciality=Paediatrics; status banner + inline URL rendered cleanly. Active row recorded `Role=Coordinator, Institution=KGK, Speciality=Paediatrics`. T056.d institution-dropdown scope filter verified: only KGK shown, Demo Institution excluded.
-Gap: **Finding A2-1.** `InvitationRules.ValidateScope` requires `SpecialityId` for `Coordinator` (also `CommitteeMember` and `SpecialityAdmin`). Scenario intent was an institution-wide coordinator. Either revise scenario to always set a speciality, OR loosen the validator so Coordinator+null-speciality is permitted (a coordinator supporting an entire department may not belong to one speciality). Same finding affects Step 2.2 vanrensburg (external CommitteeMember).
+Actual: After T060 (commit pending), Coordinator with no speciality is accepted. Status banner + inline URL render cleanly. Active row recorded `Role=Coordinator, Institution=KGK, Speciality=(blank)`. T056.d institution-dropdown scope filter verified: only KGK shown, Demo Institution excluded. Browser-verified 2026-05-27 after T060 build with `t060-coord@test.local` test invitation.
+Gap: None. **Finding A2-1 closed by T060** — `InvitationRules.ValidateScope` no longer requires `SpecialityId` for Coordinator or CommitteeMember; `SpecialityAdmin` still requires one with a clearer message.
 
 ### Step 2.2 — Issue six consultant invitations
 Role: Prof Mbatha
@@ -509,8 +509,8 @@ Action: Repeat Step 2.1's form for each consultant below. After each, copy the r
 | `vanrensburg@sun.ac.za` | `CommitteeMember` | leave blank | External examiner; speciality blank because his Stellenbosch home institution is not in this Wombat tenancy. |
 
 Expected: All six rows in Active invitations with the correct role and institution columns. Six registration URLs captured.
-Actual: All 6 invitations persisted. Per A2-1, vanrensburg's Speciality was forced to `Paediatrics` (external-examiner role couldn't be saved with Speciality blank — handler rejects). Patel + Khumalo's Assessor invitations required both Speciality AND Sub-speciality (`Paediatrics` / `General Paediatrics`) — Assessor demands both scope levels per the validator. After 7 total invitations the Active table holds 7 rows.
-Gap: Same as Step 2.1's A2-1 — the strict-speciality rule blocked the scenario's intended external-CommitteeMember pattern. Workaround used.
+Actual: All 6 invitations persist. After T060, vanrensburg's external CommitteeMember invitation can be issued with Speciality blank as the scenario intends. Patel + Khumalo's Assessor invitations still require both Speciality AND Sub-speciality (`Paediatrics` / `General Paediatrics`) — Assessor demands both scope levels per the validator (rule unchanged). After 7 total invitations the Active table holds 7 rows.
+Gap: None. A2-1 closed by T060.
 
 ### Step 2.2.b — Issue secondary `Assessor` invitations for Zulu / Naidoo / Botha
 Role: Prof Mbatha
@@ -720,7 +720,7 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 ### Validator over-restriction
 
-2. **A2-1** — `InvitationRules.ValidateScope` requires `SpecialityId` for `Coordinator`, `CommitteeMember`, and `SpecialityAdmin`. Scenario expected institution-wide Coordinator (Smit) and external CommitteeMember (van Rensburg with no local speciality). Workaround: assign speciality=Paediatrics. **Recommendation:** Coordinator should allow null speciality (institution-wide); CommitteeMember should allow null speciality (external examiner). Or revise scenario.
+2. **✅ A2-1** (FIXED by T060, commit pending) — `InvitationRules.ValidateScope` now allows Coordinator + CommitteeMember with no speciality. SpecialityAdmin still requires speciality but with a clearer "Speciality administrators must be scoped to a speciality." message. Steps 2.1 + 2.2 reverted to leave-Speciality-blank prescription. Verified end-to-end: Coordinator and external CommitteeMember invitations issued without speciality; SpecialityAdmin without speciality still rejected with new message.
 
 ### Missing surfaces
 
@@ -756,8 +756,8 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 ### Suggested code-side task list (model: **Opus** for migration/policy work, **Sonnet** for the UX picker work)
 
-- **T059** (✅ shipped this session) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
-- **T060** (open) — widen `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. ~30 min, **Sonnet**.
+- **T059** (✅ shipped 2026-05-27 in commit `9114244`) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
+- **T060** (✅ shipped 2026-05-27, commit pending in this session) — widened `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. Task file `Rewrite/Tasks/T060-invitation-validator-scope-relaxation.md`.
 - **T061** (open) — admin Users surface (replaces `/placeholder/users`): list users, add/remove roles, reset password, revoke pending same-email invitations on register. ~4–6h, **Opus** (auth + audit + tests).
 - **T062** (open) — Decision Panel form pickers (scope-aware Institution + Speciality + user picker textbox for Chair/Members/External). ~2–3h, **Sonnet**.
 - **T063** (open) — widen `CommitteeDecisionAuthorization.DemandPanelAdministration` to include InstitutionalAdmin (scope-checked) + reconcile with page authorize. Drop Coordinator from page authorize to match handler. ~1h, **Sonnet**.
