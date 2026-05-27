@@ -4,16 +4,19 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**Act 2 played end-to-end this session.** 11 findings surfaced; 1 real bug fixed inline (T059 — DbContext concurrency in ListAssessors/Trainees); the rest open as a cluster of small-to-medium follow-ups (T060–T066). Two dev-only CLI ops tools added to `Wombat.Web/Program.cs` (`--dev-reset-password` and `--dev-add-role`) to unblock common ops tasks until proper admin UI surfaces exist. See `Rewrite/scenario-paediatrics.md` Act 2 findings summary for the full list.
+**Act 2 played + T060 shipped this session.** 11 findings raised during the Act 2 play-through; 2 closed in-session (T059 — DbContext concurrency in ListAssessors/Trainees; T060 — invitation validator relaxed for Coordinator + external CommitteeMember). 9 remaining are scoped as T061–T066. Task files for each were created.
 
-**Next session — three candidate threads, pick one:**
+**Next session — pick one:**
 
-1. **T060–T064 cluster** — small fixes from Act 2 (~6–10h total). Best bundling: T060 (invitation validator) + T063 (panel auth) + T064 (assessor edit URL/dropdown) share zero code; can be split. T061 (Users admin surface) is the big one and likely the single most useful — it covers A2-3 / A2-4 / A2-pwd / A2-2 papercut all at once. **Suggested model: Opus** for T061; **Sonnet** for the smaller fixes.
-2. **T052 + T051.b bundle (carried over)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
-3. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). Act 1 Phase 1.F was scope-reduced to just structural workflow + publish; populating Mini-CEX takes ~20 minutes before Act 3 proper can run. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
-4. **Operational deployment (carried from T016).** First-time deploy against Linode.
+1. **T061 (Recommended)** — admin Users surface (replaces `/placeholder/users`). Closes 4 findings (A2-3 multi-role onboarding, A2-4 missing surface, A2-pwd no admin password reset, A2-2 stale invitation papercut). Also removes the dev-only `--dev-reset-password` / `--dev-add-role` CLI flags. ~4–6h, **Opus** — touches auth, audit, two new pages, ~5 commands, tests.
+2. **T062 + T063 bundle** — Decision Panel form pickers + auth reconciliation. T063 widens `DemandPanelAdministration` to InstitutionalAdmin (scope-checked) and reconciles page/handler authorize; T062 swaps the raw-id fields for scope-aware pickers. ~3–4h total, **Sonnet**.
+3. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
+4. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
+5. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
+6. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
+7. **Operational deployment (carried from T016).** First-time deploy against Linode.
 
-**Recommended path:** T061 alone in the next session. It's the most valuable single piece of work (closes 4 of the Act 2 findings + the carried Mbatha-password-recovery problem) and unblocks future scenario replays from the same dead end this session hit. Estimate ~4–6h, **Opus**.
+**Strong recommendation:** **T061**. It's the single most valuable open task — closes the largest cluster of A2 findings, removes the dev-CLI stop-gaps from production code, and unblocks future scenario replays from the same dead end this session hit.
 
 ## This session at a glance
 
@@ -25,6 +28,8 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 - `9114244` — T059: fix DbContext concurrency in list handlers + dev CLI ops tools.
 - `c0072a9` — docs: Act 2 play-through findings + handoff update.
+- `e6cdc03` — docs: record session commits in handoff.
+- `bc9776c` — T060: relax invitation validator for Coordinator + external CommitteeMember + create T061–T066 task files. **(+5 tests, 221/221 Application pass.)**
 
 **Test status at session end:** unchanged from prior session — build clean, 318/318 pass. T059's fix is a behaviour change (sequential vs parallel) on a hot path that did not have a regression test. Suggested future test (not yet added): an integration test that seeds N>1 trainee profiles and asserts `/admin/trainees` does not throw.
 
@@ -260,7 +265,9 @@ Across six clusters:
 
 ## Last completed
 
-**T059 — DbContext concurrency fix on ListAssessors + ListTrainees + dev CLI ops tools + Act 2 play-through** (commit pending). Surfaced during the Act 2 play-through when `/admin/trainees` and `/admin/assessors` crashed with `A second operation was started on this context instance before a previous operation completed.` Two handlers (`ListAssessorsForSpecialityQueryHandler` + `ListTraineesForSpecialityQueryHandler`) fired `Task.WhenAll(profiles.Select(GetByIdAsync))` on a shared `ApplicationDbContext`. EF Core forbids parallel queries on a single context. Fix: replaced with sequential foreach loops; profile count is small (N=5 in this scenario, plausibly <50 in production), so the sequential cost is negligible. Same session: added two dev-only CLI flags to `Wombat.Web/Program.cs` — `--dev-reset-password <email> <new>` (Identity-backed PasswordReset token + ResetPassword) and `--dev-add-role <email> <role>` (UserManager.AddToRoleAsync) — both guarded by `app.Environment.IsDevelopment()` so they're inert in Production. Used to recover Mbatha's lost password and to stamp Assessor onto Zulu/Naidoo/Botha respectively. Act 2 then played end-to-end Phases 2.A–2.H; 11 findings recorded in `Rewrite/scenario-paediatrics.md`.
+**T060 — Invitation validator relaxation + 7 task files for the remaining Act 2 findings** (commit `bc9776c`). Split `InvitationRules.ValidateScope`'s combined SpecialityAdmin/Coordinator/CommitteeMember `requires speciality scope` rule so only SpecialityAdmin still requires speciality (with a clearer message). Coordinator and CommitteeMember can now be issued with just an institution — closes A2-1. Sub-speciality still forbidden for all three. 5 new tests in `InvitationValidatorTests.cs` exercise the validator through `IssueInvitationCommandHandler`: Coordinator-null-speciality accepted, CommitteeMember-null-speciality accepted, SpecialityAdmin-null-speciality rejected with new message, Coordinator/CommitteeMember-with-sub-speciality still rejected. Browser-verified end-to-end as Mbatha. Scenario doc Steps 2.1 + 2.2 reverted to leave-Speciality-blank prescription; Act 2 findings summary marks A2-1 closed. Also created `Rewrite/Tasks/T061-...md` through `T066-...md` covering the remaining 9 Act 2 findings. Tests: Domain 45, Application 221 (+5), Architecture 19, Web 38 = 323/323.
+
+**T059 — DbContext concurrency fix on ListAssessors + ListTrainees + dev CLI ops tools + Act 2 play-through** (commit `9114244`). Surfaced during the Act 2 play-through when `/admin/trainees` and `/admin/assessors` crashed with `A second operation was started on this context instance before a previous operation completed.` Two handlers (`ListAssessorsForSpecialityQueryHandler` + `ListTraineesForSpecialityQueryHandler`) fired `Task.WhenAll(profiles.Select(GetByIdAsync))` on a shared `ApplicationDbContext`. EF Core forbids parallel queries on a single context. Fix: replaced with sequential foreach loops; profile count is small (N=5 in this scenario, plausibly <50 in production), so the sequential cost is negligible. Same session: added two dev-only CLI flags to `Wombat.Web/Program.cs` — `--dev-reset-password <email> <new>` (Identity-backed PasswordReset token + ResetPassword) and `--dev-add-role <email> <role>` (UserManager.AddToRoleAsync) — both guarded by `app.Environment.IsDevelopment()` so they're inert in Production. Used to recover Mbatha's lost password and to stamp Assessor onto Zulu/Naidoo/Botha respectively. Act 2 then played end-to-end Phases 2.A–2.H; 11 findings recorded in `Rewrite/scenario-paediatrics.md`.
 
 **T058 — Activity-types list Scope column path resolution** (commit `02a167f`). Finding #6 from the 2026-05-26 replay: global Administrator sees activity types from multiple specialities, all rendered as bare "Speciality" — visually indistinguishable except by key suffix. Replaced `@item.Scope` with `@FormatScope(item)` which resolves the scope-entity name via the same scope-aware GetInstitutionsListQuery / GetSpecialitiesListQuery / GetSubSpecialitiesListQuery lookups the T053 picker uses. Format: "Global", "Institution · X", "Speciality · I / S", "Sub-speciality · I / S / Sub". If a lookup row is missing (e.g. soft-deleted institution), helpers fall back to "Institution · #42" with the raw id so rows stay disambiguable. Verified as global Administrator: 20 rows split cleanly between "Speciality · Demo Institution / General Medicine" and "Speciality · Kgosi Kgari Teaching Hospital / Paediatrics". 1 file; +52/-1 lines; UI-only; Architecture 19/19, Web 38/38 pass.
 
@@ -389,6 +396,7 @@ Verification:
 
 ## Last verified commits
 
+- `bc9776c` — T060 (relax invitation validator for Coordinator + external CommitteeMember; SpecialityAdmin still requires speciality with clearer message; 5 new tests in InvitationValidatorTests.cs; 7 task files added — T060 + T061 + T062 + T063 + T064 + T065 + T066; scenario doc Step 2.1 + 2.2 reverted; A2-1 closed; build clean; Domain 45/45, Application 221/221, Architecture 19/19, Web 38/38; browser-verified end-to-end as Mbatha).
 - `c0072a9` — docs: Act 2 play-through findings + handoff update (Rewrite/scenario-paediatrics.md Act 2 Actual/Gap + 11-finding summary; Rewrite/current_state.md session log; doc-only).
 - `9114244` — T059 (DbContext concurrency fix in ListAssessors + ListTrainees; +2 dev CLI flags `--dev-reset-password` and `--dev-add-role` in `Wombat.Web/Program.cs`; 3 files; +96/-8 lines; build clean; Domain 45/45, Application 216/216, Architecture 19/19, Web 38/38).
 - `02a167f` — T058 (activity-types list Scope column path resolution; 1 file; Architecture 19/19, Web 38/38; browser-verified as global Administrator)
