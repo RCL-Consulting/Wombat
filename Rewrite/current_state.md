@@ -23,7 +23,8 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 **Session commits (this session, in chronological order — all on `master`):**
 
-- _(pending in this turn)_ — T059 (DbContext concurrency fix in ListAssessors + ListTrainees); dev CLI flags (`--dev-reset-password`, `--dev-add-role`) in `Wombat.Web/Program.cs`; scenario-paediatrics.md Act 2 Actual/Gap + findings summary; this handoff update.
+- `9114244` — T059: fix DbContext concurrency in list handlers + dev CLI ops tools.
+- `c0072a9` — docs: Act 2 play-through findings + handoff update.
 
 **Test status at session end:** unchanged from prior session — build clean, 318/318 pass. T059's fix is a behaviour change (sequential vs parallel) on a hot path that did not have a regression test. Suggested future test (not yet added): an integration test that seeds N>1 trainee profiles and asserts `/admin/trainees` does not throw.
 
@@ -388,6 +389,8 @@ Verification:
 
 ## Last verified commits
 
+- `c0072a9` — docs: Act 2 play-through findings + handoff update (Rewrite/scenario-paediatrics.md Act 2 Actual/Gap + 11-finding summary; Rewrite/current_state.md session log; doc-only).
+- `9114244` — T059 (DbContext concurrency fix in ListAssessors + ListTrainees; +2 dev CLI flags `--dev-reset-password` and `--dev-add-role` in `Wombat.Web/Program.cs`; 3 files; +96/-8 lines; build clean; Domain 45/45, Application 216/216, Architecture 19/19, Web 38/38).
 - `02a167f` — T058 (activity-types list Scope column path resolution; 1 file; Architecture 19/19, Web 38/38; browser-verified as global Administrator)
 - `a60ed2a` — docs: mark findings 5 + 7 closed by T057; update handoff (doc-only)
 - `d7f695c` — T057 (post-save tab-title fix + EntrustmentScale write-gate; 7 files; 5 forceLoad swaps on Institution/Speciality/SubSpeciality/Epa/Curriculum/EntrustmentScale edit pages + 1 EntrustmentScaleEdit policy swap + 1 EntrustmentScalesList button-conditional refactor with `_isAdministrator` field check; browser-verified as both Mbatha and admin; build clean, all 318 tests pass)
