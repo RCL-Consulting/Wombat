@@ -736,13 +736,13 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 7. **A2-8** — Admit-trainee form has no `Stage` field. Stage appears to be computed from `ProgrammeStartDate` elsewhere but is not displayed in `/admin/trainees` either. Either add a read-only Stage column to the active list, or persist Stage as an editable column.
 
-8. **A2-10** — Decision Panel form uses raw integer IDs (Institution / Speciality) and raw GUID textareas (Chair / Member / External user ids). No name pickers — operator must paste GUIDs from a DB query. **New task suggested: T062** — scope-aware pickers + multi-select user picker on `PanelEdit.razor`.
+8. **✅ A2-10** (FIXED by T062, commit pending) — `PanelEdit.razor` now uses scope-aware `<select>` widgets for Institution / Speciality and native `<select multiple>` pickers for Chair / Members / External — backed by a new `ListPanelMemberCandidatesQuery` that filters CommitteeMember users by caller's institution. Round-trip verified end-to-end as Mbatha (created "T062 Test Panel" with chair Zulu + members Botha/Naidoo) and as Administrator (sees both institutions' specialities + all CommitteeMembers across institutions).
 
 ### Authorization mismatch
 
-9. **A2-9** — Mbatha (InstitutionalAdmin) cannot create or manage committee panels. T056 left this surface out. Decision panels are institution-scoped data; InstitutionalAdmin should administer panels within their institution. Recommend widening `CommitteeDecisionAuthorization.DemandPanelAdministration` to accept InstitutionalAdmin + scope-check the panel's institution. Bootstrap Administrator was used as workaround for this session.
+9. **✅ A2-9** (FIXED by T063, commit pending) — `DemandPanelAdministration` widened to InstitutionalAdmin. CreateDecisionPanel, UpdateDecisionPanel, GetDecisionPanelById, ListDecisionPanels all scope-filter on the resolved institution (panel.InstitutionId for Institution-scoped; panel.Speciality.InstitutionId for Speciality-scoped). Out-of-scope GetById returns null (404, not 403). Verified end-to-end: Mbatha created and viewed KGK panels; admin sees all panels.
 
-10. **A2-11** — Page-authorize / handler-authorize mismatch on the Decision Panel surface. `[Authorize(Roles = "Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]` lets Coordinator into the page; `DemandPanelAdministration` then rejects the save with "You are not allowed to manage committee panels." Drop Coordinator from the page authorize OR add Coordinator to the handler. Recommend keeping handler strict + dropping page role to match (Coordinator's actual privilege is `DemandReviewScheduling`, not panel administration).
+10. **✅ A2-11** (FIXED by T063, commit pending) — `PanelEdit.razor`'s page authorize tightened to `Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin` (Coordinator dropped). `PanelsList.razor` keeps Coordinator for read-only viewing. Verified Smit (Coordinator) is now redirected to `/access-denied` on `/committee/panels/new` instead of being let in and failing at Save.
 
 ### Minor / cosmetic
 
@@ -759,8 +759,8 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 - **T059** (✅ shipped 2026-05-27 in commit `9114244`) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
 - **T060** (✅ shipped 2026-05-27, commit pending in this session) — widened `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. Task file `Rewrite/Tasks/T060-invitation-validator-scope-relaxation.md`.
 - **T061** (✅ shipped 2026-05-27 in commit `7610ac5`) — admin Users surface at `/admin/users` + `/admin/users/{userId}`. List users (scope-filtered), add/remove roles, reset password, lock-out/reactivate, revoke pending same-email invitations. AcceptInvitation auto-revokes stale same-email invitations on registration. Replaced both `--dev-reset-password` and `--dev-add-role` CLI flags. 15 new Application tests + 1 new bUnit smoke test; 339/339 pass.
-- **T062** (open) — Decision Panel form pickers (scope-aware Institution + Speciality + user picker textbox for Chair/Members/External). ~2–3h, **Sonnet**.
-- **T063** (open) — widen `CommitteeDecisionAuthorization.DemandPanelAdministration` to include InstitutionalAdmin (scope-checked) + reconcile with page authorize. Drop Coordinator from page authorize to match handler. ~1h, **Sonnet**.
+- **T062** (✅ shipped 2026-05-27, commit pending) — Decision Panel form pickers: scope-aware Institution + Speciality `<select>`, native `<select multiple>` for Chair/Members/External backed by `ListPanelMemberCandidatesQuery`. Round-trip verified.
+- **T063** (✅ shipped 2026-05-27, commit pending) — `DemandPanelAdministration` widened to InstitutionalAdmin; handlers scope-check resolved institution (via `Speciality.InstitutionId` for Speciality-scoped panels). PanelEdit page authorize tightened to drop Coordinator (Coordinator's actual privilege is `DemandReviewScheduling`). 7 new scope-guard tests.
 - **T064** (open) — AssessorProfileEdit post-save URL flip + dropdown narrowing (compare T055 pattern). ~30 min, **Sonnet**.
 - **T065** (open, optional) — TrainingStatus enum: extend T035 with `Provisional` / `In training` / `Trained` enum alongside the date, OR revise scenario to refer to the date only. ~1h, **Sonnet**.
 - **T066** (open, optional) — Trainee admit form: add Stage display (computed read-only OR editable). ~1h, **Sonnet**.

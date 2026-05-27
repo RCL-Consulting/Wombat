@@ -107,11 +107,12 @@
   {
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
       _panels.Clear();
-      _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery()));
+      _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User)));
 
       _reviews.Clear();
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _reviews.AddRange(await Sender.Send(new ListReviewsForPanelQuery(authState.User)));
     }
     catch (Exception exception)

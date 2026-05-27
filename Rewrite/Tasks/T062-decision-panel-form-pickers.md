@@ -1,4 +1,4 @@
-# T062 — Decision Panel form pickers (Institution / Speciality / user-id replacement)
+# T062 — Decision Panel form pickers (Institution / Speciality / user-id replacement) ✅ SHIPPED 2026-05-27
 
 `src/Wombat.Web/Components/Pages/CommitteeDecisions/PanelEdit.razor` uses raw integer inputs for Institution / Speciality and raw GUID textareas for Chair / Member / External user ids. A real operator must run a DB query (or, in the 2026-05-27 Act 2 play-through, `psql` directly) to find the right IDs. Finding **A2-10**.
 

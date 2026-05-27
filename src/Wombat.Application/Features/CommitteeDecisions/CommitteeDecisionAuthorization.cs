@@ -14,6 +14,7 @@ internal static class CommitteeDecisionAuthorization
     public static void DemandPanelAdministration(ClaimsPrincipal principal)
     {
         if (principal.IsInRole(WombatRoles.Administrator) ||
+            principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
             principal.IsInRole(WombatRoles.SpecialityAdmin) ||
             principal.IsInRole(WombatRoles.SubSpecialityAdmin))
         {

@@ -1,6 +1,7 @@
 @page "/committee/panels"
-@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]
+@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Decision Panels</PageTitle>
 
@@ -42,7 +43,8 @@
   {
     try
     {
-      _items.AddRange(await Sender.Send(new ListDecisionPanelsQuery()));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _items.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User)));
     }
     catch (Exception exception)
     {

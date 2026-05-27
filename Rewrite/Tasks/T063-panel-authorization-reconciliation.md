@@ -1,4 +1,4 @@
-# T063 — Decision panel authorization: widen handler + reconcile page authorize
+# T063 — Decision panel authorization: widen handler + reconcile page authorize ✅ SHIPPED 2026-05-27
 
 Two Act 2 findings on the Decision Panel surface:
 

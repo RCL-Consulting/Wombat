@@ -1,8 +1,11 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -47,6 +50,12 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
     {
         CommitteeDecisionAuthorization.DemandPanelAdministration(request.Principal);
 
+        var resolvedInstitutionId = await ResolveInstitutionIdAsync(request, cancellationToken);
+        if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
+        {
+            throw new UnauthorizedAccessException("You can only manage panels in your institution.");
+        }
+
         var panel = new DecisionPanel
         {
             Name = request.Name.Trim(),
@@ -73,5 +82,18 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
             panel.InstitutionId,
             panel.SpecialityId,
             panel.Members.Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role)).ToArray());
+    }
+
+    private async Task<int?> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
+    {
+        return request.Scope switch
+        {
+            DecisionPanelScope.Institution => request.InstitutionId,
+            DecisionPanelScope.Speciality when request.SpecialityId.HasValue => await _dbContext.Set<Speciality>()
+                .Where(speciality => speciality.Id == request.SpecialityId.Value)
+                .Select(speciality => (int?)speciality.InstitutionId)
+                .SingleOrDefaultAsync(cancellationToken),
+            _ => null
+        };
     }
 }

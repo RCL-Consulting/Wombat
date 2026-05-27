@@ -4,22 +4,28 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T061 shipped this session — admin Users surface at `/admin/users` + `/admin/users/{userId}`.** Closes A2-2 / A2-3 / A2-4 / A2-pwd. Removed both `--dev-reset-password` and `--dev-add-role` CLI flags from `Wombat.Web/Program.cs`. `AcceptInvitationCommandHandler` now auto-revokes stale same-email invitations on registration. 16 new tests; 339/339 pass.
+**T061 + T062 + T063 shipped this session.** Act 2 findings A2-2 / A2-3 / A2-4 / A2-pwd (T061), A2-9 / A2-11 (T063), and A2-10 (T062) all closed. Decision Panel surface now usable by InstitutionalAdmin end-to-end. 23 new tests on top of prior 323 → 346/346 pass.
 
 **Next session — pick one:**
 
-1. **T062 + T063 bundle (Recommended)** — Decision Panel form pickers + auth reconciliation. T063 widens `DemandPanelAdministration` to InstitutionalAdmin (scope-checked) and reconciles page/handler authorize; T062 swaps the raw-id fields for scope-aware pickers. ~3–4h total, **Sonnet**.
-2. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
-3. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
-4. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
-5. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
-6. **Operational deployment (carried from T016).** First-time deploy against Linode.
+1. **T064 (Recommended for quick win)** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
+2. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
+3. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
+4. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
+5. **Operational deployment (carried from T016).** First-time deploy against Linode.
 
-**Strong recommendation:** **T062 + T063**. Both Act 2 findings on the Decision Panel surface; bundling them lets one task touch the page + handler + tests once. ~3–4h, **Sonnet**.
+**Strong recommendation:** **Play Act 3.** All Act 2 findings are now closed. Act 3 is the next play-through milestone — it's the first real end-to-end test of the activity lifecycle (Mini-CEX submission → assessor rates → credit applies), which the credit-applier code has never been exercised against. Expect findings; budget ~3h with **Opus**.
 
 ## This session at a glance
 
-**Session 2026-05-27 (continued) — T061 shipped: admin Users surface.** Replaced the `/placeholder/users` stub with `/admin/users` (list, scope-filtered, client-side filter) + `/admin/users/{userId}` (account summary, role add/remove, password reset, lockout, pending-invitation cleanup). Both pages gated on `AdministratorOrInstitutionalAdmin` and pass `ClaimsPrincipal` through to the handlers, which scope-filter via the standard T056 helpers. Added 6 MediatR records under `Features/Users/`: `ListUsersQuery`, `GetUserByIdQuery`, `AddRoleToUserCommand`, `RemoveRoleFromUserCommand`, `ResetUserPasswordCommand`, `SetUserLockoutCommand`, `RevokePendingInvitationsForEmailCommand`. Extended `IUserAdministrationService` with `ListAllUsersAsync`, `AddRoleAsync`, `RemoveRoleAsync`, `ResetPasswordAsync`, `SetLockoutAsync`; `UserIdentityDetails` gained a positional `IsLockedOut` (default false → existing call sites unaffected). Modified `AcceptInvitationCommandHandler` to sweep all other Active same-email invitations to Revoked on a successful registration. Removed both dev-CLI flags from `Wombat.Web/Program.cs`. NavMenu's Administrator block + InstitutionalAdmin block both point at `/admin/users`.
+**Session 2026-05-27 (continued) — T062 + T063 shipped: Decision Panel surface usable by Mbatha.** **T063:** widened `DemandPanelAdministration` to accept `InstitutionalAdmin`; CreateDecisionPanel + UpdateDecisionPanel now resolve the panel's effective institution (InstitutionId directly for Institution-scoped, or via Speciality.InstitutionId for Speciality-scoped) and reject with `UnauthorizedAccessException` when the caller isn't authorized for it. GetDecisionPanelById + ListDecisionPanels now take `ClaimsPrincipal`; out-of-scope GetById returns null (404, not 403). PanelEdit page authorize tightened to `Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin` (Coordinator dropped — its actual privilege is `DemandReviewScheduling`). PanelsList retains Coordinator for read-only viewing. **T062:** swapped numeric Institution/Speciality InputNumbers and Chair/Members/External GUID textareas for scope-aware `<select>` widgets + native `<select multiple>` pickers backed by a new `ListPanelMemberCandidatesQuery(Principal)`. The query lists `CommitteeMember` users filtered by caller's institution (Administrator sees all). Single chair `<select>`, two `<select multiple>` for Members and Externals, with the chair excluded from both and members excluded from externals. Post-save now uses `forceLoad: true` (mirrors T057's pattern) so the document.title updates after the SPA nav from `/new` to `/{id}`. 7 new scope-guard tests in `PanelScopeGuardTests`.
+
+**Browser-verified end-to-end (Playwright):**
+- As Mbatha (InstitutionalAdmin): `/committee/panels` lists 1 KGK panel; `/committee/panels/new` Speciality picker shows only "Kgosi Kgari Teaching Hospital / Paediatrics"; Chair picker shows 4 CommitteeMembers (Botha, Naidoo, van Rensburg, Zulu — Demo Committee correctly excluded). Created "T062 Test Panel" with chair Zulu + Members Botha+Naidoo + no External → saved to `/committee/panels/2` with all pickers showing the round-tripped selection.
+- As Smit (Coordinator): `/committee/panels` shows panels (read-only); `/committee/panels/new` redirects to `/access-denied`.
+- As Administrator: `/committee/panels/new` Speciality picker shows both institutions ("Demo Institution / General Medicine" + "Kgosi Kgari Teaching Hospital / Paediatrics"); Chair picker shows all 5 CommitteeMembers including Demo Committee.
+
+**Session 2026-05-27 (continued earlier) — T061 shipped: admin Users surface.** Replaced the `/placeholder/users` stub with `/admin/users` (list, scope-filtered, client-side filter) + `/admin/users/{userId}` (account summary, role add/remove, password reset, lockout, pending-invitation cleanup). Both pages gated on `AdministratorOrInstitutionalAdmin` and pass `ClaimsPrincipal` through to the handlers, which scope-filter via the standard T056 helpers. Added 6 MediatR records under `Features/Users/`: `ListUsersQuery`, `GetUserByIdQuery`, `AddRoleToUserCommand`, `RemoveRoleFromUserCommand`, `ResetUserPasswordCommand`, `SetUserLockoutCommand`, `RevokePendingInvitationsForEmailCommand`. Extended `IUserAdministrationService` with `ListAllUsersAsync`, `AddRoleAsync`, `RemoveRoleAsync`, `ResetPasswordAsync`, `SetLockoutAsync`; `UserIdentityDetails` gained a positional `IsLockedOut` (default false → existing call sites unaffected). Modified `AcceptInvitationCommandHandler` to sweep all other Active same-email invitations to Revoked on a successful registration. Removed both dev-CLI flags from `Wombat.Web/Program.cs`. NavMenu's Administrator block + InstitutionalAdmin block both point at `/admin/users`.
 
 **Role-mutation guardrails:** `UserAdministrationRules.AssignableRoles` excludes `Administrator` and `PendingTrainee` (must remain DB-direct / system-managed). Handler also rejects: cross-institution targets (UnauthorizedAccessException), self-lockout (InvalidOperationException), lockout of any Administrator (InvalidOperationException), password reset against an Administrator unless caller is Administrator.
 
@@ -44,8 +50,10 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `3b652fd` — docs: record T060 in handoff + recommend T061 next.
 - `f5fabf3` — docs: finalize 2026-05-27 session log.
 - `7610ac5` — T061: admin Users surface + auto-revoke of stale invitations on register + dev-CLI flag removal. **(+16 tests, 339/339 pass.)**
+- `2565137` — docs: record T061 commit hash in handoff + scenario findings.
+- _T062 + T063 (commit pending in this session)_ — Decision Panel scope-aware pickers + InstitutionalAdmin admin policy + Coordinator dropped from edit. **(+7 tests, 346/346 pass.)**
 
-**Test status at session end:** build clean, **339/339 pass** (Domain 45, Application 236 (+15 from T061), Architecture 19, Web 39 (+1 bUnit smoke from T061)).
+**Test status at session end:** build clean, **346/346 pass** (Domain 45, Application 243 (+7 from T063), Architecture 19, Web 39).
 
 ## Previous session
 
