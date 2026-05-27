@@ -53,10 +53,20 @@ public sealed class ListAssessorsForSpecialityQueryHandler : IRequestHandler<Lis
             .ThenBy(entity => entity.Id)
             .ToListAsync(cancellationToken);
 
-        var users = await Task.WhenAll(profiles.Select(profile => _userAdministrationService.GetByIdAsync(profile.UserId, cancellationToken)));
-        var usersById = users
-            .Where(user => user is not null)
-            .ToDictionary(user => user!.UserId, user => user!);
+        var usersById = new Dictionary<string, UserIdentityDetails>();
+        foreach (var profile in profiles)
+        {
+            if (usersById.ContainsKey(profile.UserId))
+            {
+                continue;
+            }
+
+            var user = await _userAdministrationService.GetByIdAsync(profile.UserId, cancellationToken);
+            if (user is not null)
+            {
+                usersById[user.UserId] = user;
+            }
+        }
 
         return profiles
             .Where(profile => usersById.ContainsKey(profile.UserId))
