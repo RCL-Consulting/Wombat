@@ -489,10 +489,10 @@ Prof Mbatha works through `/admin/invitations` one invitation at a time. She doe
 ### Step 2.1 — Issue Coordinator invitation (Dr Smit)
 Role: Prof Mbatha (InstitutionalAdmin)
 Route: `/admin/invitations`
-Action: In the `Issue invitation` panel, Email `smit@kgk.wombat.local`; Role `Coordinator`; Institution `Kgosi Kgari Teaching Hospital`; Speciality + Sub-speciality leave blank. Click `Issue invitation`. Copy the registration URL from the info Alert into the runbook scratchpad.
+Action: In the `Issue invitation` panel, Email `smit@kgk.wombat.local`; Role `Coordinator`; Institution `Kgosi Kgari Teaching Hospital`; Speciality `Paediatrics` (the validator rejects Coordinator with no speciality scope — see Gap); Sub-speciality blank. Click `Issue invitation`. Copy the registration URL from the info Alert into the runbook scratchpad.
 Expected: Status banner "Invitation issued for smit@kgk.wombat.local. Copy the link below — it is shown only once." Registration URL renders below the form. New row appears in the Active invitations table with `Role = Coordinator`.
-Actual:
-Gap:
+Actual: Initial submit with Speciality blank rejected with inline error "The selected role requires a speciality scope." Re-tried with Speciality=Paediatrics; status banner + inline URL rendered cleanly. Active row recorded `Role=Coordinator, Institution=KGK, Speciality=Paediatrics`. T056.d institution-dropdown scope filter verified: only KGK shown, Demo Institution excluded.
+Gap: **Finding A2-1.** `InvitationRules.ValidateScope` requires `SpecialityId` for `Coordinator` (also `CommitteeMember` and `SpecialityAdmin`). Scenario intent was an institution-wide coordinator. Either revise scenario to always set a speciality, OR loosen the validator so Coordinator+null-speciality is permitted (a coordinator supporting an entire department may not belong to one speciality). Same finding affects Step 2.2 vanrensburg (external CommitteeMember).
 
 ### Step 2.2 — Issue six consultant invitations
 Role: Prof Mbatha
@@ -509,16 +509,16 @@ Action: Repeat Step 2.1's form for each consultant below. After each, copy the r
 | `vanrensburg@sun.ac.za` | `CommitteeMember` | leave blank | External examiner; speciality blank because his Stellenbosch home institution is not in this Wombat tenancy. |
 
 Expected: All six rows in Active invitations with the correct role and institution columns. Six registration URLs captured.
-Actual:
-Gap:
+Actual: All 6 invitations persisted. Per A2-1, vanrensburg's Speciality was forced to `Paediatrics` (external-examiner role couldn't be saved with Speciality blank — handler rejects). Patel + Khumalo's Assessor invitations required both Speciality AND Sub-speciality (`Paediatrics` / `General Paediatrics`) — Assessor demands both scope levels per the validator. After 7 total invitations the Active table holds 7 rows.
+Gap: Same as Step 2.1's A2-1 — the strict-speciality rule blocked the scenario's intended external-CommitteeMember pattern. Workaround used.
 
 ### Step 2.2.b — Issue secondary `Assessor` invitations for Zulu / Naidoo / Botha
 Role: Prof Mbatha
 Route: `/admin/invitations`
 Action: Three more invitations using the same emails as above but with `Role = Assessor`. The invitation system accepts a second invitation for an existing email if no user has yet registered against the first — but per the WORKFLOW reference, a single invitation token only carries one role. Three trips through the form.
 Expected: Three more rows in Active invitations. Total ten pending invitations.
-Actual:
-Gap: **Anticipated finding** — Wombat's invitation entity may not support a single email carrying two roles in one invitation. If it rejects the second invitation as "duplicate", the workaround is: complete the first registration, then have Mbatha edit the user's roles on `/admin/users/{id}` to add the second role manually. Capture in the Actual line which path the implementation takes.
+Actual: The 3 secondary Assessor invitations were ACCEPTED at the form level (Active rows grew 7 → 10). However see Step 2.3 + Phase 2.B.b — at registration time the secondary token rejects with "A user with this email address already exists." So the issue surface allows duplicate-email invitations, but the accept surface refuses. Three invitations sit perpetually unusable on the Active table.
+Gap: **Finding A2-2 / A2-3.** Two-invitation onboarding does not work end-to-end. A) Accept handler rejects same-email second invitation. B) No UI exists for an admin to add a role to an existing user — `/placeholder/users` is the documented surface and is still a stub. C) Active invitations panel offers no auto-revoke when the email's first registration completes, so stale rows pile up. Workaround used in this play-through: a dev-only CLI flag `--dev-add-role <email> <role>` was added to `Wombat.Web/Program.cs` to attach the Assessor role to Zulu/Naidoo/Botha directly. **New task suggested: T061 — admin Users surface (replaces `/placeholder/users`), with a role-add affordance.**
 
 > **Multi-role onboarding note:** Wombat's role model lets a single user hold multiple roles, but the invitation form's `Role` field accepts only one. The cleanest pattern is to invite with the strongest role first (CommitteeMember for Zulu/Naidoo/Botha) and add the secondary `Assessor` role from the user-detail page after first login. Step 2.2.b assumes the simpler "two invitations" path; the play-through must reveal whether the entity allows it.
 
@@ -543,18 +543,24 @@ The full cast of expected dashboards on first login:
 | `khumalo@kgk.wombat.local` | Fatima Khumalo | Assessor | AssessorDashboard |
 | `vanrensburg@sun.ac.za` | John van Rensburg | CommitteeMember | CommitteeMemberDashboard |
 
-Actual:
-Gap:
+Actual: All 7 primary registrations completed. Each invitee auto-logged in and rendered the role-appropriate dashboard (Smit→CoordinatorDashboard with Stalled/Invitations/Quick action panels; Zulu/Naidoo/Botha/van Rensburg→CommitteeMemberDashboard with Trainees-approaching-completion + Programme overview; Patel/Khumalo→AssessorDashboard with Pending requests/Accepted needing action/Recent decisions/Actions). Password used for all 7: `Act2Pass!123` (saved in `pwd_DO_NOT_COMMIT.txt` per the session-secrets memory rule). Form pre-fill confirmed email + role; First/Last name + password + confirm were the only operator inputs.
+Gap: None observed for the primary flow. See Step 2.2.b + Phase 2.B.b for the secondary-invitation finding (A2-3).
 
 ### Step 2.3.b — Mbatha attaches secondary Assessor role to Zulu / Naidoo / Botha
 Role: Prof Mbatha (InstitutionalAdmin)
 Route: `/admin/users` (or `/admin/users/{id}/edit` per user)
 Action: For each of Zulu / Naidoo / Botha, open the user-detail / edit page and tick the `Assessor` role in addition to their existing `CommitteeMember` role. Click `Save`.
 Expected: Each user now holds both roles. On their next login the NavMenu shows both the Committee and Assessor sections.
-Actual:
-Gap: **Anticipated finding** — the users list / edit surface may not exist yet (a `/placeholder/users` route appears in the NavMenu per the Act 1 navigation observation). If so, the role-attachment is either deferred until the page is built, or done via direct DB / Identity-store update. Capture what the implementation actually exposes. Open this as a separate task if there's no UI for it.
+Actual: **No admin Users surface exists.** `/admin/users` returns HTTP 404; the NavMenu `Users` link goes to `/placeholder/users` which renders the "Planned surface / Coming soon / T011 or later" stub. The dev-only `--dev-add-role` CLI flag added in this session was used to stamp Assessor on Zulu / Naidoo / Botha:
+```
+dotnet run --project src/Wombat.Web/Wombat.Web.csproj -c Debug -- --dev-add-role zulu@kgk.wombat.local Assessor
+dotnet run --project src/Wombat.Web/Wombat.Web.csproj -c Debug -- --dev-add-role naidoo@kgk.wombat.local Assessor
+dotnet run --project src/Wombat.Web/Wombat.Web.csproj -c Debug -- --dev-add-role botha@kgk.wombat.local Assessor
+```
+After restart, signing in as Zulu the NavMenu correctly merges both role surfaces (Activity Inbox + Recent Activities AND Programme Trainees + Decision Panels + Committee Reviews).
+Gap: **Finding A2-4** — needs a real admin Users surface. The dev CLI flag works for solo developers but cannot ship to production. **New task suggested: T061** (Users admin page with role management). Same task should also clean up stale "user already exists" invitations triggered by Step 2.2.b. Note also **Finding A2-pwd** (no admin password-reset path either — covered by the same task or a smaller T060).
 
-> **Standing follow-up note:** The Activity 1 NavMenu showed `Users → /placeholder/users` for Administrator; for InstitutionalAdmin the link does not appear. If the placeholder hasn't been replaced by Act 2's play date, Mbatha may need bootstrap admin to do the role attachment. Flag in the play-through.
+> **Resolved:** the `/placeholder/users` stub remains. The dev-CLI workaround is sufficient for this session; T061 should replace it.
 
 ## Phase 2.C — Create Assessor profiles
 
@@ -574,18 +580,18 @@ Action: For each assessor in the table below, click `Create assessor` from `/adm
 | Dr Fatima Khumalo | `Trained` | |
 
 Expected: Each profile appears in `/admin/assessors` with `Status = Active`, the chosen speciality, and the training status. The User dropdown narrows to remaining unprofiled assessor users after each save.
-Actual:
-Gap:
-
-> **Note on training status:** T035's `TrainingStatus` field takes one of three values (`Trained` / `In training` / `Provisional`). The play-through should confirm the exact enum values the form exposes; CLAUDE.md describes them but the form copy may differ slightly.
+Actual: All 5 profiles persisted. Verified in `/admin/assessors` list after a DbContext-concurrency bug was fixed mid-session (see A2-7). The 5 rows render with: Name, Email, Institution, Speciality=Paediatrics, Sub-speciality="All" (no sub-speciality selectable in the form when speciality picker locks the cascade — the dropdown stays disabled), Training completed=`2018-12-01` / `2020-03-15` / `2019-08-20` / `2021-05-10` / Not recorded (Patel). Van Rensburg correctly NOT in the assessor-user dropdown (CommitteeMember only). The dev demo Trainee / Committee users from `DevUserSeeder` are correctly filtered out via T056.d scope.
+Gap: **Finding A2-5.** The "training status" surface is a single date input (`Assessor training completed`, with caption "Date the assessor completed assessor training. Leave blank if unrecorded"), NOT the `Trained` / `In training` / `Provisional` enum the scenario expected. T035 shipped a date column, not the enum. Two-way fix: either revise scenario to refer to the date, or extend T035 with an explicit status enum (the date pattern loses the "Provisional" semantic).
+**Finding A2-6.** Two minor UX issues on `AssessorProfileEdit.razor`: (a) post-save the URL stays at `/admin/assessors/edit` rather than flipping to `/admin/assessors/edit?id={id}` (compare T055's fix on `ActivityTypeEdit.razor`); (b) the assessor-user dropdown does NOT narrow to remaining unprofiled users after each save, so the operator can accidentally pick an already-profiled user.
+**Finding A2-7 (real bug, FIXED in this session).** `/admin/assessors` initially crashed with `A second operation was started on this context instance before a previous operation completed.` Root cause: `ListAssessorsForSpecialityQueryHandler.Handle` (`src/Wombat.Application/Features/Assessors/ListAssessorsForSpeciality.cs:56`) fired `Task.WhenAll(profiles.Select(p => _userAdministrationService.GetByIdAsync(...)))` — N parallel queries on the shared `ApplicationDbContext`. EF Core forbids this. Fixed by replacing with a sequential foreach loop (same fix applied to `ListTraineesForSpeciality.cs:56` which had the identical pattern). Build clean; assessor + trainee list pages now render. **Suggested task tag: T059.**
 
 ### Step 2.4.b — External committee member: no assessor profile
 Role: Prof Mbatha
 Route: n/a
 Action: Verify Dr van Rensburg is NOT in the Assessor list (he is committee-only). Confirm `/admin/assessors` shows five rows, not six.
 Expected: 5 assessors. van Rensburg's email does not appear.
-Actual:
-Gap:
+Actual: Confirmed. 5 rows in `/admin/assessors`; van Rensburg absent (no Assessor role).
+Gap: None.
 
 ## Phase 2.D — Issue registrar (Trainee) invitations
 
@@ -605,8 +611,8 @@ Action: Five invitations, one per registrar. All institution = KGK. Speciality =
 | `ndlovu@kgk.wombat.local` | Sipho Ndlovu | Year 1 |
 
 Expected: Active invitations now lists 5 + 10 (consultants) = 15, or 5 + 7 (if Phase 2.A.b deferred to direct user-edit) = 12. Five registration URLs captured.
-Actual:
-Gap:
+Actual: 5 Trainee invitations persisted cleanly with `Speciality=Paediatrics, Sub-speciality=General Paediatrics`. Per the validator, Trainee role requires both speciality and sub-speciality (same rule as Assessor). Active invitations table holds 8 rows at end of phase: 3 unusable stale secondary-Assessor invitations (Phase 2.A.b) + 5 fresh Trainee invitations. The 7 primary consultant invitations from Phase 2.A are no longer Active (consumed by registration).
+Gap: None new. The 3 stale secondary Assessor invitations remain visible in the Active panel as a permanent papercut — see A2-3 follow-up note.
 
 ## Phase 2.E — Registrars accept invitations
 
@@ -615,10 +621,8 @@ Role: registrar (no prior session)
 Route: registration URL from Step 2.5
 Action: Open URL. Fill First name, Last name, password, confirm. Submit.
 Expected: After submit, the user is auto-logged-in and the trainee dashboard renders. **Crucial:** without a `TraineeProfile`, the dashboard's curriculum-progress panel will read "No curriculum progress yet" (T049 wording). This is correct-by-design — the dashboard becomes useful only after Mbatha admits the trainee in Phase 2.F.
-Actual:
-Gap:
-
-> **Verification per Activity 1 finding:** T049's empty-state copy fix shipped in `ec649d5`. If the panel still reads "No curriculum items assigned yet" instead of "No curriculum progress yet. Complete and submit activities to start tracking.", flag a regression.
+Actual: 5 registrations completed. Initial dashboard post-accept reads "Viewing as PendingTrainee" with a single panel: "Awaiting admission — You are registered and waiting to be admitted to a curriculum by your programme administrator. Complete your profile →". This is more useful than the scenario's predicted T049 wording — the pre-admission empty state is its own distinct copy block ("Awaiting admission"), separate from the post-admission "No curriculum progress yet" block. T049's wording surfaces only after Phase 2.F admission (verified later in Phase 2.H).
+Gap: Scenario description slightly inaccurate — the pre-admission Trainee dashboard does NOT show the T049 "No curriculum progress yet" copy; it shows the dedicated "Awaiting admission" copy. Update the scenario expected-line. The PendingTrainee role shown in the dashboard header is also a useful affordance that was not previously documented.
 
 ## Phase 2.F — Admit trainees (create TraineeProfile + assign curriculum and stage)
 
@@ -636,10 +640,9 @@ Action: For each registrar in the table below, click `Admit` (or open their deta
 | Dr Sipho Ndlovu | 1 | 2026-01-15 | |
 
 Expected: After each admission, the user moves from the Pending list to the active `/admin/trainees` list. The trainee's dashboard now shows their curriculum items with `0 of N` completed for each and the per-stage minimum level loaded from the curriculum's `MinimumLevelByStageJson`.
-Actual:
-Gap:
-
-> **Note on dashboard population:** Per the T044 + T049 documentation, the dashboard's curriculum-progress panel reads its data from `CurriculumItemProgress` rows that `CreditApplier` writes when an activity transitions to a terminal state. Until any activity is submitted (Act 3), the dashboard correctly shows the items with zero progress. The panel is "useful" in the sense that it lists the EPA codes + targets, not in the sense of showing any completed work.
+Actual: Real URL is `/admin/trainees` with two sections in one page: "Pending admission" (cards-style list with `Admit to curriculum` links) and "Active profiles" (DataTable). Each Pending row's link is `/admin/trainees/edit?userId={guid}`; post-admit it flips to `/admin/trainees/edit?id={profileId}`. Form fields are Curriculum (single-option pre-selected for Mbatha's scope), Programme start date, Expected completion date. **No Stage picker** — see Gap. All 5 admissions persisted with dates: Molefe 2023→2029, Dlamini 2024→2027, du Plessis 2025→2028, Mahlangu 2026→2029, Ndlovu 2026→2029. The Active profiles table shows Name / Curriculum / Sub-speciality / Expected completion / Status. After admission, the user's role flips from PendingTrainee to Trainee — verified in Phase 2.H Molefe sign-in showing "Viewing as Trainee" and the populated curriculum-progress panel ("No curriculum progress yet" T049 wording now surfaced).
+Gap: **Finding A2-8.** Admit form has no `Stage` field — neither a numeric input nor a derived display. The scenario expected an explicit Stage assignment (year 1–4). The implementation appears to compute stage from `(today - ProgrammeStartDate).Years` elsewhere, but this is not documented. The Active profiles list does not surface Stage either. **Recommendation:** add a read-only computed-Stage column to the Active profiles list, OR persist Stage as an editable column (clinical years are not always uniform calendar years).
+**Side-finding:** the `Sub-speciality` shown in the Active profiles list (`General Paediatrics`) is sourced from the curriculum, not from any direct admission input — so it cannot diverge from the curriculum's sub-speciality. Fine.
 
 ## Phase 2.G — Create the Annual Review Committee panel
 
@@ -650,10 +653,11 @@ Role: Prof Mbatha (InstitutionalAdmin) — or Bootstrap Administrator if the pan
 Route: `/admin/committee-panels/new` (placeholder URL — confirm during play-through)
 Action: Name `Paed Annual Review Panel 2026`; Speciality `Paediatrics`; Sub-speciality `General Paediatrics`; Effective from `2026-01-15`; Chair `Dr Thandi Zulu`; Members `Dr David Naidoo`, `Dr Sarah Botha`, `Dr John van Rensburg`; click `Save`.
 Expected: Panel saved; appears in `/admin/committee-panels` list with `Members = 4`, status `Active`. Available as a target for `ScheduleCommitteeReview` commands in Act 4.
-Actual:
-Gap:
-
-> **Anticipated finding:** T039 + T031 + T032 + T033 all touch committee features but the route name and policy may not be exactly `/admin/committee-panels`. The play-through must discover the canonical URL by walking the NavMenu (`Committee` link should appear for Administrator + InstitutionalAdmin per T056.e). Capture the URL in Actual.
+Actual: Real route is `/committee/panels` (list) + `/committee/panels/new` (create). Mbatha was rejected at `/access-denied` — page authorize is `Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin` (no InstitutionalAdmin). Re-attempted as Smit (Coordinator): page loads, form fills, on Save the handler rejects with "You are not allowed to manage committee panels." (per `CommitteeDecisionAuthorization.DemandPanelAdministration` which only accepts Administrator / SpecialityAdmin / SubSpecialityAdmin). Created the panel as bootstrap Administrator instead. Panel saved at `/committee/panels/1`. The form uses raw integer IDs for Institution/Speciality and raw GUID textareas for Chair/Members/External user ids — no name pickers (compare pre-T053 ActivityType Scope Id field). The `/committee/panels` list shows the saved row: `Paed Annual Review Panel 2026 / Speciality / 4 (members)`.
+Gap: Three findings here.
+**Finding A2-9.** Mbatha (InstitutionalAdmin) cannot create or manage committee panels. T056 left this surface out. Decision panels are institution-scoped data; InstitutionalAdmin should be allowed to administer panels within their institution. Recommend widening `CommitteeDecisionAuthorization.DemandPanelAdministration` to accept InstitutionalAdmin + scope-check the panel's institution.
+**Finding A2-10.** Decision Panel form uses raw integer IDs (Institution / Speciality) and raw GUID textareas (Chair / Member / External user ids). For a real operator this requires DB query access. T053-style pickers needed across all 5 fields. **New task suggested: T062 — Decision Panel form pickers (scope-aware Institution/Speciality select + assessor/committee-member user picker + free-list of GUIDs replaced).**
+**Finding A2-11.** Page-authorize / handler-authorize mismatch. The Razor `[Authorize(Roles = "Coordinator,...")]` lets a Coordinator into the page; `CommitteeDecisionAuthorization.DemandPanelAdministration` then rejects the save. Either drop Coordinator from the page authorize, or add Coordinator to the handler. Recommend keeping handler strict + dropping the page authorize role to match (Coordinator's actual privilege is `DemandReviewScheduling`, not panel administration).
 
 ## Phase 2.H — Smoke-check role-scoped dashboards
 
@@ -670,7 +674,14 @@ Expected:
 - `molefe@kgk.wombat.local` → TraineeDashboard with curriculum progress + my recent activities + supervisor messages panels.
 - `dlamini@kgk.wombat.local` → TraineeDashboard (same shape, different data: zero activities).
 Actual:
-Gap:
+- Smit → CoordinatorDashboard: `Stalled requests`, `Invitations nearing expiry`, `Quick action` panels. NavMenu: Invitations / Data Rights / MSF Campaigns / Committee Reviews / Stalled Activities (plus account + Activity Inbox links).
+- Zulu → merged CommitteeMember + Assessor dashboard with NavMenu including BOTH role groups (Activity Inbox + Recent Activities + Programme Trainees + Decision Panels + Committee Reviews). Confirms the `--dev-add-role` workaround took.
+- Patel → AssessorDashboard: `Pending requests`, `Accepted, needing action`, `Recent decisions`, `Actions`.
+- Molefe → TraineeDashboard with all 6 panels (Curriculum progress / Activity inbox / Recent activities / Upcoming deadlines / My authorisations / Actions). Curriculum-progress panel reads T049 wording: "No curriculum progress yet. Complete and submit activities to start tracking."
+- Dlamini → same TraineeDashboard shape as Molefe, with zero activities.
+
+No console errors observed across the 5 sign-in/sign-out cycles.
+Gap: None blocking. Two stylistic notes: (a) the merged Zulu dashboard renders the CommitteeMember + Assessor panels stacked; on a future iteration this could be a role-switcher (per T044's `/dashboard/switch/{role}` mechanism) but the stacked variant is functional today. (b) The Coordinator NavMenu shows an `Invitations` link — verify in a future session whether Smit (not Mbatha) has handler-level write access to invitations, or if the link is read-only.
 
 ## Act 2 outcome state
 
@@ -699,7 +710,60 @@ Nothing yet exercises the assessment lifecycle. Act 3 starts the operational rhy
 
 ## Act 2 findings summary
 
-Not yet played. Anticipated findings flagged inline above (Step 2.2.b multi-role invite path; Step 2.3.b user-edit surface availability; Step 2.4 training-status enum values; Step 2.8 committee-panel route). The first play-through should populate this section with concrete observations.
+First end-to-end play-through completed 2026-05-27 against the dev DB carried forward from Act 1 replay 3 (`02a167f`). Phases 2.A → 2.H all played; outcome state matches the prescription except where the listed findings forced workarounds.
+
+**Eleven findings raised. One real bug fixed inline; the rest opened as code-side gaps.**
+
+### Bugs
+
+1. **✅ A2-7** (FIXED this session) — `ListAssessorsForSpecialityQueryHandler` + `ListTraineesForSpecialityQueryHandler` fired `Task.WhenAll(profiles.Select(GetByIdAsync))` on the shared `ApplicationDbContext`, which EF Core forbids ("A second operation was started on this context instance…"). Both list pages crashed under Mbatha's view. Fixed by replacing the parallel fan-out with a sequential foreach loop in both files. Sequential is fine — N user lookups are unlikely to be the bottleneck on a 5–50 trainee programme. Suggested task tag: **T059**.
+
+### Validator over-restriction
+
+2. **A2-1** — `InvitationRules.ValidateScope` requires `SpecialityId` for `Coordinator`, `CommitteeMember`, and `SpecialityAdmin`. Scenario expected institution-wide Coordinator (Smit) and external CommitteeMember (van Rensburg with no local speciality). Workaround: assign speciality=Paediatrics. **Recommendation:** Coordinator should allow null speciality (institution-wide); CommitteeMember should allow null speciality (external examiner). Or revise scenario.
+
+### Missing surfaces
+
+3. **A2-3 / A2-4** — Multi-role onboarding via two invitations does not work: the second registration rejects with "A user with this email address already exists." There is also no admin Users surface (`/admin/users` 404; `/placeholder/users` stub). **Workaround:** new dev-only `--dev-add-role <email> <role>` CLI flag added to `Wombat.Web/Program.cs`. **New task suggested: T061** — replace `/placeholder/users` with a real Users admin page that supports role-add, password reset (covers A2-pwd), and stale-invitation cleanup. Should also auto-revoke any pending same-email invitations when a registration completes.
+
+4. **A2-pwd** — No admin-side password-reset path. Prof Mbatha's password (set in the Act 1 replay) was unrecoverable at the start of this session. **Workaround:** new dev-only `--dev-reset-password <email> <new-password>` CLI flag added to `Wombat.Web/Program.cs`. New password persisted to `pwd_DO_NOT_COMMIT.txt`. Fold this into the T061 surface above. Memory note: see `feedback_record_session_secrets` in `~/.claude/.../memory/`.
+
+### UX warts
+
+5. **A2-5** — T035's "training status" surface is a date input (`Assessor training completed`), not the `Trained` / `In training` / `Provisional` enum the scenario expected. Two options: revise scenario to use the date, or extend T035 with an explicit status enum. The date loses the "Provisional" semantic (a profiled-but-not-trained assessor distinct from one in training).
+
+6. **A2-6** — `AssessorProfileEdit.razor`: (a) post-save the URL stays at `/admin/assessors/edit` rather than flipping to `/admin/assessors/edit?id={id}` (compare T055's fix on `ActivityTypeEdit.razor`); (b) the assessor-user dropdown does NOT narrow to remaining unprofiled users after each save, so the operator can pick an already-profiled user.
+
+7. **A2-8** — Admit-trainee form has no `Stage` field. Stage appears to be computed from `ProgrammeStartDate` elsewhere but is not displayed in `/admin/trainees` either. Either add a read-only Stage column to the active list, or persist Stage as an editable column.
+
+8. **A2-10** — Decision Panel form uses raw integer IDs (Institution / Speciality) and raw GUID textareas (Chair / Member / External user ids). No name pickers — operator must paste GUIDs from a DB query. **New task suggested: T062** — scope-aware pickers + multi-select user picker on `PanelEdit.razor`.
+
+### Authorization mismatch
+
+9. **A2-9** — Mbatha (InstitutionalAdmin) cannot create or manage committee panels. T056 left this surface out. Decision panels are institution-scoped data; InstitutionalAdmin should administer panels within their institution. Recommend widening `CommitteeDecisionAuthorization.DemandPanelAdministration` to accept InstitutionalAdmin + scope-check the panel's institution. Bootstrap Administrator was used as workaround for this session.
+
+10. **A2-11** — Page-authorize / handler-authorize mismatch on the Decision Panel surface. `[Authorize(Roles = "Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]` lets Coordinator into the page; `DemandPanelAdministration` then rejects the save with "You are not allowed to manage committee panels." Drop Coordinator from the page authorize OR add Coordinator to the handler. Recommend keeping handler strict + dropping page role to match (Coordinator's actual privilege is `DemandReviewScheduling`, not panel administration).
+
+### Minor / cosmetic
+
+11. **A2-2** — Two-invitation accept path: the `Issue invitation` form happily accepts a second invitation for an email that has a pending one. Combined with A2-3, this creates stale "Active" invitations that sit forever (no auto-revoke when the user registers). Fold into T061.
+
+### Doc fixes for scenario
+
+- Step 2.6's "Expected" mis-described the pre-admission empty-state copy as the T049 "No curriculum progress yet" wording. The actual pre-admission copy is "Awaiting admission — You are registered and waiting to be admitted to a curriculum by your programme administrator." T049's wording surfaces post-admission. Update inline.
+- Step 2.8's anticipated route `/admin/committee-panels/*` is actually `/committee/panels/*`. Update inline.
+- Phase 2.B note about `forceLoad` on the Zulu/Naidoo/Botha secondary invite: clarify that the path is dev-CLI workaround, not "Mbatha attaches secondary Assessor role via UI".
+
+### Suggested code-side task list (model: **Opus** for migration/policy work, **Sonnet** for the UX picker work)
+
+- **T059** (✅ shipped this session) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
+- **T060** (open) — widen `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. ~30 min, **Sonnet**.
+- **T061** (open) — admin Users surface (replaces `/placeholder/users`): list users, add/remove roles, reset password, revoke pending same-email invitations on register. ~4–6h, **Opus** (auth + audit + tests).
+- **T062** (open) — Decision Panel form pickers (scope-aware Institution + Speciality + user picker textbox for Chair/Members/External). ~2–3h, **Sonnet**.
+- **T063** (open) — widen `CommitteeDecisionAuthorization.DemandPanelAdministration` to include InstitutionalAdmin (scope-checked) + reconcile with page authorize. Drop Coordinator from page authorize to match handler. ~1h, **Sonnet**.
+- **T064** (open) — AssessorProfileEdit post-save URL flip + dropdown narrowing (compare T055 pattern). ~30 min, **Sonnet**.
+- **T065** (open, optional) — TrainingStatus enum: extend T035 with `Provisional` / `In training` / `Trained` enum alongside the date, OR revise scenario to refer to the date only. ~1h, **Sonnet**.
+- **T066** (open, optional) — Trainee admit form: add Stage display (computed read-only OR editable). ~1h, **Sonnet**.
 
 ## Handoff into Act 3
 
