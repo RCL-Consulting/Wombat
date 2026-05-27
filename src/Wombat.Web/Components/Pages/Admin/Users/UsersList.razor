@@ -1,0 +1,90 @@
+@page "/admin/users"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Users</PageTitle>
+
+<PageHeader Title="Users" Subtitle="Manage roles, passwords, and access for all users across the institutions you administer." />
+
+<StatePanel IsLoading="_loading" IsEmpty="@(FilteredUsers.Count == 0 && string.IsNullOrWhiteSpace(_filter))" EmptyTitle="No users" EmptyBody="No user accounts exist within your scope." LoadError="@_loadError">
+  <div class="detail-card">
+    <div class="form-grid form-grid--wide">
+      <FormField Label="Filter" InputId="users-filter">
+        <input id="users-filter" type="search" class="form-control" placeholder="Search by name or email" @bind="_filter" @bind:event="oninput" />
+      </FormField>
+    </div>
+
+    @if (FilteredUsers.Count == 0)
+    {
+      <div class="detail-card detail-card--empty-compact">No users match the current filter.</div>
+    }
+    else
+    {
+      <DataTable TItem="UserSummaryDto" Items="FilteredUsers" Caption="Users">
+        <HeaderRow>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Institution</th>
+            <th>Roles</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="user">
+          <tr>
+            <td>@($"{user.FirstName} {user.LastName}")</td>
+            <td>@user.Email</td>
+            <td>@(user.InstitutionName ?? "Global")</td>
+            <td>@string.Join(", ", user.Roles)</td>
+            <td>@(user.IsLockedOut ? "Locked out" : "Active")</td>
+            <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")">Manage</a></td>
+          </tr>
+        </Row>
+      </DataTable>
+    }
+  </div>
+</StatePanel>
+
+@code {
+  private IReadOnlyList<UserSummaryDto> _users = [];
+  private bool _loading = true;
+  private string? _loadError;
+  private string _filter = string.Empty;
+
+  private IReadOnlyList<UserSummaryDto> FilteredUsers
+  {
+    get
+    {
+      if (string.IsNullOrWhiteSpace(_filter))
+      {
+        return _users;
+      }
+      var needle = _filter.Trim();
+      return _users
+        .Where(user =>
+          user.Email.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+          user.FirstName.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+          user.LastName.Contains(needle, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+    }
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _users = await Sender.Send(new ListUsersQuery(authState.User));
+    }
+    catch (Exception exception)
+    {
+      _loadError = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

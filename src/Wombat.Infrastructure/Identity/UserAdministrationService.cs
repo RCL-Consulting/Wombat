@@ -57,6 +57,22 @@ public sealed class UserAdministrationService : IUserAdministrationService
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await LoadUsersQuery()
+            .OrderBy(entity => entity.LastName)
+            .ThenBy(entity => entity.FirstName)
+            .ToListAsync(cancellationToken);
+
+        var results = new List<UserIdentityDetails>(users.Count);
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            results.Add(Map(user, roles.ToArray()));
+        }
+        return results;
+    }
+
     public async Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
     {
         var user = await _dbContext.Users.SingleOrDefaultAsync(entity => entity.Id == userId, cancellationToken)
@@ -138,6 +154,82 @@ public sealed class UserAdministrationService : IUserAdministrationService
         await _userManager.UpdateSecurityStampAsync(user);
     }
 
+    public async Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        if (await _userManager.IsInRoleAsync(user, role))
+        {
+            return;
+        }
+
+        var result = await _userManager.AddToRoleAsync(user, role);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(error => error.Description)));
+        }
+
+        await _userManager.UpdateSecurityStampAsync(user);
+    }
+
+    public async Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        if (!await _userManager.IsInRoleAsync(user, role))
+        {
+            return;
+        }
+
+        var result = await _userManager.RemoveFromRoleAsync(user, role);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(error => error.Description)));
+        }
+
+        await _userManager.UpdateSecurityStampAsync(user);
+    }
+
+    public async Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(error => error.Description)));
+        }
+
+        await _userManager.UpdateSecurityStampAsync(user);
+    }
+
+    public async Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        // Lockout uses DateTimeOffset.MaxValue as the "indefinite" sentinel. Clearing the lockout
+        // requires setting LockoutEnd to null (UserManager.SetLockoutEndDateAsync only writes the
+        // column; we also need lockout enabled to be true to honour it).
+        if (locked)
+        {
+            await _userManager.SetLockoutEnabledAsync(user, true);
+        }
+
+        var lockoutEnd = locked ? DateTimeOffset.MaxValue : (DateTimeOffset?)null;
+        var result = await _userManager.SetLockoutEndDateAsync(user, lockoutEnd);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(error => error.Description)));
+        }
+
+        await _userManager.UpdateSecurityStampAsync(user);
+    }
+
     private IQueryable<WombatIdentityUser> LoadUsersQuery()
         => _dbContext.Users
             .AsNoTracking()
@@ -153,7 +245,8 @@ public sealed class UserAdministrationService : IUserAdministrationService
             user.InstitutionId,
             user.SpecialityScopes.Select(scope => scope.SpecialityId).Distinct().ToArray(),
             user.SubSpecialityScopes.Select(scope => scope.SubSpecialityId).Distinct().ToArray(),
-            roles);
+            roles,
+            IsLockedOut: user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow);
 
     private static void SyncScopes<TScope>(
         ICollection<TScope> currentScopes,

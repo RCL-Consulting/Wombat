@@ -60,7 +60,26 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
             invitation.SubSpecialityId,
             cancellationToken);
 
-        invitation.UsedOn = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        invitation.UsedOn = now;
+
+        // T061: sweep stale invitations for the same email. Once a user is provisioned,
+        // any other active invitation for that email cannot be accepted (the registration
+        // path rejects "user already exists"), so leaving them open is just clutter.
+        // Multi-role onboarding goes through /admin/users after first registration.
+        var staleInvitations = await _dbContext.Set<Invitation>()
+            .Where(entity =>
+                entity.Email == invitation.Email &&
+                entity.Id != invitation.Id &&
+                !entity.UsedOn.HasValue &&
+                !entity.RevokedOn.HasValue)
+            .ToListAsync(cancellationToken);
+
+        foreach (var stale in staleInvitations)
+        {
+            stale.RevokedOn = now;
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new AcceptedInvitationResult(provisionedUser.UserId, provisionedUser.AssignedRole);

@@ -130,5 +130,20 @@ public sealed class AssessorTrainingStatusTests
 
         public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+
+        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(_users.Values.ToArray());
+
+        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
     }
 }

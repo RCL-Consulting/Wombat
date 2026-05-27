@@ -4,6 +4,7 @@ public interface IUserAdministrationService
 {
     Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default);
     Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default);
     Task UpdateScopeAsync(
         string userId,
@@ -12,6 +13,10 @@ public interface IUserAdministrationService
         IReadOnlyCollection<int> subSpecialityIds,
         CancellationToken cancellationToken = default);
     Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default);
+    Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default);
+    Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default);
+    Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default);
+    Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default);
 }
 
 public sealed record UserIdentityDetails(
@@ -22,4 +27,5 @@ public sealed record UserIdentityDetails(
     int? InstitutionId,
     IReadOnlyCollection<int> SpecialityIds,
     IReadOnlyCollection<int> SubSpecialityIds,
-    IReadOnlyCollection<string> Roles);
+    IReadOnlyCollection<string> Roles,
+    bool IsLockedOut = false);

@@ -1,0 +1,273 @@
+@page "/admin/users/{UserId}"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>@Title</PageTitle>
+
+<PageHeader Title="@Title" Subtitle="Roles, password reset, lockout, and pending-invitation cleanup for a single user.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/users">Back to users</a>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_actionError))
+{
+  <Alert Kind="danger">@_actionError</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+<StatePanel IsLoading="_loading" IsEmpty="@(_user is null)" EmptyTitle="User unavailable" EmptyBody="The user could not be found or is outside your scope." LoadError="@_loadError">
+  @if (_user is not null)
+  {
+    <div class="details-grid">
+      <section class="detail-card">
+        <h3>Account summary</h3>
+        <dl class="detail-list">
+          <dt>Name</dt><dd>@($"{_user.FirstName} {_user.LastName}")</dd>
+          <dt>Email</dt><dd>@_user.Email</dd>
+          <dt>Institution</dt><dd>@(_user.InstitutionName ?? "Global (no institution)")</dd>
+          <dt>Status</dt><dd>@(_user.IsLockedOut ? "Locked out" : "Active")</dd>
+        </dl>
+      </section>
+
+      <section class="detail-card">
+        <h3>Roles</h3>
+        @if (_user.Roles.Count == 0)
+        {
+          <p class="muted">This user has no roles.</p>
+        }
+        else
+        {
+          <ul class="stack-list">
+            @foreach (var role in _user.Roles)
+            {
+              <li>
+                <span>@role</span>
+                @if (CanModifyRole(role))
+                {
+                  <button type="button" class="btn btn-danger btn-sm" disabled="@_busy" @onclick="() => RemoveRoleAsync(role)">Remove</button>
+                }
+                else
+                {
+                  <span class="muted">System-managed</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        <h4 style="margin-top: 1.5rem;">Add role</h4>
+        <div class="form-grid form-grid--wide">
+          <FormField Label="Role" InputId="add-role-select">
+            <select id="add-role-select" class="form-select" @bind="_addRoleSelection">
+              <option value="">Select role</option>
+              @foreach (var role in AddableRoles)
+              {
+                <option value="@role">@role</option>
+              }
+            </select>
+          </FormField>
+        </div>
+        <FormActions>
+          <button type="button" class="btn btn-primary" disabled="@(_busy || string.IsNullOrWhiteSpace(_addRoleSelection))" @onclick="AddRoleAsync">Add role</button>
+        </FormActions>
+      </section>
+
+      <section class="detail-card">
+        <h3>Reset password</h3>
+        <p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+        <div class="form-grid form-grid--wide">
+          <FormField Label="New password" InputId="reset-password-input">
+            <div class="password-wrapper">
+              <input id="reset-password-input" type="password" class="form-control" @bind="_newPassword" @bind:event="oninput" minlength="8" />
+              <PasswordToggleButton For="reset-password-input" />
+            </div>
+          </FormField>
+        </div>
+        <FormActions>
+          <button type="button" class="btn btn-primary" disabled="@(_busy || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" @onclick="ResetPasswordAsync">Reset password</button>
+        </FormActions>
+      </section>
+
+      <section class="detail-card">
+        <h3>Lockout</h3>
+        @if (_user.IsLockedOut)
+        {
+          <p>This user is currently locked out and cannot sign in.</p>
+          <FormActions>
+            <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
+          </FormActions>
+        }
+        else if (CanLockoutUser)
+        {
+          <p>Locking out the user prevents sign-in immediately. Reactivating clears the lockout.</p>
+          <FormActions>
+            <button type="button" class="btn btn-danger" disabled="@_busy" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
+          </FormActions>
+        }
+        else
+        {
+          <p class="muted">Global administrators cannot be locked out from this surface.</p>
+        }
+      </section>
+
+      <section class="detail-card">
+        <h3>Pending invitations</h3>
+        @if (_user.PendingInvitations.Count == 0)
+        {
+          <p class="muted">No active invitations are outstanding for this email.</p>
+        }
+        else
+        {
+          <DataTable TItem="UserPendingInvitationDto" Items="_user.PendingInvitations" Caption="Pending invitations for this email">
+            <HeaderRow>
+              <tr>
+                <th>Role</th>
+                <th>Institution</th>
+                <th>Speciality</th>
+                <th>Issued</th>
+                <th>Expires</th>
+              </tr>
+            </HeaderRow>
+            <Row Context="invitation">
+              <tr>
+                <td>@invitation.TargetRole</td>
+                <td>@invitation.InstitutionName</td>
+                <td>@(invitation.SpecialityName ?? "—")</td>
+                <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
+              </tr>
+            </Row>
+          </DataTable>
+          <FormActions>
+            <button type="button" class="btn btn-danger" disabled="@_busy" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
+          </FormActions>
+        }
+      </section>
+    </div>
+  }
+</StatePanel>
+
+@code {
+  [Parameter] public string UserId { get; set; } = string.Empty;
+
+  private UserDetailDto? _user;
+  private bool _loading = true;
+  private bool _busy;
+  private string? _loadError;
+  private string? _actionError;
+  private string? _statusMessage;
+  private string _addRoleSelection = string.Empty;
+  private string _newPassword = string.Empty;
+  private bool _callerIsAdministrator;
+  private string? _callerUserId;
+
+  private string Title => _user is null ? "User" : $"{_user.FirstName} {_user.LastName}";
+
+  private IEnumerable<string> AddableRoles
+    => UserAdministrationRules.AssignableRoles.Where(role => _user is null || !_user.Roles.Contains(role, StringComparer.Ordinal));
+
+  private bool CanLockoutUser
+    => _user is not null
+       && !_user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal)
+       && !string.Equals(_callerUserId, _user.UserId, StringComparison.Ordinal);
+
+  private bool CanModifyRole(string role)
+    => UserAdministrationRules.IsAssignableRole(role)
+       && !(role == WombatRoles.Administrator && !_callerIsAdministrator);
+
+  protected override async Task OnParametersSetAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _callerIsAdministrator = authState.User.IsAdministrator();
+      _callerUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+      _user = await Sender.Send(new GetUserByIdQuery(UserId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _loadError = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task RunActionAsync(Func<System.Security.Claims.ClaimsPrincipal, Task> action, string successMessage)
+  {
+    _busy = true;
+    _actionError = null;
+    _statusMessage = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await action(authState.User);
+      _statusMessage = successMessage;
+      _user = await Sender.Send(new GetUserByIdQuery(UserId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _actionError = exception.Message;
+    }
+    finally
+    {
+      _busy = false;
+    }
+  }
+
+  private async Task AddRoleAsync()
+  {
+    if (string.IsNullOrWhiteSpace(_addRoleSelection))
+    {
+      return;
+    }
+    var role = _addRoleSelection;
+    await RunActionAsync(
+      principal => Sender.Send(new AddRoleToUserCommand(UserId, role, principal)),
+      $"Role '{role}' added.");
+    _addRoleSelection = string.Empty;
+  }
+
+  private Task RemoveRoleAsync(string role)
+    => RunActionAsync(
+      principal => Sender.Send(new RemoveRoleFromUserCommand(UserId, role, principal)),
+      $"Role '{role}' removed.");
+
+  private Task ResetPasswordAsync()
+  {
+    var newPassword = _newPassword;
+    _newPassword = string.Empty;
+    return RunActionAsync(
+      principal => Sender.Send(new ResetUserPasswordCommand(UserId, newPassword, principal)),
+      "Password reset. Share the new password with the user out-of-band.");
+  }
+
+  private Task SetLockoutAsync(bool locked)
+    => RunActionAsync(
+      principal => Sender.Send(new SetUserLockoutCommand(UserId, locked, principal)),
+      locked ? "User locked out." : "User reactivated.");
+
+  private Task RevokeInvitationsAsync()
+    => RunActionAsync(
+      async principal =>
+      {
+        var revoked = await Sender.Send(new RevokePendingInvitationsForEmailCommand(_user!.Email, principal));
+        _ = revoked;
+      },
+      "Pending invitations revoked.");
+}

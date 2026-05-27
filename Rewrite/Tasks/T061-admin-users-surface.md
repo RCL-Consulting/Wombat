@@ -1,4 +1,4 @@
-# T061 — Admin Users surface (replaces `/placeholder/users`)
+# T061 — Admin Users surface (replaces `/placeholder/users`) ✅ SHIPPED 2026-05-27
 
 Wombat has no admin Users page. The placeholder route `/placeholder/users` renders the "Planned surface / Coming soon / T011 or later" stub. `/admin/users` returns HTTP 404. This blocks four common ops tasks:
 

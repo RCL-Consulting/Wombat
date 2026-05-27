@@ -4,23 +4,34 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**Act 2 played + T060 shipped this session.** 11 findings raised during the Act 2 play-through; 2 closed in-session (T059 — DbContext concurrency in ListAssessors/Trainees; T060 — invitation validator relaxed for Coordinator + external CommitteeMember). 9 remaining are scoped as T061–T066. Task files for each were created.
+**T061 shipped this session — admin Users surface at `/admin/users` + `/admin/users/{userId}`.** Closes A2-2 / A2-3 / A2-4 / A2-pwd. Removed both `--dev-reset-password` and `--dev-add-role` CLI flags from `Wombat.Web/Program.cs`. `AcceptInvitationCommandHandler` now auto-revokes stale same-email invitations on registration. 16 new tests; 339/339 pass.
 
 **Next session — pick one:**
 
-1. **T061 (Recommended)** — admin Users surface (replaces `/placeholder/users`). Closes 4 findings (A2-3 multi-role onboarding, A2-4 missing surface, A2-pwd no admin password reset, A2-2 stale invitation papercut). Also removes the dev-only `--dev-reset-password` / `--dev-add-role` CLI flags. ~4–6h, **Opus** — touches auth, audit, two new pages, ~5 commands, tests.
-2. **T062 + T063 bundle** — Decision Panel form pickers + auth reconciliation. T063 widens `DemandPanelAdministration` to InstitutionalAdmin (scope-checked) and reconciles page/handler authorize; T062 swaps the raw-id fields for scope-aware pickers. ~3–4h total, **Sonnet**.
-3. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
-4. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
-5. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
-6. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
-7. **Operational deployment (carried from T016).** First-time deploy against Linode.
+1. **T062 + T063 bundle (Recommended)** — Decision Panel form pickers + auth reconciliation. T063 widens `DemandPanelAdministration` to InstitutionalAdmin (scope-checked) and reconciles page/handler authorize; T062 swaps the raw-id fields for scope-aware pickers. ~3–4h total, **Sonnet**.
+2. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
+3. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
+4. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
+5. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
+6. **Operational deployment (carried from T016).** First-time deploy against Linode.
 
-**Strong recommendation:** **T061**. It's the single most valuable open task — closes the largest cluster of A2 findings, removes the dev-CLI stop-gaps from production code, and unblocks future scenario replays from the same dead end this session hit.
+**Strong recommendation:** **T062 + T063**. Both Act 2 findings on the Decision Panel surface; bundling them lets one task touch the page + handler + tests once. ~3–4h, **Sonnet**.
 
 ## This session at a glance
 
-**Session 2026-05-27 — Act 2 played end-to-end, T059 + T060 shipped, two dev CLI ops tools added, 7 task files created for the remaining Act 2 findings.** Act 1's state was intact in the dev DB. Mbatha's password from the prior session was unrecoverable (Identity stores only the hash) — added a `--dev-reset-password` flag in `Wombat.Web/Program.cs`, reset her to `Mbatha@KGK2026!`, recorded in `pwd_DO_NOT_COMMIT.txt`. Then walked Phases 2.A → 2.H: 10 invitations issued (7 primary + 3 secondary Assessor), 7 primaries accepted, secondary invitations rejected at registration with "user already exists" → added `--dev-add-role` flag to stamp Assessor onto Zulu / Naidoo / Botha directly. 5 AssessorProfiles + 5 PendingTrainees admitted + 1 Decision Panel created. Mid-stream hit a real bug — `Task.WhenAll(profiles.Select(GetByIdAsync))` on shared DbContext crashed `/admin/assessors`; fixed both List handlers (Assessors + Trainees) to sequential await (T059). All 11 findings written into the scenario doc's Act 2 outcome + findings summary. Then T060 shipped: split `InvitationRules.ValidateScope`'s combined SpecialityAdmin/Coordinator/CommitteeMember rule so Coordinator and external CommitteeMember can be issued with just an institution; SpecialityAdmin still requires speciality with a clearer message. 5 new tests + browser-verified all 3 cases. Finally, task files T060–T066 created for the 10 remaining Act 2 findings.
+**Session 2026-05-27 (continued) — T061 shipped: admin Users surface.** Replaced the `/placeholder/users` stub with `/admin/users` (list, scope-filtered, client-side filter) + `/admin/users/{userId}` (account summary, role add/remove, password reset, lockout, pending-invitation cleanup). Both pages gated on `AdministratorOrInstitutionalAdmin` and pass `ClaimsPrincipal` through to the handlers, which scope-filter via the standard T056 helpers. Added 6 MediatR records under `Features/Users/`: `ListUsersQuery`, `GetUserByIdQuery`, `AddRoleToUserCommand`, `RemoveRoleFromUserCommand`, `ResetUserPasswordCommand`, `SetUserLockoutCommand`, `RevokePendingInvitationsForEmailCommand`. Extended `IUserAdministrationService` with `ListAllUsersAsync`, `AddRoleAsync`, `RemoveRoleAsync`, `ResetPasswordAsync`, `SetLockoutAsync`; `UserIdentityDetails` gained a positional `IsLockedOut` (default false → existing call sites unaffected). Modified `AcceptInvitationCommandHandler` to sweep all other Active same-email invitations to Revoked on a successful registration. Removed both dev-CLI flags from `Wombat.Web/Program.cs`. NavMenu's Administrator block + InstitutionalAdmin block both point at `/admin/users`.
+
+**Role-mutation guardrails:** `UserAdministrationRules.AssignableRoles` excludes `Administrator` and `PendingTrainee` (must remain DB-direct / system-managed). Handler also rejects: cross-institution targets (UnauthorizedAccessException), self-lockout (InvalidOperationException), lockout of any Administrator (InvalidOperationException), password reset against an Administrator unless caller is Administrator.
+
+**Test additions (16 new):** `UserAdministrationTests` (12 — scope guards, role-mutation rejections, password reset forwarding, lockout self-refusal + admin-refusal, invitation sweep + cross-institution rejection, AssignableRoles assertion); `AcceptInvitationAutoRevokeTests` (1 — auto-revokes other Active same-email invitations on registration); `UsersListSmokeTests` (1 bUnit — 2 rows render + filter narrows to one). The Application stub `StubUserAdministrationService` was updated for the new interface methods.
+
+**Browser-verified end-to-end (Playwright):**
+- As Administrator: `/admin/users` lists 16 seeded users; opened Patel's detail, reset password to `PatelT061!2026`, signed out, signed back in as `patel@kgk.wombat.local` with the new password → dashboard reachable.
+- As Mbatha (InstitutionalAdmin): `/admin/users` shows 14 rows — all KGK users + the global Administrator. Demo Institution users hidden. Direct nav to a Demo user's detail URL renders "User unavailable" (out-of-scope = 404, not 403). On Zulu (CommitteeMember + Assessor): add-role picker correctly excludes Administrator, PendingTrainee, CommitteeMember, Assessor. Added Coordinator → success Alert. Removed Coordinator → success Alert. Lockout → status flips to "Locked out". Reactivate → status back to "Active".
+
+**Known UX wart noted, not blocking (deferred):** On first nav to `/admin/users/{userId}` immediately after clicking a list row, the document.title sometimes lags at "Users" while the h1 updates correctly. Same family as T057's `<PageTitle>` re-eval issue. Hard reload of the detail URL renders the title correctly. Doesn't affect functionality.
+
+**Session 2026-05-27 (earlier) — T059 + T060 also shipped.** 11 findings raised during Act 2 play-through; T059 fixed DbContext concurrency in ListAssessors/Trainees, T060 relaxed the invitation validator for Coordinator + external CommitteeMember.
 
 **Memory addition:** `feedback_record_session_secrets` — when a session sets a password during a play-through, record it to disk so the next session can resume. Previous session's AI lost Mbatha's password by not recording it; cost ~10 minutes this session to recover.
 
@@ -29,10 +40,12 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `9114244` — T059: fix DbContext concurrency in list handlers + dev CLI ops tools.
 - `c0072a9` — docs: Act 2 play-through findings + handoff update.
 - `e6cdc03` — docs: record session commits in handoff.
-- `bc9776c` — T060: relax invitation validator for Coordinator + external CommitteeMember + create T061–T066 task files. **(+5 tests, 221/221 Application pass.)**
+- `bc9776c` — T060: relax invitation validator for Coordinator + external CommitteeMember + create T061–T066 task files.
 - `3b652fd` — docs: record T060 in handoff + recommend T061 next.
+- `f5fabf3` — docs: finalize 2026-05-27 session log.
+- _T061 (commit pending in this session)_ — admin Users surface + auto-revoke of stale invitations on register + dev-CLI flag removal.
 
-**Test status at session end:** build clean, **323/323 pass** (Domain 45, Application 216 → 221 (+5 from T060), Architecture 19, Web 38). T059's fix is a behaviour change (sequential vs parallel) on a hot path that did not have a regression test. Suggested future test (not yet added): an integration test that seeds N>1 trainee profiles and asserts `/admin/trainees` does not throw.
+**Test status at session end:** build clean, **339/339 pass** (Domain 45, Application 236 (+15 from T061), Architecture 19, Web 39 (+1 bUnit smoke from T061)).
 
 ## Previous session
 
