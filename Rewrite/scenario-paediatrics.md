@@ -724,9 +724,9 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 ### Missing surfaces
 
-3. **✅ A2-3 / A2-4** (FIXED by T061, commit pending) — Admin Users surface now lives at `/admin/users` + `/admin/users/{userId}`. Add-role / Remove-role buttons cover multi-role onboarding from a single primary invitation; no second invitation needed. `--dev-add-role` CLI flag removed.
+3. **✅ A2-3 / A2-4** (FIXED by T061 commit `7610ac5`) — Admin Users surface now lives at `/admin/users` + `/admin/users/{userId}`. Add-role / Remove-role buttons cover multi-role onboarding from a single primary invitation; no second invitation needed. `--dev-add-role` CLI flag removed.
 
-4. **✅ A2-pwd** (FIXED by T061, commit pending) — Admin Users detail page exposes Reset password (Identity-backed token + reset). `--dev-reset-password` CLI flag removed from `Wombat.Web/Program.cs`. Verified end-to-end: reset Patel via the UI; signed in as Patel with the new password.
+4. **✅ A2-pwd** (FIXED by T061 commit `7610ac5`) — Admin Users detail page exposes Reset password (Identity-backed token + reset). `--dev-reset-password` CLI flag removed from `Wombat.Web/Program.cs`. Verified end-to-end: reset Patel via the UI; signed in as Patel with the new password.
 
 ### UX warts
 
@@ -746,7 +746,7 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 ### Minor / cosmetic
 
-11. **✅ A2-2** (FIXED by T061, commit pending) — Two paths now close the stale-invitation hole: (a) `AcceptInvitationCommandHandler` sweeps all other Active same-email invitations to Revoked on registration; (b) the Users-detail page exposes a "Revoke all pending invitations" button for any active row that the admin wants to clear manually.
+11. **✅ A2-2** (FIXED by T061 commit `7610ac5`) — Two paths now close the stale-invitation hole: (a) `AcceptInvitationCommandHandler` sweeps all other Active same-email invitations to Revoked on registration; (b) the Users-detail page exposes a "Revoke all pending invitations" button for any active row that the admin wants to clear manually.
 
 ### Doc fixes for scenario
 
@@ -758,7 +758,7 @@ First end-to-end play-through completed 2026-05-27 against the dev DB carried fo
 
 - **T059** (✅ shipped 2026-05-27 in commit `9114244`) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
 - **T060** (✅ shipped 2026-05-27, commit pending in this session) — widened `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. Task file `Rewrite/Tasks/T060-invitation-validator-scope-relaxation.md`.
-- **T061** (✅ shipped 2026-05-27, commit pending in this session) — admin Users surface at `/admin/users` + `/admin/users/{userId}`. List users (scope-filtered), add/remove roles, reset password, lock-out/reactivate, revoke pending same-email invitations. AcceptInvitation auto-revokes stale same-email invitations on registration. Replaced both `--dev-reset-password` and `--dev-add-role` CLI flags. 15 new Application tests + 1 new bUnit smoke test; 339/339 pass.
+- **T061** (✅ shipped 2026-05-27 in commit `7610ac5`) — admin Users surface at `/admin/users` + `/admin/users/{userId}`. List users (scope-filtered), add/remove roles, reset password, lock-out/reactivate, revoke pending same-email invitations. AcceptInvitation auto-revokes stale same-email invitations on registration. Replaced both `--dev-reset-password` and `--dev-add-role` CLI flags. 15 new Application tests + 1 new bUnit smoke test; 339/339 pass.
 - **T062** (open) — Decision Panel form pickers (scope-aware Institution + Speciality + user picker textbox for Chair/Members/External). ~2–3h, **Sonnet**.
 - **T063** (open) — widen `CommitteeDecisionAuthorization.DemandPanelAdministration` to include InstitutionalAdmin (scope-checked) + reconcile with page authorize. Drop Coordinator from page authorize to match handler. ~1h, **Sonnet**.
 - **T064** (open) — AssessorProfileEdit post-save URL flip + dropdown narrowing (compare T055 pattern). ~30 min, **Sonnet**.

@@ -43,7 +43,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `bc9776c` — T060: relax invitation validator for Coordinator + external CommitteeMember + create T061–T066 task files.
 - `3b652fd` — docs: record T060 in handoff + recommend T061 next.
 - `f5fabf3` — docs: finalize 2026-05-27 session log.
-- _T061 (commit pending in this session)_ — admin Users surface + auto-revoke of stale invitations on register + dev-CLI flag removal.
+- `7610ac5` — T061: admin Users surface + auto-revoke of stale invitations on register + dev-CLI flag removal. **(+16 tests, 339/339 pass.)**
 
 **Test status at session end:** build clean, **339/339 pass** (Domain 45, Application 236 (+15 from T061), Architecture 19, Web 39 (+1 bUnit smoke from T061)).
 
