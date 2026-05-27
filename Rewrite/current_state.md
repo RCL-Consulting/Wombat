@@ -51,7 +51,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 - `f5fabf3` — docs: finalize 2026-05-27 session log.
 - `7610ac5` — T061: admin Users surface + auto-revoke of stale invitations on register + dev-CLI flag removal. **(+16 tests, 339/339 pass.)**
 - `2565137` — docs: record T061 commit hash in handoff + scenario findings.
-- _T062 + T063 (commit pending in this session)_ — Decision Panel scope-aware pickers + InstitutionalAdmin admin policy + Coordinator dropped from edit. **(+7 tests, 346/346 pass.)**
+- `852f410` — T062 + T063: Decision Panel scope-aware pickers + InstitutionalAdmin admin policy + Coordinator dropped from edit. **(+7 tests, 346/346 pass.)**
 
 **Test status at session end:** build clean, **346/346 pass** (Domain 45, Application 243 (+7 from T063), Architecture 19, Web 39).
 
