@@ -373,3 +373,6 @@ EPA Book/chapters/
 
 # Local dev credentials — kept out of commits manually until now
 pwd_DO_NOT_COMMIT.txt
+
+# DB snapshot dumps written by tools/db-snapshot.ps1
+recovery/
