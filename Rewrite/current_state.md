@@ -2,17 +2,63 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-**Acts 1 + 2 replayed this session (2026-05-29) against a freshly reset DB. All T060/T061/T062/T063 closures hold under re-run; A2-5 / A2-6 / A2-8 remain open as expected (T064/T065/T066 still queued).** Recovery-point helper `tools/db-snapshot.ps1` added (commit `3b370db`) so future Acts can roll back to `after-act-1-replay` or `after-act-2-replay` snapshots without re-driving the prior Act's prose.
+## Active task
+
+**Act 3 partially played this session (2026-05-29, Opus). Phases 3.A–3.C + 3.H ran; the credit
+engine is proven end-to-end (DB-verified); two HIGH blockers (T067, T068) found + fixed + committed.
+3.D–3.G + 3.I deferred.** Work is on branch `fix/T067-activity-builder-addfield-crash` — **NOT merged
+to master.** Detail in `Rewrite/act3-findings-scratch.md`.
+
+**Landed (committed on the branch):**
+- **T067** (`2b732cf`) — builder crashed the circuit on the first **Add field** click (loop-variable
+  capture in `ActivityTypeEdit.razor`). Blocked building any multi-field schema.
+- **T068** (`6281eae`) — no trainee could create any activity (`GetActivityTypeEditorQuery` read
+  guard rejected non-admins → circuit crash on `/activities/new`). Fixed.
+- Full 12-field Mini-CEX schema built via the builder, **published v2**; lifecycle driven
+  trainee→assessor→complete twice. **Activity 2 (overall_level 4) credited PAED-001** —
+  `CurriculumItemProgresses` row verified in DB (counts=1, minReached=1, key `2:complete`). Actor-DSL
+  `field:assessor_user_id` verified both ways; audit log clean.
+
+**Open follow-ups raised:**
+- **T069 (HIGH)** — `ActivityForm` has no EPA/User/Scale pickers (raw number/text inputs; trainee
+  must hand-type an EPA id + assessor GUID).
+- **T070 (MEDIUM)** — no assessor rating-edit/note in Rated state (Step 3.5 unperformable).
+- **T071 (HIGH, domain decision)** — credit `minimum_level_field` is all-or-nothing: the level-3
+  activity credited nothing (not even volume), only level-4 counted; scenario expected volume to count
+  regardless. Two-counter model is currently dead.
+- **T072 (HIGH)** — `/portfolio/progress` does NOT render the credited PAED-001 row even though it
+  exists in the DB. Credit is invisible to the trainee. (Corrects an earlier wrong note that the
+  dashboard showed "1 of 30" — it does not.)
+- Doc fixes: Step 1.11.b 13→12 fields; Step 3.6 vs T071; "Format JSON" button refs.
+
+**DB snapshots this session:** `act3-schema-built` (Mini-CEX v2 published, pre-lifecycle) and
+`act3-minicex-credited` (activities 1+2 completed, PAED-001 credited; a stray activity 3 sits in
+`submitted` — harmless). `tools\db-snapshot.ps1 restore <name>`.
 
 **Next session — pick one:**
 
-1. **Play Act 3 (Recommended)** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Restore from `after-act-2-replay` snapshot (~10s) instead of replaying prior Acts. Requires the full Mini-CEX form schema to be built first (Act 1 replay left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
-2. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Confirmed still open in replay 2. ~30 min, **Sonnet**.
-3. **T065 / T066** — small follow-ups (training status enum, trainee stage display). Both confirmed still open. ~15 min–2h each, **Sonnet**.
-4. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
-5. **Operational deployment (carried from T016).** First-time deploy against Linode.
+1. **Merge the branch + continue Act 3 (Recommended).** First `git checkout master; dotnet test`,
+   then squash/ff-merge `fix/T067-activity-builder-addfield-crash` (T067+T068 are clean isolated
+   fixes). Then restore `act3-minicex-credited` and continue Phases **3.D** (procedure-log
+   stage-minimum credit gating — most valuable distinct test; needs `procedure_log_paed` schema built
+   first), 3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards. **Opus.** Each of 3.D–3.F needs
+   that type's full schema built via the builder first (~15 builder steps each).
+2. **T072 + T071 first (cheap, high value).** Fix the progress page (T072) and decide credit
+   semantics (T071), then re-verify 3.C — these gate correct credit display for all later acts.
+3. **T069 (HIGH)** — wire EPA/User/Scale pickers so the forms are usable before driving 3.D–3.F.
+4. **T070 / T064 / T065 / T066** — smaller follow-ups. **Sonnet.**
 
-**Strong recommendation:** **Play Act 3.** Act 2 replay confirmed all the invitation / users / panel surfaces are solid; the next interesting failure modes live in the activity lifecycle. Restoring `after-act-2-replay` skips the ~2h of setup. **Opus** so it can interpret unexpected behavior cleanly the first time the credit-applier runs end-to-end.
+**Strong recommendation:** option 1, but do **T072 + T071 + T069** before 3.D so the remaining
+phases exercise real credit display, real semantics, and real pickers.
+
+> **Tooling notes for next session (important):** heavy Playwright result-batching latency this
+> session — drive the UI in **small batches (≤6 stateful steps), verify each before the next**; large
+> batches caused cascading silent failures (a wrong `<select>` value or stale element ref no-ops, then
+> later steps run against the wrong state). The activity-type `<select>` options use **numeric ids**
+> as values (e.g. `"11"`), not the string key. **Save draft on `/activities/new` keeps the URL at
+> `/activities/new`** — reach the created activity via `/activities/{id}` (or My Activities) to submit
+> it; don't Submit on the new page. Keep **`psql` calls solo** — a non-zero psql exit cancels sibling
+> tool calls in the same message.
 
 ## This session at a glance
 
