@@ -48,8 +48,12 @@ This file is the live handoff between sessions. Every session ends by editing th
 **Session commits (this session, chronological, master branch):**
 - `3b370db` — tools: add `db-snapshot.ps1` for local recovery points (2 files; 165 insertions).
 - `37be4ec` — docs: record 2026-05-29 Act 1 + Act 2 replay; T060-T063 fixes hold (2 files; 60 insertions).
+- `519286c` — docs: record 37be4ec commit hash in handoff (1 file; 1 insertion / 1 deletion).
+- _docs: finalize 2026-05-29 session log_ — this commit.
 
-**Memory file unchanged this session.**
+**Memory file unchanged this session.** Existing `feedback_record_session_secrets` memory was honoured: scenario users' shared password (`Act2Pass!123`) and Mbatha's password (`Mbatha@KGK2026!`) re-recorded in `pwd_DO_NOT_COMMIT.txt` with a note that they correspond to the `after-act-1-replay` / `after-act-2-replay` snapshots, so any session restoring those snapshots can sign in without re-driving registration.
+
+**Session finalized.** Handoff ready for the next session — recommended pickup is **Play Act 3** with **Opus**, starting from `tools\db-snapshot.ps1 restore after-act-2-replay`.
 
 ---
 
@@ -453,7 +457,12 @@ Verification:
 
 ## Last verified commits
 
+- `37be4ec` — docs: record 2026-05-29 Act 1 + Act 2 replay; T060-T063 fixes hold (2 files: `Rewrite/scenario-paediatrics.md` + `Rewrite/current_state.md`; +60 insertions; new "Replay 2 (2026-05-29)" subsection under Act 2 findings summary; doc-only).
 - `3b370db` — tools: add `tools/db-snapshot.ps1` for local recovery points (2 files; .gitignore adds `recovery/`; PowerShell helper wraps `pg_dump --format=custom` + PostgreSQL template-DB cloning; `take` / `restore` / `list` / `drop` subcommands; pulls connection from Wombat.Web user-secrets at runtime; verified round-trip against the dev DB).
+- `7c9e3a9` — docs: record T062+T063 commit hash in handoff + scenario findings (doc-only).
+- `852f410` — T062 + T063 (Decision Panel scope-aware pickers + InstitutionalAdmin admin policy widened + Coordinator dropped from page authorize; 7 new scope-guard tests; Application 236 → 243; build clean; browser-verified end-to-end as Mbatha + Smit + Administrator).
+- `2565137` — docs: record T061 commit hash in handoff + scenario findings (doc-only).
+- `7610ac5` — T061 (admin Users surface at `/admin/users` + `/admin/users/{userId}`; 6 new MediatR records; `IUserAdministrationService` extended with 5 methods; `AcceptInvitationCommandHandler` auto-revokes stale same-email invitations on registration; both dev-CLI flags removed from `Wombat.Web/Program.cs`; 16 new tests; Application 227 → 236, Web 38 → 39; 339/339 → 339/339 pass; browser-verified as Administrator + Mbatha).
 - `bc9776c` — T060 (relax invitation validator for Coordinator + external CommitteeMember; SpecialityAdmin still requires speciality with clearer message; 5 new tests in InvitationValidatorTests.cs; 7 task files added — T060 + T061 + T062 + T063 + T064 + T065 + T066; scenario doc Step 2.1 + 2.2 reverted; A2-1 closed; build clean; Domain 45/45, Application 221/221, Architecture 19/19, Web 38/38; browser-verified end-to-end as Mbatha).
 - `c0072a9` — docs: Act 2 play-through findings + handoff update (Rewrite/scenario-paediatrics.md Act 2 Actual/Gap + 11-finding summary; Rewrite/current_state.md session log; doc-only).
 - `9114244` — T059 (DbContext concurrency fix in ListAssessors + ListTrainees; +2 dev CLI flags `--dev-reset-password` and `--dev-add-role` in `Wombat.Web/Program.cs`; 3 files; +96/-8 lines; build clean; Domain 45/45, Application 216/216, Architecture 19/19, Web 38/38).
