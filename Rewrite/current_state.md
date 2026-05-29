@@ -36,9 +36,19 @@ Tests updated/added (Application 245/245). Live-verified: a level-3 Mini-CEX now
   correct (T071) but unseen.**
 - Doc fixes: Step 1.11.b 13→12 fields; Step 3.6 vs T071; "Format JSON" button refs.
 
-**DB snapshots this session:** `act3-schema-built` (Mini-CEX v2 published, pre-lifecycle) and
+**DB snapshots this session:** `act3-schema-built` (Mini-CEX v2 published, pre-lifecycle),
 `act3-minicex-credited` (activities 1+2 completed, PAED-001 credited; a stray activity 3 sits in
-`submitted` — harmless). `tools\db-snapshot.ps1 restore <name>`.
+`submitted` — harmless), and `act3-credit-semantics-T071` (clean post-T071 verification: one level-3
+Mini-CEX → `CountsSoFar=1, MinimumLevelReachedCount=0`). `tools\db-snapshot.ps1 restore <name>`.
+
+**Session commits (branch `fix/T067-activity-builder-addfield-crash`, chronological):**
+`2b732cf` T067 builder Add-field fix · `6281eae` T068 trainee schema read · `c4b9e73` docs Act 3
+play-through + T069/T070/T071 · `79d124d` docs Act 3 correction + T072 · `08be04b` docs handoff fix ·
+`860a33d` T071 credit volume-always (+tests, Application 245/245) · _this commit_ finalize log.
+Build clean; **full-solution `dotnet test` NOT run — do so before merging the branch.** Server stopped.
+
+**Session finalized.** Recommended next pickup: **T072** (make the now-correct credit visible on
+`/portfolio/progress`), then merge the branch and continue Act 3 Phases 3.D–3.I. **Opus.**
 
 **Next session — pick one:**
 
