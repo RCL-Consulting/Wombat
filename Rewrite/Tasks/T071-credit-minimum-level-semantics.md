@@ -1,8 +1,39 @@
 # T071 — Credit `minimum_level_field` is an all-or-nothing gate (two-counter model is dead)
 
-**Status:** open — **domain decision required** (found during Act 3 play-through, 2026-05-29)
-**Severity:** High (affects whether trainees get curriculum credit) but needs a product call first.
-**Surface:** `src/Wombat.Infrastructure/Activities/CreditApplier.cs` (+ the scenario expectation).
+**Status:** ✅ DONE 2026-05-29 — **Option A chosen** (volume always counts; level-attainment is the
+separate counter). Implemented + unit-tested + verified end-to-end on the live completion path.
+**Severity:** High (affects whether trainees get curriculum credit).
+**Surface:** `src/Wombat.Infrastructure/Activities/CreditApplier.cs`.
+
+## Resolution (2026-05-29)
+
+Chose **Option A**. In `CreditApplier.ApplyAsync` the early `continue` that skipped a below-level
+completion was removed: a matching completion now always increments `CountsSoFar`, while
+`MinimumLevelReachedCount` increments only when `MeetsMinimumLevel` is true (unchanged). Now the two
+counters genuinely diverge.
+
+- `RebuildCurriculumProgress` delegates to `CreditApplier`, so it inherits the new semantics — no
+  duplicate logic to change.
+- Tests (`tests/Wombat.Application.Tests/Activities/CreditApplierTests.cs`): the old
+  `..._WhenMinimumLevelIsBelowRequired_DoesNotCount` became
+  `..._CountsVolumeButNotLevelReached` (counts=1, minReached=0); added
+  `..._AccumulatesVolumeAndLevelReachedSeparatelyAcrossActivities` (counts=2, minReached=1). Helper
+  `CreateCompletedActivity` gained an `activityId` param so two activities get distinct credit keys.
+  Application suite 245/245 green.
+- **Live verification:** from the `act3-schema-built` snapshot, drove one Mini-CEX at
+  `overall_level=3` (below PAED-001 min 4) trainee→assessor→complete. DB after:
+  `CurriculumItemProgresses` row `item=2, CountsSoFar=1, MinimumLevelReachedCount=0` — previously
+  produced **no row at all**. Combined with the earlier level-4 case (`counts=1, minReached=1`) the
+  split-counter model is confirmed. Snapshot `act3-credit-semantics-T071` taken.
+
+Remaining: the trainee `/portfolio/progress` page still doesn't render the row (separate bug
+**T072**); the credit *data* is now correct. Scenario Step 3.6 ("1 of 30" with level below target)
+is now consistent with the code under Option A.
+
+---
+
+## Original finding (kept for reference)
+
 
 ## Observation
 

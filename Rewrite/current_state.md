@@ -19,16 +19,21 @@ to master.** Detail in `Rewrite/act3-findings-scratch.md`.
   `CurriculumItemProgresses` row verified in DB (counts=1, minReached=1, key `2:complete`). Actor-DSL
   `field:assessor_user_id` verified both ways; audit log clean.
 
+**T071 (HIGH) ✅ SHIPPED 2026-05-29 (Option A).** Credit `minimum_level_field` was all-or-nothing
+(below-level completions credited nothing). Chose Option A: volume (`CountsSoFar`) always counts on a
+match; `MinimumLevelReachedCount` only when the level is met. Removed the early `continue` in
+`CreditApplier.ApplyAsync`; `RebuildCurriculumProgress` inherits it (delegates to CreditApplier).
+Tests updated/added (Application 245/245). Live-verified: a level-3 Mini-CEX now writes
+`CountsSoFar=1, MinimumLevelReachedCount=0` (was: no row). Snapshot `act3-credit-semantics-T071`.
+
 **Open follow-ups raised:**
 - **T069 (HIGH)** — `ActivityForm` has no EPA/User/Scale pickers (raw number/text inputs; trainee
   must hand-type an EPA id + assessor GUID).
 - **T070 (MEDIUM)** — no assessor rating-edit/note in Rated state (Step 3.5 unperformable).
-- **T071 (HIGH, domain decision)** — credit `minimum_level_field` is all-or-nothing: the level-3
-  activity credited nothing (not even volume), only level-4 counted; scenario expected volume to count
-  regardless. Two-counter model is currently dead.
 - **T072 (HIGH)** — `/portfolio/progress` does NOT render the credited PAED-001 row even though it
   exists in the DB. Credit is invisible to the trainee. (Corrects an earlier wrong note that the
-  dashboard showed "1 of 30" — it does not.)
+  dashboard showed "1 of 30" — it does not.) **Now the most valuable next fix — the credit data is
+  correct (T071) but unseen.**
 - Doc fixes: Step 1.11.b 13→12 fields; Step 3.6 vs T071; "Format JSON" button refs.
 
 **DB snapshots this session:** `act3-schema-built` (Mini-CEX v2 published, pre-lifecycle) and

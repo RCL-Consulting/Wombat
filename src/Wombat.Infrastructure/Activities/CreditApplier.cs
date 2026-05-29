@@ -42,11 +42,11 @@ public sealed class CreditApplier : ICreditApplier
             var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, cancellationToken);
             foreach (var curriculumItem in curriculumItems)
             {
+                // A completed activity that matches a curriculum item always counts toward volume
+                // (CountsSoFar). The entrustment level is a separate progression signal: a completion
+                // below the curriculum item's required level still counts as evidence, but only
+                // contributes to MinimumLevelReachedCount when the level is actually met. (T071)
                 var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement);
-                if (!minimumLevelReached && !string.IsNullOrWhiteSpace(directive.MinimumLevelField))
-                {
-                    continue;
-                }
 
                 var progressSet = _dbContext.Set<CurriculumItemProgress>();
                 var progress = progressSet.Local.SingleOrDefault(
