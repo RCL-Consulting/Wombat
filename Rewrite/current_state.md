@@ -27,10 +27,24 @@ Tests updated/added (Application 245/245). Live-verified: a level-3 Mini-CEX now
 `CountsSoFar=1, MinimumLevelReachedCount=0` (was: no row). Snapshot `act3-credit-semantics-T071`.
 
 **Open follow-ups raised:**
-- **T069 (HIGH)** — `ActivityForm` has no EPA/User/Scale pickers (raw number/text inputs; trainee
-  must hand-type an EPA id + assessor GUID).
 - **T070 (MEDIUM)** — no assessor rating-edit/note in Rated state (Step 3.5 unperformable).
 - Doc fixes: Step 1.11.b 13→12 fields; Step 3.6 vs T071; "Format JSON" button refs.
+
+**T069 (HIGH) ✅ SHIPPED 2026-05-30 (Opus).** Runtime `ActivityForm` now renders rich pickers instead
+of raw inputs. `IActivityReferenceDataService` gained scoped `GetEpaOptionsAsync` (sub-speciality
+scope; admin all), `GetAssessorOptionsAsync` (institution scope, via `IUserAdministrationService`) and
+`GetEntrustmentScaleOptionsAsync`/`GetEntrustmentScaleLevelOptionsAsync(scaleKey)`. `ActivityForm`
+injects `AuthenticationStateProvider`, loads options per field type, and renders Epa/User (and Choice)
+as `<select>`; Scale renders a level `<select>` when its `scale_key` resolves, else **falls back to the
+number input** (existing schemas with no scale binding still work). The builder field editor
+(`ActivityTypeEdit`) now shows an **Entrustment scale** picker for Scale fields (writes `scale_key`).
+Stored primitives unchanged → CreditApplier/actor-DSL unaffected. Live-verified: Dlamini's
+`/activities/new` Mini-CEX shows an EPA dropdown (15 scoped PAED EPAs) + Assessor dropdown (5 KGK
+assessors); builder Scale-picker binds a scale and the live preview shows the 5 levels. Tests +6
+(Infrastructure 7, Web 41; Application 249, Domain 45, Architecture 19). **Debt:** existing published
+schemas need re-binding (set each Scale field's scale, republish) for labelled level dropdowns; the
+T072 trajectory parser still reads the rating by literal field name (not schema-aware) — small
+follow-up if wanted.
 
 **T072 (HIGH) ✅ SHIPPED 2026-05-29 (Opus).** Premise was partly wrong — credit **was** visible on the
 trainee **dashboard** (`/`) all along (live-verified: "Curriculum progress" card shows `1 / 30 · reached
@@ -57,26 +71,27 @@ play-through + T069/T070/T071 · `79d124d` docs Act 3 correction + T072 · `08be
 `860a33d` T071 credit volume-always (+tests, Application 245/245) · _this commit_ finalize log.
 Build clean; **full-solution `dotnet test` NOT run — do so before merging the branch.** Server stopped.
 
-**Recommended next pickup: T069** (wire `ActivityForm` runtime EPA/User/Scale pickers + fold in the
-trajectory field-name resolution this task left as schema-aware debt) — then merge the branch and
-continue Act 3. **Opus.**
+**Recommended next pickup: merge the branch, then continue Act 3 (3.D–3.I).** T067/T068/T071/T072/T069
+are all clean, isolated, tested fixes on this branch; the schema-driven loop now has real pickers
+(T069), real credit display (T072), and real credit semantics (T071). **Opus.**
 
 **Next session — pick one:**
 
-1. **T069 (HIGH, Recommended).** Wire EPA/User/Scale pickers in the runtime `ActivityForm` so the
-   schema-driven forms are usable by real trainees (today they hand-type an EPA id + assessor GUID).
-   While there, make the EPA-trajectory parser read field roles from the activity-type schema/credit
-   config instead of T072's `overall`|`overall_level` literal fallback. **Opus.**
-2. **Merge the branch + continue Act 3.** First `git checkout master; dotnet test`, then squash/ff-merge
-   `fix/T067-activity-builder-addfield-crash` (T067+T068+T071+T072 are clean isolated fixes). Then
-   restore `act3-minicex-credited` and continue Phases **3.D** (procedure-log stage-minimum credit
-   gating — most valuable distinct test; needs `procedure_log_paed` schema built first), 3.E DOPS,
-   3.F MSF, 3.G stalled triage, 3.I dashboards. **Opus.** Each of 3.D–3.F needs that type's full schema
-   built via the builder first (~15 builder steps each).
-3. **T070 / T064 / T065 / T066** — smaller follow-ups. **Sonnet.**
+1. **Merge the branch + continue Act 3 (Recommended).** First `git checkout master; dotnet test`
+   (full solution — not yet run this branch), then squash/ff-merge
+   `fix/T067-activity-builder-addfield-crash`. Then restore `act3-minicex-credited` and continue Phases
+   **3.D** (procedure-log stage-minimum credit gating — most valuable distinct test; needs
+   `procedure_log_paed` schema built first), 3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards.
+   **Opus.** Each of 3.D–3.F needs that type's full schema built via the builder first (~15 steps each).
+   Note: thanks to T069, building those schemas can now bind a scale per Scale field, and the forms are
+   fillable without hand-typing ids/GUIDs.
+2. **T070 / T064 / T065 / T066** — smaller follow-ups. **Sonnet.**
+3. **Trajectory schema-awareness (small).** Make `GetEpaTrajectoryForTraineeQuery` read the rating/EPA
+   field roles from the activity-type schema/credit config rather than T072's literal
+   `overall`|`overall_level` fallback. **Sonnet.**
 
-**Strong recommendation:** option 1 (T069), then merge, then drive 3.D–3.I — so the remaining phases
-exercise real pickers, real credit display (T072), and real semantics (T071).
+**Strong recommendation:** option 1 — the Act 3 prerequisites (pickers, credit display, semantics) are
+all in place now, so 3.D–3.I can be driven realistically.
 
 > **Tooling notes for next session (important):** heavy Playwright result-batching latency this
 > session — drive the UI in **small batches (≤6 stateful steps), verify each before the next**; large

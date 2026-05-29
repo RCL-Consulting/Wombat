@@ -1,4 +1,5 @@
 using Bunit;
+using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
@@ -10,6 +11,7 @@ public sealed class BuilderPreviewParityTests : TestContext
 {
     public BuilderPreviewParityTests()
     {
+        this.AddTestAuthorization().SetAuthorized("trainee@test");
         Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
     }
 
@@ -46,11 +48,5 @@ public sealed class BuilderPreviewParityTests : TestContext
         builderPreview.Markup.Should().Contain("Your message");
         runtimeDetail.Markup.Should().Contain("Greeting");
         runtimeDetail.Markup.Should().Contain("Your message");
-    }
-
-    private sealed class StubActivityReferenceDataService : IActivityReferenceDataService
-    {
-        public Task<IReadOnlyList<ActivityCatalogueOption>> GetCatalogueOptionsAsync(string catalogueKey, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
     }
 }

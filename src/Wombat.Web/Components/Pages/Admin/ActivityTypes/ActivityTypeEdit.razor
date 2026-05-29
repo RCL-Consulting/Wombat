@@ -5,8 +5,10 @@
 @using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList
 @using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList
 @using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList
+@using Wombat.Application.Features.Activities.Services
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IActivityReferenceDataService ReferenceData
 @inject NavigationManager Navigation
 
 <PageTitle>@(_editor?.Name ?? "Activity Type")</PageTitle>
@@ -202,6 +204,18 @@
                   <FormField Label="Catalogue key" InputId="field-catalogue">
                     <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />
                   </FormField>
+                  @if (selectedField.Type == FieldType.Scale)
+                  {
+                    <FormField Label="Entrustment scale" InputId="field-scale" HelpText="Levels of the chosen scale render as the rating dropdown at runtime.">
+                      <select id="field-scale" class="form-select" @bind="selectedField.ScaleKey">
+                        <option value="">Select…</option>
+                        @foreach (var scale in _entrustmentScales)
+                        {
+                          <option value="@scale.Value">@scale.Label</option>
+                        }
+                      </select>
+                    </FormField>
+                  }
                   <div class="form-check">
                     <input id="field-required" class="form-check-input" type="checkbox" @bind="selectedField.Required" />
                     <label for="field-required">Required</label>
@@ -266,6 +280,7 @@
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+  private IReadOnlyList<ActivityCatalogueOption> _entrustmentScales = [];
   private bool _loading = true;
   private bool _busy;
   private string? _loadError;
@@ -345,6 +360,7 @@
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      _entrustmentScales = await ReferenceData.GetEntrustmentScaleOptionsAsync();
       LoadEditorState(_editor);
       RefreshWarnings();
     }

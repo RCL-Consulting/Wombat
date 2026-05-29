@@ -4,6 +4,7 @@
 @using Wombat.Application.Features.Activities.Services
 @using Wombat.Domain.Activities.Schema
 @inject IActivityReferenceDataService ReferenceDataService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (!string.IsNullOrWhiteSpace(_loadError))
 {
@@ -34,7 +35,6 @@ else if (_schema is not null)
               @switch (field.Type)
               {
                 case FieldType.Text:
-                case FieldType.User:
                 case FieldType.Signature:
                 case FieldType.ProcedureRef:
                   <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
@@ -43,9 +43,7 @@ else if (_schema is not null)
                   <textarea id="@field.Key" class="form-control" rows="4" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
                   break;
                 case FieldType.Number:
-                case FieldType.Epa:
                 case FieldType.Likert:
-                case FieldType.Scale:
                 case FieldType.Rating:
                   <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
@@ -53,6 +51,8 @@ else if (_schema is not null)
                   <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Choice:
+                case FieldType.Epa:
+                case FieldType.User:
                   <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                     <option value="">Select…</option>
                     @foreach (var option in GetOptions(field))
@@ -60,6 +60,23 @@ else if (_schema is not null)
                       <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
                     }
                   </select>
+                  break;
+                case FieldType.Scale:
+                  var scaleOptions = GetOptions(field);
+                  if (scaleOptions.Count > 0)
+                  {
+                    <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                      <option value="">Select…</option>
+                      @foreach (var option in scaleOptions)
+                      {
+                        <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
+                      }
+                    </select>
+                  }
+                  else
+                  {
+                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  }
                   break;
                 case FieldType.MultiChoice:
                   <div class="full-width">
@@ -116,7 +133,7 @@ else if (_schema is not null)
       _schema = FormSchemaParser.Parse(SchemaJson);
       _data = JsonNode.Parse(string.IsNullOrWhiteSpace(DataJson) ? "{}" : DataJson)?.AsObject() ?? [];
       _loadError = null;
-      await LoadCatalogueOptionsAsync();
+      await LoadOptionsAsync();
     }
     catch (Exception exception)
     {
@@ -231,7 +248,7 @@ else if (_schema is not null)
     await DataJsonChanged.InvokeAsync(_data.ToJsonString());
   }
 
-  private async Task LoadCatalogueOptionsAsync()
+  private async Task LoadOptionsAsync()
   {
     _catalogueOptionsByField.Clear();
 
@@ -240,14 +257,25 @@ else if (_schema is not null)
       return;
     }
 
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var principal = authState.User;
+
     foreach (var field in _schema.Sections.SelectMany(section => section.Fields))
     {
-      if (string.IsNullOrWhiteSpace(field.CatalogueKey))
+      IReadOnlyList<ActivityCatalogueOption>? options = field.Type switch
       {
-        continue;
-      }
+        FieldType.Epa => await ReferenceDataService.GetEpaOptionsAsync(principal),
+        FieldType.User => await ReferenceDataService.GetAssessorOptionsAsync(principal),
+        FieldType.Scale => await ReferenceDataService.GetEntrustmentScaleLevelOptionsAsync(field.ScaleKey),
+        _ when !string.IsNullOrWhiteSpace(field.CatalogueKey)
+          => await ReferenceDataService.GetCatalogueOptionsAsync(field.CatalogueKey),
+        _ => null
+      };
 
-      _catalogueOptionsByField[field.Key] = await ReferenceDataService.GetCatalogueOptionsAsync(field.CatalogueKey);
+      if (options is not null)
+      {
+        _catalogueOptionsByField[field.Key] = options;
+      }
     }
   }
 
