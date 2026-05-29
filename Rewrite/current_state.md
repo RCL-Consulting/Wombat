@@ -47,7 +47,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 **Session commits (this session, chronological, master branch):**
 - `3b370db` — tools: add `db-snapshot.ps1` for local recovery points (2 files; 165 insertions).
-- _docs commit pending_ — scenario doc Act 2 findings replay-2 update + current_state.md session log.
+- `37be4ec` — docs: record 2026-05-29 Act 1 + Act 2 replay; T060-T063 fixes hold (2 files; 60 insertions).
 
 **Memory file unchanged this session.**
 
