@@ -4,19 +4,54 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**T061 + T062 + T063 shipped this session.** Act 2 findings A2-2 / A2-3 / A2-4 / A2-pwd (T061), A2-9 / A2-11 (T063), and A2-10 (T062) all closed. Decision Panel surface now usable by InstitutionalAdmin end-to-end. 23 new tests on top of prior 323 → 346/346 pass.
+**Acts 1 + 2 replayed this session (2026-05-29) against a freshly reset DB. All T060/T061/T062/T063 closures hold under re-run; A2-5 / A2-6 / A2-8 remain open as expected (T064/T065/T066 still queued).** Recovery-point helper `tools/db-snapshot.ps1` added (commit `3b370db`) so future Acts can roll back to `after-act-1-replay` or `after-act-2-replay` snapshots without re-driving the prior Act's prose.
 
 **Next session — pick one:**
 
-1. **T064 (Recommended for quick win)** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Quickest standalone fix. ~30 min, **Sonnet**.
-2. **T065 / T066** — small follow-ups (training status, trainee stage display). ~15 min–2h each, **Sonnet**.
-3. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
-4. **Play Act 3 of the scenario** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Requires the full Mini-CEX form schema to be built first (Act 1 left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
+1. **Play Act 3 (Recommended)** — first real exercise of the activity lifecycle (trainee submits Mini-CEX → assessor rates → credit applies). Restore from `after-act-2-replay` snapshot (~10s) instead of replaying prior Acts. Requires the full Mini-CEX form schema to be built first (Act 1 replay left it at the default `title`-only schema). ~20 min schema build + ~2h Act 3 play. **Suggested model: Opus** — first end-to-end credit-applier test, expect findings.
+2. **T064** — AssessorProfileEdit post-save URL flip + dropdown narrowing. Confirmed still open in replay 2. ~30 min, **Sonnet**.
+3. **T065 / T066** — small follow-ups (training status enum, trainee stage display). Both confirmed still open. ~15 min–2h each, **Sonnet**.
+4. **T052 + T051.b bundle (carried from before)** — Invitation form: allow Administrator role with null institution + capture First/Last name. Same migration overhead. ~3.5h, **Opus**.
 5. **Operational deployment (carried from T016).** First-time deploy against Linode.
 
-**Strong recommendation:** **Play Act 3.** All Act 2 findings are now closed. Act 3 is the next play-through milestone — it's the first real end-to-end test of the activity lifecycle (Mini-CEX submission → assessor rates → credit applies), which the credit-applier code has never been exercised against. Expect findings; budget ~3h with **Opus**.
+**Strong recommendation:** **Play Act 3.** Act 2 replay confirmed all the invitation / users / panel surfaces are solid; the next interesting failure modes live in the activity lifecycle. Restoring `after-act-2-replay` skips the ~2h of setup. **Opus** so it can interpret unexpected behavior cleanly the first time the credit-applier runs end-to-end.
 
 ## This session at a glance
+
+**Session 2026-05-29 — Acts 1 + 2 replayed clean against a freshly reset DB; recovery-point helper added.** No code changes to product surfaces; one tooling commit + scenario doc + handoff updates.
+
+**Recovery-point helper (`tools/db-snapshot.ps1`, commit `3b370db`).** PowerShell wrapper around `pg_dump --format=custom` + PostgreSQL template-database cloning. Subcommands: `take <name>`, `restore <name>`, `list`, `drop <name>`. Reads the dev connection string from `Wombat.Web` user-secrets at runtime so it tracks the canonical DB without duplicating config. Each `take` writes both a `.dump` file under `recovery/` (gitignored) and a `wombat_snapshot_<name>` template DB; `restore` prefers the template clone (seconds) and falls back to the dump file. `recovery/` added to `.gitignore`.
+
+**Snapshots taken this session:**
+- `before-replay` — dirty post-2026-05-27 state (safety net before drop). Can be discarded once we're sure Act 2 stayed clean — kept until next session for safety.
+- `after-act-1-replay` — Act 1 outcome state (1 institution + speciality + sub-speciality, 2 entrustment scales, 15 EPAs, 1 curriculum + 15 items, 10 published activity types, admin + Mbatha).
+- `after-act-2-replay` — Act 2 outcome state (above + 7 consultants registered + 5 assessor profiles + 5 trainee profiles + 1 decision panel).
+
+**Replay coverage:** every Act 1 step from 1.1 through 1.13 driven via Playwright as bootstrap admin (Steps 1.1-1.7) and Mbatha (Steps 1.8-1.13). Phase 1.F kept replay-3's minimal-schema scope reduction (default `title`-only form + default workflow + default credit; just metadata + publish per type). Act 2 all 8 phases driven as Mbatha + the seven invitee registrations + Smit's negative panel-create check.
+
+**T060/T061/T062/T063 verification under re-run** (all closures hold; see `scenario-paediatrics.md` § "Act 2 findings summary → Replay 2 (2026-05-29)" for the granular per-finding result):
+- **A2-1** (T060): Coordinator + external CommitteeMember invitations accepted with blank Speciality; SpecialityAdmin still rejected with new clearer message; Trainee/Assessor still require both Speciality + Sub-speciality.
+- **A2-2 / A2-3 / A2-4 / A2-pwd** (T061): `/admin/users` lists 9 KGK + 1 global Admin for Mbatha (Demo Institution users hidden via T056.d). Added Assessor to Zulu/Naidoo/Botha via the Add-role picker; banners + DB confirm. No dev CLI flags used.
+- **A2-7** (T059): `/admin/assessors` and `/admin/trainees` render cleanly under Mbatha's view; no DbContext concurrency crash.
+- **A2-9 / A2-11** (T063): Mbatha reaches `/committee/panels/new`; Smit (Coordinator) gets `/access-denied?ReturnUrl=...` on the same route. Smit retains read-only `/committee/panels`.
+- **A2-10** (T062): All four scope-aware pickers in place (Speciality + Chair single-select + Members/External multi-select). Created `Paed Annual Review Panel 2026` with correct chair/member/external role flags persisted.
+
+**Open findings unchanged** (confirmed open under re-run, not regressions):
+- **A2-5** (T065) — Assessor training surface is still a date, not enum.
+- **A2-6** (T064) — `AssessorProfileEdit` post-save URL stays at `/admin/assessors/edit` (does not flip to `?id={id}`). Verified by saving 5 profiles back-to-back; URL never changes.
+- **A2-8** (T066) — Admit-trainee form has no Stage field; Active profiles list doesn't surface Stage either.
+
+**One new observation (non-blocking):** Phase 2.H Zulu's dashboard now uses T044's `/dashboard/switch/{role}` mechanism — "Viewing as CommitteeMember / You also act as Assessor. Switch view: Assessor" — instead of the stacked-merged layout the 2026-05-27 play-through saw. NavMenu still shows the union. Nicer UX; worth noting in case future Acts depend on the layout assumption.
+
+**Test status:** unchanged from 2026-05-27 — Domain 45, Application 243, Architecture 19, Web 39 = 346/346 pass. No code changes to product surfaces this session.
+
+**Session commits (this session, chronological, master branch):**
+- `3b370db` — tools: add `db-snapshot.ps1` for local recovery points (2 files; 165 insertions).
+- _docs commit pending_ — scenario doc Act 2 findings replay-2 update + current_state.md session log.
+
+**Memory file unchanged this session.**
+
+---
 
 **Session 2026-05-27 (continued) — T062 + T063 shipped: Decision Panel surface usable by Mbatha.** **T063:** widened `DemandPanelAdministration` to accept `InstitutionalAdmin`; CreateDecisionPanel + UpdateDecisionPanel now resolve the panel's effective institution (InstitutionId directly for Institution-scoped, or via Speciality.InstitutionId for Speciality-scoped) and reject with `UnauthorizedAccessException` when the caller isn't authorized for it. GetDecisionPanelById + ListDecisionPanels now take `ClaimsPrincipal`; out-of-scope GetById returns null (404, not 403). PanelEdit page authorize tightened to `Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin` (Coordinator dropped — its actual privilege is `DemandReviewScheduling`). PanelsList retains Coordinator for read-only viewing. **T062:** swapped numeric Institution/Speciality InputNumbers and Chair/Members/External GUID textareas for scope-aware `<select>` widgets + native `<select multiple>` pickers backed by a new `ListPanelMemberCandidatesQuery(Principal)`. The query lists `CommitteeMember` users filtered by caller's institution (Administrator sees all). Single chair `<select>`, two `<select multiple>` for Members and Externals, with the chair excluded from both and members excluded from externals. Post-save now uses `forceLoad: true` (mirrors T057's pattern) so the document.title updates after the SPA nav from `/new` to `/{id}`. 7 new scope-guard tests in `PanelScopeGuardTests`.
 
@@ -418,6 +453,7 @@ Verification:
 
 ## Last verified commits
 
+- `3b370db` — tools: add `tools/db-snapshot.ps1` for local recovery points (2 files; .gitignore adds `recovery/`; PowerShell helper wraps `pg_dump --format=custom` + PostgreSQL template-DB cloning; `take` / `restore` / `list` / `drop` subcommands; pulls connection from Wombat.Web user-secrets at runtime; verified round-trip against the dev DB).
 - `bc9776c` — T060 (relax invitation validator for Coordinator + external CommitteeMember; SpecialityAdmin still requires speciality with clearer message; 5 new tests in InvitationValidatorTests.cs; 7 task files added — T060 + T061 + T062 + T063 + T064 + T065 + T066; scenario doc Step 2.1 + 2.2 reverted; A2-1 closed; build clean; Domain 45/45, Application 221/221, Architecture 19/19, Web 38/38; browser-verified end-to-end as Mbatha).
 - `c0072a9` — docs: Act 2 play-through findings + handoff update (Rewrite/scenario-paediatrics.md Act 2 Actual/Gap + 11-finding summary; Rewrite/current_state.md session log; doc-only).
 - `9114244` — T059 (DbContext concurrency fix in ListAssessors + ListTrainees; +2 dev CLI flags `--dev-reset-password` and `--dev-add-role` in `Wombat.Web/Program.cs`; 3 files; +96/-8 lines; build clean; Domain 45/45, Application 216/216, Architecture 19/19, Web 38/38).

@@ -712,7 +712,24 @@ Nothing yet exercises the assessment lifecycle. Act 3 starts the operational rhy
 
 First end-to-end play-through completed 2026-05-27 against the dev DB carried forward from Act 1 replay 3 (`02a167f`). Phases 2.A → 2.H all played; outcome state matches the prescription except where the listed findings forced workarounds.
 
-**Eleven findings raised. One real bug fixed inline; the rest opened as code-side gaps.**
+**Eleven findings raised on first play. One real bug fixed inline; eight closed by follow-up tasks T059→T063 within the same session; three open as T064/T065/T066 (cosmetic / non-blocking).**
+
+### Replay 2 (2026-05-29 — verifies T060/T061/T062/T063 hold)
+
+Re-ran Acts 1 + 2 end-to-end against a freshly dropped DB after the recovery-point helper (`tools/db-snapshot.ps1`) was added in commit `3b370db`. Same prescription as the 2026-05-27 first play; only the closures and three known-open warts surfaced.
+
+- **Act 1 outcome state restored:** 1 KGK institution + Paediatrics + General Paediatrics, 2 entrustment scales, 15 PAED EPAs, FCPaed(SA) Part 1 v2026.1 curriculum with all 15 items (per-stage JSON round-trips byte-for-byte), 10 published Paed activity types (minimal-schema scope reduction maintained), bootstrap admin + Mbatha. Snapshot `after-act-1-replay` taken (template DB + 0.17 MB dump file).
+- **A2-1 closure holds.** Smit (Coordinator) and vanRensburg (external CommitteeMember) invitations issued with blank Speciality + Sub-speciality, both accepted via T060's relaxed validator. Patel/Khumalo (Assessor) still require Speciality + Sub-speciality cascade.
+- **A2-2 / A2-3 / A2-4 closures hold.** `/admin/users` lists 9 users for Mbatha (8 KGK + 1 global Administrator; Demo Institution users hidden — T056.d scope guard intact). Opened Zulu / Naidoo / Botha detail pages and added Assessor via the Add-role picker; banner "Role 'Assessor' added." rendered on each; dropdown narrowed to exclude already-held roles. DB confirms all three now hold both CommitteeMember + Assessor. No dev CLI flags used.
+- **A2-7 closure holds.** `/admin/assessors` renders cleanly under Mbatha's view both before and after creating profiles. Sequential foreach loop in `ListAssessorsForSpecialityQueryHandler` + `ListTraineesForSpecialityQueryHandler` no longer triggers the DbContext concurrency crash.
+- **A2-9 / A2-11 closures hold.** Mbatha (InstitutionalAdmin) reaches `/committee/panels/new` without /access-denied. Smit (Coordinator) is redirected to `/access-denied?ReturnUrl=%2Fcommittee%2Fpanels%2Fnew` (page authorize tightened to drop Coordinator). Smit retains read-only access to `/committee/panels` — list renders.
+- **A2-10 closure holds.** T062 panel form fully wired: Speciality picker shows "Kgosi Kgari Teaching Hospital / Paediatrics" (Mbatha's scope only); Chair `<select>` lists the 4 CommitteeMembers (Botha / Naidoo / van Rensburg / Zulu); Members + External `<select multiple>` lists the same 4. Created `Paed Annual Review Panel 2026` with Chair=Zulu, Members=Botha+Naidoo, External=vanRensburg; saved at `/committee/panels/1` with role flags persisted correctly (Zulu=1 Chair, Botha+Naidoo=2 Member, vanRensburg=3 External).
+- **A2-5 still open** (T065) — `Assessor training completed` is still a date input, not the Trained/In training/Provisional enum the scenario refers to. Saved Khumalo's profile with blank date as expected.
+- **A2-6 still open** (T064) — `AssessorProfileEdit` post-save URL stays at `/admin/assessors/edit` after each save (does not flip to `?id={id}`). Compare T055's pattern on `ActivityTypeEdit.razor`.
+- **A2-8 still open** (T066) — Admit-trainee form has no Stage field; only Programme start date + Expected completion date. Active profiles list also doesn't surface Stage. Each of 5 trainees admitted cleanly to curriculum 2; trainee profile rows persisted with `?id=2..6`.
+- **New observation on Phase 2.H — role-switcher pattern.** Zulu's dashboard now renders as "Viewing as CommitteeMember / You also act as Assessor. Switch view: Assessor" rather than the stacked-panels behavior the 2026-05-27 play-through saw. T044's `/dashboard/switch/{role}` mechanism is wired. NavMenu still shows the union of both role's surfaces (Activity Inbox + Recent Activities + Programme Trainees + Decision Panels + Committee Reviews). Non-blocking; nicer than stacked.
+- **Snapshot taken.** `after-act-2-replay` template DB + dump file written. Restoring it (`tools\db-snapshot.ps1 restore after-act-2-replay`) drops Act 3 directly back to the same starting state without replaying Acts 1+2 again.
+- **No regressions, no new findings, no console errors observed across the seven role-scoped sign-in/sign-out cycles in Phase 2.A→2.H.**
 
 ### Bugs
 
