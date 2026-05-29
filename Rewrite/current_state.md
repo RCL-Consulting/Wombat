@@ -2,8 +2,6 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## Active task
-
 **Acts 1 + 2 replayed this session (2026-05-29) against a freshly reset DB. All T060/T061/T062/T063 closures hold under re-run; A2-5 / A2-6 / A2-8 remain open as expected (T064/T065/T066 still queued).** Recovery-point helper `tools/db-snapshot.ps1` added (commit `3b370db`) so future Acts can roll back to `after-act-1-replay` or `after-act-2-replay` snapshots without re-driving the prior Act's prose.
 
 **Next session — pick one:**
