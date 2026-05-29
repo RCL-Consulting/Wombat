@@ -104,6 +104,14 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
 
     internal static async Task<bool> CanReadAsync(ClaimsPrincipal principal, ActivityType activityType, CancellationToken cancellationToken, IApplicationDbContext? dbContext = null)
     {
+        // A published, active activity type is a form template any authenticated user must be
+        // able to read in order to log an activity against it (e.g. a trainee on /activities/new).
+        // Drafts and inactive types remain admin-only below.
+        if (activityType.IsActive && activityType.Version > 0)
+        {
+            return true;
+        }
+
         if (principal.IsAdministrator())
         {
             return true;
