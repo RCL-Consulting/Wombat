@@ -117,7 +117,8 @@
             {
               @for (var sectionIndex = 0; sectionIndex < _builderSchema.Sections.Count; sectionIndex++)
               {
-                var formSection = _builderSchema.Sections[sectionIndex];
+                var capturedSectionIndex = sectionIndex;
+                var formSection = _builderSchema.Sections[capturedSectionIndex];
                 <div class="detail-card detail-card--compact mb-3">
                   <div class="header-container">
                     <div>
@@ -125,15 +126,16 @@
                       <p class="page-subtitle"><code>@formSection.Key</code></p>
                     </div>
                     <div class="actions-cell">
-                      <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectSection(sectionIndex)">Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled="@(sectionIndex == 0)" @onclick="() => MoveSection(sectionIndex, -1)">Up</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled="@(sectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(sectionIndex, 1)">Down</button>
-                      <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteSection(sectionIndex)">Delete</button>
+                      <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectSection(capturedSectionIndex)">Edit</button>
+                      <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedSectionIndex == 0)" @onclick="() => MoveSection(capturedSectionIndex, -1)">Up</button>
+                      <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedSectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(capturedSectionIndex, 1)">Down</button>
+                      <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteSection(capturedSectionIndex)">Delete</button>
                     </div>
                   </div>
 
                   @foreach (var field in formSection.Fields.Select((value, index) => (value, index)))
                   {
+                    var capturedFieldIndex = field.index;
                     <div class="detail-card detail-card--interactive detail-card--compact mb-3">
                       <div class="header-container">
                         <div>
@@ -141,16 +143,16 @@
                           <p class="page-subtitle"><code>@field.value.Key</code> · @field.value.Type</p>
                         </div>
                         <div class="actions-cell">
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectField(sectionIndex, field.index)">Edit</button>
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(field.index == 0)" @onclick="() => MoveField(sectionIndex, field.index, -1)">Up</button>
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(field.index == formSection.Fields.Count - 1)" @onclick="() => MoveField(sectionIndex, field.index, 1)">Down</button>
-                          <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteField(sectionIndex, field.index)">Delete</button>
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">Edit</button>
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedFieldIndex == 0)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, -1)">Up</button>
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedFieldIndex == formSection.Fields.Count - 1)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, 1)">Down</button>
+                          <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteField(capturedSectionIndex, capturedFieldIndex)">Delete</button>
                         </div>
                       </div>
                     </div>
                   }
 
-                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => AddField(sectionIndex)">Add field</button>
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => AddField(capturedSectionIndex)">Add field</button>
                 </div>
               }
             }
