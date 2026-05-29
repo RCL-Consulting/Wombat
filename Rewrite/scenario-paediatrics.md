@@ -1015,7 +1015,38 @@ After Act 3 completes cleanly, the database adds:
 
 ## Act 3 findings summary
 
-Not yet played. Anticipated findings flagged inline: full Mini-CEX schema (3.1), Mini-CEX credit JSON (3.5), MSF notification path (3.9), MSF scheduled-job mechanism (3.10), Coordinator stalled-assessment URL (3.12).
+**Partial first play — 2026-05-29 (Opus).** Phases 3.A–3.C + 3.H played end-to-end against the
+`after-act-2-replay` snapshot via Playwright; 3.D–3.G + 3.I deferred. Full detail in
+`Rewrite/act3-findings-scratch.md`.
+
+Two HIGH blockers found + fixed inline (branch `fix/T067-activity-builder-addfield-crash`):
+- **T067** (`2b732cf`) — builder crashed the circuit on the first **Add field** click
+  (loop-variable capture in `ActivityTypeEdit.razor`); blocked building any multi-field schema.
+- **T068** (`6281eae`) — no trainee could create any activity (trainee `/activities/new` reuses the
+  admin builder's `GetActivityTypeEditorQuery`; its read guard rejected non-admins → circuit crash).
+- Neither was catchable by earlier replays (default single-`title` schema only).
+
+**Credit engine works end-to-end (verified in DB):** full 12-field Mini-CEX published v2; lifecycle
+driven trainee→assessor→complete twice. Activity at `overall_level=4` (meets PAED-001 min 4) wrote a
+`CurriculumItemProgress` row (counts=1, minReached=1, key `2:complete`); the `field:assessor_user_id`
+actor verified both ways (Patel no buttons, Naidoo Accept); audit log clean (no JsonException).
+
+Open findings → tasks:
+- **T069 (HIGH)** — `ActivityForm` has no EPA/User/Scale pickers; raw number/text inputs force a
+  trainee to hand-type an EPA id + assessor GUID. Forms not usable by real trainees until fixed.
+- **T070 (MEDIUM)** — no assessor rating-edit/note surface in Rated state (Step 3.5 unperformable).
+- **T071 (HIGH, domain call)** — credit `minimum_level_field` is all-or-nothing: the `overall_level=3`
+  activity credited **nothing** (not even volume); only the level-4 one counted. Scenario Step 3.6
+  expected volume to count regardless of level. The two progress counters can never diverge under the
+  current code. Decide: count volume always + gate only the level-reached counter (matches scenario),
+  or keep the gate and fix the scenario.
+- **T072 (HIGH)** — even with a verified credit row present, the trainee `/portfolio/progress` page
+  does **not** render the PAED-001 entry. Credit is persisted but invisible to the trainee.
+- Doc fixes: Step 1.11.b "13 fields" → 12; Step 3.6 reconcile with T071; "Format JSON" button refs
+  in 1.11.c/d.
+
+Deferred: 3.D procedure-log stage-min gating, 3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards
+(each of 3.D–3.F needs its full schema built first via the now-fixed builder).
 
 ## Handoff into Act 4
 
