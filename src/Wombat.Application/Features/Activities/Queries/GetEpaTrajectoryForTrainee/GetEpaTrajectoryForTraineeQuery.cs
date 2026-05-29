@@ -42,7 +42,10 @@ public sealed record TrajectoryPointDto(
 public sealed class GetEpaTrajectoryForTraineeQueryHandler
     : IRequestHandler<GetEpaTrajectoryForTraineeQuery, IReadOnlyList<EpaTrajectoryDto>>
 {
-    private static readonly IReadOnlyDictionary<string, string> SourceByActivityKey =
+    // Schema-driven activity types carry institution-specific keys (e.g. "mini_cex_paed"),
+    // so we match a known assessment family either exactly or as a "<base>_..." prefix rather
+    // than against a fixed set of literal keys.
+    private static readonly IReadOnlyDictionary<string, string> SourceByActivityFamily =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["mini_cex"] = "Direct observation",
@@ -50,6 +53,22 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             ["cbd"] = "Conversation",
             ["acat"] = "Conversation"
         };
+
+    private static bool TryResolveSource(string activityTypeKey, out string source)
+    {
+        foreach (var (family, label) in SourceByActivityFamily)
+        {
+            if (activityTypeKey == family ||
+                activityTypeKey.StartsWith(family + "_", StringComparison.Ordinal))
+            {
+                source = label;
+                return true;
+            }
+        }
+
+        source = string.Empty;
+        return false;
+    }
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -86,7 +105,7 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         var rawPoints = new List<(int EpaId, TrajectoryPointDto Point)>();
         foreach (var activity in activities)
         {
-            if (!SourceByActivityKey.TryGetValue(activity.ActivityType.Key, out var source))
+            if (!TryResolveSource(activity.ActivityType.Key, out var source))
             {
                 continue;
             }
@@ -152,7 +171,11 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                 return false;
             }
 
-            if (!TryGetInt32(document.RootElement, "overall", out rating) || rating < 1 || rating > 5)
+            // "overall" is the legacy seeded field name; schema-driven types built via the
+            // visual builder name the overall rating "overall_level".
+            if ((!TryGetInt32(document.RootElement, "overall", out rating) &&
+                 !TryGetInt32(document.RootElement, "overall_level", out rating)) ||
+                rating < 1 || rating > 5)
             {
                 return false;
             }

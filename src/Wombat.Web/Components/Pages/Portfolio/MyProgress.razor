@@ -6,30 +6,68 @@
 
 <PageTitle>My progress</PageTitle>
 
-<PageHeader Title="My progress" Subtitle="Rating trajectory for each EPA you have evidence against." />
+<PageHeader Title="My progress" Subtitle="Your curriculum credit and rating trajectory for each EPA you have evidence against." />
 
-<StatePanel IsLoading="@(_trajectories is null && _error is null)"
-            LoadError="@_error"
-            IsEmpty="@(_trajectories is { Count: 0 })"
-            EmptyTitle="No rated observations on file yet"
-            EmptyBody="Mini-CEX, DOPS, CbD, and ACAT assessments will appear here as your supervisors complete them.">
-  <div class="details-grid">
-    @foreach (var trajectory in _trajectories!)
+<StatePanel IsLoading="@(_progress is null && _error is null)"
+            LoadError="@_error">
+  <section>
+    <h2>Curriculum credit</h2>
+    @if (_progress is { Count: 0 })
     {
-      <section class="detail-card">
-        <h3>@trajectory.EpaCode — @trajectory.EpaTitle</h3>
-        <p class="muted">
-          @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
-          from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").
-        </p>
-        <TrajectoryChart Points="@BuildChartPoints(trajectory)"
-                         AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
-      </section>
+      <p class="muted">No curriculum items assigned yet. Once you are admitted to a curriculum, your EPAs will appear here.</p>
     }
-  </div>
+    else
+    {
+      <div class="details-grid">
+        @foreach (var item in _progress!)
+        {
+          <section class="detail-card">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-sm)">
+              <h3>@item.EpaCode</h3>
+              <span class="muted">@item.CompletedCount / @item.RequiredCount</span>
+            </div>
+            <p class="muted">@item.EpaTitle</p>
+            <div class="progress-bar">
+              <div class="progress-bar-fill @(item.IsComplete ? "is-complete" : "")"
+                   style="width:@(item.RequiredCount > 0 ? Math.Min(100, item.CompletedCount * 100 / item.RequiredCount) : 0)%"></div>
+            </div>
+            <p class="muted" style="font-size:0.85rem;margin-top:var(--space-xs)">
+              Minimum level @item.EffectiveMinimumLevelOrder@(item.TraineeStage.HasValue ? $" (year {item.TraineeStage})" : string.Empty) · reached @item.MinimumLevelReachedCount / @item.RequiredCount
+              @if (item.LastUpdated.HasValue)
+              {
+                <text> · last credited @item.LastUpdated.Value.ToString("d MMM yyyy")</text>
+              }
+            </p>
+          </section>
+        }
+      </div>
+    }
+  </section>
+
+  @if (_trajectories is { Count: > 0 })
+  {
+    <section style="margin-top:var(--space-xl)">
+      <h2>Rating trajectory</h2>
+      <div class="details-grid">
+        @foreach (var trajectory in _trajectories)
+        {
+          <section class="detail-card">
+            <h3>@trajectory.EpaCode — @trajectory.EpaTitle</h3>
+            <p class="muted">
+              @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
+              from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").
+            </p>
+            <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+                             AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
+          </section>
+        }
+      </div>
+    </section>
+  }
 </StatePanel>
 
 @code {
+  private IReadOnlyList<TraineeCurriculumProgressDto>? _progress;
   private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
   private string? _error;
 
@@ -40,6 +78,7 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
+      _progress = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId));
     }
     catch (Exception exception)

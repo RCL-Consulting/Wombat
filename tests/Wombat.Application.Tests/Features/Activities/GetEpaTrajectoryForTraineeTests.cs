@@ -155,6 +155,56 @@ public sealed class GetEpaTrajectoryForTraineeTests
         trajectory.Points.Select(p => p.Source).Should().Equal("Direct observation", "Conversation");
     }
 
+    [Fact]
+    public async Task MapsSchemaDrivenKeyVariant()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        // Schema-driven types built via the visual builder carry institution-specific
+        // key suffixes (e.g. "mini_cex_paed"); they must still map to the assessment family.
+        var miniCexPaed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+
+        AddRatedActivity(dbContext, miniCexPaed, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Points.Should().ContainSingle();
+        trajectory.Points[0].Source.Should().Be("Direct observation");
+    }
+
+    [Fact]
+    public async Task ReadsOverallLevelFieldWhenOverallAbsent()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCexPaed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+
+        // Visual-builder schema stores the overall rating as "overall_level", not "overall".
+        dbContext.Activities.Add(new Activity
+        {
+            ActivityTypeId = miniCexPaed.Id,
+            ActivityType = miniCexPaed,
+            SchemaVersion = miniCexPaed.Version,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "assessor-a",
+            CurrentState = "completed",
+            DataJson = "{\"epa_id\": \"7\", \"assessor_user_id\": \"assessor-a\", \"overall_level\": \"4\"}",
+            CreatedOn = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc),
+            UpdatedOn = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc)
+        });
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Points.Should().ContainSingle();
+        trajectory.Points[0].Rating.Should().Be(4);
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

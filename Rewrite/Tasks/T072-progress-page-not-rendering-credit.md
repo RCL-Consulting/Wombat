@@ -1,8 +1,40 @@
 # T072 — Trainee progress page does not render an existing CurriculumItemProgress row
 
-**Status:** open (found during Act 3 play-through, 2026-05-29)
+**Status:** ✅ SHIPPED 2026-05-29 (Opus). See "Resolution" below.
 **Severity:** High — credit is invisible to the trainee even when correctly persisted.
 **Surface:** `/portfolio/progress` page + its query/projection (Trainee progress feature).
+
+## Resolution (2026-05-29)
+
+The original premise was partly wrong: the credit **was** visible — on the trainee **dashboard**
+(`/`), whose "Curriculum progress" card correctly renders `1 / 30 · reached 0 / 30` by EPA title
+(live-verified). The real defect was a **surface mismatch**: that dashboard card links to
+`/portfolio/progress`, but that page was a *rating-trajectory* chart that never showed curriculum
+credit — and it was empty anyway because the trajectory query (a) allow-listed only literal keys
+`mini_cex`/`dops`/`cbd`/`acat` (the built type is `mini_cex_paed`), and (b) parsed the rating from a
+field named `overall` while the schema-driven Mini-CEX stores `overall_level`.
+
+Fixes (chosen: lead with curriculum credit + fix trajectory; pragmatic field fallbacks):
+1. **New query** `GetCurriculumProgressForTraineeQuery` (`Features/Curricula/GetCurriculumProgressForTrainee.cs`)
+   — lists **every** curriculum item in the trainee's active-profile curriculum (including 0-credit
+   items as "0 of N"), left-joined to `CurriculumItemProgress`, with effective stage-minimum level,
+   level-reached count, and last-credited date. Reuses `ComputeTraineeStage`.
+2. **`/portfolio/progress` rebuilt** (`MyProgress.razor`) — leads with a **Curriculum credit**
+   section (EPA code + title, count/required, progress bar, min-level + reached, last-credited
+   date), then keeps the **Rating trajectory** section (only rendered when points exist).
+3. **Trajectory parser fixed** (`GetEpaTrajectoryForTraineeQuery.cs`) — matches an assessment family
+   by exact key **or** `"<base>_…"` prefix (so `mini_cex_paed` resolves), and reads the overall
+   rating from `overall` **or** `overall_level` (schema-driven debt; a fully schema-aware field
+   resolution belongs with T069).
+
+**Live-verified** as Dlamini on snapshot `act3-credit-semantics-T071`: `/portfolio/progress` shows
+`PAED-001 — 1 / 30 — Minimum level 4 (year 3) · reached 0 / 30 · last credited …`, all 15 PAED items
+listed, and the trajectory charts the level-3 observation. Tests: +5 (Application 249/249); Domain 45,
+Architecture 19, Web 39 unchanged.
+
+---
+
+## Original report
 
 ## Symptom
 
