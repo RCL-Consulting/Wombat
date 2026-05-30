@@ -13,6 +13,14 @@ remain deferred** and are the next substantive work. Detail in `Rewrite/act3-fin
 > available in this env). All other suites green at merge: Domain 45, Application 249, Architecture 19,
 > Web 41, Infrastructure 7 = 361. Run the Integration suite (needs Docker) when next on a Docker host.
 > Local master is ~132 commits ahead of `origin/master` (repo not pushed) — push only when you intend to.
+>
+> **Container engine for Integration tests (dev-env note):** `Wombat.Integration.Tests` uses
+> Testcontainers, which needs a Docker-API-compatible engine running. None is installed on this Windows
+> machine, so that suite can't run locally yet. Everything else works on native PostgreSQL 16
+> (`127.0.0.1:5432`) — Docker is *not* needed for app dev, running the app, the other test suites, or
+> `tools/db-snapshot.ps1`. To unlock integration tests locally/CI, install Rancher Desktop or Podman
+> (lighter, no Docker Desktop licensing) or Docker Desktop (WSL2 backend). Defer-able if integration is
+> only run in CI later.
 
 **Landed (now on master):**
 - **T067** (`2b732cf`) — builder crashed the circuit on the first **Add field** click (loop-variable
