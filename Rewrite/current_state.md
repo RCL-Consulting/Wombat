@@ -4,12 +4,17 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
-**Act 3 partially played this session (2026-05-29, Opus). Phases 3.A–3.C + 3.H ran; the credit
-engine is proven end-to-end (DB-verified); two HIGH blockers (T067, T068) found + fixed + committed.
-3.D–3.G + 3.I deferred.** Work is on branch `fix/T067-activity-builder-addfield-crash` — **NOT merged
-to master.** Detail in `Rewrite/act3-findings-scratch.md`.
+**✅ Branch `fix/T067-activity-builder-addfield-crash` MERGED to master 2026-05-30 (ff to `0a88cc8`).**
+It carried five clean tested fixes — **T067, T068, T071, T072, T069** — plus the Act 3 play-through
+docs. Act 3 Phases 3.A–3.C + 3.H ran (credit engine proven end-to-end, DB-verified); **3.D–3.G + 3.I
+remain deferred** and are the next substantive work. Detail in `Rewrite/act3-findings-scratch.md`.
 
-**Landed (committed on the branch):**
+> **Merge caveat:** full-solution `dotnet test` could not include the Integration project (Docker not
+> available in this env). All other suites green at merge: Domain 45, Application 249, Architecture 19,
+> Web 41, Infrastructure 7 = 361. Run the Integration suite (needs Docker) when next on a Docker host.
+> Local master is ~132 commits ahead of `origin/master` (repo not pushed) — push only when you intend to.
+
+**Landed (now on master):**
 - **T067** (`2b732cf`) — builder crashed the circuit on the first **Add field** click (loop-variable
   capture in `ActivityTypeEdit.razor`). Blocked building any multi-field schema.
 - **T068** (`6281eae`) — no trainee could create any activity (`GetActivityTypeEditorQuery` read
