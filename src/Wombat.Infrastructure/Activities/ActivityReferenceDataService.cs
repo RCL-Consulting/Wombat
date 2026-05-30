@@ -69,6 +69,25 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
                 }
             }
 
+            // An InstitutionalAdmin isn't scoped to a speciality/sub-speciality but should see every
+            // EPA in their institution (e.g. when designing a form in the builder).
+            if (principal.IsInstitutionalAdmin())
+            {
+                var institutionId = principal.GetInstitutionId();
+                if (institutionId.HasValue)
+                {
+                    var subsUnderInstitution = await _dbContext.Set<SubSpeciality>()
+                        .AsNoTracking()
+                        .Where(sub => sub.Speciality.InstitutionId == institutionId.Value)
+                        .Select(sub => sub.Id)
+                        .ToListAsync(cancellationToken);
+                    foreach (var id in subsUnderInstitution)
+                    {
+                        subSpecialityIds.Add(id);
+                    }
+                }
+            }
+
             if (subSpecialityIds.Count == 0)
             {
                 return [];
