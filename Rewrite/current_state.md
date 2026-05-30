@@ -4,6 +4,30 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
+**✅ Clean post-fix replay of Act 3.A–3.C done 2026-05-30 (Opus) — all five fixes hold from a fresh
+Act-2 state, and the replay caught + fixed one new bug.** Restored `after-act-2-replay`, rebuilt the
+full 12-field Mini-CEX schema via the builder (3 sections; 6 Scale fields each bound to "Paed General
+Entrustment Scale" via the new T069 picker), set workflow + credit JSON, published v2. Drove Dlamini →
+two Mini-CEX (overall_level 3 and 4) → Naidoo accept+complete each. Results, all live + DB verified:
+- **T067** builder Add-field used ~12× with **no crash**. **T069 builder** scale-picker bound 6 fields;
+  preview rendered level dropdowns. **T069 runtime** trainee form showed EPA dropdown (15 scoped PAED
+  EPAs), Assessor dropdown (5 KGK), Scale dropdowns (5 levels). **T068** trainee created activities.
+  Actor-DSL: submit=subject, accept/complete=`field:assessor_user_id` (Naidoo saw Accept).
+- **T071** credit (DB): PAED-001 `CountsSoFar=2, MinimumLevelReachedCount=1` (both volume; only the
+  level-4 met stage-min 4), keys `["1:complete","2:complete"]`. **T072** `/portfolio/progress` shows
+  `PAED-001 — 2 / 30 · reached 1 / 30 · last credited 30 May 2026`, all 15 items, trajectory charts
+  both ratings (3 and 4).
+- **NEW BUG found + fixed (`cd0ca07`):** `ActivityForm` reloaded EPA/assessor/scale options from the DB
+  in `OnParametersSetAsync` on **every** field edit; rapid edits overlapped queries on the scoped
+  DbContext → "A second operation was started on this context instance." Fixed to load options only
+  when `SchemaJson` changes (claim before await); +1 regression test. Web 42/42.
+- Minor wart (not fixed): builder **EPA preview is empty for an InstitutionalAdmin** (Mbatha) because
+  `GetEpaOptionsAsync` scopes by speciality/sub-speciality claims, which she lacks; trainees see EPAs
+  fine. Consider letting InstitutionalAdmins see their institution's EPAs in the builder preview.
+- Snapshot `act3-replay-verified` captures this clean post-fix credited state.
+
+---
+
 **✅ Branch `fix/T067-activity-builder-addfield-crash` MERGED to master 2026-05-30 (ff to `0a88cc8`).**
 It carried five clean tested fixes — **T067, T068, T071, T072, T069** — plus the Act 3 play-through
 docs. Act 3 Phases 3.A–3.C + 3.H ran (credit engine proven end-to-end, DB-verified); **3.D–3.G + 3.I
