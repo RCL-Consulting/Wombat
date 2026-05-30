@@ -1,5 +1,6 @@
 @page "/admin/assessors"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Domain.Identity
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -23,6 +24,7 @@
         <th>Institution</th>
         <th>Speciality</th>
         <th>Sub-speciality</th>
+        <th>Training status</th>
         <th>Training completed</th>
         <th></th>
       </tr>
@@ -34,6 +36,7 @@
         <td>@assessor.InstitutionName</td>
         <td>@(assessor.SpecialityName ?? "All")</td>
         <td>@(assessor.SubSpecialityName ?? "All")</td>
+        <td>@DescribeStatus(assessor.TrainingStatus)</td>
         <td>@(assessor.TrainingCompletedOn?.ToString("yyyy-MM-dd") ?? "Not recorded")</td>
         <td><a class="btn btn-outline btn-sm" href="@($"/admin/assessors/edit?id={assessor.Id}")">Edit</a></td>
       </tr>
@@ -62,4 +65,12 @@
       _loading = false;
     }
   }
+
+  private static string DescribeStatus(AssessorTrainingStatus status) => status switch
+  {
+    AssessorTrainingStatus.InTraining => "In training",
+    AssessorTrainingStatus.Provisional => "Provisional",
+    AssessorTrainingStatus.Trained => "Trained",
+    _ => "Not started"
+  };
 }

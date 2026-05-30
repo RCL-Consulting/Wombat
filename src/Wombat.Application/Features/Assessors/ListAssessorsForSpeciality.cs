@@ -86,6 +86,7 @@ public sealed class ListAssessorsForSpecialityQueryHandler : IRequestHandler<Lis
                     profile.Speciality?.Name,
                     profile.SubSpecialityId,
                     profile.SubSpeciality?.Name,
+                    profile.TrainingStatus,
                     profile.TrainingCompletedOn);
             })
             .OrderBy(profile => profile.LastName)

@@ -11,6 +11,7 @@ public sealed class AssessorProfileConfiguration : IEntityTypeConfiguration<Asse
         builder.ToTable("AssessorProfiles");
         builder.Property(profile => profile.UserId).HasMaxLength(450);
         builder.Property(profile => profile.Qualifications).HasMaxLength(4000);
+        builder.Property(profile => profile.TrainingStatus).HasConversion<int>();
         builder.HasIndex(profile => profile.UserId).IsUnique();
 
         builder.HasOne(profile => profile.Institution)

@@ -37,13 +37,51 @@ public sealed class AssessorTrainingStatusTests
                 1,
                 SpecialityId: null,
                 SubSpecialityId: null,
+                TrainingStatus: AssessorTrainingStatus.Trained,
                 TrainingCompletedOn: completedOn,
                 Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
+        dto.TrainingStatus.Should().Be(AssessorTrainingStatus.Trained);
         dto.TrainingCompletedOn.Should().Be(completedOn);
         var stored = await db.Set<AssessorProfile>().SingleAsync(p => p.UserId == "assessor-1");
+        stored.TrainingStatus.Should().Be(AssessorTrainingStatus.Trained);
         stored.TrainingCompletedOn.Should().Be(completedOn);
+    }
+
+    [Fact]
+    public async Task CreateOrUpdate_InTraining_ClearsCompletedDate()
+    {
+        await using var db = CreateDb();
+        Seed(db);
+
+        var users = new StubUserAdministrationService(new UserIdentityDetails(
+            UserId: "assessor-1",
+            Email: "a@example.org",
+            FirstName: "Al",
+            LastName: "Assessor",
+            InstitutionId: 1,
+            SpecialityIds: Array.Empty<int>(),
+            SubSpecialityIds: Array.Empty<int>(),
+            Roles: new[] { WombatRoles.Assessor }));
+
+        var handler = new CreateOrUpdateAssessorProfileCommandHandler(db, users);
+
+        // A date supplied alongside a non-completed status is dropped by the handler.
+        var dto = await handler.Handle(
+            new CreateOrUpdateAssessorProfileCommand(
+                "assessor-1",
+                "MBChB",
+                1,
+                SpecialityId: null,
+                SubSpecialityId: null,
+                TrainingStatus: AssessorTrainingStatus.InTraining,
+                TrainingCompletedOn: new DateOnly(2026, 2, 14),
+                Principal: TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        dto.TrainingStatus.Should().Be(AssessorTrainingStatus.InTraining);
+        dto.TrainingCompletedOn.Should().BeNull();
     }
 
     [Fact]

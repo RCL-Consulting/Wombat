@@ -1,3 +1,5 @@
+using Wombat.Domain.Identity;
+
 namespace Wombat.Application.Features.Assessors;
 
 public sealed record AssessorProfileDto(
@@ -13,4 +15,5 @@ public sealed record AssessorProfileDto(
     string? SpecialityName,
     int? SubSpecialityId,
     string? SubSpecialityName,
+    AssessorTrainingStatus TrainingStatus,
     DateOnly? TrainingCompletedOn);

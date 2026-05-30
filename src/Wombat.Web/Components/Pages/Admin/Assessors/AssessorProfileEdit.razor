@@ -1,5 +1,6 @@
 @page "/admin/assessors/edit"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Domain.Identity
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -74,10 +75,23 @@
             <ValidationMessage For="() => _model.Qualifications" />
           </FormField>
 
-          <FormField Label="Assessor training completed" InputId="assessor-training-completed">
-            <InputDate id="assessor-training-completed" class="form-control" @bind-Value="_model.TrainingCompletedOn" />
-            <small class="muted">Date the assessor completed assessor training. Leave blank if unrecorded.</small>
+          <FormField Label="Assessor training status" InputId="assessor-training-status" Required="true">
+            <InputSelect id="assessor-training-status" class="form-select" @bind-Value="_model.TrainingStatus">
+              <option value="@AssessorTrainingStatus.NotStarted">Not started</option>
+              <option value="@AssessorTrainingStatus.InTraining">In training</option>
+              <option value="@AssessorTrainingStatus.Provisional">Provisional (awaiting sign-off)</option>
+              <option value="@AssessorTrainingStatus.Trained">Trained</option>
+            </InputSelect>
+            <small class="muted">Faculty-development lifecycle. In-training assessors may assess under supervision.</small>
           </FormField>
+
+          @if (_model.TrainingStatus is AssessorTrainingStatus.Provisional or AssessorTrainingStatus.Trained)
+          {
+            <FormField Label="Assessor training completed" InputId="assessor-training-completed">
+              <InputDate id="assessor-training-completed" class="form-control" @bind-Value="_model.TrainingCompletedOn" />
+              <small class="muted">Date the assessor completed assessor training. Leave blank if unrecorded.</small>
+            </FormField>
+          }
         </div>
 
         <FormActions>
@@ -137,6 +151,7 @@
           SpecialityId = profile.SpecialityId,
           SubSpecialityId = profile.SubSpecialityId,
           Qualifications = profile.Qualifications,
+          TrainingStatus = profile.TrainingStatus,
           TrainingCompletedOn = profile.TrainingCompletedOn
         };
       }
@@ -178,6 +193,7 @@
         _model.InstitutionId,
         _model.SpecialityId,
         _model.SubSpecialityId,
+        _model.TrainingStatus,
         _model.TrainingCompletedOn,
         authState.User));
 
@@ -210,6 +226,7 @@
     [MaxLength(4000)]
     public string Qualifications { get; set; } = string.Empty;
 
+    public AssessorTrainingStatus TrainingStatus { get; set; } = AssessorTrainingStatus.NotStarted;
     public DateOnly? TrainingCompletedOn { get; set; }
   }
 }

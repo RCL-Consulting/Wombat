@@ -15,6 +15,7 @@ public sealed record CreateOrUpdateAssessorProfileCommand(
     int InstitutionId,
     int? SpecialityId,
     int? SubSpecialityId,
+    AssessorTrainingStatus TrainingStatus,
     DateOnly? TrainingCompletedOn,
     ClaimsPrincipal Principal) : IRequest<AssessorProfileDto>;
 
@@ -25,9 +26,13 @@ public sealed class CreateOrUpdateAssessorProfileCommandValidator : AbstractVali
         RuleFor(command => command.UserId).NotEmpty();
         RuleFor(command => command.Qualifications).NotEmpty().MaximumLength(4000);
         RuleFor(command => command.InstitutionId).GreaterThan(0);
+        RuleFor(command => command.TrainingStatus).IsInEnum();
         RuleFor(command => command.SubSpecialityId)
             .Must((command, subSpecialityId) => !subSpecialityId.HasValue || command.SpecialityId.HasValue)
             .WithMessage("A sub-speciality requires a speciality.");
+        // Note: a completion date is only meaningful for Provisional/Trained; rather than
+        // rejecting a stale value (the edit form hides the field for other statuses), the
+        // handler normalizes it away. See CreateOrUpdateAssessorProfileCommandHandler.
     }
 }
 
@@ -111,7 +116,11 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
         profile.InstitutionId = request.InstitutionId;
         profile.SpecialityId = request.SpecialityId;
         profile.SubSpecialityId = request.SubSpecialityId;
-        profile.TrainingCompletedOn = request.TrainingCompletedOn;
+        profile.TrainingStatus = request.TrainingStatus;
+        profile.TrainingCompletedOn =
+            request.TrainingStatus is AssessorTrainingStatus.Provisional or AssessorTrainingStatus.Trained
+                ? request.TrainingCompletedOn
+                : null;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -135,6 +144,7 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
             speciality?.Name,
             subSpeciality?.Id,
             subSpeciality?.Name,
+            profile.TrainingStatus,
             profile.TrainingCompletedOn);
     }
 }

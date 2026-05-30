@@ -51,6 +51,7 @@ public sealed class GetAssessorProfileByIdQueryHandler : IRequestHandler<GetAsse
             profile.Speciality?.Name,
             profile.SubSpecialityId,
             profile.SubSpeciality?.Name,
+            profile.TrainingStatus,
             profile.TrainingCompletedOn);
     }
 }
