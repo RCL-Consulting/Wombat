@@ -1,5 +1,18 @@
 # T065 — Assessor training status: clarify enum vs date
 
+> **✅ SHIPPED 2026-05-30 (Opus) — Option B chosen** (commit `2562c2a`). Added the
+> `AssessorTrainingStatus` enum (NotStarted/InTraining/Provisional/Trained) to `AssessorProfile`
+> alongside the existing `TrainingCompletedOn` date. Migration
+> `20260530104328_AssessorTrainingStatusEnum` (dotnet-ef scaffolded) with a backfill (recorded
+> completion date → Trained, else NotStarted), verified applied to the dev DB. DTO + command + 3
+> handlers + edit-page picker (date gated to Provisional/Trained) + list column; browser round-trip
+> verified. Tests: existing date test updated to pass Trained, +1 handler test (date cleared for
+> non-completed statuses). Closes Act-3 finding **F-3E-1** (in-training assessor now representable).
+> **Note:** surfaces status (flagging); hard-*blocking* an in-training assessor from completing is a
+> separate product decision, deliberately left out.
+
+---
+
 The `Rewrite/scenario-paediatrics.md` Act 2 cast called for a `TrainingStatus` enum on `AssessorProfile` with three values: `Trained` / `In training` / `Provisional`. The 2026-05-27 Act 2 play-through (Finding **A2-5**) discovered T035 actually shipped a single `TrainingCompletedOn` date column — "Date the assessor completed assessor training. Leave blank if unrecorded." The shapes are not equivalent: a date can express "not recorded" but cannot distinguish "actively in training" from "provisional (profiled but no training yet)".
 
 Decision required: **revise the scenario** to refer to the date only, OR **extend T035** with the enum and keep the date as a sub-field.

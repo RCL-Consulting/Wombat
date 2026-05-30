@@ -2,28 +2,48 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ Session finalized — 2026-05-30 (Sonnet, continued)
+## ⭐ Session finalized — 2026-05-30 (Opus) — Act 3 played in full + 2 findings fixed
 
-**Act 3 fully played — all phases 3.A–3.I complete.** Rebuilt from `after-act-2-replay` (prior
-`act3-*` snapshots were corrupted by another project). Schemas built via builder for mini_cex_paed v2,
-procedure_log_paed v2, dops_paed v2, msf_paed v2. No code changes — pure play-through + findings.
+**Act 3 fully played (3.A–3.I, Sonnet), then its two real code findings fixed (Opus). On `master`,
+nothing pushed.** Act 3 was rebuilt from `after-act-2-replay` (the older `act3-*` snapshots were
+corrupted by another project sharing this Postgres instance). Schemas built via the visual builder:
+mini_cex_paed v2, procedure_log_paed v2, dops_paed v2, msf_paed v2. Per-phase Actual/Gap lines are in
+`scenario-paediatrics.md`; build details in `act3-rebuild-scratch.md`.
 
-**DB snapshots:** `act3R-minicex-published`, `act3R-A-C`, `act3R-D`, `act3R-E`, `act3R-F`, `act3R-final`.
-Restore with `tools\db-snapshot.ps1 restore act3R-final`.
+**Findings fixed this session:**
+- **F-3G-1 FIXED (`361fc6b`, task `T074`):** Coordinator "Stalled requests" panel was dead — the query
+  filtered `CurrentState == "requested"` (a state no workflow defines; the model is draft→submitted→
+  rated→completed) and compared `CreatedOn` not `UpdatedOn`. Now `CurrentState == "submitted" &&
+  UpdatedOn < stallCutoff`; `StalledRequestItem.RequestedOn`→`SubmittedOn`; +1 regression test. (Also
+  fixed a pre-existing committed compile error in CreditApplierTests: `PublishedVersion`→`Version`.)
+- **T065 SHIPPED (`2562c2a`):** assessor `TrainingStatus` enum (NotStarted/InTraining/Provisional/
+  Trained) on `AssessorProfile`, alongside the existing `TrainingCompletedOn` date — closes **F-3E-1**
+  (in-training now representable). Migration `20260530104328_AssessorTrainingStatusEnum` (dotnet-ef
+  scaffolded) + backfill: recorded date→Trained(3), else NotStarted(0); verified applied. Edit-page
+  status picker (date gated to Provisional/Trained) + list column; full browser round-trip verified.
+  NOTE: models + surfaces status (flagging); **hard-blocking** an in-training assessor from completing
+  is a separate product decision, deliberately NOT done.
 
-**New findings (open):**
-- **F-3E-1 (LOW):** In-training assessor (NULL `TrainingCompletedOn`) is NOT blocked at runtime.
-  Patel accepted + completed Mahlangu's DOPS without any guard. T065 (assessor training enum) still open.
-- **F-3E-2 (OBSERVE):** PAED-010 has no stage-1 minimum in its JSON → credit engine falls back to flat
-  min 4; level-2 DOPS counts volume but not reached. Correct; document in task T066 follow-up.
-- **F-3G-1 (MEDIUM):** Coordinator "Stalled requests" panel does not surface submissions > 5 days old
-  (activity backdated 15 days, job triggered, still shows nothing). Bug or threshold mismatch. New task
-  needed (T074 recommended).
-- **F-3F-NOTE:** MSF credit rule used `curriculum_item_id: 13` = PAED-012, not PAED-013. Credit landed on
-  PAED-012. Scenario text should note MSF credits PAED-012 (Lead a multi-disciplinary case discussion).
+**Tests:** Domain 45, Application 252, Architecture 19, Web 42 — all green. Integration not run (Docker).
+
+**DB snapshots:** latest is **`act3R-final-t065`** (Act 3 complete + T065 migration applied & backfilled;
+Patel=InTraining demo, Botha/Naidoo/Zulu=Trained, Khumalo=NotStarted). Restore with
+`tools\db-snapshot.ps1 restore act3R-final-t065`. Older `act3R-*` predate the T065 migration (restoring
+one re-applies it on app start). Earlier act3R milestones: `act3R-minicex-published`, `-A-C`, `-D`,
+`-E`, `-F`, `-final`.
+
+**Findings still open (deferred, documented):**
+- **F-3E-2 (not a code bug):** PAED-010 has no stage-1 key in `MinimumLevelByStageJson` → credit engine
+  correctly falls back to the flat min (4); a year-1 level-2 DOPS counts volume but not reached. This is
+  curriculum **seed-config**, not a defect. Fold into T066 if a stage-1 minimum for PAED-010 is wanted.
+- **F-3F-NOTE (doc):** the MSF credit rule built used `curriculum_item_id: 13` = PAED-012 (not PAED-013).
+  Just a play-through choice; revisit when seeding the real MSF credit rule.
+
+**⚠️ Env note:** during this session an external process intermittently corrupted files under `Rewrite/`
+and stale `act3-*` DB snapshots (same other-project tooling). If a doc looks mangled, check `git`.
 
 **▶ Recommended next: Act 4** (annual review + STARs + appeal). Opus.
-Start from `tools\db-snapshot.ps1 restore act3R-final`. No code changes needed before Act 4 begins.
+Start from `tools\db-snapshot.ps1 restore act3R-final-t065`.
 
 ## ⭐ Session finalized — 2026-05-30 (Opus)
 
