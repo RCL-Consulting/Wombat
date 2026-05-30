@@ -1031,22 +1031,23 @@ driven trainee→assessor→complete twice. Activity at `overall_level=4` (meets
 `CurriculumItemProgress` row (counts=1, minReached=1, key `2:complete`); the `field:assessor_user_id`
 actor verified both ways (Patel no buttons, Naidoo Accept); audit log clean (no JsonException).
 
-Open findings → tasks:
-- **T069 (HIGH)** — `ActivityForm` has no EPA/User/Scale pickers; raw number/text inputs force a
-  trainee to hand-type an EPA id + assessor GUID. Forms not usable by real trainees until fixed.
-- **T070 (MEDIUM)** — no assessor rating-edit/note surface in Rated state (Step 3.5 unperformable).
-- **T071 (HIGH, domain call)** — credit `minimum_level_field` is all-or-nothing: the `overall_level=3`
-  activity credited **nothing** (not even volume); only the level-4 one counted. Scenario Step 3.6
-  expected volume to count regardless of level. The two progress counters can never diverge under the
-  current code. Decide: count volume always + gate only the level-reached counter (matches scenario),
-  or keep the gate and fix the scenario.
-- **T072 (HIGH)** — even with a verified credit row present, the trainee `/portfolio/progress` page
-  does **not** render the PAED-001 entry. Credit is persisted but invisible to the trainee.
+Findings → tasks (status as of 2026-05-30):
+- **T069 (HIGH) ✅ SHIPPED** — runtime `ActivityForm` now renders EPA/User/Scale dropdowns; builder
+  gained a Scale-binding picker. (Verified across the 3.A–3.D play-throughs.)
+- **T070 (MEDIUM, OPEN)** — no assessor rating-edit/note surface in Rated state (Step 3.5 unperformable).
+- **T071 (HIGH) ✅ SHIPPED** — volume (`CountsSoFar`) always counts on a match; `MinimumLevelReachedCount`
+  only when the level is met. (Option A; matches Step 3.6.)
+- **T072 (HIGH) ✅ SHIPPED** — `/portfolio/progress` leads with a curriculum-credit section (EPA code +
+  count/required + stage-min + reached + last-credited) and keeps the rating trajectory below.
+- **T073 (HIGH) ✅ SHIPPED** — credit engine gates on the **stage-aware** minimum
+  (`GetMinimumLevelForStage`), not the flat target; matches the stage-aware figure the UI displays.
+  Found heading into 3.D and verified by it (PAED-011: 5/30, reached 3/30 for a year-2 trainee).
 - Doc fixes: Step 1.11.b "13 fields" → 12; Step 3.6 reconcile with T071; "Format JSON" button refs
   in 1.11.c/d.
 
-Deferred: 3.D procedure-log stage-min gating, 3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards
-(each of 3.D–3.F needs its full schema built first via the now-fixed builder).
+**Play-through progress (post-fix, 2026-05-30):** 3.A–3.C replayed clean twice from `after-act-2-replay`;
+3.D played end-to-end. Deferred: **3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards** (3.E/3.F each
+need that type's schema built first via the builder). Resume from snapshot `act3-D-verified`.
 
 ## Handoff into Act 4
 

@@ -2,6 +2,41 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ Session finalized — 2026-05-30 (Opus)
+
+**Shipped this session (all merged to `master`, nothing pushed):**
+- **T072** (`b045fee`) — `/portfolio/progress` now leads with curriculum credit; trajectory parser
+  handles schema-driven `*_paed` keys + `overall_level`.
+- **T069** (`0a88cc8`) — runtime `ActivityForm` EPA/User/Scale pickers + builder Scale-binding picker.
+- Merged the `fix/T067-…` branch to master (`edf9bba`); container-engine note (`7ef04bc`).
+- **ActivityForm reload fix** (`cd0ca07`) — load reference options once per schema (not per edit);
+  fixes a DbContext-concurrency crash on rapid form edits. Found by the clean replay.
+- **InstitutionalAdmin EPA-preview fix** (`63a5605`) — builder EPA picker now populated for InstAdmins.
+- **T073** (`4b5cad8`) — credit engine gates on the **stage-aware** minimum, not the flat target.
+  Found heading into 3.D; `TraineeProfile.GetStage` is the new single source of truth.
+
+**Play-through this session (from `after-act-2-replay`):** Act 3 **3.A–3.D** all driven clean post-fix
+and DB+UI verified. Mini-CEX credit `PAED-001 2/30 reached 1/30`; procedure-log credit
+`PAED-011 5/30 reached 3/30` (stage-2 gating). Builder validated end-to-end three times.
+
+**Tests:** Domain 45, Application 250, Architecture 19, Web 42, Infrastructure 8 — all green.
+**Integration NOT run** (Testcontainers needs a Docker-API engine; none on this Windows box — install
+Rancher Desktop / Podman / Docker Desktop to run it, or run in CI).
+
+**DB snapshots added:** `act3-replay-verified`, `act3-D-verified` (latest; PAED-001 + PAED-011 credited,
+Mini-CEX v2 + procedure_log_paed v2 published). `tools\db-snapshot.ps1 restore act3-D-verified`.
+
+**No new secrets created** (reused `Mbatha@KGK2026!` / `Act2Pass!123`, already in pwd_DO_NOT_COMMIT.txt).
+
+### ▶ Recommended next pickup — **Act 3 Phase 3.E (DOPS), then 3.F / 3.G / 3.I. Opus.**
+Each of 3.E/3.F first needs that type's schema built via the builder (~1 builder session each; ~85k
+tokens of Playwright per build — budget one phase per context window). Start from
+`tools\db-snapshot.ps1 restore act3-D-verified`. Smaller alt tasks if preferred: **T070** (assessor
+rating-edit/note in Rated state — Sonnet) or the trajectory schema-awareness cleanup (Sonnet).
+Open follow-up still: **T070** (MEDIUM). Builder note: set a field's **label before its key** and verify
+`ActivityTypes.StagingSchemaJson` before publishing (a `@bind` commit can drop a key when a Type
+`<select>` change immediately follows the key fill).
+
 ## Active task
 
 **✅ Act 3 Phase 3.D played + a HIGH credit bug (T073) fixed 2026-05-30 (Opus).** Heading into 3.D
