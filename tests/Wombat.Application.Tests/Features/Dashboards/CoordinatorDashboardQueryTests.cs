@@ -45,6 +45,52 @@ public sealed class CoordinatorDashboardQueryTests
     }
 
     [Fact]
+    public async Task RecentlySubmittedOrNonSubmitted_AreNotStalled()
+    {
+        await using var db = CreateDb();
+        var activityType = new ActivityType
+        {
+            Id = 1, Key = "mini_cex", Name = "Mini-CEX", Scope = ActivityScope.Global
+        };
+        db.ActivityTypes.Add(activityType);
+
+        // Submitted but recent (UpdatedOn just now) — not stalled.
+        db.Activities.Add(new Activity
+        {
+            Id = 1, ActivityTypeId = 1, SubjectUserId = "trainee-1",
+            CreatedByUserId = "trainee-1", CurrentState = "submitted",
+            DataJson = "{}", SchemaVersion = 1,
+            CreatedOn = DateTime.UtcNow.AddDays(-20), UpdatedOn = DateTime.UtcNow
+        });
+        // Old but still a draft (never submitted) — not stalled.
+        db.Activities.Add(new Activity
+        {
+            Id = 2, ActivityTypeId = 1, SubjectUserId = "trainee-2",
+            CreatedByUserId = "trainee-2", CurrentState = "draft",
+            DataJson = "{}", SchemaVersion = 1,
+            CreatedOn = DateTime.UtcNow.AddDays(-20), UpdatedOn = DateTime.UtcNow.AddDays(-20)
+        });
+        // Old and completed (terminal) — not stalled.
+        db.Activities.Add(new Activity
+        {
+            Id = 3, ActivityTypeId = 1, SubjectUserId = "trainee-3",
+            CreatedByUserId = "trainee-3", CurrentState = "completed",
+            DataJson = "{}", SchemaVersion = 1,
+            CreatedOn = DateTime.UtcNow.AddDays(-20), UpdatedOn = DateTime.UtcNow.AddDays(-20)
+        });
+        db.SaveChanges();
+
+        var handler = new GetCoordinatorDashboardSummaryQueryHandler(
+            db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }));
+        var principal = CreatePrincipal("coord-1", institutionId: 1);
+
+        var result = await handler.Handle(
+            new GetCoordinatorDashboardSummaryQuery(principal), CancellationToken.None);
+
+        result.StalledRequests.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task WithExpiringInvitation_ReturnsIt()
     {
         await using var db = CreateDb();
@@ -80,9 +126,9 @@ public sealed class CoordinatorDashboardQueryTests
         db.Activities.Add(new Activity
         {
             Id = 1, ActivityTypeId = 1, SubjectUserId = "trainee-1",
-            CreatedByUserId = "trainee-1", CurrentState = "requested",
+            CreatedByUserId = "trainee-1", CurrentState = "submitted",
             DataJson = "{}", SchemaVersion = 1,
-            CreatedOn = DateTime.UtcNow.AddDays(-10), UpdatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow.AddDays(-12), UpdatedOn = DateTime.UtcNow.AddDays(-10)
         });
 
         db.SaveChanges();

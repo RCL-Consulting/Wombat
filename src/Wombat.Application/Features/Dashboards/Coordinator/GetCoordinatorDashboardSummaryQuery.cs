@@ -37,13 +37,13 @@ public sealed class GetCoordinatorDashboardSummaryQueryHandler
         var stalledQuery = _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(a => a.ActivityType)
-            .Where(a => a.CurrentState == "requested" && a.CreatedOn < stallCutoff);
+            .Where(a => a.CurrentState == "submitted" && a.UpdatedOn < stallCutoff);
 
         var stalled = await stalledQuery
-            .OrderBy(a => a.CreatedOn)
+            .OrderBy(a => a.UpdatedOn)
             .Take(10)
             .Select(a => new StalledRequestItem(
-                a.Id, a.ActivityType.Name, a.SubjectUserId, a.CreatedOn))
+                a.Id, a.ActivityType.Name, a.SubjectUserId, a.UpdatedOn))
             .ToListAsync(cancellationToken);
 
         var expiringQuery = _dbContext.Set<Invitation>()

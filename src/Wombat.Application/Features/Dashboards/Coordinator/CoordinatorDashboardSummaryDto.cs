@@ -8,7 +8,7 @@ public sealed record StalledRequestItem(
     int ActivityId,
     string ActivityTypeName,
     string SubjectName,
-    DateTime RequestedOn);
+    DateTime SubmittedOn);
 
 public sealed record ExpiringInvitationItem(
     int InvitationId,
