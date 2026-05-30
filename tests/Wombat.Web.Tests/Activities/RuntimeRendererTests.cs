@@ -103,6 +103,50 @@ public sealed class RuntimeRendererTests : TestContext
         rendered.Markup.Should().Contain("type=\"number\"");
     }
 
+    [Fact]
+    public void ActivityForm_LoadsOptionsOncePerSchema_NotOnDataChange()
+    {
+        var counting = new CountingReferenceDataService();
+        Services.AddSingleton<IActivityReferenceDataService>(counting);
+
+        const string schema = """
+            { "version": 1, "sections": [ { "key": "s", "title": "S", "fields": [ { "key": "epa_id", "type": "epa", "label": "EPA" } ] } ] }
+            """;
+        const string schemaV2 = """
+            { "version": 1, "sections": [ { "key": "s", "title": "S", "fields": [ { "key": "epa_id", "type": "epa", "label": "EPA (v2)" } ] } ] }
+            """;
+
+        var cut = RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, schema)
+            .Add(component => component.DataJson, "{}"));
+
+        counting.EpaCalls.Should().Be(1);
+
+        // A data-only change must NOT re-query reference options (this was the DbContext-concurrency bug).
+        cut.SetParametersAndRender(parameters => parameters
+            .Add(component => component.SchemaJson, schema)
+            .Add(component => component.DataJson, "{\"epa_id\":\"1\"}"));
+        counting.EpaCalls.Should().Be(1);
+
+        // A schema change DOES reload (the builder live-preview relies on this).
+        cut.SetParametersAndRender(parameters => parameters
+            .Add(component => component.SchemaJson, schemaV2)
+            .Add(component => component.DataJson, "{\"epa_id\":\"1\"}"));
+        counting.EpaCalls.Should().Be(2);
+    }
+
+    private sealed class CountingReferenceDataService : StubActivityReferenceDataService
+    {
+        public int EpaCalls { get; private set; }
+
+        public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEpaOptionsAsync(
+            System.Security.Claims.ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+        {
+            EpaCalls++;
+            return Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
+        }
+    }
+
     private sealed class PopulatedReferenceDataService : StubActivityReferenceDataService
     {
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEpaOptionsAsync(

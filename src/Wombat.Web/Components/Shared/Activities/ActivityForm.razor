@@ -123,6 +123,7 @@ else if (_schema is not null)
   private FormSchema? _schema;
   private JsonObject _data = [];
   private string? _loadError;
+  private string? _loadedSchemaJson;
 
   private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
 
@@ -130,10 +131,20 @@ else if (_schema is not null)
   {
     try
     {
-      _schema = FormSchemaParser.Parse(SchemaJson);
       _data = JsonNode.Parse(string.IsNullOrWhiteSpace(DataJson) ? "{}" : DataJson)?.AsObject() ?? [];
+
+      // Schema parsing and reference-option loading depend only on the schema, not the data.
+      // Reloading them on every value change would re-query the DB on each edit and can trigger
+      // concurrent DbContext use when edits arrive in quick succession. Claim the schema before the
+      // await so a re-entrant OnParametersSetAsync (fired by a rapid edit) skips the reload.
+      if (!string.Equals(_loadedSchemaJson, SchemaJson, StringComparison.Ordinal))
+      {
+        _schema = FormSchemaParser.Parse(SchemaJson);
+        _loadedSchemaJson = SchemaJson;
+        await LoadOptionsAsync();
+      }
+
       _loadError = null;
-      await LoadOptionsAsync();
     }
     catch (Exception exception)
     {
@@ -141,6 +152,7 @@ else if (_schema is not null)
       _schema = null;
       _data = [];
       _catalogueOptionsByField.Clear();
+      _loadedSchemaJson = null;
     }
   }
 
