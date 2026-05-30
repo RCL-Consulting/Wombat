@@ -4,6 +4,19 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
+**✅ Wart fixed + second clean replay done 2026-05-30 (Opus).** The builder EPA-preview wart (empty for
+InstitutionalAdmins) is fixed in `63a5605`: `GetEpaOptionsAsync` now also returns every EPA whose
+sub-speciality rolls up to an InstitutionalAdmin's institution (Administrator still all; trainee/
+speciality scoping unchanged; +1 test, Infrastructure 8). Re-ran the **whole replay from
+`after-act-2-replay`**: rebuilt the 12-field Mini-CEX via the builder as **Mbatha** — the EPA preview
+now lists all 15 PAED EPAs ✓ — published v2, drove Dlamini→Naidoo two Mini-CEX (level 3 + 4). Same green
+result: DB `PAED-001 CountsSoFar=2, MinimumLevelReachedCount=1`; `/portfolio/progress` shows the credit
++ trajectory (ratings 3 and 4). Builder commit-race note: set field **label before key** and verify the
+staged schema (`ActivityTypes.StagingSchemaJson`) before publishing — a key occasionally fails to commit
+when a Type `<select>` change immediately follows the key fill.
+
+---
+
 **✅ Clean post-fix replay of Act 3.A–3.C done 2026-05-30 (Opus) — all five fixes hold from a fresh
 Act-2 state, and the replay caught + fixed one new bug.** Restored `after-act-2-replay`, rebuilt the
 full 12-field Mini-CEX schema via the builder (3 sections; 6 Scale fields each bound to "Paed General
