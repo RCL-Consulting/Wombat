@@ -4,6 +4,25 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## Active task
 
+**✅ Act 3 Phase 3.D played + a HIGH credit bug (T073) fixed 2026-05-30 (Opus).** Heading into 3.D
+(procedure-log stage-minimum credit gating) I found `CreditApplier` gated "level reached" on the
+curriculum item's **flat** `MinimumLevelOrder`, ignoring `MinimumLevelByStageJson` — while the dashboard/
+progress page display the **stage-aware** minimum. Fixed (T073, `4b5cad8`): added
+`TraineeProfile.GetStage(today)` (domain single-source; dashboard's `ComputeTraineeStage` delegates to
+it) and `CreditApplier` now gates on `GetMinimumLevelForStage(stage)`. +1 unit test (Application 250),
+no regressions. Then played 3.D live: built+published **`procedure_log_paed` v2** via the builder (EPA,
+Procedure, Supervision-level Scale bound to scale 2; workflow draft→logged; credit epa_id +
+minimum_level_field=supervision_level). du Plessis (stage 2) logged 5 IV-access entries on PAED-011
+(stage-2 min 3, flat 4): 2×level-2 + 3×level-3. Result (DB + `/portfolio/progress`): **PAED-011 = 5 / 30
+· reached 3 / 30 · "Minimum level 3 (year 2)"** — the three level-3 entries credited toward reached (would
+have been 0 under the old flat-gate). Snapshot `act3-D-verified`.
+
+**Act 3 status:** 3.A–3.D done (clean, post-fix). **Remaining: 3.E DOPS, 3.F MSF, 3.G stalled-assessment
+triage, 3.I dashboard sweep** (each 3.E/3.F needs that type's schema built via the builder first). All on
+master; nothing pushed.
+
+---
+
 **✅ Wart fixed + second clean replay done 2026-05-30 (Opus).** The builder EPA-preview wart (empty for
 InstitutionalAdmins) is fixed in `63a5605`: `GetEpaOptionsAsync` now also returns every EPA whose
 sub-speciality rolls up to an InstitutionalAdmin's institution (Administrator still all; trainee/
