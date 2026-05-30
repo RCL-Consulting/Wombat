@@ -1045,9 +1045,30 @@ Findings → tasks (status as of 2026-05-30):
 - Doc fixes: Step 1.11.b "13 fields" → 12; Step 3.6 reconcile with T071; "Format JSON" button refs
   in 1.11.c/d.
 
-**Play-through progress (post-fix, 2026-05-30):** 3.A–3.C replayed clean twice from `after-act-2-replay`;
-3.D played end-to-end. Deferred: **3.E DOPS, 3.F MSF, 3.G stalled triage, 3.I dashboards** (3.E/3.F each
-need that type's schema built first via the builder). Resume from snapshot `act3-D-verified`.
+**Full play — 2026-05-30 (Sonnet).** All phases 3.A–3.I played end-to-end from `after-act-2-replay`
+(rebuild — prior `act3-*` snapshots corrupted by another project sharing the Postgres instance).
+Schemas built via the visual builder: mini_cex_paed v2 (12 fields/3 sections), procedure_log_paed v2
+(4 fields), dops_paed v2 (11 fields), msf_paed v2 (2 fields). Final snapshot `act3R-final`.
+
+**3.D verified:** PAED-011 5/30 reached 3/30 (stage-2 min 3 honoured; levels 2,2 below, 3,3,4 above).
+**3.E verified:** DOPS by Mahlangu (stage 1), Patel (in-training, NULL TrainingCompletedOn). Key findings:
+  - In-training assessor NOT blocked by Wombat at runtime (T065 still open — no guard on TrainingCompletedOn).
+  - PAED-010 stage-1 minimum not in MinimumLevelByStageJson {"2":2,"3":3,"4":4} → fallback to flat min 4;
+    level-2 DOPS counts volume (1/10) but not reached (0/10). Correct defensible fallback.
+**3.F verified:** MSF `draft→open→closing→closed` all via `creator` actor (Molefe). Credit applied to
+  PAED-012 item 13 (1/8 reached). `msf-campaign-auto-close` scheduled job exists; manual close also works.
+  Note: MSF credit rule used `curriculum_item_id: 13` (= PAED-012, not PAED-013 as scenario implies).
+**3.G verified (partial):** Mahlangu's stale Mini-CEX (activity 10, backdated 15 days) did NOT appear in
+  Smit's "Stalled requests" panel even after `assessor-pending-nudge` job ran manually. The panel exists
+  and renders but its query does not flag the submission. Gap: stale detection query not surfacing
+  submissions older than 5 days in the coordinator panel.
+**3.H verified:** Audit log renders 50+ entries, all transitions present, no JsonException.
+**3.I verified:**
+  - Molefe (yr 4): PAED-012 1/8 reached 1/8 (MSF); all others 0.
+  - Dlamini (yr 3): PAED-001 2/30 reached 1/30.
+  - du Plessis (yr 2): PAED-011 5/30 reached 3/30.
+  - Mahlangu (yr 1): PAED-010 1/10 reached 0/10 (stage fallback to flat 4).
+  - Ndlovu (yr 1): all 0/N — clean empty state, no crashes.
 
 ## Handoff into Act 4
 

@@ -2,6 +2,29 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ Session finalized — 2026-05-30 (Sonnet, continued)
+
+**Act 3 fully played — all phases 3.A–3.I complete.** Rebuilt from `after-act-2-replay` (prior
+`act3-*` snapshots were corrupted by another project). Schemas built via builder for mini_cex_paed v2,
+procedure_log_paed v2, dops_paed v2, msf_paed v2. No code changes — pure play-through + findings.
+
+**DB snapshots:** `act3R-minicex-published`, `act3R-A-C`, `act3R-D`, `act3R-E`, `act3R-F`, `act3R-final`.
+Restore with `tools\db-snapshot.ps1 restore act3R-final`.
+
+**New findings (open):**
+- **F-3E-1 (LOW):** In-training assessor (NULL `TrainingCompletedOn`) is NOT blocked at runtime.
+  Patel accepted + completed Mahlangu's DOPS without any guard. T065 (assessor training enum) still open.
+- **F-3E-2 (OBSERVE):** PAED-010 has no stage-1 minimum in its JSON → credit engine falls back to flat
+  min 4; level-2 DOPS counts volume but not reached. Correct; document in task T066 follow-up.
+- **F-3G-1 (MEDIUM):** Coordinator "Stalled requests" panel does not surface submissions > 5 days old
+  (activity backdated 15 days, job triggered, still shows nothing). Bug or threshold mismatch. New task
+  needed (T074 recommended).
+- **F-3F-NOTE:** MSF credit rule used `curriculum_item_id: 13` = PAED-012, not PAED-013. Credit landed on
+  PAED-012. Scenario text should note MSF credits PAED-012 (Lead a multi-disciplinary case discussion).
+
+**▶ Recommended next: Act 4** (annual review + STARs + appeal). Opus.
+Start from `tools\db-snapshot.ps1 restore act3R-final`. No code changes needed before Act 4 begins.
+
 ## ⭐ Session finalized — 2026-05-30 (Opus)
 
 **Shipped this session (all merged to `master`, nothing pushed):**
@@ -28,11 +51,27 @@ Mini-CEX v2 + procedure_log_paed v2 published). `tools\db-snapshot.ps1 restore a
 
 **No new secrets created** (reused `Mbatha@KGK2026!` / `Act2Pass!123`, already in pwd_DO_NOT_COMMIT.txt).
 
-### ▶ Recommended next pickup — **Act 3 Phase 3.E (DOPS), then 3.F / 3.G / 3.I. Opus.**
-Each of 3.E/3.F first needs that type's schema built via the builder (~1 builder session each; ~85k
-tokens of Playwright per build — budget one phase per context window). Start from
-`tools\db-snapshot.ps1 restore act3-D-verified`. Smaller alt tasks if preferred: **T070** (assessor
-rating-edit/note in Rated state — Sonnet) or the trajectory schema-awareness cleanup (Sonnet).
+### ⚠️ 2026-05-30 (later, Opus): act3-* snapshots CORRUPTED — Act 3 being rebuilt from clean Act-2 state
+**Do NOT restore `act3-D-verified` / any `act3-*` snapshot** — they were polluted by **another
+project** sharing the Postgres instance (`ActivityTypes` blown up to 429 cols incl. duplicate
+column names + a stray `ActivityTypes_BackupPre` table, main table 0 rows; the app can't query it).
+User confirmed the corruption is foreign and chose: **restore `after-act-2-replay` (verified clean)
+and rebuild ALL of Act 3 (3.A–3.I) via the visual builder.** That rebuild is IN PROGRESS.
+
+**▶ Resume from `Rewrite/act3-rebuild-scratch.md` → "⏯ RESUME HERE".** It has the clean-DB facts
+(real schema column names, cast UserIds, stages, EPA/curriculum stage-minimums, scale id 2), the
+canonical workflow/credit JSON (the exact format the parser accepts — easy to get wrong), and a
+per-phase checklist. Current point: mini_cex_paed FORM schema built (snapshot `act3R-minicex-built`),
+but its Workflow/Credit JSON was pasted in the WRONG format and must be re-pasted + republished
+before any lifecycle credits. **Model: Sonnet for the play-through grind; escalate to Opus for
+findings / domain calls / handoff.**
+
+Dev server: `$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run --project src/Wombat.Web/Wombat.Web.csproj`
+(NOT `--no-launch-profile`). DB `wombat_t002_verify` user `wombat` pw `3Uca!yptus#12`; psql at
+`C:\Program Files\PostgreSQL\16\bin\psql.exe`. Keep psql calls SOLO (a failing call cancels its batch).
+
+Smaller alt tasks if preferred: **T070** (assessor rating-edit/note in Rated state — Sonnet) or the
+trajectory schema-awareness cleanup (Sonnet).
 Open follow-up still: **T070** (MEDIUM). Builder note: set a field's **label before its key** and verify
 `ActivityTypes.StagingSchemaJson` before publishing (a `@bind` commit can drop a key when a Type
 `<select>` change immediately follows the key fill).
