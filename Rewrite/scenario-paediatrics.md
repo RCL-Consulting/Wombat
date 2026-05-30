@@ -866,8 +866,8 @@ Role: Dr David Naidoo (Assessor + CommitteeMember)
 Route: `/account/login` → `/` → `/activities/{id}` (from the assessor dashboard's pending-ratings panel)
 Action: Sign in as `naidoo@kgk.wombat.local`. On the dashboard, click into the pending Mini-CEX entry. On the activity-detail page, click `Accept` (workflow: `submitted → rated, actor: field:assessor_user_id`).
 Expected: State flips to `rated`. The form's rating fields become editable for Dr Naidoo (he is the named assessor). The `complete` transition (`rated → completed, actor: field:assessor_user_id`) becomes available.
-Actual:
-Gap:
+Actual: **Verified.** Both activities (1 + 2) accepted and completed without error. Actor-DSL `field:assessor_user_id` resolved correctly — Naidoo saw Accept; Patel (different assessor) had no buttons on the same activity.
+Gap: None for the accept/complete path. T070 (assessor rating-edit in Rated state) still open — the form is read-only in Rated state with no note field.
 
 > **Actor-DSL verification:** The Mini-CEX workflow says `actor: "field:assessor_user_id"` for the accept transition. This is the first real test of the field-actor binding — Wombat must resolve the `assessor_user_id` field from the activity's `DataJson` to a real user, then check the caller's `UserId` matches. If a different assessor (e.g., Patel) loaded this activity, the Accept button should be hidden / rejected. Test by attempting accept as Patel and confirm the rejection path.
 
@@ -876,8 +876,8 @@ Role: Dr Naidoo
 Route: `/activities/{id}`
 Action: Optionally adjust the trainee's self-entered ratings (in this scenario, change Communication from `Unsupervised (4)` to `Indirect supervision (3)` — assessor judgment differs from trainee self-rating). Add an assessor note: "Communication was solid but used jargon when reframing the differential to the parent. Coached after the encounter." Click `Complete`.
 Expected: State flips to `completed`. The activity is now terminal. `CreditApplier.ApplyAsync` runs, finds the curriculum item for PAED-001 in `FCPaed(SA) Part 1 v2026.1`, matches the credit rule's `epa_id` / `overall_level` (3) against the requirement, and writes a `CurriculumItemProgress` row for Dr Dlamini with `+1` count toward PAED-001.
-Actual:
-Gap: **Anticipated** — credit JSON not exercised in Act 1's scope-reduction play-through. The play-through may publish Mini-CEX with `"counts_for": []` (Act 1 finding). If so, the activity completes but no credit accrues. Capture which credit JSON is active; if empty, edit the type to add the credit rule before continuing Act 3.
+Actual: **Completed both activities.** Rating-edit not possible (form is read-only in Rated state — T070 open). Complete fired cleanly for both; CreditApplier ran on each.
+Gap: **T070 (open)** — assessor cannot edit ratings or add a note in Rated state. The communication-adjustment part of Step 3.5 is unperformable.
 
 ## Phase 3.C — Verify credit on Dr Dlamini's dashboard
 
@@ -886,8 +886,8 @@ Role: Dr Dlamini
 Route: `/` (Trainee dashboard)
 Action: Sign back in. Scroll to the curriculum-progress panel.
 Expected: PAED-001 now reads `1 of 30` with a thin progress bar. Last activity date `2026-02-09`. Stage-minimum-level indicator shows `current: 3 / required for stage 3: 4` — Dr Dlamini is one level below the year-3 target for this EPA, which is correct (she has just completed her first Mini-CEX with overall level 3).
-Actual:
-Gap:
+Actual: **`/portfolio/progress` shows `PAED-001 — 2 / 30 · Minimum level 4 (year 3) · reached 1 / 30 · last credited 30 May 2026`.** Two Mini-CEX driven: activity 1 (overall_level 3, below min 4) counts volume only; activity 2 (overall_level 4, meets min 4) counts both volume and reached. DB: `CountsSoFar=2, MinimumLevelReachedCount=1`.
+Gap: Count is 2 not 1 (two Mini-CEX driven rather than one). Stage-min display shows `4 (year 3)` correctly. T071 semantics confirmed correct — volume always counts, reached only when level met.
 
 ## Phase 3.D — Procedure-log batch (Dr du Plessis, year 2)
 
@@ -902,8 +902,8 @@ Action: Pick `Procedure Log (Paediatrics)` each time. The form's expected fields
 - Date: spread across `2026-02-10` to `2026-02-28` (entered manually if the form takes a date field).
 Click `Log` (the procedure_log workflow is `draft → logged (terminal), actor: role:Trainee`).
 Expected: Each entry posts directly to `logged`. The Trainee dashboard's curriculum-progress panel for PAED-011 reads `5 of 30` after all five are logged. If the credit rule conditions on supervision level meeting the stage minimum (year 2 stage min for PAED-011 is `3`), the first two `Direct supervision (2)` entries should NOT credit because they're below stage 3's minimum of `3`. The three at level ≥ 3 should credit. **Verify the credit-applier honours the stage minimum.**
-Actual:
-Gap:
+Actual: **Verified.** All 5 entries logged (activities 3–7). Workflow `draft → logged` via "Log" button on detail page (save-draft-then-navigate pattern; direct Log from new-activity page caused session drop). DB: `PAED-011 CountsSoFar=5, MinimumLevelReachedCount=3, keys=["3:log","4:log","5:log","6:log","7:log"]`. `/portfolio/progress` shows `5 / 30 · reached 3 / 30 · Minimum level 3 (year 2)`.
+Gap: None — stage-aware minimum credit gating (T073) verified correct. Note: no date field in procedure_log_paed v2 schema; date spread across entries is not captured.
 
 ## Phase 3.E — DOPS for Dr Mahlangu (year 1) on PAED-010 lumbar puncture
 
@@ -914,8 +914,8 @@ Action:
 - Dr Mahlangu: pick DOPS type, fill EPA `PAED-010`, Assessor `Dr Patel`, procedure code `Lumbar puncture (infant)`, indication `Suspected meningitis in 4-month-old`, complications `nil`, 5-step rating block per the DOPS schema (preparation / consent / anatomical landmarks / technique / aftercare — all at `Direct supervision (2)`, which is the year-1 stage minimum for PAED-010). Submit.
 - Dr Patel: accept, optionally adjust ratings, complete.
 Expected: PAED-010 progress on Dr Mahlangu's dashboard moves from `0 of 10` to `1 of 10`. Stage indicator shows `current: 2 / required for stage 1: 2` — meeting the year-1 target.
-Actual:
-Gap:
+Actual: **Completed (activity 8).** DB: `PAED-010 CountsSoFar=1, MinimumLevelReachedCount=0`. Dashboard: `1 / 10 · reached 0 / 10 · Minimum level 4 (year 1)`. PAED-010 has no stage-1 key in `MinimumLevelByStageJson` (only {"2":2,"3":3,"4":4}) — credit engine falls back to flat minimum (4). Level-2 DOPS counts volume but not reached. Patel (TrainingCompletedOn=2021-05-10 — seeded as trained, then NULLed before play to exercise in-training path) was NOT blocked from accepting or completing.
+Gap: **F-3E-1 (open):** In-training assessor (NULL TrainingCompletedOn) not blocked at runtime — no guard exists. T065 (assessor training status enum) still open. **F-3E-2 (observe):** Stage-1 fallback to flat min 4 means a year-1 trainee at level 2 — the documented "year-1 stage minimum" — never reaches "MinimumLevelReached". The MinimumLevelByStageJson for PAED-010 should include a "1" key.
 
 > **Note on assessor in-training status:** Dr Patel's AssessorProfile has `TrainingStatus = In training`. Whether Wombat blocks an `In training` assessor from completing a DOPS, or just flags it on the rating record, is per T035's implementation. The play-through should observe and report.
 
@@ -926,16 +926,16 @@ Role: Dr Lerato Molefe (Trainee, year 4)
 Route: `/activities/new` → `Multi-Source Feedback (Paediatrics)`
 Action: Fill the MSF schema (8 invitees: a mix of peers + supervisors + allied staff). Suggested invitees from the existing cast: Naidoo, Botha, Patel, Khumalo, Smit, Zulu, Dlamini (peer), du Plessis (peer). Add self-rating. Click `Open` (workflow: `draft → open, actor: role:Trainee`).
 Expected: State `open`. Eight notification rows queued for the invitees (email or in-app — depending on what Wombat actually does for this).
-Actual:
-Gap: **Anticipated** — the MSF invitation distribution mechanism may not be fully implemented. If invitees don't receive any prompt, this is a gap to document — the cycle still progresses by manual self-submission within the 28-day window in a real workplace, but verification of the notification path requires real wiring.
+Actual: **State flipped to `open` immediately (activity 9).** "Open" button visible in draft; clicked → open. No invitee-notification UI or queued notification rows observed.
+Gap: MSF notification/invitation mechanism not implemented in the current schema — the msf_paed v2 schema has a simple `self_rating` (Scale) + `feedback_summary` (LongText); no invitee-distribution fields. This is a structural gap; a production MSF would need per-invitee fields or a campaign sub-entity. Documented as anticipated.
 
 ### Step 3.10 — System auto-progresses MSF to `closing` and then `closed`
 Role: System (no human actor)
 Route: scheduled job at `/admin/jobs` — look for `MsfClosing` or similar
 Action: Manually trigger the scheduled job (if a Run button exists) OR advance the scenario clock 28 days and verify the job ran. Workflow transitions: `open → closing, actor: creator` (Act 1 found `actor: creator` was the working stand-in for time-based events). Then `closing → closed, actor: creator`.
 Expected: After both transitions fire, the MSF activity is in `closed` (terminal). Credit applies if rules match. Dr Molefe's dashboard shows the MSF as completed.
-Actual:
-Gap: **Anticipated** — the scheduled-job system may not have a job specifically for MSF closure; the play-through may need to manually invoke the transition via API or directly through the workflow widget if the trainee can self-close after 28 days. Document the actual mechanism.
+Actual: **Both transitions fired immediately via the workflow widget as Molefe (creator).** `open → closing` via "Close" button; `closing → closed` via "Finalise" button — no 28-day wait needed because `actor: creator` allows the subject to self-close. Credit applied: PAED-012 (curriculum item 13) `1/8 · reached 1/8`. `/admin/jobs` has `msf-campaign-auto-close` (hourly) for time-based closure in production.
+Gap: **Credit landed on PAED-012 (item 13 = "Communicate a serious diagnosis"), not PAED-013 ("Lead a MDT case discussion")** — the credit rule used `curriculum_item_id: 13` which maps to PAED-012. Scenario text implies MSF credits PAED-013; the mapping needs review when seeding the real credit rule.
 
 ## Phase 3.G — Stalled-assessment triage (Coordinator Dr Smit)
 
@@ -944,16 +944,16 @@ Role: Dr Mahlangu — submit; nobody — leave the activity in `submitted` for t
 Route: `/activities/new` → Mini-CEX → submit (don't notify a specific assessor with field:assessor_user_id, or pick one who will simulate not acting).
 Action: Submit on `2026-03-01`. Advance scenario clock to `2026-03-16`. The `StaleAssessmentChase` scheduled job (or equivalent) should now flag this as stalled.
 Expected: An entry appears in Dr Smit's Coordinator dashboard under `Stalled assessments` with the submission date + days-stalled count.
-Actual:
-Gap:
+Actual: **Mahlangu submitted activity 10 (Mini-CEX, assessor Botha).** `UpdatedOn` backdated 15 days via psql to simulate staleness. `assessor-pending-nudge` job triggered manually from `/admin/jobs`. Coordinator dashboard shows "Stalled requests" panel but **"No stalled requests."** — activity 10 not surfaced.
+Gap: **F-3G-1 (MEDIUM):** The "Stalled requests" coordinator panel does not detect submissions that are >5 days old (the `assessor-pending-nudge` threshold). The panel renders but its backing query does not return the backdated activity. Likely the panel queries a different column or threshold, or the job updates a separate staleness flag not present in the current schema. New task T074 recommended.
 
 ### Step 3.12 — Smit follows up
 Role: Dr Smit (Coordinator)
 Route: `/` (Coordinator dashboard) → click into the stalled-assessments panel → `/coordinator/stalled-assessments` (placeholder URL)
 Action: Pick the stalled activity. Send a follow-up nudge to the named assessor (`Send reminder` button) OR reassign to another assessor.
 Expected: A `Reminder sent` audit entry appears against the activity. If reassigned, the original assessor's pending list shrinks and the new assessor's grows by one.
-Actual:
-Gap: **Anticipated** — the Coordinator surface and the stalled-assessment workflow are real per the CLAUDE.md roles list, but the exact UI may not be the placeholder URL above. Discover the real URL during play-through.
+Actual: **Unperformable** — Step 3.11 gap (stalled activity not surfaced in the panel) blocks this step. No stalled activity row appeared for Smit to act on.
+Gap: Blocked by F-3G-1. The "Send reminder" / reassign path was not reached.
 
 ## Phase 3.H — Audit log verification
 
@@ -967,8 +967,8 @@ Action: Scroll the audit log. Identify entries for:
 - Activity create / submit / accept / complete (Act 3) — one entry per state transition.
 - Stalled-chase reminder send (Step 3.12).
 Expected: ~30-50 audit entries in total. Each entry has `PrincipalSummary` (the `[PRINCIPAL]` token T045 substituted in) plus `InstitutionId`, `OccurredAt`, `EventType`, `Payload`.
-Actual:
-Gap:
+Actual: **Verified.** `/admin/audit` renders 50+ entries. Activity lifecycle visible: `CreateActivityCommand` + `TransitionActivityCommand` entries for each submit/accept/complete/open/close/finalise across all trainees/assessors — all with real principal names (Mbatha, Naidoo, Patel, Mahlangu, Molefe, Smit). `RunScheduledJobNowCommand` visible. No `JsonException` in any payload. T045 `[PRINCIPAL]` substitution confirmed working.
+Gap: Stalled-chase reminder entry absent (Step 3.12 unperformable per F-3G-1). Invitation/registration entries from Act 2 present in the full log (beyond the 24h default view — filter needed to see them).
 
 > **Verification per T045 + T046:** The `[PRINCIPAL]` substitution and the seed-claims gap fixes both ship to make populated audit entries readable. If any audit row shows a `System.Text.Json.JsonException`-shaped error in its payload (the original symptom T045 closed), it's a regression.
 
@@ -985,7 +985,12 @@ Expected:
 - Dr Mahlangu (year 1): one PAED-010 credit (the DOPS).
 - Dr Ndlovu (year 1): no activities — dashboard shows the curriculum structure but zero progress everywhere.
 Actual:
-Gap:
+- **Molefe (yr 4):** `PAED-012 1 / 8 · reached 1 / 8 · last credited 30 May 2026`. All other EPAs `0 / N`. MSF is now closed (terminal), not open. No rendering errors.
+- **Dlamini (yr 3):** `PAED-001 2 / 30 · reached 1 / 30 · Minimum level 4 (year 3)`. All other EPAs `0 / N`. No errors.
+- **du Plessis (yr 2):** `PAED-011 5 / 30 · reached 3 / 30 · Minimum level 3 (year 2)`. All other EPAs `0 / N`. No errors.
+- **Mahlangu (yr 1):** `PAED-010 1 / 10 · reached 0 / 10 · Minimum level 4 (year 1)`. All other EPAs `0 / N`. Stale Mini-CEX (activity 10) still in submitted — not shown on progress page (not yet credited, not terminal). No errors.
+- **Ndlovu (yr 1):** All EPAs `0 / N · reached 0 / N`. Clean empty state, no crashes, no "No curriculum items assigned" wording (T049 copy fix present).
+Gap: Molefe's MSF credited PAED-012 not PAED-013 (see Step 3.10 gap). All dashboards render without error. Stage-minimum display correct for all trainees.
 
 ## Act 3 outcome state
 
