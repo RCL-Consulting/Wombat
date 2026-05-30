@@ -6,6 +6,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Infrastructure.Activities;
 
@@ -35,6 +36,7 @@ public sealed class CreditApplier : ICreditApplier
 
         using var document = JsonDocument.Parse(completedActivity.DataJson);
         var creditKey = GetCreditKey(completedActivity);
+        var traineeStage = await ResolveTraineeStageAsync(completedActivity.SubjectUserId, cancellationToken);
         var updatedRows = new List<CurriculumItemProgress>();
 
         foreach (var directive in rules.CountsFor)
@@ -46,7 +48,7 @@ public sealed class CreditApplier : ICreditApplier
                 // (CountsSoFar). The entrustment level is a separate progression signal: a completion
                 // below the curriculum item's required level still counts as evidence, but only
                 // contributes to MinimumLevelReachedCount when the level is actually met. (T071)
-                var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement);
+                var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement, traineeStage);
 
                 var progressSet = _dbContext.Set<CurriculumItemProgress>();
                 var progress = progressSet.Local.SingleOrDefault(
@@ -124,7 +126,8 @@ public sealed class CreditApplier : ICreditApplier
     private static bool MeetsMinimumLevel(
         CurriculumItem curriculumItem,
         CreditDirective directive,
-        JsonElement data)
+        JsonElement data,
+        int? traineeStage)
     {
         if (string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
             string.IsNullOrWhiteSpace(directive.MinimumLevelFixed))
@@ -132,19 +135,32 @@ public sealed class CreditApplier : ICreditApplier
             return true;
         }
 
+        // Gate on the level required for the trainee's current stage, not the flat target level, so
+        // the credit engine agrees with the stage-aware minimum the dashboard/progress page displays.
+        var requiredLevel = curriculumItem.GetMinimumLevelForStage(traineeStage);
+
         if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
             TryGetInt32(data, directive.MinimumLevelField, out var providedLevel))
         {
-            return providedLevel >= curriculumItem.MinimumLevelOrder;
+            return providedLevel >= requiredLevel;
         }
 
         if (!string.IsNullOrWhiteSpace(directive.MinimumLevelFixed) &&
             int.TryParse(directive.MinimumLevelFixed, CultureInfo.InvariantCulture, out var fixedLevel))
         {
-            return fixedLevel >= curriculumItem.MinimumLevelOrder;
+            return fixedLevel >= requiredLevel;
         }
 
         return false;
+    }
+
+    private async Task<int?> ResolveTraineeStageAsync(string traineeUserId, CancellationToken cancellationToken)
+    {
+        var profile = await _dbContext.Set<TraineeProfile>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == traineeUserId && p.IsActive, cancellationToken);
+
+        return profile?.GetStage(DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
     private static HashSet<string> DeserializeCreditedKeys(string json)

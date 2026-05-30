@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
@@ -106,6 +107,46 @@ public sealed class CreditApplierTests
         var progress = await dbContext.CurriculumItemProgresses.SingleAsync();
         progress.CountsSoFar.Should().Be(1);
         progress.MinimumLevelReachedCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_GatesOnStageMinimum_NotFlatTargetLevel()
+    {
+        // The curriculum item's flat target is level 4, but stage 2 only requires level 3. A year-2
+        // trainee completing at level 3 should count toward MinimumLevelReachedCount (it meets the
+        // stage minimum the dashboard shows), even though it is below the flat target.
+        await using var dbContext = CreateDbContext();
+        dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "IV access" });
+        dbContext.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 4000,
+            CurriculumId = 3000,
+            EpaId = 5000,
+            RequiredCount = 30,
+            MinimumLevelOrder = 4,
+            MinimumLevelByStageJson = """{"1":2,"2":3,"3":4,"4":4}""",
+            WindowMonths = 36
+        });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-400), // ~1.1y -> stage 2
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            IsActive = true
+        });
+        dbContext.SaveChanges();
+
+        var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 3 }""");
+        var applier = new CreditApplier(dbContext);
+
+        await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        var progress = await dbContext.CurriculumItemProgresses.SingleAsync();
+        progress.CountsSoFar.Should().Be(1);
+        progress.MinimumLevelReachedCount.Should().Be(1); // would be 0 if gated on the flat target (4)
     }
 
     private static ApplicationDbContext CreateDbContext()

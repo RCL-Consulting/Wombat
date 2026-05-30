@@ -147,14 +147,5 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
     }
 
     public static int? ComputeTraineeStage(DateOnly programmeStart, DateOnly today)
-    {
-        if (today < programmeStart)
-        {
-            return null;
-        }
-
-        var daysElapsed = today.DayNumber - programmeStart.DayNumber;
-        var yearsElapsed = daysElapsed / 365;
-        return yearsElapsed + 1;
-    }
+        => new TraineeProfile { ProgrammeStartDate = programmeStart }.GetStage(today);
 }
