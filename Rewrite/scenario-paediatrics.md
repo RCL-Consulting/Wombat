@@ -1472,11 +1472,12 @@ end-to-end; four findings surfaced (none fixed yet — design/feature decisions 
 - **5.D** — `Deactivate` flips the profile to inactive (drops it off the Active list).
 
 **Findings (all OPEN, documented):**
-- **F-5-1 — no graduation/completion committee decision category.** The enum is
-  `SatisfactoryProgress / SatisfactoryWithObservations / InadequateProgressAdditionalTraining /
-  InadequateProgressRepeat / ReleaseFromTraining / OutcomeDeferred` — there is no `Graduate`/`Complete`.
-  Recorded the graduation as `SatisfactoryProgress`. A terminal "programme complete" outcome has no
-  first-class representation.
+- **F-5-1 — no graduation decision category — RESOLVED (T081, 2026-06-01).** Added `Graduate = 7` to
+  `CommitteeDecisionCategory` (a terminal "programme complete" outcome) + its PDF label
+  ("Graduate (programme complete)"). The decision dropdown is enum-driven so it now offers Graduate;
+  the profile-completion lifecycle (T080) then archives the trainee. +1 domain test
+  (record + ratify a Graduate decision). A future Act 5 replay records `Graduate` instead of the
+  `SatisfactoryProgress` workaround used in the original play-through.
 - **F-5-2 — portfolio omitted the STAR section — RESOLVED (T077, 2026-06-01).** `PortfolioPdfService`
   now loads the trainee's **active** `EntrustmentDecision`s and renders a "Statements of Awarded
   Responsibility (STARs)" table (EPA code/title, authorised level, issued, expires) after the Summary.

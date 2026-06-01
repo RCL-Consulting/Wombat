@@ -97,6 +97,7 @@ internal static class CommitteeSectionComponent
         CommitteeDecisionCategory.InadequateProgressRepeat => "Inadequate Progress — Repeat",
         CommitteeDecisionCategory.ReleaseFromTraining => "Release from Training",
         CommitteeDecisionCategory.OutcomeDeferred => "Outcome Deferred",
+        CommitteeDecisionCategory.Graduate => "Graduate (programme complete)",
         _ => category.ToString()
     };
 }

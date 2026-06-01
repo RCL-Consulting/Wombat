@@ -21,6 +21,30 @@ public sealed class CommitteeReviewTests
     }
 
     [Fact]
+    public void Review_RecordsAndRatifies_GraduateDecision()
+    {
+        var review = new CommitteeReview
+        {
+            TraineeUserId = "trainee-1",
+            ReviewPeriodFrom = new DateOnly(2029, 1, 1),
+            ReviewPeriodTo = new DateOnly(2029, 12, 31),
+            ScheduledOn = new DateOnly(2029, 11, 18)
+        };
+
+        review.Start([], "chair-1", DateTime.UtcNow);
+        review.RecordDecision(
+            CommitteeDecisionCategory.Graduate,
+            "All 15 EPAs met or exceeded; recommend award and programme completion.",
+            null,
+            "chair-1",
+            DateTime.UtcNow);
+        review.Ratify("chair-1", DateTime.UtcNow);
+
+        Assert.Equal(CommitteeReviewState.Ratified, review.State);
+        Assert.Equal(CommitteeDecisionCategory.Graduate, review.GetCurrentDecision()!.Category);
+    }
+
+    [Fact]
     public void Review_StateMachine_TransitionsThroughAppealToFinal()
     {
         var review = new CommitteeReview

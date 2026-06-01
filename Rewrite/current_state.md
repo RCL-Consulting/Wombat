@@ -32,18 +32,17 @@ since staging was already proven in Act 4 — ratify issued all 12 identically.)
 - **F-5-5 — RESOLVED (T079):** added Coordinator to `ExportPortfolioCommand`. Live-verified: Smit
   reproduced Mbatha's exact PDF (identical hash) — Step 5.5 now passes on authz + determinism.
 
-**All four Act 5 findings now fixed (T077/T078 then T079/T080).** Only **F-5-1** (no `Graduate` committee
-**decision category**) remains open — deliberately, as graduation is represented by the STARs + the new
-completion lifecycle, not a decision enum value.
+**All five Act 5 findings now fixed (T077/T078, T079/T080, T081).** F-5-1 closed: added a `Graduate`
+committee decision category (T081) — the committee can formally record graduation; the T080 lifecycle
+then archives the trainee.
 
-**Tests:** Domain 48, Infrastructure 10, Application 268, Architecture 19, Web 42 — all green. Integration
-not run (Docker). DB snapshot **`act5-complete`** re-taken to reflect the proper graduation (Molefe
-completed via Mark-complete: `CompletedOn` set, Trainee role removed) + the `TraineeCompletion` migration.
+**Tests:** Domain 49, Infrastructure 10, Application 268, Architecture 19, Web 42 — all green. Integration
+not run (Docker). DB snapshot **`act5-complete`** reflects the proper graduation (Molefe completed via
+Mark-complete: `CompletedOn` set, Trainee role removed) + the `TraineeCompletion` migration.
 
 **▶ Recommended next:** the **Appendix** cross-cutting spot-checks (data rights, scheduled jobs, SSO,
-mobile/a11y) in `scenario-paediatrics.md`, or F-5-1 if a first-class graduation decision category is
-wanted. **Sonnet** is fine for the Appendix grind; **Opus** if F-5-1 turns into a workflow/enum change.
-The linear acts (1–5) are all played and their substantive findings fixed.
+mobile/a11y) in `scenario-paediatrics.md`. **Sonnet** is fine for the Appendix grind. The linear acts
+(1–5) are all played and **all their findings fixed** (F-3*, F-4*, F-5* all resolved).
 
 ## ⭐ Session finalized — 2026-06-01 (Opus) — Act 4 played in full + F-4A-1 fixed (T075)
 
