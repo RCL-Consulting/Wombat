@@ -55,9 +55,8 @@ Also: the **Bash tool runs bash, not PowerShell** — start the dev server via t
 **No new secrets** — reused Mbatha `Mbatha@KGK2026!` and scenario shared `Act2Pass!123` (Zulu,
 Mahlangu), already in `pwd_DO_NOT_COMMIT.txt`.
 
-**⚠️ Commit:** T075 (code + tests) + the doc updates (this file, scenario summary, task file) were
-**not yet committed** when this handoff was written — `git status` and commit them as one logical
-unit if not already done. Build clean, all non-Integration suites green.
+**Commit:** T075 (code + tests) + doc updates landed in **`46126bf`** on `master` (10 files,
++447/-7). Nothing pushed. Build clean, all non-Integration suites green.
 
 **▶ Recommended next: Act 5** (graduation + STAR augmentation to all 15 EPAs + portfolio PDF export).
 **Opus** (touches entrustment-decision augmentation + QuestPDF). Start from
