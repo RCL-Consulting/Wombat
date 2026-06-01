@@ -53,6 +53,7 @@ public sealed class GetTraineeProfileByIdQueryHandler : IRequestHandler<GetTrain
             profile.Curriculum.SubSpeciality.Name,
             profile.ProgrammeStartDate,
             profile.ExpectedCompletionDate,
-            profile.IsActive);
+            profile.IsActive,
+            profile.CompletedOn);
     }
 }

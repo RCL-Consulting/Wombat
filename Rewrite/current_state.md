@@ -24,22 +24,26 @@ since staging was already proven in Act 4 — ratify issued all 12 identically.)
 - **F-5-3 — RESOLVED (T078, `af46b5a`):** removed the wall-clock `Generated:` line + set fixed
   QuestPDF metadata → byte-for-byte reproducible. Live-verified: two exports → identical hash filename.
   +2 Infrastructure tests (8→10).
-- **F-5-4 (OPEN):** no trainee graduation/completion lifecycle — only generic `Deactivate` (leaves the
-  `Trainee` role intact, DB-verified); no Alumnus role/transition, no "Completed" tab, no graduation email.
-- **F-5-5 (OPEN, found while fixing F-5-3):** `ExportPortfolioCommand` excludes **Coordinator** from
-  portfolio export, so Step 5.5's "Coordinator reproduces the PDF" fails on authorisation.
+- **F-5-4 — RESOLVED (T080):** added a graduation lifecycle —
+  `TraineeProfile.CompletedOn` + `Complete()`, `CompleteTraineeProfileCommand` (records date, deactivates,
+  **removes Trainee role**, sends graduation email), "Mark complete" edit action, "Completed & closed"
+  list section. Migration `20260601172756_TraineeCompletion`; +5 tests. Live-verified (Molefe → roles
+  none, listed completed). F-5-1 (no graduation decision category) still open.
+- **F-5-5 — RESOLVED (T079):** added Coordinator to `ExportPortfolioCommand`. Live-verified: Smit
+  reproduced Mbatha's exact PDF (identical hash) — Step 5.5 now passes on authz + determinism.
 
-**F-5-2 + F-5-3 FIXED this session (T077/T078).** Remaining Act 5 findings OPEN: **F-5-4** (graduation
-lifecycle) and **F-5-5** (Coordinator portfolio export).
+**All four Act 5 findings now fixed (T077/T078 then T079/T080).** Only **F-5-1** (no `Graduate` committee
+**decision category**) remains open — deliberately, as graduation is represented by the STARs + the new
+completion lifecycle, not a decision enum value.
 
-**Tests:** Domain 45, Infrastructure 10 (+2 PDF), Application 265, Architecture 19, Web 42 — all green.
-Integration not run (Docker). DB snapshot `act5-complete` still valid (PDF fixes are code-only, no data
-change; the live DB has a few extra `PortfolioExport` audit rows from verification exports).
+**Tests:** Domain 48, Infrastructure 10, Application 268, Architecture 19, Web 42 — all green. Integration
+not run (Docker). DB snapshot **`act5-complete`** re-taken to reflect the proper graduation (Molefe
+completed via Mark-complete: `CompletedOn` set, Trainee role removed) + the `TraineeCompletion` migration.
 
-**▶ Recommended next:** the remaining Act 5 findings if wanted (**F-5-4** graduation lifecycle is the
-bigger one; **F-5-5** Coordinator export is a one-line authz call), then the **Appendix** cross-cutting
-spot-checks (data rights, scheduled jobs, SSO, mobile/a11y) in `scenario-paediatrics.md`. **Opus** for
-F-5-4; **Sonnet** ok for F-5-5 + the Appendix grind. The linear acts (1–5) are all played.
+**▶ Recommended next:** the **Appendix** cross-cutting spot-checks (data rights, scheduled jobs, SSO,
+mobile/a11y) in `scenario-paediatrics.md`, or F-5-1 if a first-class graduation decision category is
+wanted. **Sonnet** is fine for the Appendix grind; **Opus** if F-5-1 turns into a workflow/enum change.
+The linear acts (1–5) are all played and their substantive findings fixed.
 
 ## ⭐ Session finalized — 2026-06-01 (Opus) — Act 4 played in full + F-4A-1 fixed (T075)
 

@@ -30,7 +30,11 @@
         <h3>Trainee summary</h3>
         <p><strong>Email:</strong> @_model.Email</p>
         <p><strong>Name:</strong> @_model.FullName</p>
-        <p><strong>Status:</strong> @(_model.IsActive ? "Active" : "Inactive")</p>
+        <p><strong>Status:</strong> @(_model.IsActive ? "Active" : (_model.CompletedOn.HasValue ? "Completed" : "Inactive"))</p>
+        @if (_model.CompletedOn.HasValue)
+        {
+          <p><strong>Completed:</strong> @_model.CompletedOn.Value.ToString("yyyy-MM-dd")</p>
+        }
       </aside>
 
       <section class="detail-card">
@@ -58,11 +62,21 @@
             </FormField>
           </div>
 
+          @if (!_isAdmission && _model.IsActive)
+          {
+            <div class="form-grid form-grid--wide">
+              <FormField Label="Completion date" InputId="completion-date" HelpText="Records graduation: archives the profile and removes the Trainee role.">
+                <InputDate id="completion-date" class="form-control" @bind-Value="_model.CompletionDate" />
+              </FormField>
+            </div>
+          }
+
           <FormActions>
             <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
             @if (!_isAdmission && _model.IsActive)
             {
               <button type="button" class="btn btn-danger" disabled="@_saving" @onclick="DeactivateAsync">Deactivate</button>
+              <button type="button" class="btn btn-outline" disabled="@_saving" @onclick="CompleteAsync">Mark complete</button>
             }
             <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
           </FormActions>
@@ -111,7 +125,8 @@
           CurriculumId = profile.CurriculumId,
           ProgrammeStartDate = profile.ProgrammeStartDate,
           ExpectedCompletionDate = profile.ExpectedCompletionDate,
-          IsActive = profile.IsActive
+          IsActive = profile.IsActive,
+          CompletedOn = profile.CompletedOn
         };
       }
       else if (!string.IsNullOrWhiteSpace(UserId))
@@ -236,6 +251,35 @@
     }
   }
 
+  private async Task CompleteAsync()
+  {
+    if (_model is null || _model.Id <= 0)
+    {
+      return;
+    }
+
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new CompleteTraineeProfileCommand(_model.Id, _model.CompletionDate, authState.User));
+      _model.IsActive = false;
+      _model.CompletedOn = _model.CompletionDate;
+      _statusMessage = "Trainee marked complete. The Trainee role has been removed and a graduation email sent.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
   private sealed class TraineeProfileFormModel
   {
     public int Id { get; set; }
@@ -252,5 +296,7 @@
 
     public DateOnly? ExpectedCompletionDate { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateOnly? CompletedOn { get; set; }
+    public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
   }
 }

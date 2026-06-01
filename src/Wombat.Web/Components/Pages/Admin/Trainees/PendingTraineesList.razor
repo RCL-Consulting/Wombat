@@ -45,20 +45,19 @@
 
     <section class="detail-card">
       <h3>Active profiles</h3>
-      @if (_trainees.Count == 0)
+      @if (_activeTrainees.Count == 0)
       {
-        <div class="detail-card detail-card--empty-compact">No trainee profiles found.</div>
+        <div class="detail-card detail-card--empty-compact">No active trainee profiles found.</div>
       }
       else
       {
-        <DataTable TItem="TraineeProfileDto" Items="_trainees" Caption="Active trainee profiles">
+        <DataTable TItem="TraineeProfileDto" Items="_activeTrainees" Caption="Active trainee profiles">
           <HeaderRow>
             <tr>
               <th>Name</th>
               <th>Curriculum</th>
               <th>Sub-speciality</th>
               <th>Expected completion</th>
-              <th>Status</th>
               <th></th>
             </tr>
           </HeaderRow>
@@ -68,13 +67,39 @@
               <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
               <td>@trainee.SubSpecialityName</td>
               <td>@trainee.ExpectedCompletionDate.ToString("yyyy-MM-dd")</td>
-              <td>@(trainee.IsActive ? "Active" : "Inactive")</td>
               <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a></td>
             </tr>
           </Row>
         </DataTable>
       }
     </section>
+
+    @if (_closedTrainees.Count > 0)
+    {
+      <section class="detail-card">
+        <h3>Completed &amp; closed profiles</h3>
+        <DataTable TItem="TraineeProfileDto" Items="_closedTrainees" Caption="Completed and closed trainee profiles">
+          <HeaderRow>
+            <tr>
+              <th>Name</th>
+              <th>Curriculum</th>
+              <th>Sub-speciality</th>
+              <th>Outcome</th>
+              <th></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="trainee">
+            <tr>
+              <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
+              <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
+              <td>@trainee.SubSpecialityName</td>
+              <td>@(trainee.CompletedOn.HasValue ? $"Completed {trainee.CompletedOn.Value:yyyy-MM-dd}" : "Withdrawn")</td>
+              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a></td>
+            </tr>
+          </Row>
+        </DataTable>
+      </section>
+    }
   </div>
 </StatePanel>
 
@@ -82,6 +107,9 @@
   private IReadOnlyList<PendingTraineeDto> _pendingTrainees = [];
   private IReadOnlyList<TraineeProfileDto> _trainees = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];
+
+  private IReadOnlyList<TraineeProfileDto> _activeTrainees => _trainees.Where(trainee => trainee.IsActive).ToList();
+  private IReadOnlyList<TraineeProfileDto> _closedTrainees => _trainees.Where(trainee => !trainee.IsActive).ToList();
   private bool _loading = true;
   private string? _errorMessage;
 

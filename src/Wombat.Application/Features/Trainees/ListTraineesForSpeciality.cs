@@ -88,7 +88,8 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
                     profile.Curriculum.SubSpeciality.Name,
                     profile.ProgrammeStartDate,
                     profile.ExpectedCompletionDate,
-                    profile.IsActive);
+                    profile.IsActive,
+                    profile.CompletedOn);
             })
             .OrderBy(profile => profile.LastName)
             .ThenBy(profile => profile.FirstName)

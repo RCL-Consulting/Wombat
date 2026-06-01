@@ -65,6 +65,26 @@ public sealed class ExportPortfolioCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_CoordinatorCanExportTraineePortfolio()
+    {
+        await using var db = CreateDb();
+
+        var pdfService = new Mock<IPortfolioPdfService>();
+        pdfService
+            .Setup(s => s.GenerateAsync(It.IsAny<PortfolioExportRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PortfolioExportResult([], "test.pdf", "hash"));
+
+        var principal = CreatePrincipal("coord-1", WombatRoles.Coordinator);
+        var handler = new ExportPortfolioCommandHandler(db, pdfService.Object);
+
+        var act = () => handler.Handle(
+            new ExportPortfolioCommand("trainee-1", null, null, principal),
+            CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
     public async Task Handle_UnauthorizedUserCannotExportOtherPortfolio()
     {
         await using var db = CreateDb();

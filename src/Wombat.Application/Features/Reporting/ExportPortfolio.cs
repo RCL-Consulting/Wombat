@@ -68,7 +68,8 @@ public sealed class ExportPortfolioCommandHandler : IRequestHandler<ExportPortfo
         if (principal.IsInRole(WombatRoles.Administrator) ||
             principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
             principal.IsInRole(WombatRoles.SpecialityAdmin) ||
-            principal.IsInRole(WombatRoles.SubSpecialityAdmin))
+            principal.IsInRole(WombatRoles.SubSpecialityAdmin) ||
+            principal.IsInRole(WombatRoles.Coordinator))
         {
             return;
         }

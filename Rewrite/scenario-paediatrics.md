@@ -1486,16 +1486,18 @@ end-to-end; four findings surfaced (none fixed yet — design/feature decisions 
   (`CreationDate`/`ModifiedDate` = `2000-01-01Z`) on both services. Provenance is the content hash (file
   name + `/portfolio/verify`). Verified live: two exports of Molefe's portfolio produced the identical
   file `portfolio-176a91aec2bc.pdf` (before: two different hashes). +2 Infrastructure tests.
-- **F-5-5 — Coordinator cannot export portfolios (noted, deferred).** `ExportPortfolioCommand.
-  DemandExportAccess` admits Administrator/InstitutionalAdmin/SpecialityAdmin/SubSpecialityAdmin or the
-  trainee themselves — **not Coordinator** — so Step 5.5's "Coordinator reproduces the PDF" fails on
-  authorisation (independent of the now-fixed determinism). Decide whether Coordinators get portfolio
-  read/export access.
-- **F-5-4 — no trainee graduation/completion lifecycle.** No "Mark complete"/"Graduate" action (only
-  `Deactivate`), no Alumnus role / role transition (Deactivate leaves the `Trainee` role intact —
-  DB-verified), no "Completed" sub-tab on `/admin/trainees`, and no graduation email (Step 5.7). The
-  only closure is a generic `Deactivate` (semantically "withdrawn"), which can't distinguish a graduate
-  from a drop-out.
+- **F-5-5 — Coordinator could not export portfolios — RESOLVED (T079, 2026-06-01).** Added `Coordinator`
+  to `ExportPortfolioCommand.DemandExportAccess`. Live-verified: Smit (Coordinator) exported Molefe's
+  portfolio and got the **identical** content-hash file as Mbatha's export — so Step 5.5's
+  "Coordinator reproduces the PDF byte-for-byte" now passes (authz via T079, determinism via T078). +1 test.
+- **F-5-4 — no graduation/completion lifecycle — RESOLVED (T080, 2026-06-01).** Added
+  `TraineeProfile.CompletedOn` + `Complete()`, a scope-guarded `CompleteTraineeProfileCommand` that
+  records the date, deactivates, **removes the `Trainee` role** (no Alumnus role — archived) and sends a
+  `GraduationEmail`; a "Mark complete" action on the edit page; a "Completed & closed" section on the
+  trainees list. Migration `20260601172756_TraineeCompletion`; +5 tests. Live-verified: Molefe marked
+  complete (2029-12-15) → `IsActive=false`, `CompletedOn` set, roles → **(none)**, listed under
+  "Completed & closed". (F-5-1 — no graduation *decision category* — remains open; graduation is the
+  STARs + this lifecycle, not a decision enum value.)
 
 **DB snapshot:** `act5-complete` (Molefe: 15 STARs, final review Ratified, profile deactivated).
 

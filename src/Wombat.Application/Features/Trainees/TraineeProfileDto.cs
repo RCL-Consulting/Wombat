@@ -15,7 +15,8 @@ public sealed record TraineeProfileDto(
     string SubSpecialityName,
     DateOnly ProgrammeStartDate,
     DateOnly ExpectedCompletionDate,
-    bool IsActive);
+    bool IsActive,
+    DateOnly? CompletedOn = null);
 
 public sealed record PendingTraineeDto(
     string UserId,
