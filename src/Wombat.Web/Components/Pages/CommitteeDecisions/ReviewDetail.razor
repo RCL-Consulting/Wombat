@@ -334,7 +334,13 @@
       }
       if (_scales.Count == 0)
       {
-        _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+        var allScales = await Sender.Send(new GetEntrustmentScalesListQuery());
+        // T076/F-4D-1: constrain the STAR level picker to the trainee's programme scale when one is
+        // configured; otherwise offer every scale.
+        var programScaleId = await Sender.Send(new GetProgramScaleIdForReviewQuery(ReviewId));
+        _scales = programScaleId.HasValue && allScales.Any(scale => scale.Id == programScaleId.Value)
+          ? allScales.Where(scale => scale.Id == programScaleId.Value).ToList()
+          : allScales;
       }
     }
     catch (Exception exception)

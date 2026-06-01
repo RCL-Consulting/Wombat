@@ -9,4 +9,5 @@ public sealed record UpdateSubSpecialityCommand(
     string Name,
     string? Description,
     bool IsActive,
+    int? DefaultEntrustmentScaleId,
     ClaimsPrincipal Principal) : IRequest<SubSpecialityDto>;

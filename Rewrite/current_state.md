@@ -41,9 +41,11 @@ phases). Restore the final state with `tools\db-snapshot.ps1 restore act4-comple
   chair + a governance note added (separation of duties; appeals independent of the program overseer).
   Multi-role is supported, so an institutional lead granted `CommitteeMember` + seated as chair could
   legitimately ratify/resolve via membership — this scenario deliberately keeps them separate.
-- **F-4D-1 (UI correctness):** the STAR "Authorised level" picker lists every level from every
-  scale (duplicate-looking 1–5 sets) and does not narrow to the EPA's scale — can stage against the
-  wrong scale. Filter levels to the EPA's entrustment scale.
+- **F-4D-1 (UI correctness) — RESOLVED (T076):** STAR "Authorised level" picker offered every scale's
+  levels (duplicate 1–5 sets) and didn't narrow. Fixed via **Option A** — a programme default scale on
+  `SubSpeciality` (`DefaultEntrustmentScaleId`): picker filters to it, stage handler rejects off-scale
+  levels, admin edit-page picker added. Migration `20260601161846_ProgrammeDefaultEntrustmentScale`;
+  +7 tests (Application 258→265). Live-verified; Paediatrics seeded to scale 2 in `act4-complete-t076`.
 - **F-4B-1 (doc):** scenario imagines a tabbed evidence bundle with a T032 sampling-concentration
   warning + dashboard snapshot; the implemented `ReviewDetail` is single-column with neither (T032
   not exercisable here). Also: no review-type field; no NavMenu link to `/committee/reviews` for
@@ -60,10 +62,16 @@ Mahlangu), already in `pwd_DO_NOT_COMMIT.txt`.
 **Commit:** T075 (code + tests) + doc updates landed in **`46126bf`** on `master` (10 files,
 +447/-7). Nothing pushed. Build clean, all non-Integration suites green.
 
-**▶ Recommended next: Act 5** (graduation + STAR augmentation to all 15 EPAs + portfolio PDF export).
-**Opus** (touches entrustment-decision augmentation + QuestPDF). Start from
-`tools\db-snapshot.ps1 restore act4-complete`. Alternatively, address F-4D-1 (Sonnet) or the F-4A-2
-governance call first.
+**Post-Act-4 findings follow-up (2026-06-01, Opus):** working the Act 4 findings one-by-one —
+**F-4A-2 RESOLVED (A1, docs-only, `b01920f`)** and **F-4D-1 RESOLVED (T076, code)**. Remaining open:
+**F-4B-1** (no tabbed evidence bundle / T032 sampling-concentration surface / dashboard snapshot on
+`ReviewDetail`; no review-type field; no NavMenu link to `/committee/reviews` for InstAdmin) — still
+to be triaged with the user.
+
+**▶ Recommended next: finish F-4B-1, then Act 5** (graduation + STAR augmentation to all 15 EPAs +
+portfolio PDF export). **Opus** (entrustment-decision augmentation + QuestPDF). Start Act 5 from
+**`tools\db-snapshot.ps1 restore act4-complete-t076`** (= act4-complete + the T076 migration + Paed
+default scale; the pure `act4-complete` is kept as the play-through record).
 
 ## ⭐ Session finalized — 2026-05-30 (Opus) — Act 3 played in full + 2 findings fixed
 

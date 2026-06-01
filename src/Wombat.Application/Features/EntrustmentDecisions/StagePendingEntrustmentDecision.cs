@@ -6,6 +6,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
@@ -73,8 +74,19 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
 
         _ = await _dbContext.Set<Epa>().SingleOrDefaultAsync(e => e.Id == request.EpaId, cancellationToken)
             ?? throw new InvalidOperationException("The specified EPA could not be found.");
-        _ = await _dbContext.Set<EntrustmentLevel>().SingleOrDefaultAsync(l => l.Id == request.AuthorisedLevelId, cancellationToken)
+        var level = await _dbContext.Set<EntrustmentLevel>().SingleOrDefaultAsync(l => l.Id == request.AuthorisedLevelId, cancellationToken)
             ?? throw new InvalidOperationException("The specified entrustment level could not be found.");
+
+        // T076 / F-4D-1: when the trainee's programme (sub-speciality) declares a default entrustment
+        // scale, the STAR must be granted on that scale — reject a level from any other scale.
+        var programScaleId = await _dbContext.Set<TraineeProfile>()
+            .Where(profile => profile.UserId == review.TraineeUserId)
+            .Select(profile => profile.Curriculum.SubSpeciality.DefaultEntrustmentScaleId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (programScaleId.HasValue && level.ScaleId != programScaleId.Value)
+        {
+            throw new InvalidOperationException("The authorised level must belong to the programme's entrustment scale.");
+        }
 
         var evidenceJson = EntrustmentDecisionMappings.SerializeEvidenceLinks(request.EvidenceLinks ?? Array.Empty<EntrustmentEvidenceLinkInput>());
 

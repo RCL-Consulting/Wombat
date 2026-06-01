@@ -4,6 +4,7 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@using Wombat.Application.Features.Epas
 
 <PageTitle>@(IsNew ? "Create Sub-Speciality" : "Edit Sub-Speciality")</PageTitle>
 
@@ -42,6 +43,17 @@
 
         @if (!IsNew)
         {
+          <FormField Label="Default entrustment scale" InputId="sub-speciality-scale" FullWidth="true">
+            <InputSelect id="sub-speciality-scale" class="form-select" @bind-Value="_model.DefaultEntrustmentScaleId">
+              <option value="">No default — offer every scale</option>
+              @foreach (var scale in _scales)
+              {
+                <option value="@scale.Id">@scale.Name</option>
+              }
+            </InputSelect>
+            <p class="form-hint">Committee STARs for this programme's trainees are limited to this scale's levels.</p>
+          </FormField>
+
           <FormField Label="Status" InputId="sub-speciality-active">
             <div class="form-check">
               <InputCheckbox id="sub-speciality-active" class="form-check-input" @bind-Value="_model.IsActive" />
@@ -71,6 +83,7 @@
   public int? Id { get; set; }
 
   private SpecialityDto? _speciality;
+  private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
   private SubSpecialityFormModel _model = new();
   private string? _errorMessage;
   private string? _statusMessage;
@@ -102,6 +115,8 @@
         return;
       }
 
+      _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+
       var subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId, authState.User));
       var subSpecialityId = Id!.Value;
       var subSpeciality = subSpecialities.SingleOrDefault(item => item.Id == subSpecialityId);
@@ -116,7 +131,8 @@
       {
         Name = subSpeciality.Name,
         Description = subSpeciality.Description,
-        IsActive = subSpeciality.IsActive
+        IsActive = subSpeciality.IsActive,
+        DefaultEntrustmentScaleId = subSpeciality.DefaultEntrustmentScaleId
       };
     }
     catch (Exception exception)
@@ -147,8 +163,9 @@
         return;
       }
 
-      subSpeciality = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, authState.User));
+      subSpeciality = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, _model.DefaultEntrustmentScaleId, authState.User));
       _model.IsActive = subSpeciality.IsActive;
+      _model.DefaultEntrustmentScaleId = subSpeciality.DefaultEntrustmentScaleId;
       _statusMessage = "Sub-speciality saved.";
     }
     catch (Exception exception)
@@ -214,5 +231,7 @@
     public string? Description { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public int? DefaultEntrustmentScaleId { get; set; }
   }
 }

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Institutions.Commands.UpdateSubSpeciality;
@@ -38,10 +39,17 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
             throw new UnauthorizedAccessException("You do not have permission to move this sub-speciality to that speciality.");
         }
 
+        if (request.DefaultEntrustmentScaleId.HasValue &&
+            !await _dbContext.Set<EntrustmentScale>().AnyAsync(scale => scale.Id == request.DefaultEntrustmentScaleId.Value, cancellationToken))
+        {
+            throw new InvalidOperationException($"Entrustment scale {request.DefaultEntrustmentScaleId.Value} was not found.");
+        }
+
         subSpeciality.SpecialityId = request.SpecialityId;
         subSpeciality.Name = request.Name.Trim();
         subSpeciality.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         subSpeciality.IsActive = request.IsActive;
+        subSpeciality.DefaultEntrustmentScaleId = request.DefaultEntrustmentScaleId;
 
         try
         {
@@ -52,6 +60,6 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
             throw new InvalidOperationException("A sub-speciality with the same name already exists for this speciality.", exception);
         }
 
-        return new SubSpecialityDto(subSpeciality.Id, subSpeciality.SpecialityId, subSpeciality.Name, subSpeciality.Description, subSpeciality.IsActive);
+        return new SubSpecialityDto(subSpeciality.Id, subSpeciality.SpecialityId, subSpeciality.Name, subSpeciality.Description, subSpeciality.IsActive, subSpeciality.DefaultEntrustmentScaleId);
     }
 }

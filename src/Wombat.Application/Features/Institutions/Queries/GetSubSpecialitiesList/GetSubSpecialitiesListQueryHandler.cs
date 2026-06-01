@@ -34,7 +34,7 @@ public sealed class GetSubSpecialitiesListQueryHandler : IRequestHandler<GetSubS
             .OrderBy(entity => entity.Speciality.Institution.Name)
             .ThenBy(entity => entity.Speciality.Name)
             .ThenBy(entity => entity.Name)
-            .Select(entity => new SubSpecialityDto(entity.Id, entity.SpecialityId, entity.Name, entity.Description, entity.IsActive))
+            .Select(entity => new SubSpecialityDto(entity.Id, entity.SpecialityId, entity.Name, entity.Description, entity.IsActive, entity.DefaultEntrustmentScaleId))
             .ToListAsync(cancellationToken);
     }
 }

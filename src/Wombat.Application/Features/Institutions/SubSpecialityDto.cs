@@ -5,4 +5,5 @@ public sealed record SubSpecialityDto(
     int SpecialityId,
     string Name,
     string? Description,
-    bool IsActive);
+    bool IsActive,
+    int? DefaultEntrustmentScaleId = null);

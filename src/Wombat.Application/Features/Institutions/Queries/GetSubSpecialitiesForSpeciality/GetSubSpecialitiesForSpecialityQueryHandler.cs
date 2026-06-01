@@ -39,7 +39,7 @@ public sealed class GetSubSpecialitiesForSpecialityQueryHandler : IRequestHandle
         return await _dbContext.Set<SubSpeciality>()
             .Where(entity => entity.SpecialityId == request.SpecialityId)
             .OrderBy(entity => entity.Name)
-            .Select(entity => new SubSpecialityDto(entity.Id, entity.SpecialityId, entity.Name, entity.Description, entity.IsActive))
+            .Select(entity => new SubSpecialityDto(entity.Id, entity.SpecialityId, entity.Name, entity.Description, entity.IsActive, entity.DefaultEntrustmentScaleId))
             .ToListAsync(cancellationToken);
     }
 }

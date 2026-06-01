@@ -1293,10 +1293,15 @@ ran clean against the implemented model, with several scenario/impl deltas noted
   independent of the program overseer. A user *can* hold multiple roles, so an institutional lead who
   is also granted `CommitteeMember` and seated as panel chair could legitimately ratify/resolve —
   Wombat models that via membership, not an admin override — but this scenario keeps them separate.
-- **F-4D-1 (UI correctness, deferred):** the STAR "Authorised level" picker lists **every level
-  from every scale** (two near-duplicate 1–5 sets: "4. Independent" vs "4. Unsupervised"), and does
-  **not** narrow to the selected EPA's scale — a committee member can silently stage a STAR against
-  the wrong scale. Should filter levels to the EPA's entrustment scale.
+- **F-4D-1 (UI correctness — RESOLVED, T076, 2026-06-01):** the STAR "Authorised level" picker listed
+  **every level from every scale** (near-duplicate 1–5 sets: "4. Independent" vs "4. Unsupervised")
+  and didn't narrow, so a committee member could stage a STAR on the wrong scale. There's no EPA→scale
+  link (scales are global; 0 AssessmentForms/FormEpaLinks), so the fix (**Option A**) adds a
+  **programme default scale**: `SubSpeciality.DefaultEntrustmentScaleId`. When set, the picker filters
+  to that scale and the stage handler rejects an off-scale level; unset falls back to all scales.
+  Migration `20260601161846_ProgrammeDefaultEntrustmentScale`; SubSpeciality edit-page picker; +7
+  tests. Live-verified: with `General Paediatrics` → Paed scale, the picker showed only the 5 Paed
+  levels. Paediatrics seeded to scale 2 in snapshot **`act4-complete-t076`** (Act 5 baseline).
 - **F-4B-1 (scenario/impl mismatch, doc):** the scenario imagines a tabbed pre-meeting evidence
   bundle (Activities / STAR snapshot / dashboard snapshot / **T032 sampling-concentration warning**).
   The implemented `ReviewDetail` is single-column and has **no sampling-concentration surface and no
