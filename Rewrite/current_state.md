@@ -2,7 +2,60 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ Act 5 played in full — 2026-06-01 (Opus) — graduation; 4 findings (all open)
+## ⭐ SESSION FINALIZED — 2026-06-01 (Opus) — Acts 4 & 5 played; all findings fixed
+
+**Big session.** Played **Act 4** (annual review + STARs + appeal) and **Act 5** (graduation + portfolio
+PDF) end-to-end via Playwright, and fixed **every** finding raised — 9 task-commits, all on `master`,
+**nothing pushed**. The linear scenario (Acts 1–5) is now fully played with all findings closed.
+
+**Commits this session (chronological, `master`):**
+- `46126bf` **T075** — InstitutionalAdmin committee-review scheduling (F-4A-1, scope-aware + tests).
+- `a2c786f` docs (T075 hash).
+- `b01920f` **F-4A-2** resolved A1 (docs-only) — committee ratify/appeals stay with the chair.
+- `3186a85` **T076** — programme default entrustment scale (F-4D-1; SubSpeciality.DefaultEntrustmentScaleId
+  + migration; STAR level picker filters to it).
+- `282aab3` **F-4B-1** — committee nav links for InstAdmin/Administrator + doc reconcile (sampling
+  warning + evidence already exist; review-type field deferred).
+- `7949b8f` docs (Act 5 play-through + the 4 then-open findings).
+- `af46b5a` **T077+T078** — portfolio STAR section (F-5-2) + deterministic PDFs (F-5-3).
+- `b0bff7d` docs (T077/T078 hash).
+- `4cc1207` **T079+T080** — Coordinator portfolio export (F-5-5) + graduation/completion lifecycle
+  (F-5-4: `TraineeProfile.CompletedOn` + Mark-complete + role removal + graduation email + migration).
+- `0a0a7d8` **T081** — `Graduate` committee decision category (F-5-1).
+- _this commit_ — session finalization.
+
+**Two EF migrations added this session** (both auto-applied at startup; both dotnet-ef scaffolded):
+`20260601161846_ProgrammeDefaultEntrustmentScale`, `20260601172756_TraineeCompletion`.
+
+**Tests (all green):** Domain 49, Infrastructure 10, Application 268, Architecture 19, Web 42.
+**Integration NOT run** (Testcontainers needs a Docker engine — none on this box). One *flaky*
+Infrastructure failure recurs only on full-solution `dotnet test` when it races the dev-server kill;
+isolated `dotnet test` of the Infrastructure project is a clean 10/10.
+
+**DB snapshots (latest):** `act5-complete` (Molefe graduated: 15 STARs, profile completed via
+Mark-complete, Trainee role removed; both new migrations applied). Earlier checkpoints kept:
+`act4-A-scheduled`, `act4-molefe-ratified`, `act4-complete`, `act4-complete-t076`, `act5-complete`.
+Restore with `tools\db-snapshot.ps1 restore <name>`.
+
+**No new secrets** — reused `Mbatha@KGK2026!` (Mbatha) and the shared `Act2Pass!123`
+(Zulu / Mahlangu / Smit), already in `pwd_DO_NOT_COMMIT.txt`.
+
+**Open follow-ups (deferred, documented):** review-type field on committee reviews (F-4B-1 d — Annual
+vs Pre-graduation; descriptive-only, nothing depends on it); F-3E-2 / F-3F-NOTE seed-config notes from
+Act 3.
+
+**▶ Recommended next: the Appendix** cross-cutting spot-checks (data rights, scheduled jobs, SSO,
+mobile/a11y) in `scenario-paediatrics.md` — the linear acts are done. **Sonnet** is fine for that grind.
+
+**⚠️ Tooling reminders:** start the dev server via the **PowerShell** tool (`$env:ASPNETCORE_ENVIRONMENT=
+'Development'; dotnet run …`), NOT the Bash tool (bash mangles `$env:` — it silently runs `dotnet run`
+in *Production* after the failed env-set, grabbing port 5080). Do **not** run `db-snapshot.ps1 take`
+while a browser request is in flight (the template-clone drops the app's DB connections and 500s the
+request) — snapshot while idle. Keep `psql` calls solo.
+
+---
+
+## ⭐ Act 5 played in full — 2026-06-01 (Opus) — graduation; findings fixed (T077–T081)
 
 **Act 5 (graduation + STAR augmentation + portfolio PDF) played end-to-end from
 `act4-complete-t076`. No code changes — all four findings are design/feature decisions left OPEN for
