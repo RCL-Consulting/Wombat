@@ -18,22 +18,28 @@ since staging was already proven in Act 4 — ratify issued all 12 identically.)
 **Findings (all OPEN — detail + repro in `scenario-paediatrics.md` § "Act 5 findings summary"):**
 - **F-5-1:** no `Graduate`/`Complete` committee decision category (recorded graduation as
   `SatisfactoryProgress`).
-- **F-5-2:** portfolio PDF **omits the STAR/authorisations section** — none of the 15 awarded STARs
-  appear; `PortfolioPdfService` never queries `EntrustmentDecisions`. STARs are only separate per-EPA
-  certificates (`EntrustmentCertificatePdfService`).
-- **F-5-3:** portfolio + STAR-certificate PDFs are **non-deterministic** — render
-  `Generated: {UtcNow:…HH:mm}` on every page, so byte-for-byte reproducibility (Step 5.5) fails
-  (demonstrated: two exports → two different content-hash filenames). Hash-derived filename amplifies it.
-- **F-5-4:** no trainee graduation/completion lifecycle — only generic `Deactivate` (leaves the
+- **F-5-2 — RESOLVED (T077, `<this commit>`):** portfolio PDF now renders a "Statements of Awarded
+  Responsibility (STARs)" table (all active `EntrustmentDecision`s). Live-verified: Molefe's portfolio
+  lists all 15 STARs.
+- **F-5-3 — RESOLVED (T078, `<this commit>`):** removed the wall-clock `Generated:` line + set fixed
+  QuestPDF metadata → byte-for-byte reproducible. Live-verified: two exports → identical hash filename.
+  +2 Infrastructure tests (8→10).
+- **F-5-4 (OPEN):** no trainee graduation/completion lifecycle — only generic `Deactivate` (leaves the
   `Trainee` role intact, DB-verified); no Alumnus role/transition, no "Completed" tab, no graduation email.
+- **F-5-5 (OPEN, found while fixing F-5-3):** `ExportPortfolioCommand` excludes **Coordinator** from
+  portfolio export, so Step 5.5's "Coordinator reproduces the PDF" fails on authorisation.
 
-**Tests:** unchanged from earlier today — Domain 45, Infrastructure 8, Application 265, Architecture 19,
-Web 42 (no code changes this act). Server running on 5080 (DB = `act5-complete`).
+**F-5-2 + F-5-3 FIXED this session (T077/T078).** Remaining Act 5 findings OPEN: **F-5-4** (graduation
+lifecycle) and **F-5-5** (Coordinator portfolio export).
 
-**▶ Recommended next:** triage the four Act 5 findings with the user (F-5-2/F-5-3 are the most
-substantive — portfolio completeness + PDF determinism), then the **Appendix** cross-cutting spot-checks
-(data rights, scheduled jobs, SSO, mobile/a11y) in `scenario-paediatrics.md`. **Opus** for the PDF/
-graduation-lifecycle work; **Sonnet** ok for the Appendix grind. The linear acts (1–5) are now all played.
+**Tests:** Domain 45, Infrastructure 10 (+2 PDF), Application 265, Architecture 19, Web 42 — all green.
+Integration not run (Docker). DB snapshot `act5-complete` still valid (PDF fixes are code-only, no data
+change; the live DB has a few extra `PortfolioExport` audit rows from verification exports).
+
+**▶ Recommended next:** the remaining Act 5 findings if wanted (**F-5-4** graduation lifecycle is the
+bigger one; **F-5-5** Coordinator export is a one-line authz call), then the **Appendix** cross-cutting
+spot-checks (data rights, scheduled jobs, SSO, mobile/a11y) in `scenario-paediatrics.md`. **Opus** for
+F-5-4; **Sonnet** ok for F-5-5 + the Appendix grind. The linear acts (1–5) are all played.
 
 ## ⭐ Session finalized — 2026-06-01 (Opus) — Act 4 played in full + F-4A-1 fixed (T075)
 

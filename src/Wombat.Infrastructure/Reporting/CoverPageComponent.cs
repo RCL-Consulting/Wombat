@@ -66,13 +66,6 @@ internal static class CoverPageComponent
                 });
             }
 
-            column.Item().Height(8);
-
-            column.Item().AlignCenter().Text(text =>
-            {
-                text.Span($"Generated: {data.GeneratedOn:yyyy-MM-dd HH:mm} UTC").FontSize(9).FontColor(Colors.Grey.Medium);
-            });
-
             column.Item().Height(40);
 
             column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);

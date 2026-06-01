@@ -1477,20 +1477,20 @@ end-to-end; four findings surfaced (none fixed yet — design/feature decisions 
   InadequateProgressRepeat / ReleaseFromTraining / OutcomeDeferred` — there is no `Graduate`/`Complete`.
   Recorded the graduation as `SatisfactoryProgress`. A terminal "programme complete" outcome has no
   first-class representation.
-- **F-5-2 — portfolio PDF omits the STAR / entrustment-decision section entirely.** `PortfolioPdfService`
-  never queries `EntrustmentDecisions`; the PDF shows committee *reviews* but **none of the 15 awarded
-  STARs/authorisations**. The centerpiece of a graduation portfolio is absent. STARs exist only as
-  separate per-EPA certificates (`EntrustmentCertificatePdfService` via `/portfolio/authorisations`),
-  which the scenario conflated with the portfolio. Decide whether the portfolio should embed an
-  authorisations/STAR section.
-- **F-5-3 — portfolio (and STAR-certificate) PDFs are non-deterministic.** Both render
-  `Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC` on every page (`CoverPageComponent.cs:73`,
-  `EntrustmentCertificatePdfService.cs:195`), so two exports more than a minute apart produce different
-  bytes — **Step 5.5 byte-for-byte reproducibility fails** (demonstrated live: two exports → two
-  different content-hash filenames `portfolio-46a3959b1e92.pdf` vs `portfolio-82cb272b2eb3.pdf`). The
-  hash-derived filename amplifies it. Fix: drop/normalise `GeneratedOn` from the hashed content (and
-  ensure QuestPDF metadata is deterministic) if reproducibility is required, or drop the reproducibility
-  expectation (treat the PDF as a point-in-time snapshot).
+- **F-5-2 — portfolio omitted the STAR section — RESOLVED (T077, 2026-06-01).** `PortfolioPdfService`
+  now loads the trainee's **active** `EntrustmentDecision`s and renders a "Statements of Awarded
+  Responsibility (STARs)" table (EPA code/title, authorised level, issued, expires) after the Summary.
+  Verified live: Molefe's portfolio now lists all 15 STARs (12 Unsupervised, 3 Indirect).
+- **F-5-3 — PDFs were non-deterministic — RESOLVED (T078, 2026-06-01).** Removed the wall-clock
+  `Generated:` line (portfolio cover + certificate footer) and set fixed QuestPDF `DocumentMetadata`
+  (`CreationDate`/`ModifiedDate` = `2000-01-01Z`) on both services. Provenance is the content hash (file
+  name + `/portfolio/verify`). Verified live: two exports of Molefe's portfolio produced the identical
+  file `portfolio-176a91aec2bc.pdf` (before: two different hashes). +2 Infrastructure tests.
+- **F-5-5 — Coordinator cannot export portfolios (noted, deferred).** `ExportPortfolioCommand.
+  DemandExportAccess` admits Administrator/InstitutionalAdmin/SpecialityAdmin/SubSpecialityAdmin or the
+  trainee themselves — **not Coordinator** — so Step 5.5's "Coordinator reproduces the PDF" fails on
+  authorisation (independent of the now-fixed determinism). Decide whether Coordinators get portfolio
+  read/export access.
 - **F-5-4 — no trainee graduation/completion lifecycle.** No "Mark complete"/"Graduate" action (only
   `Deactivate`), no Alumnus role / role transition (Deactivate leaves the `Trainee` role intact —
   DB-verified), no "Completed" sub-tab on `/admin/trainees`, and no graduation email (Step 5.7). The

@@ -10,6 +10,7 @@ using Wombat.Application.Features.Reporting;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 
@@ -17,6 +18,22 @@ namespace Wombat.Infrastructure.Reporting;
 
 internal sealed class PortfolioPdfService : IPortfolioPdfService
 {
+    // F-5-3 / T078: a fixed timestamp keeps the PDF metadata (and therefore the bytes) deterministic,
+    // so the same data always produces the same content hash. Provenance is the content hash itself
+    // (the file name + the /portfolio/verify surface), not a wall-clock generation time.
+    internal static readonly DateTime DeterministicTimestamp = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    internal static DocumentMetadata DeterministicMetadata { get; } = new()
+    {
+        Title = "Portfolio Export",
+        Author = "Wombat",
+        Subject = "Trainee portfolio",
+        Creator = "Wombat",
+        Producer = "Wombat",
+        CreationDate = DeterministicTimestamp,
+        ModifiedDate = DeterministicTimestamp
+    };
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IMsfAggregationService _msfAggregationService;
 
@@ -43,7 +60,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
                 page.Content().Element(content => ComposeContent(content, data));
                 page.Footer().Element(footer => IntegrityFooterComponent.Compose(footer));
             });
-        });
+        }).WithMetadata(DeterministicMetadata);
 
         var pdfBytes = document.GeneratePdf();
 
@@ -61,6 +78,11 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             column.Spacing(10);
 
             column.Item().Element(e => SummaryPageComponent.Compose(e, data));
+
+            if (data.EntrustmentDecisions.Count > 0)
+            {
+                column.Item().Element(e => EntrustmentSummaryComponent.Compose(e, data.EntrustmentDecisions));
+            }
 
             if (data.CommitteeReviews.Count > 0)
             {
@@ -158,6 +180,17 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .OrderByDescending(review => review.ScheduledOn)
             .ToListAsync(cancellationToken);
 
+        // F-5-2 / T077: the trainee's active STARs (entrustment authorisations). These are current
+        // standing authorisations, so they are not constrained by the activity date filter.
+        var entrustmentDecisions = await _dbContext.Set<EntrustmentDecision>()
+            .AsNoTracking()
+            .Include(decision => decision.Epa)
+            .Include(decision => decision.AuthorisedLevel)
+            .Where(decision => decision.TraineeUserId == request.TraineeUserId)
+            .Where(decision => decision.Status == EntrustmentDecisionStatus.Active)
+            .OrderBy(decision => decision.Epa.Code)
+            .ToListAsync(cancellationToken);
+
         var msfCampaigns = await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .Include(campaign => campaign.Template)
@@ -208,12 +241,12 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             SpecialityName: traineeProfile?.Curriculum.SubSpeciality.Speciality.Name,
             FromDate: request.FromDate,
             ToDate: request.ToDate,
-            GeneratedOn: DateTime.UtcNow,
             Brand: brand,
             Activities: activities,
             ActivitiesByType: activitiesByType,
             SchemaVersions: schemaVersions,
             CommitteeReviews: committeeReviews,
+            EntrustmentDecisions: entrustmentDecisions,
             MsfReports: msfReports,
             AuditEntries: auditEntries);
     }
@@ -227,12 +260,12 @@ internal sealed record PortfolioData(
     string? SpecialityName,
     DateOnly? FromDate,
     DateOnly? ToDate,
-    DateTime GeneratedOn,
     InstitutionBrand? Brand,
     List<Activity> Activities,
     Dictionary<string, List<Activity>> ActivitiesByType,
     Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> SchemaVersions,
     List<CommitteeReview> CommitteeReviews,
+    List<EntrustmentDecision> EntrustmentDecisions,
     List<MsfCampaignAggregateReportDto> MsfReports,
     List<AuditEntry> AuditEntries);
 

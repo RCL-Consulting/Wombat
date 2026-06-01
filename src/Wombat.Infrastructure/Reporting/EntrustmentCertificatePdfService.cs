@@ -13,6 +13,18 @@ namespace Wombat.Infrastructure.Reporting;
 
 internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificatePdfService
 {
+    // F-5-3 / T078: fixed metadata so the certificate is byte-for-byte reproducible from its data.
+    private static readonly QuestPDF.Infrastructure.DocumentMetadata DeterministicMetadata = new()
+    {
+        Title = "Statement of Awarded Responsibility",
+        Author = "Wombat",
+        Subject = "Entrustment decision",
+        Creator = "Wombat",
+        Producer = "Wombat",
+        CreationDate = PortfolioPdfService.DeterministicTimestamp,
+        ModifiedDate = PortfolioPdfService.DeterministicTimestamp
+    };
+
     private readonly IApplicationDbContext _dbContext;
 
     public EntrustmentCertificatePdfService(IApplicationDbContext dbContext)
@@ -38,7 +50,7 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
                 page.Content().Element(e => ComposeContent(e, data));
                 page.Footer().Element(e => ComposeFooter(e, data));
             });
-        });
+        }).WithMetadata(DeterministicMetadata);
 
         var pdfBytes = document.GeneratePdf();
         var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
@@ -191,9 +203,7 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             column.Item().Height(4);
             column.Item().AlignCenter().Text(t =>
             {
-                t.Span("Generated ").FontSize(8).FontColor(Colors.Grey.Darken1);
-                t.Span($"{data.GeneratedOn:yyyy-MM-dd HH:mm} UTC").FontSize(8).FontColor(Colors.Grey.Darken1);
-                t.Span(" · Decision #").FontSize(8).FontColor(Colors.Grey.Darken1);
+                t.Span("Decision #").FontSize(8).FontColor(Colors.Grey.Darken1);
                 t.Span(data.DecisionId.ToString()).FontSize(8).FontColor(Colors.Grey.Darken1);
             });
         });
@@ -250,8 +260,7 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
                 .ToList(),
             RevokedOn: decision.RevokedOn,
             RevokedByUserId: decision.RevokedByUserId,
-            RevocationReason: decision.RevocationReason,
-            GeneratedOn: DateTime.UtcNow);
+            RevocationReason: decision.RevocationReason);
     }
 
     private static string? FormatName(WombatIdentityUser? user)
@@ -285,7 +294,6 @@ internal sealed record CertificateData(
     List<CertificateEvidence> EvidenceLinks,
     DateTime? RevokedOn,
     string? RevokedByUserId,
-    string? RevocationReason,
-    DateTime GeneratedOn);
+    string? RevocationReason);
 
 internal sealed record CertificateEvidence(string SourceLabel, string Summary);
