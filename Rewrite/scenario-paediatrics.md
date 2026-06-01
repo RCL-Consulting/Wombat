@@ -1302,13 +1302,22 @@ ran clean against the implemented model, with several scenario/impl deltas noted
   Migration `20260601161846_ProgrammeDefaultEntrustmentScale`; SubSpeciality edit-page picker; +7
   tests. Live-verified: with `General Paediatrics` → Paed scale, the picker showed only the 5 Paed
   levels. Paediatrics seeded to scale 2 in snapshot **`act4-complete-t076`** (Act 5 baseline).
-- **F-4B-1 (scenario/impl mismatch, doc):** the scenario imagines a tabbed pre-meeting evidence
-  bundle (Activities / STAR snapshot / dashboard snapshot / **T032 sampling-concentration warning**).
-  The implemented `ReviewDetail` is single-column and has **no sampling-concentration surface and no
-  dashboard snapshot**; evidence is captured only on Start. T032 was not exercisable here.
-- **No review-type field:** the schedule form has no "Annual vs Pre-graduation" review-type field;
-  all 5 scheduled as plain Summative. Minor — fold into a review-type enhancement if wanted.
-- **Nav:** no NavMenu link to `/committee/reviews` for InstitutionalAdmin (URL-only).
+- **F-4B-1 (mostly RECONCILED 2026-06-01):** re-examined the page — most of the original note was
+  wrong. **T032 sampling-concentration warning DOES exist and render** (`ReviewDetail` shows a
+  per-EPA warning block, conditional on `AnyWarning`); it just didn't fire because Molefe's MSF had 0
+  rated observations and Mahlangu's 2 activities weren't concentrated enough — working as designed,
+  not a defect. The implemented `ReviewDetail` is **single-column** (not tabbed) but **does** surface
+  the evidence: a frozen activity snapshot (captured on Start) + the per-EPA rating trajectory + the
+  conditional sampling warning. The "tabbed bundle / frozen dashboard snapshot" the scenario imagined
+  was over-specified; the activities + trajectory are the relevant frozen evidence. Decision: accept
+  the implemented design; no code change for the evidence layout.
+  - **(e) Nav — FIXED 2026-06-01:** `/committee/reviews` + `/committee/panels` were linked for
+    Coordinator/SpecialityAdmin/SubSpecialityAdmin/CommitteeMember but **not** for InstitutionalAdmin
+    or Administrator (after T075 they could reach the page but not discover it). Added "Decision
+    Panels" + "Committee Reviews" to both nav blocks; verified Mbatha's nav now shows them.
+  - **(d) Review-type field — DEFERRED:** the schedule form has no "Annual vs Pre-graduation" field;
+    all 5 scheduled as plain Summative. No logic depends on the distinction, so it's a descriptive-only
+    schema change — deferred unless a real need surfaces.
 - **Tooling note:** do **not** run `tools/db-snapshot.ps1 take` concurrently with live browser
   requests — the template-clone (`CREATE DATABASE … TEMPLATE`) briefly drops the app's DB
   connections and 500s the in-flight request (cookie security-stamp query). Snapshot while idle.

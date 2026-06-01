@@ -62,14 +62,19 @@ Mahlangu), already in `pwd_DO_NOT_COMMIT.txt`.
 **Commit:** T075 (code + tests) + doc updates landed in **`46126bf`** on `master` (10 files,
 +447/-7). Nothing pushed. Build clean, all non-Integration suites green.
 
-**Post-Act-4 findings follow-up (2026-06-01, Opus):** working the Act 4 findings one-by-one —
-**F-4A-2 RESOLVED (A1, docs-only, `b01920f`)** and **F-4D-1 RESOLVED (T076, code)**. Remaining open:
-**F-4B-1** (no tabbed evidence bundle / T032 sampling-concentration surface / dashboard snapshot on
-`ReviewDetail`; no review-type field; no NavMenu link to `/committee/reviews` for InstAdmin) — still
-to be triaged with the user.
+**Post-Act-4 findings follow-up (2026-06-01, Opus) — ALL THREE handled:**
+- **F-4A-2 RESOLVED (A1, docs-only, `b01920f`)** — committee ratify/appeals stay with the chair.
+- **F-4D-1 RESOLVED (T076, `3186a85`)** — programme default entrustment scale.
+- **F-4B-1 mostly RECONCILED + nav fix (this commit):** re-examined `ReviewDetail` — the T032
+  sampling-concentration warning **does** exist/render (conditional on `AnyWarning`; just didn't fire
+  on the thin scenario data), and the single-column page **does** surface the evidence (frozen
+  activity snapshot + trajectory + warning). The scenario over-imagined a tabbed bundle / dashboard
+  snapshot — accepted the implemented design (no code). **Fixed (e):** added "Decision Panels" +
+  "Committee Reviews" nav links for InstitutionalAdmin + Administrator (were missing; verified live).
+  **Deferred (d):** review-type field (Annual vs Pre-graduation) — descriptive-only, nothing uses it.
 
-**▶ Recommended next: finish F-4B-1, then Act 5** (graduation + STAR augmentation to all 15 EPAs +
-portfolio PDF export). **Opus** (entrustment-decision augmentation + QuestPDF). Start Act 5 from
+**▶ Recommended next: Act 5** (graduation + STAR augmentation to all 15 EPAs + portfolio PDF export).
+**Opus** (entrustment-decision augmentation + QuestPDF). Start Act 5 from
 **`tools\db-snapshot.ps1 restore act4-complete-t076`** (= act4-complete + the T076 migration + Paed
 default scale; the pure `act4-complete` is kept as the play-through record).
 
