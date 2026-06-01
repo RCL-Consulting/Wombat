@@ -36,9 +36,11 @@ server was being killed; re-ran isolated = 8/8.)
 phases). Restore the final state with `tools\db-snapshot.ps1 restore act4-complete`.
 
 **Findings still open (deferred, documented in the Act 4 findings summary):**
-- **F-4A-2 (governance):** scenario casts Mbatha for ratify (4.8) + appeal-resolve (4.10), but code
-  reserves those to chair/external/Administrator. Driven as chair Zulu. Decide whether the
-  institutional lead should be an allowed ratifier/appeal body, or amend the scenario casting.
+- **F-4A-2 (governance) — RESOLVED A1 (docs-only):** keep the code; ratification + appeals stay with
+  the committee (chair), InstAdmin schedules/oversees only. Scenario steps 4.8/4.10 recast to the
+  chair + a governance note added (separation of duties; appeals independent of the program overseer).
+  Multi-role is supported, so an institutional lead granted `CommitteeMember` + seated as chair could
+  legitimately ratify/resolve via membership — this scenario deliberately keeps them separate.
 - **F-4D-1 (UI correctness):** the STAR "Authorised level" picker lists every level from every
   scale (duplicate-looking 1–5 sets) and does not narrow to the EPA's scale — can stage against the
   wrong scale. Filter levels to the EPA's entrustment scale.

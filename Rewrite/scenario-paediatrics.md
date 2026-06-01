@@ -1088,7 +1088,20 @@ Act 4 needs from Act 3:
 # Act 4 — Month 12: annual review
 
 **Date in scenario:** 2027-01-08 (committee scheduled session) through 2027-02-15 (ratification + STAR delivery).
-**Who:** Prof Mbatha schedules + supervises the cycle. The committee panel (Zulu chair / Naidoo / Botha / van Rensburg) makes the calls. Each trainee receives a written outcome. One trainee (Dr Mahlangu) lodges an appeal that goes to Prof Mbatha.
+**Who:** Prof Mbatha (InstitutionalAdmin) schedules + oversees the cycle. The committee panel
+(Zulu chair / Naidoo / Botha / van Rensburg) does the substantive work — it records and **ratifies**
+the decisions, and the chair/external resolve appeals. Each trainee receives a written outcome. One
+trainee (Dr Mahlangu) lodges an appeal that the panel chair (Dr Zulu) resolves.
+
+> **Governance model (F-4A-2, resolved A1 2026-06-01).** Committee authority is **panel-membership**
+> based, not admin-role based: ratification requires the **panel chair** (or a global Administrator);
+> appeal resolution requires the **chair or an external member**. An InstitutionalAdmin schedules and
+> oversees but does **not** ratify or hear appeals — preserving separation of duties (and keeping
+> appeals independent of the program overseer). Note this is a *casting* choice, not a code limit: a
+> user may hold multiple roles, so an institutional lead who is *also* granted the `CommitteeMember`
+> role and seated on the panel as chair could legitimately ratify/resolve — Wombat models that through
+> membership, not an admin override. This scenario keeps the institutional lead and the committee
+> separate.
 
 **Why:** The annual review is the formal gate where the committee decides whether each trainee progresses to the next stage, repeats, is referred for additional supervision, or graduates. STARs (Statement of Awarded Responsibility) are the persistent record of granted entrustment levels per EPA.
 
@@ -1103,7 +1116,7 @@ Act 4 needs from Act 3:
 3. Committee meets, records decisions per trainee; majority pre-graduation continues, one borderline case, one referral, Dr Molefe progresses to graduation-track.
 4. STARs staged for one EPA per trainee (where they've reached the year-end target).
 5. Ratification step records the decisions formally.
-6. Dr Mahlangu's referral triggers an appeal; Prof Mbatha reviews and either upholds or remits.
+6. Dr Mahlangu's referral triggers an appeal; the panel chair (Dr Zulu) reviews and either upholds, dismisses, or remits.
 
 ## Phase 4.A — Schedule the 5 reviews
 
@@ -1192,30 +1205,30 @@ Gap:
 ## Phase 4.E — Ratification
 
 ### Step 4.8 — Ratify decisions
-Role: Prof Mbatha (InstitutionalAdmin)
-Route: `/admin/committee-reviews/{id}` per review, or a batch action on `/admin/committee-reviews`
+Role: Dr Thandi Zulu (panel **chair**) — ratification is `DemandChairAccess` (chair or global Administrator), **not** an InstitutionalAdmin power (F-4A-2/A1).
+Route: `/committee/reviews/{id}` per review — open each and click `Ratify`.
 Action: For each review, click `Ratify`. This transitions the review to its terminal state and locks the decision. For Dr Molefe's review, the 3 PendingEntrustmentDecision rows transition to `EntrustmentDecision` rows (per T029 / T030 — the STAR PDF should become generable).
 Expected: All five reviews in `Ratified` (or equivalent terminal) state. Dr Molefe's profile shows 3 awarded STARs.
-Actual:
-Gap:
+Actual (2026-06-01): All 5 ratified as chair Zulu (State=4 Ratified). Ratifying Molefe's review **atomically issued 3 `EntrustmentDecision` rows** (PAED-001/006 Unsupervised, PAED-013 Indirect supervision; Status Active, `IssuedByCommitteeReviewId`=1) and consumed the 3 PendingEntrustmentDecision rows (0 remaining). DB-verified.
+Gap: Scenario originally cast Mbatha here; corrected to chair per A1. STAR PDF generation not exercised this pass (Act 5). No batch-ratify action exists — each review ratified individually (acceptable).
 
 ## Phase 4.F — Appeal
 
 ### Step 4.9 — Dr Mahlangu lodges an appeal
 Role: Dr Nomsa Mahlangu (Trainee)
-Route: `/portfolio/reviews/{mahlangu_review_id}` → `Appeal` button (form on the review detail per T039's appeals form)
-Action: Click `Appeal`. Fill the appeal reason: "Single DOPS reflects start-of-year skill level. Stalled Mini-CEX was assessor-side issue, not trainee-side. Request reconsideration with attached evidence of 3 additional Mini-CEXes submitted in last 30 days." Submit.
-Expected: Appeal saved. Review's state flips from `Ratified` to `Appealed` (or appended with an appeal record — exact mechanism per T039). Prof Mbatha receives an appeal notification.
-Actual:
-Gap:
+Route: `/committee/my-reviews` → `View` on the ratified review → fill `Appeal reason` → `Lodge appeal`.
+Action: Open the review, enter the appeal reason ("Single DOPS reflects start-of-year skill level. Stalled Mini-CEX was an assessor-side scheduling issue, not trainee-side. Request reconsideration; 3 additional Mini-CEX assessments submitted in the last 30 days."), click `Lodge appeal`.
+Expected: Appeal saved. Review state flips from `Ratified` to `UnderAppeal`.
+Actual (2026-06-01): "Appeal lodged" banner; review state → `UnderAppeal`. The open appeal lists on both the trainee view and the chair's review detail. DB-verified (1 CommitteeAppeal row, Open).
+Gap: Trainee surface is `/committee/my-reviews` (not the guessed `/portfolio/reviews/{id}`). No appeal-notification email was observed (not verified this pass).
 
-### Step 4.10 — Prof Mbatha reviews the appeal
-Role: Prof Mbatha
-Route: `/admin/committee-reviews/{id}/appeals/{appealId}`
-Action: Read the appeal text. Verify the cited additional Mini-CEXes (need to have been submitted in Act 3 or appended for the scenario). Decide: in this scenario, **uphold the referral** but reduce its scope to a 3-month re-review instead of 6-month. Click `Decide`.
-Expected: Appeal disposed. Review state flips to `AppealResolved`. Trainee dashboard shows the appeal outcome.
-Actual:
-Gap:
+### Step 4.10 — The panel chair resolves the appeal
+Role: Dr Thandi Zulu (panel **chair**) — appeal resolution is `DemandAppealResolverAccess` (chair or external member, or global Administrator), **not** an InstitutionalAdmin power (F-4A-2/A1). *(For independence, a program may prefer the **external** member, Dr van Rensburg, to resolve.)*
+Route: `/committee/reviews/{id}` → Appeals section → select `Outcome` → `Resolve appeal`.
+Action: Read the appeal text. Decide: in this scenario, **uphold the referral** but reduce its scope to a 3-month re-review instead of 6-month. Select outcome `Remitted`, set replacement category `InadequateProgressAdditionalTraining` with a rationale recording the reduced re-review window, click `Resolve appeal`.
+Expected: Appeal disposed; review reaches a terminal state; trainee can see the outcome.
+Actual (2026-06-01): Outcome `Remitted` with a replacement decision. Review state → `Final`. A new `CommitteeDecision` was written with `SupersedesDecisionId` = the original referral decision; the appeal shows `(Remitted)`. DB-verified.
+Gap: Scenario originally cast Mbatha here; corrected to chair per A1. Outcome vocabulary is `Upheld / Dismissed / Remitted` — "uphold the referral but change the window" maps to **Remitted** with a replacement decision (selecting Remitted reveals replacement category + rationale fields). Note: the chair who recorded/ratified the decision also resolved the appeal — a program wanting independence should route this to the external member instead.
 
 ## Act 4 outcome state
 
@@ -1271,10 +1284,15 @@ ran clean against the implemented model, with several scenario/impl deltas noted
 - **F-4A-1 (FIXED — T075):** InstitutionalAdmin was excluded from review scheduling/viewing at
   both the page gate and `DemandReviewScheduling`, even though `DemandPanelAdministration` (T063)
   admits them — so Mbatha could build the panel but not schedule on it. Fixed scope-aware; +6 tests.
-- **F-4A-2 (governance, deferred):** the scenario casts Mbatha (InstAdmin) for ratification (4.8)
-  and appeal resolution (4.10), but the code reserves those to the panel chair/external/Administrator
-  (`DemandChairAccess` / `DemandAppealResolverAccess`). Driven as chair Zulu instead. Decide whether
-  the institutional lead should be an allowed ratifier / appeal body, or amend the scenario.
+- **F-4A-2 (governance — RESOLVED A1, 2026-06-01):** the scenario originally cast Mbatha (InstAdmin)
+  for ratification (4.8) and appeal resolution (4.10), but the code reserves those to the panel
+  chair/external/Administrator (`DemandChairAccess` / `DemandAppealResolverAccess`). **Decision: keep
+  the code, amend the scenario** — ratification and appeals stay with the committee (chair Zulu), the
+  InstitutionalAdmin schedules + oversees only. Steps 4.8/4.10 recast to the chair; a governance note
+  added under the Act 4 header. Rationale: preserves separation of duties and keeps appeals
+  independent of the program overseer. A user *can* hold multiple roles, so an institutional lead who
+  is also granted `CommitteeMember` and seated as panel chair could legitimately ratify/resolve —
+  Wombat models that via membership, not an admin override — but this scenario keeps them separate.
 - **F-4D-1 (UI correctness, deferred):** the STAR "Authorised level" picker lists **every level
   from every scale** (two near-duplicate 1–5 sets: "4. Independent" vs "4. Unsupervised"), and does
   **not** narrow to the selected EPA's scale — a committee member can silently stage a STAR against
