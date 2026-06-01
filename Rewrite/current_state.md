@@ -2,6 +2,39 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ Act 5 played in full — 2026-06-01 (Opus) — graduation; 4 findings (all open)
+
+**Act 5 (graduation + STAR augmentation + portfolio PDF) played end-to-end from
+`act4-complete-t076`. No code changes — all four findings are design/feature decisions left OPEN for
+the user (same find-then-decide rhythm as Act 4). Snapshot `act5-complete`.**
+
+**Worked (DB/PDF-verified):** Mbatha scheduled Molefe's final review (T075); chair Zulu staged STARs
+for the remaining 12 EPAs (the **T076 scale filter applied** — only Paed levels offered); ratify
+issued them atomically → **Molefe has 15 EntrustmentDecisions covering all 15 EPAs** (12 Unsupervised
++ 3 Indirect). Portfolio PDF generated cleanly (cover/summary/committee-reviews/activities/MSF/audit).
+*(2 STARs staged via UI to verify; the other 10 bulk-loaded via SQL into `PendingEntrustmentDecisions`
+since staging was already proven in Act 4 — ratify issued all 12 identically.)*
+
+**Findings (all OPEN — detail + repro in `scenario-paediatrics.md` § "Act 5 findings summary"):**
+- **F-5-1:** no `Graduate`/`Complete` committee decision category (recorded graduation as
+  `SatisfactoryProgress`).
+- **F-5-2:** portfolio PDF **omits the STAR/authorisations section** — none of the 15 awarded STARs
+  appear; `PortfolioPdfService` never queries `EntrustmentDecisions`. STARs are only separate per-EPA
+  certificates (`EntrustmentCertificatePdfService`).
+- **F-5-3:** portfolio + STAR-certificate PDFs are **non-deterministic** — render
+  `Generated: {UtcNow:…HH:mm}` on every page, so byte-for-byte reproducibility (Step 5.5) fails
+  (demonstrated: two exports → two different content-hash filenames). Hash-derived filename amplifies it.
+- **F-5-4:** no trainee graduation/completion lifecycle — only generic `Deactivate` (leaves the
+  `Trainee` role intact, DB-verified); no Alumnus role/transition, no "Completed" tab, no graduation email.
+
+**Tests:** unchanged from earlier today — Domain 45, Infrastructure 8, Application 265, Architecture 19,
+Web 42 (no code changes this act). Server running on 5080 (DB = `act5-complete`).
+
+**▶ Recommended next:** triage the four Act 5 findings with the user (F-5-2/F-5-3 are the most
+substantive — portfolio completeness + PDF determinism), then the **Appendix** cross-cutting spot-checks
+(data rights, scheduled jobs, SSO, mobile/a11y) in `scenario-paediatrics.md`. **Opus** for the PDF/
+graduation-lifecycle work; **Sonnet** ok for the Appendix grind. The linear acts (1–5) are now all played.
+
 ## ⭐ Session finalized — 2026-06-01 (Opus) — Act 4 played in full + F-4A-1 fixed (T075)
 
 **Act 4 (annual review + STARs + appeal) played end-to-end and DB-verified, after fixing one real

@@ -1449,7 +1449,55 @@ After Act 5 completes cleanly:
 
 ## Act 5 findings summary
 
-Not yet played. T023 (portfolio PDF) and T030 (STAR PDF) are the biggest moving parts to verify. The byte-for-byte reproducibility check (Step 5.5) requires the PDF generation to be deterministic — if QuestPDF embeds a timestamp or any non-deterministic field, that property fails. T030's STAR certificate format is fully specified per its task file; cross-check.
+**Played in full 2026-06-01 (Opus) from `act4-complete-t076`.** The graduation mechanics work
+end-to-end; four findings surfaced (none fixed yet — design/feature decisions for the user).
+
+**Actual route map:** schedule via `/committee/reviews` (Mbatha, T075); conduct via
+`/committee/reviews/{id}` (chair Zulu); portfolio export via `/portfolio/export/{TraineeUserId}`
+(not `/admin/trainees/{id}`); trainee closure via `/admin/trainees/edit?id={profileId}`.
+
+**What worked (DB/PDF-verified):**
+- **5.A** — Mbatha scheduled Molefe's final review (id 6); chair Zulu started it and staged STARs for
+  the remaining 12 EPAs (PAED-002..012 Unsupervised=4, PAED-014/015 Indirect=3). The **T076 scale
+  filter applied** — the level picker showed only the 5 Paed-scale levels. (2 staged via UI to verify;
+  the other 10 bulk-loaded via SQL into `PendingEntrustmentDecisions` to reach 12 efficiently — the
+  staging mechanism was already proven in Act 4. Decision recorded — see F-5-1.)
+- **5.B** — ratified (chair Zulu; scenario said bootstrap admin — chair also satisfies `DemandChairAccess`).
+  Atomic issue verified: **Molefe now has 15 `EntrustmentDecision` rows covering all 15 EPAs** (12
+  Unsupervised + 3 Indirect), 0 pending remaining. The 10 SQL-staged rows issued identically to the 2 UI ones.
+- **5.C** — portfolio PDF **generated successfully** (read the actual PDF): cover (KGK / Molefe /
+  FCPaed(SA) Part 1 / period), Summary, **Committee Decisions** (both ratified reviews with rationale),
+  Activities (MSF #9), and an Audit-trail appendix. InstitutionalAdmin (Mbatha) authorized to export a
+  trainee's portfolio.
+- **5.D** — `Deactivate` flips the profile to inactive (drops it off the Active list).
+
+**Findings (all OPEN, documented):**
+- **F-5-1 — no graduation/completion committee decision category.** The enum is
+  `SatisfactoryProgress / SatisfactoryWithObservations / InadequateProgressAdditionalTraining /
+  InadequateProgressRepeat / ReleaseFromTraining / OutcomeDeferred` — there is no `Graduate`/`Complete`.
+  Recorded the graduation as `SatisfactoryProgress`. A terminal "programme complete" outcome has no
+  first-class representation.
+- **F-5-2 — portfolio PDF omits the STAR / entrustment-decision section entirely.** `PortfolioPdfService`
+  never queries `EntrustmentDecisions`; the PDF shows committee *reviews* but **none of the 15 awarded
+  STARs/authorisations**. The centerpiece of a graduation portfolio is absent. STARs exist only as
+  separate per-EPA certificates (`EntrustmentCertificatePdfService` via `/portfolio/authorisations`),
+  which the scenario conflated with the portfolio. Decide whether the portfolio should embed an
+  authorisations/STAR section.
+- **F-5-3 — portfolio (and STAR-certificate) PDFs are non-deterministic.** Both render
+  `Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC` on every page (`CoverPageComponent.cs:73`,
+  `EntrustmentCertificatePdfService.cs:195`), so two exports more than a minute apart produce different
+  bytes — **Step 5.5 byte-for-byte reproducibility fails** (demonstrated live: two exports → two
+  different content-hash filenames `portfolio-46a3959b1e92.pdf` vs `portfolio-82cb272b2eb3.pdf`). The
+  hash-derived filename amplifies it. Fix: drop/normalise `GeneratedOn` from the hashed content (and
+  ensure QuestPDF metadata is deterministic) if reproducibility is required, or drop the reproducibility
+  expectation (treat the PDF as a point-in-time snapshot).
+- **F-5-4 — no trainee graduation/completion lifecycle.** No "Mark complete"/"Graduate" action (only
+  `Deactivate`), no Alumnus role / role transition (Deactivate leaves the `Trainee` role intact —
+  DB-verified), no "Completed" sub-tab on `/admin/trainees`, and no graduation email (Step 5.7). The
+  only closure is a generic `Deactivate` (semantically "withdrawn"), which can't distinguish a graduate
+  from a drop-out.
+
+**DB snapshot:** `act5-complete` (Molefe: 15 STARs, final review Ratified, profile deactivated).
 
 ---
 
