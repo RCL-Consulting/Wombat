@@ -18,10 +18,10 @@ since staging was already proven in Act 4 — ratify issued all 12 identically.)
 **Findings (all OPEN — detail + repro in `scenario-paediatrics.md` § "Act 5 findings summary"):**
 - **F-5-1:** no `Graduate`/`Complete` committee decision category (recorded graduation as
   `SatisfactoryProgress`).
-- **F-5-2 — RESOLVED (T077, `<this commit>`):** portfolio PDF now renders a "Statements of Awarded
+- **F-5-2 — RESOLVED (T077, `af46b5a`):** portfolio PDF now renders a "Statements of Awarded
   Responsibility (STARs)" table (all active `EntrustmentDecision`s). Live-verified: Molefe's portfolio
   lists all 15 STARs.
-- **F-5-3 — RESOLVED (T078, `<this commit>`):** removed the wall-clock `Generated:` line + set fixed
+- **F-5-3 — RESOLVED (T078, `af46b5a`):** removed the wall-clock `Generated:` line + set fixed
   QuestPDF metadata → byte-for-byte reproducible. Live-verified: two exports → identical hash filename.
   +2 Infrastructure tests (8→10).
 - **F-5-4 (OPEN):** no trainee graduation/completion lifecycle — only generic `Deactivate` (leaves the
