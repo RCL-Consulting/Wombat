@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -19,14 +21,42 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
 
     public async Task<IReadOnlyList<CommitteeReviewListItemDto>> Handle(ListReviewsForPanelQuery request, CancellationToken cancellationToken)
     {
-        var userId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
-
-        return await _dbContext.Set<CommitteeReview>()
+        var query = _dbContext.Set<CommitteeReview>()
             .AsNoTracking()
             .Include(review => review.Panel)
                 .ThenInclude(panel => panel.Members)
             .Include(review => review.Decisions)
-            .Where(review => review.Panel.Members.Any(member => member.UserId == userId))
+            .AsQueryable();
+
+        // Administrator sees every panel's reviews; an InstitutionalAdmin sees reviews for
+        // panels in their institution (Institution-scoped via InstitutionId, Speciality-scoped
+        // via the Speciality's InstitutionId); committee members see panels they sit on. (T075)
+        if (request.Principal.IsAdministrator())
+        {
+            // No filter — global view.
+        }
+        else if (request.Principal.IsInstitutionalAdmin())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedInstitutionId.HasValue)
+            {
+                return Array.Empty<CommitteeReviewListItemDto>();
+            }
+
+            query = query.Where(review =>
+                (review.Panel.Scope == DecisionPanelScope.Institution && review.Panel.InstitutionId == scopedInstitutionId.Value) ||
+                (review.Panel.Scope == DecisionPanelScope.Speciality && review.Panel.SpecialityId.HasValue &&
+                 _dbContext.Set<Speciality>().Any(speciality =>
+                    speciality.Id == review.Panel.SpecialityId.Value &&
+                    speciality.InstitutionId == scopedInstitutionId.Value)));
+        }
+        else
+        {
+            var userId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
+            query = query.Where(review => review.Panel.Members.Any(member => member.UserId == userId));
+        }
+
+        return await query
             .OrderByDescending(review => review.ScheduledOn)
             .Select(review => new CommitteeReviewListItemDto(
                 review.Id,

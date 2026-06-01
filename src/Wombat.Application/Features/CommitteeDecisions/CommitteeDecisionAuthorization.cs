@@ -26,7 +26,12 @@ internal static class CommitteeDecisionAuthorization
 
     public static void DemandReviewScheduling(ClaimsPrincipal principal)
     {
+        // InstitutionalAdmin can schedule reviews on panels in their own institution
+        // (the handler applies the scope check). This mirrors DemandPanelAdministration,
+        // which already admits InstitutionalAdmin — scheduling a review on a panel you can
+        // administer should not require a lesser Coordinator role. (T075 / F-4A-1)
         if (principal.IsInRole(WombatRoles.Administrator) ||
+            principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
             principal.IsInRole(WombatRoles.Coordinator) ||
             principal.IsInRole(WombatRoles.SpecialityAdmin) ||
             principal.IsInRole(WombatRoles.SubSpecialityAdmin))

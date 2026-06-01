@@ -1240,7 +1240,57 @@ After Act 4 completes cleanly, the database adds:
 
 ## Act 4 findings summary
 
-Not yet played. Specific items to verify: T032 sampling-concentration warning fires correctly on Molefe's bundle (likely needs ≥ 3 activities from the same assessor — may not trigger if the scenario only has the one MSF); T033's per-EPA trajectory chart renders for trainees with at least one credit; T029's PendingEntrustmentDecision lifecycle locks correctly on ratification; T031's formative-only review mode is not exercised here but the form should still allow it as an option.
+**Played in full 2026-06-01 (Opus) from `act3R-final-t065`.** All six phases driven and
+DB-verified. One real bug found and fixed before 4.A could proceed (F-4A-1 / T075); the rest
+ran clean against the implemented model, with several scenario/impl deltas noted below.
+
+**Actual route map (the scenario's guessed routes were wrong):**
+- Schedule + list reviews: `/committee/reviews` (`ReviewsSchedule.razor`), not
+  `/admin/committee-reviews/new`.
+- Review detail / conduct / STAR-stage / ratify / resolve-appeal: `/committee/reviews/{id}`
+  (`ReviewDetail.razor`).
+- Trainee appeal surface: `/committee/my-reviews` (`MyReviews.razor`), not `/portfolio/reviews/{id}`.
+
+**What was verified working end-to-end:**
+- **4.A** — 5 reviews scheduled by Mbatha (after T075), all `Scheduled`, panel 1, 2027-01-08.
+- **4.B / evidence** — the evidence bundle is **frozen on "Start review"** (not a pre-meeting
+  preview). It correctly captured each trainee's activities: Molefe MSF #9; Mahlangu Mini-CEX #10
+  + DOPS #8. T033 **rating trajectory renders** when rated WBAs exist (Mahlangu PAED-001 r2,
+  PAED-010 r2); Molefe's MSF produced no per-EPA ratings so his trajectory was empty (expected).
+- **4.C** — decisions recorded for all 5 (chair Zulu). Category mapping used:
+  Molefe/Dlamini = `SatisfactoryProgress`, du Plessis = `SatisfactoryWithObservations`,
+  Mahlangu = `InadequateProgressAdditionalTraining`, Ndlovu = `OutcomeDeferred`.
+- **4.D** — 3 STARs staged for Molefe (PAED-001/006 Unsupervised, PAED-013 Indirect supervision).
+- **4.E** — all 5 ratified; ratifying Molefe **atomically issued 3 `EntrustmentDecision` rows**
+  (Status Active, linked to review 1) and consumed the pending rows. STAR lifecycle proven.
+- **4.F** — Mahlangu (trainee) lodged an appeal → review `UnderAppeal`; chair resolved it
+  `Remitted` with a replacement decision (referral upheld, re-review cut 6mo→3mo). Review went
+  `Final`; the replacement `CommitteeDecision` correctly carries `SupersedesDecisionId` = original.
+
+**Findings:**
+- **F-4A-1 (FIXED — T075):** InstitutionalAdmin was excluded from review scheduling/viewing at
+  both the page gate and `DemandReviewScheduling`, even though `DemandPanelAdministration` (T063)
+  admits them — so Mbatha could build the panel but not schedule on it. Fixed scope-aware; +6 tests.
+- **F-4A-2 (governance, deferred):** the scenario casts Mbatha (InstAdmin) for ratification (4.8)
+  and appeal resolution (4.10), but the code reserves those to the panel chair/external/Administrator
+  (`DemandChairAccess` / `DemandAppealResolverAccess`). Driven as chair Zulu instead. Decide whether
+  the institutional lead should be an allowed ratifier / appeal body, or amend the scenario.
+- **F-4D-1 (UI correctness, deferred):** the STAR "Authorised level" picker lists **every level
+  from every scale** (two near-duplicate 1–5 sets: "4. Independent" vs "4. Unsupervised"), and does
+  **not** narrow to the selected EPA's scale — a committee member can silently stage a STAR against
+  the wrong scale. Should filter levels to the EPA's entrustment scale.
+- **F-4B-1 (scenario/impl mismatch, doc):** the scenario imagines a tabbed pre-meeting evidence
+  bundle (Activities / STAR snapshot / dashboard snapshot / **T032 sampling-concentration warning**).
+  The implemented `ReviewDetail` is single-column and has **no sampling-concentration surface and no
+  dashboard snapshot**; evidence is captured only on Start. T032 was not exercisable here.
+- **No review-type field:** the schedule form has no "Annual vs Pre-graduation" review-type field;
+  all 5 scheduled as plain Summative. Minor — fold into a review-type enhancement if wanted.
+- **Nav:** no NavMenu link to `/committee/reviews` for InstitutionalAdmin (URL-only).
+- **Tooling note:** do **not** run `tools/db-snapshot.ps1 take` concurrently with live browser
+  requests — the template-clone (`CREATE DATABASE … TEMPLATE`) briefly drops the app's DB
+  connections and 500s the in-flight request (cookie security-stamp query). Snapshot while idle.
+
+**DB snapshots:** `act4-A-scheduled`, `act4-molefe-ratified`, `act4-complete` (final, all phases).
 
 ## Handoff into Act 5
 

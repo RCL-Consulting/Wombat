@@ -1,5 +1,5 @@
 @page "/committee/reviews"
-@attribute [Authorize(Roles = "Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin,CommitteeMember")]
+@attribute [Authorize(Roles = "Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin,CommitteeMember")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager

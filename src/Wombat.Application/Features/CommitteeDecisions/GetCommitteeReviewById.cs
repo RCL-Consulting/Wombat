@@ -5,6 +5,7 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -44,6 +45,17 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                 throw new UnauthorizedAccessException("This review is not yet visible to the trainee.");
             }
         }
+        else if (request.Principal.IsInstitutionalAdmin() && !request.Principal.IsAdministrator())
+        {
+            // An InstitutionalAdmin can view (read-only) any review for a panel in their
+            // institution, even without panel membership. Conduct actions (start/record/
+            // ratify) remain chair-gated in their respective handlers. (T075 / F-4A-1)
+            var resolvedInstitutionId = await ResolveInstitutionIdAsync(review.Panel, cancellationToken);
+            if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
+            {
+                throw new UnauthorizedAccessException("You can only view committee reviews for panels in your institution.");
+            }
+        }
         else if (!request.Principal.IsInRole(WombatRoles.Administrator) && !request.Principal.IsInRole(WombatRoles.Coordinator))
         {
             CommitteeDecisionAuthorization.DemandPanelAccess(request.Principal, review.Panel);
@@ -51,4 +63,15 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
 
         return review.ToDetailDto();
     }
+
+    private async Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
+        => panel.Scope switch
+        {
+            DecisionPanelScope.Institution => panel.InstitutionId,
+            DecisionPanelScope.Speciality when panel.SpecialityId.HasValue => await _dbContext.Set<Speciality>()
+                .Where(speciality => speciality.Id == panel.SpecialityId.Value)
+                .Select(speciality => (int?)speciality.InstitutionId)
+                .SingleOrDefaultAsync(cancellationToken),
+            _ => null
+        };
 }

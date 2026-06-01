@@ -2,6 +2,68 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ Session finalized — 2026-06-01 (Opus) — Act 4 played in full + F-4A-1 fixed (T075)
+
+**Act 4 (annual review + STARs + appeal) played end-to-end and DB-verified, after fixing one real
+blocking bug. On `master`, nothing committed yet at time of writing — see "commit" note below.**
+Started from `tools\db-snapshot.ps1 restore act3R-final-t065`.
+
+**Bug found + fixed before 4.A could run — F-4A-1 / T075 (scope-aware, mirrors T063):**
+InstitutionalAdmin (Prof Mbatha, the scenario's scheduler) was excluded from the committee-review
+surface at both the page gate (`ReviewsSchedule`/`ReviewDetail`) and `DemandReviewScheduling`, even
+though `DemandPanelAdministration` already admits them — so she could build the panel but not
+schedule on it. Fixed: admit InstAdmin to `DemandReviewScheduling` + a panel-institution scope guard
+in `ScheduleCommitteeReviewCommandHandler`; broadened `ListReviewsForPanelQuery` (Admin=all,
+InstAdmin=own-institution, else member-based) and `GetCommitteeReviewByIdQuery` (InstAdmin view,
+scope-checked); added InstAdmin to both page gates. Conduct actions (start/record/ratify/resolve)
+stay chair-gated by design. **+6 tests** (`ReviewSchedulingScopeGuardTests`), Application 252→258.
+Full task write-up: `Rewrite/Tasks/T075-institutional-admin-committee-review-scheduling.md`.
+
+**Play-through result (all DB-verified; per-phase detail in `scenario-paediatrics.md` § "Act 4
+findings summary"):** 5 reviews scheduled (Mbatha) → evidence frozen on Start (MSF/Mini-CEX/DOPS
+captured; T033 trajectory renders for rated WBAs) → 5 decisions recorded (chair Zulu) → 3 STARs
+staged for Molefe → all 5 ratified (**Molefe's ratify atomically issued 3 `EntrustmentDecision`
+rows**) → Mahlangu lodged an appeal → chair resolved it `Remitted` (referral upheld, 6mo→3mo),
+review `Final`, replacement decision supersedes the original. Decisions: Molefe/Dlamini
+`SatisfactoryProgress`, du Plessis `SatisfactoryWithObservations`, Mahlangu
+`InadequateProgressAdditionalTraining`, Ndlovu `OutcomeDeferred`.
+
+**Tests:** Domain 45, Infrastructure 8, Application 258, Architecture 19, Web 42 — all green.
+Integration not run (Docker). (One flaky Infrastructure failure on a full-solution run while the dev
+server was being killed; re-ran isolated = 8/8.)
+
+**DB snapshots:** `act4-A-scheduled`, `act4-molefe-ratified`, **`act4-complete`** (final, all
+phases). Restore the final state with `tools\db-snapshot.ps1 restore act4-complete`.
+
+**Findings still open (deferred, documented in the Act 4 findings summary):**
+- **F-4A-2 (governance):** scenario casts Mbatha for ratify (4.8) + appeal-resolve (4.10), but code
+  reserves those to chair/external/Administrator. Driven as chair Zulu. Decide whether the
+  institutional lead should be an allowed ratifier/appeal body, or amend the scenario casting.
+- **F-4D-1 (UI correctness):** the STAR "Authorised level" picker lists every level from every
+  scale (duplicate-looking 1–5 sets) and does not narrow to the EPA's scale — can stage against the
+  wrong scale. Filter levels to the EPA's entrustment scale.
+- **F-4B-1 (doc):** scenario imagines a tabbed evidence bundle with a T032 sampling-concentration
+  warning + dashboard snapshot; the implemented `ReviewDetail` is single-column with neither (T032
+  not exercisable here). Also: no review-type field; no NavMenu link to `/committee/reviews` for
+  InstAdmin (URL-only).
+
+**⚠️ Tooling note:** do NOT run `db-snapshot.ps1 take` concurrently with live browser requests — the
+template-clone briefly drops the app's DB connections and 500s the in-flight request. Snapshot idle.
+Also: the **Bash tool runs bash, not PowerShell** — start the dev server via the PowerShell tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`) or it silently no-ops.
+
+**No new secrets** — reused Mbatha `Mbatha@KGK2026!` and scenario shared `Act2Pass!123` (Zulu,
+Mahlangu), already in `pwd_DO_NOT_COMMIT.txt`.
+
+**⚠️ Commit:** T075 (code + tests) + the doc updates (this file, scenario summary, task file) were
+**not yet committed** when this handoff was written — `git status` and commit them as one logical
+unit if not already done. Build clean, all non-Integration suites green.
+
+**▶ Recommended next: Act 5** (graduation + STAR augmentation to all 15 EPAs + portfolio PDF export).
+**Opus** (touches entrustment-decision augmentation + QuestPDF). Start from
+`tools\db-snapshot.ps1 restore act4-complete`. Alternatively, address F-4D-1 (Sonnet) or the F-4A-2
+governance call first.
+
 ## ⭐ Session finalized — 2026-05-30 (Opus) — Act 3 played in full + 2 findings fixed
 
 **Act 3 fully played (3.A–3.I, Sonnet), then its two real code findings fixed (Opus). On `master`,

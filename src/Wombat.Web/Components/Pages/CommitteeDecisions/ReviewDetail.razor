@@ -1,5 +1,5 @@
 @page "/committee/reviews/{ReviewId:int}"
-@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,SpecialityAdmin,SubSpecialityAdmin")]
+@attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
