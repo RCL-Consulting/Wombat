@@ -9,6 +9,7 @@ public sealed class CommitteeReview
     public DateOnly ReviewPeriodTo { get; set; }
     public DateOnly ScheduledOn { get; set; }
     public bool IsFormative { get; set; }
+    public CommitteeReviewType ReviewType { get; set; } = CommitteeReviewType.AnnualProgression;
     public CommitteeReviewState State { get; private set; } = CommitteeReviewState.Scheduled;
     public DateTime? StartedOn { get; private set; }
     public string? StartedByUserId { get; private set; }

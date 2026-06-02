@@ -16,7 +16,8 @@ public sealed record ScheduleCommitteeReviewCommand(
     DateOnly ReviewPeriodTo,
     DateOnly ScheduledOn,
     ClaimsPrincipal Principal,
-    bool IsFormative = false) : IRequest<CommitteeReviewListItemDto>;
+    bool IsFormative = false,
+    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression) : IRequest<CommitteeReviewListItemDto>;
 
 public sealed class ScheduleCommitteeReviewCommandValidator : AbstractValidator<ScheduleCommitteeReviewCommand>
 {
@@ -66,7 +67,8 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             ReviewPeriodFrom = request.ReviewPeriodFrom,
             ReviewPeriodTo = request.ReviewPeriodTo,
             ScheduledOn = request.ScheduledOn,
-            IsFormative = request.IsFormative
+            IsFormative = request.IsFormative,
+            ReviewType = request.ReviewType
         };
 
         _dbContext.Set<CommitteeReview>().Add(review);
@@ -83,7 +85,8 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             review.State,
             null,
             null,
-            review.IsFormative);
+            review.IsFormative,
+            review.ReviewType);
     }
 
     private async Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)

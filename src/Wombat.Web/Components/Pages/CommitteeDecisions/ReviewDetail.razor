@@ -63,6 +63,7 @@
         <div><dt>Trainee</dt><dd><code>@_review.TraineeUserId</code></dd></div>
         <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
         <div><dt>Period</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
+        <div><dt>Type</dt><dd>@(_review.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation review" : "Annual progression review")</dd></div>
         <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
         <div><dt>State</dt><dd>@_review.State</dd></div>
       </dl>

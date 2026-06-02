@@ -46,6 +46,12 @@
         <FormField Label="Scheduled on" InputId="review-scheduled" Required="true">
           <InputDate id="review-scheduled" class="form-control" @bind-Value="_model.ScheduledOn" />
         </FormField>
+        <FormField Label="Review type" InputId="review-type" Required="true">
+          <InputSelect id="review-type" class="form-select" @bind-Value="_model.ReviewType">
+            <option value="@CommitteeReviewType.AnnualProgression">Annual progression review</option>
+            <option value="@CommitteeReviewType.PreGraduation">Pre-graduation review</option>
+          </InputSelect>
+        </FormField>
         <FormField Label="Formative only" InputId="review-formative">
           <label class="checkbox-label">
             <InputCheckbox id="review-formative" @bind-Value="_model.IsFormative" />
@@ -67,6 +73,7 @@
         <th>Trainee</th>
         <th>Panel</th>
         <th>Period</th>
+        <th>Type</th>
         <th>Mode</th>
         <th>State</th>
         <th>Decision</th>
@@ -78,6 +85,7 @@
         <td><code>@item.TraineeUserId</code></td>
         <td>@item.PanelName</td>
         <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@ReviewTypeLabel(item.ReviewType)</td>
         <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.State</td>
         <td>@(item.IsFormative ? "—" : item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
@@ -130,6 +138,12 @@
     _showCreateForm = !_showCreateForm;
   }
 
+  private static string ReviewTypeLabel(CommitteeReviewType type) => type switch
+  {
+    CommitteeReviewType.PreGraduation => "Pre-graduation",
+    _ => "Annual progression"
+  };
+
   private async Task CreateAsync()
   {
     _actionError = null;
@@ -144,7 +158,8 @@
         _model.ReviewPeriodTo,
         _model.ScheduledOn,
         authState.User,
-        _model.IsFormative));
+        _model.IsFormative,
+        _model.ReviewType));
 
       NavigationManager.NavigateTo($"/committee/reviews/{review.Id}");
     }
@@ -172,5 +187,7 @@
     public DateOnly ScheduledOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
     public bool IsFormative { get; set; }
+
+    public CommitteeReviewType ReviewType { get; set; } = CommitteeReviewType.AnnualProgression;
   }
 }

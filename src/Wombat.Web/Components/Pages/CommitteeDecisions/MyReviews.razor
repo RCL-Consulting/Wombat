@@ -23,6 +23,7 @@
       <tr>
         <th>Panel</th>
         <th>Period</th>
+        <th>Type</th>
         <th>State</th>
         <th>Decision</th>
         <th></th>
@@ -32,6 +33,7 @@
       <tr>
         <td>@item.PanelName</td>
         <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@(item.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation" : "Annual progression")</td>
         <td>@item.State</td>
         <td>@(item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
         <td class="actions-cell">

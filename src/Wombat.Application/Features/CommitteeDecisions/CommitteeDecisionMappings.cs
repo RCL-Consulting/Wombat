@@ -57,5 +57,6 @@ internal static class CommitteeDecisionMappings
                     item.Summary,
                     item.SourceRecordedOn))
                 .ToArray(),
-            review.IsFormative);
+            review.IsFormative,
+            review.ReviewType);
 }

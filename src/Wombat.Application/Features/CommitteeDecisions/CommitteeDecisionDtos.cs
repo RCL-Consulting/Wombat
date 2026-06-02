@@ -36,7 +36,8 @@ public sealed record CommitteeReviewListItemDto(
     CommitteeReviewState State,
     CommitteeDecisionCategory? CurrentDecisionCategory,
     DateTime? RatifiedOn,
-    bool IsFormative = false);
+    bool IsFormative = false,
+    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression);
 
 public sealed record CommitteeDecisionDto(
     int Id,
@@ -83,4 +84,5 @@ public sealed record CommitteeReviewDetailDto(
     IReadOnlyList<CommitteeDecisionDto> Decisions,
     IReadOnlyList<CommitteeAppealDto> Appeals,
     IReadOnlyList<CommitteeEvidenceDto> EvidenceItems,
-    bool IsFormative = false);
+    bool IsFormative = false,
+    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression);
