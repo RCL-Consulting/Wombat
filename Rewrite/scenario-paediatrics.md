@@ -1060,9 +1060,19 @@ Schemas built via the visual builder: mini_cex_paed v2 (12 fields/3 sections), p
   - In-training assessor NOT blocked by Wombat at runtime (T065 still open — no guard on TrainingCompletedOn).
   - PAED-010 stage-1 minimum not in MinimumLevelByStageJson {"2":2,"3":3,"4":4} → fallback to flat min 4;
     level-2 DOPS counts volume (1/10) but not reached (0/10). Correct defensible fallback.
+    **F-3E-2 RESOLVED 2026-06-02 (DB patch, snapshot `followups-complete`):** PAED-010 (curriculum item 11)
+    `MinimumLevelByStageJson` → `{"1":2,"2":2,"3":3,"4":4}` (year-1 min = level 2 per this step); Mahlangu's
+    level-2 DOPS now meets it → progress row 3 `MinimumLevelReachedCount` 0→1 (PAED-010 now **1/10 reached
+    1/10**). Runtime data only — curriculum items/stage-minimums are authored via the admin UI, not seeded
+    in code, so there is no repo change.
 **3.F verified:** MSF `draft→open→closing→closed` all via `creator` actor (Molefe). Credit applied to
   PAED-012 item 13 (1/8 reached). `msf-campaign-auto-close` scheduled job exists; manual close also works.
   Note: MSF credit rule used `curriculum_item_id: 13` (= PAED-012, not PAED-013 as scenario implies).
+  **F-3F-NOTE RESOLVED 2026-06-02 (DB patch, snapshot `followups-complete`):** the MSF activity-type
+  credit rule (`ActivityTypes` id 16 + published `ActivityTypeVersions` id 24) `curriculum_item_id` 13 → 14
+  (PAED-013); Molefe's MSF credit (progress row 4) moved from PAED-012 to PAED-013 (now **PAED-013 1/6
+  reached 1/6**; rule has no level gate so counts/reached unchanged). Runtime data only (credit rules are
+  builder-authored, not seeded) — no repo change.
 **3.G verified (partial):** Mahlangu's stale Mini-CEX (activity 10, backdated 15 days) did NOT appear in
   Smit's "Stalled requests" panel even after `assessor-pending-nudge` job ran manually. The panel exists
   and renders but its query does not flag the submission. Gap: stale detection query not surfacing
@@ -1315,9 +1325,14 @@ ran clean against the implemented model, with several scenario/impl deltas noted
     Coordinator/SpecialityAdmin/SubSpecialityAdmin/CommitteeMember but **not** for InstitutionalAdmin
     or Administrator (after T075 they could reach the page but not discover it). Added "Decision
     Panels" + "Committee Reviews" to both nav blocks; verified Mbatha's nav now shows them.
-  - **(d) Review-type field — DEFERRED:** the schedule form has no "Annual vs Pre-graduation" field;
-    all 5 scheduled as plain Summative. No logic depends on the distinction, so it's a descriptive-only
-    schema change — deferred unless a real need surfaces.
+  - **(d) Review-type field — RESOLVED 2026-06-02 (T082, commit `59a004d`):** added
+    `CommitteeReviewType { AnnualProgression, PreGraduation }` — domain enum + entity property, integer
+    column (migration `20260602110316_CommitteeReviewType`, backfills existing reviews to
+    AnnualProgression), command/DTO/mapping plumbing, three list projections, and schedule-form
+    dropdown + detail/list display. +2 Application tests (268→270). Orthogonal to `IsFormative`. In the
+    `followups-complete` snapshot, Molefe's Act 5 final review (review 6) is tagged **Pre-graduation**;
+    the other five reviews are **Annual progression**. Live-verified: list Type column, schedule-form
+    Review-type dropdown, and detail Type row all render.
 - **Tooling note:** do **not** run `tools/db-snapshot.ps1 take` concurrently with live browser
   requests — the template-clone (`CREATE DATABASE … TEMPLATE`) briefly drops the app's DB
   connections and 500s the in-flight request (cookie security-stamp query). Snapshot while idle.

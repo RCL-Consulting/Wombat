@@ -2,6 +2,57 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-06-02 (Opus) — all three deferred follow-ups completed
+
+**Cleared the last three deferred follow-ups** (F-4B-1 d, F-3E-2, F-3F-NOTE). One code task-commit
+on `master` (**nothing pushed**) + two runtime-data patches captured in a new DB snapshot. With this,
+**every finding from the linear Acts 1–5 is closed** — only the cross-cutting Appendix spot-checks
+remain unplayed.
+
+**Code (1 commit, `master`):**
+- `59a004d` **T082** — review-type field on committee reviews (**F-4B-1 d**).
+  `CommitteeReviewType { AnnualProgression=1, PreGraduation=2 }`: domain enum + `CommitteeReview.ReviewType`,
+  integer column via migration **`20260602110316_CommitteeReviewType`** (dotnet-ef scaffolded; backfills
+  existing reviews to AnnualProgression — enum has no 0, so the scaffolder's `defaultValue:0` was changed
+  to `1`), command/DTO/mapping plumbing, all three list projections, schedule-form dropdown + detail/list
+  "Type" display. Orthogonal to `IsFormative`. +2 Application tests. Task file `Tasks/T082-committee-review-type.md`.
+  **Live-verified** (admin browser): list Type column, schedule-form Review-type dropdown, detail Type row.
+
+**Runtime-data patches (NOT in git — curriculum items & credit rules are builder-authored, never seeded
+in code; captured in snapshot `followups-complete`):**
+- **F-3E-2 RESOLVED** — PAED-010 (curriculum item 11) `MinimumLevelByStageJson` `{"2":2,"3":3,"4":4}` →
+  `{"1":2,"2":2,"3":3,"4":4}` (year-1 min = level 2 per scenario step 3.E). Mahlangu's level-2 DOPS now
+  meets it → progress row 3 reached 0→1 (**PAED-010 1/10 reached 1/10**).
+- **F-3F-NOTE RESOLVED** — MSF credit rule (`ActivityTypes` 16 + published `ActivityTypeVersions` 24)
+  `curriculum_item_id` 13→14; Molefe's MSF credit (progress row 4) moved PAED-012 → **PAED-013** (1/6
+  reached 1/6; rule has no level gate). All five updates ran in one transaction.
+- Also tagged Molefe's Act 5 final review (review 6) **PreGraduation** so the snapshot exercises the new
+  T082 field; the other five reviews stay AnnualProgression.
+
+**Tests (all green):** Domain 49, Infrastructure 10, **Application 270** (+2), Architecture 19, Web 42.
+Integration NOT run (Testcontainers needs Docker — none on this box).
+
+**DB snapshots:** new **`followups-complete`** = `act5-complete` + the T082 migration + the two data
+fixes + Molefe-review tagged PreGraduation. Restore with `tools\db-snapshot.ps1 restore followups-complete`.
+The pure `act5-complete` is kept unchanged as the Act 5 play-through record. The T082 migration was
+applied to the live dev DB via `dotnet ef database update` before snapshotting.
+
+**No new secrets** — reused `admin@wombat.local` / `ChangeThisAdmin123!` for the browser verification;
+all already in `pwd_DO_NOT_COMMIT.txt`.
+
+**▶ Recommended next: the Appendix** cross-cutting spot-checks (data rights, scheduled jobs, SSO,
+mobile/a11y) in `scenario-paediatrics.md` — the only outstanding work; the linear acts are all played
+and every finding is closed. **Sonnet** is fine for that grind. Start from
+`tools\db-snapshot.ps1 restore followups-complete`.
+
+**⚠️ Tooling reminders (unchanged):** start the dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), NOT Bash (bash mangles `$env:` → silently
+runs Production on 5080). Don't `db-snapshot.ps1 take` while a browser request is in flight (template
+clone drops DB connections → 500). Keep `psql` calls solo. `dotnet ef` 10.0.3 works here for scaffolding
+migrations against the live DB.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-01 (Opus) — Acts 4 & 5 played; all findings fixed
 
 **Big session.** Played **Act 4** (annual review + STARs + appeal) and **Act 5** (graduation + portfolio
