@@ -1,6 +1,26 @@
 # T084 — Erasure approval is not atomic (Approved-but-not-erased, no retry)
 
-**Status:** 🔴 OPEN — found 2026-06-04 in Appendix A.1.2 play-through. **MEDIUM** (compliance integrity).
+**Status:** ✅ FIXED 2026-06-04 (Opus). Found in Appendix A.1.2 play-through. **MEDIUM** (compliance integrity).
+
+## Fix (shipped)
+
+`ApproveDataRightsRequestCommandHandler` now **validates the erasure precondition (PseudonymSalt) BEFORE
+calling `entity.Approve()`** — so a missing salt throws while the request is still `Submitted`, leaving
+it fully actionable (no stranded Approved-but-not-erased state). The salt is resolved once up front and
+passed into `IErasureExecutor.ExecuteAsync`. Implemented option (a) from below; the existing
+`SaveChangesAsync`-at-end already rolls back on a throw, and the precheck closes the observed gap.
+
+**Tests:** `ApproveDataRightsRequestHandlerTests` (+3 Application): erasure without salt → throws, stays
+`Submitted`, executor **not** called; erasure with salt → executor called once, `Completed`; export →
+`Completed` without erasure.
+
+**Dev config:** `Wombat:PseudonymSalt` was set via user-secrets during the appendix session (recorded in
+`pwd_DO_NOT_COMMIT.txt`) so erasure runs locally; the clean-salt path (→ pseudonymisation → `Completed`)
+was live-verified there. **Production must still set `Wombat:PseudonymSalt`.** A startup warning when it
+is absent remains an optional future nicety (not done).
+
+---
+
 
 ## Problem (F-A1-1)
 

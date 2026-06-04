@@ -55,6 +55,17 @@ public sealed class ApproveDataRightsRequestCommandHandler : IRequestHandler<App
             .FirstOrDefaultAsync(r => r.Id == request.RequestId, cancellationToken)
             ?? throw new InvalidOperationException("Data rights request not found.");
 
+        // Validate type-specific prerequisites BEFORE mutating the request, so a precondition
+        // failure (e.g. missing PseudonymSalt) leaves it actionable (Submitted/UnderReview) rather
+        // than stranded in Approved-but-not-executed with no UI recovery. (T084 / F-A1-1)
+        string? erasureSalt = null;
+        if (entity.Type == DataRightsRequestType.Erasure)
+        {
+            erasureSalt = _options.PseudonymSalt
+                ?? throw new InvalidOperationException(
+                    "PseudonymSalt is not configured. Cannot execute erasure without it.");
+        }
+
         var utcNow = DateTime.UtcNow;
         entity.Approve(actorUserId, request.DecisionNote, utcNow);
 
@@ -62,10 +73,7 @@ public sealed class ApproveDataRightsRequestCommandHandler : IRequestHandler<App
         switch (entity.Type)
         {
             case DataRightsRequestType.Erasure:
-                var salt = _options.PseudonymSalt
-                    ?? throw new InvalidOperationException(
-                        "PseudonymSalt is not configured. Cannot execute erasure without it.");
-                await _erasureExecutor.ExecuteAsync(entity, salt, cancellationToken);
+                await _erasureExecutor.ExecuteAsync(entity, erasureSalt!, cancellationToken);
                 entity.Complete(DateTime.UtcNow);
                 break;
 
