@@ -1,6 +1,25 @@
 # T083 — Data-rights export "Download" returns 404 (endpoint never mapped)
 
-**Status:** 🔴 OPEN — found 2026-06-04 in Appendix A.1.1 play-through. **HIGH** (GDPR deliverable unreachable).
+**Status:** ✅ FIXED 2026-06-04 (Opus). Found in Appendix A.1.1 play-through. **HIGH** (GDPR deliverable unreachable).
+
+## Fix (shipped)
+
+Added `app.MapGet("/account/data-rights/download/{id:guid}", ...).RequireAuthorization()` in `Program.cs`
+(after `/account/logout`): dispatches `DownloadAccessReportQuery(id, httpContext.User)` and returns
+`Results.File(result.ZipBytes, "application/zip", result.FileName)`. `UnauthorizedAccessException` /
+`InvalidOperationException` → `Results.NotFound()` (404-not-403, so other users' request ids aren't
+leaked — mirrors the institution-scope convention). The handler already enforces ownership + Completed +
+Access/Export type.
+
+**Tests:** `DownloadAccessReportQueryHandlerTests` (+5 Application): owner of a Completed Export → report;
+Administrator → report; other user → Unauthorized; not-completed → throws; missing → throws.
+
+**Live-verified:** as Mahlangu, `GET /account/data-rights/download/{id}` for a Completed Export →
+**200, `application/zip`, `Content-Disposition: attachment; filename=data-export-…zip`, 90,704 bytes,
+`PK\x03\x04` magic** (was 404 before).
+
+---
+
 
 ## Problem (F-A1-2)
 

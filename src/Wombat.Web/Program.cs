@@ -309,6 +309,28 @@ app.MapPost("/account/logout", async (
     return Results.LocalRedirect("/account/login");
 });
 
+app.MapGet("/account/data-rights/download/{id:guid}", async (
+    Guid id,
+    ISender sender,
+    HttpContext httpContext) =>
+{
+    try
+    {
+        var result = await sender.Send(
+            new Wombat.Application.Features.DataRights.Queries.DownloadAccessReportQuery(id, httpContext.User));
+        return Results.File(result.ZipBytes, "application/zip", result.FileName);
+    }
+    catch (Exception exception) when (
+        exception is UnauthorizedAccessException ||
+        exception is InvalidOperationException)
+    {
+        // 404 (not 403) so we do not leak the existence of other users' requests, mirroring the
+        // institution-scope convention. Covers: not found, wrong type, not yet completed, not owner.
+        return Results.NotFound();
+    }
+})
+.RequireAuthorization();
+
 app.MapGet("/dashboard/switch/{role}", (string role, HttpContext httpContext) =>
 {
     if (Wombat.Web.Navigation.DashboardPriority.ValidRoles.Contains(role))
