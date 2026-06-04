@@ -2,6 +2,55 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-06-04 (Opus) — Appendix cross-cutting spot-checks played
+
+**Played the whole Appendix** (data rights, scheduled jobs, SSO, mobile/a11y) from snapshot
+`followups-complete`. **No product code changed this session** — it's a find-and-triage pass. Found
+**2 real data-rights bugs (1 HIGH)** + 3 a11y polish items, all ticketed as task files. One **docs
+commit** on `master` (nothing pushed). DB spot-check artifacts were rolled back by restoring
+`followups-complete`. **With this, the entire Paediatrics scenario (Acts 1–5 + Appendix) is played.**
+
+**New findings → task files (all OPEN, none block the linear acts):**
+- **T083 (HIGH)** — data-rights Export/Access **"Download" 404s**: `/account/data-rights/download/{id}`
+  is never mapped in `Program.cs`; `DownloadAccessReportQuery` is never dispatched from `Wombat.Web`
+  (grep: 0 refs). Export approves → `Completed` but the artifact is undeliverable. Live-verified (fetch +
+  click both 404).
+- **T084 (MED)** — **erasure approve is non-atomic**: if the executor throws (dev was missing
+  `Wombat:PseudonymSalt`), the request is left `Approved` but data un-erased, with no UI retry. On a
+  clean run erasure = **pseudonymisation** (name/email cleared, `UserName`→`deleted_user_<hash>`, account
+  locked, Id retained), request → `Completed`.
+- **T085 (MOD)** — TrajectoryChart has `aria-label` + per-point `<title>` but **no text/tabular
+  fallback** (WCAG 1.1.1).
+- **T086 (LOW)** — muted `#6c757d` on page bg `#f8f9fa` = 4.45:1 (just under AA 4.5); some controls
+  21–23px tall (< WCAG 2.5.8 24px). Plus a tiny note: list `?key=`/`?status=` query params don't
+  pre-filter on load.
+
+**Passed cleanly:** A.2 scheduled jobs (9 jobs, all Succeeded; manual Run-now records the triggering
+user); A.3 SSO degrades gracefully (no dev IdP) with invariants unit-tested (Administrator-blocked,
+group→role, PendingTrainee fallback, scope guards); A.4 mobile (no h-overflow, hamburger works), keyboard
+(logical focus order, T048 h1 ring holds). Full Actual/Gap in `scenario-paediatrics.md` §"Appendix
+findings summary".
+
+**Dev-env change (persists, not in git):** set `Wombat:PseudonymSalt` via `dotnet user-secrets` on
+`Wombat.Web` so erasure runs locally — value recorded in `pwd_DO_NOT_COMMIT.txt`. Production must set it.
+
+**Tests:** not re-run this session (no product code changed); last green at the T082 session (Domain 49,
+Infrastructure 10, Application 270, Architecture 19, Web 42). **DB:** `followups-complete` is the current
+restored state (unchanged by the appendix). Snapshots unchanged.
+
+**▶ Recommended next:** fix the triaged findings, **starting with T083 (HIGH)** — the export download is
+a real GDPR-deliverable gap and is a small, self-contained Program.cs endpoint + test. Then T084
+(erasure atomicity), then T085/T086 (a11y). **Opus** for T083/T084 (endpoint + transactional/handler
+correctness); **Sonnet** is fine for T085/T086 (a11y polish). Start from
+`tools\db-snapshot.ps1 restore followups-complete`.
+
+**⚠️ Tooling reminders (unchanged):** dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), not Bash; don't `db-snapshot.ps1 take`
+during a live browser request; keep `psql` solo; restore needs the dev server stopped (it holds DB
+connections).
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-02 (Opus) — all three deferred follow-ups completed
 
 **Cleared the last three deferred follow-ups** (F-4B-1 d, F-3E-2, F-3F-NOTE). One code task-commit

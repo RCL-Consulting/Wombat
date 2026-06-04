@@ -1640,4 +1640,54 @@ The appendix doesn't accumulate scenario state — its spot-checks read existing
 
 ## Appendix findings summary
 
-Not yet played. The A.3 SSO section has the highest deferral risk (no local IdP). A.4 likely surfaces multiple a11y findings — they should be triaged per WCAG severity, not added blindly to the active-task list.
+**Played in full 2026-06-04 (Opus) from snapshot `followups-complete`.** Two real data-rights bugs
+found (one HIGH), plus three a11y polish items; A.3 SSO deferred (no local IdP) but its invariants are
+unit-tested. DB artifacts (test requests, the erasure) were rolled back by restoring `followups-complete`.
+A dev `Wombat:PseudonymSalt` user-secret was added so erasure can run locally (recorded in
+`pwd_DO_NOT_COMMIT.txt`).
+
+**A.1 Data rights**
+- **A.1.1 export — PARTIAL / bug.** Trainee (Mahlangu) submitted an Export request → it sat `Submitted`
+  (admin-approval workflow, **not** the scenario's "scheduled job packages it" — there is no async export
+  worker; the report is built on-demand at download). Admin approved → status `Completed`. **BUG
+  F-A1-2 (HIGH → T083):** the "Download" link `/account/data-rights/download/{id}` **404s** — the
+  endpoint is never mapped in `Program.cs` and `DownloadAccessReportQuery` is never dispatched from
+  `Wombat.Web`. Export is undeliverable.
+- **A.1.2 erasure — verified + bug.** Erasure = **pseudonymisation** (not hard delete): on a clean run
+  (Ndlovu) name/email cleared, `UserName` → `deleted_user_<hash>`, account locked, row/Id retained for
+  audit FKs; request → `Completed`. **BUG F-A1-1 (MEDIUM → T084):** approve is non-atomic — the first
+  attempt (dev missing `PseudonymSalt`) left the request `Approved` but data un-erased with no UI retry.
+  Also: dev lacked `Wombat:PseudonymSalt` (config gap, fixed via user-secrets).
+
+**A.2 Scheduled jobs — PASS.** `/admin/jobs` lists **9** jobs (activity-draft-nudge, assessor-pending-
+nudge, audit-log-retention, entrustment-decision-expiry, msf-campaign-auto-close, msf-invitation-expiry-
+reminder, portfolio-export-cleanup, scheduled-job-run-retention, weekly-coordinator-digest) with cron,
+last/next run, status (all Succeeded), enable toggle, Run now. Manual "Run now" on assessor-pending-nudge
+recorded a `ScheduledJobRun` (Succeeded, 65ms) with **Triggered by = the admin's user id** (vs
+"scheduler"). Run-history page at `/admin/jobs/runs` with key/status/date filters. (Scenario's guessed
+job names differ; `EmailWorker`/`DataRightsExportWorker` are not scheduled jobs — email is a continuous
+BackgroundService, export is on-demand — by design.)
+
+**A.3 SSO — DEFERRED (no local IdP).** `/admin/sso/group-mappings` degrades gracefully: clear banner
+("No SSO providers are configured… add to `Sso:Providers` and restart") + empty mappings; the add-mapping
+form is correctly gated behind a configured provider (dev `Sso.Providers: []`). A.3.2/A.3.3 (SSO login)
+can't run locally. The invariants are unit-tested: `SsoGroupMapperTests` (group→role, overlapping groups,
+no-match→no roles, **Administrator mapping skipped**, manual-vs-SSO role tracking, provider isolation),
+`SsoGroupMappingCommandTests` (**Create AdministratorRole throws**), `SsoScopeGuardTests` (InstAdmin scope).
+
+**A.4 Mobile + accessibility — mostly PASS; 3 polish items.**
+- **A.4.1 mobile (360px):** no page-level horizontal overflow; hamburger toggle appears and expands the
+  nav (15 links); admin dashboard/trainee dashboard reflow to single column. Wide data tables overflow
+  into an internal scroll (acceptable). Minor: some controls 21–23px tall (< WCAG 2.5.8 AA 24px) → T086.
+- **A.4.2 keyboard:** logical DOM focus order through the activity form (18 focusables, type→fields→
+  ratings→narrative→Save→Submit), no positive tabindex, all visible fields labelled, `h1 tabindex=-1`
+  + `outline:none` (T048 holds — programmatic focus target, not tabbable, no stray ring).
+- **A.4.3 screen reader:** sound heading structure (minor H1→H3 skip), required markers announced;
+  **TrajectoryChart has aria-label + per-point `<title>` but NO text/tabular fallback** → WCAG 1.1.1
+  (MODERATE → T085).
+- **A.4.4 contrast:** nav (light text on navy gradient ~10:1), body/headings/`dd` pass; status shown as
+  dark `#333` text (passes). **Muted `#6c757d` on page bg `#f8f9fa` = 4.45:1, marginally < AA 4.5**
+  (LOW → T086).
+
+**Triaged tasks:** T083 (download 404, HIGH), T084 (erasure not atomic, MED), T085 (chart SR fallback,
+MOD), T086 (contrast + tap-target polish, LOW). None block the linear acts.
