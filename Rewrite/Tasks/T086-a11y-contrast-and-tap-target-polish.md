@@ -1,6 +1,21 @@
 # T086 — A11y polish: muted-text contrast + small tap targets
 
-**Status:** 🟡 OPEN — found 2026-06-04 in Appendix A.4.4 / A.4.1. **LOW** (WCAG AA polish).
+**Status:** ✅ FIXED 2026-06-04 (Opus). Found in Appendix A.4.4 / A.4.1. **LOW** (WCAG AA polish).
+
+## Fix (shipped)
+
+- **Contrast:** `--muted-text` darkened `rgb(108 117 125)` → `rgb(104 111 119)` in `app.css :root`.
+  Live-verified: `.page-subtitle` on the page background now **4.83:1** (was 4.45) — passes WCAG AA;
+  still routed through the CSS custom property (no raw hex outside `:root`).
+- **Tap targets:** added `min-height: 1.75rem` (28px) to `.btn`, lifting `.btn-sm`/`.btn-xs` controls
+  (Sign out, table Disable/Run-now) above the WCAG 2.5.8 (AA) 24px minimum. Live-verified: smallest
+  `.btn` now **28px** (was 23px); normal buttons unchanged (≤46px).
+
+The query-string-filter note (`?key=`/`?status=` not pre-filtering on load) is left as an optional
+future nicety — not done.
+
+---
+
 
 ## Findings
 

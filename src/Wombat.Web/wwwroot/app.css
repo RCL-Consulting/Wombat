@@ -8,7 +8,7 @@
   --background-color: rgb(248 249 250);
   --surface-color: rgb(255 255 255);
   --text-color: rgb(51 51 51);
-  --muted-text: rgb(108 117 125);
+  --muted-text: rgb(104 111 119); /* darkened from 108 117 125 for WCAG AA 4.5:1 on --background-color (was 4.45) — T086 */
   --link-color: rgb(11 92 171);
   --border-color: rgb(222 226 230);
   --input-border: rgb(206 212 218);
@@ -201,6 +201,7 @@ h5 {
   font-weight: 500;
   gap: var(--space-sm);
   justify-content: center;
+  min-height: 1.75rem; /* >=24px WCAG 2.5.8 (AA) target size; lifts .btn-sm/.btn-xs above 24px — T086 */
   padding: 0.5rem 1rem;
   text-decoration: none;
   transition: filter 0.15s ease, transform 0.15s ease;
