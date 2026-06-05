@@ -2,6 +2,45 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-06-05 (Opus) — all 4 Appendix findings fixed (T083–T086)
+
+**Fixed every finding the Appendix surfaced**, each a self-contained task-commit on `master`
+(**nothing pushed**). With this, the Paediatrics scenario is fully played **and** all its findings —
+linear acts + appendix — are closed.
+
+**Commits (chronological, `master`):**
+- `0d437e3` **T083 (HIGH)** — mapped `GET /account/data-rights/download/{id:guid}` in `Program.cs`
+  (dispatches `DownloadAccessReportQuery`, returns the ZIP via `Results.File`; auth/not-found → 404, no
+  existence leak). The Export/Access download worked end-to-end (live: 200, `application/zip`, 90,704-byte
+  `PK` ZIP). +5 Application tests.
+- `f1a352e` **T084 (MED)** — `ApproveDataRightsRequest` validates `PseudonymSalt` **before**
+  `entity.Approve()`, so a missing salt throws while still `Submitted` (no stranded Approved-but-not-erased).
+  +3 Application tests.
+- `bf2f9a4` **T085 (MOD)** — `TrajectoryChart` renders a `visually-hidden` data table (date/rating/source,
+  caption = aria-label) for screen readers (WCAG 1.1.1). +1 bUnit test.
+- `88aa0d3` **T086 (LOW)** — darkened `--muted-text` (→ `.page-subtitle` 4.45→**4.83** AA) and added
+  `min-height:1.75rem` to `.btn` (small controls 23→**28px**, WCAG 2.5.8). Live-verified.
+
+**Tests (all green):** Domain 49, **Application 278** (+8), Architecture 19, **Web 43** (+1),
+Infrastructure 10. Integration not run (Docker).
+
+**DB:** `followups-complete` is the current restored state — clean (the T083 live-verification seeded one
+export row, deleted afterward). The dev `Wombat:PseudonymSalt` user-secret persists (in
+`pwd_DO_NOT_COMMIT.txt`); **production must set it.** No snapshot changes this session.
+
+**▶ Recommended next:** scenario + findings are all closed. Options: (1) a fresh end-to-end **replay**
+to confirm the fixes hold from a clean state; (2) start **pushing** to `origin` (local `master` is now
+~140 commits ahead, never pushed) once you're ready; (3) pick up any remaining `Rewrite/practical-plan.md`
+items. **Sonnet** is fine for a replay; **Opus** if pushing/release prep involves judgement. Start any
+play-through from `tools\db-snapshot.ps1 restore followups-complete`.
+
+**⚠️ Tooling reminders (unchanged):** dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), not Bash; **stop the dev server before
+`dotnet test`/`dotnet build`** (it locks the build outputs → MSB3027); restore needs the server stopped;
+keep `psql` solo.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-04 (Opus) — Appendix cross-cutting spot-checks played
 
 **Played the whole Appendix** (data rights, scheduled jobs, SSO, mobile/a11y) from snapshot
