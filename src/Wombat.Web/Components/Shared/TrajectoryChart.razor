@@ -49,6 +49,29 @@ else
     @RenderXAxisLabel(PlotLeftPx, EarliestDate.ToString("yyyy-MM-dd"), "start")
     @RenderXAxisLabel(Width - RightMargin, LatestDate.ToString("yyyy-MM-dd"), "end")
   </svg>
+
+  @* Text/tabular equivalent of the chart for screen readers (WCAG 1.1.1). Visually hidden;
+     the SVG above carries role="img" + aria-label, this table carries the underlying data. *@
+  <table class="visually-hidden">
+    <caption>@AriaLabel</caption>
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Rating</th>
+        <th scope="col">Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var point in Points.OrderBy(p => p.Date).ThenBy(p => p.Sequence))
+      {
+        <tr>
+          <td>@point.Date.ToString("yyyy-MM-dd")</td>
+          <td>@point.Rating</td>
+          <td>@(string.IsNullOrWhiteSpace(point.Label) ? "—" : point.Label)</td>
+        </tr>
+      }
+    </tbody>
+  </table>
 }
 
 @code {

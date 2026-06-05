@@ -1,6 +1,17 @@
 # T085 — TrajectoryChart has no text/tabular fallback for screen readers
 
-**Status:** 🟠 OPEN — found 2026-06-04 in Appendix A.4.3. **MODERATE** (WCAG 2.1 SC 1.1.1).
+**Status:** ✅ FIXED 2026-06-04 (Opus). Found in Appendix A.4.3. **MODERATE** (WCAG 2.1 SC 1.1.1).
+
+## Fix (shipped)
+
+`TrajectoryChart.razor` now renders a `<table class="visually-hidden">` after the SVG, with the
+`AriaLabel` as `<caption>` and a row per observation (Date / Rating / Source). The SVG keeps
+`role="img"` + `aria-label`; the hidden table exposes the underlying data to assistive tech (WCAG 1.1.1).
+Reuses the existing `.visually-hidden` utility (no CSS change). +1 bUnit test
+(`RendersVisuallyHiddenTableFallbackForScreenReaders`); the 5 existing TrajectoryChart tests still pass.
+
+---
+
 
 ## Problem (F-A4-1)
 

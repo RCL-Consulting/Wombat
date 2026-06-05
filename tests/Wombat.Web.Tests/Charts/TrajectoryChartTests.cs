@@ -82,4 +82,26 @@ public sealed class TrajectoryChartTests : TestContext
         cut.Find("svg").GetAttribute("aria-label").Should().Be("Rating trajectory for EPA-07");
         cut.Find("svg").GetAttribute("role").Should().Be("img");
     }
+
+    [Fact]
+    public void RendersVisuallyHiddenTableFallbackForScreenReaders()
+    {
+        var points = new[]
+        {
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2, 0, "Direct observation"),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 4, 1, "Conversation")
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(p => p.Points, points)
+            .Add(p => p.AriaLabel, "Rating trajectory for EPA-07"));
+
+        var table = cut.Find("table.visually-hidden");
+        table.QuerySelector("caption")!.TextContent.Should().Be("Rating trajectory for EPA-07");
+
+        var rows = table.QuerySelectorAll("tbody tr");
+        rows.Length.Should().Be(2);
+        rows[0].TextContent.Should().Contain("2026-01-01").And.Contain("2").And.Contain("Direct observation");
+        rows[1].TextContent.Should().Contain("2026-02-01").And.Contain("4").And.Contain("Conversation");
+    }
 }
