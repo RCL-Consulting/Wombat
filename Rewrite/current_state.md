@@ -2,6 +2,46 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⏳ CLEAN FULL REPLAY IN PROGRESS — 2026-06-05 (Opus) — Act 1 ~80% (1.A–1.E + scale done)
+
+**User asked for a full from-scratch replay** of the Paediatrics scenario (Acts 1–5 + Appendix) via the
+UI. DB was **dropped + recreated empty** (`DROP/CREATE DATABASE wombat_t002_verify`), app re-migrated +
+seeded on startup. Driving everything through Playwright per the user's choice ("grind everything through
+the UI"). **No product code changed; nothing committed except this handoff.**
+
+**Act 1 progress (all UI-driven, DB-verified):**
+- **1.A ✓** institution **KGK** (id 2), speciality **Paediatrics** (id 2), sub-speciality **General
+  Paediatrics** (id 2) — bootstrap admin.
+- **1.B ✓** **Mbatha** invited (InstitutionalAdmin) + registered via the inline registration URL (no SMTP
+  needed; T051). Password `Mbatha@KGK2026!` (already in pwd file). Logged-in flows work.
+- **1.C ✓** **Paed General Entrustment Scale** (id 2), 5 ten-Cate levels — bootstrap admin (scales are
+  Administrator-only, T057).
+- **1.D ✓** **15 EPAs** PAED-001…015 (EPA ids **2–16**; Core 1–13, Elective 14–15) — as Mbatha.
+- **1.E ✓** curriculum **FCPaed(SA) Part 1 v2026.1** (id 2) + **15 items**, all counts/levels/windows/
+  weights/stage-JSON DB-verified. **PAED-010 entered with stage-1=2** (`{"1":2,"2":2,"3":3,"4":4}`) to
+  reflect the **F-3E-2 resolution**, not the original table's dash.
+- **1.F ☐ PENDING** — the **10 activity types** (minimal: metadata + default workflow/credit + publish
+  each, per the scenario's own reduced Act-1 scope; full *_paed schemas are built in Act 3). As Mbatha.
+  Keys: mini_cex_paed, cbd_paed, acat_paed, dops_paed, procedure_log_paed, msf_paed, reflective_note_paed,
+  journal_club_paed, research_output_paed, teaching_session_paed.
+
+**Snapshot:** **`act1-v2-pre-activitytypes`** = Act 1 through 1.E + scale. Restore with
+`tools\db-snapshot.ps1 restore act1-v2-pre-activitytypes` to resume at Phase 1.F.
+
+**Finding so far (Act 1):** fresh-install seeding logs a non-fatal **"AuditEntries is append-only: UPDATE
+and DELETE are not permitted"** EF exception (during DevUserSeeder user upsert) — users/roles/Demo still
+seed correctly. Worth a task if it recurs (likely the audit interceptor attempting an UPDATE on an
+existing dev user). Not yet ticketed.
+
+**▶ Resume:** restore `act1-v2-pre-activitytypes`, log in as **Mbatha** (`Mbatha@KGK2026!`), build the 10
+activity types via `/admin/activity-types/new` (minimal), then **Act 2** (onboarding). **Sonnet** is fine
+for the grind. Useful automation pattern this session: drive Blazor forms with one `browser_evaluate`
+that sets `#id` values, dispatches `input`+`change`, waits ~400ms, then clicks the submit button — works
+reliably (use explicit element `#id`s, not positional indexing — positional got the scale name wrong once).
+
+---
+
+
 ## ⭐ SESSION FINALIZED — 2026-06-05 (Opus) — all 4 Appendix findings fixed (T083–T086)
 
 **Fixed every finding the Appendix surfaced**, each a self-contained task-commit on `master`
