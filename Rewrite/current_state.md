@@ -20,13 +20,20 @@ the UI"). **No product code changed; nothing committed except this handoff.**
 - **1.E ✓** curriculum **FCPaed(SA) Part 1 v2026.1** (id 2) + **15 items**, all counts/levels/windows/
   weights/stage-JSON DB-verified. **PAED-010 entered with stage-1=2** (`{"1":2,"2":2,"3":3,"4":4}`) to
   reflect the **F-3E-2 resolution**, not the original table's dash.
-- **1.F ☐ PENDING** — the **10 activity types** (minimal: metadata + default workflow/credit + publish
-  each, per the scenario's own reduced Act-1 scope; full *_paed schemas are built in Act 3). As Mbatha.
-  Keys: mini_cex_paed, cbd_paed, acat_paed, dops_paed, procedure_log_paed, msf_paed, reflective_note_paed,
-  journal_club_paed, research_output_paed, teaching_session_paed.
+- **1.F ◑ 1/10 DONE** — the **10 activity types** (minimal: metadata + default schema/workflow/credit +
+  publish each, per the scenario's own reduced Act-1 scope; full *_paed schemas are built in Act 3).
+  **`mini_cex_paed` built + published (id 11, v1, ScopeId 2)** — builder save-draft→publish flow
+  verified on the fresh DB (T055 URL-flip works). **9 remaining:** cbd_paed, acat_paed, dops_paed,
+  procedure_log_paed, msf_paed, reflective_note_paed, journal_club_paed, research_output_paed,
+  teaching_session_paed. (10 seeded IM types occupy ids 1–10, so the Paed types get ids 11+.)
 
-**Snapshot:** **`act1-v2-pre-activitytypes`** = Act 1 through 1.E + scale. Restore with
-`tools\db-snapshot.ps1 restore act1-v2-pre-activitytypes` to resume at Phase 1.F.
+**Activity-type builder flow (verified):** `/admin/activity-types/new` → click **Metadata** tab →
+set `#type-key`,`#type-name`,`#type-description`, `#type-scope`=`Speciality` (wait) →
+`#type-scope-id`=`2` (KGK/Paediatrics), ensure `#type-is-active` checked → **Save draft** (URL flips to
+`/admin/activity-types/{id}`) → click **Publish**. ~3 calls/type.
+
+**Snapshots:** **`act1-v2-minicex-published`** (latest, = 1.A–1.E + scale + mini_cex_paed published) and
+`act1-v2-pre-activitytypes` (= through 1.E + scale). Restore the latest to resume Phase 1.F at type 2/10.
 
 **Finding so far (Act 1):** fresh-install seeding logs a non-fatal **"AuditEntries is append-only: UPDATE
 and DELETE are not permitted"** EF exception (during DevUserSeeder user upsert) — users/roles/Demo still
