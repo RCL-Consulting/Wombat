@@ -2,7 +2,31 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⏳ CLEAN FULL REPLAY IN PROGRESS — 2026-06-05 (Opus) — Act 1 ~80% (1.A–1.E + scale done)
+## ⏳ CLEAN FULL REPLAY IN PROGRESS — 2026-06-06 (Opus) — ✅ Act 1 COMPLETE; next: Act 2
+
+**Act 1 fully replayed from a fresh DB and DB-verified.** All 7 Act-1 goals met. Snapshot
+**`after-act-1-replay-v2`** is the Act-1 end-state — **restore it to start Act 2**
+(`tools\db-snapshot.ps1 restore after-act-1-replay-v2`; stop the dev server first).
+
+**Act-1 end-state (ids):** KGK (inst 2) / Paediatrics (spec 2) / General Paediatrics (sub-spec 2);
+Mbatha InstitutionalAdmin (`Mbatha@KGK2026!`); Paed General Entrustment Scale (id 2, 5 levels); 15 EPAs
+PAED-001…015 (ids **2–16**); curriculum FCPaed(SA) Part 1 v2026.1 (id 2) + 15 items (PAED-010 stage-1=2
+per F-3E-2); **10 activity types published (ids 11–20, all v1, ScopeId 2):** mini_cex_paed, cbd_paed,
+acat_paed, dops_paed, procedure_log_paed, msf_paed, reflective_note_paed, journal_club_paed,
+research_output_paed, teaching_session_paed. (Activity types built minimally — default schema/workflow/
+credit — per the scenario's reduced Act-1 scope; full *_paed schemas are built in **Act 3**.)
+
+**▶ Next: Act 2 (onboarding)** — `scenario-paediatrics.md` Act 2. As Mbatha, invite the 7 consultants
+(Smit/Coordinator, Zulu/Naidoo/Botha/Patel/Khumalo/van Rensburg per the Cast) + register each via the
+inline URL; create 5 assessor profiles + 5 trainee profiles; create the decision panel. Reuse the shared
+play-through password `Act2Pass!123` (already in pwd file). Snapshot `after-act-2-replay-v2` at the end.
+
+**Act-1 finding:** fresh-install seeding logs a non-fatal **"AuditEntries is append-only"** EF exception
+(DevUserSeeder user upsert) — users/roles/Demo still seed. Ticket if it recurs.
+
+---
+
+## ✅ Act 1 replay detail (2026-06-05/06) — superseded by the summary above
 
 **User asked for a full from-scratch replay** of the Paediatrics scenario (Acts 1–5 + Appendix) via the
 UI. DB was **dropped + recreated empty** (`DROP/CREATE DATABASE wombat_t002_verify`), app re-migrated +
