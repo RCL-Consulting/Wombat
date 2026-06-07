@@ -2,27 +2,194 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⏳ CLEAN FULL REPLAY IN PROGRESS — 2026-06-06 (Opus) — ✅ Act 1 COMPLETE; next: Act 2
+## ✅ CLEAN FULL REPLAY COMPLETE — 2026-06-07 (Opus) — Acts 1–5 ALL DONE (linear scenario fully replayed)
 
-**Act 1 fully replayed from a fresh DB and DB-verified.** All 7 Act-1 goals met. Snapshot
-**`after-act-1-replay-v2`** is the Act-1 end-state — **restore it to start Act 2**
-(`tools\db-snapshot.ps1 restore after-act-1-replay-v2`; stop the dev server first).
+**The entire Paediatrics scenario (Acts 1–5) has been replayed clean from a fresh DB, end-to-end, UI-driven,
+and DB-verified at every step.** Final snapshot **`act5-v2-final`** is the full end-state. Per-act snapshots:
+`after-act-1-replay-v2`, `after-act-2-replay-v2`, `act3-v2-AD`, `act3-v2-final`, `act4-v2-final`, `act5-v2-final`.
+**Dev server is STOPPED.** No product code changed across the whole replay; no new secrets (reused
+`Mbatha@KGK2026!` / `Act2Pass!123` / `ChangeThisAdmin123!`).
 
-**Act-1 end-state (ids):** KGK (inst 2) / Paediatrics (spec 2) / General Paediatrics (sub-spec 2);
-Mbatha InstitutionalAdmin (`Mbatha@KGK2026!`); Paed General Entrustment Scale (id 2, 5 levels); 15 EPAs
-PAED-001…015 (ids **2–16**); curriculum FCPaed(SA) Part 1 v2026.1 (id 2) + 15 items (PAED-010 stage-1=2
-per F-3E-2); **10 activity types published (ids 11–20, all v1, ScopeId 2):** mini_cex_paed, cbd_paed,
-acat_paed, dops_paed, procedure_log_paed, msf_paed, reflective_note_paed, journal_club_paed,
-research_output_paed, teaching_session_paed. (Activity types built minimally — default schema/workflow/
-credit — per the scenario's reduced Act-1 scope; full *_paed schemas are built in **Act 3**.)
+**Final state (DB-verified):** 16 users; 5 active trainee profiles + **1 completed (Molefe, graduated:
+Trainee role removed, profile inactive)**; 10 activities; 6 committee reviews; **15 EntrustmentDecisions
+(Molefe's full STAR set across all 15 EPAs)**; 1 resolved appeal.
 
-**▶ Next: Act 2 (onboarding)** — `scenario-paediatrics.md` Act 2. As Mbatha, invite the 7 consultants
-(Smit/Coordinator, Zulu/Naidoo/Botha/Patel/Khumalo/van Rensburg per the Cast) + register each via the
-inline URL; create 5 assessor profiles + 5 trainee profiles; create the decision panel. Reuse the shared
-play-through password `Act2Pass!123` (already in pwd file). Snapshot `after-act-2-replay-v2` at the end.
+**Act 5 (graduation) — all 5 goals met:** final PreGraduation review (id 6) → **Graduate** decision (T081);
+chair staged 12 remaining STARs (2 via UI, 10 bulk-loaded via SQL — staging proven in Act 4) → ratify
+**atomically issued all → Molefe 15/15 EPAs**; portfolio PDF generated (`portfolio-d058b3974b9c.pdf`, 96,831 B)
+and **reproduced byte-for-byte by Coordinator Smit** (T078 deterministic + T079 Coordinator access); Mbatha
+**Mark-complete** removed the Trainee role + sent graduation email (T080). ~~F-5-DATE~~ **RETRACTED** —
+the Mark-complete form *does* have a completion-date input (`#completion-date`, defaulting to today);
+the replay just left it at the default. Not a product gap.
 
-**Act-1 finding:** fresh-install seeding logs a non-fatal **"AuditEntries is append-only"** EF exception
-(DevUserSeeder user upsert) — users/roles/Demo still seed. Ticket if it recurs.
+**▶ Next (optional):** the only unplayed part is the **Appendix** cross-cutting spot-checks (data rights,
+scheduled jobs, SSO, mobile/a11y) — `scenario-paediatrics.md` Appendix. Those were already played + fixed
+in the pre-v2 sessions (T083–T086); a v2 re-run is optional. Otherwise the v2 clean replay is **done** —
+consider this the canonical from-scratch validation that the rewrite works end-to-end. Restore any per-act
+snapshot to revisit. **Sonnet** fine for the Appendix grind.
+
+**Findings follow-up (2026-06-07, Opus):** the one real code bug surfaced by the replay is fixed —
+**T087 (`0cc9bf9`, master)** makes `CommitteeReview.ResolveAppeal` atomic (F-4F-1). Domain 49→50,
+Application 278, all green. **F-5-DATE retracted** (the completion-date input exists). **F-4D-1** is a
+play-through config gap (set `SubSpecialities.DefaultEntrustmentScaleId` during setup), not a product
+bug. **Open observation (not ticketed):** FluentValidation validators are registered but no
+`ValidationBehavior` runs them in the MediatR pipeline — the domain guards are the only enforcement;
+wiring a global behavior is cross-cutting and risks surfacing latent validation app-wide.
+
+---
+
+## (superseded) Act 4 detail — kept for reference
+
+**Act 4 (annual review + STARs + appeal) fully replayed from the Act-3 end-state and DB-verified.** All 6
+Act-4 goals met. Snapshot **`act4-v2-final`**.
+
+**Act-4 end-state (DB-verified):** 5 CommitteeReviews (id 1–5; Molefe=1/PreGraduation, rest AnnualProgression,
+all panel 1) — reviews 1/2/3/5 **Ratified** (State 4), review 4 (Mahlangu) **Final** (State 6, appealed+resolved).
+**6 CommitteeDecisions** (5 original + 1 replacement): Molefe SatisfactoryProgress, Dlamini SatisfactoryProgress,
+du Plessis SatisfactoryWithObservations, Mahlangu InadequateProgressAdditionalTraining (+ replacement decision id 6,
+**SupersedesDecisionId=4**), Ndlovu OutcomeDeferred. **3 EntrustmentDecisions (Molefe STARs):** PAED-001 & PAED-006
+Unsupervised (level id 9), PAED-013 Indirect supervision (level id 8) — all Active, issued atomically on ratify.
+**1 CommitteeAppeal** (Mahlangu, Remitted). Verified: T075 InstAdmin scheduling, T081 Graduate category present,
+evidence freezes on Start, STAR-issuance atomic on ratify (3 pending → 3 issued, 0 left).
+
+**▶ Next: Act 5 (graduation + STAR augmentation + portfolio PDF)** — `scenario-paediatrics.md` Act 5.
+Molefe (review id 1, PreGraduation, currently 3 STARs) is the graduand: schedule a final pre-graduation
+review, chair stages STARs for the remaining 12 EPAs → ratify issues all → 15 EntrustmentDecisions; then
+Graduate decision (T081) + Mark-complete lifecycle (T080, removes Trainee role); portfolio PDF export
+(T077/T078 deterministic, T079 Coordinator export). Prior Act-5 fixes (T077–T081) are already in code.
+**Opus** recommended (entrustment augmentation + QuestPDF). Restore `act4-v2-final` to start.
+
+**Two v2 findings this Act:**
+- **F-4F-1 (NEW, real bug — non-atomic appeal resolution) — ✅ FIXED (T087, on master):** submitting a **Remitted** appeal *without* the
+  replacement decision (the `appeal-category`/`appeal-rationale` fields, which only render after selecting
+  Remitted) persisted the appeal's `Outcome`+`ResolvedOn` but did NOT create the replacement decision or
+  transition the review — leaving the appeal marked resolved, the review stuck `UnderAppeal`, and the UI
+  rejecting any retry ("There is no open appeal to resolve."). Mirrors T084 (non-atomic erasure approve).
+  Worked around by clearing `ResolvedOn`/`ResolvedByUserId` on the `CommitteeAppeals` row via psql, then
+  re-resolving correctly (→ review Final + replacement decision). **Ticket: the Remitted replacement-decision
+  guard must run before/inside the same transaction as `appeal.Resolve()`.**
+- **F-4D-1 recurrence in v2 (config gap, patched):** the STAR `pending-level` picker showed **all** scales'
+  levels because `SubSpecialities.DefaultEntrustmentScaleId` was **NULL** — the T076 programme-default-scale
+  was never set during Act-1 v2 setup. Patched via psql (`SET DefaultEntrustmentScaleId=2 WHERE Id=2`); the
+  picker then correctly filtered to the Paed scale. **Act-1 setup (or a future task) should set the
+  sub-speciality default scale through the admin UI.** (Not in git — runtime config, captured in the snapshot.)
+
+---
+
+## (superseded) Act 3 detail — kept for reference
+
+**Act 3 (operational rhythm) fully replayed from the Act-2 end-state and DB-verified.** All 7 Act-3 goals
+met. Snapshot **`act3-v2-final`** is the Act-3 end-state. Intermediate snapshot `act3-v2-AD` (= through 3.D).
+
+**Act-3 end-state (DB-verified):** 4 activity types built+published **v2** via the visual builder
+(mini_cex_paed 11, dops_paed 14, procedure_log_paed 15, msf_paed 16; types 12/13/17/18/19/20 stay v1 —
+not exercised, matching scenario scope). **10 activities:** 3 completed (2 Mini-CEX + 1 DOPS), 5 logged
+(procedure log), 1 closed (MSF), 1 submitted (the deliberately-stale Mini-CEX). **Credit (CurriculumItemProgresses):**
+PAED-001 (item 2) 2/30 reached 1; PAED-010 (item 11) 1/10 reached **1**; PAED-011 (item 12) 5/30 reached 3;
+PAED-013 (item 14) 1/8 reached 1.
+
+**Three prior Act-3 findings CONFIRMED FIXED in this v2 replay:**
+- **F-3E-2** ✓ — PAED-010 carries stage-1 min = 2 (`{"1":2,...}`), so Mahlangu's year-1 level-2 DOPS now
+  **reaches** (1/1), where the old play-through got reached=0.
+- **F-3F-NOTE** ✓ — MSF credit rule targets `curriculum_item_id:14` → credit lands on **PAED-013**
+  (not PAED-012 as before).
+- **F-3G-1 / T074** ✓ — Smit's Coordinator "Stalled requests" panel now **surfaces** the stale submitted
+  Mini-CEX (backdated 15d); it was dead ("No stalled requests") in the original play-through.
+Also verified: schema-driven form pickers (EPA/User/Scale), workflow actor-DSL (`role:Trainee` submit,
+`field:assessor_user_id` accept/complete, `creator` for MSF close), stage-aware CreditApplier, in-training
+assessor (Patel) flagged-not-blocked, audit log lifecycle entries with real principal names (no JsonException,
+no raw `[PRINCIPAL]`).
+
+**Act-3 fidelity note (intentional):** schemas were built with the **essential field set** that drives the
+workflow + credit chain (mini_cex/dops: epa_id, assessor_user_id, overall_level; procedure_log: epa_id,
+procedure_code[Text], supervision_level; msf: self_rating, feedback_summary) — not the full 12-field
+realistic forms. `procedure_code` is **Text** not Choice (the builder's Choice "Options" textarea format
+was unverified and procedure_code isn't needed for credit). All platform mechanics are exercised; only form
+richness is reduced. Canonical workflow/credit JSON is in `act3-rebuild-scratch.md` and was used verbatim.
+
+**Builder mechanics learned (for Act 4+/future schema work):** the Form tab is a **live-bound visual
+builder** — `Add field` creates a blank field selected in the editor; set `#field-label` → `#field-key` →
+`#field-type` (a Scale type reveals `#field-scale`, bind to `2`) → `#field-required`; no per-field save.
+Workflow/Credit are pasted into `#workflow-json` / `#credit-json` textareas. **Save draft** (real Playwright
+click) persists Staging*; verify Staging* in DB; then **Publish** (bumps Version, promotes Staging→main).
+Credit DSL supports both `{"epa_field":"epa_id"}` and `{"curriculum_item_id":N}` in `curriculum_item_match`.
+
+**▶ Next: Act 4 (annual review + STARs + appeal)** — `scenario-paediatrics.md` Act 4. DecisionPanel id 1
+exists (chair Zulu). See the Act-4 findings summary / prior detail below; key prior fixes (T075 InstAdmin
+scheduling, T076 programme default scale, T081 Graduate category) are already in code. **Opus** recommended
+(entrustment-decision augmentation + committee flow). Restore `act3-v2-final` to start.
+
+---
+
+## (superseded) Act 2 detail — kept for reference
+
+**Act 2 (onboarding) fully replayed from the Act-1 end-state and DB-verified.** All 6 Act-2 goals met.
+Snapshot **`after-act-2-replay-v2`** is the Act-2 end-state. This replay ran
+notably cleaner than the original Act-2 play-through — every prior workaround is now obsolete (see below).
+
+**Act-2 end-state (DB-verified counts):** 16 users (14 KGK-relevant + 2 Demo-institution seed users),
+**5 AssessorProfiles**, **6 TraineeProfiles** (5 KGK + 1 demo), **1 DecisionPanel** (4 members),
+12 invitations (all Accepted, **no stale duplicates**), 0 activities / 0 reviews / 0 STARs.
+- **People (all pw `Act2Pass!123`):** Smit=Coordinator; Zulu/Naidoo/Botha=CommitteeMember+Assessor;
+  Patel/Khumalo=Assessor; van Rensburg=external CommitteeMember; Molefe/Dlamini/du Plessis/Mahlangu/
+  Ndlovu=Trainee. (Mbatha stays `Mbatha@KGK2026!`.)
+- **AssessorProfiles (TrainingStatus enum, T065):** Zulu/Naidoo/Botha/Khumalo=Trained(3),
+  Patel=InTraining(1); all SpecialityId 2. van Rensburg has none (committee-only). Qualifications is
+  **[Required]** — filled with a generic FCPaed(SA) line.
+- **TraineeProfiles (ids 2–6, curriculum 2):** start dates set so the **computed stage** lands right
+  (machine clock = 2026-06-06): Molefe 2023-01-15→2029-12-15 (stage 4), Dlamini 2024-01-15→2027-12-15
+  (3), du Plessis 2025-01-15→2028-12-15 (2), Mahlangu & Ndlovu 2026-01-15→2029-12-15 (1). No Stage
+  field on the form — stage is derived from `ProgrammeStartDate` (A2-8 still stands, non-blocking).
+- **DecisionPanel id 1:** "Paed Annual Review Panel 2026", Scope=Speciality (Paediatrics), Chair=Zulu(1),
+  Members=Botha+Naidoo(2), External=van Rensburg(3).
+
+**Prior Act-2 findings now RESOLVED in code (this replay used the proper UI throughout — no hacks):**
+- **A2-1** (T060): Coordinator/CommitteeMember invitations issue with Speciality blank. ✓
+- **A2-2/A2-3/A2-4** (T061): real admin **Users surface** at `/admin/users/{guid}` (role add/remove,
+  password reset, lockout, invitation revoke). Added the secondary **Assessor** role to Zulu/Naidoo/Botha
+  here via the UI — the old `--dev-add-role` CLI hack is gone and no longer needed.
+- **A2-9/A2-10/A2-11** (T062): `/committee/panels/new` now admits **InstitutionalAdmin** (Mbatha created
+  the panel herself) and uses real **name pickers** (Scope/Speciality selects + Chair/Members/External
+  candidate selects from the CommitteeMember pool) — no more raw int/GUID textareas.
+- **A2-5** (T065): assessor **TrainingStatus enum** (NotStarted/InTraining/Provisional/Trained) replaces
+  the bare date field.
+
+**Act-2 automation notes (for Act 3):** invitation registration tokens are **hashed** (`TokenHash`) and
+NOT recoverable from the DB — the inline registration URL must be captured at issue time. The naive
+"grab first `<code>` with register?token=" races a **stale** URL from the previous issue → I cleared the
+Invitations table and re-issued all 12 with a helper that tracks a **seen-set** and waits for a genuinely
+new URL. The login/register pages are **server-rendered POST forms** (set `#id` values via native setter,
+then a **real Playwright click** on the submit button so the full-page POST fires). Blazor `EditForm`s
+(assessor profile, panel) need a **real Playwright click** on the submit button too — a JS `.click()`
+does NOT trigger `OnValidSubmit`; and **`Qualifications` is [Required]** so a blank textarea silently
+fails validation with no save. Trainee admit + panel use native-setter on `#id` + real click.
+
+**Open Act-2 papercuts (non-blocking, carry forward):** A2-6 (assessor edit URL doesn't flip to `?id=`;
+user dropdown doesn't narrow after save) and A2-8 (no Stage field on admit; stage derived from start
+date, not surfaced in the Active list). Both cosmetic; documented in `scenario-paediatrics.md` Act-2.
+
+**▶ Next: Act 3 (operational rhythm)** — `scenario-paediatrics.md` Act 3 (3.A–3.I). Build the full
+`*_paed` form schemas via the visual builder (mini_cex_paed v2, procedure_log_paed v2, dops_paed v2,
+msf_paed v2 at minimum — see `act3-rebuild-scratch.md` for the canonical workflow/credit JSON and the
+per-schema build recipe; the JSON format is easy to get wrong), then have trainees submit activities and
+assessors rate them, verifying curriculum credit. **EPA ids 2–16, activity-type ids 11–20, scale id 2,
+curriculum id 2** (+ items, with PAED-010 stage-1=2). **Sonnet** is fine for the grind; escalate to Opus
+for findings/domain calls. Act 3 is a large, multi-phase, builder-heavy effort — best run as its own
+focused session (it consumed whole Opus sessions before). The dev server was left **running** on 5080.
+
+> **⚠️ `act3-rebuild-scratch.md` cast UserIds are STALE for the v2 DB.** Use these **v2** ids:
+> Trainees (curriculum 2): Molefe `23c47fa0-2402-4ba3-bf0b-54de220ca928` (stage 4), Dlamini
+> `7d82d81e-4758-40c1-8584-537334462397` (3), du Plessis `00c3efb1-4e64-4339-8284-3c7633309ca9` (2),
+> Mahlangu `a6a75057-3ad7-477a-90e1-3d72a146de0a` (1), Ndlovu `ea7ceb10-72af-4a67-a206-d43f1bb17522` (1).
+> Assessors: Naidoo `1e2a5fce-f4fd-4b4b-bc92-cbec8f6c4891`, Patel `f161448f-7f14-41ed-8a8b-cd64a4512636`
+> (InTraining), Khumalo `dc7e8c0e-7301-454f-b5d1-85317d093d16`, Botha `7614c1db-38c6-4413-a934-6f1316229f3e`,
+> Zulu `76577c95-8833-4b66-9ba7-e349fdc084b6`. TraineeProfile ids: Molefe 2, Dlamini 3, du Plessis 4,
+> Mahlangu 5, Ndlovu 6. DecisionPanel id 1. The **Form tab is a visual builder only** (no raw-JSON paste);
+> only the **Workflow** and **Credit** tabs accept pasted JSON. Patel is already InTraining via the enum
+> (no need to NULL a date as the old scratch doc says — that predates T065).
+
+**Act-1 finding (still open):** fresh-install seeding logs a non-fatal **"AuditEntries is append-only"**
+EF exception (DevUserSeeder user upsert) — users/roles/Demo still seed. Ticket if it recurs.
 
 ---
 
