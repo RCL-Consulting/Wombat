@@ -2,6 +2,39 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-06-07 (Opus) — clean v2 replay (Acts 1–5) DONE + 2 code fixes shipped
+
+**Two-part session.** (1) Replayed the **entire linear Paediatrics scenario (Acts 1–5)** clean from a
+fresh DB, UI-driven, DB-verified at every step — six per-act snapshots banked, ending at **`act5-v2-final`**
+(Molefe graduated with 15/15 STARs; 16 users / 10 activities / 6 reviews / 1 resolved appeal). (2) Fixed
+the real findings the replay surfaced, each a task-commit on `master` (**nothing pushed**):
+
+- **T087 (`0cc9bf9`)** — atomic committee-appeal resolution (**F-4F-1**): moved the Remitted
+  replacement-decision guard before `appeal.Resolve()` so a bad request throws with zero mutation
+  (no more stranded `UnderAppeal`). +1 domain test.
+- **T088 (`d054b6c`)** — wired FluentValidation into the MediatR pipeline (`ValidationBehavior` inside the
+  audit behaviour): ~75 validators were registered but **never executed** (the root cause that let the bad
+  appeal request reach the domain). +2 tests. Live-verified valid commands still pass.
+
+**Non-bugs:** **F-5-DATE retracted** (completion-date input already exists); **F-4D-1** is a setup config
+gap (`SubSpecialities.DefaultEntrustmentScaleId`), not a defect.
+
+**Tests (all green):** Domain **50**, Application **280**, Architecture **19**, Web **43**. Integration NOT
+run (no Docker on this box). Full solution builds clean. **Dev server STOPPED; live DB restored to
+`act5-v2-final`.** No new secrets.
+
+**▶ Recommended next:** optionally re-run the **Appendix** cross-cutting spot-checks in v2 (already played +
+fixed pre-v2 as T083–T086), or begin **pushing** `master` to origin (local `master` is now well ahead,
+never pushed). **Sonnet** fine for the Appendix grind; **Opus** for release/push judgement. Start any
+play-through from `tools\db-snapshot.ps1 restore act5-v2-final` (or an earlier per-act snapshot).
+
+**⚠️ Tooling reminders (unchanged):** dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), not Bash; **stop the dev server before
+`dotnet test`/`dotnet build`/`db-snapshot.ps1 restore`**; keep `psql` calls solo; psql here-strings must be
+**ASCII** (em-dashes trip UTF-8). `AuditEntries` is append-only (a DB trigger blocks DELETE/UPDATE).
+
+---
+
 ## ✅ CLEAN FULL REPLAY COMPLETE — 2026-06-07 (Opus) — Acts 1–5 ALL DONE (linear scenario fully replayed)
 
 **The entire Paediatrics scenario (Acts 1–5) has been replayed clean from a fresh DB, end-to-end, UI-driven,
