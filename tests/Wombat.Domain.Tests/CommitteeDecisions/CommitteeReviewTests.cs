@@ -100,4 +100,50 @@ public sealed class CommitteeReviewTests
         Assert.Single(review.Appeals);
         Assert.Equal(CommitteeAppealOutcome.Remitted, review.Appeals.Single().Outcome);
     }
+
+    [Fact]
+    public void ResolveAppeal_RemittedWithoutReplacement_ThrowsAndLeavesAppealUnresolved()
+    {
+        var review = new CommitteeReview
+        {
+            TraineeUserId = "trainee-1",
+            ReviewPeriodFrom = new DateOnly(2026, 1, 1),
+            ReviewPeriodTo = new DateOnly(2026, 3, 31),
+            ScheduledOn = new DateOnly(2026, 4, 1)
+        };
+
+        review.Start([], "chair-1", DateTime.UtcNow);
+        review.RecordDecision(
+            CommitteeDecisionCategory.InadequateProgressAdditionalTraining,
+            "Insufficient evidence volume.",
+            null,
+            "chair-1",
+            DateTime.UtcNow);
+        review.Ratify("chair-1", DateTime.UtcNow);
+        review.LodgeAppeal("Evidence reflects start-of-year skill.", "trainee-1", DateTime.UtcNow);
+
+        // F-4F-1: a Remitted resolution missing the replacement decision must throw WITHOUT mutating
+        // anything — the appeal stays open and the review stays UnderAppeal so the operator can retry.
+        Assert.Throws<InvalidOperationException>(() =>
+            review.ResolveAppeal(CommitteeAppealOutcome.Remitted, "external-1", DateTime.UtcNow));
+
+        var appeal = review.Appeals.Single();
+        Assert.Null(appeal.ResolvedOn);
+        Assert.Null(appeal.Outcome);
+        Assert.Equal(CommitteeReviewState.UnderAppeal, review.State);
+        Assert.Single(review.Decisions);
+
+        // A subsequent correct resolution still succeeds (no stranded state).
+        review.ResolveAppeal(
+            CommitteeAppealOutcome.Remitted,
+            "external-1",
+            DateTime.UtcNow,
+            CommitteeDecisionCategory.InadequateProgressAdditionalTraining,
+            "Referral upheld; re-review window reduced to 3 months.",
+            null);
+
+        Assert.Equal(CommitteeReviewState.Final, review.State);
+        Assert.Equal(2, review.Decisions.Count);
+        Assert.Equal(CommitteeAppealOutcome.Remitted, review.Appeals.Single().Outcome);
+    }
 }

@@ -150,18 +150,21 @@ public sealed class CommitteeReview
         var appeal = Appeals.OrderByDescending(item => item.LodgedOn).ThenByDescending(item => item.Id).FirstOrDefault(item => !item.ResolvedOn.HasValue)
             ?? throw new InvalidOperationException("There is no open appeal to resolve.");
 
+        // Validate every precondition BEFORE mutating any state, so a bad request throws without
+        // partially resolving the appeal. (F-4F-1: previously appeal.Resolve() ran first, leaving the
+        // appeal marked resolved + the review stranded UnderAppeal when the replacement guard threw.)
+        if (outcome == CommitteeAppealOutcome.Remitted && (!remittedCategory.HasValue || string.IsNullOrWhiteSpace(remittedRationale)))
+        {
+            throw new InvalidOperationException("A remitted appeal must record the replacement decision.");
+        }
+
         appeal.Resolve(outcome, actorUserId, utcNow);
 
         if (outcome == CommitteeAppealOutcome.Remitted)
         {
-            if (!remittedCategory.HasValue || string.IsNullOrWhiteSpace(remittedRationale))
-            {
-                throw new InvalidOperationException("A remitted appeal must record the replacement decision.");
-            }
-
             Decisions.Add(CommitteeDecision.Create(
-                remittedCategory.Value,
-                remittedRationale,
+                remittedCategory!.Value,
+                remittedRationale!,
                 remittedConditions,
                 actorUserId,
                 utcNow,
