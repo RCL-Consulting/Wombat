@@ -32,9 +32,10 @@ snapshot to revisit. **Sonnet** fine for the Appendix grind.
 **T087 (`0cc9bf9`, master)** makes `CommitteeReview.ResolveAppeal` atomic (F-4F-1). Domain 49→50,
 Application 278, all green. **F-5-DATE retracted** (the completion-date input exists). **F-4D-1** is a
 play-through config gap (set `SubSpecialities.DefaultEntrustmentScaleId` during setup), not a product
-bug. **Open observation (not ticketed):** FluentValidation validators are registered but no
-`ValidationBehavior` runs them in the MediatR pipeline — the domain guards are the only enforcement;
-wiring a global behavior is cross-cutting and risks surfacing latent validation app-wide.
+bug. **T088 (`d054b6c`, master)** wired FluentValidation into the MediatR pipeline (a new
+`ValidationBehavior` inside the audit behaviour) — ~75 validators that were registered but never executed
+now run before their handlers; live-verified valid commands still pass. Tests after both fixes: Domain 50,
+Application 280, Architecture 19, Web 43 — all green (Integration not run, no Docker).
 
 ---
 
