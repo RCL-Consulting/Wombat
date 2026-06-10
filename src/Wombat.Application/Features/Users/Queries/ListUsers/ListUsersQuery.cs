@@ -37,9 +37,10 @@ public sealed class ListUsersQueryHandler : IRequestHandler<ListUsersQuery, IRea
             {
                 return Array.Empty<UserSummaryDto>();
             }
-            // InstitutionalAdmin sees own-institution users plus unscoped (no-institution) users
-            // such as global Administrators — they're visible but cannot be mutated from this surface.
-            query = query.Where(user => !user.InstitutionId.HasValue || user.InstitutionId.Value == scopedInstitutionId.Value);
+            // InstitutionalAdmin sees only users scoped to their own institution. Unscoped
+            // (no-institution) accounts such as global Administrators are not exposed to a
+            // tenant-level admin — they are managed only from the global Administrator surface.
+            query = query.Where(user => user.InstitutionId.HasValue && user.InstitutionId.Value == scopedInstitutionId.Value);
         }
 
         var filtered = query.ToArray();

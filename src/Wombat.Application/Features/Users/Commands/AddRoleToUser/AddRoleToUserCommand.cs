@@ -44,7 +44,8 @@ public sealed class AddRoleToUserCommandHandler : IRequestHandler<AddRoleToUserC
             throw new UnauthorizedAccessException("You do not have permission to modify a global administrator.");
         }
 
-        if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
+        if (!request.Principal.IsAdministrator()
+            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this user.");
         }

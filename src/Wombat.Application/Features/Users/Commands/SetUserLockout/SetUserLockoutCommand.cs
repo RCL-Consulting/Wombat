@@ -36,7 +36,8 @@ public sealed class SetUserLockoutCommandHandler : IRequestHandler<SetUserLockou
             throw new InvalidOperationException("A global administrator cannot be locked out from this surface.");
         }
 
-        if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
+        if (!request.Principal.IsAdministrator()
+            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this user.");
         }

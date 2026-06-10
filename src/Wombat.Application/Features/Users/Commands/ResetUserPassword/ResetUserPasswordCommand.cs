@@ -38,7 +38,8 @@ public sealed class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserP
             throw new UnauthorizedAccessException("You do not have permission to reset a global administrator's password.");
         }
 
-        if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
+        if (!request.Principal.IsAdministrator()
+            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
         {
             throw new UnauthorizedAccessException("You do not have permission to reset this user's password.");
         }

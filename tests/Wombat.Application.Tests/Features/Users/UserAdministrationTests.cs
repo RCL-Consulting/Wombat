@@ -28,7 +28,7 @@ public sealed class UserAdministrationTests
     private const int InstitutionB = 2;
 
     [Fact]
-    public async Task ListUsers_AsInstitutionalAdmin_OnlyReturnsOwnInstitutionAndGlobal()
+    public async Task ListUsers_AsInstitutionalAdmin_OnlyReturnsOwnInstitution()
     {
         await using var db = NewDb();
         SeedInstitutions(db);
@@ -41,7 +41,73 @@ public sealed class UserAdministrationTests
         var handler = new ListUsersQueryHandler(users, db);
         var result = await handler.Handle(new ListUsersQuery(TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
 
-        result.Select(user => user.UserId).Should().BeEquivalentTo("u-a", "u-g");
+        // Unscoped global accounts (e.g. Administrators) are NOT exposed to a tenant-level admin.
+        result.Select(user => user.UserId).Should().BeEquivalentTo("u-a");
+    }
+
+    [Fact]
+    public async Task ListUsers_AsAdministrator_ReturnsAllIncludingUnscoped()
+    {
+        await using var db = NewDb();
+        SeedInstitutions(db);
+
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-a", "a@kgk", "A", "User", InstitutionA, [], [], [WombatRoles.Coordinator]));
+        users.Add(new UserIdentityDetails("u-b", "b@b", "B", "User", InstitutionB, [], [], [WombatRoles.Coordinator]));
+        users.Add(new UserIdentityDetails("u-g", "g@global", "G", "User", InstitutionId: null, [], [], [WombatRoles.Administrator]));
+
+        var handler = new ListUsersQueryHandler(users, db);
+        var result = await handler.Handle(new ListUsersQuery(TestPrincipals.Administrator()), CancellationToken.None);
+
+        result.Select(user => user.UserId).Should().BeEquivalentTo("u-a", "u-b", "u-g");
+    }
+
+    [Fact]
+    public async Task GetUserById_UnscopedGlobalUser_AsInstitutionalAdmin_ReturnsNull()
+    {
+        await using var db = NewDb();
+        SeedInstitutions(db);
+
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-g", "g@global", "G", "User", InstitutionId: null, [], [], [WombatRoles.Administrator]));
+
+        var handler = new GetUserByIdQueryHandler(users, db);
+        var result = await handler.Handle(new GetUserByIdQuery("u-g", TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetUserById_UnscopedGlobalUser_AsAdministrator_IsVisible()
+    {
+        await using var db = NewDb();
+        SeedInstitutions(db);
+
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-g", "g@global", "G", "User", InstitutionId: null, [], [], [WombatRoles.Administrator]));
+
+        var handler = new GetUserByIdQueryHandler(users, db);
+        var result = await handler.Handle(new GetUserByIdQuery("u-g", TestPrincipals.Administrator()), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.UserId.Should().Be("u-g");
+    }
+
+    [Fact]
+    public async Task ResetPassword_UnscopedNonAdministrator_AsInstitutionalAdmin_IsRejected()
+    {
+        // Latent write gap: an unscoped (no-institution) account that is NOT a global Administrator
+        // must still be unreachable by a tenant-level admin. The role guard alone did not cover this.
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-g", "g@global", "G", "User", InstitutionId: null, [], [], [WombatRoles.Coordinator]));
+
+        var handler = new ResetUserPasswordCommandHandler(users);
+        var act = () => handler.Handle(
+            new ResetUserPasswordCommand("u-g", "NewPass!2026", TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        users.ResetPasswordCalls.Should().BeEmpty();
     }
 
     [Fact]

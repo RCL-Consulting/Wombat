@@ -35,7 +35,10 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
         }
 
         // Scope guard: out-of-scope users are reported as 404, not 403, to avoid leaking id existence.
-        if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
+        // Unscoped (global) accounts such as Administrators are visible only to a global Administrator,
+        // never to a tenant-level InstitutionalAdmin.
+        if (!request.Principal.IsAdministrator()
+            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
         {
             return null;
         }
