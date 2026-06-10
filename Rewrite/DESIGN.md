@@ -42,12 +42,11 @@ Defined at `:root` in `app.css`. These are the **only** colours and spacings all
 ```css
 :root {
   /* ── Brand palette (Wombat) ──────────────────────────
-     These values are TBD and must be confirmed before T010 ships.
-     Until then, use the ClinicAssist placeholders below so the app
-     renders cleanly. Swapping the palette later means editing this
-     one block — no other file encodes a raw colour. */
-  --primary-color:    #2c3e50;   /* TBD: deep brand ink (sidebar-safe) */
-  --secondary-color:  #3498db;   /* TBD: action / link / focus ring */
+     Refined navy/blue identity (T089). Swapping the palette means editing
+     this one block — no other file encodes a raw colour. */
+  --primary-color:    #2c3e50;   /* deep slate-navy ink (headings, sidebar-safe) */
+  --secondary-color:  #2d6cdf;   /* action / link / focus ring — 4.86:1 white-on-button (AA) */
+  --accent-color:     #3498db;   /* lighter brand blue for soft accents / highlights */
   --success-color:    #27ae60;   /* semantic, rarely tweaked */
   --danger-color:     #e74c3c;
   --warning-color:    #fd7e14;
@@ -72,7 +71,7 @@ Defined at `:root` in `app.css`. These are the **only** colours and spacings all
   --hover-bg:         #f8f9fa;
   --header-bg:        #f1f3f5;
 
-  /* Sidebar gradient (matches ClinicAssist shape, Wombat hues TBD) */
+  /* Sidebar gradient (navy → violet) */
   --sidebar-gradient-start: rgb(5, 39, 103);
   --sidebar-gradient-end:   #3a0647;
 
@@ -92,6 +91,25 @@ Defined at `:root` in `app.css`. These are the **only** colours and spacings all
 - `primary-color` is ink / heading accent. `secondary-color` is for actions — buttons, links, focus rings. Do not mix them up.
 - The sidebar gradient tokens are used by `NavMenu.razor.css` only.
 - If the brand palette changes, only `:root` changes.
+
+## Logo & brand assets (T089)
+
+The Wombat mark is a stylised wombat face (white, on a navy→blue gradient disc) emerging from a darker
+"burrow" mound. Source-of-truth SVGs live in `wwwroot/brand/`:
+
+- `wombat-mark.svg` — the round mark, transparent corners. Used in the nav brand lockup, the login card,
+  and as `favicon.svg`. This is the canonical vector logo; render it as an `<img>` (it is multi-colour, so
+  it is **not** an `Icon.razor` glyph and does not use `currentColor`).
+- `wombat-tile.svg` — a full-bleed, opaque square variant (same face, no transparent corners) used only to
+  rasterise the OS app-icon tiles.
+
+Raster fallbacks (generated from `wombat-tile.svg`, in `wwwroot/`): `favicon.ico` (16/32/48),
+`apple-touch-icon.png` (180), `icon-192.png` / `icon-512.png` (PWA, `purpose: any maskable`). The head links
++ `site.webmanifest` + `theme-color` (`#2c3e50`) are wired in `Components/App.razor`.
+
+**Lockup:** mark + `Wombat` wordmark, `font-weight: 700`, `letter-spacing: -0.01em`. White on the sidebar
+gradient (`.navbar-brand`); `--primary-color` on light (`.account-brand`). To re-skin, regenerate the four
+raster files from the tile SVG and keep the mark/tile colours in sync with `:root`.
 
 ## Typography
 

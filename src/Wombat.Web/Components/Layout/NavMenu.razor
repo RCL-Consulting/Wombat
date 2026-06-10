@@ -2,11 +2,15 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" href="">Wombat</a>
+    <a class="navbar-brand" href="">
+      <img class="navbar-brand-mark" src="/brand/wombat-mark.svg" alt="" width="40" height="40" />
+      <span class="navbar-brand-text">Wombat</span>
+    </a>
   </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" @bind="IsNavMenuExpanded" />
+<input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu"
+       aria-expanded="@IsNavMenuExpanded" class="navbar-toggler" @bind="IsNavMenuExpanded" />
 
 <div class="nav-scrollable" @onclick="CloseNavMenu">
   <nav class="flex-column">
