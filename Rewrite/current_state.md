@@ -2,27 +2,30 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ ACTIVE — 2026-06-10 (Opus) — T091 national EPA/curriculum catalogue (CMSA-owned) — DESIGN phase
+## ⭐ ACTIVE — 2026-06-11 (Opus) — T091 national EPA/curriculum catalogue — P1+P2 DONE, P3 next
 
-**Big domain redesign just opened.** User confirmed the current EPA ownership model is a **mistake**: in SA,
-EPAs + curricula are defined by the **Colleges of Medicine of South Africa (CMSA)** and institutions **adopt**
-them — they don't author their own. Today EPAs/curricula are institution-scoped via
-`Epa.SubSpecialityId → SubSpeciality.SpecialityId → Speciality.InstitutionId`. Task file:
-`Rewrite/Tasks/T091-national-epa-curriculum-catalogue.md`. Blast-radius mapped (see task file + below).
+**Big domain redesign in progress.** EPAs/curricula must be nationally owned by the **Colleges of Medicine of
+SA (CMSA)**; institutions **adopt** them (don't author). Decided design (4 forks) + 6-phase plan in
+`Rewrite/Tasks/T091-national-epa-curriculum-catalogue.md`. Decisions: College layer; national core + local
+extras; per-College `CollegeAdmin` role; explicit version-pinned adoption.
 
-**Status:** design questions being put to the user before any schema change. **No code changed for T091 yet.**
-Blast radius (from an Explore pass): Domain (Epa/Curriculum/CurriculumItem own via SubSpeciality; Scales
-already global; AssessmentForm + DecisionPanel already have global/optional-scope precedents); EF configs +
-unique indexes `Epas(SubSpecialityId,Code)` / `Curricula(SubSpecialityId,Name,Version)`; ~15 Application
-handlers scope EPA/curriculum by `SubSpeciality.Speciality.InstitutionId`; Web admin pages `/admin/epas`,
-`/admin/curricula` (+items) under `AdministratorOrInstitutionalAdmin`; `EpaScopeGuardTests` +
-`CurriculumScopeGuardTests` assert institution-scoping; `TraineeProfile.CurriculumId` binds trainees;
-`CreditApplier` resolves CurriculumItem by Id/EpaId/EpaField.
+**Committed (master, unpushed):**
+- **P1 (`1c18bda`)** — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
+- **P2 (`f63d993`)** — re-parented `Speciality` InstitutionId→CollegeId; added direct `TraineeProfile.InstitutionId`;
+  re-scoped ~35 Application handlers (catalogue→`CanAccessCollege`; trainees/forms/panels/activity-types→direct
+  institution); Infra seeders/PDF/reference-data; Web admin pages compile; migration
+  `T091_ReparentSpecialityToCollege` (fresh-DB). Scope-guard tests rewritten to college-scoping; `CollegeAdmin`
+  test principal added. **All unit suites green: Domain 50, Application 284, Architecture 19, Web 43, Infrastructure 10.**
 
-**▶ Next:** answer the design forks (governance/ownership level, institution adoption granularity, local-EPA
-latitude, authoring role), then plan → implement on a fresh DB. **Opus** (domain + migration design). This is
-a multi-session effort; likely split into sub-tasks (domain re-parent → migration → admin surfaces → scenario
-rebuild). Don't start coding until the forks are decided.
+**⚠️ Provisional / deferred to later phases (flagged inline with T091 comments):** InstitutionalAdmins see the
+WHOLE national EPA/curriculum catalogue (no adoption narrowing until P4); Web admin pages show no College column
+and don't filter specialities (P5 rework); speciality-scoped DecisionPanels must carry their own InstitutionId.
+**DB must be rebuilt fresh** — old `act*-v2-*` snapshots are invalid under the new schema.
+
+**▶ Next: P3** — local-extras: nullable `OwningInstitutionId` on `Epa` + `CurriculumItem` (null=national core,
+set=institution-local); union national + own-institution-local in list queries; guards (national=CollegeAdmin,
+local=matching InstitutionalAdmin). Then **P4** adoption+versioning, **P5** Web surfaces, **P6** scenario rebuild.
+**Opus** throughout. Integration tests NOT run (need Docker).
 
 ---
 
