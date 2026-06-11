@@ -68,13 +68,14 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
             .Options);
 
         db.Set<Institution>().Add(new Institution { Id = InstitutionA, Name = "KGK", ShortCode = "KGK", IsActive = true, CreatedOn = DateTime.UtcNow });
-        db.Set<Speciality>().Add(new Speciality { Id = 1, InstitutionId = InstitutionA, Name = "Paediatrics", IsActive = true });
+        db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = InstitutionA, Name = "Paediatrics", IsActive = true });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "General Paediatrics", IsActive = true });
         db.Set<Curriculum>().Add(new Curriculum { Id = 1, SubSpecialityId = 1, Name = "FCPaed(SA) Part 1", Version = "2026.1" });
         db.Set<TraineeProfile>().Add(new TraineeProfile
         {
             Id = 1,
             UserId = "trainee-1",
+            InstitutionId = InstitutionA,
             CurriculumId = 1,
             ProgrammeStartDate = new DateOnly(2023, 1, 15),
             ExpectedCompletionDate = new DateOnly(2029, 12, 31),

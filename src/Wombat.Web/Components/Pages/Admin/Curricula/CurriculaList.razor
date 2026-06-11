@@ -35,12 +35,12 @@
         @{
           var subSpeciality = _subSpecialities.Single(entity => entity.Id == curriculum.SubSpecialityId);
           var speciality = _specialities.Single(entity => entity.Id == subSpeciality.SpecialityId);
-          var institution = _institutions.Single(entity => entity.Id == speciality.InstitutionId);
         }
         <tr>
           <td>@curriculum.Name</td>
           <td>@curriculum.Version</td>
-          <td>@institution.Name</td>
+          @* Curricula are national now (T091); College column lands with the Phase 5 admin rework. *@
+          <td>—</td>
           <td>@speciality.Name</td>
           <td>@subSpeciality.Name</td>
           <td>@curriculum.EffectiveFrom.ToString("yyyy-MM-dd")</td>

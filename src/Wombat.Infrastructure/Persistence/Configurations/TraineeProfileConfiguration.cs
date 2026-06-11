@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Infrastructure.Persistence.Configurations;
 
@@ -17,6 +18,11 @@ public sealed class TraineeProfileConfiguration : IEntityTypeConfiguration<Train
         builder.HasOne(profile => profile.Curriculum)
             .WithMany()
             .HasForeignKey(profile => profile.CurriculumId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Institution>()
+            .WithMany()
+            .HasForeignKey(profile => profile.InstitutionId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

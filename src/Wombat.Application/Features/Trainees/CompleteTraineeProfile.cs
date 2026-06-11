@@ -50,7 +50,7 @@ public sealed class CompleteTraineeProfileCommandHandler : IRequestHandler<Compl
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException("The trainee profile could not be found.");
 
-        if (!request.Principal.CanAccessInstitution(profile.Curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessInstitution(profile.InstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to complete this trainee profile.");
         }

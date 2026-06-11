@@ -73,18 +73,15 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             // EPA in their institution (e.g. when designing a form in the builder).
             if (principal.IsInstitutionalAdmin())
             {
-                var institutionId = principal.GetInstitutionId();
-                if (institutionId.HasValue)
+                // EPAs/sub-specialities are national now (T091); an InstitutionalAdmin building a form sees
+                // the whole national catalogue. Adoption-based narrowing arrives in phase 4.
+                var allSubs = await _dbContext.Set<SubSpeciality>()
+                    .AsNoTracking()
+                    .Select(sub => sub.Id)
+                    .ToListAsync(cancellationToken);
+                foreach (var id in allSubs)
                 {
-                    var subsUnderInstitution = await _dbContext.Set<SubSpeciality>()
-                        .AsNoTracking()
-                        .Where(sub => sub.Speciality.InstitutionId == institutionId.Value)
-                        .Select(sub => sub.Id)
-                        .ToListAsync(cancellationToken);
-                    foreach (var id in subsUnderInstitution)
-                    {
-                        subSpecialityIds.Add(id);
-                    }
+                    subSpecialityIds.Add(id);
                 }
             }
 

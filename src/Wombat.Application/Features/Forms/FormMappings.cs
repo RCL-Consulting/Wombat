@@ -37,33 +37,16 @@ internal static class FormMappings
     /// Returns null for fully-global forms (no institution / speciality / sub-speciality set) —
     /// callers should treat those as visible to InstitutionalAdmin and editable only by Administrator.
     /// </summary>
-    public static async Task<int?> ResolveFormScopeInstitutionAsync(
+    // Speciality/sub-speciality scopes now reference national (College-owned) disciplines (T091) and no
+    // longer resolve to an owning institution; only the explicit Institution scope does. Discipline-scoped
+    // (and global) forms therefore resolve to null = Administrator-only to write, per the guard below.
+    public static Task<int?> ResolveFormScopeInstitutionAsync(
         IApplicationDbContext dbContext,
         int? institutionId,
         int? specialityId,
         int? subSpecialityId,
         CancellationToken cancellationToken)
-    {
-        if (institutionId.HasValue)
-        {
-            return institutionId.Value;
-        }
-        if (specialityId.HasValue)
-        {
-            return await dbContext.Set<Speciality>()
-                .Where(entity => entity.Id == specialityId.Value)
-                .Select(entity => (int?)entity.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken);
-        }
-        if (subSpecialityId.HasValue)
-        {
-            return await dbContext.Set<SubSpeciality>()
-                .Where(entity => entity.Id == subSpecialityId.Value)
-                .Select(entity => (int?)entity.Speciality.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken);
-        }
-        return null;
-    }
+        => Task.FromResult(institutionId);
 
     /// <summary>
     /// Throws UnauthorizedAccessException unless the caller may write to the given form-scope tuple.

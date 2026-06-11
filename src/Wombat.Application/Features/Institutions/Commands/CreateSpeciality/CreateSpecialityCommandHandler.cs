@@ -17,14 +17,14 @@ public sealed class CreateSpecialityCommandHandler : IRequestHandler<CreateSpeci
 
     public async Task<SpecialityDto> Handle(CreateSpecialityCommand request, CancellationToken cancellationToken)
     {
-        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        if (!request.Principal.CanAccessCollege(request.CollegeId))
         {
-            throw new UnauthorizedAccessException("You do not have permission to create a speciality for this institution.");
+            throw new UnauthorizedAccessException("You do not have permission to create a speciality for this college.");
         }
 
         var speciality = new Speciality
         {
-            InstitutionId = request.InstitutionId,
+            CollegeId = request.CollegeId,
             Name = request.Name.Trim(),
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim()
         };
@@ -37,9 +37,9 @@ public sealed class CreateSpecialityCommandHandler : IRequestHandler<CreateSpeci
         }
         catch (DbUpdateException exception)
         {
-            throw new InvalidOperationException("A speciality with the same name already exists for this institution.", exception);
+            throw new InvalidOperationException("A speciality with the same name already exists for this college.", exception);
         }
 
-        return new SpecialityDto(speciality.Id, speciality.InstitutionId, speciality.Name, speciality.Description, speciality.IsActive);
+        return new SpecialityDto(speciality.Id, speciality.CollegeId, speciality.Name, speciality.Description, speciality.IsActive);
     }
 }

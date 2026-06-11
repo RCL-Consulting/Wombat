@@ -91,7 +91,7 @@ public sealed class GetCurriculumProgressForTraineeTests
     private static void SeedCurriculum(ApplicationDbContext db)
     {
         db.Institutions.Add(new Institution { Id = 1, Name = "KGK" });
-        db.Specialities.Add(new Speciality { Id = 1, InstitutionId = 1, Name = "Paediatrics" });
+        db.Specialities.Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics" });
         db.SubSpecialities.Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "General Paediatrics" });
 
         db.Epas.Add(new Epa { Id = 1, SubSpecialityId = 1, Code = "PAED-001", Title = "Clerk an acute admission" });

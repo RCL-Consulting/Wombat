@@ -117,37 +117,34 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
             return true;
         }
 
-        if (!principal.IsInstitutionalAdmin())
-        {
-            return false;
-        }
-
-        var callerInstitutionId = principal.GetInstitutionId();
-        if (!callerInstitutionId.HasValue)
-        {
-            return false;
-        }
-
         switch (activityType.Scope)
         {
             case ActivityScope.Global:
                 return true;
             case ActivityScope.Institution:
-                return activityType.ScopeId == callerInstitutionId.Value;
+                var callerInstitutionId = principal.GetInstitutionId();
+                return principal.IsInstitutionalAdmin() && callerInstitutionId.HasValue && activityType.ScopeId == callerInstitutionId.Value;
             case ActivityScope.Speciality:
+                // National discipline (T091): readable by the owning College's CollegeAdmin.
                 if (dbContext is null || !activityType.ScopeId.HasValue)
                 {
                     return false;
                 }
-                return await dbContext.Set<Speciality>()
-                    .AnyAsync(entity => entity.Id == activityType.ScopeId.Value && entity.InstitutionId == callerInstitutionId.Value, cancellationToken);
+                var specialityCollegeId = await dbContext.Set<Speciality>()
+                    .Where(entity => entity.Id == activityType.ScopeId.Value)
+                    .Select(entity => (int?)entity.CollegeId)
+                    .SingleOrDefaultAsync(cancellationToken);
+                return specialityCollegeId.HasValue && principal.CanAccessCollege(specialityCollegeId.Value);
             case ActivityScope.SubSpeciality:
                 if (dbContext is null || !activityType.ScopeId.HasValue)
                 {
                     return false;
                 }
-                return await dbContext.Set<SubSpeciality>()
-                    .AnyAsync(entity => entity.Id == activityType.ScopeId.Value && entity.Speciality.InstitutionId == callerInstitutionId.Value, cancellationToken);
+                var subSpecialityCollegeId = await dbContext.Set<SubSpeciality>()
+                    .Where(entity => entity.Id == activityType.ScopeId.Value)
+                    .Select(entity => (int?)entity.Speciality.CollegeId)
+                    .SingleOrDefaultAsync(cancellationToken);
+                return subSpecialityCollegeId.HasValue && principal.CanAccessCollege(subSpecialityCollegeId.Value);
             default:
                 return false;
         }

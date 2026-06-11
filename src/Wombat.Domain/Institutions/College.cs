@@ -15,4 +15,6 @@ public sealed class College
     public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+
+    public ICollection<Speciality> Specialities { get; set; } = [];
 }

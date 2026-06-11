@@ -67,10 +67,12 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             .SingleOrDefaultAsync(entity => entity.Id == request.CurriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The selected curriculum could not be found.");
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to admit a trainee into this curriculum.");
-        }
+        // The curriculum is now a national (College-owned) catalogue version, so the trainee's institution
+        // is the institution they belong to, not one derived from the curriculum (T091). Adoption-based
+        // gating of which national curricula an institution may admit into arrives in phase 4.
+        var institutionId = user.InstitutionId
+            ?? request.Principal.GetInstitutionId()
+            ?? throw new InvalidOperationException("The trainee's institution could not be determined.");
 
         var expectedCompletionDate = request.ExpectedCompletionDate
             ?? request.ProgrammeStartDate.AddMonths(GetDefaultCompletionMonths(curriculum));
@@ -78,6 +80,7 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
         var profile = new TraineeProfile
         {
             UserId = request.UserId,
+            InstitutionId = institutionId,
             CurriculumId = curriculum.Id,
             ProgrammeStartDate = request.ProgrammeStartDate,
             ExpectedCompletionDate = expectedCompletionDate,
@@ -89,7 +92,7 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
 
         await _userAdministrationService.UpdateScopeAsync(
             request.UserId,
-            curriculum.SubSpeciality.Speciality.InstitutionId,
+            institutionId,
             [curriculum.SubSpeciality.SpecialityId],
             [curriculum.SubSpecialityId],
             cancellationToken);

@@ -116,7 +116,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
@@ -157,7 +157,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
@@ -201,7 +201,7 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }

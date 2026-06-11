@@ -33,22 +33,11 @@ public sealed class GetAssessmentFormsListQueryHandler : IRequestHandler<GetAsse
             }
 
             var institutionId = scopedInstitutionId.Value;
-            var allowedSpecialityIds = await _dbContext.Set<Speciality>()
-                .Where(entity => entity.InstitutionId == institutionId)
-                .Select(entity => entity.Id)
-                .ToListAsync(cancellationToken);
-
-            var allowedSubSpecialityIds = await _dbContext.Set<SubSpeciality>()
-                .Where(entity => entity.Speciality.InstitutionId == institutionId)
-                .Select(entity => entity.Id)
-                .ToListAsync(cancellationToken);
-
+            // Forms are institution-owned via form.InstitutionId; speciality/sub-speciality now denote a
+            // national discipline (T091), not ownership. A non-admin sees their institution's forms plus
+            // global forms (all scope ids null); write attempts get blocked by the per-command scope guard.
             query = query.Where(form =>
                 form.InstitutionId == institutionId ||
-                (form.SpecialityId != null && allowedSpecialityIds.Contains(form.SpecialityId.Value)) ||
-                (form.SubSpecialityId != null && allowedSubSpecialityIds.Contains(form.SubSpecialityId.Value)) ||
-                // Global forms (all three scope ids null) are visible — write attempts get
-                // blocked by the per-command scope guard.
                 (form.InstitutionId == null && form.SpecialityId == null && form.SubSpecialityId == null));
         }
 

@@ -67,13 +67,13 @@ public sealed class PanelScopeGuardTests
         await using var db = SeededDb();
         var handler = new CreateDecisionPanelCommandHandler(db);
 
-        // SpecialityInB belongs to InstitutionB. An InstitutionA admin cannot create
-        // a speciality-scoped panel on it.
+        // The panel runs at InstitutionB (covering a national discipline, SpecialityInB); a panel now
+        // carries its own institution (T091). An InstitutionA admin cannot create it.
         var act = () => handler.Handle(
             new CreateDecisionPanelCommand(
                 Name: "Outside",
                 Scope: DecisionPanelScope.Speciality,
-                InstitutionId: null,
+                InstitutionId: InstitutionB,
                 SpecialityId: SpecialityInB,
                 Members: new[] { new DecisionPanelMemberInput("u-chair", DecisionPanelMemberRole.Chair) },
                 Principal: TestPrincipals.InstitutionalAdmin(InstitutionA)),
@@ -181,7 +181,7 @@ public sealed class PanelScopeGuardTests
         db.Set<Institution>().AddRange(
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
-        db.Set<Speciality>().Add(new Speciality { Id = SpecialityInB, InstitutionId = InstitutionB, Name = "SpecB", IsActive = true });
+        db.Set<Speciality>().Add(new Speciality { Id = SpecialityInB, CollegeId = InstitutionB, Name = "SpecB", IsActive = true });
         db.SaveChanges();
         return db;
     }

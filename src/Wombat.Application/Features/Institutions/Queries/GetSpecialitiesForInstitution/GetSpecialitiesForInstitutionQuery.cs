@@ -3,4 +3,5 @@ using MediatR;
 
 namespace Wombat.Application.Features.Institutions.Queries.GetSpecialitiesForInstitution;
 
-public sealed record GetSpecialitiesForInstitutionQuery(int InstitutionId, ClaimsPrincipal Principal) : IRequest<IReadOnlyList<SpecialityDto>>;
+// Named "ForInstitution" historically; now resolves a College's national speciality catalogue (T091).
+public sealed record GetSpecialitiesForInstitutionQuery(int CollegeId, ClaimsPrincipal Principal) : IRequest<IReadOnlyList<SpecialityDto>>;

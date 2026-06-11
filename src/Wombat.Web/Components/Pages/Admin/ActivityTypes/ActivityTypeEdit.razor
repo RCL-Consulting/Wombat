@@ -327,14 +327,12 @@
       .OrderBy(institution => institution.Name)
       .Select(institution => new ScopeIdOption(institution.Id, institution.Name)),
     ActivityScope.Speciality => from speciality in _specialities
-      join institution in _institutions on speciality.InstitutionId equals institution.Id
-      orderby institution.Name, speciality.Name
-      select new ScopeIdOption(speciality.Id, $"{institution.Name} / {speciality.Name}"),
+      orderby speciality.Name
+      select new ScopeIdOption(speciality.Id, speciality.Name),
     ActivityScope.SubSpeciality => from subSpeciality in _subSpecialities
       join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
-      join institution in _institutions on speciality.InstitutionId equals institution.Id
-      orderby institution.Name, speciality.Name, subSpeciality.Name
-      select new ScopeIdOption(subSpeciality.Id, $"{institution.Name} / {speciality.Name} / {subSpeciality.Name}"),
+      orderby speciality.Name, subSpeciality.Name
+      select new ScopeIdOption(subSpeciality.Id, $"{speciality.Name} / {subSpeciality.Name}"),
     _ => []
   };
 

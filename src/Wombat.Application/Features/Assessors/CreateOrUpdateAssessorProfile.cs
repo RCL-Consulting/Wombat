@@ -75,10 +75,8 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
                 .SingleOrDefaultAsync(entity => entity.Id == request.SpecialityId.Value, cancellationToken)
                 ?? throw new InvalidOperationException("The selected speciality could not be found.");
 
-            if (speciality.InstitutionId != request.InstitutionId)
-            {
-                throw new InvalidOperationException("The selected speciality does not belong to the selected institution.");
-            }
+            // Specialities are national now (T091); the assessor's speciality denotes a discipline, not an
+            // institution tie, so no institution-consistency check is required.
         }
 
         SubSpeciality? subSpeciality = null;

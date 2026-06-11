@@ -154,7 +154,7 @@ public sealed class InvitationValidatorTests
         db.Specialities.Add(new Speciality
         {
             Id = specialityId,
-            InstitutionId = institutionId,
+            CollegeId = institutionId,
             Name = $"Speciality {specialityId}",
             IsActive = true
         });

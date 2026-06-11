@@ -23,18 +23,18 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Sub-speciality {request.Id} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to update this sub-speciality.");
         }
 
-        var targetInstitutionId = await _dbContext.Set<Speciality>()
+        var targetCollegeId = await _dbContext.Set<Speciality>()
             .Where(entity => entity.Id == request.SpecialityId)
-            .Select(entity => (int?)entity.InstitutionId)
+            .Select(entity => (int?)entity.CollegeId)
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"Speciality {request.SpecialityId} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(targetInstitutionId))
+        if (!request.Principal.CanAccessCollege(targetCollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to move this sub-speciality to that speciality.");
         }

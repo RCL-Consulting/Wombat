@@ -89,14 +89,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             review.ReviewType);
     }
 
-    private async Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
-        => panel.Scope switch
-        {
-            DecisionPanelScope.Institution => panel.InstitutionId,
-            DecisionPanelScope.Speciality when panel.SpecialityId.HasValue => await _dbContext.Set<Speciality>()
-                .Where(speciality => speciality.Id == panel.SpecialityId.Value)
-                .Select(speciality => (int?)speciality.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken),
-            _ => null
-        };
+    // The panel carries its own institution regardless of scope; the discipline is national now (T091).
+    private Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
+        => Task.FromResult(panel.InstitutionId);
 }

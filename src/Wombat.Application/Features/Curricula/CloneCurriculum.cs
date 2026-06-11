@@ -40,7 +40,7 @@ public sealed class CloneCurriculumAsNewVersionCommandHandler : IRequestHandler<
     {
         var current = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
 
-        if (!request.Principal.CanAccessInstitution(current.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(current.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to clone this curriculum.");
         }

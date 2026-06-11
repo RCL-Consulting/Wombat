@@ -46,7 +46,7 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to update this curriculum.");
         }
@@ -58,7 +58,7 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
                 entity.Name,
                 entity.SpecialityId,
                 SpecialityName = entity.Speciality.Name,
-                entity.Speciality.InstitutionId
+                entity.Speciality.CollegeId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -67,7 +67,7 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to move this curriculum to that sub-speciality.");
         }

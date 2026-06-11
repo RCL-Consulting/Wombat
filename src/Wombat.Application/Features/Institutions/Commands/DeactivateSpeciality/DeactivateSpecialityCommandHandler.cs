@@ -20,7 +20,7 @@ public sealed class DeactivateSpecialityCommandHandler : IRequestHandler<Deactiv
         var speciality = await _dbContext.Set<Speciality>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Speciality {request.Id} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to deactivate this speciality.");
         }

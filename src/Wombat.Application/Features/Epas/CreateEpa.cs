@@ -55,7 +55,7 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
     {
         var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => new { entity.Name, entity.Speciality.InstitutionId })
+            .Select(entity => new { entity.Name, entity.Speciality.CollegeId })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
@@ -63,7 +63,7 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to create an EPA in this sub-speciality.");
         }

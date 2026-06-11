@@ -45,7 +45,7 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException("The trainee profile could not be found.");
 
-        if (!request.Principal.CanAccessInstitution(profile.Curriculum.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessInstitution(profile.InstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to update this trainee profile.");
         }
@@ -57,11 +57,7 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
             .SingleOrDefaultAsync(entity => entity.Id == request.CurriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The selected curriculum could not be found.");
 
-        if (!request.Principal.CanAccessInstitution(curriculum.SubSpeciality.Speciality.InstitutionId))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to move this trainee to that curriculum.");
-        }
-
+        // The curriculum is a national catalogue version (T091); the trainee stays in their own institution.
         profile.CurriculumId = request.CurriculumId;
         profile.ProgrammeStartDate = request.ProgrammeStartDate;
         profile.ExpectedCompletionDate = request.ExpectedCompletionDate
@@ -71,7 +67,7 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
 
         await _userAdministrationService.UpdateScopeAsync(
             profile.UserId,
-            curriculum.SubSpeciality.Speciality.InstitutionId,
+            profile.InstitutionId,
             [curriculum.SubSpeciality.SpecialityId],
             [curriculum.SubSpecialityId],
             cancellationToken);

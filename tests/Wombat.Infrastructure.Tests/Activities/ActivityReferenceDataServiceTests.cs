@@ -51,28 +51,29 @@ public sealed class ActivityReferenceDataServiceTests
     }
 
     [Fact]
-    public async Task GetEpaOptions_InstitutionalAdmin_SeesAllEpasInOwnInstitution()
+    public async Task GetEpaOptions_InstitutionalAdmin_SeesWholeNationalCatalogue()
     {
         await using var db = CreateDb();
-        // Institution 1 has two specialities (each with a sub-speciality + EPA); institution 2 has one.
-        db.Set<Speciality>().Add(new Speciality { Id = 1, InstitutionId = 1, Name = "Paeds" });
-        db.Set<Speciality>().Add(new Speciality { Id = 2, InstitutionId = 1, Name = "Surgery" });
-        db.Set<Speciality>().Add(new Speciality { Id = 3, InstitutionId = 2, Name = "Other inst" });
+        // EPAs are a national (College-owned) catalogue now (T091), so an InstitutionalAdmin building a
+        // form sees every EPA regardless of College. (Adoption-based narrowing arrives in phase 4.)
+        db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paeds" });
+        db.Set<Speciality>().Add(new Speciality { Id = 2, CollegeId = 1, Name = "Surgery" });
+        db.Set<Speciality>().Add(new Speciality { Id = 3, CollegeId = 2, Name = "Other college" });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 10, SpecialityId = 1, Name = "Gen Paeds" });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 11, SpecialityId = 2, Name = "Gen Surg" });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 12, SpecialityId = 3, Name = "Other sub" });
         db.Epas.Add(new Epa { Id = 1, SubSpecialityId = 10, Code = "P-1", Title = "Paeds EPA", IsActive = true });
         db.Epas.Add(new Epa { Id = 2, SubSpecialityId = 11, Code = "S-1", Title = "Surg EPA", IsActive = true });
-        db.Epas.Add(new Epa { Id = 3, SubSpecialityId = 12, Code = "O-1", Title = "Other-inst EPA", IsActive = true });
+        db.Epas.Add(new Epa { Id = 3, SubSpecialityId = 12, Code = "O-1", Title = "Other-college EPA", IsActive = true });
         await db.SaveChangesAsync();
 
         var service = new ActivityReferenceDataService(db, new StubUserAdministrationService([]));
-        // InstitutionalAdmin scoped to institution 1, with no speciality/sub-speciality claims.
+        // InstitutionalAdmin with no speciality/sub-speciality claims.
         var instAdmin = Principal(institutionId: 1, roles: [WombatRoles.InstitutionalAdmin]);
 
         var options = await service.GetEpaOptionsAsync(instAdmin);
 
-        options.Select(o => o.Value).Should().BeEquivalentTo(["1", "2"]);
+        options.Select(o => o.Value).Should().BeEquivalentTo(["1", "2", "3"]);
     }
 
     [Fact]

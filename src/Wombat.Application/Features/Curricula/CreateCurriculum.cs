@@ -47,7 +47,7 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
                 entity.Name,
                 entity.SpecialityId,
                 SpecialityName = entity.Speciality.Name,
-                entity.Speciality.InstitutionId
+                entity.Speciality.CollegeId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -56,7 +56,7 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to create a curriculum in this sub-speciality.");
         }

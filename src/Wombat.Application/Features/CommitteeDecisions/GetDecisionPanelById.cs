@@ -55,16 +55,8 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
                 .ToArray());
     }
 
-    private async Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
-    {
-        return panel.Scope switch
-        {
-            DecisionPanelScope.Institution => panel.InstitutionId,
-            DecisionPanelScope.Speciality when panel.SpecialityId.HasValue => await _dbContext.Set<Speciality>()
-                .Where(speciality => speciality.Id == panel.SpecialityId.Value)
-                .Select(speciality => (int?)speciality.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken),
-            _ => null
-        };
-    }
+    // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
+    // now a national catalogue entry (T091) and no longer the source of the institution.
+    private Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
+        => Task.FromResult(panel.InstitutionId);
 }

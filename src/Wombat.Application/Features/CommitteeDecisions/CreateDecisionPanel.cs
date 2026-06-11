@@ -84,16 +84,8 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
             panel.Members.Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role)).ToArray());
     }
 
-    private async Task<int?> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
-    {
-        return request.Scope switch
-        {
-            DecisionPanelScope.Institution => request.InstitutionId,
-            DecisionPanelScope.Speciality when request.SpecialityId.HasValue => await _dbContext.Set<Speciality>()
-                .Where(speciality => speciality.Id == request.SpecialityId.Value)
-                .Select(speciality => (int?)speciality.InstitutionId)
-                .SingleOrDefaultAsync(cancellationToken),
-            _ => null
-        };
-    }
+    // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
+    // now a national catalogue entry (T091) and no longer the source of the institution.
+    private Task<int?> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
+        => Task.FromResult(request.InstitutionId);
 }

@@ -9,5 +9,6 @@ public sealed class Institution
     public bool IsActive { get; set; } = true;
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
 
-    public ICollection<Speciality> Specialities { get; set; } = [];
+    // Specialities are owned by College (national), not Institution — see T091.
+    // Institution-scoped concepts (trainees, activity types, forms) carry a direct InstitutionId.
 }

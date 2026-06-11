@@ -239,7 +239,7 @@
   private bool _saving;
 
   private bool IsNew => !Id.HasValue;
-  private IEnumerable<SpecialityDto> FilteredSpecialities => _model.InstitutionId.HasValue ? _specialities.Where(entity => entity.InstitutionId == _model.InstitutionId.Value) : _specialities;
+  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities; // National catalogue now (T091).
   private IEnumerable<SubSpecialityDto> FilteredSubSpecialities => _model.SpecialityId.HasValue ? _subSpecialities.Where(entity => entity.SpecialityId == _model.SpecialityId.Value) : _subSpecialities;
   private IEnumerable<EpaDto> LinkableEpas => _model.SubSpecialityId.HasValue ? _epas.Where(entity => entity.SubSpecialityId == _model.SubSpecialityId.Value) : _epas;
 

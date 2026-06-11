@@ -54,7 +54,11 @@ public sealed class DevUserSeeder
 
         var subSpecialityId = demoCurriculum.SubSpecialityId;
         var specialityId = demoCurriculum.SubSpeciality.SpecialityId;
-        var institutionId = demoCurriculum.SubSpeciality.Speciality.InstitutionId;
+        // The curriculum is national now (T091); the dev trainee trains at the seeded DEMO institution.
+        var institutionId = await _dbContext.Institutions
+            .Where(institution => institution.ShortCode == "DEMO")
+            .Select(institution => institution.Id)
+            .SingleAsync(cancellationToken);
 
         await EnsureTraineeAsync(demoCurriculum.Id, institutionId, specialityId, subSpecialityId, cancellationToken);
         await EnsureCommitteeMemberAsync(institutionId, specialityId, subSpecialityId, cancellationToken);

@@ -174,7 +174,7 @@ public sealed class ReviewSchedulingScopeGuardTests
         db.Set<Institution>().AddRange(
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
-        db.Set<Speciality>().Add(new Speciality { Id = SpecialityInA, InstitutionId = InstitutionA, Name = "SpecA", IsActive = true });
+        db.Set<Speciality>().Add(new Speciality { Id = SpecialityInA, CollegeId = InstitutionA, Name = "SpecA", IsActive = true });
         db.SaveChanges();
         return db;
     }

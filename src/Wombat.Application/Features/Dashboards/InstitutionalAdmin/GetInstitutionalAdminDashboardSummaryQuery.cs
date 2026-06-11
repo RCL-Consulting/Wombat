@@ -43,21 +43,16 @@ public sealed class GetInstitutionalAdminDashboardSummaryQueryHandler
             }
         }
 
-        var specialityCount = institutionId.HasValue
-            ? await _dbContext.Set<Speciality>()
-                .AsNoTracking()
-                .CountAsync(s => s.InstitutionId == institutionId.Value, cancellationToken)
-            : await _dbContext.Set<Speciality>()
-                .AsNoTracking()
-                .CountAsync(cancellationToken);
+        // Specialities/sub-specialities are now national (College-owned) catalogue, not institution-scoped
+        // (T091); report the national catalogue totals. A per-institution "adopted disciplines" count
+        // arrives with adoption in phase 4.
+        var specialityCount = await _dbContext.Set<Speciality>()
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
 
-        var subSpecialityQuery = _dbContext.Set<SubSpeciality>().AsNoTracking();
-        if (institutionId.HasValue)
-        {
-            subSpecialityQuery = subSpecialityQuery
-                .Where(ss => ss.Speciality.InstitutionId == institutionId.Value);
-        }
-        var subSpecialityCount = await subSpecialityQuery.CountAsync(cancellationToken);
+        var subSpecialityCount = await _dbContext.Set<SubSpeciality>()
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
 
         return new InstitutionalAdminDashboardSummaryDto(roleCounts, specialityCount, subSpecialityCount);
     }

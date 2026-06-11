@@ -117,10 +117,8 @@
     if (!specialityId.HasValue) return "Speciality";
     var speciality = _specialities.FirstOrDefault(s => s.Id == specialityId.Value);
     if (speciality is null) return $"Speciality · #{specialityId}";
-    var institution = _institutions.FirstOrDefault(i => i.Id == speciality.InstitutionId);
-    return institution is null
-      ? $"Speciality · {speciality.Name}"
-      : $"Speciality · {institution.Name} / {speciality.Name}";
+    // Specialities are national now (T091); College prefix lands with the Phase 5 admin rework.
+    return $"Speciality · {speciality.Name}";
   }
 
   private string SubSpecialityLabel(int? subSpecialityId)
@@ -130,9 +128,7 @@
     if (subSpeciality is null) return $"Sub-speciality · #{subSpecialityId}";
     var speciality = _specialities.FirstOrDefault(s => s.Id == subSpeciality.SpecialityId);
     if (speciality is null) return $"Sub-speciality · {subSpeciality.Name}";
-    var institution = _institutions.FirstOrDefault(i => i.Id == speciality.InstitutionId);
-    return institution is null
-      ? $"Sub-speciality · {speciality.Name} / {subSpeciality.Name}"
-      : $"Sub-speciality · {institution.Name} / {speciality.Name} / {subSpeciality.Name}";
+    // Specialities are national now (T091); College prefix lands with the Phase 5 admin rework.
+    return $"Sub-speciality · {speciality.Name} / {subSpeciality.Name}";
   }
 }

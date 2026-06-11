@@ -54,14 +54,14 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("The requested EPA was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(epa.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to update this EPA.");
         }
 
         var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => new { entity.Name, entity.Speciality.InstitutionId })
+            .Select(entity => new { entity.Name, entity.Speciality.CollegeId })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
@@ -69,7 +69,7 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to move this EPA to that sub-speciality.");
         }

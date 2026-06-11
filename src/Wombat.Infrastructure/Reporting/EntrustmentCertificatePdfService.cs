@@ -216,7 +216,6 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             .Include(d => d.Epa)
                 .ThenInclude(epa => epa.SubSpeciality)
                     .ThenInclude(sub => sub.Speciality)
-                        .ThenInclude(spec => spec.Institution)
             .Include(d => d.AuthorisedLevel)
             .Include(d => d.IssuedByCommitteeReview)
                 .ThenInclude(review => review.Panel)
@@ -235,7 +234,15 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == decision.TraineeUserId, cancellationToken);
 
-        var institution = decision.Epa.SubSpeciality.Speciality.Institution;
+        // The EPA is national now (T091); the issuing institution is where the trainee trained.
+        var traineeProfile = await _dbContext.Set<Domain.Identity.TraineeProfile>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == decision.TraineeUserId, cancellationToken);
+        var institution = traineeProfile is not null
+            ? await _dbContext.Set<Domain.Institutions.Institution>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == traineeProfile.InstitutionId, cancellationToken)
+            : null;
 
         return new CertificateData(
             DecisionId: decision.Id,
@@ -252,7 +259,7 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             PanelName: decision.IssuedByCommitteeReview.Panel.Name,
             CommitteeReviewId: decision.IssuedByCommitteeReviewId,
             ChairName: FormatName(chair) ?? decision.IssuedByChairUserId,
-            InstitutionName: institution.Name,
+            InstitutionName: institution?.Name ?? string.Empty,
             EvidenceLinks: decision.EvidenceLinks
                 .OrderBy(link => link.SourceType)
                 .ThenBy(link => link.Id)

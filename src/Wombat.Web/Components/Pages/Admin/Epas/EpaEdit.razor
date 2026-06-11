@@ -109,8 +109,7 @@
   private IEnumerable<LookupOption> SubSpecialityOptions =>
     from subSpeciality in _subSpecialities
     join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
-    join institution in _institutions on speciality.InstitutionId equals institution.Id
-    select new LookupOption(subSpeciality.Id, $"{institution.Name} / {speciality.Name} / {subSpeciality.Name}");
+    select new LookupOption(subSpeciality.Id, $"{speciality.Name} / {subSpeciality.Name}");
 
   protected override async Task OnParametersSetAsync()
   {

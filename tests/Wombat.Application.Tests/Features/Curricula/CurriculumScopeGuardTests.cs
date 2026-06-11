@@ -9,15 +9,16 @@ using Wombat.Infrastructure.Persistence;
 namespace Wombat.Application.Tests.Features.Curricula;
 
 /// <summary>
-/// T056.b scope-guard tests: InstitutionalAdmin sees and edits only curricula scoped to their institution.
+/// T091 scope-guard tests: curricula are a national catalogue owned by a College; a CollegeAdmin sees and
+/// edits only curricula scoped to their College. (Replaces the pre-T091 institution-scoped guards.)
 /// </summary>
 public sealed class CurriculumScopeGuardTests : IAsyncLifetime
 {
     private ApplicationDbContext _db = null!;
-    private int _institutionAId;
-    private int _institutionBSubSpecialityId;
-    private int _institutionACurriculumId;
-    private int _institutionBCurriculumId;
+    private int _collegeAId;
+    private int _collegeBSubSpecialityId;
+    private int _collegeACurriculumId;
+    private int _collegeBCurriculumId;
 
     public async Task InitializeAsync()
     {
@@ -26,13 +27,13 @@ public sealed class CurriculumScopeGuardTests : IAsyncLifetime
             .Options;
         _db = new ApplicationDbContext(options);
 
-        var institutionA = new Institution { Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow };
-        var institutionB = new Institution { Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow };
-        _db.Institutions.AddRange(institutionA, institutionB);
+        var collegeA = new College { Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow };
+        var collegeB = new College { Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow };
+        _db.Colleges.AddRange(collegeA, collegeB);
         await _db.SaveChangesAsync();
 
-        var specA = new Speciality { InstitutionId = institutionA.Id, Name = "SpecA", IsActive = true };
-        var specB = new Speciality { InstitutionId = institutionB.Id, Name = "SpecB", IsActive = true };
+        var specA = new Speciality { CollegeId = collegeA.Id, Name = "SpecA", IsActive = true };
+        var specB = new Speciality { CollegeId = collegeB.Id, Name = "SpecB", IsActive = true };
         _db.Specialities.AddRange(specA, specB);
         await _db.SaveChangesAsync();
 
@@ -60,10 +61,10 @@ public sealed class CurriculumScopeGuardTests : IAsyncLifetime
         _db.Curricula.AddRange(curriculumA, curriculumB);
         await _db.SaveChangesAsync();
 
-        _institutionAId = institutionA.Id;
-        _institutionBSubSpecialityId = subB.Id;
-        _institutionACurriculumId = curriculumA.Id;
-        _institutionBCurriculumId = curriculumB.Id;
+        _collegeAId = collegeA.Id;
+        _collegeBSubSpecialityId = subB.Id;
+        _collegeACurriculumId = curriculumA.Id;
+        _collegeBCurriculumId = curriculumB.Id;
     }
 
     public Task DisposeAsync()
@@ -73,51 +74,51 @@ public sealed class CurriculumScopeGuardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetCurriculaList_InstitutionalAdmin_SeesOnlyOwn()
+    public async Task GetCurriculaList_CollegeAdmin_SeesOnlyOwn()
     {
         var handler = new GetCurriculaListQueryHandler(_db);
         var result = await handler.Handle(
-            new GetCurriculaListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new GetCurriculaListQuery(TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
-        result.Should().ContainSingle().Which.Id.Should().Be(_institutionACurriculumId);
+        result.Should().ContainSingle().Which.Id.Should().Be(_collegeACurriculumId);
     }
 
     [Fact]
-    public async Task GetCurriculumById_InstitutionalAdmin_OtherInstitution_ReturnsNull()
+    public async Task GetCurriculumById_CollegeAdmin_OtherCollege_ReturnsNull()
     {
         var handler = new GetCurriculumByIdQueryHandler(_db);
         var result = await handler.Handle(
-            new GetCurriculumByIdQuery(_institutionBCurriculumId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new GetCurriculumByIdQuery(_collegeBCurriculumId, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
         result.Should().BeNull();
     }
 
     [Fact]
-    public async Task CreateCurriculum_InstitutionalAdmin_RejectsOtherInstitution()
+    public async Task CreateCurriculum_CollegeAdmin_RejectsOtherCollege()
     {
         var handler = new CreateCurriculumCommandHandler(_db);
         var act = () => handler.Handle(
-            new CreateCurriculumCommand(_institutionBSubSpecialityId, "X", "1.0", new DateOnly(2026, 1, 1), null, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new CreateCurriculumCommand(_collegeBSubSpecialityId, "X", "1.0", new DateOnly(2026, 1, 1), null, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     [Fact]
-    public async Task UpdateCurriculum_InstitutionalAdmin_RejectsOtherInstitution()
+    public async Task UpdateCurriculum_CollegeAdmin_RejectsOtherCollege()
     {
         var handler = new UpdateCurriculumCommandHandler(_db);
         var act = () => handler.Handle(
-            new UpdateCurriculumCommand(_institutionBCurriculumId, _institutionBSubSpecialityId, "X", "1.0", new DateOnly(2026, 1, 1), null, true, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new UpdateCurriculumCommand(_collegeBCurriculumId, _collegeBSubSpecialityId, "X", "1.0", new DateOnly(2026, 1, 1), null, true, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     [Fact]
-    public async Task RemoveCurriculumItem_InstitutionalAdmin_RejectsOtherInstitution()
+    public async Task RemoveCurriculumItem_CollegeAdmin_RejectsOtherCollege()
     {
         var handler = new RemoveCurriculumItemCommandHandler(_db);
         var act = () => handler.Handle(
-            new RemoveCurriculumItemCommand(_institutionBCurriculumId, 1, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new RemoveCurriculumItemCommand(_collegeBCurriculumId, 1, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }

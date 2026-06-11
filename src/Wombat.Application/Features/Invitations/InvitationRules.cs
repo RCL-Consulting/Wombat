@@ -62,12 +62,14 @@ internal static class InvitationRules
 
         if (specialityId.HasValue)
         {
-            var specialityMatchesInstitution = await dbContext.Set<Speciality>()
-                .AnyAsync(entity => entity.Id == specialityId.Value && entity.InstitutionId == institutionId && entity.IsActive, cancellationToken);
+            // Specialities are national now (T091); verify existence only — the discipline is independent
+            // of the invitee's institution.
+            var specialityExists = await dbContext.Set<Speciality>()
+                .AnyAsync(entity => entity.Id == specialityId.Value && entity.IsActive, cancellationToken);
 
-            if (!specialityMatchesInstitution)
+            if (!specialityExists)
             {
-                return "The selected speciality does not belong to the selected institution.";
+                return "The selected speciality was not found.";
             }
         }
 

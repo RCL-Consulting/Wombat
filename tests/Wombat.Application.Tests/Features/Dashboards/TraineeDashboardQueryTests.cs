@@ -77,7 +77,7 @@ public sealed class TraineeDashboardQueryTests
         var institution = new Institution { Id = 1, Name = "Test Institution" };
         db.Institutions.Add(institution);
 
-        var speciality = new Speciality { Id = 1, InstitutionId = 1, Name = "Test Spec" };
+        var speciality = new Speciality { Id = 1, CollegeId = 1, Name = "Test Spec" };
         db.Specialities.Add(speciality);
 
         var subSpec = new SubSpeciality { Id = 1, SpecialityId = 1, Name = "Test SubSpec" };

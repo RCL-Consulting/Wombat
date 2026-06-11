@@ -20,17 +20,17 @@ public sealed class UpdateSpecialityCommandHandler : IRequestHandler<UpdateSpeci
         var speciality = await _dbContext.Set<Speciality>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Speciality {request.Id} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to update this speciality.");
         }
 
-        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        if (!request.Principal.CanAccessCollege(request.CollegeId))
         {
-            throw new UnauthorizedAccessException("You do not have permission to move this speciality to that institution.");
+            throw new UnauthorizedAccessException("You do not have permission to move this speciality to that college.");
         }
 
-        speciality.InstitutionId = request.InstitutionId;
+        speciality.CollegeId = request.CollegeId;
         speciality.Name = request.Name.Trim();
         speciality.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         speciality.IsActive = request.IsActive;
@@ -41,9 +41,9 @@ public sealed class UpdateSpecialityCommandHandler : IRequestHandler<UpdateSpeci
         }
         catch (DbUpdateException exception)
         {
-            throw new InvalidOperationException("A speciality with the same name already exists for this institution.", exception);
+            throw new InvalidOperationException("A speciality with the same name already exists for this college.", exception);
         }
 
-        return new SpecialityDto(speciality.Id, speciality.InstitutionId, speciality.Name, speciality.Description, speciality.IsActive);
+        return new SpecialityDto(speciality.Id, speciality.CollegeId, speciality.Name, speciality.Description, speciality.IsActive);
     }
 }

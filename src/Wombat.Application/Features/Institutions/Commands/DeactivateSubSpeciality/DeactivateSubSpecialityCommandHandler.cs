@@ -22,7 +22,7 @@ public sealed class DeactivateSubSpecialityCommandHandler : IRequestHandler<Deac
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Sub-speciality {request.Id} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(subSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(subSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to deactivate this sub-speciality.");
         }

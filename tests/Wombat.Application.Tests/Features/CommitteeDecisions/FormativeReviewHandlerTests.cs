@@ -105,7 +105,7 @@ public sealed class FormativeReviewHandlerTests
     private static async Task SeedAsync(ApplicationDbContext dbContext)
     {
         var institution = new Institution { Id = 1, Name = "Test Hospital", IsActive = true, CreatedOn = DateTime.UtcNow };
-        var speciality = new Speciality { Id = 5, InstitutionId = 1, Name = "General Medicine", IsActive = true };
+        var speciality = new Speciality { Id = 5, CollegeId = 1, Name = "General Medicine", IsActive = true };
         var subSpec = new SubSpeciality { Id = 9, SpecialityId = 5, Name = "Acute Care", IsActive = true };
 
         var scale = new EntrustmentScale { Id = 1, Name = "Standard 5-point" };

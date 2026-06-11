@@ -66,12 +66,21 @@ public sealed class DataSeeder
     private async Task<DemoSeedContext> EnsureDemoContextAsync(CancellationToken cancellationToken)
     {
         var institution = await _dbContext.Institutions
-            .Include(entity => entity.Specialities)
-            .ThenInclude(entity => entity.SubSpecialities)
             .SingleOrDefaultAsync(entity => entity.ShortCode == "DEMO", cancellationToken);
 
+        College college;
         if (institution is null)
         {
+            // Specialities are owned by a national College now (T091); the Institution is a separate
+            // training site. Seed both, with the demo discipline under the College.
+            college = new College
+            {
+                Name = "Demo College",
+                ShortCode = "DEMO-C",
+                Description = "Seeded demo college (national catalogue owner).",
+                CreatedOn = DateTime.UtcNow
+            };
+
             institution = new Institution
             {
                 Name = "Demo Institution",
@@ -84,7 +93,7 @@ public sealed class DataSeeder
             {
                 Name = "General Medicine",
                 Description = "Seeded demo speciality.",
-                Institution = institution
+                College = college
             };
 
             var subSpeciality = new SubSpeciality
@@ -94,19 +103,25 @@ public sealed class DataSeeder
                 Speciality = speciality
             };
 
+            _dbContext.Colleges.Add(college);
             _dbContext.Institutions.Add(institution);
             _dbContext.Specialities.Add(speciality);
             _dbContext.SubSpecialities.Add(subSpeciality);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+        else
+        {
+            college = await _dbContext.Colleges
+                .SingleAsync(entity => entity.ShortCode == "DEMO-C", cancellationToken);
+        }
 
         var specialityId = await _dbContext.Specialities
-            .Where(entity => entity.InstitutionId == institution.Id)
+            .Where(entity => entity.CollegeId == college.Id)
             .Select(entity => entity.Id)
             .FirstAsync(cancellationToken);
 
         var subSpecialityId = await _dbContext.SubSpecialities
-            .Where(entity => entity.Speciality.InstitutionId == institution.Id)
+            .Where(entity => entity.Speciality.CollegeId == college.Id)
             .Select(entity => entity.Id)
             .FirstAsync(cancellationToken);
 

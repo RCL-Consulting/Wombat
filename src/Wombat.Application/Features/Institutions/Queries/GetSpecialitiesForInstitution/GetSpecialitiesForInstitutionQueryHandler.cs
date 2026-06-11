@@ -17,15 +17,15 @@ public sealed class GetSpecialitiesForInstitutionQueryHandler : IRequestHandler<
 
     public async Task<IReadOnlyList<SpecialityDto>> Handle(GetSpecialitiesForInstitutionQuery request, CancellationToken cancellationToken)
     {
-        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        if (!request.Principal.CanAccessCollege(request.CollegeId))
         {
             return Array.Empty<SpecialityDto>();
         }
 
         return await _dbContext.Set<Speciality>()
-            .Where(entity => entity.InstitutionId == request.InstitutionId)
+            .Where(entity => entity.CollegeId == request.CollegeId)
             .OrderBy(entity => entity.Name)
-            .Select(entity => new SpecialityDto(entity.Id, entity.InstitutionId, entity.Name, entity.Description, entity.IsActive))
+            .Select(entity => new SpecialityDto(entity.Id, entity.CollegeId, entity.Name, entity.Description, entity.IsActive))
             .ToListAsync(cancellationToken);
     }
 }

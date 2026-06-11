@@ -26,30 +26,15 @@ public sealed class ListActivityTypesAdminQueryHandler : IRequestHandler<ListAct
 
         if (!request.Principal.IsAdministrator())
         {
+            // Speciality/sub-speciality scopes are now national (College-owned) disciplines (T091), so a
+            // non-admin sees the global + all national discipline types, plus their own institution's types.
+            // Adoption-based narrowing of national types arrives in phase 4.
             var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
-            {
-                return Array.Empty<ActivityTypeAdminListItemDto>();
-            }
-
-            // Materialise the ids of specialities and sub-specialities that belong to the caller's
-            // institution so the EF query stays a single SELECT with IN(...) clauses.
-            var allowedSpecialityIds = await _dbContext.Set<Speciality>()
-                .Where(entity => entity.InstitutionId == scopedInstitutionId.Value)
-                .Select(entity => entity.Id)
-                .ToListAsync(cancellationToken);
-
-            var allowedSubSpecialityIds = await _dbContext.Set<SubSpeciality>()
-                .Where(entity => entity.Speciality.InstitutionId == scopedInstitutionId.Value)
-                .Select(entity => entity.Id)
-                .ToListAsync(cancellationToken);
-
-            var institutionId = scopedInstitutionId.Value;
             query = query.Where(entity =>
                 entity.Scope == ActivityScope.Global ||
-                (entity.Scope == ActivityScope.Institution && entity.ScopeId == institutionId) ||
-                (entity.Scope == ActivityScope.Speciality && entity.ScopeId != null && allowedSpecialityIds.Contains(entity.ScopeId.Value)) ||
-                (entity.Scope == ActivityScope.SubSpeciality && entity.ScopeId != null && allowedSubSpecialityIds.Contains(entity.ScopeId.Value)));
+                (entity.Scope == ActivityScope.Institution && scopedInstitutionId != null && entity.ScopeId == scopedInstitutionId.Value) ||
+                entity.Scope == ActivityScope.Speciality ||
+                entity.Scope == ActivityScope.SubSpeciality);
         }
 
         return await query

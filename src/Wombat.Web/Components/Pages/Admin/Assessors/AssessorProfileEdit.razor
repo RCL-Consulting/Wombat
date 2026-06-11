@@ -119,8 +119,8 @@
   private string? _actionError;
   private string? _statusMessage;
 
-  private IEnumerable<SpecialityDto> FilteredSpecialities
-    => _specialities.Where(entity => entity.InstitutionId == _model?.InstitutionId);
+  // Specialities are a national catalogue now (T091); not filtered by the selected institution.
+  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
 
   private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
     => _subSpecialities.Where(entity => entity.SpecialityId == _model?.SpecialityId);

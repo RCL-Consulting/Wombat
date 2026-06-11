@@ -6,6 +6,14 @@ public sealed class TraineeProfile
 {
     public int Id { get; set; }
     public string UserId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The institution where the trainee trains. Held directly (mirrors AssessorProfile) because the
+    /// curriculum is now a national, College-owned catalogue and no longer carries an institution —
+    /// see T091. The trainee follows the national <see cref="Curriculum"/> version their institution
+    /// adopted.
+    /// </summary>
+    public int InstitutionId { get; set; }
     public int CurriculumId { get; set; }
     public DateOnly ProgrammeStartDate { get; set; }
     public DateOnly ExpectedCompletionDate { get; set; }

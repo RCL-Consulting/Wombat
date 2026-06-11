@@ -19,18 +19,18 @@ public sealed class GetSubSpecialitiesForSpecialityQueryHandler : IRequestHandle
     {
         if (!request.Principal.IsAdministrator())
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
+            var scopedCollegeId = request.Principal.GetCollegeId();
+            if (!scopedCollegeId.HasValue)
             {
                 return Array.Empty<SubSpecialityDto>();
             }
 
-            var owningInstitutionId = await _dbContext.Set<Speciality>()
+            var owningCollegeId = await _dbContext.Set<Speciality>()
                 .Where(entity => entity.Id == request.SpecialityId)
-                .Select(entity => entity.InstitutionId)
+                .Select(entity => entity.CollegeId)
                 .SingleOrDefaultAsync(cancellationToken);
 
-            if (owningInstitutionId != scopedInstitutionId.Value)
+            if (owningCollegeId != scopedCollegeId.Value)
             {
                 return Array.Empty<SubSpecialityDto>();
             }

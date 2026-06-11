@@ -1,6 +1,20 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** OPEN — design + decision required before implementation (large, cross-cutting).
+**Status:** IN PROGRESS — Phase 1 (foundation) + Phase 2 (re-parent) DONE & committed; Phases 3–6 remain.
+
+**Progress:**
+- ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
+- ✅ **P2** — re-parented `Speciality` (InstitutionId→CollegeId); added direct `TraineeProfile.InstitutionId`;
+  re-scoped ~35 Application handlers (national catalogue → `CanAccessCollege`; trainees/forms/panels/
+  activity-types → direct institution); Infra seeders/PDF services/reference-data fixed; Web admin pages
+  compile (College display + adoption-aware filtering deferred to P5, marked with T091 comments); migration
+  `T091_ReparentSpecialityToCollege` (fresh-DB, column rename + new FKs); scope-guard tests rewritten to
+  college-scoping; `CollegeAdmin` test principal added. All unit suites green (Domain 50, Application 284,
+  Architecture 19, Web 43, Infrastructure 10). Provisional/Phase-4-deferred bits flagged inline:
+  InstitutionalAdmin sees the whole national EPA/curriculum catalogue (no adoption narrowing yet);
+  speciality-scoped DecisionPanels now carry their own InstitutionId.
+- ⏳ **P3** local-extras (OwningInstitutionId), **P4** adoption + versioning, **P5** Web surfaces (College
+  admin + adoption + College display), **P6** tests + scenario rebuild — still to do.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
 Medicine of South Africa (CMSA)** (e.g. the College of Paediatricians → FCPaed), and

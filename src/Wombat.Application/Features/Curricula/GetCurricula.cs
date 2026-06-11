@@ -25,17 +25,17 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
 
         if (!request.Principal.IsAdministrator())
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
+            var scopedCollegeId = request.Principal.GetCollegeId();
+            if (!scopedCollegeId.HasValue)
             {
                 return Array.Empty<CurriculumDto>();
             }
 
-            query = query.Where(entity => entity.SubSpeciality.Speciality.InstitutionId == scopedInstitutionId.Value);
+            query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
         }
 
         return await query
-            .OrderBy(entity => entity.SubSpeciality.Speciality.Institution.Name)
+            .OrderBy(entity => entity.SubSpeciality.Speciality.College.Name)
             .ThenBy(entity => entity.SubSpeciality.Speciality.Name)
             .ThenBy(entity => entity.SubSpeciality.Name)
             .ThenBy(entity => entity.Name)
@@ -91,7 +91,7 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
                         .OrderBy(item => item.Epa.Code)
                         .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson))
                         .ToList()),
-                InstitutionId = entity.SubSpeciality.Speciality.InstitutionId
+                CollegeId = entity.SubSpeciality.Speciality.CollegeId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -100,7 +100,7 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
             return null;
         }
 
-        if (!request.Principal.CanAccessInstitution(projection.InstitutionId))
+        if (!request.Principal.CanAccessCollege(projection.CollegeId))
         {
             return null;
         }

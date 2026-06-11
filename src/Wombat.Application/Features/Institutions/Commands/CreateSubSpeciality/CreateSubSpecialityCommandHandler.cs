@@ -17,13 +17,13 @@ public sealed class CreateSubSpecialityCommandHandler : IRequestHandler<CreateSu
 
     public async Task<SubSpecialityDto> Handle(CreateSubSpecialityCommand request, CancellationToken cancellationToken)
     {
-        var owningInstitutionId = await _dbContext.Set<Speciality>()
+        var owningCollegeId = await _dbContext.Set<Speciality>()
             .Where(entity => entity.Id == request.SpecialityId)
-            .Select(entity => (int?)entity.InstitutionId)
+            .Select(entity => (int?)entity.CollegeId)
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"Speciality {request.SpecialityId} was not found.");
 
-        if (!request.Principal.CanAccessInstitution(owningInstitutionId))
+        if (!request.Principal.CanAccessCollege(owningCollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to create a sub-speciality for this speciality.");
         }

@@ -21,19 +21,19 @@ public sealed class GetSpecialitiesListQueryHandler : IRequestHandler<GetSpecial
 
         if (!request.Principal.IsAdministrator())
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
+            var scopedCollegeId = request.Principal.GetCollegeId();
+            if (!scopedCollegeId.HasValue)
             {
                 return Array.Empty<SpecialityDto>();
             }
 
-            query = query.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
+            query = query.Where(entity => entity.CollegeId == scopedCollegeId.Value);
         }
 
         return await query
-            .OrderBy(entity => entity.Institution.Name)
+            .OrderBy(entity => entity.College.Name)
             .ThenBy(entity => entity.Name)
-            .Select(entity => new SpecialityDto(entity.Id, entity.InstitutionId, entity.Name, entity.Description, entity.IsActive))
+            .Select(entity => new SpecialityDto(entity.Id, entity.CollegeId, entity.Name, entity.Description, entity.IsActive))
             .ToListAsync(cancellationToken);
     }
 }

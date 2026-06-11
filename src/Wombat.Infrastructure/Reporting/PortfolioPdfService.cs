@@ -113,10 +113,14 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .Include(profile => profile.Curriculum)
                 .ThenInclude(curriculum => curriculum.SubSpeciality)
                     .ThenInclude(sub => sub.Speciality)
-                        .ThenInclude(spec => spec.Institution)
             .FirstOrDefaultAsync(profile => profile.UserId == request.TraineeUserId, cancellationToken);
 
-        var institution = traineeProfile?.Curriculum.SubSpeciality.Speciality.Institution;
+        // The curriculum is national now (T091); the trainee's institution is held directly on the profile.
+        var institution = traineeProfile is not null
+            ? await _dbContext.Set<Domain.Institutions.Institution>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == traineeProfile.InstitutionId, cancellationToken)
+            : null;
         var brand = institution is not null
             ? await _dbContext.Set<InstitutionBrand>()
                 .AsNoTracking()

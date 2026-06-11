@@ -113,7 +113,7 @@ public sealed class AdmitTraineeCommandHandlerTests
         dbContext.Specialities.Add(new Speciality
         {
             Id = 100,
-            InstitutionId = 10,
+            CollegeId = 10,
             Name = "Internal Medicine"
         });
 

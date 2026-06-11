@@ -4,7 +4,7 @@ using MediatR;
 namespace Wombat.Application.Features.Institutions.Commands.CreateSpeciality;
 
 public sealed record CreateSpecialityCommand(
-    int InstitutionId,
+    int CollegeId,
     string Name,
     string? Description,
     ClaimsPrincipal Principal) : IRequest<SpecialityDto>;

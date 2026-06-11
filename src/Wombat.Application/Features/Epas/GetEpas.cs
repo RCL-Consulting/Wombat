@@ -40,7 +40,7 @@ public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaC
             throw new InvalidOperationException("The requested EPA was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(epa.SubSpeciality.Speciality.InstitutionId))
+        if (!request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId))
         {
             throw new UnauthorizedAccessException("You do not have permission to deactivate this EPA.");
         }
@@ -70,17 +70,17 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
 
         if (!request.Principal.IsAdministrator())
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
+            var scopedCollegeId = request.Principal.GetCollegeId();
+            if (!scopedCollegeId.HasValue)
             {
                 return Array.Empty<EpaDto>();
             }
 
-            query = query.Where(entity => entity.SubSpeciality.Speciality.InstitutionId == scopedInstitutionId.Value);
+            query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
         }
 
         return await query
-            .OrderBy(entity => entity.SubSpeciality.Speciality.Institution.Name)
+            .OrderBy(entity => entity.SubSpeciality.Speciality.College.Name)
             .ThenBy(entity => entity.SubSpeciality.Speciality.Name)
             .ThenBy(entity => entity.SubSpeciality.Name)
             .ThenBy(entity => entity.Code)
@@ -125,7 +125,7 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
                     entity.Category,
                     entity.IsActive,
                     entity.CreatedOn),
-                InstitutionId = entity.SubSpeciality.Speciality.InstitutionId
+                CollegeId = entity.SubSpeciality.Speciality.CollegeId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -134,7 +134,7 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
             return null;
         }
 
-        if (!request.Principal.CanAccessInstitution(projection.InstitutionId))
+        if (!request.Principal.CanAccessCollege(projection.CollegeId))
         {
             return null;
         }

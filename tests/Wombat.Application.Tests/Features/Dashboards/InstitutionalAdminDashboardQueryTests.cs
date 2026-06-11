@@ -65,7 +65,7 @@ public sealed class InstitutionalAdminDashboardQueryTests
     private static void SeedInstitutionData(ApplicationDbContext db)
     {
         db.Institutions.Add(new Institution { Id = 1, Name = "Test" });
-        db.Specialities.Add(new Speciality { Id = 1, InstitutionId = 1, Name = "Spec" });
+        db.Specialities.Add(new Speciality { Id = 1, CollegeId = 1, Name = "Spec" });
         db.SubSpecialities.Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "SubSpec" });
         db.SaveChanges();
     }

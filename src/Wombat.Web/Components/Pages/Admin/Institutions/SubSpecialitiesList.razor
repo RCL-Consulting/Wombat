@@ -9,7 +9,8 @@
   <Actions>
     @if (_speciality is not null)
     {
-      <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{_speciality.InstitutionId}/specialities")">Back to specialities</a>
+      @* Specialities are College-owned now (T091); the route param now carries the college id. *@
+      <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{_speciality.CollegeId}/specialities")">Back to specialities</a>
     }
     <a class="btn btn-primary btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/new")">
       <Icon Name="plus" />

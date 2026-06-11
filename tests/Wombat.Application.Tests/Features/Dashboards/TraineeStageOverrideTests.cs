@@ -80,7 +80,7 @@ public sealed class TraineeStageOverrideTests
     private static void SeedWithStageOverrides(ApplicationDbContext db, int programmeStartDaysAgo)
     {
         db.Institutions.Add(new Institution { Id = 1, Name = "Test Hospital" });
-        db.Specialities.Add(new Speciality { Id = 1, InstitutionId = 1, Name = "Spec" });
+        db.Specialities.Add(new Speciality { Id = 1, CollegeId = 1, Name = "Spec" });
         db.SubSpecialities.Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "SubSpec" });
         db.Epas.Add(new Epa { Id = 7, SubSpecialityId = 1, Code = "EPA-07", Title = "EPA 7", Category = EpaCategory.Core });
         db.Curricula.Add(new Curriculum

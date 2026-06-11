@@ -158,8 +158,8 @@
   private bool _loading = true;
   private bool _saving;
 
-  private IEnumerable<SpecialityDto> FilteredSpecialities
-    => _specialities.Where(entity => _model.InstitutionId.HasValue && entity.InstitutionId == _model.InstitutionId.Value);
+  // Specialities are a national catalogue now (T091); not filtered by the selected institution.
+  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
 
   private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
     => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);

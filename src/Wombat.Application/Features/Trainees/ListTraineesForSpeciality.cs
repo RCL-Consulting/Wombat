@@ -44,7 +44,7 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
             {
                 return Array.Empty<TraineeProfileDto>();
             }
-            query = query.Where(entity => entity.Curriculum.SubSpeciality.Speciality.InstitutionId == scopedInstitutionId.Value);
+            query = query.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
         }
 
         var profiles = await query

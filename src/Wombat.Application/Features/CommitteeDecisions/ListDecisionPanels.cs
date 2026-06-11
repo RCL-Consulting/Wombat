@@ -34,12 +34,8 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
             return await _dbContext.Set<DecisionPanel>()
                 .AsNoTracking()
                 .Include(panel => panel.Members)
-                .Where(panel =>
-                    (panel.Scope == DecisionPanelScope.Institution && panel.InstitutionId == scopedInstitutionId.Value) ||
-                    (panel.Scope == DecisionPanelScope.Speciality && panel.SpecialityId.HasValue &&
-                     _dbContext.Set<Speciality>().Any(speciality =>
-                        speciality.Id == panel.SpecialityId.Value &&
-                        speciality.InstitutionId == scopedInstitutionId.Value)))
+                // Panels carry their own institution now; the speciality they cover is national (T091).
+                .Where(panel => panel.InstitutionId == scopedInstitutionId.Value)
                 .OrderBy(panel => panel.Name)
                 .Select(panel => new DecisionPanelSummaryDto(
                     panel.Id,

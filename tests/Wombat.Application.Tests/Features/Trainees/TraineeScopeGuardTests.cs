@@ -33,8 +33,8 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
         _db.Institutions.AddRange(institutionA, institutionB);
         await _db.SaveChangesAsync();
 
-        var specA = new Speciality { InstitutionId = institutionA.Id, Name = "SpecA", IsActive = true };
-        var specB = new Speciality { InstitutionId = institutionB.Id, Name = "SpecB", IsActive = true };
+        var specA = new Speciality { CollegeId = institutionA.Id, Name = "SpecA", IsActive = true };
+        var specB = new Speciality { CollegeId = institutionB.Id, Name = "SpecB", IsActive = true };
         _db.Specialities.AddRange(specA, specB);
         await _db.SaveChangesAsync();
 
@@ -57,6 +57,7 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
         var profileB = new TraineeProfile
         {
             UserId = "user-b",
+            InstitutionId = institutionB.Id,
             CurriculumId = curriculumB.Id,
             ProgrammeStartDate = new DateOnly(2026, 1, 15),
             ExpectedCompletionDate = new DateOnly(2028, 1, 15),

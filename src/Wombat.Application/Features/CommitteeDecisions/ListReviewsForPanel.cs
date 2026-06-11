@@ -43,12 +43,8 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
                 return Array.Empty<CommitteeReviewListItemDto>();
             }
 
-            query = query.Where(review =>
-                (review.Panel.Scope == DecisionPanelScope.Institution && review.Panel.InstitutionId == scopedInstitutionId.Value) ||
-                (review.Panel.Scope == DecisionPanelScope.Speciality && review.Panel.SpecialityId.HasValue &&
-                 _dbContext.Set<Speciality>().Any(speciality =>
-                    speciality.Id == review.Panel.SpecialityId.Value &&
-                    speciality.InstitutionId == scopedInstitutionId.Value)));
+            // Panels carry their own institution now; the speciality they cover is national (T091).
+            query = query.Where(review => review.Panel.InstitutionId == scopedInstitutionId.Value);
         }
         else
         {

@@ -21,17 +21,17 @@ public sealed class GetSubSpecialitiesListQueryHandler : IRequestHandler<GetSubS
 
         if (!request.Principal.IsAdministrator())
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
+            var scopedCollegeId = request.Principal.GetCollegeId();
+            if (!scopedCollegeId.HasValue)
             {
                 return Array.Empty<SubSpecialityDto>();
             }
 
-            query = query.Where(entity => entity.Speciality.InstitutionId == scopedInstitutionId.Value);
+            query = query.Where(entity => entity.Speciality.CollegeId == scopedCollegeId.Value);
         }
 
         return await query
-            .OrderBy(entity => entity.Speciality.Institution.Name)
+            .OrderBy(entity => entity.Speciality.College.Name)
             .ThenBy(entity => entity.Speciality.Name)
             .ThenBy(entity => entity.Name)
             .Select(entity => new SubSpecialityDto(entity.Id, entity.SpecialityId, entity.Name, entity.Description, entity.IsActive, entity.DefaultEntrustmentScaleId))

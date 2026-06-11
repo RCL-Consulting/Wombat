@@ -62,7 +62,7 @@ public sealed class CommitteeReviewTypeTests
     private static async Task SeedAsync(ApplicationDbContext dbContext)
     {
         dbContext.Institutions.Add(new Institution { Id = 1, Name = "Test Hospital", IsActive = true, CreatedOn = DateTime.UtcNow });
-        dbContext.Specialities.Add(new Speciality { Id = 5, InstitutionId = 1, Name = "General Medicine", IsActive = true });
+        dbContext.Specialities.Add(new Speciality { Id = 5, CollegeId = 1, Name = "General Medicine", IsActive = true });
         dbContext.DecisionPanels.Add(new DecisionPanel
         {
             Id = 20,

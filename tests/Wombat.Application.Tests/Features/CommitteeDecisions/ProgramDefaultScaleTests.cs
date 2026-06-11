@@ -163,7 +163,7 @@ public sealed class ProgramDefaultScaleTests
             new EntrustmentLevel { Id = LevelInB, ScaleId = ScaleB, Order = 4, Label = "Unsupervised" });
 
         db.Set<Institution>().Add(new Institution { Id = 1, Name = "KGK", ShortCode = "KGK", IsActive = true, CreatedOn = DateTime.UtcNow });
-        db.Set<Speciality>().Add(new Speciality { Id = 1, InstitutionId = 1, Name = "Paediatrics", IsActive = true });
+        db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics", IsActive = true });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = SubSpecialityId, SpecialityId = 1, Name = "Paeds", IsActive = true, DefaultEntrustmentScaleId = defaultScaleId });
         db.Set<Curriculum>().Add(new Curriculum { Id = CurriculumId, SubSpecialityId = SubSpecialityId, Name = "Paed", Version = "2026.1" });
         db.Set<TraineeProfile>().Add(new TraineeProfile { UserId = TraineeUserId, CurriculumId = CurriculumId, ProgrammeStartDate = new DateOnly(2023, 1, 15), ExpectedCompletionDate = new DateOnly(2029, 12, 31) });

@@ -64,8 +64,8 @@
                   <option value="">Select speciality</option>
                   @foreach (var speciality in _specialities)
                   {
-                    var institutionName = _institutions.FirstOrDefault(institution => institution.Id == speciality.InstitutionId)?.Name ?? "Unknown";
-                    <option value="@speciality.Id">@institutionName / @speciality.Name</option>
+                    @* Specialities are national now (T091); College prefix lands with the Phase 5 rework. *@
+                    <option value="@speciality.Id">@speciality.Name</option>
                   }
                 </InputSelect>
               </FormField>

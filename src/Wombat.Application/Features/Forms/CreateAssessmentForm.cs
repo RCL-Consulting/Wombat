@@ -78,14 +78,16 @@ public sealed class CreateAssessmentFormCommandHandler : IRequestHandler<CreateA
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (specialityId.HasValue && institutionId.HasValue)
+        if (specialityId.HasValue)
         {
-            var specialityMatchesInstitution = await _dbContext.Set<Domain.Institutions.Speciality>()
-                .AnyAsync(entity => entity.Id == specialityId.Value && entity.InstitutionId == institutionId.Value, cancellationToken);
+            // Specialities are national now (T091); just verify existence. The discipline a form covers is
+            // independent of its owning institution.
+            var specialityExists = await _dbContext.Set<Domain.Institutions.Speciality>()
+                .AnyAsync(entity => entity.Id == specialityId.Value, cancellationToken);
 
-            if (!specialityMatchesInstitution)
+            if (!specialityExists)
             {
-                throw new InvalidOperationException("The selected speciality does not belong to the selected institution.");
+                throw new InvalidOperationException("The selected speciality was not found.");
             }
         }
 

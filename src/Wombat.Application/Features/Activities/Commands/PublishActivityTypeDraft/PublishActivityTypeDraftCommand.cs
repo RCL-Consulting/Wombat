@@ -55,37 +55,34 @@ internal static class ActivityTypeScopeGuard
             return;
         }
 
-        if (!principal.IsInstitutionalAdmin())
-        {
-            throw new UnauthorizedAccessException("You do not have permission to modify this activity type.");
-        }
-
-        var callerInstitutionId = principal.GetInstitutionId();
-        if (!callerInstitutionId.HasValue)
-        {
-            throw new UnauthorizedAccessException("You do not have permission to modify this activity type.");
-        }
-
         switch (scope)
         {
             case ActivityScope.Global:
                 throw new UnauthorizedAccessException("Only global administrators may edit a globally-scoped activity type.");
             case ActivityScope.Institution:
-                if (scopeId != callerInstitutionId.Value)
+                // Institution-scoped types are the institution's own (the schema-driven builder).
+                var callerInstitutionId = principal.GetInstitutionId();
+                if (!principal.IsInstitutionalAdmin() || !callerInstitutionId.HasValue || scopeId != callerInstitutionId.Value)
                 {
                     throw new UnauthorizedAccessException("You do not have permission to modify activity types in that institution.");
                 }
                 return;
             case ActivityScope.Speciality:
-                if (!scopeId.HasValue ||
-                    !await dbContext.Set<Speciality>().AnyAsync(entity => entity.Id == scopeId.Value && entity.InstitutionId == callerInstitutionId.Value, cancellationToken))
+                // Speciality/sub-speciality scopes now reference a national (College-owned) discipline (T091),
+                // so they are authored by the owning College's CollegeAdmin (or a global Administrator).
+                var specialityCollegeId = scopeId.HasValue
+                    ? await dbContext.Set<Speciality>().Where(entity => entity.Id == scopeId.Value).Select(entity => (int?)entity.CollegeId).SingleOrDefaultAsync(cancellationToken)
+                    : null;
+                if (!specialityCollegeId.HasValue || !principal.CanAccessCollege(specialityCollegeId.Value))
                 {
                     throw new UnauthorizedAccessException("You do not have permission to modify activity types in that speciality.");
                 }
                 return;
             case ActivityScope.SubSpeciality:
-                if (!scopeId.HasValue ||
-                    !await dbContext.Set<SubSpeciality>().AnyAsync(entity => entity.Id == scopeId.Value && entity.Speciality.InstitutionId == callerInstitutionId.Value, cancellationToken))
+                var subSpecialityCollegeId = scopeId.HasValue
+                    ? await dbContext.Set<SubSpeciality>().Where(entity => entity.Id == scopeId.Value).Select(entity => (int?)entity.Speciality.CollegeId).SingleOrDefaultAsync(cancellationToken)
+                    : null;
+                if (!subSpecialityCollegeId.HasValue || !principal.CanAccessCollege(subSpecialityCollegeId.Value))
                 {
                     throw new UnauthorizedAccessException("You do not have permission to modify activity types in that sub-speciality.");
                 }
