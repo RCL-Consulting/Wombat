@@ -7,9 +7,9 @@ namespace Wombat.Web.Tests.Dashboards;
 public sealed class DashboardPriorityTests
 {
     [Fact]
-    public void PriorityOrder_ContainsAllNineRoles()
+    public void PriorityOrder_ContainsEveryRole()
     {
-        DashboardPriority.Order.Should().HaveCount(9);
+        DashboardPriority.Order.Should().HaveCount(WombatRoles.All.Count);
         foreach (var role in WombatRoles.All)
         {
             DashboardPriority.Order.Should().Contain(role);

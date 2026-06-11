@@ -3,6 +3,7 @@ namespace Wombat.Domain.Identity;
 public static class WombatRoles
 {
     public const string Administrator = "Administrator";
+    public const string CollegeAdmin = "CollegeAdmin";
     public const string InstitutionalAdmin = "InstitutionalAdmin";
     public const string SpecialityAdmin = "SpecialityAdmin";
     public const string SubSpecialityAdmin = "SubSpecialityAdmin";
@@ -15,6 +16,7 @@ public static class WombatRoles
     public static readonly IReadOnlyList<string> All =
     [
         Administrator,
+        CollegeAdmin,
         InstitutionalAdmin,
         SpecialityAdmin,
         SubSpecialityAdmin,

@@ -6,12 +6,14 @@ namespace Wombat.Infrastructure.Identity;
 
 public static class AuthorizationPolicies
 {
+    public const string RequireCollegeScope = nameof(RequireCollegeScope);
     public const string RequireInstitutionScope = nameof(RequireInstitutionScope);
     public const string RequireSpecialityScope = nameof(RequireSpecialityScope);
     public const string RequireSubSpecialityScope = nameof(RequireSubSpecialityScope);
     public const string RequireSpecialityAdminForCurrentInstitution = nameof(RequireSpecialityAdminForCurrentInstitution);
     public const string RequireSubSpecialityAdminForCurrentInstitution = nameof(RequireSubSpecialityAdminForCurrentInstitution);
     public const string AdministratorOrInstitutionalAdmin = nameof(AdministratorOrInstitutionalAdmin);
+    public const string AdministratorOrCollegeAdmin = nameof(AdministratorOrCollegeAdmin);
 
     public static IServiceCollection AddWombatAuthorization(this IServiceCollection services)
     {
@@ -27,6 +29,9 @@ public static class AuthorizationPolicies
             {
                 options.AddPolicy(role, policy => policy.RequireRole(role));
             }
+
+            options.AddPolicy(RequireCollegeScope, policy =>
+                policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.CollegeId)));
 
             options.AddPolicy(RequireInstitutionScope, policy =>
                 policy.Requirements.Add(new ScopeClaimRequirement(WombatClaims.InstitutionId)));
@@ -53,6 +58,9 @@ public static class AuthorizationPolicies
 
             options.AddPolicy(AdministratorOrInstitutionalAdmin, policy =>
                 policy.RequireRole(WombatRoles.Administrator, WombatRoles.InstitutionalAdmin));
+
+            options.AddPolicy(AdministratorOrCollegeAdmin, policy =>
+                policy.RequireRole(WombatRoles.Administrator, WombatRoles.CollegeAdmin));
         });
 
         return services;

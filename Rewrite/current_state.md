@@ -2,6 +2,104 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ ACTIVE — 2026-06-10 (Opus) — T091 national EPA/curriculum catalogue (CMSA-owned) — DESIGN phase
+
+**Big domain redesign just opened.** User confirmed the current EPA ownership model is a **mistake**: in SA,
+EPAs + curricula are defined by the **Colleges of Medicine of South Africa (CMSA)** and institutions **adopt**
+them — they don't author their own. Today EPAs/curricula are institution-scoped via
+`Epa.SubSpecialityId → SubSpeciality.SpecialityId → Speciality.InstitutionId`. Task file:
+`Rewrite/Tasks/T091-national-epa-curriculum-catalogue.md`. Blast-radius mapped (see task file + below).
+
+**Status:** design questions being put to the user before any schema change. **No code changed for T091 yet.**
+Blast radius (from an Explore pass): Domain (Epa/Curriculum/CurriculumItem own via SubSpeciality; Scales
+already global; AssessmentForm + DecisionPanel already have global/optional-scope precedents); EF configs +
+unique indexes `Epas(SubSpecialityId,Code)` / `Curricula(SubSpecialityId,Name,Version)`; ~15 Application
+handlers scope EPA/curriculum by `SubSpeciality.Speciality.InstitutionId`; Web admin pages `/admin/epas`,
+`/admin/curricula` (+items) under `AdministratorOrInstitutionalAdmin`; `EpaScopeGuardTests` +
+`CurriculumScopeGuardTests` assert institution-scoping; `TraineeProfile.CurriculumId` binds trainees;
+`CreditApplier` resolves CurriculumItem by Id/EpaId/EpaField.
+
+**▶ Next:** answer the design forks (governance/ownership level, institution adoption granularity, local-EPA
+latitude, authoring role), then plan → implement on a fresh DB. **Opus** (domain + migration design). This is
+a multi-session effort; likely split into sub-tasks (domain re-parent → migration → admin surfaces → scenario
+rebuild). Don't start coding until the forks are decided.
+
+---
+
+## ✅ SESSION 2026-06-10 (Opus) — T090 + T089 committed; T091 opened
+
+- **T090 (`f800b99`)** — confined InstitutionalAdmin user administration to own-institution scope. User spotted
+  (during T089 logo review) that an InstitutionalAdmin could see/“Manage” the global `admin@wombat.local` at
+  `/admin/users`. Fixed: `ListUsersQuery`/`GetUserByIdQuery` own-institution only; 4 mutation handlers reject
+  unscoped targets for non-Administrators (closed a latent write gap). +4 tests. Application **284** green.
+  Task file `Tasks/T090-institutional-admin-user-scope-leak.md`.
+- **T089 (`fa9928e`)** — branding & polish committed. Adds the self-hosted **variable Fraunces** wordmark
+  (`wwwroot/fonts/fraunces-var.woff2`; OFL/GPLv3) for the brand lockup only — weight 500, WONK on, SOFT 0,
+  `font-optical-sizing: auto`; new `--font-display`/`--font-display-settings` tokens. Nav mark 40px + centered
+  in the top bar; login mark 56px. Palette `#2d6cdf`/`#3498db`, logo, favicons/manifest, arrow-left.svg,
+  nav-toggler a11y. Web bUnit **43/43** green. User reviewed the wordmark live and approved (matched their
+  Google Fonts specimen at weight ~500).
+- **`master` is well ahead of origin and still unpushed** (now incl. T090 + T089). Standing item.
+
+**⚠️ Tooling reminders (unchanged):** dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), not Bash; **stop the dev server before
+`dotnet test`/`dotnet build`/`db-snapshot.ps1 restore`**; keep `psql` calls solo. `AuditEntries` is
+append-only (DB trigger blocks DELETE/UPDATE).
+
+---
+
+## ⭐ SESSION FINALIZED — 2026-06-07 (Opus) — Appendix cross-cutting spot-checks re-run in v2 (all PASS; T083–T086 fixes hold)
+
+**Re-ran the entire Appendix (A.1–A.4) from `act5-v2-final`, UI-driven via Playwright, DB-verified.** Goal was
+to confirm the four 2026-06-04 findings (T083–T086, all since fixed) hold from the clean v2 state, plus
+re-confirm the things that passed. **No product code changed. Nothing committed** (this handoff only).
+DB artifacts (1 export request, 1 erasure, 1 manual job run) were **rolled back by restoring `act5-v2-final`**;
+verified clean afterward (Ndlovu restored, 0 DataRightsRequests). **Dev server STOPPED.** No new secrets
+(reused existing pw + the persistent `Wombat:PseudonymSalt` dev user-secret).
+
+**Fix verifications (all HOLD in v2):**
+- **T083 (export download) ✓** — `/account/data-rights/download/{id}` returns **HTTP 200, `application/zip`,
+  85,643-byte "PK" ZIP** (was the 404 bug). Realistic non-existent GUID → **404** (no leak).
+- **T084 (atomic erasure) ✓** — Ndlovu erasure = **pseudonymisation**: Email/First/Last/NormalizedEmail
+  cleared, `UserName`→`deleted_user_446aa09f`, account locked (`LockoutEnd=infinity`), **Id retained**,
+  request→**Completed**, **3 audit entries retained**. The T084 **Retry/Resume** recovery buttons are
+  present on the request page.
+- **T085 (chart SR fallback) ✓** — Mahlangu's review (id 4) renders TrajectoryCharts with `role=img` +
+  `aria-label` **and** the `<table class="visually-hidden">` fallback (caption=aria-label, Date/Rating/Source,
+  populated). (Molefe's reviews have no chart — his STARs came via committee staging, not rated activities.)
+- **T086 (contrast + tap-target) ✓** — `--muted-text`=`rgb(104 111 119)` → **4.83:1** on page bg (≥AA 4.5);
+  `.btn` min-height **28px** (≥WCAG 2.5.8 24px).
+
+**Re-confirmed passes:** A.2 jobs (9 jobs listed; manual Run-now on assessor-pending-nudge recorded a
+`ScheduledJobRun` Succeeded/91ms with Triggered-by = admin id, vs `scheduler`); A.3 SSO degrades gracefully
+(no local IdP banner + form gated; login paths still deferred, invariants unit-tested); A.4.1 mobile @375px
+(no horizontal overflow, hamburger present). A.4.2 keyboard not separately re-driven (covered by T048, unchanged).
+
+**3 minor new observations (none block anything; not ticketed):**
+- **Guid.Empty download → 500** instead of 404/400. A **T088 side-effect**: the `RequestId must not be empty`
+  validator now throws `ValidationException`, which the minimal-API download endpoint doesn't catch. No real
+  download link carries an empty GUID — edge-case robustness only. (Fix: catch ValidationException → 400/404.)
+- **`/icons/arrow-left.svg` 404** on the "Back to jobs" / "Back to list" link icon (missing asset; cosmetic).
+- **Mobile nav toggler is an unlabeled `<input class="navbar-toggler">`** (no `aria-label`/`aria-expanded`) —
+  minor a11y nit, pre-existing.
+
+**Tests:** not re-run this session (no product code changed); last green = the T087/T088 session + this
+session's verify pass (Domain 50, Application 280, Architecture 19, Web 43). **DB:** `act5-v2-final` (restored,
+clean). Snapshots unchanged.
+
+**▶ Recommended next:** the scenario + Appendix are now fully validated in v2 and every finding is closed.
+The remaining real item is **pushing `master` to origin** (local master is well ahead, never pushed) — **Opus**
+for release judgement; review the unpushed history first. The 3 minor observations above could optionally be
+swept into a tiny polish task. Start any play-through from `tools\db-snapshot.ps1 restore act5-v2-final`.
+
+**⚠️ Tooling reminders (unchanged):** dev server via the **PowerShell** tool
+(`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`), not Bash; **stop the dev server before
+`dotnet test`/`dotnet build`/`db-snapshot.ps1 restore`**; keep `psql` calls solo (it lives at
+`C:\Program Files\PostgreSQL\16\bin\psql.exe`, not on PATH); psql here-strings must be **ASCII**.
+`AuditEntries` is append-only (a DB trigger blocks DELETE/UPDATE).
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-07 (Opus) — clean v2 replay (Acts 1–5) DONE + 2 code fixes shipped
 
 **Two-part session.** (1) Replayed the **entire linear Paediatrics scenario (Acts 1–5)** clean from a

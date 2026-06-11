@@ -9,11 +9,39 @@ public static class ClaimsPrincipalExtensions
     public static int? GetInstitutionId(this ClaimsPrincipal principal)
         => principal.GetSingleIntClaim(WombatClaimTypes.InstitutionId);
 
+    public static int? GetCollegeId(this ClaimsPrincipal principal)
+        => principal.GetSingleIntClaim(WombatClaimTypes.CollegeId);
+
     public static bool IsAdministrator(this ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.Administrator);
 
+    public static bool IsCollegeAdmin(this ClaimsPrincipal principal)
+        => principal.IsInRole(WombatRoles.CollegeAdmin);
+
     public static bool IsInstitutionalAdmin(this ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.InstitutionalAdmin);
+
+    /// <summary>
+    /// True if the caller is a global Administrator, or a CollegeAdmin whose college-id claim
+    /// matches the target college. Used by national-catalogue handlers reachable from the
+    /// AdministratorOrCollegeAdmin policy as a second line of defence (mirrors
+    /// <see cref="CanAccessInstitution"/>). (T091)
+    /// </summary>
+    public static bool CanAccessCollege(this ClaimsPrincipal principal, int collegeId)
+    {
+        if (principal.IsAdministrator())
+        {
+            return true;
+        }
+
+        if (!principal.IsCollegeAdmin())
+        {
+            return false;
+        }
+
+        var scopedCollegeId = principal.GetCollegeId();
+        return scopedCollegeId.HasValue && scopedCollegeId.Value == collegeId;
+    }
 
     /// <summary>
     /// True if the caller is a global Administrator, or an InstitutionalAdmin whose

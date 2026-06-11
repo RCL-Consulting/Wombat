@@ -13,6 +13,7 @@ public static class DashboardPriority
     public static readonly IReadOnlyList<string> Order =
     [
         WombatRoles.Administrator,
+        WombatRoles.CollegeAdmin,
         WombatRoles.InstitutionalAdmin,
         WombatRoles.SpecialityAdmin,
         WombatRoles.SubSpecialityAdmin,
