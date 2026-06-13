@@ -2,7 +2,12 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ ACTIVE — 2026-06-11 (Opus) — T091 national EPA/curriculum catalogue — P1+P2 DONE, P3 next
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 P1–P3 DONE; T090 + T089 shipped; P4 next
+
+**Long, productive session.** Shipped T090 (user-admin scope-leak fix) + T089 (branding/Fraunces wordmark),
+then drove the **T091 national EPA/curriculum redesign through Phases 1–3** (College ownership + local extras),
+all green and committed. **Nothing pushed** — `master` is far ahead of origin (T090, T089, T091 P1–P3 + this
+session's earlier work). Pushing `master` is the standing item.
 
 **Big domain redesign in progress.** EPAs/curricula must be nationally owned by the **Colleges of Medicine of
 SA (CMSA)**; institutions **adopt** them (don't author). Decided design (4 forks) + 6-phase plan in
