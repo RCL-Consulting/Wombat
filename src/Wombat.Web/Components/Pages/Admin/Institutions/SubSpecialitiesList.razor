@@ -1,5 +1,5 @@
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -9,8 +9,7 @@
   <Actions>
     @if (_speciality is not null)
     {
-      @* Specialities are College-owned now (T091); the route param now carries the college id. *@
-      <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{_speciality.CollegeId}/specialities")">Back to specialities</a>
+      <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{_speciality.CollegeId}/specialities")">Back to specialities</a>
     }
     <a class="btn btn-primary btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/new")">
       <Icon Name="plus" />
@@ -60,30 +59,12 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _speciality = await FindSpecialityAsync(SpecialityId, authState.User);
+      _speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId, authState.User));
     }
     catch (Exception exception)
     {
       _errorMessage = exception.Message;
     }
-  }
-
-  private async Task<SpecialityDto?> FindSpecialityAsync(int specialityId, System.Security.Claims.ClaimsPrincipal principal)
-  {
-    var institutions = await Sender.Send(new GetInstitutionsListQuery(principal));
-
-    foreach (var institution in institutions)
-    {
-      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(institution.Id, principal));
-      var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
-
-      if (speciality is not null)
-      {
-        return speciality;
-      }
-    }
-
-    return null;
   }
 }

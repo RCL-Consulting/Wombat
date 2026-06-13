@@ -1,15 +1,15 @@
-@page "/admin/institutions/{InstitutionId:int}/specialities/new"
-@page "/admin/institutions/{InstitutionId:int}/specialities/{Id:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@page "/admin/colleges/{CollegeId:int}/specialities/new"
+@page "/admin/colleges/{CollegeId:int}/specialities/{Id:int}"
+@attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>@(IsNew ? "Create Speciality" : "Edit Speciality")</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create speciality" : "Edit speciality")" Subtitle="@(_institution is null ? "Scope this speciality under the current institution." : $"Institution: {_institution.Name} ({_institution.ShortCode})")">
+<PageHeader Title="@(IsNew ? "Create speciality" : "Edit speciality")" Subtitle="@(_college is null ? "Scope this speciality under the current college." : $"College: {_college.Name} ({_college.ShortCode})")">
   <Actions>
-    <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{InstitutionId}/specialities")">Back to specialities</a>
+    <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities")">Back to specialities</a>
     @if (!IsNew && Id.HasValue)
     {
       <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{Id.Value}/sub-specialities")">Manage sub-specialities</a>
@@ -56,7 +56,7 @@
       </div>
 
       <FormActions>
-        <a class="btn btn-outline" href="@($"/admin/institutions/{InstitutionId}/specialities")">Cancel</a>
+        <a class="btn btn-outline" href="@($"/admin/colleges/{CollegeId}/specialities")">Cancel</a>
         @if (!IsNew)
         {
           <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
@@ -69,12 +69,12 @@
 
 @code {
   [Parameter]
-  public int InstitutionId { get; set; }
+  public int CollegeId { get; set; }
 
   [Parameter]
   public int? Id { get; set; }
 
-  private InstitutionDto? _institution;
+  private CollegeDto? _college;
   private SpecialityFormModel _model = new();
   private string? _errorMessage;
   private string? _statusMessage;
@@ -92,9 +92,9 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId, authState.User));
+      _college = await Sender.Send(new GetCollegeByIdQuery(CollegeId, authState.User));
 
-      if (_institution is null)
+      if (_college is null)
       {
         Navigation.NavigateTo("/not-found");
         return;
@@ -106,11 +106,9 @@
         return;
       }
 
-      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId, authState.User));
-      var specialityId = Id!.Value;
-      var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
+      var speciality = await Sender.Send(new GetSpecialityByIdQuery(Id!.Value, authState.User));
 
-      if (speciality is null)
+      if (speciality is null || speciality.CollegeId != CollegeId)
       {
         Navigation.NavigateTo("/not-found");
         return;
@@ -146,12 +144,12 @@
 
       if (IsNew)
       {
-        speciality = await Sender.Send(new CreateSpecialityCommand(InstitutionId, _model.Name, EmptyToNull(_model.Description), authState.User));
-        Navigation.NavigateTo($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}", forceLoad: true);
+        speciality = await Sender.Send(new CreateSpecialityCommand(CollegeId, _model.Name, EmptyToNull(_model.Description), authState.User));
+        Navigation.NavigateTo($"/admin/colleges/{CollegeId}/specialities/{speciality.Id}", forceLoad: true);
         return;
       }
 
-      speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, InstitutionId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, authState.User));
+      speciality = await Sender.Send(new UpdateSpecialityCommand(Id!.Value, CollegeId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, authState.User));
       _model.IsActive = speciality.IsActive;
       _statusMessage = "Speciality saved.";
     }

@@ -1,21 +1,21 @@
-@page "/admin/institutions/{InstitutionId:int}/specialities"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@page "/admin/colleges/{CollegeId:int}/specialities"
+@attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Specialities</PageTitle>
 
-<PageHeader Title="Specialities" Subtitle="@(_institution is null ? "Manage specialities for the selected institution." : $"Institution: {_institution.Name} ({_institution.ShortCode})")">
+<PageHeader Title="Specialities" Subtitle="@(_college is null ? "Manage specialities for the selected college." : $"College: {_college.Name} ({_college.ShortCode})")">
   <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
-    <a class="btn btn-primary btn-sm" href="@($"/admin/institutions/{InstitutionId}/specialities/new")">
+    <a class="btn btn-outline btn-sm" href="/admin/colleges">Back to colleges</a>
+    <a class="btn btn-primary btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities/new")">
       <Icon Name="plus" />
       Create speciality
     </a>
   </Actions>
 </PageHeader>
 
-<StatePanel IsLoading="@(_specialities is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_specialities?.Count == 0)" EmptyTitle="No specialities yet" EmptyBody="Create the first speciality for this institution.">
+<StatePanel IsLoading="@(_specialities is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_specialities?.Count == 0)" EmptyTitle="No specialities yet" EmptyBody="Create the first speciality for this college.">
   @if (_specialities is not null)
   {
     <DataTable TItem="SpecialityDto" Items="_specialities" Caption="Specialities">
@@ -34,7 +34,7 @@
           <td>@(speciality.IsActive ? "Active" : "Inactive")</td>
           <td>
             <div class="actions-cell">
-              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{InstitutionId}/specialities/{speciality.Id}")">Edit</a>
+              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities/{speciality.Id}")">Edit</a>
               <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{speciality.Id}/sub-specialities")">Sub-specialities</a>
             </div>
           </td>
@@ -46,9 +46,9 @@
 
 @code {
   [Parameter]
-  public int InstitutionId { get; set; }
+  public int CollegeId { get; set; }
 
-  private InstitutionDto? _institution;
+  private CollegeDto? _college;
   private IReadOnlyList<SpecialityDto>? _specialities;
   private string? _errorMessage;
 
@@ -59,8 +59,8 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institution = await Sender.Send(new GetInstitutionByIdQuery(InstitutionId, authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(InstitutionId, authState.User));
+      _college = await Sender.Send(new GetCollegeByIdQuery(CollegeId, authState.User));
+      _specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(CollegeId, authState.User));
     }
     catch (Exception exception)
     {

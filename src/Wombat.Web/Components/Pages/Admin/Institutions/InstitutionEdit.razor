@@ -10,10 +10,6 @@
 <PageHeader Title="@(IsNew ? "Create institution" : "Edit institution")" Subtitle="Maintain the institution record used for scoping and onboarding.">
   <Actions>
     <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
-    @if (!IsNew)
-    {
-      <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{Id}/specialities")">Manage specialities</a>
-    }
   </Actions>
 </PageHeader>
 

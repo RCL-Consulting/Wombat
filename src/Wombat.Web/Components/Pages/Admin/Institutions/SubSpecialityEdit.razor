@@ -1,6 +1,6 @@
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/new"
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -101,7 +101,7 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _speciality = await FindSpecialityAsync(SpecialityId, authState.User);
+      _speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
 
       if (_speciality is null)
       {
@@ -199,24 +199,6 @@
     {
       _saving = false;
     }
-  }
-
-  private async Task<SpecialityDto?> FindSpecialityAsync(int specialityId, System.Security.Claims.ClaimsPrincipal principal)
-  {
-    var institutions = await Sender.Send(new GetInstitutionsListQuery(principal));
-
-    foreach (var institution in institutions)
-    {
-      var specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(institution.Id, principal));
-      var speciality = specialities.SingleOrDefault(item => item.Id == specialityId);
-
-      if (speciality is not null)
-      {
-        return speciality;
-      }
-    }
-
-    return null;
   }
 
   private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
