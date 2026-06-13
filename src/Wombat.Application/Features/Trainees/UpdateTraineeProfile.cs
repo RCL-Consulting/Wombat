@@ -58,6 +58,9 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
             ?? throw new InvalidOperationException("The selected curriculum could not be found.");
 
         // The curriculum is a national catalogue version (T091); the trainee stays in their own institution.
+        // Re-pin to the institution's active adoption for the (possibly changed) curriculum's discipline,
+        // rejecting a version the institution has not adopted (T091 phase 4).
+        profile.AdoptionId = await TraineeAdoptionResolver.ResolveAdoptionIdAsync(_dbContext, profile.InstitutionId, curriculum, cancellationToken);
         profile.CurriculumId = request.CurriculumId;
         profile.ProgrammeStartDate = request.ProgrammeStartDate;
         profile.ExpectedCompletionDate = request.ExpectedCompletionDate

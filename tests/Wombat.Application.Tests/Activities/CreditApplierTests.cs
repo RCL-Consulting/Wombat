@@ -177,7 +177,78 @@ public sealed class CreditApplierTests
             WindowMonths = 12
         });
 
+        // Credit accrues only against the trainee's own (active) profile, which pins the adopted
+        // national curriculum version and the trainee's institution (T091 phase 4).
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            InstitutionId = 10,
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            IsActive = true
+        });
+
         dbContext.SaveChanges();
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ScopesToAdoptedVersionAndOwnInstitutionLocalExtras()
+    {
+        // The trainee follows curriculum version 3000 at institution 10. Matching by EPA must credit only
+        // that version's national core item plus institution 10's local extra — never another institution's
+        // local extra, nor an item in a different curriculum version that shares the same EPA. (T091 phase 4.)
+        await using var dbContext = CreateDbContext();
+        dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "Take a history" });
+
+        dbContext.CurriculumItems.AddRange(
+            new CurriculumItem { Id = 4000, CurriculumId = 3000, EpaId = 5000, OwningInstitutionId = null, RequiredCount = 3, MinimumLevelOrder = 3, WindowMonths = 12 },
+            new CurriculumItem { Id = 4001, CurriculumId = 3000, EpaId = 5000, OwningInstitutionId = 10, RequiredCount = 3, MinimumLevelOrder = 3, WindowMonths = 12 },
+            new CurriculumItem { Id = 4002, CurriculumId = 3000, EpaId = 5000, OwningInstitutionId = 99, RequiredCount = 3, MinimumLevelOrder = 3, WindowMonths = 12 },
+            new CurriculumItem { Id = 4003, CurriculumId = 3001, EpaId = 5000, OwningInstitutionId = null, RequiredCount = 3, MinimumLevelOrder = 3, WindowMonths = 12 });
+
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            InstitutionId = 10,
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            IsActive = true
+        });
+        dbContext.SaveChanges();
+
+        var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 4 }""");
+        var applier = new CreditApplier(dbContext);
+
+        await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        var creditedItemIds = await dbContext.CurriculumItemProgresses
+            .Select(progress => progress.CurriculumItemId)
+            .ToListAsync();
+        creditedItemIds.Should().BeEquivalentTo(new[] { 4000, 4001 });
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenNoActiveTraineeProfile_DoesNothing()
+    {
+        // Without an active trainee profile there is no adopted curriculum to credit against.
+        await using var dbContext = CreateDbContext();
+        dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "Take a history" });
+        dbContext.CurriculumItems.Add(new CurriculumItem { Id = 4000, CurriculumId = 3000, EpaId = 5000, RequiredCount = 3, MinimumLevelOrder = 3, WindowMonths = 12 });
+        dbContext.SaveChanges();
+
+        var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 4 }""");
+        var applier = new CreditApplier(dbContext);
+
+        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        updated.Should().BeEmpty();
+        dbContext.CurriculumItemProgresses.Should().BeEmpty();
     }
 
     private static ActivityType CreateActivityType()

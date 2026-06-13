@@ -100,6 +100,19 @@ public sealed class ActivityHandlersTests
             WindowMonths = 12
         });
 
+        // The activity subject is an active trainee following curriculum 3000 at institution 10; credit
+        // is now scoped to the trainee's adopted curriculum version (T091 phase 4).
+        dbContext.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            InstitutionId = 10,
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            IsActive = true
+        });
+
         var activityType = new ActivityType
         {
             Id = 200,

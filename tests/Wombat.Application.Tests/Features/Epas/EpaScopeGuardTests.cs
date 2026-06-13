@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Tests.TestHelpers;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -55,6 +56,21 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
         // Institution-local extra under College A's discipline, owned by institution A.
         var localEpa = new Epa { SubSpecialityId = subA.Id, OwningInstitutionId = institutionA.Id, Code = "LOC-1", Title = "Local", IsActive = true };
         _db.Epas.AddRange(epaA, epaB, localEpa);
+        await _db.SaveChangesAsync();
+
+        // Institution A has adopted College A's curriculum for SubA, so its InstitutionalAdmin sees SubA's
+        // national EPAs (national-catalogue visibility is adoption-narrowed in T091 phase 4).
+        var curriculumA = new Curriculum { SubSpecialityId = subA.Id, Name = "Curr A", Version = "2026", EffectiveFrom = new DateOnly(2026, 1, 1) };
+        _db.Curricula.Add(curriculumA);
+        await _db.SaveChangesAsync();
+        _db.Set<InstitutionCurriculumAdoption>().Add(new InstitutionCurriculumAdoption
+        {
+            InstitutionId = institutionA.Id,
+            CurriculumId = curriculumA.Id,
+            SubSpecialityId = subA.Id,
+            AdoptedOn = new DateOnly(2026, 1, 1),
+            IsActive = true
+        });
         await _db.SaveChangesAsync();
 
         _collegeAId = collegeA.Id;

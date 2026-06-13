@@ -36,19 +36,28 @@ public sealed class CreditApplier : ICreditApplier
 
         using var document = JsonDocument.Parse(completedActivity.DataJson);
         var creditKey = GetCreditKey(completedActivity);
-        var traineeStage = await ResolveTraineeStageAsync(completedActivity.SubjectUserId, cancellationToken);
+
+        // Credit only accrues against the trainee's own portfolio: the national curriculum version their
+        // institution adopted, plus that institution's local extras. Without an active trainee profile
+        // there is nothing to credit against. (T091 phase 4.)
+        var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, cancellationToken);
+        if (trainee is null)
+        {
+            return [];
+        }
+
         var updatedRows = new List<CurriculumItemProgress>();
 
         foreach (var directive in rules.CountsFor)
         {
-            var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, cancellationToken);
+            var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
             foreach (var curriculumItem in curriculumItems)
             {
                 // A completed activity that matches a curriculum item always counts toward volume
                 // (CountsSoFar). The entrustment level is a separate progression signal: a completion
                 // below the curriculum item's required level still counts as evidence, but only
                 // contributes to MinimumLevelReachedCount when the level is actually met. (T071)
-                var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement, traineeStage);
+                var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement, trainee.Stage);
 
                 var progressSet = _dbContext.Set<CurriculumItemProgress>();
                 var progress = progressSet.Local.SingleOrDefault(
@@ -95,11 +104,19 @@ public sealed class CreditApplier : ICreditApplier
     private async Task<IReadOnlyList<CurriculumItem>> ResolveCurriculumItemsAsync(
         CurriculumItemMatchRule matchRule,
         JsonElement data,
+        TraineeContext trainee,
         CancellationToken cancellationToken)
     {
+        // Every match is confined to the trainee's adopted curriculum version (national core) plus their
+        // own institution's local extras. This prevents credit leaking across curriculum versions or
+        // onto another institution's local items that happen to share an EPA. (T091 phase 4.)
+        var scoped = _dbContext.Set<CurriculumItem>()
+            .Where(entity => entity.CurriculumId == trainee.CurriculumId
+                && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == trainee.InstitutionId));
+
         if (matchRule.CurriculumItemId.HasValue)
         {
-            return await _dbContext.Set<CurriculumItem>()
+            return await scoped
                 .Where(entity => entity.Id == matchRule.CurriculumItemId.Value)
                 .ToListAsync(cancellationToken);
         }
@@ -107,7 +124,7 @@ public sealed class CreditApplier : ICreditApplier
         if (!string.IsNullOrWhiteSpace(matchRule.CurriculumItemField) &&
             TryGetInt32(data, matchRule.CurriculumItemField, out var curriculumItemId))
         {
-            return await _dbContext.Set<CurriculumItem>()
+            return await scoped
                 .Where(entity => entity.Id == curriculumItemId)
                 .ToListAsync(cancellationToken);
         }
@@ -115,7 +132,7 @@ public sealed class CreditApplier : ICreditApplier
         if (!string.IsNullOrWhiteSpace(matchRule.EpaField) &&
             TryGetInt32(data, matchRule.EpaField, out var epaId))
         {
-            return await _dbContext.Set<CurriculumItem>()
+            return await scoped
                 .Where(entity => entity.EpaId == epaId)
                 .ToListAsync(cancellationToken);
         }
@@ -154,14 +171,24 @@ public sealed class CreditApplier : ICreditApplier
         return false;
     }
 
-    private async Task<int?> ResolveTraineeStageAsync(string traineeUserId, CancellationToken cancellationToken)
+    private async Task<TraineeContext?> ResolveTraineeAsync(string traineeUserId, CancellationToken cancellationToken)
     {
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == traineeUserId && p.IsActive, cancellationToken);
 
-        return profile?.GetStage(DateOnly.FromDateTime(DateTime.UtcNow));
+        if (profile is null)
+        {
+            return null;
+        }
+
+        return new TraineeContext(
+            profile.CurriculumId,
+            profile.InstitutionId,
+            profile.GetStage(DateOnly.FromDateTime(DateTime.UtcNow)));
     }
+
+    private sealed record TraineeContext(int CurriculumId, int InstitutionId, int? Stage);
 
     private static HashSet<string> DeserializeCreditedKeys(string json)
     {

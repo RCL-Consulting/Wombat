@@ -74,6 +74,10 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             ?? request.Principal.GetInstitutionId()
             ?? throw new InvalidOperationException("The trainee's institution could not be determined.");
 
+        // The trainee is pinned to the national curriculum version their institution has adopted for
+        // the discipline; admission into a non-adopted version (or discipline) is rejected (T091 phase 4).
+        var adoptionId = await TraineeAdoptionResolver.ResolveAdoptionIdAsync(_dbContext, institutionId, curriculum, cancellationToken);
+
         var expectedCompletionDate = request.ExpectedCompletionDate
             ?? request.ProgrammeStartDate.AddMonths(GetDefaultCompletionMonths(curriculum));
 
@@ -82,6 +86,7 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             UserId = request.UserId,
             InstitutionId = institutionId,
             CurriculumId = curriculum.Id,
+            AdoptionId = adoptionId,
             ProgrammeStartDate = request.ProgrammeStartDate,
             ExpectedCompletionDate = expectedCompletionDate,
             IsActive = true

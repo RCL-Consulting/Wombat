@@ -144,6 +144,74 @@ public sealed class AdmitTraineeCommandHandlerTests
             ]
         });
 
+        // The institution has adopted version 3000 for this discipline — admission is gated on it (T091 phase 4).
+        dbContext.Set<InstitutionCurriculumAdoption>().Add(new InstitutionCurriculumAdoption
+        {
+            Id = 7000,
+            InstitutionId = 10,
+            CurriculumId = 3000,
+            SubSpecialityId = 1000,
+            AdoptedOn = new DateOnly(2026, 1, 1),
+            IsActive = true
+        });
+
         dbContext.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Handle_PinsTraineeToTheInstitutionsActiveAdoption()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var dbContext = new ApplicationDbContext(options);
+        SeedCurriculum(dbContext);
+
+        var userAdministrationService = new Mock<IUserAdministrationService>();
+        userAdministrationService
+            .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserIdentityDetails(
+                "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
+
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+
+        await handler.Handle(
+            new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        var profile = await dbContext.TraineeProfiles.SingleAsync();
+        profile.AdoptionId.Should().Be(7000);
+    }
+
+    [Fact]
+    public async Task Handle_WhenInstitutionHasNotAdoptedTheCurriculum_Throws()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var dbContext = new ApplicationDbContext(options);
+        SeedCurriculum(dbContext);
+
+        // Remove the adoption so the discipline is no longer adopted by the institution.
+        dbContext.Set<InstitutionCurriculumAdoption>().RemoveRange(dbContext.Set<InstitutionCurriculumAdoption>());
+        dbContext.SaveChanges();
+
+        var userAdministrationService = new Mock<IUserAdministrationService>();
+        userAdministrationService
+            .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserIdentityDetails(
+                "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
+
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+
+        var act = () => handler.Handle(
+            new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not adopted a curriculum*");
+        dbContext.TraineeProfiles.Should().BeEmpty();
     }
 }

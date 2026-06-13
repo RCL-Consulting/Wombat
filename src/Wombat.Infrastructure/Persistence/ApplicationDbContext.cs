@@ -30,6 +30,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<WombatIdentityUserSubSpecialityScope> UserSubSpecialityScopes => Set<WombatIdentityUserSubSpecialityScope>();
     public DbSet<College> Colleges => Set<College>();
     public DbSet<Institution> Institutions => Set<Institution>();
+    public DbSet<InstitutionCurriculumAdoption> InstitutionCurriculumAdoptions => Set<InstitutionCurriculumAdoption>();
     public DbSet<Speciality> Specialities => Set<Speciality>();
     public DbSet<SubSpeciality> SubSpecialities => Set<SubSpeciality>();
     public DbSet<Epa> Epas => Set<Epa>();

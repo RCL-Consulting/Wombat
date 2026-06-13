@@ -74,9 +74,8 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
 
         if (!request.Principal.IsAdministrator())
         {
-            // National EPAs are visible to the owning College's CollegeAdmin and to any InstitutionalAdmin
-            // (they adopt the national catalogue; adoption narrowing arrives in phase 4). An InstitutionalAdmin
-            // also sees their own institution-local extras. (T091 phase 3.)
+            // CollegeAdmin sees the national EPAs they govern. An InstitutionalAdmin sees the national EPAs
+            // in the disciplines their institution has actively adopted, plus their own local extras. (T091.)
             var scopedCollegeId = request.Principal.GetCollegeId();
             var scopedInstitutionId = request.Principal.GetInstitutionId();
             if (!scopedCollegeId.HasValue && !scopedInstitutionId.HasValue)
@@ -84,9 +83,21 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
                 return Array.Empty<EpaDto>();
             }
 
+            List<int> adoptedSubSpecialityIds = [];
+            if (!scopedCollegeId.HasValue && scopedInstitutionId.HasValue)
+            {
+                adoptedSubSpecialityIds = await _dbContext.Set<Wombat.Domain.Institutions.InstitutionCurriculumAdoption>()
+                    .Where(adoption => adoption.IsActive && adoption.InstitutionId == scopedInstitutionId.Value)
+                    .Select(adoption => adoption.SubSpecialityId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+            }
+
             query = query.Where(entity =>
                 (entity.OwningInstitutionId == null &&
-                    (scopedCollegeId == null || entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value)) ||
+                    (scopedCollegeId != null
+                        ? entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value
+                        : adoptedSubSpecialityIds.Contains(entity.SubSpecialityId))) ||
                 (scopedInstitutionId != null && entity.OwningInstitutionId == scopedInstitutionId.Value));
         }
 

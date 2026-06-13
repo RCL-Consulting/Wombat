@@ -24,5 +24,11 @@ public sealed class TraineeProfileConfiguration : IEntityTypeConfiguration<Train
             .WithMany()
             .HasForeignKey(profile => profile.InstitutionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Pins the trainee to the national curriculum version their institution adopted (T091 phase 4).
+        builder.HasOne<InstitutionCurriculumAdoption>()
+            .WithMany()
+            .HasForeignKey(profile => profile.AdoptionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

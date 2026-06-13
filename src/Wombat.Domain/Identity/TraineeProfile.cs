@@ -15,6 +15,15 @@ public sealed class TraineeProfile
     /// </summary>
     public int InstitutionId { get; set; }
     public int CurriculumId { get; set; }
+
+    /// <summary>
+    /// The institution's adoption record that pins this trainee to the national curriculum version
+    /// they follow (see <see cref="Wombat.Domain.Institutions.InstitutionCurriculumAdoption"/>).
+    /// Nullable for profiles created before T091 phase 4; new admissions always set it. The pinned
+    /// version equals <see cref="CurriculumId"/> at admission time even though the institution may
+    /// later re-adopt a newer version for future trainees.
+    /// </summary>
+    public int? AdoptionId { get; set; }
     public DateOnly ProgrammeStartDate { get; set; }
     public DateOnly ExpectedCompletionDate { get; set; }
     public bool IsActive { get; set; } = true;

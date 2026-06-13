@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Curricula;
 
@@ -26,12 +27,28 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
         if (!request.Principal.IsAdministrator())
         {
             var scopedCollegeId = request.Principal.GetCollegeId();
-            if (!scopedCollegeId.HasValue)
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+
+            if (scopedCollegeId.HasValue)
+            {
+                // CollegeAdmin: the national catalogue they govern.
+                query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
+            }
+            else if (scopedInstitutionId.HasValue)
+            {
+                // InstitutionalAdmin: only the national versions their institution has actively adopted —
+                // the versions they may admit trainees into (T091 phase 4).
+                var adoptedCurriculumIds = await _dbContext.Set<InstitutionCurriculumAdoption>()
+                    .Where(adoption => adoption.IsActive && adoption.InstitutionId == scopedInstitutionId.Value)
+                    .Select(adoption => adoption.CurriculumId)
+                    .ToListAsync(cancellationToken);
+
+                query = query.Where(entity => adoptedCurriculumIds.Contains(entity.Id));
+            }
+            else
             {
                 return Array.Empty<CurriculumDto>();
             }
-
-            query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
         }
 
         return await query

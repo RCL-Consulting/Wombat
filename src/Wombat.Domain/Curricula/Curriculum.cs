@@ -25,7 +25,11 @@ public sealed class Curriculum
             EffectiveFrom = effectiveFrom,
             EffectiveTo = effectiveTo,
             IsActive = true,
+            // Clone only the national core (OwningInstitutionId == null). Institution-local extras
+            // belong to the institution, not the College's published version, and stay pinned to the
+            // version they were added on; institutions re-add their extras after re-adopting (T091).
             Items = Items
+                .Where(item => item.OwningInstitutionId is null)
                 .OrderBy(item => item.Id)
                 .Select(item => new CurriculumItem
                 {
@@ -33,7 +37,8 @@ public sealed class Curriculum
                     RequiredCount = item.RequiredCount,
                     MinimumLevelOrder = item.MinimumLevelOrder,
                     WindowMonths = item.WindowMonths,
-                    Weight = item.Weight
+                    Weight = item.Weight,
+                    MinimumLevelByStageJson = item.MinimumLevelByStageJson
                 })
                 .ToList()
         };
