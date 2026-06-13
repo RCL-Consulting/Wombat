@@ -2,7 +2,56 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 P1–P3 DONE; T090 + T089 shipped; P4 next
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 (adoption + versioning) DONE**; P5 next
+
+**Shipped T091 Phase 4** — the version-pinned adoption layer. Institutions now adopt national
+(College-owned) curriculum *versions* explicitly; trainees and curriculum credit are pinned to the
+adopted version (the CMSA model). One code commit on `master` (**nothing pushed**).
+
+**Committed (`c592556`, master, unpushed):**
+- **Domain** — new `InstitutionCurriculumAdoption` (Institution adopts a national `Curriculum` version
+  per discipline; **partial unique index = one active adoption per institution+sub-speciality**; all FKs
+  Restrict). `TraineeProfile.AdoptionId` pins the trainee to the adopted version (nullable; new admissions
+  always set it). `Curriculum.CloneAsNewVersion` now clones **only national-core items** (skips local
+  extras, which stay pinned to their version) and **preserves stage-level JSON** (was dropping it — latent bug).
+- **Application** — `Features/Adoptions`: `AdoptCurriculum` (adopt/re-adopt; re-adoption supersedes the
+  current active record for that discipline) + `ListAdoptions` (Administrator any/all; InstitutionalAdmin
+  own-institution only) + DTO/mappings. `AdmitTrainee`/`UpdateTraineeProfile` resolve & **require** the
+  institution's active adoption for the chosen version (**hard gate** via `TraineeAdoptionResolver` —
+  admission into a non-adopted version/discipline is rejected). `GetCurricula`/`GetEpas` narrowed for
+  InstitutionalAdmin to **adopted-only** (this also fixes the **previously-empty** trainee-admit curriculum
+  dropdown for InstitutionalAdmins — they had no College claim so saw nothing).
+- **Infrastructure** — `CreditApplier` now resolves the active trainee profile and **scopes every
+  curriculum-item match** to that trainee's adopted curriculum version **+ own-institution local extras**
+  (no credit leak across versions or onto another institution's local items sharing an EPA); returns nothing
+  when there is no active trainee profile. EF config + DbSet + TraineeProfile FK; migration
+  `T091_CurriculumAdoption` (fresh-DB).
+- **+9 tests.** Unit suites green: **Domain 50, Application 298, Architecture 19, Web 43, Infrastructure 10.**
+  Integration NOT run (Docker). Production code (`Wombat.Web`, transitively all src) builds **clean in Release**.
+
+**⚠️ Pre-existing, NOT mine, blocks only `dotnet build Wombat.sln -c Release`:** a nullable warning-as-error
+in `tests/.../CompleteTraineeProfileCommandHandlerTests.cs:43` (`m.Tags.Contains(...)`, `Tags` possibly null).
+Untouched by P4; all unit suites pass in Debug and production src is clean in Release. Trivial one-char fix
+(`m.Tags!.Contains` / `?.Contains(...) == true`) — sweep it whenever, or fold into P6 test work.
+
+**⚠️ EF CLI gotcha learned this session:** `dotnet ef migrations add/remove --no-build` used a **stale**
+assembly → produced an EMPTY migration, and the follow-up `remove --no-build` then deleted the **wrong**
+(committed P3) migration + reverted the snapshot. Recovered via `git checkout` of the committed migration
+files + snapshot. **Always run `dotnet ef migrations add` WITHOUT `--no-build`** (let it rebuild) so the model
+reflects current code.
+
+**▶ Next: P5 — Web surfaces.** College admin pages (Administrator manages Colleges); national EPA/curriculum
+authoring surfaced to CollegeAdmin; **institution adoption pages** (InstitutionalAdmin adopts/re-adopts via
+`AdoptCurriculum`/`ListAdoptions`, manages local extras); add College display columns to the admin
+EPA/curriculum/speciality lists; nav updates. NOTE: until P5 ships the adoption UI, an InstitutionalAdmin has
+no way to create an adoption, so their trainee-admit dropdown stays empty in the live app (Administrator sees
+all) — P5 closes that. Then **P6** scenario rebuild on a fresh DB (national CMSA Paediatrics catalogue + KGK
+adoption) — old `act*-v2-*` snapshots are invalid under the new schema. **Opus** recommended for P5/P6 (auth +
+UI wiring + migration/scenario correctness). DB must be rebuilt fresh.
+
+---
+
+## (superseded) 2026-06-13 earlier — T091 P1–P3 DONE; T090 + T089 shipped
 
 **Long, productive session.** Shipped T090 (user-admin scope-leak fix) + T089 (branding/Fraunces wordmark),
 then drove the **T091 national EPA/curriculum redesign through Phases 1–3** (College ownership + local extras),

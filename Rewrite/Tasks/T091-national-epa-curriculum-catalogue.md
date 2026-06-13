@@ -1,6 +1,6 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** IN PROGRESS — Phase 1 (foundation) + Phase 2 (re-parent) DONE & committed; Phases 3–6 remain.
+**Status:** IN PROGRESS — Phases 1–4 DONE & committed; Phases 5–6 remain.
 
 **Progress:**
 - ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
@@ -13,8 +13,21 @@
   Architecture 19, Web 43, Infrastructure 10). Provisional/Phase-4-deferred bits flagged inline:
   InstitutionalAdmin sees the whole national EPA/curriculum catalogue (no adoption narrowing yet);
   speciality-scoped DecisionPanels now carry their own InstitutionId.
-- ⏳ **P3** local-extras (OwningInstitutionId), **P4** adoption + versioning, **P5** Web surfaces (College
-  admin + adoption + College display), **P6** tests + scenario rebuild — still to do.
+- ✅ **P3** (`03fad97` additive + `2714f11` logic) — local extras: nullable `OwningInstitutionId` on `Epa`
+  + `CurriculumItem`; partial unique indexes; national-vs-local authorization.
+- ✅ **P4** (`c592556`) — adoption + versioning. New `InstitutionCurriculumAdoption` (Institution adopts a
+  national `Curriculum` version per discipline; partial unique index = one active per institution+sub-speciality;
+  all FKs Restrict). `TraineeProfile.AdoptionId` pins the trainee to the adopted version.
+  `Curriculum.CloneAsNewVersion` now clones only national-core items (skips local extras) + preserves stage JSON.
+  `AdoptCurriculum` (adopt/re-adopt — re-adoption supersedes the active record) + `ListAdoptions`
+  (Administrator any/all; InstitutionalAdmin own-only). `AdmitTrainee`/`UpdateTraineeProfile` resolve & **require**
+  the institution's active adoption for the chosen version (hard gate via `TraineeAdoptionResolver`).
+  `CreditApplier` scopes every curriculum-item match to the trainee's adopted curriculum version + own-institution
+  local extras (no cross-version/cross-institution leak; nothing without an active profile). `GetCurricula`/`GetEpas`
+  narrowed for InstitutionalAdmin to adopted-only (also fixes the previously-empty admit dropdown). Migration
+  `T091_CurriculumAdoption` (fresh-DB). +9 tests. Unit suites green: Domain 50, Application 298, Architecture 19,
+  Web 43, Infrastructure 10.
+- ⏳ **P5** Web surfaces (College admin + adoption pages + College display), **P6** tests + scenario rebuild — still to do.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
 Medicine of South Africa (CMSA)** (e.g. the College of Paediatricians → FCPaed), and
@@ -104,8 +117,9 @@ Trainee:             TraineeProfile.CurriculumId (national version) [+ AdoptionI
 - **P3 — Local-extra discriminators:** `OwningInstitutionId` on Epa + CurriculumItem; uniqueness;
   list queries union national + own-institution-local; guards (national needs CollegeAdmin, local
   needs matching InstitutionalAdmin).
-- **P4 — Adoption + versioning:** `InstitutionCurriculumAdoption` entity/config/migration; adopt /
-  re-adopt flows; trainee linkage; CreditApplier respects adoption + local items.
+- **P4 — Adoption + versioning:** ✅ DONE (`c592556`). `InstitutionCurriculumAdoption` entity/config/migration;
+  adopt / re-adopt flows; trainee linkage (`TraineeProfile.AdoptionId`, hard gate at admission); CreditApplier
+  respects adoption + local items; InstitutionalAdmin catalogue views narrowed to adopted-only.
 - **P5 — Web surfaces:** College admin (Administrator); national EPA/curriculum authoring
   (CollegeAdmin); institution adoption + local-extras pages (InstitutionalAdmin); nav updates.
 - **P6 — Tests + scenario rebuild:** update/extend Application + architecture + Web tests; rebuild
