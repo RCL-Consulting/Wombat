@@ -2,7 +2,49 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5a–c DONE**; P5d + P6 next
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 (a–d) DONE**; only display-columns polish + P6 left
+
+**Long session — shipped T091 Phase 4 (adoption + versioning) and all of Phase 5 (Web surfaces, a–d).** Eight
+code commits + docs on `master` (**nothing pushed**; master is far ahead of origin — pushing is the standing item).
+All unit suites green; **full solution builds clean in Release** (0 warnings).
+
+**Latest add — `bfa4ca4` P5d (Speciality/SubSpeciality re-routed under College):** specialities are College-owned
+(P2) but the admin UI was still institution-routed and the **create-speciality flow was broken** (passed
+InstitutionId where CollegeId is expected). Now: new `GetSpecialityByIdQuery` (clean lookup, CanAccessCollege,
+404-not-403) replacing the institution-scanning hack; Speciality pages at `/admin/colleges/{CollegeId}/specialities`;
+pages → `AdministratorOrCollegeAdmin`; `/admin/specialities` redirect resolves the CollegeAdmin's college;
+CollegesList Specialities drill-in + CollegeAdmin Specialities nav; dead institution→speciality links removed.
+
+**Earlier this session:** `c592556` **P4** (adoption + versioning — `InstitutionCurriculumAdoption`,
+`TraineeProfile.AdoptionId`, adopt/re-adopt, admission hard-gate, CreditApplier scoping, narrowed catalogue views,
+migration `T091_CurriculumAdoption`); `b9da54c` fixed a pre-existing CS8604 (Release build); `28a3cec` **P5a**
+(College admin CRUD + pages); `889f8ba` **P5b** (adoption page — closes the InstitutionalAdmin-can't-admit gap);
+`daeadb8` **P5c** (`NationalCatalogueAccess` policy + CollegeAdmin/Administrator catalogue nav).
+
+**Tests:** Domain 50, **Application 304**, Architecture 19, Web 43, Infrastructure 10 — all green. Integration NOT
+run (Docker). ~16 tests added this session.
+
+**▶ Next: optional P5e polish, then P6.**
+- **P5e (optional, deferred):** College display columns on the admin EPA + curriculum lists — add `CollegeName`
+  to `EpaDto`/`CurriculumDto` and update every construction site (GetEpas x2, CreateEpa, UpdateEpa, GetCurricula
+  x2, `CurriculumMappings.ToDto`, CloneCurriculum, ManageCurriculumItems). Pure display; wide blast radius —
+  skip or fold into P6.
+- **P6 — scenario rebuild on a fresh DB:** national CMSA Paediatrics catalogue (College → Speciality →
+  SubSpeciality → EPAs + curriculum, authored as CollegeAdmin/Administrator), **KGK adopts it** via
+  `/admin/adoptions`, then admit trainees (now gated on adoption) and replay Acts 1–5. **Old `act*-v2-*` snapshots
+  are invalid** under the new schema — DB must be rebuilt fresh. **Opus** recommended.
+
+**End-to-end flow now wired in the app:** Administrator creates a College → its Specialities/SubSpecialities → a
+CollegeAdmin (or Administrator) authors national EPAs + a curriculum → an InstitutionalAdmin adopts that curriculum
+version at `/admin/adoptions` → trainees are admitted into the adopted version (hard-gated) → activities credit only
+against the adopted version + own-institution local extras.
+
+**⚠️ EF CLI gotcha (still relevant):** run `dotnet ef migrations add` **without `--no-build`** (stale-assembly
+empty migration + wrong-migration deletion bit me this session; recovered via `git checkout`).
+
+---
+
+## (superseded) 2026-06-13 — T091 **P4 + P5a–c DONE**
 
 **Long session — shipped T091 Phase 4 (adoption + versioning) and Phase 5a–c (Web surfaces).** Six commits
 on `master` (**nothing pushed**; master is far ahead of origin — pushing is still the standing item). All unit

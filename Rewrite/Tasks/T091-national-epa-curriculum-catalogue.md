@@ -1,7 +1,7 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** IN PROGRESS — Phases 1–4 + P5a–P5c DONE & committed; P5d (Speciality re-routing + College
-display columns) + Phase 6 remain.
+**Status:** IN PROGRESS — Phases 1–4 + P5a–P5d DONE & committed; only the optional **College display
+columns** polish + **Phase 6** (scenario rebuild) remain.
 
 **Progress:**
 - ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
@@ -36,12 +36,16 @@ display columns) + Phase 6 remain.
     previously-empty trainee-admit dropdown. InstitutionalAdmin nav: Curriculum Adoptions (Specialities removed).
   - **P5c** (`daeadb8`) — `NationalCatalogueAccess` policy (Admin+CollegeAdmin+InstitutionalAdmin) on the
     EPA/curriculum list+edit pages; new CollegeAdmin nav section (EPAs, Curricula); Administrator EPAs/Curricula links.
-  - ⏳ **P5d (remaining):** Speciality/SubSpeciality UI is still institution-routed
-    (`/admin/institutions/{id}/specialities`) — wrong post-P2 (specialities are College-owned). Re-route under
-    College (`/admin/colleges/{id}/specialities`), add a College picker to SpecialityEdit, a CollegeAdmin
-    Specialities nav link, and a GetSpecialitiesForCollege query. Plus **College display columns** on the EPA/
-    curriculum admin lists (needs CollegeName on EpaDto/CurriculumDto + projection updates).
-- ⏳ **P6** tests + scenario rebuild — still to do.
+  - **P5d** (`bfa4ca4`) — re-routed Speciality/SubSpeciality admin under College
+    (`/admin/colleges/{CollegeId}/specialities[/{id}|new]`); new `GetSpecialityByIdQuery` (replaces the
+    institution-scanning hack); pages → `AdministratorOrCollegeAdmin`; `/admin/specialities` redirect resolves
+    the CollegeAdmin's college; CollegesList Specialities drill-in + CollegeAdmin Specialities nav; removed dead
+    institution→speciality links. Fixed the broken create-speciality flow (was passing InstitutionId as CollegeId). +1 test.
+  - ⏳ **P5e (optional polish, deferred):** **College display columns** on the admin EPA + curriculum lists —
+    add `CollegeName` to `EpaDto`/`CurriculumDto` and update every projection/`ToDto`/create-update return
+    (GetEpas x2, CreateEpa, UpdateEpa, GetCurricula x2, CurriculumMappings.ToDto, CloneCurriculum,
+    ManageCurriculumItems). Pure display; wide blast radius — defer or fold into P6.
+- ⏳ **P6** scenario rebuild on a fresh DB + test additions — still to do.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
 Medicine of South Africa (CMSA)** (e.g. the College of Paediatricians → FCPaed), and
@@ -134,10 +138,10 @@ Trainee:             TraineeProfile.CurriculumId (national version) [+ AdoptionI
 - **P4 — Adoption + versioning:** ✅ DONE (`c592556`). `InstitutionCurriculumAdoption` entity/config/migration;
   adopt / re-adopt flows; trainee linkage (`TraineeProfile.AdoptionId`, hard gate at admission); CreditApplier
   respects adoption + local items; InstitutionalAdmin catalogue views narrowed to adopted-only.
-- **P5 — Web surfaces:** ◑ P5a–c DONE (`28a3cec`/`889f8ba`/`daeadb8`) — College admin (Administrator);
+- **P5 — Web surfaces:** ✅ P5a–d DONE (`28a3cec`/`889f8ba`/`daeadb8`/`bfa4ca4`) — College admin (Administrator);
   adoption page (InstitutionalAdmin); national EPA/curriculum authoring surfaced to CollegeAdmin via the
-  `NationalCatalogueAccess` policy + nav. ⏳ P5d remaining — Speciality/SubSpeciality College re-routing +
-  College display columns on the catalogue lists.
+  `NationalCatalogueAccess` policy + nav; Speciality/SubSpeciality re-routed under College. ⏳ Only the optional
+  College display columns (P5e) remain.
 - **P6 — Tests + scenario rebuild:** update/extend Application + architecture + Web tests; rebuild
   `scenario-paediatrics.md` Act 1 setup on a fresh DB (national CMSA Paediatrics catalogue + KGK
   adoption); re-bank snapshots. Old `act*-v2-*` snapshots become invalid for the new schema.
