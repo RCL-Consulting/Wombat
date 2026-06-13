@@ -1,6 +1,8 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** IN PROGRESS — Phases 1–5 DONE & committed; only **Phase 6** (scenario rebuild on a fresh DB) remains.
+**Status:** IN PROGRESS — Phases 1–5 DONE & committed; **P6 fresh-DB validation DONE** (schema + new surfaces
+proven end-to-end via the UI; seeder fixed; snapshot `t091-fresh-setup` banked). Remaining: the full realistic
+**Acts 1–5 narrative replay** (Paediatrics, 15 EPAs, onboarding → activities → committee → graduation).
 
 **Progress:**
 - ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
@@ -44,7 +46,20 @@
     construction site (GetEpas x2, CreateEpa, UpdateEpa, GetCurricula x2, CreateCurriculum,
     `CurriculumMappings.ToDto` + 5 callers; `LoadCurriculumAsync` now includes College). EpasList/CurriculaList
     placeholder "Institution —" column replaced by a real "College" column.
-- ⏳ **P6** scenario rebuild on a fresh DB + test additions — still to do.
+- ◑ **P6** scenario rebuild on a fresh DB — **validation pass DONE** (see below); full narrative replay remains.
+  - Dropped + recreated `wombat_t002_verify` empty → app boot applied the **entire migration chain cleanly**
+    (incl. all T091 migrations) and seeded. **Fix shipped (`220a909`):** `DevUserSeeder` never set the
+    new `TraineeProfile.InstitutionId` (P2 FK) → fresh boot crashed (exit 82, FK violation); now set from DEMO.
+  - DB-verified the seed builds the College chain: Demo College → General Medicine (CollegeId set) →
+    SubSpeciality → IM curriculum; trainee profile seeds.
+  - **UI-validated end-to-end (Playwright, admin@wombat.local):** `/admin/colleges` lists the College;
+    `/admin/colleges/1/specialities` (P5d re-route) shows "College: Demo College"; `/admin/adoptions` (Administrator
+    institution picker → adoptable-curricula picker from `GetAdoptableCurricula`) **adopted** the IM curriculum →
+    "Curriculum adopted." + active row, **DB-verified** (`InstitutionCurriculumAdoptions` Id 1, active);
+    `/admin/curricula` shows the new **College column** (P5e).
+  - Snapshot **`t091-fresh-setup`** banked (clean post-validation state; one adoption present).
+  - ⏳ Remaining: rebuild the realistic Paediatrics scenario (national College of Paediatricians, 15 EPAs +
+    curriculum, KGK adopts, onboarding, activities/credit, committee/STARs, graduation) and re-bank per-act snapshots.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
 Medicine of South Africa (CMSA)** (e.g. the College of Paediatricians → FCPaed), and

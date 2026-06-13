@@ -2,7 +2,45 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 (a–e) DONE**; only P6 (scenario rebuild) left
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 DONE + P6 fresh-DB validation DONE**; full narrative replay remains
+
+**Very long session.** Shipped T091 **Phase 4** (adoption + versioning), all of **Phase 5** (Web surfaces a–e),
+and a **P6 fresh-DB validation pass** that proves the whole redesign works from scratch in the running app. 13
+commits + docs on `master` (**nothing pushed**; master far ahead of origin — pushing is the standing item).
+
+**P6 validation (this session's finale) — fresh DB, UI-driven, DB-verified:**
+- Dropped + recreated `wombat_t002_verify` empty → startup applied the **entire migration chain cleanly** (incl.
+  all T091 migrations: AddCollege, ReparentSpecialityToCollege, LocalExtraDiscriminators, CurriculumAdoption) and seeded.
+- **Fix shipped (`220a909`):** `DevUserSeeder` never set the new `TraineeProfile.InstitutionId` (P2 FK) → fresh
+  boot crashed (exit 82, FK violation). Now set from the DEMO institution; `AdoptionId` left null (dev seed bypasses
+  the admit gate; CreditApplier scopes by CurriculumId + InstitutionId).
+- DB-verified seed: Demo College → General Medicine (CollegeId set) → SubSpeciality → IM curriculum + trainee profile.
+- **UI-validated (Playwright, admin@wombat.local / ChangeThisAdmin123!):** `/admin/colleges` lists the College;
+  `/admin/colleges/1/specialities` (P5d) shows "College: Demo College"; **`/admin/adoptions`** (Administrator picks
+  Demo Institution → adoptable-curricula picker → **adopted IM Core Curriculum**) → "Curriculum adopted." + active
+  row, **DB-verified** (`InstitutionCurriculumAdoptions` Id 1, active); `/admin/curricula` shows the new **College**
+  column (P5e). **Dev server STOPPED; browser left open.**
+- Snapshot **`t091-fresh-setup`** banked (clean validated state; one adoption present). Old `act*-v2-*` snapshots
+  remain invalid under the new schema.
+
+**▶ Next: the full realistic Acts 1–5 narrative replay** on the new schema (its own focused Opus session). Build the
+national **College of Paediatricians** → Paediatrics → General Paed → 15 EPAs + curriculum (as Administrator/CollegeAdmin),
+create **KGK** institution + Mbatha (InstitutionalAdmin), **KGK adopts** the curriculum via `/admin/adoptions`, then
+onboard trainees (now **gated on adoption** — admit only into the adopted version), run activities/credit, committee/STARs,
+graduation; re-bank per-act snapshots. Restore `t091-fresh-setup` (or drop/recreate empty) to start. **Watch:** trainee
+admission requires an active adoption; the InstitutionalAdmin curriculum dropdown shows only adopted versions.
+
+**Tests:** Domain 50, **Application 304**, Architecture 19, Web 43, Infrastructure 10 — all green. Integration NOT
+run (needs Docker). Full solution builds clean in Release (0 warnings).
+
+**⚠️ Tooling reminders:** dev server via the **PowerShell** tool (`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`,
+run in background); **stop it before** `dotnet test`/`build`/`db-snapshot take|restore`; `psql` at
+`C:\Program Files\PostgreSQL\16\bin\psql.exe` (solo calls, ASCII here-strings); `AuditEntries` append-only. **EF CLI:**
+run `dotnet ef migrations add` **without `--no-build`** (stale-assembly empty/wrong-migration hazard).
+
+---
+
+## (superseded) 2026-06-13 — T091 **P4 + P5 (a–e) DONE**; P6 next
 
 **Long session — shipped T091 Phase 4 (adoption + versioning) and all of Phase 5 (Web surfaces, a–e).** Eleven
 code commits + docs on `master` (**nothing pushed**; master is far ahead of origin — pushing is the standing item).
