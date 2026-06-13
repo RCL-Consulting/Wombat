@@ -2,7 +2,52 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 (adoption + versioning) DONE**; P5 next
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5a–c DONE**; P5d + P6 next
+
+**Long session — shipped T091 Phase 4 (adoption + versioning) and Phase 5a–c (Web surfaces).** Six commits
+on `master` (**nothing pushed**; master is far ahead of origin — pushing is still the standing item). All unit
+suites green and the **full solution builds clean in Release** (0 warnings — the pre-existing `Tags` nit is fixed).
+
+**Commits this session (master, unpushed):**
+- **`c592556` — P4 (adoption + versioning).** `InstitutionCurriculumAdoption` (one active per institution+
+  sub-speciality, partial unique index); `TraineeProfile.AdoptionId`; `Curriculum.CloneAsNewVersion` clones only
+  national-core items + preserves stage JSON. `AdoptCurriculum`/`ListAdoptions`. `AdmitTrainee`/`UpdateTraineeProfile`
+  **hard-gate** on the institution's active adoption. `CreditApplier` scopes credit to the trainee's adopted version
+  + own-institution local extras. `GetCurricula`/`GetEpas` narrowed for InstitutionalAdmin to adopted-only. Migration
+  `T091_CurriculumAdoption`. (Full detail in the superseded section below.)
+- **`b9da54c`** — fixed a pre-existing CS8604 (`EmailMessage.Tags` null) that broke `dotnet build -c Release`.
+- **`28a3cec` — P5a (College admin).** `Features/Colleges` CRUD (Administrator-only create/update/deactivate;
+  list/by-id allow CollegeAdmin own); `/admin/colleges` list + edit pages; Administrator nav link.
+- **`889f8ba` — P5b (adoption page).** `GetAdoptableCurricula` (shared active national catalogue) + `/admin/adoptions`
+  (InstitutionalAdmin adopts/re-adopts via their claim; Administrator picks an institution). **This closes the gap
+  where InstitutionalAdmins couldn't admit trainees** (no UI to create an adoption). InstitutionalAdmin nav now has
+  Curriculum Adoptions (the dead Specialities link was removed).
+- **`daeadb8` — P5c (CollegeAdmin authoring surface).** New `NationalCatalogueAccess` policy
+  (Admin+CollegeAdmin+InstitutionalAdmin) on the EPA/curriculum list+edit pages; new CollegeAdmin nav section
+  (EPAs, Curricula); Administrator EPAs/Curricula links.
+
+**Tests:** Domain 50, **Application 303**, Architecture 19, Web 43, Infrastructure 10 — all green. Integration NOT
+run (Docker). +14 tests this session (adoption, College admin, credit-scoping, admit-gate, adoptable-list).
+
+**▶ Next: P5d (finish Web surfaces), then P6.**
+- **P5d** — the **Speciality/SubSpeciality admin UI is still institution-routed** (`/admin/institutions/{id}/specialities`,
+  `GetSpecialitiesForInstitutionQuery`) — semantically wrong post-P2 (specialities are College-owned). Re-route under
+  College (`/admin/colleges/{id}/specialities`), add a **College picker** to `SpecialityEdit`, a CollegeAdmin
+  **Specialities** nav link, and a `GetSpecialitiesForCollege` query. Then **College display columns** on the admin
+  EPA + curriculum lists (add `CollegeName` to `EpaDto`/`CurriculumDto` + update every projection/`ToDto` call site —
+  several: GetEpas x2, GetCurricula x2, CurriculumMappings.ToDto, CloneCurriculum, ManageCurriculumItems).
+- **P6** — scenario rebuild on a **fresh DB**: national CMSA Paediatrics catalogue (College → Speciality →
+  SubSpeciality → EPAs + curriculum), **KGK adopts it** (via `/admin/adoptions`), then admit trainees (now gated on
+  adoption) and replay. Old `act*-v2-*` snapshots are **invalid** under the new schema — DB must be rebuilt. Also fold
+  in any test additions. **Opus** recommended for P5d/P6 (route rework + migration/scenario correctness).
+
+**⚠️ EF CLI gotcha (still relevant):** run `dotnet ef migrations add` **without `--no-build`** — `--no-build` used a
+stale assembly this session, produced an EMPTY migration, and a follow-up `remove --no-build` deleted the wrong
+(committed) migration + reverted the snapshot (recovered via `git checkout`).
+
+---
+
+## (superseded) 2026-06-13 — T091 **P4 (adoption + versioning) DONE**
 
 **Shipped T091 Phase 4** — the version-pinned adoption layer. Institutions now adopt national
 (College-owned) curriculum *versions* explicitly; trainees and curriculum credit are pinned to the

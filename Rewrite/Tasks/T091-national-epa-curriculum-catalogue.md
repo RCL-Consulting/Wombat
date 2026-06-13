@@ -1,6 +1,7 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** IN PROGRESS — Phases 1–4 DONE & committed; Phases 5–6 remain.
+**Status:** IN PROGRESS — Phases 1–4 + P5a–P5c DONE & committed; P5d (Speciality re-routing + College
+display columns) + Phase 6 remain.
 
 **Progress:**
 - ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
@@ -27,7 +28,20 @@
   narrowed for InstitutionalAdmin to adopted-only (also fixes the previously-empty admit dropdown). Migration
   `T091_CurriculumAdoption` (fresh-DB). +9 tests. Unit suites green: Domain 50, Application 298, Architecture 19,
   Web 43, Infrastructure 10.
-- ⏳ **P5** Web surfaces (College admin + adoption pages + College display), **P6** tests + scenario rebuild — still to do.
+- ◑ **P5** Web surfaces — **P5a–c DONE:**
+  - **P5a** (`28a3cec`) — College admin: `Features/Colleges` CRUD (CollegeDto; GetColleges list+by-id;
+    Create/Update/Deactivate, Administrator-only) + `/admin/colleges` list & edit pages + Administrator nav.
+  - **P5b** (`889f8ba`) — adoption page: `GetAdoptableCurricula` (shared active national catalogue) +
+    `/admin/adoptions` (InstitutionalAdmin adopts/re-adopts; Administrator via institution picker). Fixes the
+    previously-empty trainee-admit dropdown. InstitutionalAdmin nav: Curriculum Adoptions (Specialities removed).
+  - **P5c** (`daeadb8`) — `NationalCatalogueAccess` policy (Admin+CollegeAdmin+InstitutionalAdmin) on the
+    EPA/curriculum list+edit pages; new CollegeAdmin nav section (EPAs, Curricula); Administrator EPAs/Curricula links.
+  - ⏳ **P5d (remaining):** Speciality/SubSpeciality UI is still institution-routed
+    (`/admin/institutions/{id}/specialities`) — wrong post-P2 (specialities are College-owned). Re-route under
+    College (`/admin/colleges/{id}/specialities`), add a College picker to SpecialityEdit, a CollegeAdmin
+    Specialities nav link, and a GetSpecialitiesForCollege query. Plus **College display columns** on the EPA/
+    curriculum admin lists (needs CollegeName on EpaDto/CurriculumDto + projection updates).
+- ⏳ **P6** tests + scenario rebuild — still to do.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
 Medicine of South Africa (CMSA)** (e.g. the College of Paediatricians → FCPaed), and
@@ -120,8 +134,10 @@ Trainee:             TraineeProfile.CurriculumId (national version) [+ AdoptionI
 - **P4 — Adoption + versioning:** ✅ DONE (`c592556`). `InstitutionCurriculumAdoption` entity/config/migration;
   adopt / re-adopt flows; trainee linkage (`TraineeProfile.AdoptionId`, hard gate at admission); CreditApplier
   respects adoption + local items; InstitutionalAdmin catalogue views narrowed to adopted-only.
-- **P5 — Web surfaces:** College admin (Administrator); national EPA/curriculum authoring
-  (CollegeAdmin); institution adoption + local-extras pages (InstitutionalAdmin); nav updates.
+- **P5 — Web surfaces:** ◑ P5a–c DONE (`28a3cec`/`889f8ba`/`daeadb8`) — College admin (Administrator);
+  adoption page (InstitutionalAdmin); national EPA/curriculum authoring surfaced to CollegeAdmin via the
+  `NationalCatalogueAccess` policy + nav. ⏳ P5d remaining — Speciality/SubSpeciality College re-routing +
+  College display columns on the catalogue lists.
 - **P6 — Tests + scenario rebuild:** update/extend Application + architecture + Web tests; rebuild
   `scenario-paediatrics.md` Act 1 setup on a fresh DB (national CMSA Paediatrics catalogue + KGK
   adoption); re-bank snapshots. Old `act*-v2-*` snapshots become invalid for the new schema.
