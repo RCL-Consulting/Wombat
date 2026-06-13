@@ -6,6 +6,7 @@ public sealed record CurriculumDto(
     int SubSpecialityId,
     string SpecialityName,
     string SubSpecialityName,
+    string CollegeName,
     string Name,
     string Version,
     DateOnly EffectiveFrom,

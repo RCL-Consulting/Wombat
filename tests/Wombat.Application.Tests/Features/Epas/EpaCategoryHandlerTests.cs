@@ -103,6 +103,7 @@ public sealed class EpaCategoryHandlerTests
     private static void SeedSubSpeciality(ApplicationDbContext db)
     {
         db.Institutions.Add(new Institution { Id = 1, Name = "Hospital" });
+        db.Colleges.Add(new College { Id = 1, Name = "College", ShortCode = "C" });
         db.Specialities.Add(new Speciality { Id = 1, CollegeId = 1, Name = "Spec" });
         db.SubSpecialities.Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "SubSpec" });
         db.SaveChanges();

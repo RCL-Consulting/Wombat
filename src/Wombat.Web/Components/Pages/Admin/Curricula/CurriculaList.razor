@@ -22,7 +22,7 @@
         <tr>
           <th>Name</th>
           <th>Version</th>
-          <th>Institution</th>
+          <th>College</th>
           <th>Speciality</th>
           <th>Sub-speciality</th>
           <th>Effective</th>
@@ -39,8 +39,7 @@
         <tr>
           <td>@curriculum.Name</td>
           <td>@curriculum.Version</td>
-          @* Curricula are national now (T091); College column lands with the Phase 5 admin rework. *@
-          <td>—</td>
+          <td>@curriculum.CollegeName</td>
           <td>@speciality.Name</td>
           <td>@subSpeciality.Name</td>
           <td>@curriculum.EffectiveFrom.ToString("yyyy-MM-dd")</td>

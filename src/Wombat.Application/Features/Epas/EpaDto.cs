@@ -6,6 +6,7 @@ public sealed record EpaDto(
     int Id,
     int SubSpecialityId,
     string SubSpecialityName,
+    string CollegeName,
     string Code,
     string Title,
     string? Description,

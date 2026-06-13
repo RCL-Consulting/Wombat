@@ -89,6 +89,6 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, subSpeciality.SpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, true);
+        return CurriculumMappings.ToDto(curriculum, subSpeciality.SpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true);
     }
 }

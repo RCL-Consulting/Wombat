@@ -59,6 +59,6 @@ public sealed class CloneCurriculumAsNewVersionCommandHandler : IRequestHandler<
         }
 
         clone = await CurriculumMappings.LoadCurriculumAsync(_dbContext, clone.Id, cancellationToken);
-        return CurriculumMappings.ToDto(clone, clone.SubSpeciality.SpecialityId, clone.SubSpeciality.Speciality.Name, clone.SubSpeciality.Name, true);
+        return CurriculumMappings.ToDto(clone, clone.SubSpeciality.SpecialityId, clone.SubSpeciality.Speciality.Name, clone.SubSpeciality.Name, clone.SubSpeciality.Speciality.College.Name, true);
     }
 }

@@ -65,7 +65,7 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
 
         var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => new { entity.Name, entity.Speciality.CollegeId })
+            .Select(entity => new { entity.Name, entity.Speciality.CollegeId, CollegeName = entity.Speciality.College.Name })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
@@ -98,6 +98,6 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("An EPA with the same code already exists for this sub-speciality.", exception);
         }
 
-        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
+        return new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, subSpeciality.CollegeName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn);
     }
 }
