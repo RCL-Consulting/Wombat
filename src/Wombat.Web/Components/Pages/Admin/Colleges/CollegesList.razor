@@ -1,0 +1,65 @@
+@page "/admin/colleges"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Colleges</PageTitle>
+
+<PageHeader Title="Colleges" Subtitle="National governing bodies (CMSA constituent colleges) that own the EPAs and curricula institutions adopt.">
+  <Actions>
+    <a class="btn btn-primary" href="/admin/colleges/new">
+      <Icon Name="plus" />
+      Create college
+    </a>
+  </Actions>
+</PageHeader>
+
+<StatePanel IsLoading="@(_colleges is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_colleges?.Count == 0)" EmptyTitle="No colleges yet" EmptyBody="Create the first college to start defining national specialities, EPAs and curricula.">
+  @if (_colleges is not null)
+  {
+    <DataTable TItem="CollegeDto" Items="_colleges" Caption="Colleges">
+      <HeaderRow>
+        <tr>
+          <th>Name</th>
+          <th>Short code</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="college">
+        <tr>
+          <td>@college.Name</td>
+          <td>@college.ShortCode</td>
+          <td>@college.Description</td>
+          <td>@(college.IsActive ? "Active" : "Inactive")</td>
+          <td>@college.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+          <td>
+            <div class="actions-cell">
+              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}")">Edit</a>
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</StatePanel>
+
+@code {
+  private IReadOnlyList<CollegeDto>? _colleges;
+  private string? _errorMessage;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _colleges = await Sender.Send(new GetCollegesListQuery(authState.User));
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+  }
+}

@@ -1,0 +1,196 @@
+@page "/admin/colleges/new"
+@page "/admin/colleges/{Id:int}"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>@(IsNew ? "Create College" : "Edit College")</PageTitle>
+
+<PageHeader Title="@(IsNew ? "Create college" : "Edit college")" Subtitle="Maintain the national college record that owns specialities, EPAs and curricula.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/colleges">Back to colleges</a>
+  </Actions>
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  <div class="form-container">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="college-edit">
+      <DataAnnotationsValidator />
+      <ValidationSummary class="validation-summary-errors" />
+
+      <div class="form-grid">
+        <FormField Label="Name" InputId="college-name" Required="true">
+          <InputText id="college-name" class="form-control" @bind-Value="_model.Name" />
+          <ValidationMessage For="() => _model.Name" />
+        </FormField>
+
+        <FormField Label="Short code" InputId="college-short-code" Required="true">
+          <InputText id="college-short-code" class="form-control" @bind-Value="_model.ShortCode" />
+          <ValidationMessage For="() => _model.ShortCode" />
+        </FormField>
+
+        <FormField Label="Description" InputId="college-description">
+          <InputTextArea id="college-description" class="form-control" @bind-Value="_model.Description" rows="3" />
+          <ValidationMessage For="() => _model.Description" />
+        </FormField>
+
+        @if (!IsNew)
+        {
+          <FormField Label="Status" InputId="college-active">
+            <div class="form-check">
+              <InputCheckbox id="college-active" class="form-check-input" @bind-Value="_model.IsActive" />
+              <label for="college-active">Active</label>
+            </div>
+          </FormField>
+        }
+      </div>
+
+      <FormActions>
+        <a class="btn btn-outline" href="/admin/colleges">Cancel</a>
+        @if (!IsNew)
+        {
+          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+        }
+        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+      </FormActions>
+    </EditForm>
+  </div>
+</StatePanel>
+
+@code {
+  [Parameter]
+  public int? Id { get; set; }
+
+  private CollegeFormModel _model = new();
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
+
+  private bool IsNew => !Id.HasValue;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+
+    if (IsNew)
+    {
+      _model = new CollegeFormModel { IsActive = true };
+      return;
+    }
+
+    _loading = true;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var college = await Sender.Send(new GetCollegeByIdQuery(Id!.Value, authState.User));
+
+      if (college is null)
+      {
+        Navigation.NavigateTo("/not-found");
+        return;
+      }
+
+      _model = new CollegeFormModel
+      {
+        Name = college.Name,
+        ShortCode = college.ShortCode,
+        Description = college.Description,
+        IsActive = college.IsActive
+      };
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task SaveAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+      if (IsNew)
+      {
+        var created = await Sender.Send(new CreateCollegeCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.Description), authState.User));
+        Navigation.NavigateTo($"/admin/colleges/{created.Id}", forceLoad: true);
+        return;
+      }
+
+      var college = await Sender.Send(new UpdateCollegeCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.Description), _model.IsActive, authState.User));
+      _model.IsActive = college.IsActive;
+      _statusMessage = "College saved.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private async Task DeactivateAsync()
+  {
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeactivateCollegeCommand(Id!.Value, authState.User));
+      _model.IsActive = false;
+      _statusMessage = "College deactivated.";
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+  private sealed class CollegeFormModel
+  {
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(32)]
+    public string ShortCode { get; set; } = string.Empty;
+
+    [StringLength(1000)]
+    public string? Description { get; set; }
+
+    public bool IsActive { get; set; } = true;
+  }
+}
