@@ -15,16 +15,25 @@ extras; per-College `CollegeAdmin` role; explicit version-pinned adoption.
   re-scoped ~35 Application handlers (catalogue→`CanAccessCollege`; trainees/forms/panels/activity-types→direct
   institution); Infra seeders/PDF/reference-data; Web admin pages compile; migration
   `T091_ReparentSpecialityToCollege` (fresh-DB). Scope-guard tests rewritten to college-scoping; `CollegeAdmin`
-  test principal added. **All unit suites green: Domain 50, Application 284, Architecture 19, Web 43, Infrastructure 10.**
+  test principal added.
+- **P3 (`03fad97` additive + `2714f11` logic)** — local extras: nullable `OwningInstitutionId` on `Epa` +
+  `CurriculumItem` (null=national core, set=institution-local); partial unique indexes (national codes per
+  sub-speciality, local per sub-speciality+institution); migration `T091_LocalExtraDiscriminators`. Auth wired:
+  Create EPA / Add curriculum item — CollegeAdmin/Admin author national, InstitutionalAdmin adds local;
+  Update/Deactivate/Remove branch national→`CanAccessCollege` / local→`CanAccessInstitution(owner)` (+ coarse
+  curriculum gate so item existence isn't leaked); list shows national + own-local. +5 tests.
+  **All unit suites green: Domain 50, Application 289, Architecture 19, Web 43, Infrastructure 10.**
 
 **⚠️ Provisional / deferred to later phases (flagged inline with T091 comments):** InstitutionalAdmins see the
 WHOLE national EPA/curriculum catalogue (no adoption narrowing until P4); Web admin pages show no College column
 and don't filter specialities (P5 rework); speciality-scoped DecisionPanels must carry their own InstitutionId.
 **DB must be rebuilt fresh** — old `act*-v2-*` snapshots are invalid under the new schema.
 
-**▶ Next: P3** — local-extras: nullable `OwningInstitutionId` on `Epa` + `CurriculumItem` (null=national core,
-set=institution-local); union national + own-institution-local in list queries; guards (national=CollegeAdmin,
-local=matching InstitutionalAdmin). Then **P4** adoption+versioning, **P5** Web surfaces, **P6** scenario rebuild.
+**▶ Next: P4** — adoption + versioning: new `InstitutionCurriculumAdoption` entity (Institution adopts a
+national Curriculum *version*; AdoptedOn/IsActive; unique active per institution+discipline); adopt/re-adopt
+flows; trainee linkage (TraineeProfile pins to adopted version); CreditApplier honours adoption + local items;
+then narrow the "InstitutionalAdmin sees whole catalogue" provisional bits to adopted-only. Then **P5** Web
+surfaces (College admin + adoption + College display columns), **P6** scenario rebuild on fresh DB.
 **Opus** throughout. Integration tests NOT run (need Docker).
 
 ---
