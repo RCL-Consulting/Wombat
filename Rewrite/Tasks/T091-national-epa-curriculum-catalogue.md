@@ -1,7 +1,6 @@
 # T091 — EPAs/curricula are nationally owned (CMSA), institutions adopt them
 
-**Status:** IN PROGRESS — Phases 1–4 + P5a–P5d DONE & committed; only the optional **College display
-columns** polish + **Phase 6** (scenario rebuild) remain.
+**Status:** IN PROGRESS — Phases 1–5 DONE & committed; only **Phase 6** (scenario rebuild on a fresh DB) remains.
 
 **Progress:**
 - ✅ **P1** (`1c18bda`) — College entity + CollegeAdmin role/claim/policy/scope helpers (additive).
@@ -41,10 +40,10 @@ columns** polish + **Phase 6** (scenario rebuild) remain.
     institution-scanning hack); pages → `AdministratorOrCollegeAdmin`; `/admin/specialities` redirect resolves
     the CollegeAdmin's college; CollegesList Specialities drill-in + CollegeAdmin Specialities nav; removed dead
     institution→speciality links. Fixed the broken create-speciality flow (was passing InstitutionId as CollegeId). +1 test.
-  - ⏳ **P5e (optional polish, deferred):** **College display columns** on the admin EPA + curriculum lists —
-    add `CollegeName` to `EpaDto`/`CurriculumDto` and update every projection/`ToDto`/create-update return
-    (GetEpas x2, CreateEpa, UpdateEpa, GetCurricula x2, CurriculumMappings.ToDto, CloneCurriculum,
-    ManageCurriculumItems). Pure display; wide blast radius — defer or fold into P6.
+  - **P5e** (`5103553`) — College display columns. `EpaDto`/`CurriculumDto` carry `CollegeName`; updated every
+    construction site (GetEpas x2, CreateEpa, UpdateEpa, GetCurricula x2, CreateCurriculum,
+    `CurriculumMappings.ToDto` + 5 callers; `LoadCurriculumAsync` now includes College). EpasList/CurriculaList
+    placeholder "Institution —" column replaced by a real "College" column.
 - ⏳ **P6** scenario rebuild on a fresh DB + test additions — still to do.
 **Surfaced:** 2026-06-10. User confirmed the current ownership model is a **mistake**:
 in South Africa, EPAs and the discipline curriculum are defined by the **Colleges of
@@ -138,10 +137,10 @@ Trainee:             TraineeProfile.CurriculumId (national version) [+ AdoptionI
 - **P4 — Adoption + versioning:** ✅ DONE (`c592556`). `InstitutionCurriculumAdoption` entity/config/migration;
   adopt / re-adopt flows; trainee linkage (`TraineeProfile.AdoptionId`, hard gate at admission); CreditApplier
   respects adoption + local items; InstitutionalAdmin catalogue views narrowed to adopted-only.
-- **P5 — Web surfaces:** ✅ P5a–d DONE (`28a3cec`/`889f8ba`/`daeadb8`/`bfa4ca4`) — College admin (Administrator);
-  adoption page (InstitutionalAdmin); national EPA/curriculum authoring surfaced to CollegeAdmin via the
-  `NationalCatalogueAccess` policy + nav; Speciality/SubSpeciality re-routed under College. ⏳ Only the optional
-  College display columns (P5e) remain.
+- **P5 — Web surfaces:** ✅ DONE (P5a–e: `28a3cec`/`889f8ba`/`daeadb8`/`bfa4ca4`/`5103553`) — College admin
+  (Administrator); adoption page (InstitutionalAdmin); national EPA/curriculum authoring surfaced to CollegeAdmin
+  via the `NationalCatalogueAccess` policy + nav; Speciality/SubSpeciality re-routed under College; College display
+  columns on the EPA/curriculum lists.
 - **P6 — Tests + scenario rebuild:** update/extend Application + architecture + Web tests; rebuild
   `scenario-paediatrics.md` Act 1 setup on a fresh DB (national CMSA Paediatrics catalogue + KGK
   adoption); re-bank snapshots. Old `act*-v2-*` snapshots become invalid for the new schema.

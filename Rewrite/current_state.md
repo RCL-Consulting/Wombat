@@ -2,7 +2,50 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 (a–d) DONE**; only display-columns polish + P6 left
+## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 (a–e) DONE**; only P6 (scenario rebuild) left
+
+**Long session — shipped T091 Phase 4 (adoption + versioning) and all of Phase 5 (Web surfaces, a–e).** Eleven
+code commits + docs on `master` (**nothing pushed**; master is far ahead of origin — pushing is the standing item).
+All unit suites green; **full solution builds clean in Release** (0 warnings).
+
+**Phase 5 is complete.** The full national-catalogue + adoption workflow is now wired end-to-end in the app:
+- **P5a** (`28a3cec`) — College admin CRUD + `/admin/colleges` pages (Administrator).
+- **P5b** (`889f8ba`) — `/admin/adoptions` (InstitutionalAdmin adopts/re-adopts; Administrator via institution
+  picker). Closes the gap where an InstitutionalAdmin couldn't admit trainees.
+- **P5c** (`daeadb8`) — `NationalCatalogueAccess` policy on EPA/curriculum pages + CollegeAdmin/Administrator nav.
+- **P5d** (`bfa4ca4`) — Speciality/SubSpeciality re-routed under College (`/admin/colleges/{id}/specialities`);
+  new `GetSpecialityByIdQuery`; fixed the broken create-speciality flow (was passing InstitutionId as CollegeId).
+- **P5e** (`5103553`) — College display columns: `EpaDto`/`CurriculumDto` carry `CollegeName`; EpasList/CurriculaList
+  show a real College column (was a "—" placeholder).
+
+**Phase 4 (earlier, `c592556`):** `InstitutionCurriculumAdoption` (one active per institution+sub-speciality),
+`TraineeProfile.AdoptionId`, adopt/re-adopt, admission **hard-gate**, `CreditApplier` scoped to the adopted version
++ own-institution local extras, narrowed catalogue views, migration `T091_CurriculumAdoption`. Plus `b9da54c`
+(pre-existing CS8604 Release fix).
+
+**Tests:** Domain 50, **Application 304**, Architecture 19, Web 43, Infrastructure 10 — all green. Integration NOT
+run (Docker). ~17 tests added this session.
+
+**End-to-end flow now in the app:** Administrator creates a College → its Specialities/SubSpecialities → a
+CollegeAdmin (or Administrator) authors national EPAs + a curriculum → an InstitutionalAdmin adopts that curriculum
+version at `/admin/adoptions` → trainees are admitted into the adopted version (hard-gated) → activities credit only
+against the adopted version + own-institution local extras.
+
+**▶ Next: P6 — scenario rebuild on a FRESH DB.** Old `act*-v2-*` snapshots are **invalid** under the new schema
+(College layer, re-parented Speciality, adoption, version-pinned trainees). Rebuild Act-1 setup as: national CMSA
+**College of Paediatricians** → Speciality (Paediatrics) → SubSpeciality (General Paed) → 15 EPAs + curriculum
+(authored as Administrator/CollegeAdmin), then **KGK adopts** the curriculum via `/admin/adoptions`, then admit the
+trainees (now gated on adoption) and replay Acts 1–5; re-bank snapshots. Drive via Playwright + verify in DB.
+Watch: trainee admission now REQUIRES an active adoption for the discipline; the InstitutionalAdmin's curriculum
+dropdown shows only adopted versions. **Opus** recommended (migration/scenario correctness). Integration tests
+need Docker (not on this box).
+
+**⚠️ EF CLI gotcha (still relevant):** run `dotnet ef migrations add` **without `--no-build`** (stale-assembly
+empty migration + wrong-migration deletion bit me this session; recovered via `git checkout`).
+
+---
+
+## (superseded) 2026-06-13 — T091 **P4 + P5a–d DONE**
 
 **Long session — shipped T091 Phase 4 (adoption + versioning) and all of Phase 5 (Web surfaces, a–d).** Eight
 code commits + docs on `master` (**nothing pushed**; master is far ahead of origin — pushing is the standing item).
