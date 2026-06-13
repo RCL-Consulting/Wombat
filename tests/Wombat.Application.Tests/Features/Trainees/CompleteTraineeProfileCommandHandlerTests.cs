@@ -40,7 +40,7 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
         profile.CompletedOn.Should().Be(new DateOnly(2029, 12, 15));
         profile.IsActive.Should().BeFalse();
         users.Verify(s => s.RemoveRoleAsync("trainee-1", WombatRoles.Trainee, It.IsAny<CancellationToken>()), Times.Once);
-        email.Verify(s => s.SendAsync(It.Is<EmailMessage>(m => m.To == "molefe@kgk" && m.Tags.Contains("graduation")), It.IsAny<CancellationToken>()), Times.Once);
+        email.Verify(s => s.SendAsync(It.Is<EmailMessage>(m => m.To == "molefe@kgk" && m.Tags != null && m.Tags.Contains("graduation")), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
