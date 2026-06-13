@@ -94,10 +94,13 @@ public sealed class DevUserSeeder
             _dbContext.TraineeProfiles.Add(new TraineeProfile
             {
                 UserId = existingUser.Id,
+                InstitutionId = institutionId,
                 CurriculumId = curriculumId,
                 ProgrammeStartDate = today,
                 ExpectedCompletionDate = today.AddYears(4),
                 IsActive = true
+                // AdoptionId left null: this dev seed bypasses the AdmitTrainee adoption gate (T091); the
+                // CreditApplier scopes by CurriculumId + InstitutionId, so credit still resolves correctly.
             });
             await _dbContext.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Seeded TraineeProfile for {Email}.", TraineeEmail);
