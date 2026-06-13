@@ -1,6 +1,6 @@
 @page "/admin/epas/new"
 @page "/admin/epas/{Id:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider

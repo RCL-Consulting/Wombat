@@ -1,5 +1,5 @@
 @page "/admin/curricula/{Id:int}/items"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider

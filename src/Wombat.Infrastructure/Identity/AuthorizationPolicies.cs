@@ -15,6 +15,13 @@ public static class AuthorizationPolicies
     public const string AdministratorOrInstitutionalAdmin = nameof(AdministratorOrInstitutionalAdmin);
     public const string AdministratorOrCollegeAdmin = nameof(AdministratorOrCollegeAdmin);
 
+    /// <summary>
+    /// National EPA/curriculum catalogue pages. A CollegeAdmin authors the national core, an
+    /// InstitutionalAdmin views the adopted catalogue and manages institution-local extras, an
+    /// Administrator sees everything. Handlers enforce the fine-grained per-row scope (T091).
+    /// </summary>
+    public const string NationalCatalogueAccess = nameof(NationalCatalogueAccess);
+
     public static IServiceCollection AddWombatAuthorization(this IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationHandler, ScopeClaimRequirementHandler>();
@@ -61,6 +68,9 @@ public static class AuthorizationPolicies
 
             options.AddPolicy(AdministratorOrCollegeAdmin, policy =>
                 policy.RequireRole(WombatRoles.Administrator, WombatRoles.CollegeAdmin));
+
+            options.AddPolicy(NationalCatalogueAccess, policy =>
+                policy.RequireRole(WombatRoles.Administrator, WombatRoles.CollegeAdmin, WombatRoles.InstitutionalAdmin));
         });
 
         return services;
