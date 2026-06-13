@@ -116,7 +116,18 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
+        // A CollegeAdmin/Administrator edits the national core; an InstitutionalAdmin adds an
+        // institution-local item to the (adopted) national curriculum (T091 phase 3).
+        var owningInstitutionId = !request.Principal.IsAdministrator()
+            && !request.Principal.IsCollegeAdmin()
+            && request.Principal.IsInstitutionalAdmin()
+                ? request.Principal.GetInstitutionId()
+                : null;
+
+        var authorized = owningInstitutionId is null
+            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
+            : request.Principal.CanAccessInstitution(owningInstitutionId.Value);
+        if (!authorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
@@ -129,6 +140,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         curriculum.Items.Add(new CurriculumItem
         {
             EpaId = request.EpaId,
+            OwningInstitutionId = owningInstitutionId,
             RequiredCount = request.RequiredCount,
             MinimumLevelOrder = request.MinimumLevelOrder,
             WindowMonths = request.WindowMonths,
@@ -157,7 +169,10 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
+        // Coarse gate (don't leak item existence): only the curriculum's CollegeAdmin or some InstitutionalAdmin
+        // (who may own a local item) may touch it. The fine-grained per-item owner check follows. (T091 phase 3.)
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
+            && !request.Principal.IsInstitutionalAdmin())
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
@@ -166,6 +181,15 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         if (item is null)
         {
             throw new InvalidOperationException("The requested curriculum item was not found.");
+        }
+
+        // National core item -> CollegeAdmin; institution-local item -> the owning InstitutionalAdmin.
+        var authorized = item.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
+            : request.Principal.CanAccessInstitution(item.OwningInstitutionId.Value);
+        if (!authorized)
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
         if (curriculum.Items.Any(entity => entity.Id != request.ItemId && entity.EpaId == request.EpaId))
@@ -201,7 +225,10 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
+        // Coarse gate (don't leak item existence): only the curriculum's CollegeAdmin or some InstitutionalAdmin
+        // (who may own a local item) may touch it. The fine-grained per-item owner check follows. (T091 phase 3.)
+        if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
+            && !request.Principal.IsInstitutionalAdmin())
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
@@ -210,6 +237,15 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         if (item is null)
         {
             throw new InvalidOperationException("The requested curriculum item was not found.");
+        }
+
+        // National core item -> CollegeAdmin; institution-local item -> the owning InstitutionalAdmin.
+        var authorized = item.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
+            : request.Principal.CanAccessInstitution(item.OwningInstitutionId.Value);
+        if (!authorized)
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
         _dbContext.Set<CurriculumItem>().Remove(item);

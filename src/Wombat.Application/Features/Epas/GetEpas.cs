@@ -40,7 +40,11 @@ public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaC
             throw new InvalidOperationException("The requested EPA was not found.");
         }
 
-        if (!request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId))
+        // National EPA -> CollegeAdmin; institution-local extra -> the owning InstitutionalAdmin (T091 phase 3).
+        var authorized = epa.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId)
+            : request.Principal.CanAccessInstitution(epa.OwningInstitutionId.Value);
+        if (!authorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to deactivate this EPA.");
         }
@@ -70,13 +74,20 @@ public sealed class ListEpasForSubSpecialityQueryHandler : IRequestHandler<ListE
 
         if (!request.Principal.IsAdministrator())
         {
+            // National EPAs are visible to the owning College's CollegeAdmin and to any InstitutionalAdmin
+            // (they adopt the national catalogue; adoption narrowing arrives in phase 4). An InstitutionalAdmin
+            // also sees their own institution-local extras. (T091 phase 3.)
             var scopedCollegeId = request.Principal.GetCollegeId();
-            if (!scopedCollegeId.HasValue)
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            if (!scopedCollegeId.HasValue && !scopedInstitutionId.HasValue)
             {
                 return Array.Empty<EpaDto>();
             }
 
-            query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
+            query = query.Where(entity =>
+                (entity.OwningInstitutionId == null &&
+                    (scopedCollegeId == null || entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value)) ||
+                (scopedInstitutionId != null && entity.OwningInstitutionId == scopedInstitutionId.Value));
         }
 
         return await query
@@ -125,7 +136,8 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
                     entity.Category,
                     entity.IsActive,
                     entity.CreatedOn),
-                CollegeId = entity.SubSpeciality.Speciality.CollegeId
+                CollegeId = entity.SubSpeciality.Speciality.CollegeId,
+                entity.OwningInstitutionId
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -134,7 +146,12 @@ public sealed class GetEpaByIdQueryHandler : IRequestHandler<GetEpaByIdQuery, Ep
             return null;
         }
 
-        if (!request.Principal.CanAccessCollege(projection.CollegeId))
+        // National EPA: viewable by the owning College's CollegeAdmin, or any InstitutionalAdmin (they adopt
+        // the national catalogue). Local extra: viewable by the owning InstitutionalAdmin. (T091 phase 3.)
+        var authorized = projection.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(projection.CollegeId) || request.Principal.IsInstitutionalAdmin()
+            : request.Principal.CanAccessInstitution(projection.OwningInstitutionId.Value);
+        if (!authorized)
         {
             return null;
         }

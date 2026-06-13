@@ -54,7 +54,11 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("The requested EPA was not found.");
         }
 
-        if (!request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId))
+        // National EPA -> CollegeAdmin; institution-local extra -> the owning InstitutionalAdmin (T091 phase 3).
+        var authorized = epa.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId)
+            : request.Principal.CanAccessInstitution(epa.OwningInstitutionId.Value);
+        if (!authorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to update this EPA.");
         }
@@ -69,7 +73,10 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
+        var targetAuthorized = epa.OwningInstitutionId is null
+            ? request.Principal.CanAccessCollege(subSpeciality.CollegeId)
+            : request.Principal.CanAccessInstitution(epa.OwningInstitutionId.Value);
+        if (!targetAuthorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to move this EPA to that sub-speciality.");
         }

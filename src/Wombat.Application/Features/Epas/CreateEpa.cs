@@ -63,7 +63,18 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
             throw new InvalidOperationException("The selected sub-speciality was not found.");
         }
 
-        if (!request.Principal.CanAccessCollege(subSpeciality.CollegeId))
+        // A CollegeAdmin/Administrator authors the national core; an InstitutionalAdmin adds an
+        // institution-local extra (T091 phase 3). The owner determines who may later edit it.
+        var owningInstitutionId = !request.Principal.IsAdministrator()
+            && !request.Principal.IsCollegeAdmin()
+            && request.Principal.IsInstitutionalAdmin()
+                ? request.Principal.GetInstitutionId()
+                : null;
+
+        var authorized = owningInstitutionId is null
+            ? request.Principal.CanAccessCollege(subSpeciality.CollegeId)
+            : request.Principal.CanAccessInstitution(owningInstitutionId.Value);
+        if (!authorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to create an EPA in this sub-speciality.");
         }
@@ -71,6 +82,7 @@ public sealed class CreateEpaCommandHandler : IRequestHandler<CreateEpaCommand, 
         var epa = new Epa
         {
             SubSpecialityId = request.SubSpecialityId,
+            OwningInstitutionId = owningInstitutionId,
             Code = request.Code.Trim(),
             Title = request.Title.Trim(),
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
