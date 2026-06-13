@@ -8,6 +8,13 @@ public sealed class CurriculumItem
     public int Id { get; set; }
     public int CurriculumId { get; set; }
     public int EpaId { get; set; }
+
+    /// <summary>
+    /// Null for a national core item (part of the College's published curriculum). Set to an institution id
+    /// for an institution-local addition: an institution may add local items to a national curriculum it has
+    /// adopted, but never edit the national core (T091, phase 3).
+    /// </summary>
+    public int? OwningInstitutionId { get; set; }
     public int RequiredCount { get; set; }
     public int MinimumLevelOrder { get; set; }
     public int WindowMonths { get; set; }
