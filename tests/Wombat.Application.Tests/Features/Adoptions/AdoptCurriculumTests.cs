@@ -97,6 +97,23 @@ public sealed class AdoptCurriculumTests
         otherInstitution.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task GetAdoptableCurricula_ReturnsActiveCatalogue_ForInstitutionalAdmin_ButNotOtherRoles()
+    {
+        await using var dbContext = CreateDbContext();
+        Seed(dbContext);
+        var handler = new GetAdoptableCurriculaQueryHandler(dbContext);
+
+        var forInstitutionalAdmin = await handler.Handle(new GetAdoptableCurriculaQuery(TestPrincipals.InstitutionalAdmin(10)), CancellationToken.None);
+        forInstitutionalAdmin.Should().ContainSingle().Which.CollegeName.Should().Be("College of Physicians");
+
+        var forAdministrator = await handler.Handle(new GetAdoptableCurriculaQuery(TestPrincipals.Administrator()), CancellationToken.None);
+        forAdministrator.Should().ContainSingle();
+
+        var forCollegeAdmin = await handler.Handle(new GetAdoptableCurriculaQuery(TestPrincipals.CollegeAdmin(5)), CancellationToken.None);
+        forCollegeAdmin.Should().BeEmpty();
+    }
+
     private static ApplicationDbContext CreateDbContext()
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())

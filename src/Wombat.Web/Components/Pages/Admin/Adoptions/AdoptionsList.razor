@@ -1,0 +1,184 @@
+@page "/admin/adoptions"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Curriculum adoptions</PageTitle>
+
+<PageHeader Title="Curriculum adoptions" Subtitle="Adopt the national (college-owned) curriculum versions your institution trains against. Trainees can only be admitted into an adopted version.">
+</PageHeader>
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+  <Alert Kind="success">@_statusMessage</Alert>
+}
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+  <Alert Kind="danger">@_errorMessage</Alert>
+}
+
+<StatePanel IsLoading="@(_loading)" IsEmpty="false" EmptyTitle="" EmptyBody="">
+  @if (_isAdministrator)
+  {
+    <div class="form-container">
+      <FormField Label="Institution" InputId="adoption-institution">
+        <select id="adoption-institution" class="form-select" value="@_institutionId" @onchange="OnInstitutionChanged">
+          <option value="">— Select an institution —</option>
+          @foreach (var institution in _institutions)
+          {
+            <option value="@institution.Id">@institution.Name</option>
+          }
+        </select>
+      </FormField>
+    </div>
+  }
+
+  @if (_institutionId.HasValue)
+  {
+    <div class="form-container">
+      <h3>Adopt a curriculum</h3>
+      <div class="form-grid">
+        <FormField Label="National curriculum version" InputId="adoption-curriculum">
+          <select id="adoption-curriculum" class="form-select" @bind="_selectedCurriculumId">
+            <option value="0">— Select a curriculum —</option>
+            @foreach (var curriculum in _adoptable)
+            {
+              <option value="@curriculum.Id">@curriculum.CollegeName — @curriculum.SpecialityName / @curriculum.SubSpecialityName: @curriculum.Name (@curriculum.Version)</option>
+            }
+          </select>
+        </FormField>
+      </div>
+      <FormActions>
+        <button type="button" class="btn btn-primary" @onclick="AdoptAsync" disabled="@(_saving || _selectedCurriculumId == 0)">@(_saving ? "Adopting..." : "Adopt")</button>
+      </FormActions>
+      <p class="page-subtitle">Re-adopting a newer version of a discipline you already follow supersedes the current adoption for that discipline.</p>
+    </div>
+
+    <h3>Current adoptions</h3>
+    @if (_adoptions is { Count: > 0 })
+    {
+      <DataTable TItem="AdoptionDto" Items="_adoptions" Caption="Curriculum adoptions">
+        <HeaderRow>
+          <tr>
+            <th>College</th>
+            <th>Speciality</th>
+            <th>Discipline</th>
+            <th>Curriculum</th>
+            <th>Version</th>
+            <th>Adopted on</th>
+            <th>Status</th>
+          </tr>
+        </HeaderRow>
+        <Row Context="adoption">
+          <tr>
+            <td>@adoption.CollegeName</td>
+            <td>@adoption.SpecialityName</td>
+            <td>@adoption.SubSpecialityName</td>
+            <td>@adoption.CurriculumName</td>
+            <td>@adoption.CurriculumVersion</td>
+            <td>@adoption.AdoptedOn.ToString("yyyy-MM-dd")</td>
+            <td>@(adoption.IsActive ? "Active" : "Superseded")</td>
+          </tr>
+        </Row>
+      </DataTable>
+    }
+    else
+    {
+      <p class="page-subtitle">No curriculum adoptions yet for this institution.</p>
+    }
+  }
+</StatePanel>
+
+@code {
+  private bool _isAdministrator;
+  private int? _institutionId;
+  private int _selectedCurriculumId;
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<AdoptableCurriculumDto> _adoptable = [];
+  private IReadOnlyList<AdoptionDto>? _adoptions;
+  private string? _errorMessage;
+  private string? _statusMessage;
+  private bool _loading;
+  private bool _saving;
+
+  protected override async Task OnInitializedAsync()
+  {
+    _loading = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var user = authState.User;
+      _isAdministrator = user.IsAdministrator();
+
+      _adoptable = await Sender.Send(new GetAdoptableCurriculaQuery(user));
+
+      if (_isAdministrator)
+      {
+        _institutions = await Sender.Send(new GetInstitutionsListQuery(user));
+      }
+      else
+      {
+        _institutionId = user.GetInstitutionId();
+        if (_institutionId.HasValue)
+        {
+          await LoadAdoptionsAsync();
+        }
+      }
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task OnInstitutionChanged(ChangeEventArgs args)
+  {
+    _statusMessage = null;
+    _errorMessage = null;
+    _institutionId = int.TryParse(args.Value?.ToString(), out var parsed) && parsed > 0 ? parsed : null;
+    _adoptions = null;
+    if (_institutionId.HasValue)
+    {
+      await LoadAdoptionsAsync();
+    }
+  }
+
+  private async Task LoadAdoptionsAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _adoptions = await Sender.Send(new ListAdoptionsQuery(_institutionId, authState.User));
+  }
+
+  private async Task AdoptAsync()
+  {
+    if (!_institutionId.HasValue || _selectedCurriculumId == 0)
+    {
+      return;
+    }
+
+    _saving = true;
+    _errorMessage = null;
+    _statusMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new AdoptCurriculumCommand(_institutionId.Value, _selectedCurriculumId, authState.User));
+      _statusMessage = "Curriculum adopted.";
+      _selectedCurriculumId = 0;
+      await LoadAdoptionsAsync();
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+}
