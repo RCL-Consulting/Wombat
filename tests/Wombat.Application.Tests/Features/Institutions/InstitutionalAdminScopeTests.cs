@@ -64,6 +64,19 @@ public sealed class InstitutionalAdminScopeTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         _collegeASubSpecialityId = subSpecialityA.Id;
+
+        // Institution A has adopted College A's discipline (Sub A). Institution B has adopted nothing.
+        // This is what makes College A's national speciality/sub-speciality visible to Institution A's
+        // InstitutionalAdmin (T092). CurriculumId is not navigated by the queries under test.
+        _dbContext.Set<InstitutionCurriculumAdoption>().Add(new InstitutionCurriculumAdoption
+        {
+            InstitutionId = institutionA.Id,
+            CurriculumId = 1,
+            SubSpecialityId = subSpecialityA.Id,
+            AdoptedOn = new DateOnly(2026, 1, 15),
+            IsActive = true
+        });
+        await _dbContext.SaveChangesAsync();
     }
 
     public Task DisposeAsync()
@@ -120,6 +133,46 @@ public sealed class InstitutionalAdminScopeTests : IAsyncLifetime
             new GetSubSpecialitiesListQuery(TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
         result.Should().ContainSingle().Which.Id.Should().Be(_collegeASubSpecialityId);
+    }
+
+    [Fact]
+    public async Task GetSpecialitiesList_InstitutionalAdmin_SeesAdoptedDisciplineSpecialities()
+    {
+        var handler = new GetSpecialitiesListQueryHandler(_dbContext);
+        var result = await handler.Handle(
+            new GetSpecialitiesListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            CancellationToken.None);
+        result.Should().ContainSingle().Which.Id.Should().Be(_collegeASpecialityId);
+    }
+
+    [Fact]
+    public async Task GetSpecialitiesList_InstitutionalAdmin_NoAdoption_SeesEmpty()
+    {
+        var handler = new GetSpecialitiesListQueryHandler(_dbContext);
+        var result = await handler.Handle(
+            new GetSpecialitiesListQuery(TestPrincipals.InstitutionalAdmin(_institutionBId)),
+            CancellationToken.None);
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetSubSpecialitiesList_InstitutionalAdmin_SeesAdoptedDisciplines()
+    {
+        var handler = new GetSubSpecialitiesListQueryHandler(_dbContext);
+        var result = await handler.Handle(
+            new GetSubSpecialitiesListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            CancellationToken.None);
+        result.Should().ContainSingle().Which.Id.Should().Be(_collegeASubSpecialityId);
+    }
+
+    [Fact]
+    public async Task GetSubSpecialitiesList_InstitutionalAdmin_NoAdoption_SeesEmpty()
+    {
+        var handler = new GetSubSpecialitiesListQueryHandler(_dbContext);
+        var result = await handler.Handle(
+            new GetSubSpecialitiesListQuery(TestPrincipals.InstitutionalAdmin(_institutionBId)),
+            CancellationToken.None);
+        result.Should().BeEmpty();
     }
 
     [Fact]

@@ -22,12 +22,27 @@ public sealed class GetSubSpecialitiesListQueryHandler : IRequestHandler<GetSubS
         if (!request.Principal.IsAdministrator())
         {
             var scopedCollegeId = request.Principal.GetCollegeId();
-            if (!scopedCollegeId.HasValue)
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+
+            if (scopedCollegeId.HasValue)
+            {
+                // CollegeAdmin: the sub-specialities their own College owns. (T091)
+                query = query.Where(entity => entity.Speciality.CollegeId == scopedCollegeId.Value);
+            }
+            else if (request.Principal.IsInstitutionalAdmin() && scopedInstitutionId.HasValue)
+            {
+                // InstitutionalAdmin: the sub-specialities (disciplines) their institution has an
+                // active adoption for. Mirrors GetSpecialitiesListQuery. (T092)
+                var adoptedSubSpecialityIds = _dbContext.Set<InstitutionCurriculumAdoption>()
+                    .Where(adoption => adoption.IsActive && adoption.InstitutionId == scopedInstitutionId.Value)
+                    .Select(adoption => adoption.SubSpecialityId);
+
+                query = query.Where(entity => adoptedSubSpecialityIds.Contains(entity.Id));
+            }
+            else
             {
                 return Array.Empty<SubSpecialityDto>();
             }
-
-            query = query.Where(entity => entity.Speciality.CollegeId == scopedCollegeId.Value);
         }
 
         return await query
