@@ -23,7 +23,13 @@ commits + docs on `master` (**nothing pushed**; master far ahead of origin — p
 - Snapshot **`t091-fresh-setup`** banked (clean validated state; one adoption present). Old `act*-v2-*` snapshots
   remain invalid under the new schema.
 
-**▶ Next: the full realistic Acts 1–5 narrative replay** on the new schema (its own focused Opus session). Build the
+**`scenario-paediatrics.md` rewritten for T091 (`f47a076`):** the canonical runbook now prescribes the national
+model end-to-end (College of Paediatricians authors the catalogue; KGK adopts; admission adoption-gated; Act 1
+restructured + steps renumbered 1.1–1.16; Acts 3–5 credit/STAR notes). Prior `Actual:`/`Gap:` + per-act findings
+are marked **superseded (pre-T091)** and retained for history. It's ready to drive the replay below.
+
+**▶ Next: the full realistic Acts 1–5 narrative replay** on the new schema (its own focused Opus session), following
+the rewritten `scenario-paediatrics.md`. Build the
 national **College of Paediatricians** → Paediatrics → General Paed → 15 EPAs + curriculum (as Administrator/CollegeAdmin),
 create **KGK** institution + Mbatha (InstitutionalAdmin), **KGK adopts** the curriculum via `/admin/adoptions`, then
 onboard trainees (now **gated on adoption** — admit only into the adopted version), run activities/credit, committee/STARs,
