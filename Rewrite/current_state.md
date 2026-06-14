@@ -2,6 +2,82 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION 2026-06-14 (Opus) — T091 fresh-DB replay (**Act 1 + Act-2 adoption gate VALIDATED**) + both invitation findings **FIXED** (T092 + T093)
+
+**Both findings surfaced by the replay are now fixed, tested, and live-verified — no longer just tickets.**
+
+- **T092 (blocker) FIXED** — `GetSpecialitiesListQuery`/`GetSubSpecialitiesListQuery` gained an
+  InstitutionalAdmin branch scoping to the institution's **active adoptions**. Mbatha's invitation Speciality
+  dropdown now shows KGK's adopted discipline; she issued an Assessor invitation (Patel) live. +4 tests.
+- **T093 (CollegeAdmin provisioning) FIXED** — the finding grew: T091 P1 never wired CollegeAdmin *scoping*
+  (no `WombatIdentityUser.CollegeId`, no `CollegeId` claim emission). Built end-to-end: `Invitation.CollegeId`
+  + nullable `InstitutionId`, user `CollegeId`, claims-factory emits it, provisioner sets it, `InvitationRules`
+  allows CollegeAdmin (Administrator-only, college-scoped), invitation form gains a College picker. Migration
+  **`T093_CollegeAdminProvisioning`** (CLI-generated, applied on boot). +5 tests. **Live-verified:** issued a
+  CollegeAdmin invite for **Dr Kruger** (College of Paediatricians) → he registered → `/admin/epas` shows
+  exactly his college's 15 PAED EPAs. DB: user `CollegeId=2`.
+
+**All suites green after the fixes:** Domain 50, **Application 313** (+9), Architecture 19, Web 43; full
+solution **Release build clean (0 warnings)**. Snapshot **`t091-act2-with-collegeadmin`** banks the fixed
+state (T093 migration applied + Kruger). New secret `Kruger@CMSA2026!` recorded in `pwd_DO_NOT_COMMIT.txt`.
+**Dev server STOPPED; browser open.** Task files `Tasks/T092-*.md` (DONE) + `Tasks/T093-*.md` (new, DONE).
+
+---
+
+## (earlier same session) 2026-06-14 — T091 fresh-DB replay: Act 1 + Act-2 adoption gate VALIDATED; 2 findings raised
+
+**Ran the rewritten `scenario-paediatrics.md` against a truly fresh DB (dropped + recreated empty → startup
+migrated the full 29-migration chain incl. all 4 T091 migrations + seeded Demo College/Institution). Drove Act 1
+end-to-end UI-first (Playwright) + DB-verified at every step, then validated the key Act-2 T091 change (adoption-gated
+admission). The entire T091 hinge works from scratch.** No product code changed; 2 real integration regressions found
+(invitation surface). **Dev server STOPPED; browser left open.** Snapshots banked: **`t091-act1-replay`**,
+**`t091-act2-molefe-admitted`**.
+
+**Act 1 — DONE + DB-verified (ids in parens):** College of Paediatricians (2) → Paediatrics speciality (2) →
+General Paediatrics sub-speciality (2, DefaultEntrustmentScaleId→Paed scale (2)); Paed General Entrustment Scale (2,
+5 ten-Cate levels); **15 national EPAs** (ids 2–16, all `OwningInstitutionId` null, 2 elective); **FCPaed(SA) Part 1
+v2026.1** curriculum (2) + **15 items** (counts/min-levels/per-stage-JSON/windows/weights all match the runbook table
+byte-for-byte, incl. PAED-010 yr1-min-2 F-3E-2 fix); **KGK institution** (2); **Mbatha** InstitutionalAdmin (invite→
+register→dashboard, nav shows Curriculum Adoptions); **KGK adopted** FCPaed v2026.1 via `/admin/adoptions`
+(InstitutionCurriculumAdoptions id 1, active, DB-verified — no institution picker, resolved from her claim);
+**Mini-CEX activity type published** (id 11, Scope=Institution→KGK; T053/T055/T056 scope-guard + publish path all
+work post-T091). **Scope reduction:** built only the Mini-CEX worked example (default schema), not all 10 types — the
+builder is platform mechanics already proven in prior replays + P6; full 10-type build still pending for Act 3.
+
+**Act 2 — adoption gate VALIDATED (the core T091 Act-2 change):** admit-form (`/admin/trainees/edit`) curriculum
+picker shows **only the adopted** `FCPaed(SA) Part 1 (2026.1)` (nothing else); Molefe admitted → **TraineeProfile id 2
+pinned: CurriculumId 2, InstitutionId 2, AdoptionId 1**, start 2023-01-15. Version-pinning works end-to-end. Full Act-2
+team onboarding (other 4 registrars, 6 consultants, coordinator, assessor profiles, committee panel) **NOT done** —
+blocked by the finding below.
+
+**🐞 TWO FINDINGS (invitation surface, post-T091) → new task `T092`:**
+1. **F-A2-T091-1 (blocking) — InstitutionalAdmin cannot issue Assessor/Trainee invitations.** On `/admin/invitations`
+   as Mbatha the **Speciality dropdown is empty**, but Assessor/Trainee require speciality+sub-speciality scope
+   (enforced by T088 validation + `InvitationRules`) → "The selected role requires speciality and sub-speciality
+   scope." **Root cause:** `InvitationsList.razor` populates specialities via `GetSpecialitiesListQuery`, whose handler
+   (`GetSpecialitiesListQueryHandler.cs:22-30`) returns `[]` when caller isn't Administrator and has no college claim —
+   an InstitutionalAdmin has none (specialities are College-owned post-T091). Bootstrap Administrator is unaffected
+   (sees all national specialities). This **blocks Mbatha onboarding her own clinical team** — the whole Act-2 workflow.
+   **Workaround used:** issued Molefe's Trainee invitation as the bootstrap Administrator. **Fix:** give the invitation
+   form an InstitutionalAdmin speciality source (national specialities the institution has adopted, or all national).
+2. **Step 1.3 — invitation form exposes no `CollegeAdmin` role / College picker.** Role dropdown lacks CollegeAdmin;
+   the national catalogue was therefore authored by the bootstrap Administrator (scenario's documented fallback). The
+   CollegeAdmin role/claim/policy exist (T091 P1) but the invitation-surface wiring doesn't.
+
+**▶ Next:** (a) **fix T092** (the F-A2-T091-1 blocker is the priority — it stops realistic InstitutionalAdmin-driven
+onboarding), then optionally the CollegeAdmin invitation wiring; (b) **resume the replay** from
+`t091-act2-molefe-admitted` (or rebuild from `t091-act1-replay`): finish Act-2 team onboarding (needs T092 fixed or the
+admin workaround), build the remaining 9 activity types, then Acts 3–5 (activities/credit, committee/STARs, graduation).
+**Opus** recommended (T092 auth fix + scenario correctness). Old `act*-v2-*` snapshots remain invalid under the new schema.
+
+**Tests:** not run this session (no product code changed) — last green = Domain 50, Application 304, Architecture 19,
+Web 43, Infrastructure 10. **⚠️ Tooling:** dev server via the **PowerShell** tool (background); **stop it before**
+`dotnet test`/`build`/`db-snapshot take|restore`; `psql` at `C:\Program Files\PostgreSQL\16\bin\psql.exe` — use ASCII
+**here-strings** piped to psql (the `-c "...\"...\""` double-quote escaping fails in PowerShell). Reused secrets
+`Mbatha@KGK2026!` / `Act2Pass!123` (already in `pwd_DO_NOT_COMMIT.txt`).
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-13→14 (Opus) — T091 P4 + P5 + P6-validation DONE, scenario rewritten, **master PUSHED**
 
 **Very long session, now shipped.** Delivered T091 **Phase 4** (adoption + versioning), all of **Phase 5** (Web

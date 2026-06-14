@@ -33,6 +33,7 @@ public sealed class InvitationValidatorTests
             Email: "coord@example.test",
             TargetRole: WombatRoles.Coordinator,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: null,
             SubSpecialityId: null,
             IssuedByUserId: "admin-1",
@@ -53,6 +54,7 @@ public sealed class InvitationValidatorTests
             Email: "external@example.test",
             TargetRole: WombatRoles.CommitteeMember,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: null,
             SubSpecialityId: null,
             IssuedByUserId: "admin-1",
@@ -73,6 +75,7 @@ public sealed class InvitationValidatorTests
             Email: "sa@example.test",
             TargetRole: WombatRoles.SpecialityAdmin,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: null,
             SubSpecialityId: null,
             IssuedByUserId: "admin-1",
@@ -94,6 +97,7 @@ public sealed class InvitationValidatorTests
             Email: "coord@example.test",
             TargetRole: WombatRoles.Coordinator,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: 2,
             SubSpecialityId: 3,
             IssuedByUserId: "admin-1",
@@ -115,6 +119,7 @@ public sealed class InvitationValidatorTests
             Email: "ext@example.test",
             TargetRole: WombatRoles.CommitteeMember,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: 2,
             SubSpecialityId: 3,
             IssuedByUserId: "admin-1",
@@ -124,6 +129,114 @@ public sealed class InvitationValidatorTests
 
         var exception = await act.Should().ThrowAsync<InvalidOperationException>();
         exception.Which.Message.Should().Be("The selected role may not be scoped to a sub-speciality.");
+    }
+
+    [Fact]
+    public async Task CollegeAdmin_WithCollege_IsAccepted()
+    {
+        await using var db = CreateDbWithCollege(collegeId: 5);
+        var handler = CreateHandler(db);
+
+        var command = new IssueInvitationCommand(
+            Email: "ca@example.test",
+            TargetRole: WombatRoles.CollegeAdmin,
+            InstitutionId: null,
+            CollegeId: 5,
+            SpecialityId: null,
+            SubSpecialityId: null,
+            IssuedByUserId: "admin-1",
+            Principal: TestPrincipals.Administrator());
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        result.Token.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task CollegeAdmin_WithoutCollege_IsRejected()
+    {
+        await using var db = CreateDbWithInstitution(institutionId: 1);
+        var handler = CreateHandler(db);
+
+        var command = new IssueInvitationCommand(
+            Email: "ca@example.test",
+            TargetRole: WombatRoles.CollegeAdmin,
+            InstitutionId: null,
+            CollegeId: null,
+            SpecialityId: null,
+            SubSpecialityId: null,
+            IssuedByUserId: "admin-1",
+            Principal: TestPrincipals.Administrator());
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+        exception.Which.Message.Should().Be("A college is required for a college administrator.");
+    }
+
+    [Fact]
+    public async Task CollegeAdmin_WithInstitution_IsRejected()
+    {
+        await using var db = CreateDbWithCollege(collegeId: 5);
+        var handler = CreateHandler(db);
+
+        var command = new IssueInvitationCommand(
+            Email: "ca@example.test",
+            TargetRole: WombatRoles.CollegeAdmin,
+            InstitutionId: 1,
+            CollegeId: 5,
+            SpecialityId: null,
+            SubSpecialityId: null,
+            IssuedByUserId: "admin-1",
+            Principal: TestPrincipals.Administrator());
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+        exception.Which.Message.Should().Be("College administrators may only be scoped to a college.");
+    }
+
+    [Fact]
+    public async Task CollegeAdmin_IssuedByInstitutionalAdmin_IsRejected()
+    {
+        await using var db = CreateDbWithCollege(collegeId: 5);
+        var handler = CreateHandler(db);
+
+        var command = new IssueInvitationCommand(
+            Email: "ca@example.test",
+            TargetRole: WombatRoles.CollegeAdmin,
+            InstitutionId: null,
+            CollegeId: 5,
+            SpecialityId: null,
+            SubSpecialityId: null,
+            IssuedByUserId: "u1",
+            Principal: TestPrincipals.InstitutionalAdmin(institutionId: 1));
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task InstitutionRole_WithCollege_IsRejected()
+    {
+        await using var db = CreateDbWithInstitution(institutionId: 1);
+        var handler = CreateHandler(db);
+
+        var command = new IssueInvitationCommand(
+            Email: "coord@example.test",
+            TargetRole: WombatRoles.Coordinator,
+            InstitutionId: 1,
+            CollegeId: 5,
+            SpecialityId: null,
+            SubSpecialityId: null,
+            IssuedByUserId: "admin-1",
+            Principal: TestPrincipals.Administrator());
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+        exception.Which.Message.Should().Be("Only college administrators may be scoped to a college.");
     }
 
     private IssueInvitationCommandHandler CreateHandler(ApplicationDbContext db) =>
@@ -141,6 +254,21 @@ public sealed class InvitationValidatorTests
             Id = institutionId,
             Name = $"Institution {institutionId}",
             ShortCode = $"I{institutionId}",
+            IsActive = true,
+            CreatedOn = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        return db;
+    }
+
+    private static ApplicationDbContext CreateDbWithCollege(int collegeId)
+    {
+        var db = NewInMemoryDb();
+        db.Colleges.Add(new College
+        {
+            Id = collegeId,
+            Name = $"College {collegeId}",
+            ShortCode = $"C{collegeId}",
             IsActive = true,
             CreatedOn = DateTime.UtcNow
         });

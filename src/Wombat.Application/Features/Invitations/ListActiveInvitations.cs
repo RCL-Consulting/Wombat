@@ -24,6 +24,7 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var institutions = _dbContext.Set<Institution>();
+        var colleges = _dbContext.Set<College>();
         var specialities = _dbContext.Set<Speciality>();
         var subSpecialities = _dbContext.Set<SubSpeciality>();
 
@@ -41,7 +42,10 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
 
         return await (
             from invitation in invitations
-            join institution in institutions on invitation.InstitutionId equals institution.Id
+            join institution in institutions on invitation.InstitutionId equals institution.Id into institutionGroup
+            from institution in institutionGroup.DefaultIfEmpty()
+            join college in colleges on invitation.CollegeId equals college.Id into collegeGroup
+            from college in collegeGroup.DefaultIfEmpty()
             join speciality in specialities on invitation.SpecialityId equals speciality.Id into specialityGroup
             from speciality in specialityGroup.DefaultIfEmpty()
             join subSpeciality in subSpecialities on invitation.SubSpecialityId equals subSpeciality.Id into subSpecialityGroup
@@ -55,7 +59,9 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
                 invitation.Email,
                 invitation.TargetRole,
                 invitation.InstitutionId,
-                institution.Name,
+                institution != null ? institution.Name : null,
+                invitation.CollegeId,
+                college != null ? college.Name : null,
                 invitation.SpecialityId,
                 speciality != null ? speciality.Name : null,
                 invitation.SubSpecialityId,

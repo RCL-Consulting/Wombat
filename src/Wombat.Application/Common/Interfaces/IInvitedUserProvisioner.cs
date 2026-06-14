@@ -10,7 +10,8 @@ public interface IInvitedUserProvisioner
         string firstName,
         string lastName,
         string targetRole,
-        int institutionId,
+        int? institutionId,
+        int? collegeId,
         int? specialityId,
         int? subSpecialityId,
         CancellationToken cancellationToken = default);

@@ -56,6 +56,7 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
             request.LastName,
             invitation.TargetRole,
             invitation.InstitutionId,
+            invitation.CollegeId,
             invitation.SpecialityId,
             invitation.SubSpecialityId,
             cancellationToken);

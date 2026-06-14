@@ -8,6 +8,7 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
+using Wombat.Domain.Identity;
 using Wombat.Domain.Invitations;
 
 namespace Wombat.Application.Features.Invitations;
@@ -15,7 +16,8 @@ namespace Wombat.Application.Features.Invitations;
 public sealed record IssueInvitationCommand(
     string Email,
     string TargetRole,
-    int InstitutionId,
+    int? InstitutionId,
+    int? CollegeId,
     int? SpecialityId,
     int? SubSpecialityId,
     string IssuedByUserId,
@@ -27,8 +29,9 @@ public sealed class IssueInvitationCommandValidator : AbstractValidator<IssueInv
     {
         RuleFor(command => command.Email).NotEmpty().EmailAddress().MaximumLength(320);
         RuleFor(command => command.TargetRole).NotEmpty().MaximumLength(64);
-        RuleFor(command => command.InstitutionId).GreaterThan(0);
         RuleFor(command => command.IssuedByUserId).NotEmpty();
+        // The institution-vs-college scope shape is validated by InvitationRules.ValidateScope,
+        // which depends on the target role (a CollegeAdmin has no institution). (T093)
     }
 }
 
@@ -53,12 +56,21 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
 
     public async Task<IssuedInvitationResult> Handle(IssueInvitationCommand request, CancellationToken cancellationToken)
     {
-        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
+        // A CollegeAdmin is provisioned against a national College and is Administrator-only; every
+        // other (institution-scoped) role is gated by the caller's institution claim. (T093)
+        if (request.TargetRole == WombatRoles.CollegeAdmin)
+        {
+            if (!request.Principal.IsAdministrator())
+            {
+                throw new UnauthorizedAccessException("Only an administrator may issue college administrator invitations.");
+            }
+        }
+        else if (!request.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(request.InstitutionId.Value))
         {
             throw new UnauthorizedAccessException("You do not have permission to issue invitations for that institution.");
         }
 
-        var scopeError = InvitationRules.ValidateScope(request.TargetRole, request.InstitutionId, request.SpecialityId, request.SubSpecialityId);
+        var scopeError = InvitationRules.ValidateScope(request.TargetRole, request.InstitutionId, request.CollegeId, request.SpecialityId, request.SubSpecialityId);
         if (scopeError is not null)
         {
             throw new InvalidOperationException(scopeError);
@@ -67,6 +79,7 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
         var scopeEntityError = await InvitationRules.ValidateScopeEntitiesAsync(
             _dbContext,
             request.InstitutionId,
+            request.CollegeId,
             request.SpecialityId,
             request.SubSpecialityId,
             cancellationToken);
@@ -83,6 +96,7 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
             TokenHash = _tokenService.HashToken(token),
             TargetRole = request.TargetRole,
             InstitutionId = request.InstitutionId,
+            CollegeId = request.CollegeId,
             SpecialityId = request.SpecialityId,
             SubSpecialityId = request.SubSpecialityId,
             IssuedByUserId = request.IssuedByUserId,

@@ -128,7 +128,7 @@
             <HeaderRow>
               <tr>
                 <th>Role</th>
-                <th>Institution</th>
+                <th>Institution / College</th>
                 <th>Speciality</th>
                 <th>Issued</th>
                 <th>Expires</th>
@@ -137,7 +137,7 @@
             <Row Context="invitation">
               <tr>
                 <td>@invitation.TargetRole</td>
-                <td>@invitation.InstitutionName</td>
+                <td>@invitation.ScopeName</td>
                 <td>@(invitation.SpecialityName ?? "—")</td>
                 <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
                 <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>

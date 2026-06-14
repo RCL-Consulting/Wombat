@@ -47,7 +47,12 @@ public sealed class RevokePendingInvitationsForEmailCommandHandler : IRequestHan
         // InstitutionalAdmins are blocked if any invitation is for a different institution.
         foreach (var invitation in invitations)
         {
-            if (!request.Principal.CanAccessInstitution(invitation.InstitutionId))
+            // CollegeAdmin invitations are college-scoped (Administrator-only); the rest institution-scoped. (T093)
+            var canAccess = invitation.CollegeId.HasValue
+                ? request.Principal.CanAccessCollege(invitation.CollegeId.Value)
+                : invitation.InstitutionId.HasValue && request.Principal.CanAccessInstitution(invitation.InstitutionId.Value);
+
+            if (!canAccess)
             {
                 throw new UnauthorizedAccessException(
                     "You do not have permission to revoke invitations outside your institution.");

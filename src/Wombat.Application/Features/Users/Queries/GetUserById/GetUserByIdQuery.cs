@@ -67,7 +67,16 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
         var pendingInvitationDtos = new List<UserPendingInvitationDto>(invitations.Count);
         if (invitations.Count > 0)
         {
-            var inviteInstitutionIds = invitations.Select(entity => entity.InstitutionId).Distinct().ToArray();
+            var inviteInstitutionIds = invitations
+                .Where(entity => entity.InstitutionId.HasValue)
+                .Select(entity => entity.InstitutionId!.Value)
+                .Distinct()
+                .ToArray();
+            var inviteCollegeIds = invitations
+                .Where(entity => entity.CollegeId.HasValue)
+                .Select(entity => entity.CollegeId!.Value)
+                .Distinct()
+                .ToArray();
             var inviteSpecialityIds = invitations
                 .Where(entity => entity.SpecialityId.HasValue)
                 .Select(entity => entity.SpecialityId!.Value)
@@ -79,6 +88,11 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
                 .Where(entity => inviteInstitutionIds.Contains(entity.Id))
                 .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
 
+            var collegeLookup = await _dbContext.Set<College>()
+                .AsNoTracking()
+                .Where(entity => inviteCollegeIds.Contains(entity.Id))
+                .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
+
             var specialityLookup = await _dbContext.Set<Speciality>()
                 .AsNoTracking()
                 .Where(entity => inviteSpecialityIds.Contains(entity.Id))
@@ -86,11 +100,18 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
 
             foreach (var invitation in invitations)
             {
+                // A CollegeAdmin invitation has no institution; show its College name in the scope column. (T093)
+                var scopeName = invitation.InstitutionId.HasValue
+                    ? (institutionLookup.TryGetValue(invitation.InstitutionId.Value, out var instName) ? instName : "Unknown")
+                    : invitation.CollegeId.HasValue
+                        ? (collegeLookup.TryGetValue(invitation.CollegeId.Value, out var collName) ? collName : "Unknown")
+                        : "Unknown";
+
                 pendingInvitationDtos.Add(new UserPendingInvitationDto(
                     invitation.Id,
                     invitation.TargetRole,
                     invitation.InstitutionId,
-                    institutionLookup.TryGetValue(invitation.InstitutionId, out var instName) ? instName : "Unknown",
+                    scopeName,
                     invitation.SpecialityId,
                     invitation.SpecialityId.HasValue && specialityLookup.TryGetValue(invitation.SpecialityId.Value, out var specName) ? specName : null,
                     invitation.IssuedOn,

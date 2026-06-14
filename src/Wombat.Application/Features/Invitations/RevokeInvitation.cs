@@ -31,7 +31,13 @@ public sealed class RevokeInvitationCommandHandler : IRequestHandler<RevokeInvit
             throw new InvalidOperationException("The invitation was not found.");
         }
 
-        if (!request.Principal.CanAccessInstitution(invitation.InstitutionId))
+        // CollegeAdmin invitations are college-scoped (Administrator-only); every other invitation
+        // is institution-scoped. (T093)
+        var canAccess = invitation.CollegeId.HasValue
+            ? request.Principal.CanAccessCollege(invitation.CollegeId.Value)
+            : invitation.InstitutionId.HasValue && request.Principal.CanAccessInstitution(invitation.InstitutionId.Value);
+
+        if (!canAccess)
         {
             throw new UnauthorizedAccessException("You do not have permission to revoke this invitation.");
         }

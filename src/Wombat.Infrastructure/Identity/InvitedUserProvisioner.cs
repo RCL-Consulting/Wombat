@@ -22,7 +22,8 @@ public sealed class InvitedUserProvisioner : IInvitedUserProvisioner
         string firstName,
         string lastName,
         string targetRole,
-        int institutionId,
+        int? institutionId,
+        int? collegeId,
         int? specialityId,
         int? subSpecialityId,
         CancellationToken cancellationToken = default)
@@ -44,7 +45,8 @@ public sealed class InvitedUserProvisioner : IInvitedUserProvisioner
             EmailConfirmed = true,
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
-            InstitutionId = institutionId
+            InstitutionId = institutionId,
+            CollegeId = collegeId
         };
 
         var createResult = await _userManager.CreateAsync(user, password);

@@ -33,6 +33,7 @@ public sealed class IssueInvitationCommandHandlerTests
             Email: "invitee@example.test",
             TargetRole: WombatRoles.InstitutionalAdmin,
             InstitutionId: 1,
+            CollegeId: null,
             SpecialityId: null,
             SubSpecialityId: null,
             IssuedByUserId: "admin-1",
@@ -68,7 +69,7 @@ public sealed class IssueInvitationCommandHandlerTests
         var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, options);
 
         await handler.Handle(
-            new IssueInvitationCommand("t@e.test", WombatRoles.InstitutionalAdmin, 1, null, null, "admin-1", TestPrincipals.Administrator()),
+            new IssueInvitationCommand("t@e.test", WombatRoles.InstitutionalAdmin, 1, null, null, null, "admin-1", TestPrincipals.Administrator()),
             CancellationToken.None);
 
         captured.Should().NotBeNull();

@@ -10,6 +10,7 @@ internal static class InvitationRules
 {
     private static readonly HashSet<string> AllowedTargetRoles =
     [
+        WombatRoles.CollegeAdmin,
         WombatRoles.InstitutionalAdmin,
         WombatRoles.SpecialityAdmin,
         WombatRoles.SubSpecialityAdmin,
@@ -22,14 +23,35 @@ internal static class InvitationRules
     public static bool IsAllowedTargetRole(string targetRole)
         => AllowedTargetRoles.Contains(targetRole);
 
-    public static string? ValidateScope(string targetRole, int institutionId, int? specialityId, int? subSpecialityId)
+    public static string? ValidateScope(string targetRole, int? institutionId, int? collegeId, int? specialityId, int? subSpecialityId)
     {
         if (!IsAllowedTargetRole(targetRole))
         {
             return "The selected target role cannot be issued by invitation.";
         }
 
-        if (institutionId <= 0)
+        // A CollegeAdmin is scoped to a national College, not an institution/discipline. (T093)
+        if (targetRole == WombatRoles.CollegeAdmin)
+        {
+            if (!collegeId.HasValue || collegeId.Value <= 0)
+            {
+                return "A college is required for a college administrator.";
+            }
+
+            if (institutionId.HasValue || specialityId.HasValue || subSpecialityId.HasValue)
+            {
+                return "College administrators may only be scoped to a college.";
+            }
+
+            return null;
+        }
+
+        if (collegeId.HasValue)
+        {
+            return "Only college administrators may be scoped to a college.";
+        }
+
+        if (!institutionId.HasValue || institutionId.Value <= 0)
         {
             return "An institution is required.";
         }
@@ -50,14 +72,22 @@ internal static class InvitationRules
 
     public static async Task<string?> ValidateScopeEntitiesAsync(
         IApplicationDbContext dbContext,
-        int institutionId,
+        int? institutionId,
+        int? collegeId,
         int? specialityId,
         int? subSpecialityId,
         CancellationToken cancellationToken)
     {
-        if (!await dbContext.Set<Institution>().AnyAsync(entity => entity.Id == institutionId && entity.IsActive, cancellationToken))
+        if (institutionId.HasValue &&
+            !await dbContext.Set<Institution>().AnyAsync(entity => entity.Id == institutionId.Value && entity.IsActive, cancellationToken))
         {
             return "The selected institution was not found.";
+        }
+
+        if (collegeId.HasValue &&
+            !await dbContext.Set<College>().AnyAsync(entity => entity.Id == collegeId.Value && entity.IsActive, cancellationToken))
+        {
+            return "The selected college was not found.";
         }
 
         if (specialityId.HasValue)

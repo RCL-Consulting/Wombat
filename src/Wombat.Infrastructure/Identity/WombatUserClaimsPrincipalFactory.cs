@@ -34,6 +34,11 @@ public sealed class WombatUserClaimsPrincipalFactory : UserClaimsPrincipalFactor
             identity.AddClaim(new Claim(WombatClaims.InstitutionId, scopeUser.InstitutionId.Value.ToString()));
         }
 
+        if (scopeUser.CollegeId.HasValue)
+        {
+            identity.AddClaim(new Claim(WombatClaims.CollegeId, scopeUser.CollegeId.Value.ToString()));
+        }
+
         foreach (var specialityId in scopeUser.SpecialityScopes.Select(scope => scope.SpecialityId).Distinct())
         {
             identity.AddClaim(new Claim(WombatClaims.SpecialityId, specialityId.ToString()));

@@ -41,6 +41,7 @@ public sealed class InvitationScopeGuardTests
             "x@example.test",
             WombatRoles.Coordinator,
             InstitutionId: 2,
+            CollegeId: null,
             SpecialityId: null,
             SubSpecialityId: null,
             IssuedByUserId: "u1",

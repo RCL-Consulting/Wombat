@@ -26,8 +26,10 @@ public sealed record UserDetailDto(
 public sealed record UserPendingInvitationDto(
     int InvitationId,
     string TargetRole,
-    int InstitutionId,
-    string InstitutionName,
+    int? InstitutionId,
+    // Institution name for institution-scoped invitations, or the College name for a CollegeAdmin
+    // invitation (which has no institution). (T093)
+    string ScopeName,
     int? SpecialityId,
     string? SpecialityName,
     DateTime IssuedOn,

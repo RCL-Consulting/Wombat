@@ -8,6 +8,14 @@ public class WombatIdentityUser : IdentityUser
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public int? InstitutionId { get; set; }
+
+    /// <summary>
+    /// The national College a <c>CollegeAdmin</c> is scoped to. Null for every other role.
+    /// Surfaced as the <see cref="WombatClaims.CollegeId"/> claim at login so the national-catalogue
+    /// handlers can scope by college. (T093)
+    /// </summary>
+    public int? CollegeId { get; set; }
+
     public bool OptOutOfOptionalProcessing { get; set; }
     public bool OptOutOfDigestEmails { get; set; }
 

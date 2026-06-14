@@ -132,7 +132,7 @@ Expected: Invitation issues with the College scope; on accept, Dr Kruger lands o
 Actual:
 Gap:
 
-> **If the invitation form does not yet expose `CollegeAdmin` / a College picker:** provision Dr Kruger by having the bootstrap Administrator author the catalogue directly (the Administrator can do everything a CollegeAdmin can), and capture the gap here. The CollegeAdmin role + claim/policy exist (T091 P1); the invitation surface wiring for it is verified during this replay.
+> **CollegeAdmin invitation wiring — shipped (T093, 2026-06-14).** The invitation form exposes the `CollegeAdmin` role (Administrator-only) and a College picker; the provisioner sets the user's `CollegeId` and the claims factory emits the `CollegeId` claim, so Dr Kruger lands college-scoped and sees only his College's catalogue. (T091 P1 added the role/claim-type/policy but left the user→college association + claim emission unwired; T093 completed it.) Live-verified: a CollegeAdmin invite for Kruger → his `/admin/epas` shows exactly the 15 PAED EPAs. The earlier "author as bootstrap Administrator" workaround is **no longer needed**.
 
 ### Step 1.4 — Create the Paediatrics speciality (national)
 Role: Dr Kruger (CollegeAdmin) — or bootstrap Administrator

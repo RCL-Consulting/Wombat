@@ -49,22 +49,37 @@
 
         <FormField Label="Role" InputId="invitation-role" Required="true">
           <InputSelect id="invitation-role" class="form-select" @bind-Value="_model.TargetRole">
-            @foreach (var role in _roles)
+            @foreach (var role in AvailableRoles)
             {
               <option value="@role">@role</option>
             }
           </InputSelect>
         </FormField>
 
-        <FormField Label="Institution" InputId="invitation-institution" Required="true">
-          <InputSelect id="invitation-institution" class="form-select" @bind-Value="_model.InstitutionId">
-            <option value="">Select institution</option>
-            @foreach (var institution in _institutions)
-            {
-              <option value="@institution.Id">@institution.Name</option>
-            }
-          </InputSelect>
-        </FormField>
+        @if (IsCollegeAdminRole)
+        {
+          <FormField Label="College" InputId="invitation-college" Required="true">
+            <InputSelect id="invitation-college" class="form-select" @bind-Value="_model.CollegeId">
+              <option value="">Select college</option>
+              @foreach (var college in _colleges)
+              {
+                <option value="@college.Id">@college.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+        }
+        else
+        {
+          <FormField Label="Institution" InputId="invitation-institution" Required="true">
+            <InputSelect id="invitation-institution" class="form-select" @bind-Value="_model.InstitutionId">
+              <option value="">Select institution</option>
+              @foreach (var institution in _institutions)
+              {
+                <option value="@institution.Id">@institution.Name</option>
+              }
+            </InputSelect>
+          </FormField>
+        }
 
         <FormField Label="Speciality" InputId="invitation-speciality">
           <InputSelect id="invitation-speciality" class="form-select" @bind-Value="_model.SpecialityId" disabled="@(!RequiresSpeciality)">
@@ -102,6 +117,7 @@
             <th>Email</th>
             <th>Role</th>
             <th>Institution</th>
+            <th>College</th>
             <th>Speciality</th>
             <th>Sub-speciality</th>
             <th>Issued</th>
@@ -114,6 +130,7 @@
             <td>@invitation.Email</td>
             <td>@invitation.TargetRole</td>
             <td>@invitation.InstitutionName</td>
+            <td>@invitation.CollegeName</td>
             <td>@invitation.SpecialityName</td>
             <td>@invitation.SubSpecialityName</td>
             <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
@@ -129,6 +146,7 @@
 @code {
   private static readonly string[] _roles =
   [
+    WombatRoles.CollegeAdmin,
     WombatRoles.InstitutionalAdmin,
     WombatRoles.SpecialityAdmin,
     WombatRoles.SubSpecialityAdmin,
@@ -140,14 +158,23 @@
 
   private InvitationFormModel _model = new();
   private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<CollegeDto> _colleges = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private IReadOnlyList<ActiveInvitationDto> _invitations = [];
+  private bool _isAdministrator;
   private string? _statusMessage;
   private string? _errorMessage;
   private string? _lastIssuedRegistrationUrl;
   private bool _loading = true;
   private bool _saving;
+
+  // Only a global Administrator may provision a CollegeAdmin (the handler enforces this too);
+  // hide the option from InstitutionalAdmins so they aren't offered a path that will be rejected. (T093)
+  private IEnumerable<string> AvailableRoles
+    => _isAdministrator ? _roles : _roles.Where(role => role != WombatRoles.CollegeAdmin);
+
+  private bool IsCollegeAdminRole => _model.TargetRole == WombatRoles.CollegeAdmin;
 
   private bool RequiresSpeciality
     => _model.TargetRole is WombatRoles.SpecialityAdmin or WombatRoles.SubSpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember or WombatRoles.Assessor or WombatRoles.Trainee;
@@ -174,7 +201,9 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _colleges = await Sender.Send(new GetCollegesListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
@@ -197,14 +226,25 @@
 
     try
     {
-      if (!RequiresSpeciality)
+      if (IsCollegeAdminRole)
       {
+        // A CollegeAdmin is scoped to a college only.
+        _model.InstitutionId = null;
         _model.SpecialityId = null;
         _model.SubSpecialityId = null;
       }
-      else if (!RequiresSubSpeciality)
+      else
       {
-        _model.SubSpecialityId = null;
+        _model.CollegeId = null;
+        if (!RequiresSpeciality)
+        {
+          _model.SpecialityId = null;
+          _model.SubSpecialityId = null;
+        }
+        else if (!RequiresSubSpeciality)
+        {
+          _model.SubSpecialityId = null;
+        }
       }
 
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -214,7 +254,8 @@
       var issued = await Sender.Send(new IssueInvitationCommand(
         _model.Email,
         _model.TargetRole,
-        _model.InstitutionId ?? 0,
+        _model.InstitutionId,
+        _model.CollegeId,
         _model.SpecialityId,
         _model.SubSpecialityId,
         issuedByUserId,
@@ -263,8 +304,10 @@
     [Required]
     public string TargetRole { get; set; } = WombatRoles.InstitutionalAdmin;
 
-    [Required]
+    // Institution (institution-scoped roles) vs College (CollegeAdmin) is validated server-side by
+    // InvitationRules.ValidateScope, which depends on the chosen role. (T093)
     public int? InstitutionId { get; set; }
+    public int? CollegeId { get; set; }
 
     public int? SpecialityId { get; set; }
     public int? SubSpecialityId { get; set; }
