@@ -5,8 +5,13 @@ This file is the live handoff between sessions. Every session ends by editing th
 ## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 DONE + P6 fresh-DB validation DONE**; full narrative replay remains
 
 **Very long session.** Shipped T091 **Phase 4** (adoption + versioning), all of **Phase 5** (Web surfaces a–e),
-and a **P6 fresh-DB validation pass** that proves the whole redesign works from scratch in the running app. 13
-commits + docs on `master` (**nothing pushed**; master far ahead of origin — pushing is the standing item).
+a **P6 fresh-DB validation pass** that proves the whole redesign works from scratch in the running app, and the
+**T091 rewrite of `scenario-paediatrics.md`**.
+
+**✅ PUSHED 2026-06-14.** `git push origin master` shipped **206 commits** (the entire backlog — this session + all
+prior unpushed work) to `origin/master` (`…→9f2d5b7`, clean fast-forward). `origin/master` now == local `master`
+(0/0). The long-standing "push master to origin" item is **done**; HEAD verified green in Release (0 warnings)
+before pushing. (Older session blocks below still say "nothing pushed" — true when written, now superseded.)
 
 **P6 validation (this session's finale) — fresh DB, UI-driven, DB-verified:**
 - Dropped + recreated `wombat_t002_verify` empty → startup applied the **entire migration chain cleanly** (incl.
