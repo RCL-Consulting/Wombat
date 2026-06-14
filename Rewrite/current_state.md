@@ -2,7 +2,35 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION 2026-06-14 (Opus) — T091 fresh-DB replay (**Act 1 + Act-2 adoption gate VALIDATED**) + both invitation findings **FIXED** (T092 + T093)
+## ⭐ SESSION 2026-06-14 (Opus) — **Act 1 + Act 2 fully replayed** on fresh DB; T092 + T093 fixed + committed; ▶ Acts 3–5 next
+
+**Continued the fresh-DB replay forward: Act 2 is now COMPLETE end-to-end**, driven entirely by Mbatha
+(InstitutionalAdmin) with **no Administrator workarounds** — exercising the T092 fix in the real narrative.
+- 11 invitations issued as Mbatha (Coordinator / 3×CommitteeMember / 2×Assessor / van Rensburg external CM /
+  4×Trainee) + all registered (pw `Act2Pass!123`). Zulu/Naidoo/Botha given **+Assessor** via `/admin/users`.
+- **5 assessor profiles** (Patel In-training, rest Trained; training status is now an **enum** — old A2-5 closed).
+- **All 5 KGK trainees admitted** (Molefe/Dlamini/duPlessis/Mahlangu/Ndlovu) — DB-verified every profile pins
+  **AdoptionId 1**, CurriculumId 2, stages 4/3/2/1/1. Adoption gate + version-pinning holds for the whole cohort.
+- **Committee panel** "Paed Annual Review Panel 2026" (Speciality scope): Chair Zulu, Members Naidoo+Botha,
+  External van Rensburg (4 members). Created by Mbatha (T063 lets InstitutionalAdmin manage panels).
+- **Snapshot `t091-act2-complete`** banks the full Act-2 end-state (14 KGK users incl. Kruger CollegeAdmin,
+  5 trainee + 5 assessor profiles, 1 panel, 0 activities). **Dev server STOPPED; browser open.**
+
+**▶ NEXT: Act 3 (operational rhythm).** Restore `t091-act2-complete`. Build/publish the activity-type schemas
+(only Mini-CEX exists, default-schema; Act 3 needs mini_cex/dops/procedure_log/msf with proper form+workflow+credit
+JSON — see the old Act-3 detail further down + `act3-rebuild-scratch.md`), then trainees submit activities,
+assessors rate, verify `CreditApplier` scopes credit to the adopted curriculum version. Then Acts 4 (committee
+reviews + STARs + appeal) and 5 (graduation + portfolio PDF). **Opus** recommended (schema/credit correctness).
+
+---
+
+### Findings fixed + COMMITTED this session (T092 + T093)
+
+Both invitation-surface findings surfaced by the replay are fixed, tested, live-verified, and **committed to
+`master`**: `4e3caee` fix(T092), `f24480d` feat(T093). (Working tree clean apart from pre-existing untracked
+`EPA Book/` + `.dotnet/`.)
+
+## (superseded by Act-2 completion above) SESSION 2026-06-14 — T091 fresh-DB replay + both invitation findings FIXED (T092 + T093)
 
 **Both findings surfaced by the replay are now fixed, tested, and live-verified — no longer just tickets.**
 
