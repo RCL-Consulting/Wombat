@@ -2,11 +2,12 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-06-13 (Opus) — T091 **P4 + P5 DONE + P6 fresh-DB validation DONE**; full narrative replay remains
+## ⭐ SESSION FINALIZED — 2026-06-13→14 (Opus) — T091 P4 + P5 + P6-validation DONE, scenario rewritten, **master PUSHED**
 
-**Very long session.** Shipped T091 **Phase 4** (adoption + versioning), all of **Phase 5** (Web surfaces a–e),
-a **P6 fresh-DB validation pass** that proves the whole redesign works from scratch in the running app, and the
-**T091 rewrite of `scenario-paediatrics.md`**.
+**Very long session, now shipped.** Delivered T091 **Phase 4** (adoption + versioning), all of **Phase 5** (Web
+surfaces a–e), a **P6 fresh-DB validation pass** proving the whole redesign works from scratch in the running app,
+the **T091 rewrite of `scenario-paediatrics.md`**, and finally **pushed `master` to origin** (the long-standing
+backlog). **Remaining for T091:** only the full realistic Acts 1–5 narrative replay on the new schema.
 
 **✅ PUSHED 2026-06-14.** `git push origin master` shipped **206 commits** (the entire backlog — this session + all
 prior unpushed work) to `origin/master` (`…→9f2d5b7`, clean fast-forward). `origin/master` now == local `master`
