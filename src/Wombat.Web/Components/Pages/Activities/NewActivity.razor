@@ -1,7 +1,11 @@
 @page "/activities/new"
 @attribute [Authorize]
+@using Wombat.Application.Features.Activities.Services
+@using Wombat.Domain.Activities
+@using Wombat.Domain.Activities.Workflow
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IWorkflowEvaluator WorkflowEvaluator
 
 <PageTitle>New Activity</PageTitle>
 
@@ -113,14 +117,25 @@
 
       if (submit)
       {
-        await Sender.Send(new Wombat.Application.Features.Activities.Commands.TransitionActivity.TransitionActivityCommand(
-          draft.Id,
-          "submit",
-          userId,
-          authState.User,
-          _dataJson,
-          null));
-        _status = "Activity submitted.";
+        // The first action out of the workflow's initial state isn't always keyed "submit"
+        // (procedure_log uses "log", MSF uses "open"); resolve it from the workflow rather than
+        // hard-coding a key that doesn't exist for every activity type.
+        var transitionKey = ResolveInitialTransitionKey(authState.User, userId);
+        if (transitionKey is null)
+        {
+          _status = "Draft created. Open the activity to take the next action.";
+        }
+        else
+        {
+          await Sender.Send(new Wombat.Application.Features.Activities.Commands.TransitionActivity.TransitionActivityCommand(
+            draft.Id,
+            transitionKey,
+            userId,
+            authState.User,
+            _dataJson,
+            null));
+          _status = "Activity submitted.";
+        }
       }
       else
       {
@@ -131,5 +146,38 @@
     {
       _error = exception.Message;
     }
+  }
+
+  // Resolves the first transition out of the workflow's initial state that the current user is allowed
+  // to take, so the "Submit" button advances any activity type (mini_cex "submit", procedure_log "log",
+  // MSF "open") rather than failing on a hard-coded "submit" key. Returns null if none is available.
+  private string? ResolveInitialTransitionKey(System.Security.Claims.ClaimsPrincipal user, string userId)
+  {
+    var workflowJson = _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
+    if (string.IsNullOrWhiteSpace(workflowJson))
+    {
+      return null;
+    }
+
+    var workflow = WorkflowParser.Parse(workflowJson);
+    var candidate = new Activity
+    {
+      ActivityType = new ActivityType(),
+      CurrentState = workflow.InitialState,
+      SubjectUserId = userId,
+      CreatedByUserId = userId,
+      DataJson = _dataJson
+    };
+
+    foreach (var transition in workflow.Transitions
+      .Where(transition => transition.From.Contains(workflow.InitialState, StringComparer.Ordinal)))
+    {
+      if (WorkflowEvaluator.Evaluate(workflow, candidate, transition.Key, user).Allowed)
+      {
+        return transition.Key;
+      }
+    }
+
+    return null;
   }
 }

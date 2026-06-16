@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Dashboards.Coordinator;
@@ -18,7 +19,7 @@ public sealed class CoordinatorDashboardQueryTests
     {
         await using var db = CreateDb();
         var handler = new GetCoordinatorDashboardSummaryQueryHandler(
-            db, Options.Create(new DashboardThresholds()));
+            db, Options.Create(new DashboardThresholds()), new StubUserAdmin());
         var principal = CreatePrincipal("coord-1", institutionId: 1);
 
         var result = await handler.Handle(
@@ -34,7 +35,10 @@ public sealed class CoordinatorDashboardQueryTests
         await using var db = CreateDb();
         SeedStalledData(db);
         var handler = new GetCoordinatorDashboardSummaryQueryHandler(
-            db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }));
+            db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }),
+            new StubUserAdmin(new UserIdentityDetails(
+                "trainee-1", "trainee1@example.com", "Test", "Trainee", 1,
+                System.Array.Empty<int>(), System.Array.Empty<int>(), System.Array.Empty<string>())));
         var principal = CreatePrincipal("coord-1", institutionId: 1);
 
         var result = await handler.Handle(
@@ -42,6 +46,8 @@ public sealed class CoordinatorDashboardQueryTests
 
         result.StalledRequests.Should().HaveCount(1);
         result.StalledRequests[0].ActivityTypeName.Should().Be("Mini-CEX");
+        // T094-followup: the panel shows the trainee's name, not the raw UserId GUID.
+        result.StalledRequests[0].SubjectName.Should().Be("Test Trainee");
     }
 
     [Fact]
@@ -81,7 +87,7 @@ public sealed class CoordinatorDashboardQueryTests
         db.SaveChanges();
 
         var handler = new GetCoordinatorDashboardSummaryQueryHandler(
-            db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }));
+            db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }), new StubUserAdmin());
         var principal = CreatePrincipal("coord-1", institutionId: 1);
 
         var result = await handler.Handle(
@@ -96,7 +102,7 @@ public sealed class CoordinatorDashboardQueryTests
         await using var db = CreateDb();
         SeedExpiringInvitation(db);
         var handler = new GetCoordinatorDashboardSummaryQueryHandler(
-            db, Options.Create(new DashboardThresholds()));
+            db, Options.Create(new DashboardThresholds()), new StubUserAdmin());
         var principal = CreatePrincipal("coord-1", institutionId: 1);
 
         var result = await handler.Handle(
@@ -157,5 +163,35 @@ public sealed class CoordinatorDashboardQueryTests
         if (institutionId.HasValue)
             claims.Add(new Claim(WombatClaimTypes.InstitutionId, institutionId.Value.ToString()));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
+    }
+
+    private sealed class StubUserAdmin : IUserAdministrationService
+    {
+        private readonly Dictionary<string, UserIdentityDetails> _users;
+
+        public StubUserAdmin(params UserIdentityDetails[] users)
+            => _users = users.ToDictionary(user => user.UserId, StringComparer.Ordinal);
+
+        public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
+            => Task.FromResult(_users.TryGetValue(userId, out var user) ? user : null);
+
+        public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task UpdateScopeAsync(string userId, int institutionId, IReadOnlyCollection<int> specialityIds, IReadOnlyCollection<int> subSpecialityIds, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
     }
 }

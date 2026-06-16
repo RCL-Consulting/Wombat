@@ -17,13 +17,16 @@ public sealed class GetCoordinatorDashboardSummaryQueryHandler
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly DashboardThresholds _thresholds;
+    private readonly IUserAdministrationService _users;
 
     public GetCoordinatorDashboardSummaryQueryHandler(
         IApplicationDbContext dbContext,
-        IOptions<DashboardThresholds> thresholds)
+        IOptions<DashboardThresholds> thresholds,
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
         _thresholds = thresholds.Value;
+        _users = users;
     }
 
     public async Task<CoordinatorDashboardSummaryDto> Handle(
@@ -39,12 +42,26 @@ public sealed class GetCoordinatorDashboardSummaryQueryHandler
             .Include(a => a.ActivityType)
             .Where(a => a.CurrentState == "submitted" && a.UpdatedOn < stallCutoff);
 
-        var stalled = await stalledQuery
+        var stalledActivities = await stalledQuery
             .OrderBy(a => a.UpdatedOn)
             .Take(10)
-            .Select(a => new StalledRequestItem(
-                a.Id, a.ActivityType.Name, a.SubjectUserId, a.UpdatedOn))
+            .Select(a => new { a.Id, TypeName = a.ActivityType.Name, a.SubjectUserId, a.UpdatedOn })
             .ToListAsync(cancellationToken);
+
+        // Resolve the trainee's display name (the panel previously showed the raw UserId GUID).
+        var nameCache = new Dictionary<string, string>(StringComparer.Ordinal);
+        var stalled = new List<StalledRequestItem>(stalledActivities.Count);
+        foreach (var activity in stalledActivities)
+        {
+            if (!nameCache.TryGetValue(activity.SubjectUserId, out var subjectName))
+            {
+                var details = await _users.GetByIdAsync(activity.SubjectUserId, cancellationToken);
+                subjectName = FormatSubjectName(details, activity.SubjectUserId);
+                nameCache[activity.SubjectUserId] = subjectName;
+            }
+
+            stalled.Add(new StalledRequestItem(activity.Id, activity.TypeName, subjectName, activity.UpdatedOn));
+        }
 
         var expiringQuery = _dbContext.Set<Invitation>()
             .AsNoTracking()
@@ -64,5 +81,17 @@ public sealed class GetCoordinatorDashboardSummaryQueryHandler
             .ToListAsync(cancellationToken);
 
         return new CoordinatorDashboardSummaryDto(stalled, expiring);
+    }
+
+    private static string FormatSubjectName(UserIdentityDetails? user, string fallbackUserId)
+    {
+        if (user is null)
+        {
+            return fallbackUserId;
+        }
+
+        var name = string.Join(" ", new[] { user.FirstName, user.LastName }
+            .Where(part => !string.IsNullOrWhiteSpace(part)));
+        return string.IsNullOrWhiteSpace(name) ? user.Email : name;
     }
 }

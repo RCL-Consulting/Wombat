@@ -31,14 +31,22 @@ STOPPED; browser open.**
 Act1+2 docs `5f674ef`, T094 `f841f3b`, Act-4 docs `44d0c8a`, Act-5 docs `2fc81e0`) → `origin/master` (`a2f8401..2fc81e0`,
 clean fast-forward, 0/0). The long-standing "push master to origin" item is **done**.
 
-**▶ NEXT: the linear Acts 1–5 narrative is fully replayed on the T091 schema + pushed.** Remaining options: (a) the
-**Appendix** cross-cutting spot-checks (`scenario-paediatrics.md` Appendix — data rights, scheduled jobs, SSO, mobile/a11y;
-played pre-T091 as T083–T086, a T091 re-run is optional); (b) sweep minor observations (Act-3 stalled-panel GUID display;
-new-activity Submit FAILED-transition nit). **Sonnet** fine for the Appendix grind. Restore any per-act snapshot
-(`t091-act{1..5}-complete`, `t091-act3-schemas`) to revisit.
+**🧹 T095 — both minor replay observations FIXED + committed.** (1) Coordinator "Stalled requests" panel now resolves
+the trainee's **name** (was the raw UserId GUID) — `GetCoordinatorDashboardSummaryQueryHandler` injects
+`IUserAdministrationService`; +1 test assertion. (2) `/activities/new` **Submit** now resolves the first allowed
+transition from the workflow's initial state (was hard-coded `"submit"`, which FAILED for procedure_log `"log"` / MSF
+`"open"`) — `NewActivity.razor` uses `WorkflowParser` + `IWorkflowEvaluator`. **Live-verified:** procedure_log Submit →
+`logged`, audit `TransitionActivityCommand` Success=true (was FAILED). Application **314**, Architecture 19, Web 39,
+Domain 45 green; Release clean. Task file `Tasks/T095-minor-replay-observations.md`. (Tested against `t091-act3-schemas`;
+canonical `t091-act5-complete` restored afterwards.)
 
-**Commit status:** all work committed + **pushed** to `origin/master` (in sync, 0/0). Act 5 changed no product code
-(T077–T081 all held). Acts 1–5 replay itself involves no product-code changes beyond the T092/T093/T094 fixes.
+**▶ NEXT: the linear Acts 1–5 narrative is fully replayed + pushed; both minor observations fixed.** The only remaining
+optional item is a T091 re-run of the **Appendix** cross-cutting spot-checks (`scenario-paediatrics.md` Appendix — data
+rights, scheduled jobs, SSO, mobile/a11y; played pre-T091 as T083–T086 — orthogonal to T091, so a re-run is low-value/
+optional). **Sonnet** fine for that grind. Restore any per-act snapshot (`t091-act{1..5}-complete`, `t091-act3-schemas`).
+
+**Commit status:** Acts 1–5 + T092/T093/T094 are pushed to `origin/master`. **T095 (this block) is committed locally;
+push it to keep origin in sync.** Act 5 changed no product code (T077–T081 all held).
 
 ---
 
