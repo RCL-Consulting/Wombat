@@ -17,7 +17,7 @@ request supplies none (explicit foreign id still rejected by `CanAccessInstituti
 (`Create_InstitutionalAdmin_SpecialityPanel_PinsToOwnInstitution`). **Application 313→314, Architecture 19,
 Release build clean (0 warnings).** Task file `Tasks/T094-decision-panel-institution-scope.md`. The
 existing Act-2 panel (created pre-fix) was **backfilled** `InstitutionId=2` via SQL to unblock the replay.
-**Code fix is on disk + tested but NOT yet committed** (see standing item below).
+**Code fix committed to `master` as `f841f3b`** (mirrors T092 `4e3caee` / T093 `f24480d`; not pushed).
 
 **Act 4 (all 6 goals met, DB-verified):**
 - **4.A** Mbatha scheduled **5 reviews** (panel 1; Molefe=Pre-graduation, other 4=Annual progression; all `Scheduled`).
@@ -38,10 +38,9 @@ EPAs so Molefe holds **15/15 STARs** → portfolio **PDF** (QuestPDF, T023/T078)
 Coordinator Smit → Mbatha **Mark-complete** removes the Trainee role + graduation email (T080). Prior fixes
 T078/T079/T080/T081 already in code. **Opus** recommended (STAR augmentation + QuestPDF + graduation).
 
-**⚠️ STANDING ITEM — commit T094.** The T094 code fix + test + task file + this handoff are on disk,
-green, uncommitted. Per CLAUDE.md ("commit after every completed task") the next session (or this one if
-continued) should commit T094 to `master` — mirroring how T092 (`4e3caee`) + T093 (`f24480d`) were handled.
-The Acts 1–4 replay itself involves no product-code changes and is not committed (handoff docs aside).
+**Commit status:** T094 (code + test + task file + Act-4 handoff) committed to `master` as `f841f3b`
+(not pushed — pushing `master` to origin remains the long-standing item). The Acts 1–4 replay itself
+involves no product-code changes and is not committed.
 
 **⚠️ Tooling:** dev server via PowerShell tool (background, `$env:ASPNETCORE_ENVIRONMENT='Development'`); **stop
 it before** `db-snapshot take|restore` / `dotnet test|build`. `dotnet test --no-build` ran a **stale x64
