@@ -2,6 +2,31 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION 2026-06-16 (Opus) — **Appendix re-run on T091: all PASS.** 🏁 Scenario + Appendix fully validated; nothing outstanding.
+
+**Ran the entire Appendix (A.1–A.4) on the T091 DB** (from `t091-act5-complete`), UI-driven + DB-verified. All
+prior cross-cutting fixes (T083/T084/T085/T086) hold on T091; no new findings (these are orthogonal to the EPA/
+curriculum/adoption redesign, as expected). **No product code changed; nothing committed** (this handoff only). DB
+artifacts (1 export request, Ndlovu erasure) **rolled back by restoring `t091-act5-complete`**. **Dev server STOPPED.**
+- **A.1.1 export ✓** — Dlamini requested Export → admin (bootstrap) approved → `/account/data-rights/download/{id}`
+  returns **HTTP 200, `application/zip`, 85,002-byte "PK" ZIP** (T083 holds; was the 404).
+- **A.1.2 erasure ✓** — Ndlovu requested Erasure → admin approved → **pseudonymisation** (T084): `UserName`→
+  `deleted_user_eb4f8484`, Email/First/Last cleared, account locked, **Id retained**, request **Completed**,
+  **2 audit entries retained**. Atomic (one approve).
+- **A.2 jobs ✓** — `/admin/jobs` lists **9** jobs (cron/last/next/Succeeded/Run-now); Run-now on assessor-pending-nudge
+  recorded a `ScheduledJobRun` Succeeded (12ms) **TriggeredBy = admin id** (vs empty for scheduler runs).
+- **A.3 SSO ✓** — `/admin/sso/group-mappings` degrades gracefully (banner "No SSO providers… add to `Sso:Providers`…
+  restart" + add-form gated; no local IdP). Login paths (A.3.2/3.3) remain unit-tested only.
+- **A.4 mobile/a11y ✓** — @375px no horizontal overflow + hamburger present (A.4.1); chart `role=img`+`<table>`
+  fallback confirmed in Act 4 (A.4.3/T085); `--muted-text`=`rgb(104 111 119)` = post-T086 ≥AA value (A.4.4); keyboard
+  (T048) unchanged — not re-driven.
+
+**▶ NEXT: nothing outstanding.** The T091 redesign + Acts 1–5 + Appendix are all replayed/validated; T092/T093/T094/T095
+fixed + pushed; `origin/master` in sync. Optional future polish only (none flagged). Restore any `t091-act{1..5}-complete`
+/ `t091-act3-schemas` snapshot to revisit. Per-act + Appendix all green.
+
+---
+
 ## ⭐ SESSION 2026-06-16 (Opus) — **Act 5 fully replayed** (graduation: Graduate decision → 15 STARs → portfolio PDF → mark-complete, DB+PDF-verified). **🎓 ACTS 1–5 COMPLETE on the T091 schema.**
 
 **Act 5 (graduation + portfolio PDF) is COMPLETE end-to-end on the T091 schema**, driven UI-first (Playwright) +
