@@ -2,7 +2,14 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION 2026-06-16 (Opus) — **Appendix re-run on T091: all PASS.** 🏁 Scenario + Appendix fully validated; nothing outstanding.
+## ⭐ SESSION FINALIZED — 2026-06-16 (Opus) — **Appendix re-run on T091: all PASS.** 🏁 Scenario + Appendix fully validated; nothing outstanding.
+
+> **Session close:** T091 redesign + Acts 1–5 + the full Appendix are replayed & validated on the fresh national-catalogue/
+> adoption schema. Four fixes shipped during the replay — **T092** (InstAdmin invite scope), **T093** (CollegeAdmin
+> provisioning), **T094** (panel InstitutionId), **T095** (stalled-panel name + workflow-aware new-activity submit) — all
+> tested and **pushed**; `origin/master` == `master` (`0d98abd`). Unit suites green (Domain 45, Application 314,
+> Architecture 19, Web 39). Dev server **STOPPED**; per-act + schema snapshots banked (`t091-act{1..5}-complete`,
+> `t091-act3-schemas`). Working tree clean apart from pre-existing untracked `EPA Book/` + `.dotnet/`. **Nothing outstanding.**
 
 **Ran the entire Appendix (A.1–A.4) on the T091 DB** (from `t091-act5-complete`), UI-driven + DB-verified. All
 prior cross-cutting fixes (T083/T084/T085/T086) hold on T091; no new findings (these are orthogonal to the EPA/
