@@ -60,7 +60,10 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
         {
             Name = request.Name.Trim(),
             Scope = request.Scope,
-            InstitutionId = request.Scope == DecisionPanelScope.Institution ? request.InstitutionId : null,
+            // The panel carries its own institution regardless of scope (T091/T094): a Speciality-scoped
+            // panel still belongs to the institution running that programme. Without this, ListDecisionPanels
+            // (which filters an InstitutionalAdmin by InstitutionId) hides the panel from its own creator.
+            InstitutionId = resolvedInstitutionId,
             SpecialityId = request.Scope == DecisionPanelScope.Speciality ? request.SpecialityId : null,
             CreatedOn = DateTime.UtcNow,
             Members = request.Members
@@ -85,7 +88,20 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
     }
 
     // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
-    // now a national catalogue entry (T091) and no longer the source of the institution.
+    // now a national catalogue entry (T091) and no longer the source of the institution. An InstitutionalAdmin's
+    // panels are pinned to their own institution (T094); a global Administrator supplies it explicitly via the form.
     private Task<int?> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
-        => Task.FromResult(request.InstitutionId);
+    {
+        // When the form supplies no institution (an InstitutionalAdmin creating a Speciality-scoped panel
+        // sees no institution picker), pin the panel to the caller's own institution (T094). An explicit
+        // request value is still honoured and validated by the CanAccessInstitution guard above.
+        if (!request.InstitutionId.HasValue
+            && request.Principal.IsInstitutionalAdmin()
+            && !request.Principal.IsAdministrator())
+        {
+            return Task.FromResult(request.Principal.GetInstitutionId());
+        }
+
+        return Task.FromResult(request.InstitutionId);
+    }
 }

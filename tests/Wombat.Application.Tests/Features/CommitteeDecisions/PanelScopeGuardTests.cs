@@ -83,6 +83,30 @@ public sealed class PanelScopeGuardTests
     }
 
     [Fact]
+    public async Task Create_InstitutionalAdmin_SpecialityPanel_PinsToOwnInstitution()
+    {
+        // T094: the Speciality-scoped panel form shows no institution picker, so the request carries no
+        // institution. The panel must still be pinned to the caller's own institution — otherwise
+        // ListDecisionPanels (which filters an InstitutionalAdmin by InstitutionId) hides it from its
+        // own creator, blocking review scheduling on it.
+        await using var db = SeededDb();
+        var handler = new CreateDecisionPanelCommandHandler(db);
+
+        var result = await handler.Handle(
+            new CreateDecisionPanelCommand(
+                Name: "Paed ARCP",
+                Scope: DecisionPanelScope.Speciality,
+                InstitutionId: null,
+                SpecialityId: SpecialityInB,
+                Members: new[] { new DecisionPanelMemberInput("u-chair", DecisionPanelMemberRole.Chair) },
+                Principal: TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            CancellationToken.None);
+
+        result.InstitutionId.Should().Be(InstitutionA);
+        result.SpecialityId.Should().Be(SpecialityInB);
+    }
+
+    [Fact]
     public async Task Update_InstitutionalAdmin_CannotUpdatePanelInOtherInstitution()
     {
         await using var db = SeededDb();

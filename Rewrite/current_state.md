@@ -2,7 +2,91 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION 2026-06-14 (Opus) — **Act 1 + Act 2 fully replayed** on fresh DB; T092 + T093 fixed + committed; ▶ Acts 3–5 next
+## ⭐ SESSION 2026-06-15/16 (Opus) — **Act 4 fully replayed** on the T091 DB (committee/STARs/appeal, DB-verified); **T094 found + fixed + tested**; ▶ Act 5 next
+
+**Act 4 (annual review + STARs + appeal) is COMPLETE end-to-end on the T091 schema**, driven UI-first
+(Playwright) + DB-verified. Started from `t091-act3-complete`. **Dev server STOPPED; browser open.**
+
+**🐞 T094 (blocker) FOUND + FIXED + TESTED + DONE.** The replay immediately hit a blocker: Mbatha
+(InstitutionalAdmin) scheduling reviews saw an **empty Panel dropdown** — her own Speciality-scoped panel
+had `InstitutionId = NULL`, so `ListDecisionPanels` (filters InstAdmin by InstitutionId) hid it.
+Root cause: `CreateDecisionPanelCommandHandler` persisted InstitutionId only for Institution-scoped panels
+(nulling it for Speciality scope), and the form shows no institution picker for Speciality scope. **Fix:**
+persist the resolved institution for all scopes + default to the InstAdmin's own institution when the
+request supplies none (explicit foreign id still rejected by `CanAccessInstitution`). +1 test
+(`Create_InstitutionalAdmin_SpecialityPanel_PinsToOwnInstitution`). **Application 313→314, Architecture 19,
+Release build clean (0 warnings).** Task file `Tasks/T094-decision-panel-institution-scope.md`. The
+existing Act-2 panel (created pre-fix) was **backfilled** `InstitutionId=2` via SQL to unblock the replay.
+**Code fix is on disk + tested but NOT yet committed** (see standing item below).
+
+**Act 4 (all 6 goals met, DB-verified):**
+- **4.A** Mbatha scheduled **5 reviews** (panel 1; Molefe=Pre-graduation, other 4=Annual progression; all `Scheduled`).
+- **4.B** Evidence **frozen on Start review** (single-column ReviewDetail, not tabbed): Molefe MSF #9; Mahlangu Mini-CEX #10 (submitted) + DOPS #8 (completed). **T033 rating-trajectory** chart + accessible `<table>` fallback render for trainees with rated WBAs (Dlamini PAED-001 r3→r4; Mahlangu PAED-002 r3, PAED-010 r2). du Plessis/Ndlovu empty (no rated WBAs) — presentable.
+- **4.C** Decisions recorded (chair Zulu): Molefe/Dlamini `SatisfactoryProgress`, du Plessis `SatisfactoryWithObservations`, Mahlangu `InadequateProgressAdditionalTraining`, Ndlovu `OutcomeDeferred`.
+- **4.D** 3 STARs staged for Molefe — **Authorised-level picker showed only the 5 Paed levels** (T076/F-4D-1 holds; SubSpeciality 2 default scale = Paed). PAED-001/006 Unsupervised(4), PAED-013 Indirect(3).
+- **4.E** All 5 **Ratified** (chair Zulu). Ratifying Molefe **atomically issued 3 `EntrustmentDecision` rows** (Active, `IssuedByCommitteeReviewId=1`) + consumed the 3 pending rows (0 remaining). DB-verified.
+- **4.F** Mahlangu (trainee, `/committee/my-reviews`) **lodged an appeal** → review `UnderAppeal`; chair Zulu **resolved `Remitted`** with a replacement decision (referral upheld, re-review cut 6mo→3mo) → review `Final`. New `CommitteeDecision` (id 6) carries `SupersedesDecisionId=4`; appeal resolved by Zulu. DB-verified.
+
+**End state (DB):** 5 CommitteeReviews (all terminal: 4 Ratified + 1 Final-after-appeal), 6 CommitteeDecisions
+(1 superseding), 3 EntrustmentDecisions (Molefe), 1 CommitteeAppeal (resolved Remitted). **Snapshot
+`t091-act4-complete`** banks the full state. No new secrets (reused `Mbatha@KGK2026!` / `Act2Pass!123`).
+
+**▶ NEXT: Act 5 (graduation + portfolio PDF).** Restore `t091-act4-complete`. Follow `scenario-paediatrics.md`
+Act 5: Molefe's final Pre-graduation review (review 1 is already Pre-graduation + Ratified — Act 5 may need a
+NEW final review or augment; check the scenario) → **Graduate** decision (T081) → stage/ratify the remaining 12
+EPAs so Molefe holds **15/15 STARs** → portfolio **PDF** (QuestPDF, T023/T078) generated + reproduced by
+Coordinator Smit → Mbatha **Mark-complete** removes the Trainee role + graduation email (T080). Prior fixes
+T078/T079/T080/T081 already in code. **Opus** recommended (STAR augmentation + QuestPDF + graduation).
+
+**⚠️ STANDING ITEM — commit T094.** The T094 code fix + test + task file + this handoff are on disk,
+green, uncommitted. Per CLAUDE.md ("commit after every completed task") the next session (or this one if
+continued) should commit T094 to `master` — mirroring how T092 (`4e3caee`) + T093 (`f24480d`) were handled.
+The Acts 1–4 replay itself involves no product-code changes and is not committed (handoff docs aside).
+
+**⚠️ Tooling:** dev server via PowerShell tool (background, `$env:ASPNETCORE_ENVIRONMENT='Development'`); **stop
+it before** `db-snapshot take|restore` / `dotnet test|build`. `dotnet test --no-build` ran a **stale x64
+assembly** (243 vs true 314) — run `dotnet test` **without** `--no-build`, or build first to the x64 path.
+Builder/committee form refs **churn per Blazor re-render** — snapshot after each navigate/select; the Ratify
+button took a `button:has-text("Ratify")` selector to skip snapshots.
+
+---
+
+## ⭐ SESSION 2026-06-15 (Opus) — **Act 3 fully replayed** on the T091 fresh DB (4 schemas built via the visual builder; activities + credit DB-verified)
+
+**Act 3 (operational rhythm) is COMPLETE end-to-end on the T091 schema**, driven UI-first (Playwright) + DB-verified at every credit step. No product code changed; **nothing committed** (this handoff only). **Dev server STOPPED; browser open.**
+
+**Schemas — built + published via the visual builder (user chose full-builder, not SQL):** all 4 KGK-scoped Paed
+activity types now carry real form+workflow+credit JSON (essential field set per the documented Act-3 fidelity note):
+- **mini_cex_paed (id 11, v2)** — epa_id/assessor_user_id/overall_level(scale→2); 4-state draft→submitted→rated→completed (+recall); credit epa_field=epa_id, min_level=overall_level.
+- **dops_paed (id 12, NEW)** — epa_id/assessor_user_id/procedure_code/overall_level; same 4-state workflow + credit.
+- **procedure_log_paed (id 13, NEW)** — epa_id/procedure_code/supervision_level; 2-state draft→logged; credit min_level=supervision_level.
+- **msf_paed (id 14, NEW)** — epa_id/self_rating/feedback_summary; draft→open→closing→closed (open=role:Trainee, close/finalise=creator); credit `curriculum_item_id:14` (PAED-013).
+All staging verified in DB before each publish; staging promoted to main on publish; scale_key="2" renders the Paed levels.
+
+**Activities (10) + credit — all DB-verified, scoped to the adopted FCPaed v2026.1 (curriculum 2):**
+- **3.A–3.C** Dlamini ×2 Mini-CEX (lvl 3+4) → Naidoo accept+complete → **PAED-001 2/30, reached 1** (stage-3 min 4; only lvl-4 reaches — T071 volume-vs-reached correct).
+- **3.D** du Plessis ×5 procedure logs (sup 2,2,3,3,4) → **PAED-011 5/30, reached 3** (stage-2 min 3 — T073 stage-gating correct).
+- **3.E** Mahlangu DOPS lvl 2 → **Patel (TrainingStatus=InTraining) accepted+completed, NOT blocked** → **PAED-010 1/10, reached 1** — **F-3E-2 fix HOLDS** (this DB's PAED-010 has stage-1 min=2, so a yr-1 lvl-2 DOPS reaches, where the old run got reached=0).
+- **3.F** Molefe MSF (self_rating 4) open→close→finalise → **PAED-013 1/6, reached 1** — credit lands on **item 14 = PAED-013** (F-3F-NOTE resolution holds).
+- **3.G** Mahlangu stale Mini-CEX (submitted, UpdatedOn backdated 15d) → **Smit Coordinator "Stalled requests" panel SURFACES it** (T074 fix holds; was dead pre-T074).
+- **3.H** `/admin/audit` (Mbatha): 143 entries, full lifecycle (Create/Transition + Save/Publish ActivityType) with **real principal names**, no JsonException, no raw `[PRINCIPAL]` (T045 holds).
+- **3.I** du Plessis `/portfolio/progress` renders all 15 adopted EPAs; PAED-011 shows `5/30 · reached 3/30 · Minimum level 3 (year 2)` — dashboard reads adopted-curriculum credit correctly.
+
+**Snapshots banked:** **`t091-act3-schemas`** (4 types published, 0 activities) and **`t091-act3-complete`** (full Act-3 end-state: 10 activities, 4 credit rows). No new secrets (reused `Mbatha@KGK2026!` / `Act2Pass!123`).
+
+**2 minor observations (non-blocking, not ticketed):** (1) Coordinator "Stalled requests" panel shows the trainee as a **raw UserId GUID** instead of a name (cosmetic). (2) The `/activities/new` **Submit** button on a type whose first draft transition isn't keyed `submit` (e.g. procedure_log's `log`) records a **FAILED TransitionActivityCommand** in the audit log but harmlessly leaves a draft — the trainee then Logs from the detail page. Minor robustness nit.
+
+**▶ NEXT: Act 4 (annual review + STARs + appeal).** Restore `t091-act3-complete`. DecisionPanel id 1 ("Paed Annual Review
+Panel 2026", chair Zulu) exists from Act 2. Follow `scenario-paediatrics.md` Act 4; prior fixes T075/T076/T081 are already in
+code. Then Act 5 (graduation + portfolio PDF). **Opus** recommended (committee flow + entrustment-decision correctness).
+**Tooling:** dev server via PowerShell tool (background, `$env:ASPNETCORE_ENVIRONMENT='Development'`); **stop it before**
+`db-snapshot take|restore`; psql at `C:\Program Files\PostgreSQL\16\bin\psql.exe`. Builder refs churn per Blazor re-render —
+snapshot after each navigate/select. v2 ids (this DB): trainees Molefe prof2/Dlamini prof3/duPlessis prof4/Mahlangu prof5/
+Ndlovu prof6 (all curriculum 2, adoption 1); assessors Naidoo/Patel(InTraining)/Botha/Zulu/Khumalo (speciality 2).
+
+---
+
+## (superseded by Act-3 completion above) SESSION 2026-06-14 (Opus) — **Act 1 + Act 2 fully replayed** on fresh DB; T092 + T093 fixed + committed
 
 **Continued the fresh-DB replay forward: Act 2 is now COMPLETE end-to-end**, driven entirely by Mbatha
 (InstitutionalAdmin) with **no Administrator workarounds** — exercising the T092 fix in the real narrative.
