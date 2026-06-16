@@ -27,15 +27,18 @@ STOPPED; browser open.**
 **4 active trainees + 1 graduated alumna** (Molefe). Matches the scenario's Act-5 outcome exactly. **Snapshot
 `t091-act5-complete`** banks the full end-state. No new secrets.
 
-**▶ NEXT: the linear Acts 1–5 narrative is fully replayed on the T091 schema.** Remaining options: (a) the **Appendix**
-cross-cutting spot-checks (`scenario-paediatrics.md` Appendix — data rights, scheduled jobs, SSO, mobile/a11y; played
-pre-T091 as T083–T086, a T091 re-run is optional); (b) **push `master` to origin** (the long-standing item — local master
-is ahead incl. T094 `f841f3b`); (c) sweep minor observations (Act-3 stalled-panel GUID display; new-activity Submit FAILED-
-transition nit). **Opus** for push/release judgement; **Sonnet** fine for the Appendix grind. Restore any per-act snapshot
+**✅ PUSHED 2026-06-16.** `git push origin master` shipped the 6 unpushed commits (T092 `4e3caee`, T093 `f24480d`,
+Act1+2 docs `5f674ef`, T094 `f841f3b`, Act-4 docs `44d0c8a`, Act-5 docs `2fc81e0`) → `origin/master` (`a2f8401..2fc81e0`,
+clean fast-forward, 0/0). The long-standing "push master to origin" item is **done**.
+
+**▶ NEXT: the linear Acts 1–5 narrative is fully replayed on the T091 schema + pushed.** Remaining options: (a) the
+**Appendix** cross-cutting spot-checks (`scenario-paediatrics.md` Appendix — data rights, scheduled jobs, SSO, mobile/a11y;
+played pre-T091 as T083–T086, a T091 re-run is optional); (b) sweep minor observations (Act-3 stalled-panel GUID display;
+new-activity Submit FAILED-transition nit). **Sonnet** fine for the Appendix grind. Restore any per-act snapshot
 (`t091-act{1..5}-complete`, `t091-act3-schemas`) to revisit.
 
-**Commit status:** Act 5 changed no product code (T077–T081 all held). The Act-5 handoff (this block) is the only change;
-T094 (`f841f3b`) + the Act-4 handoff (`44d0c8a`) are already committed. Acts 1–5 replay itself is not committed.
+**Commit status:** all work committed + **pushed** to `origin/master` (in sync, 0/0). Act 5 changed no product code
+(T077–T081 all held). Acts 1–5 replay itself involves no product-code changes beyond the T092/T093/T094 fixes.
 
 ---
 
