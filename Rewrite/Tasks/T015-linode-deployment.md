@@ -75,7 +75,7 @@ Execute `INFRASTRUCTURE.md`'s "First-boot checklist" against a real (or rebuilt)
 
 - [x] `https://wombat.rcl.co.za` returns a TLS-secured login page (Let's Encrypt, TLS-ALPN-01; HTTP→HTTPS 308).
 - [x] The seeded admin can log in (scripted login through Caddy: 302→`/`, auth cookie issued **with Secure flag**, admin nav renders).
-- [ ] Issuing an invitation sends a real email — **deferred**: SMTP intentionally not configured in Phase 1 (`Email__*` left empty). Wire SMTP + `systemctl restart wombat` to enable.
+- [x] Email sending works — SMTP wired 2026-06-19 (`mail.rcl.co.za:465` implicit SSL, auth `wombat@rcl.co.za`, cert verified). A real test email was delivered to `renier@rcl.co.za` over the app's exact transport (MailKit `SslOnConnect`). (The invitation *UI* — a Blazor interactive form — wasn't separately driven; the transport itself is verified.)
 - [x] `systemctl status wombat` says `active (running)`; enabled on boot (wombat + caddy + postgresql).
 - [x] `journalctl -u wombat` shows a clean startup (only benign DataProtection "no XML encryptor" + Caddy OCSP notices).
 - [x] Restarting the service: **4 s** to ready (Type=notify), `/health` 200 immediately; DataProtection key persists across restart (sessions survive).
