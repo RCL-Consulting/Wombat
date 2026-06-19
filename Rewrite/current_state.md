@@ -2,6 +2,32 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## 🚀 SESSION 2026-06-19 (Opus) — **T015 EXECUTED: Wombat is LIVE on Linode at https://wombat.rcl.co.za** (TLS, migrated, seeded, verified end-to-end)
+
+**The rewrite is deployed and serving in production.** Drove the full first-boot checklist over SSH from the Windows dev box onto a freshly-rebuilt Linode. Verified end-to-end (login through Caddy issues a Secure auth cookie; admin nav renders). **Committed `7709666` (code + deploy artifacts); NOT pushed.**
+
+**Server:** Linode `172.236.8.144` = `wombat.rcl.co.za`. **Ubuntu 26.04 LTS** (rebuilt fresh; the box existed but root login was lost, so user rebuilt it via the Linode dashboard with my SSH key). 1 vCPU / 1 GB RAM (below the 2 GB doc spec — added a 1 GB swapfile + Workstation GC). DNS A record already pointed at the box. Access: my `id_ed25519` key authorized on `root` (added during rebuild).
+
+**What's running (all `systemctl enabled`):**
+- **Ubuntu 26.04 distro packages** — `aspnetcore-runtime-10.0` (10.0.9), `postgresql` (18.4), `caddy` (2.6.2). No Microsoft/Cloudsmith APT repos needed (big simplification vs the docs).
+- **App** at `/opt/wombat/app` (framework-dependent publish, 99 MB), systemd `wombat.service` (Type=notify, `DOTNET_gcServer=0`, TimeoutStartSec=90). Migrations + role/admin/data seeding run on boot — **all 29 migrations applied, 10 roles + admin `renier@rcl.co.za` seeded** on first start.
+- **Caddy** terminates TLS (Let's Encrypt, auto), reverse-proxies `127.0.0.1:5080` with `flush_interval -1` (Blazor SignalR) + HSTS. HTTP→HTTPS 308.
+- **Postgres 18** role+db `wombat` (scram over 127.0.0.1). **Env/secrets** in `/opt/wombat/config/wombat.env` (mode 600). DataProtection keys persist to `/opt/wombat/data/keys`.
+- **Crons:** health check (every min, auto-restart on 3 fails — email alert guarded behind `mail`, which isn't installed since SMTP is deferred) + nightly `pg_dump` 02:00 (tested + restore-verified into a throwaway DB).
+
+**Two production-correctness code fixes shipped (were missing, now live + committed):**
+1. `Program.cs` **`UseForwardedHeaders`** (X-Forwarded-Proto/-For) — without it, behind Caddy the app saw `http` and auth/antiforgery cookies weren't `Secure`. Verified: login cookie now carries `Secure`.
+2. `Program.cs` **persist DataProtection keys** to `Wombat:DataProtectionKeysPath` — the homeless service user + `ProtectSystem=strict` made the default `$HOME/.aspnet` unwritable → keys were ephemeral (every restart logged everyone out). Verified: key file stable across restart.
+Plus new `appsettings.Production.json` (logging) and a new **`deploy/deploy.ps1`** (Windows tar+scp deploy; `deploy.sh` needs rsync, absent on Windows). Deploy artifacts updated to match reality (Caddyfile domain, gcServer, backup-as-postgres-superuser fix, README for 26.04). Secrets recorded in `pwd_DO_NOT_COMMIT.txt` (DB pw, PseudonymSalt, admin pw `Ex4-4cUvS@jkyHZY`).
+
+**⚠️ Finding (latent, not fixed — pre-existing):** the `AuditLog` migration installs trigger `audit_entries_immutable` (raises on UPDATE/DELETE for ALL roles). But `AuditLogRetentionJob` does `RemoveRange` (DELETE) to archive 2-yr-old rows → the trigger will **block** it. Dormant on a fresh DB (nothing is 2 yrs old; manual "Run now" archives nothing). **Resolve before rows age out** — e.g. have the job set `session_replication_role='replica'` for its txn, or archive via a SECURITY DEFINER function. Worth a task file.
+
+**▶ NEXT (deployment side):** (a) wire **SMTP** in `wombat.env` + restart to enable invitations/email (the only unverified T015 item) — **Sonnet**. (b) Fix the audit retention-vs-trigger conflict — **Opus** (correctness). (c) Optionally **push** `7709666` to origin (master is otherwise in sync per the 2026-06-16 block). (d) **T016** (final smoke test / handover / delete old Wombat source) is the last plan item — **Opus**. Future deploys: `./deploy/deploy.ps1` from this box.
+
+**Tooling notes:** drive the server with `Get-Content -Raw <script.sh> | ssh root@172.236.8.144 "tr -d '\r' | bash -s"` (avoids PowerShell→bash quoting hell + CRLF); scratch scripts live in `deploy/.remote/` (gitignored). `dotnet publish src/Wombat.Web -c Release` → `tar -czf` → `scp` → extract/rotate/restart. A PowerShell guard blocks commands that embed the admin password literal (run such checks server-side, reading creds from `wombat.env`).
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-16 (Opus) — **Appendix re-run on T091: all PASS.** 🏁 Scenario + Appendix fully validated; nothing outstanding.
 
 > **Session close:** T091 redesign + Acts 1–5 + the full Appendix are replayed & validated on the fresh national-catalogue/

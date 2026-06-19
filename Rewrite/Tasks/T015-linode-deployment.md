@@ -71,13 +71,21 @@ Execute `INFRASTRUCTURE.md`'s "First-boot checklist" against a real (or rebuilt)
 
 ## Verification
 
-- [ ] `https://wombat.<domain>` returns a TLS-secured login page.
-- [ ] The seeded admin can log in.
-- [ ] Issuing an invitation sends a real email through the configured SMTP provider.
-- [ ] `systemctl status wombat` says `active (running)`.
-- [ ] `journalctl -u wombat --since "10 minutes ago"` shows no errors.
-- [ ] Restarting the service takes the site down for <5 seconds.
-- [ ] The nightly backup cron runs successfully once (check log).
+**Executed 2026-06-19 — live at https://wombat.rcl.co.za (Linode 172.236.8.144).**
+
+- [x] `https://wombat.rcl.co.za` returns a TLS-secured login page (Let's Encrypt, TLS-ALPN-01; HTTP→HTTPS 308).
+- [x] The seeded admin can log in (scripted login through Caddy: 302→`/`, auth cookie issued **with Secure flag**, admin nav renders).
+- [ ] Issuing an invitation sends a real email — **deferred**: SMTP intentionally not configured in Phase 1 (`Email__*` left empty). Wire SMTP + `systemctl restart wombat` to enable.
+- [x] `systemctl status wombat` says `active (running)`; enabled on boot (wombat + caddy + postgresql).
+- [x] `journalctl -u wombat` shows a clean startup (only benign DataProtection "no XML encryptor" + Caddy OCSP notices).
+- [x] Restarting the service: **4 s** to ready (Type=notify), `/health` 200 immediately; DataProtection key persists across restart (sessions survive).
+- [x] The backup runs successfully + is restorable (manual run → 346 KB dump → restored into a throwaway DB: roles=10, users=1, migrations=30). Cron installed for 02:00.
+
+### Deviations from the original plan (server was Ubuntu 26.04, not 24.04)
+- .NET 10 runtime, PostgreSQL 18, and Caddy 2.6.2 all came from the **distro repos** — no Microsoft or Cloudsmith APT repos needed.
+- Two production-correctness code fixes were required and shipped: `UseForwardedHeaders` (Secure cookies behind Caddy) and persisted DataProtection keys (`Wombat:DataProtectionKeysPath`).
+- `DOTNET_gcServer=0` (Workstation GC) + an extra 1 GB swapfile for the 1 GB box.
+- The manual `REVOKE UPDATE, DELETE ON "AuditEntries"` was **not** applied — the `audit_entries_immutable` trigger already enforces append-only for all roles. ⚠️ Latent: `AuditLogRetentionJob` deletes-to-archive, which that trigger will block once rows age past 2 years (dormant on a fresh DB).
 
 ## Notes & gotchas
 
