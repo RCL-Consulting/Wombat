@@ -35,12 +35,12 @@ ssh "$REMOTE" "rm -rf $REMOTE_PREV && ([ -d $REMOTE_APP ] && mv $REMOTE_APP $REM
 echo "==> Syncing binaries to $REMOTE:$REMOTE_APP ..."
 rsync -az --delete "$PUBLISH_DIR/" "$REMOTE:$REMOTE_APP/"
 
-echo "==> Running migrations..."
-# Source the env file so --migrate gets the connection string (systemd loads it for
-# the service, but a one-shot `dotnet ... --migrate` does not inherit it otherwise).
-ssh "$REMOTE" "sudo -u wombat bash -c 'set -a; . /opt/wombat/config/wombat.env; set +a; dotnet $REMOTE_APP/Wombat.Web.dll --migrate'"
-
-echo "==> Restarting wombat service..."
+echo "==> Restarting wombat service (auto-applies EF migrations on startup)..."
+# The service applies pending EF migrations on boot using systemd's EnvironmentFile,
+# which parses wombat.env correctly (the connection string contains ';'). A one-shot
+# `dotnet ... --migrate` would need the env, and a bash `. wombat.env` mis-splits the
+# connection string on ';' — so rely on the service restart instead. Type=notify makes
+# restart block until the app is ready (or fail).
 ssh "$REMOTE" "sudo systemctl restart wombat"
 
 echo "==> Waiting for health check..."

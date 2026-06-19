@@ -49,10 +49,16 @@ rm -rf /opt/wombat/app.prev
 mv /opt/wombat/app.new /opt/wombat/app
 chown -R wombat:wombat /opt/wombat/app
 rm -f /tmp/publish.tgz
-sudo -u wombat bash -c 'set -a; . /opt/wombat/config/wombat.env; set +a; dotnet /opt/wombat/app/Wombat.Web.dll --migrate'
+# The service auto-applies EF migrations on startup using systemd's EnvironmentFile,
+# which parses wombat.env correctly (the connection string contains ';', which a bash
+# `. file` source would mis-split). Type=notify means restart blocks until ready/fails.
 systemctl restart wombat
-sleep 3
-curl -sf http://127.0.0.1:5080/health && echo ' health OK'
+ok=0
+for i in 1 2 3 4 5 6 7 8; do
+  if curl -sf http://127.0.0.1:5080/health >/dev/null 2>&1; then ok=1; echo 'health OK'; break; fi
+  sleep 2
+done
+[ "$ok" = 1 ] || { echo 'HEALTH CHECK FAILED after restart'; journalctl -u wombat -n 30 --no-pager; exit 1; }
 '@
 # tr -d strips CR so the Windows here-string runs as a clean bash script.
 $remoteScript | ssh $Remote "tr -d '\r' | bash -s"

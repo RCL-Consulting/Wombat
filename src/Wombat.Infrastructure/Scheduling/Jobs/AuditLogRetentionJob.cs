@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Audit;
+using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
@@ -27,7 +27,9 @@ public sealed class AuditLogRetentionJob : IScheduledJob
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        // Resolve the concrete context (Infrastructure-internal) so we can run the
+        // SET LOCAL below inside the same transaction as the archival delete.
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var cutoff = context.UtcNow.AddYears(-2);
         const int batchSize = 1000;
@@ -63,9 +65,18 @@ public sealed class AuditLogRetentionJob : IScheduledJob
                 ArchivedAt = context.UtcNow
             }).ToList();
 
+            // AuditEntries is append-only: the audit_entries_immutable trigger blocks
+            // DELETE for every role. Archival is the one sanctioned mover, so opt this
+            // transaction in via a session-local GUC the trigger recognises. SET LOCAL
+            // is scoped to this explicit transaction and reset on commit.
+            await using var tx = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await dbContext.Database.ExecuteSqlRawAsync(
+                "SET LOCAL wombat.allow_audit_delete = 'on'", cancellationToken);
+
             dbContext.Set<AuditEntryArchive>().AddRange(archives);
             dbContext.Set<AuditEntry>().RemoveRange(batch);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
 
             totalArchived += batch.Count;
             context.Logger.LogInformation(

@@ -112,10 +112,15 @@ rsync -az --delete publish/ wombat-prod:/opt/wombat/app/
 
 ### 6. Database migration and seeding
 
-```bash
-ssh wombat-prod "sudo -u wombat dotnet /opt/wombat/app/Wombat.Web.dll --migrate"
-ssh wombat-prod "sudo -u wombat dotnet /opt/wombat/app/Wombat.Web.dll --seed"
-```
+No manual step needed: the service applies all EF migrations and seeds roles + the
+bootstrap admin **automatically on startup** (next step), using the connection string
+from `wombat.env` via systemd's `EnvironmentFile`.
+
+> Do **not** run `sudo -u wombat dotnet Wombat.Web.dll --migrate` by hand expecting it
+> to pick up `wombat.env` — a one-shot process doesn't inherit the service environment,
+> and a bash `. wombat.env` mis-splits the connection string on its `;`. Let systemd
+> (step 7) start the service, which loads the env correctly and migrates + seeds on boot.
+> Watch `journalctl -u wombat -f` to confirm migrations apply and the admin is seeded.
 
 ### 7. systemd service
 
@@ -202,9 +207,9 @@ From your dev machine:
 ```
 
 Both: publish locally (Release), rotate the previous release on the server
-(`/opt/wombat/app` -> `app.prev`), ship the new binaries, run migrations (env
-sourced), restart the service, and confirm `/health`. `deploy.sh` rsyncs;
-`deploy.ps1` ships a tarball over scp.
+(`/opt/wombat/app` -> `app.prev`), ship the new binaries, restart the service
+(which auto-applies EF migrations on startup via systemd's env), and confirm
+`/health`. `deploy.sh` rsyncs; `deploy.ps1` ships a tarball over scp.
 
 ## Rollback
 

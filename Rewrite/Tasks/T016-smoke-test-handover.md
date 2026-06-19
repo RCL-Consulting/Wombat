@@ -9,10 +9,20 @@ a working system.
 
 ## Verification checklist
 
-### Build & test
+### Build & test (refreshed 2026-06-19)
 
 - [x] `dotnet build Wombat.sln -c Release` — zero errors, zero warnings
-- [x] `dotnet test` — 191 tests green (17 Domain + 122 Application + 19 Architecture + 33 Web)
+- [x] `dotnet test` — **426 green** (50 Domain + 314 Application + 19 Architecture + 43 Web). Integration suite needs Docker (not run on this box).
+
+### Live deployment smoke test (2026-06-19, against https://wombat.rcl.co.za)
+
+Authenticated as the seeded admin and crawled the key surfaces — all **HTTP 200, authenticated**:
+
+- [x] `/` Dashboard · `/admin/users` Users · `/admin/colleges` Colleges · `/admin/curricula` Curricula
+- [x] `/admin/epas` EPAs · `/admin/adoptions` Curriculum adoptions · `/admin/invitations` Invitations
+- [x] `/admin/audit` Audit log · `/admin/jobs` Scheduled jobs · `/admin/institutions` Institutions
+- [x] Login issues a **Secure** auth cookie behind Caddy; `/health` 200; HTTP→HTTPS 308; TLS cert valid.
+- [x] Email send verified end-to-end (real test mail delivered via the app's SMTP transport).
 
 ### Success criteria trace (from PLAN.md)
 
