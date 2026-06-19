@@ -376,3 +376,6 @@ pwd_DO_NOT_COMMIT.txt
 
 # DB snapshot dumps written by tools/db-snapshot.ps1
 recovery/
+
+# Scratch scripts piped to the deploy server over SSH (not part of the repo)
+deploy/.remote/

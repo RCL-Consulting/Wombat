@@ -1,6 +1,12 @@
 # Wombat deployment
 
-Target: Ubuntu 24.04 LTS on Linode. Caddy + PostgreSQL + systemd.
+Target: Ubuntu LTS on Linode. Caddy + PostgreSQL + systemd.
+
+**Live deployment:** `https://wombat.rcl.co.za` (Linode `172.236.8.144`, Ubuntu 26.04
+LTS, 1 vCPU / 1 GB). On Ubuntu 26.04 the .NET 10 runtime, PostgreSQL (18), and Caddy
+are all in the **default distro repos** — no Microsoft or Cloudsmith APT repos needed
+(the commands below reflect that; older 24.04 notes are kept inline where they differ).
+Secrets for this deployment are recorded in `pwd_DO_NOT_COMMIT.txt`.
 
 ## First-boot setup
 
@@ -18,12 +24,16 @@ ufw allow 22 && ufw allow 80 && ufw allow 443 && ufw --force enable
 
 ### 2. Install .NET 10 runtime
 
+On **Ubuntu 26.04** the ASP.NET Core 10 runtime is in the default repo:
+
 ```bash
-wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-dpkg -i packages-microsoft-prod.deb
 apt update
 apt install -y aspnetcore-runtime-10.0
 ```
+
+(On Ubuntu 24.04, add the Microsoft APT repo first:
+`wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && apt update`,
+then install the same package.)
 
 ### 3. PostgreSQL
 
@@ -35,11 +45,13 @@ sudo -u postgres createdb -O wombat wombat
 psql -h 127.0.0.1 -U wombat -d wombat -c 'SELECT 1;'
 ```
 
-After first migration, revoke mutation rights on the audit table (append-only enforcement):
-
-```bash
-sudo -u postgres psql -d wombat -c 'REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;'
-```
+**Audit append-only:** the `AuditLog` migration already installs a PostgreSQL trigger
+(`audit_entries_immutable`) that raises an exception on any UPDATE/DELETE of
+`AuditEntries` — for **all** roles, including the table owner. So the manual
+`REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;` mentioned in older docs is
+**redundant and not applied here**. (Note: `AuditLogRetentionJob` deletes 2-year-old
+rows to archive them, which the trigger will block — a latent conflict that is dormant
+on a fresh DB. Resolve before the first rows age out; see `Rewrite/current_state.md`.)
 
 ### 4. Config directory
 
@@ -70,6 +82,7 @@ Wombat__BaseUrl=https://wombat.example.com
 Wombat__SeedAdminEmail=renier@rcl.co.za
 Wombat__SeedAdminPassword=REDACTED
 Wombat__PseudonymSalt=REDACTED
+Wombat__DataProtectionKeysPath=/opt/wombat/data/keys
 EOF
 chmod 600 /opt/wombat/config/wombat.env
 chown wombat:wombat /opt/wombat/config/wombat.env
@@ -77,6 +90,16 @@ chown wombat:wombat /opt/wombat/config/wombat.env
 
 **Never rotate `Wombat__PseudonymSalt`** — it is used to generate stable pseudonyms
 for erased users. Rotating it breaks linkability across exports and erasure records.
+
+**`Wombat__DataProtectionKeysPath`** — directory where ASP.NET Core DataProtection keys
+are persisted (auth cookies + antiforgery tokens). Required under systemd: the service
+user is homeless and `ProtectSystem=strict` makes the default `$HOME/.aspnet` location
+unwritable, so without this keys would be ephemeral and every restart would log users
+out. Point it inside `ReadWritePaths` (i.e. under `/opt/wombat/data`). Back it up.
+
+**Email (`Email__*`) is optional for Phase 1.** If omitted, the app still runs but
+invitations/notifications won't send. Add the SMTP keys and `systemctl restart wombat`
+to enable email later — no redeploy needed.
 
 ### 5. Deploy the application
 
@@ -114,21 +137,25 @@ chmod 440 /etc/sudoers.d/wombat-restart
 
 ### 8. Caddy
 
+On **Ubuntu 26.04** Caddy is in the default repo:
+
 ```bash
-apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-    | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-    | tee /etc/apt/sources.list.d/caddy-stable.list
-apt update && apt install -y caddy
+apt install -y caddy
 ```
 
-Append the stanza from `deploy/Caddyfile.wombat` into `/etc/caddy/Caddyfile`,
-replacing `wombat.example.com` with the real domain. Then:
+(On Ubuntu 24.04, add the Cloudsmith Caddy repo first — see Caddy's install docs.)
+
+Install `deploy/Caddyfile.wombat` as `/etc/caddy/Caddyfile` (it is the full file, not a
+fragment — adjust the domain for a different deployment), then:
 
 ```bash
+cp deploy/Caddyfile.wombat /etc/caddy/Caddyfile
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 systemctl reload caddy
 ```
+
+DNS must already point at the server (it does for `wombat.rcl.co.za`); Caddy then
+obtains a Let's Encrypt cert automatically (TLS-ALPN-01) within a few seconds.
 
 Caddy obtains a Let's Encrypt certificate automatically. DNS must point at the
 server before this step, or the ACME challenge will fail.
@@ -164,12 +191,20 @@ pg_restore -h 127.0.0.1 -U wombat -d postgres \
 From your dev machine:
 
 ```bash
+# Linux / macOS / WSL / Git-Bash (needs rsync + bash):
 ./deploy/deploy.sh [user@host]
 ```
 
-The script: publishes locally, rotates the previous release on the server,
-rsyncs the new binaries, runs migrations, restarts the service, and
-confirms the health check.
+```powershell
+# Native Windows PowerShell (uses tar + scp; no rsync needed):
+./deploy/deploy.ps1                       # defaults to root@172.236.8.144
+./deploy/deploy.ps1 -Remote user@host     # e.g. staging
+```
+
+Both: publish locally (Release), rotate the previous release on the server
+(`/opt/wombat/app` -> `app.prev`), ship the new binaries, run migrations (env
+sourced), restart the service, and confirm `/health`. `deploy.sh` rsyncs;
+`deploy.ps1` ships a tarball over scp.
 
 ## Rollback
 

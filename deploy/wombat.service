@@ -15,8 +15,10 @@ EnvironmentFile=/opt/wombat/config/wombat.env
 Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+# Workstation GC: lower memory footprint on small (1-2 GB) instances.
+Environment=DOTNET_gcServer=0
 KillSignal=SIGINT
-TimeoutStartSec=60
+TimeoutStartSec=90
 TimeoutStopSec=30
 SyslogIdentifier=wombat
 ProtectSystem=strict

@@ -9,9 +9,10 @@
 #
 # Prerequisites:
 #   - SSH key auth configured for the target host
-#   - The wombat user on the target can sudo systemctl restart wombat
-#     (add a /etc/sudoers.d/wombat-restart rule on the server)
+#   - rsync + bash available locally (Linux / macOS / WSL / Git-Bash).
+#     On native Windows PowerShell use deploy/deploy.ps1 instead (tar + scp).
 #   - .NET 10 SDK installed locally (dotnet publish runs here, not on server)
+#   - root (or a sudo user) on the target; restart runs via ssh
 
 set -euo pipefail
 
@@ -35,7 +36,9 @@ echo "==> Syncing binaries to $REMOTE:$REMOTE_APP ..."
 rsync -az --delete "$PUBLISH_DIR/" "$REMOTE:$REMOTE_APP/"
 
 echo "==> Running migrations..."
-ssh "$REMOTE" "sudo -u wombat dotnet $REMOTE_APP/Wombat.Web.dll --migrate"
+# Source the env file so --migrate gets the connection string (systemd loads it for
+# the service, but a one-shot `dotnet ... --migrate` does not inherit it otherwise).
+ssh "$REMOTE" "sudo -u wombat bash -c 'set -a; . /opt/wombat/config/wombat.env; set +a; dotnet $REMOTE_APP/Wombat.Web.dll --migrate'"
 
 echo "==> Restarting wombat service..."
 ssh "$REMOTE" "sudo systemctl restart wombat"

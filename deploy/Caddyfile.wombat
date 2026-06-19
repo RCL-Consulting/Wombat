@@ -1,16 +1,27 @@
-# Wombat Caddyfile stanza — append into /etc/caddy/Caddyfile on the server.
-# Replace wombat.example.com with your actual domain.
+# Wombat Caddyfile — this is the full /etc/caddy/Caddyfile content on the server.
+# Replace wombat.rcl.co.za with your domain for a different deployment.
 #
 # IMPORTANT: flush_interval -1 is required for Blazor Server (SignalR) streaming.
 # Omitting it causes the UI to hang on first interaction.
+#
+# Caddy automatically sets X-Forwarded-Proto / X-Forwarded-For / X-Forwarded-Host
+# on the upstream request; the Wombat app honors them via UseForwardedHeaders so it
+# sees the real https scheme (cookies issued Secure, redirects use https).
 
-wombat.example.com {
+wombat.rcl.co.za {
     encode zstd gzip
+
     reverse_proxy 127.0.0.1:5080 {
         header_up Host {host}
-        header_up X-Forwarded-Proto {scheme}
         flush_interval -1
     }
+
+    header {
+        # HTTPS-only via Caddy; this host only (no includeSubDomains, to avoid
+        # affecting other rcl.co.za subdomains).
+        Strict-Transport-Security "max-age=31536000"
+    }
+
     log {
         output file /var/log/caddy/wombat.log
     }

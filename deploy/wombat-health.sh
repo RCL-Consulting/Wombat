@@ -38,8 +38,13 @@ if [ "$current_fails" -ge "$FAIL_THRESHOLD" ]; then
     systemctl restart "$SERVICE_NAME"
     rm -f "$FAIL_FILE"
 
-    echo "Wombat health check failed $current_fails times in a row. Service restarted at $(date)." \
-        | mail -s "Wombat auto-restart on $(hostname)" "$ALERT_EMAIL"
-
-    echo "[$(date -Iseconds)] Service restarted. Alert sent to $ALERT_EMAIL."
+    # Email alert is best-effort: only sent if a `mail` MTA is installed and configured.
+    # (SMTP is deferred in Phase 1, so this is typically a no-op until mail is set up.)
+    if command -v mail >/dev/null 2>&1; then
+        echo "Wombat health check failed $current_fails times in a row. Service restarted at $(date)." \
+            | mail -s "Wombat auto-restart on $(hostname)" "$ALERT_EMAIL" || true
+        echo "[$(date -Iseconds)] Service restarted. Alert sent to $ALERT_EMAIL."
+    else
+        echo "[$(date -Iseconds)] Service restarted. (mail not installed — no email alert sent.)"
+    fi
 fi

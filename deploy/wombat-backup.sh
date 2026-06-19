@@ -17,13 +17,18 @@ DOW=$(date +%u)    # 1=Mon … 7=Sun
 DOM=$(date +%-d)   # day-of-month, no leading zero
 
 mkdir -p "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly" "$BACKUP_DIR/monthly"
+chmod 700 "$BACKUP_DIR" "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly" "$BACKUP_DIR/monthly"
 
 DAILY_FILE="$BACKUP_DIR/daily/wombat-$DATE.dump"
 
 echo "[$(date -Iseconds)] Starting backup..."
 
-# Dump (custom format — supports parallel restore)
-sudo -u "$DB_USER" pg_dump -Fc -d "$DB_NAME" -f "$DAILY_FILE"
+# Dump (custom format — supports parallel restore). The dump is produced by the
+# postgres superuser over peer auth (no password needed) and streamed to stdout;
+# this script's user (root, under cron) writes the file — so BACKUP_DIR can stay
+# root-owned 0700 while pg_dump runs as a non-root DB user.
+sudo -u postgres pg_dump -Fc -d "$DB_NAME" > "$DAILY_FILE"
+chmod 600 "$DAILY_FILE"
 echo "[$(date -Iseconds)] Dump written: $DAILY_FILE"
 
 # Weekly copy (Sunday)

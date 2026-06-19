@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MediatR;
@@ -64,10 +66,34 @@ builder.Services.AddScoped<IScopedSender, ScopedSender>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHealthChecks();
 
+// DataProtection: persist keys so auth cookies / antiforgery tokens survive restarts.
+// Under systemd (ProtectSystem=strict + a homeless service user) the default key
+// location ($HOME/.aspnet) is not writable, so keys would be ephemeral and every
+// restart would log users out. When a writable keys path is configured, persist there.
+var dataProtectionBuilder = builder.Services.AddDataProtection().SetApplicationName("Wombat");
+var dataProtectionKeysPath = builder.Configuration["Wombat:DataProtectionKeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    System.IO.Directory.CreateDirectory(dataProtectionKeysPath);
+    dataProtectionBuilder.PersistKeysToFileSystem(new System.IO.DirectoryInfo(dataProtectionKeysPath));
+}
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
+
+// Running behind Caddy: TLS is terminated at the proxy and traffic is forwarded over
+// loopback as plain HTTP. Honor X-Forwarded-Proto/-For (set by the Caddyfile) so the
+// app sees the real https scheme and client IP. Must run before authentication so the
+// Identity/antiforgery cookies are issued Secure and any redirects use https.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UseStaticFiles();
 app.UseRouting();
