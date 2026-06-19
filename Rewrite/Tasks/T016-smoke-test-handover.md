@@ -40,6 +40,10 @@ Authenticated as the seeded admin and crawled the key surfaces — all **HTTP 20
 - [x] Verify no TODO/HACK/FIXME comments that indicate unfinished work — zero matches in *.cs
 - [x] Verify no placeholder or stub implementations remain — all code paths verified
 - [x] `current_state.md` updated to reflect completion
+- [~] Delete old Wombat reference source — **intentionally deferred 2026-06-19** (user
+  decision): `Wombat_ref_old_DO_NOT_COMMIT/` + `ClinicAssist.NET_ref_DO_NOT_COMMIT/` are
+  kept as porting references until the rewrite is feature-complete (SSO still pending).
+  They are gitignored, so they do not affect the repo or deployments.
 
 ## Model recommendation
 
