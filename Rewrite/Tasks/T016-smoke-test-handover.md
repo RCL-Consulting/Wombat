@@ -42,8 +42,9 @@ Authenticated as the seeded admin and crawled the key surfaces — all **HTTP 20
 - [x] `current_state.md` updated to reflect completion
 - [~] Delete old Wombat reference source — **intentionally deferred 2026-06-19** (user
   decision): `Wombat_ref_old_DO_NOT_COMMIT/` + `ClinicAssist.NET_ref_DO_NOT_COMMIT/` are
-  kept as porting references until the rewrite is feature-complete (SSO still pending).
-  They are gitignored, so they do not affect the repo or deployments.
+  kept as porting references for now. They are gitignored, so they do not affect the repo
+  or deployments. (Note: SSO is already built — T027 — but not yet *activated* on the live
+  deployment; it needs an institution's IdP config, not new code.)
 
 ## Model recommendation
 

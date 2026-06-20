@@ -2,9 +2,9 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## 🚀 SESSION 2026-06-19 (Opus) — **T015 EXECUTED: Wombat is LIVE on Linode at https://wombat.rcl.co.za** (TLS, migrated, seeded, verified end-to-end)
+## ⭐ SESSION FINALIZED — 2026-06-19/20 (Opus) — **Wombat is LIVE in production at https://wombat.rcl.co.za** 🏁 (T015 deploy + SMTP wired + T096 audit fix + T016 close-out — all verified)
 
-**The rewrite is deployed and serving in production.** Drove the full first-boot checklist over SSH from the Windows dev box onto a freshly-rebuilt Linode. Verified end-to-end (login through Caddy issues a Secure auth cookie; admin nav renders). **Committed `7709666` (code + deploy artifacts); NOT pushed.**
+**The rewrite is deployed and serving in production.** Drove the full first-boot checklist over SSH from the Windows dev box onto a freshly-rebuilt Linode. Verified end-to-end (login through Caddy issues a Secure auth cookie; admin nav renders; 10-page authenticated smoke test). **5 commits on `master` (`7709666`..`a8d44cd`); NOT pushed (held at user's request).**
 
 **Server:** Linode `172.236.8.144` = `wombat.rcl.co.za`. **Ubuntu 26.04 LTS** (rebuilt fresh; the box existed but root login was lost, so user rebuilt it via the Linode dashboard with my SSH key). 1 vCPU / 1 GB RAM (below the 2 GB doc spec — added a 1 GB swapfile + Workstation GC). DNS A record already pointed at the box. Access: my `id_ed25519` key authorized on `root` (added during rebuild).
 
@@ -13,7 +13,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 - **App** at `/opt/wombat/app` (framework-dependent publish, 99 MB), systemd `wombat.service` (Type=notify, `DOTNET_gcServer=0`, TimeoutStartSec=90). Migrations + role/admin/data seeding run on boot — **all 29 migrations applied, 10 roles + admin `renier@rcl.co.za` seeded** on first start.
 - **Caddy** terminates TLS (Let's Encrypt, auto), reverse-proxies `127.0.0.1:5080` with `flush_interval -1` (Blazor SignalR) + HSTS. HTTP→HTTPS 308.
 - **Postgres 18** role+db `wombat` (scram over 127.0.0.1). **Env/secrets** in `/opt/wombat/config/wombat.env` (mode 600). DataProtection keys persist to `/opt/wombat/data/keys`.
-- **Crons:** health check (every min, auto-restart on 3 fails — email alert guarded behind `mail`, which isn't installed since SMTP is deferred) + nightly `pg_dump` 02:00 (tested + restore-verified into a throwaway DB).
+- **Crons:** health check (every min, auto-restart on 3 fails — alert email via `msmtp`/`mail`, installed + tested 250 OK) + nightly `pg_dump` 02:00 (tested + restore-verified into a throwaway DB).
 
 **Two production-correctness code fixes shipped (were missing, now live + committed):**
 1. `Program.cs` **`UseForwardedHeaders`** (X-Forwarded-Proto/-For) — without it, behind Caddy the app saw `http` and auth/antiforgery cookies weren't `Secure`. Verified: login cookie now carries `Secure`.
@@ -24,9 +24,9 @@ Plus new `appsettings.Production.json` (logging) and a new **`deploy/deploy.ps1`
 
 **Also this session (2026-06-19):** (1) **Live smoke test** — authenticated crawl of 10 admin surfaces (Dashboard/Users/Colleges/Curricula/EPAs/Adoptions/Invitations/Audit/Jobs/Institutions) all 200+authed; unit suites green (Domain 50, Application 314, Architecture 19, Web 43). (2) **MTA installed** — `msmtp` + `bsd-mailx` so the health-check auto-restart *alert* emails send (reuses the SMTP creds; server returned 250 OK). (3) **deploy.ps1/deploy.sh/README fixed** — the explicit `--migrate` step sourced `wombat.env` via bash, which mis-split the connection string on `;`; removed it and rely on the service's startup auto-migration (systemd parses the env correctly).
 
-**SMTP wired + tested (2026-06-19):** `Email__*` set in `wombat.env` (mail.rcl.co.za:465 implicit SSL, `UseSsl=true`, auth `wombat@rcl.co.za`, From=`wombat@rcl.co.za`); service restarted (MailKit sender now active vs the previous `LoggingEmailSender`). Verified by sending a real email to `renier@rcl.co.za` over the same transport (cert verified, auth OK). Creds in `pwd_DO_NOT_COMMIT.txt`. (Separately, the health-check cron's `mail` CLI is still not installed, so auto-restart *alert emails* won't send — app email is unaffected.)
+**SMTP wired + tested (2026-06-19):** `Email__*` set in `wombat.env` (mail.rcl.co.za:465 implicit SSL, `UseSsl=true`, auth `wombat@rcl.co.za`, From=`wombat@rcl.co.za`); service restarted (MailKit sender now active vs the previous `LoggingEmailSender`). Verified by sending a real email to `renier@rcl.co.za` over the same transport (cert verified, auth OK). Creds in `pwd_DO_NOT_COMMIT.txt`. (The health-check cron's `mail` CLI was later installed via `msmtp` reusing these creds, so auto-restart *alert emails* also send — `250 OK`.)
 
-**▶ NEXT:** (a) **T016 done** except the reference-folder deletion, which the **user chose to keep** for now (`Wombat_ref_old_DO_NOT_COMMIT/` + `ClinicAssist.NET_ref_DO_NOT_COMMIT/`) — revisit when the rewrite is feature-complete (SSO etc. may still need porting reference). (b) Optionally **push** the deployment commits to origin (several unpushed on master). (c) Optional: resize the 1 GB Linode if load grows (dashboard action); wire SSO when an institution needs it. Future deploys: `./deploy/deploy.ps1` from this box.
+**▶ NEXT (all optional — nothing outstanding to ship):** (a) **T016 done** — only the reference-folder deletion is deferred (**user chose to keep** `Wombat_ref_old_DO_NOT_COMMIT/` + `ClinicAssist.NET_ref_DO_NOT_COMMIT/` as porting references). (b) **Push** the 5 unpushed `master` commits (`7709666`..`a8d44cd`) to origin when ready (held at user's request). (c) Ops: resize the 1 GB Linode if load grows (dashboard action); **activate SSO** — it is already **built** (T027: OIDC wiring + group→role mapper + `/admin/sso/group-mappings`), just not configured on this deployment, so it only needs an institution's IdP details (authority, client id/secret, group→role map) in `wombat.env` + a restart — no redeploy. Future deploys: `./deploy/deploy.ps1` from this box.
 
 **Tooling notes:** drive the server with `Get-Content -Raw <script.sh> | ssh root@172.236.8.144 "tr -d '\r' | bash -s"` (avoids PowerShell→bash quoting hell + CRLF); scratch scripts live in `deploy/.remote/` (gitignored). `dotnet publish src/Wombat.Web -c Release` → `tar -czf` → `scp` → extract/rotate/restart. A PowerShell guard blocks commands that embed the admin password literal (run such checks server-side, reading creds from `wombat.env`).
 
