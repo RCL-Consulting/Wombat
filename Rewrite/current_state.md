@@ -2,6 +2,84 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-16 (Opus) — **T097 security shipped + deployed; T098 EPA v11.1 catalogue live in code** 🏁
+
+**Last commit `ec6d587`. `origin/master` in sync (0 unpushed). Build clean (0 warnings, warnings-as-errors on).
+494 tests green: Domain 50, Application 330, Infrastructure 50, Architecture 19, Web 45. Dev server STOPPED.
+Working tree clean apart from the pre-existing untracked `EPA Book/` + `EPA version 11.1.docx`.**
+
+First session in ~3 months. Two threads ran: a security audit that became **T097**, and adoption of the
+finalised Paediatric EPA catalogue as **T098**.
+
+### T097 — the documented security controls were fiction (SHIPPED + DEPLOYED)
+
+An audit found three controls `CLAUDE.md` lists as shipped did not exist: no rate limiter anywhere in
+`Wombat.Web`, no CSP at all, no `nosniff` — plus `lockoutOnFailure: false` with no `options.Lockout` block, so
+no account could ever lock. All now real and **verified on the live site**. Also fixed `/health` (it returned
+200 with Postgres down, which both the restart cron and the deploy gate trusted), rewrote the backup script to
+bundle the DB **+ `wombat.env` + DataProtection keys**, `age`-encrypted and shipped off-host, and pinned three
+transitive packages with published advisories.
+
+**Deployed twice to production and verified there.** **Administrator password ROTATED** — the old one is in git
+history and is dead; the new one is in `pwd_DO_NOT_COMMIT.txt` **only**. Also fixed a pre-existing bug found by
+loading the site in a real browser: the `FallbackPolicy` was inherited by `MapStaticAssets()`, so fingerprinted
+assets 302'd to login for anonymous users and failed their integrity check.
+
+`INFRASTRUCTURE.md` corrected — it prescribed env var names that bind to nothing, Postgres 16 against a live
+18.4, and a `--migrate` step `deploy/README.md` forbids.
+
+### T098 — Paediatric EPA catalogue v11.1 (IN PROGRESS)
+
+`EPA version 11.1.docx` (College of Paediatricians of SA, Sept 2026) parsed, diffed against Wombat across six
+dimensions, then implemented. Parsed source banked in `Tasks/T098-data/`.
+
+**Phase 1 done** — `Epa.Domain` + migration `T098_EpaDomain`; new `PaediatricCatalogueSeeder` seeding the CPSA
+College, the **six-rung ladder** (`Order` 1-6 labelled `1, 2, 3a, 3b, 4, 5`), the 15 College-owned EPAs with
+domains and all 78 descriptors, and the v11.1 curriculum carrying each EPA's Y1-Y4 target curve. Verified on the
+dev DB: both curves correct, `RequiredCount` totals **220** (= 55/yr x 4, matching Annexure B independently),
+second run creates no duplicates.
+
+**Phase 2a done** — four paediatric WBA tools (`mini_cex_cpsa`, `cbd_cpsa`, `dops_cpsa`,
+`direct_observation_cpsa`) Speciality-scoped to Paediatrics and bound to the six-rung ladder. The binding works
+by **omitting `options`** and setting `scale_key` to the scale's exact Name; declaring options would both cap the
+validator (rejecting rung 6) and override the College ladder in the picker.
+
+**Pre-work fixes** (all live defects, independent of v11.1): the trajectory query silently dropped every rating
+above 5 and the chart axis was hard-capped at 5; credit resolved the trainee's stage from `DateTime.UtcNow`
+rather than the encounter date; and `RebuildCurriculumProgress` wiped graduated trainees' progress irrecoverably.
+
+### ▶ NEXT — **T070 is the critical path**
+
+**Assessors cannot enter a rating at all.** `DataPatchJson` has **zero** occurrences in the entire Web and Api
+layer; `/activities/{id}` is `ActivityForm` with `ReadOnly="true"`; `NewActivity.razor` hard-codes
+`SubjectUserId` to the current user. So the only data an activity ever holds is what the creator typed at
+creation. This is the open task **T070**, and until it ships the `complete` transition on the new paediatric
+tools cannot be satisfied through the product — the catalogue work is correct but not yet usable by a real
+assessor. **Opus** (it needs a new editable surface plus a transition data patch).
+
+Then, in rough order: retire the old scenario `*_paed` activity types and `PAED-*` EPAs that sit alongside the
+new national catalogue; seed the remaining ten v11.1 tools; T098 phase 3 (the per-year quota — the one thing
+that makes "55 encounters a year" enforceable rather than decorative).
+
+### Open decisions for the next session
+
+1. **Is v11.1 final?** Its cover still reads "DRAFT — FOR DISCUSSION. Content is subject to revision." Three
+   further questions for the College are in `Tasks/T098-epa-v11-adoption.md` — most importantly whether a
+   training "year" is the academic calendar or the trainee's own start date (Wombat computes 365-day blocks
+   from the trainee's start, which will not align with an 11-month academic year).
+2. **`EPA version 11.1.docx` and `EPA Book/` are still untracked.** The derived JSON is committed but the source
+   document is not, so there is no committed record of what it was derived from. Commit or gitignore deliberately.
+3. **No off-host backup exists** (deferred earlier). `wombat-backup.sh` exits non-zero nightly by design until
+   `/etc/default/wombat-backup` is configured.
+
+### Gotcha worth keeping
+
+**Never use `--no-build` with `dotnet test` or `dotnet run` in this repo** — it resolves `bin/x64/Release` while
+the solution build writes `bin/Release`. It reported a false green over two genuine failures, and later made a
+seeder look like it had run when the database was untouched. Now documented in `CLAUDE.md`.
+
+---
+
 ## ⭐ SESSION 2026-09-16 (Opus) — **T098 filed: Paediatric EPA v11.1 gap analysis** (analysis only, no code)
 
 The College of Paediatricians' **EPA v11.1** (Sept 2026) was supplied as `EPA version 11.1.docx`.
