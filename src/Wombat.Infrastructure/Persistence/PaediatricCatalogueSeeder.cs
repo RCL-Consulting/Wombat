@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
@@ -58,14 +59,98 @@ public sealed class PaediatricCatalogueSeeder
     {
         var catalogue = await ReadCatalogueAsync(cancellationToken);
 
-        var subSpecialityId = await EnsureCollegeAndDisciplineAsync(cancellationToken);
+        var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(cancellationToken);
         var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
         await EnsureDefaultScaleAsync(subSpecialityId, scale.Id, cancellationToken);
         var epaIdsByCode = await EnsureEpasAsync(subSpecialityId, catalogue.Epas, cancellationToken);
         await EnsureCurriculumAsync(subSpecialityId, catalogue, epaIdsByCode, cancellationToken);
+        await EnsureActivityTypesAsync(specialityId, cancellationToken);
     }
 
-    private async Task<int> EnsureCollegeAndDisciplineAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// The paediatric WBA tools, seeded Speciality-scoped to Paediatrics.
+    /// </summary>
+    /// <remarks>
+    /// These cannot be seeded by <see cref="DataSeeder"/>: it hard-codes the demo speciality as the
+    /// scope for every type it seeds, and it runs before this seeder, so the Paediatrics discipline
+    /// does not exist yet when it executes.
+    /// <para>
+    /// The keys are <c>&lt;family&gt;_cpsa</c>, and both halves of that matter.
+    /// <list type="bullet">
+    /// <item>A SUFFIX, not a prefix: the EPA trajectory query matches an assessment family by exact
+    /// key or by a "&lt;family&gt;_" prefix, so "mini_cex_cpsa" charts as Direct observation while
+    /// "cpsa_mini_cex" would silently never appear on any trajectory.</item>
+    /// <item><c>_cpsa</c>, not <c>_paed</c>: ActivityType.Key is globally unique and
+    /// <see cref="EnsureActivityTypesAsync"/> skips keys that already exist, so a collision is a
+    /// SILENT no-op, not an error. Earlier scenario play-throughs left institution-scoped
+    /// "mini_cex_paed" and "dops_paed" types behind, which swallowed two of these four seeds.
+    /// Naming them for the owning College keeps them unambiguous.</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    private static readonly (string Key, string Name, string Description)[] ActivityTypeSeeds =
+    [
+        ("mini_cex_cpsa", "Mini-CEX (Paediatrics)",
+            "Mini clinical evaluation exercise - direct observation of a focused clinical encounter, followed by immediate feedback."),
+        ("dops_cpsa", "DOPS (Paediatrics)",
+            "Direct observation of procedural skills - technique, patient interaction and safety."),
+        ("cbd_cpsa", "Case-Based Discussion (Paediatrics)",
+            "Structured discussion of a case the trainee has managed, exploring clinical reasoning and decision-making."),
+        ("direct_observation_cpsa", "Direct Observation (Paediatrics)",
+            "Observation of the trainee in routine practice - ward rounds, handover and family meetings."),
+    ];
+
+    private const string SeedActorUserId = "seed-system";
+
+    private async Task EnsureActivityTypesAsync(int specialityId, CancellationToken cancellationToken)
+    {
+        var existingKeys = await _dbContext.ActivityTypes
+            .Select(entity => entity.Key)
+            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
+
+        foreach (var (key, name, description) in ActivityTypeSeeds)
+        {
+            if (existingKeys.Contains(key))
+            {
+                continue;
+            }
+
+            var schemaJson = await ReadActivitySeedFileAsync(key, "schema.json", cancellationToken);
+            var workflowJson = await ReadActivitySeedFileAsync(key, "workflow.json", cancellationToken);
+            var creditJson = await ReadActivitySeedFileAsync(key, "credit.json", cancellationToken);
+
+            var activityType = new ActivityType
+            {
+                Key = key,
+                Name = name,
+                Description = description,
+                Scope = ActivityScope.Speciality,
+                ScopeId = specialityId,
+                OwnerUserId = SeedActorUserId,
+                CreatedOn = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            activityType.SaveDraft(schemaJson, workflowJson, creditJson, "[]", SeedActorUserId);
+            activityType.PublishDraft(SeedActorUserId);
+
+            _dbContext.ActivityTypes.Add(activityType);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<string> ReadActivitySeedFileAsync(string key, string fileName, CancellationToken cancellationToken)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, fileName);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"Seed file '{fileName}' for activity type '{key}' was not found.", path);
+        }
+
+        return await File.ReadAllTextAsync(path, cancellationToken);
+    }
+
+    private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(CancellationToken cancellationToken)
     {
         var college = await _dbContext.Colleges
             .SingleOrDefaultAsync(entity => entity.ShortCode == CollegeShortCode, cancellationToken);
@@ -116,7 +201,7 @@ public sealed class PaediatricCatalogueSeeder
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        return subSpeciality.Id;
+        return (speciality.Id, subSpeciality.Id);
     }
 
     private async Task<EntrustmentScale> EnsureScaleAsync(ScaleSeed seed, CancellationToken cancellationToken)

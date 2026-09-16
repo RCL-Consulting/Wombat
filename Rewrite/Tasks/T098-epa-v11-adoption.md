@@ -311,3 +311,82 @@ fails a test instead of reaching a portfolio.
   collision, but they should be retired.
 - Scale pinning (`CurriculumItem.ScaleId`) — no longer urgent, still the right model.
 - Phases 2-4 unchanged.
+
+### 2026-09-16 — Phase 2a: paediatric WBA tools bound to the six-rung ladder
+
+**Discovered while doing this: the assessor cannot enter a rating at all.** `DataPatchJson` has
+**zero** occurrences in the entire Web and Api layer; `/activities/{id}` renders `ActivityForm` with
+`ReadOnly="true"`, and the transition is dispatched with a null data patch, so `ActivityService`
+leaves `DataJson` untouched. The only data an activity will ever hold is what the **creator** typed
+at creation. `NewActivity.razor` also hard-codes `SubjectUserId` to the current user, so
+"assessor creates it for the trainee" is not available either.
+
+This is already filed as **T070** ("No assessor rating-edit / assessor-note surface", open since the
+Act 3 play-through). It, not the schema options, is the real blocker on recording entrustment. The
+seeds below are authored for the correct clinical model (trainee requests, assessor completes)
+rather than contorted around a gap that T070 will close. **Until T070 ships, `complete` cannot be
+satisfied through the product.**
+
+**Four paediatric WBA tools seeded**, Speciality-scoped to Paediatrics, covering the rated tools
+v11.1 leans on hardest: `mini_cex_cpsa` (9 EPAs), `cbd_cpsa` (12), `dops_cpsa` (8),
+`direct_observation_cpsa` (8, and previously not seeded at all in any form).
+
+How the six-rung binding actually works, established by reading the runtime rather than guessing:
+
+- **`options` is omitted.** Declaring it does two bad things at once: it caps the validator at those
+  exact strings (rejecting the sixth rung) *and* it overrides the College ladder in the picker, so
+  the clinician sees bare numbers instead of 3a / 3b. `ActivityForm.GetOptions` gives a declared
+  `options` array absolute precedence over the catalogue.
+- **`scale_key` is the scale exact Name**, "CPSA Paediatric Entrustment Scale v11.1". It resolves
+  against `EntrustmentScale.Id` (int-parsed) or the exact `Name`, so the seed stays declarative with
+  no runtime id substitution. A wrong string raises no error; the field silently degrades to a
+  plain number box. (The old seeds' "or_scale" matches nothing, which is why they survive purely on
+  their hard-coded options.)
+- **`validation: min 1, max 6`** is the only remaining server-side guard once `options` is gone.
+- The rating field is named **`overall_level`**, which the EPA trajectory query already reads.
+
+Three traps designed around, each of which fails silently rather than loudly:
+
+1. **`submit` is declared first.** The New Activity page fires the *first* transition out of the
+   initial state that the creator may take. With `cancel` first, pressing Submit would cancel the
+   request outright.
+2. **Only `completed` is terminal.** Credit fires on any transition into a terminal state, and an
+   abandoned request still carries a filled-in `epa_id`, so terminal declined/cancelled states would
+   count refused and withdrawn requests toward the trainee observation volume. The ten older seeds
+   still have this flaw.
+3. **Assessor fields are not `required: true`.** Every transition validates the whole schema in
+   Submit mode, so a required assessor field would also block `decline` and `cancel`. They are gated
+   by `requires_fields` on `complete` instead. (The older seeds' accept/decline/cancel are unusable
+   for exactly this reason.)
+
+**`observed_on` added**, a real encounter date that no existing WBA schema captures. Nothing reads it
+yet; it exists so phase 3's per-year quota has a trustworthy date to bucket on instead of an audit
+timestamp.
+
+**Keys are `<family>_cpsa`.** The suffix matters (the trajectory matches a family by exact key or by
+a `<family>_` prefix, so a `cpsa_` prefix would never chart), and `_cpsa` rather than `_paed` matters
+because earlier scenario play-throughs left institution-scoped `mini_cex_paed` and `dops_paed` types
+behind. `ActivityType.Key` is globally unique and the seeder **skips** existing keys, so the first
+attempt here silently seeded only two of the four tools. A key collision is a no-op, not an error.
+
+**+36 seed tests** (`CpsaWbaSeedTests`, 9 theories over 4 tools; Infrastructure now **50**) asserting
+rung 6 validates, 3a/3b validate, 0 and 7 are rejected, `options` is empty, `scale_key` matches the
+seeded scale name exactly, `submit` is first, only `completed` is terminal, and assessor fields are
+gated by `requires_fields`. The pre-existing `AllSeedJsonFiles_ParseCleanly` picks the new folders up
+automatically.
+
+**Verified on the dev database:** all four seeded at Version 1, Scope = Speciality, ScopeId =
+Paediatrics; `scale_key` resolves to the six-rung scale.
+
+### Still open after Phase 2a
+
+- **T070 blocks end-to-end rating entry**: an assessor-editable form on the activity view plus a
+  `DataPatchJson` on the transition. This is now the critical path, not a polish item.
+- A paediatric trainee needs a `UserSpecialityScope` row for Paediatrics **and a fresh sign-in**
+  before these tools appear: the scope filter reads claims baked into the auth cookie.
+- Ten v11.1 tools remain unseeded (CCA, RCA, clinical audit, chart-stimulated recall, case note
+  review, directly observed clinical exam, learner feedback, portfolio/logbook review, plus MSF and
+  reflective exercise in paediatric form).
+- The rung picker renders "Order. Label", so rung 3a shows as "3. 3a". Cosmetic, in
+  `ActivityReferenceDataService`.
+- The old scenario `*_paed` activity types and `PAED-*` EPAs still sit alongside the new catalogue.

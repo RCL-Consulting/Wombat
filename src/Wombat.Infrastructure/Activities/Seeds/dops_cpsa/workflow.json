@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    {
+      "key": "draft",
+      "label": "Draft"
+    },
+    {
+      "key": "requested",
+      "label": "Requested"
+    },
+    {
+      "key": "completed",
+      "label": "Completed",
+      "terminal": true
+    },
+    {
+      "key": "declined",
+      "label": "Declined"
+    },
+    {
+      "key": "cancelled",
+      "label": "Cancelled"
+    }
+  ],
+  "transitions": [
+    {
+      "key": "submit",
+      "from": "draft",
+      "to": "requested",
+      "actor": "subject|creator"
+    },
+    {
+      "key": "complete",
+      "from": "requested",
+      "to": "completed",
+      "actor": "field:assessor_user_id",
+      "requires_fields": [
+        "overall_level",
+        "strengths",
+        "improvements",
+        "plan"
+      ]
+    },
+    {
+      "key": "decline",
+      "from": "requested",
+      "to": "declined",
+      "actor": "field:assessor_user_id",
+      "requires_note": true
+    },
+    {
+      "key": "cancel",
+      "from": [
+        "draft",
+        "requested"
+      ],
+      "to": "cancelled",
+      "actor": "subject|creator"
+    }
+  ]
+}

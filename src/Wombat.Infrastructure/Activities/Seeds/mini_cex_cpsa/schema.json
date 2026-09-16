@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Assessor",
+          "required": true,
+          "help_text": "The supervisor who observed you. They complete this assessment."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Date observed",
+          "required": true,
+          "help_text": "When the encounter happened, not when this form is completed."
+        },
+        {
+          "key": "setting",
+          "type": "choice",
+          "label": "Clinical setting",
+          "required": true,
+          "options": [
+            "ward",
+            "outpatient_clinic",
+            "emergency_unit",
+            "neonatal_unit",
+            "picu",
+            "community"
+          ]
+        },
+        {
+          "key": "presenting_problem",
+          "type": "text",
+          "label": "Presenting problem",
+          "required": true
+        },
+        {
+          "key": "complexity",
+          "type": "choice",
+          "label": "Case complexity",
+          "required": true,
+          "options": [
+            "low",
+            "moderate",
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Entrustment",
+      "fields": [
+        {
+          "key": "overall_level",
+          "type": "scale",
+          "label": "Supervision required for this encounter",
+          "scale_key": "CPSA Paediatric Entrustment Scale v11.1",
+          "validation": {
+            "min": 1,
+            "max": 6
+          },
+          "help_text": "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth."
+        }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "fields": [
+        {
+          "key": "strengths",
+          "type": "longtext",
+          "label": "What was done well"
+        },
+        {
+          "key": "improvements",
+          "type": "longtext",
+          "label": "Areas for development"
+        },
+        {
+          "key": "plan",
+          "type": "longtext",
+          "label": "Agreed plan"
+        }
+      ]
+    }
+  ]
+}
