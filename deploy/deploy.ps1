@@ -7,9 +7,17 @@
     Windows-native equivalent of deploy/deploy.sh (which needs rsync + bash).
     Uses tar + scp over the OpenSSH client that ships with Windows. It publishes
     framework-dependent Release binaries, ships them as a tarball, rotates the
-    previous release on the server (-> app.prev for rollback), extracts, runs EF
-    migrations (with the env file sourced), restarts the service, and confirms
-    /health.
+    previous release on the server (-> app.prev for rollback), extracts, restarts
+    the service, and confirms /health.
+
+    There is deliberately no explicit migration step: the service applies EF
+    migrations on startup using systemd's EnvironmentFile, which parses wombat.env
+    correctly. Hand-running `dotnet Wombat.Web.dll --migrate` does NOT inherit the
+    service environment, and sourcing wombat.env from bash mis-splits the connection
+    string on its ';'. See deploy/README.md section 6.
+
+    Since T097 the /health gate is meaningful: it probes PostgreSQL, so a deploy that
+    comes up unable to reach the database now fails the gate instead of reporting success.
 
 .PARAMETER Remote
     SSH target. Default: root@172.236.8.144 (wombat.rcl.co.za). Pass a different

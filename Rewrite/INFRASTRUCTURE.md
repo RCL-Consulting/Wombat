@@ -1,10 +1,23 @@
 # Infrastructure — Linode deployment
 
-Wombat will run on a Linode VPS. The layout mirrors ClinicAssist.NET's production setup. Everything in this document is "what the server should look like when task T015 is done".
+Wombat runs on a Linode VPS. The layout mirrors ClinicAssist.NET's production setup.
+
+> **⚠ Read `deploy/README.md` first.** That file documents the deployment **as actually built
+> and running**; this file is the design rationale. Where the two disagree, `deploy/README.md`
+> wins. This document was corrected against the live server on 2026-09-16 (T097) after an audit
+> found several instructions here that would silently produce a broken box — in particular
+> environment-variable names that do not bind to anything the application reads.
 
 ## Target
 
-- **One Linode VPS**, Ubuntu 24.04 LTS, 2GB RAM minimum (4GB recommended if Blazor circuits grow).
+- **One Linode VPS.** Specified: Ubuntu 24.04 LTS, 2GB RAM minimum (4GB recommended if Blazor
+  circuits grow). **As built:** Ubuntu **26.04 LTS**, 1 vCPU / **1GB** RAM — half the specified
+  minimum — mitigated with a 1GB swapfile and `DOTNET_gcServer=0` (workstation GC). It has run
+  for 90+ days at that size. Resize before onboarding a real cohort: Blazor Interactive Server
+  holds a circuit per connected user in memory, so RAM is the scaling constraint.
+- **Packages come from the Ubuntu 26.04 distro repos** — `aspnetcore-runtime-10.0`,
+  `postgresql` (18.x) and `caddy` are all packaged. **No Microsoft or Cloudsmith APT repo is
+  needed**, which is a significant simplification over what this document originally specified.
 - **One managed PostgreSQL database** — either Linode Managed Postgres or a local Postgres on the same VPS. Local Postgres is fine for Phase 1; migrate to managed later if load justifies it.
 - **DNS** — an `A` record pointing `wombat.<yourdomain>` at the VPS IP.
 - **Email** — SMTP credentials for an external provider (Postmark, SendGrid, Mailgun, or a self-hosted Postfix). The app only needs SMTP host/port/user/pass, nothing custom.
@@ -88,42 +101,90 @@ Caddy handles TLS automatically via Let's Encrypt. No manual cert management.
 
 Two options:
 
-1. **Local Postgres 16** on the same VPS — simpler, cheaper, fine for Phase 1.
+1. **Local Postgres** on the same VPS — simpler, cheaper, fine for Phase 1. **This is what runs.**
 2. **Linode Managed Postgres** — pay for it when uptime matters more than $.
 
-For Phase 1, use local Postgres:
+For Phase 1, use local Postgres. On Ubuntu 26.04 the distro package is **PostgreSQL 18**:
 
 ```bash
-sudo apt install postgresql-16
+sudo apt install postgresql          # 18.x on 26.04 — do NOT pin postgresql-16
 sudo -u postgres createuser --pwprompt wombat
 sudo -u postgres createdb -O wombat wombat
 ```
 
-Connection string in `wombat.env`:
+> **Version matters for restores.** The live cluster is 18.x and backups are taken with
+> `pg_dump` 18. A dump from 18 will **not** restore into a 16 cluster, so a rebuild that
+> installs 16 fails at exactly the moment you need it to work.
+
+Connection string in `wombat.env` — note the name, which is what ASP.NET Core's
+`GetConnectionString("DefaultConnection")` actually reads:
 
 ```
-Wombat__ConnectionStrings__Default=Host=127.0.0.1;Database=wombat;Username=wombat;Password=...
+ConnectionStrings__DefaultConnection=Host=127.0.0.1;Database=wombat;Username=wombat;Password=...
 ```
+
+> **Not** `Wombat__ConnectionStrings__Default`, which this document specified until 2026-09-16.
+> That name binds to nothing: `WombatOptions` has no `ConnectionStrings` property, so the app
+> would fall through to whatever `appsettings.json` provides and silently target the wrong
+> database. (T097 removed the committed dev fallback, so it now fails fast instead.)
 
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):
 
 ```
-Wombat__ConnectionStrings__Default=Host=127.0.0.1;Database=wombat;Username=wombat;Password=REDACTED
-Wombat__Email__SmtpHost=smtp.example.com
-Wombat__Email__SmtpPort=587
-Wombat__Email__SmtpUser=wombat@example.com
-Wombat__Email__SmtpPassword=REDACTED
-Wombat__Email__FromAddress=no-reply@example.com
-Wombat__Email__FromName=Wombat
+ConnectionStrings__DefaultConnection=Host=127.0.0.1;Database=wombat;Username=wombat;Password=REDACTED
+Email__SmtpHost=smtp.example.com
+Email__SmtpPort=587
+Email__SmtpUser=wombat@example.com
+Email__SmtpPassword=REDACTED
+Email__FromAddress=no-reply@example.com
+Email__FromName=Wombat
+Email__UseSsl=false
 Wombat__BaseUrl=https://wombat.example.com
-Wombat__SeedAdminEmail=renier@rcl.co.za
+Wombat__MsfRespondUrl=https://wombat.example.com/msf/respond
+Wombat__AllowSelfRegistration=false
+Wombat__SeedAdminEmail=admin@example.com
 Wombat__SeedAdminPassword=REDACTED
 Wombat__PseudonymSalt=REDACTED
+Wombat__DataProtectionKeysPath=/opt/wombat/data/keys
+DOTNET_gcServer=0
 ```
 
 The double-underscore syntax is ASP.NET Core's convention for nesting. Never commit this file.
+
+**Names corrected 2026-09-16.** `Email` and `ConnectionStrings` are **top-level** configuration
+sections, not children of `Wombat` — `EmailSettings.SectionName` is `"Email"`. The old
+`Wombat__Email__*` names bound to nothing, so email silently did not work.
+
+- **`Email__UseSsl`** — set `true` for implicit-SSL submission on **port 465**. The live
+  deployment uses 465 with `UseSsl=true`. Leaving it at the `false` default while using 465
+  produces a connection that never completes.
+- **`Wombat__DataProtectionKeysPath`** — **required in production.** The service user is homeless
+  and `ProtectSystem=strict` makes the default `$HOME/.aspnet` unwritable, so without this the
+  DataProtection key ring is regenerated on every start and every user is logged out on each
+  restart. **Back this directory up** (T097's backup script now includes it).
+- **`Wombat__SeedAdminPassword`** — only consumed the first time the admin user does not exist;
+  `AdminSeeder` returns early if it does. Changing it later has no effect. Rotate the live
+  password through the admin UI, not by editing this value.
+
+### SSO (optional, not currently configured)
+
+Nothing SSO-related is set on this deployment, so no OIDC handler is registered. To enable a
+provider, add an indexed block and restart — config only, no redeploy:
+
+```
+Sso__Providers__0__Key=myuni
+Sso__Providers__0__DisplayName=My University
+Sso__Providers__0__InstitutionId=1
+Sso__Providers__0__Authority=https://login.example.edu
+Sso__Providers__0__ClientId=REDACTED
+Sso__Providers__0__ClientSecret=REDACTED
+Sso__Providers__0__GroupsClaim=groups
+Sso__Providers__0__Scopes__0=openid
+Sso__Providers__0__Scopes__1=profile
+Sso__Providers__0__Scopes__2=email
+```
 
 **`Wombat__PseudonymSalt`** — used by the erasure executor (T026) to generate deterministic pseudonyms for erased users (`deleted_user_<hex>`). This is a deployment secret. **Do not rotate it** — rotating the salt breaks pseudonym stability across exports and makes previously-issued pseudonyms unlinkable to erasure records.
 
@@ -165,17 +226,32 @@ When entries in `AuditEntryArchives` reach 7 years old, a cron job (to be config
 2. Upload to a private Linode Object Storage bucket: `s3://wombat-audit-cold/{year}/`.
 3. DELETE the exported rows from `AuditEntryArchives`.
 
-The export cron is **not** part of the application binary — it is a server-level script (`/usr/local/bin/wombat-audit-cold.sh`) that connects to PostgreSQL directly. This keeps cold storage logic out of the app's attack surface.
+The export cron is **not** part of the application binary — it is a server-level script
+(`/usr/local/bin/wombat-audit-cold.sh`) that connects to PostgreSQL directly. This keeps cold
+storage logic out of the app's attack surface.
+
+> **Status: not written, not installed.** No such script exists in `deploy/` or on the server.
+> Nothing depends on it yet — the oldest audit entries date from 2026, so the 7-year transition
+> is not due until 2033. Written up here as a design note, not as something you can rely on.
 
 ### Append-only enforcement
 
-The migration that creates `AuditEntries` also installs a PostgreSQL trigger (`audit_entries_immutable`) that raises an exception on any UPDATE or DELETE. Additionally, revoke mutation privileges from the app user after migration:
+The migration that creates `AuditEntries` installs a PostgreSQL trigger
+(`audit_entries_immutable`). **Since T096 (migration `20260619065511_T096_AuditDeleteForArchival`)
+it no longer blocks everything:**
 
-```sql
-REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;
-```
+- Every `UPDATE` still raises.
+- `DELETE` raises **unless** the transaction has set the custom GUC
+  `SET LOCAL wombat.allow_audit_delete = 'on'`.
 
-Run this once, post-migration. It does not need to be re-applied on upgrades.
+`AuditLogRetentionJob` opts in explicitly inside its own transaction; nothing else does. That
+was necessary because the original blanket trigger made the archival job impossible — it would
+have started failing silently the first time rows aged past the 2-year cutoff.
+
+> **🚫 Do NOT run `REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;`**
+> This document recommended it until 2026-09-16. It is redundant (the trigger enforces the
+> invariant) and **actively harmful** — a table-level revoke cannot be bypassed by the GUC, so
+> it re-breaks archival exactly as T096 fixed it. It is not applied on the live server.
 
 ### Retention window
 
@@ -242,17 +318,36 @@ Managed by administrators at `/admin/sso/group-mappings`. Each mapping links a p
 
 ## Backups
 
-- **Database**: nightly `pg_dump` to `/var/backups/wombat/`, then `rsync` off-host (or Linode Object Storage). Retain 14 daily, 4 weekly, 6 monthly.
-- **Config**: `/opt/wombat/config/` backed up daily, same destination. Secrets in this file mean the backup destination must be private.
-- **Uploads**: if the app writes user files, back those up the same way.
+`deploy/wombat-backup.sh` bundles **three** things nightly, because a database-only backup
+restores to a box that boots and then cannot honour its own erasure records:
 
-A simple cron:
+1. **Database** — `pg_dump -Fc`. Retain 14 daily, 4 weekly (Sunday), 6 monthly (1st).
+2. **`/opt/wombat/config/wombat.env`** — holds `Wombat__PseudonymSalt`, which is **never
+   rotatable**. Losing it permanently breaks the linkability of every POPIA erasure pseudonym
+   already issued. It cannot be reconstructed from anything.
+3. **`/opt/wombat/data/keys`** — the DataProtection key ring. Losing it invalidates every
+   session cookie and antiforgery token on restore.
+
+The bundle is **`age`-encrypted before it leaves the box** (it contains `wombat.env`), to a
+recipient whose private key lives on **neither** machine, then shipped off-host via `rclone` or
+`rsync`.
+
+> **A backup on the same disk as the database is not a backup.** One disk failure, theft or fire
+> is simultaneously total data loss *and* total disclosure of named doctors' competence records.
+> Until T097 the off-host step existed only as a comment in the script and had never run.
+
+The script **exits non-zero** if the off-host leg is unconfigured or `age` is missing, so cron
+mails you. It refuses to ship `wombat.env` unencrypted. Configure in `/etc/default/wombat-backup`
+(mode 600): `WOMBAT_BACKUP_AGE_RECIPIENT`, plus one of `WOMBAT_BACKUP_RCLONE_REMOTE` or
+`WOMBAT_BACKUP_REMOTE`.
+
+Cron — installed to `/etc/cron.d/wombat-backup`, where the **user field is mandatory**:
 
 ```
-0 2 * * * /usr/local/bin/wombat-backup.sh >> /var/log/wombat-backup.log 2>&1
+0 2 * * * root /usr/local/bin/wombat-backup.sh >> /var/log/wombat-backup.log 2>&1
 ```
 
-Script contents live in the repo under `deploy/wombat-backup.sh`.
+**Rehearse a restore.** A backup nobody has restored is a hypothesis, not a backup.
 
 ## Secrets management
 
@@ -271,7 +366,15 @@ Script contents live in the repo under `deploy/wombat-backup.sh`.
 
 ## Health check
 
-Expose `/health` in `Wombat.Web` and have Caddy probe it (or a simple cron + curl). If it returns non-200 for two consecutive minutes, restart the service and email you. Don't get clever; a 10-line shell script is fine.
+`/health` is probed every minute by `deploy/wombat-health.sh` (cron); after 3 consecutive
+failures it restarts the service and emails you via `msmtp`.
+
+**Since T097 the endpoint actually checks the database** (`AddDbContextCheck`). Before that it
+was liveness-only — `AddHealthChecks()` with zero registered checks — so it returned 200
+whenever the process was alive. A PostgreSQL outage, a bad connection string, or an exhausted
+pool left `/health` reporting "Healthy" while the app was unusable, and **both the restart cron
+and the deploy gate trusted it**. If you add further checks, keep the public response body
+terse: the endpoint is anonymous and reachable at `https://wombat.rcl.co.za/health`.
 
 ## Rollback
 
@@ -283,16 +386,29 @@ Expose `/health` in `Wombat.Web` and have Caddy probe it (or a simple cron + cur
 
 When setting up a fresh VPS:
 
-1. Fresh Ubuntu 24.04, apply all updates, set hostname.
+1. Fresh **Ubuntu 26.04**, apply all updates, set hostname. Add a **1GB swapfile** if the plan
+   has 1GB RAM.
 2. Create `wombat` system user.
-3. Install .NET 10 SDK (from Microsoft's APT repo) or just the runtime if you're publishing self-contained from dev.
-4. Install Postgres 16, create the database and user.
-5. Install Caddy from the official APT repo.
-6. Copy `appsettings.Production.json` and `wombat.env` to `/opt/wombat/config/`.
-7. Publish from dev and rsync to `/opt/wombat/app/`.
+3. `apt install aspnetcore-runtime-10.0` — from the **distro repos**. No Microsoft APT repo.
+4. `apt install postgresql` (**18.x**), create the database and user.
+5. `apt install caddy` — distro repo; no Cloudsmith repo needed.
+6. Copy `wombat.env` to `/opt/wombat/config/` (mode 600). Create `/opt/wombat/data/keys`,
+   owned by `wombat`.
+7. Publish from dev and ship to `/opt/wombat/app/` — use `deploy/deploy.ps1` (Windows) or
+   `deploy/deploy.sh`.
 8. Install the systemd unit, `systemctl daemon-reload`, `systemctl enable --now wombat`.
 9. Install the Caddyfile stanza, `systemctl reload caddy`.
-10. Run DB migrations: `dotnet Wombat.Web.dll --migrate` (wire this up as a one-shot mode, same as ClinicAssist's `dbMigrator`).
-11. Visit `https://wombat.example.com`, log in as the seeded admin, issue an invitation.
+10. **Migrations need no separate step.** The service applies them on startup via
+    `Database.MigrateAsync()`, reading config from systemd's `EnvironmentFile`.
+    > 🚫 Do **not** hand-run `dotnet Wombat.Web.dll --migrate` expecting it to pick up
+    > `wombat.env`. The flag exists, but a one-shot process does not inherit the service
+    > environment, and sourcing the file from bash mis-splits the connection string on its
+    > `;`. This document prescribed that step until 2026-09-16; it was the actual bug fixed
+    > on 2026-06-19.
+11. Install the health and backup crons to `/etc/cron.d/` (**user field required**), and
+    configure `/etc/default/wombat-backup` so the off-host backup leg actually runs.
+12. Visit `https://wombat.example.com`, log in as the seeded admin, issue an invitation.
+13. **Create a second local-password Administrator** before enabling SSO — see the break-glass
+    invariant above. Only one admin is seeded.
 
 That checklist is the verification for T015. Put it in the task file too.

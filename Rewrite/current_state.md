@@ -2,6 +2,69 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION 2026-09-16 (Opus) — **T097 DEPLOYED + admin password rotated + docs corrected** ✅
+
+**Everything below is live on production and verified there**, not just committed.
+
+**Deployed twice** via `deploy/deploy.ps1`; both passed the `/health` gate (which now actually
+probes PostgreSQL, so passing it means something). Verified on the live site: nonce-backed CSP,
+`nosniff`, `Referrer-Policy`, `X-Frame-Options`; header nonce **matches** the rendered
+`<script type="importmap">` nonce; browser console clean. Server uptime **91 days** — the June
+deploy had been running continuously.
+
+**🔑 Administrator password ROTATED.** The old value is in git history and is now dead. The app
+has no reset path (`AdminSeeder` returns early when the user exists, so `Wombat__SeedAdminPassword`
+is inert after first boot; T061 removed the dev-CLI flags; self-service reset is not wired), so
+the Identity v3 hash was computed with the same library version the app runs and applied directly —
+after asserting it verifies for the right password and rejects a wrong one. Row snapshotted to
+`/root/admin-row-backup-*.txt` first. `SecurityStamp` rotated too, invalidating existing cookies.
+**End-to-end verified:** login returns 302 + `.AspNetCore.Identity.Application` cookie
+(`Secure`, `HttpOnly`). New password is in `pwd_DO_NOT_COMMIT.txt` **only**; superseded lines are
+marked `# SUPERSEDED - DEAD`.
+
+**🐞 Found + fixed during browser verification (pre-existing, unrelated to the CSP):** the
+`FallbackPolicy` of `RequireAuthenticatedUser` was inherited by `MapStaticAssets()`, so
+**fingerprinted** static assets 302'd to login for anonymous users — the browser got HTML, the
+subresource-integrity check failed, and `ReconnectModal.<hash>.razor.js` was **blocked**.
+Unfingerprinted paths were fine because `UseStaticFiles` runs before authorization, which is what
+hid it. Fixed with `.AllowAnonymous()`; the asset now returns 200 with a hash matching its declared
+integrity.
+
+**📄 Docs corrected against reality.** `INFRASTRUCTURE.md` no longer contains instructions that
+would silently produce a broken box: env var names now bind (`ConnectionStrings__DefaultConnection`,
+`Email__*`, plus previously-undocumented `Email__UseSsl`, `Wombat__DataProtectionKeysPath`,
+`Sso__Providers__0__*`), Ubuntu 26.04 / PostgreSQL 18 (with a warning that a pg_dump-18 backup will
+**not** restore into a 16 cluster), distro packages not Microsoft/Cloudsmith repos, T096 audit-trigger
+semantics with a 🚫 on the old `REVOKE`, and the forbidden `--migrate` step removed from the
+first-boot checklist. `deploy/README.md`: `postgresql-16` → `postgresql`, added `Email__UseSsl`,
+replaced the stale audit "latent conflict" paragraph. `deploy/deploy.ps1`: `.DESCRIPTION` no longer
+advertises the migration step removed from its body in June.
+
+**▶ NEXT — genuinely outstanding:**
+1. **No off-host backup exists today.** Deferred by choice. `wombat-backup.sh` now exits non-zero
+   nightly until `/etc/default/wombat-backup` is configured (`WOMBAT_BACKUP_AGE_RECIPIENT` + a
+   destination). Generate the `age` keypair, keep the private half off both machines, **rehearse a
+   restore**. Until then the DB, `wombat.env` (non-rotatable `PseudonymSalt`) and the DataProtection
+   keys all live on one disk.
+2. **`/_blazor/initializers`** 302s for anonymous users (same fallback-policy root cause) → a
+   console JSON parse error. No functional impact observed. The conventional fix
+   (`.AllowAnonymous()` on `MapRazorComponents`) removes a defence-in-depth layer; groundwork for
+   that decision is in `Tasks/T097-*.md` §7. **Deliberately not done** at the tail of a session.
+3. **Pre-commit secret scanner** (gitleaks/trufflehog) so the credential leak cannot recur.
+4. **Second local-password Administrator** before SSO is ever switched on (break-glass invariant;
+   only one admin is seeded).
+5. Data residency is unresolved: app+DB in **London**, `rcl.co.za` git origin **and** SMTP relay in
+   **Dallas** (72.9.157.238), users in SA. POPIA §72 has no SA adequacy list, and Linode's API
+   confirms **no African region** — repatriation means changing provider, not region.
+
+**Model note:** **Opus** for items 1–2 (production + an authorization-policy judgement call).
+**Sonnet** is fine for 3.
+
+**Commit status:** committed on `master`, **not pushed** (origin is the Dallas box). Task file
+`Tasks/T097-security-posture-hardening.md` has the full detail including the rotation method.
+
+---
+
 ## ⭐ SESSION 2026-09-16 (Opus) — **T097: security posture hardening** — the documented controls were fiction; now they are real 🔐
 
 **Context:** first session in ~3 months (last commit 2026-06-20). Ran a full repo + production audit

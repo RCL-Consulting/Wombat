@@ -195,3 +195,86 @@ So the change is *probably* safe. It was deliberately **not** made in this sessi
 a defence-in-depth layer on a live system holding identifiable trainee data, in exchange for
 fixing a console error with no user-visible effect. That trade deserves its own task and its
 own verification pass, not a tail-end edit after two production deploys.
+
+---
+
+## 8. Production actions — EXECUTED 2026-09-16
+
+§6 listed these as outstanding. Items 1, 2 and 4 are now done; item 3 was deferred by the
+operator; item 5 remains open.
+
+### Deployed (twice)
+
+`deploy/deploy.ps1` run against `root@172.236.8.144`. Both deploys passed the `/health` gate —
+which, since this task, actually probes PostgreSQL, so passing it means something.
+
+Verified **on the live site** afterwards:
+
+- `Content-Security-Policy` with a per-request nonce, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy`, `X-Frame-Options`, alongside Caddy's `Strict-Transport-Security`.
+- The nonce in the response header matches the `nonce` on the rendered `<script type="importmap">`
+  (the header's `+` appears as `&#x2B;` in the attribute — HTML entity encoding, which browsers
+  decode during parsing, so the comparison holds).
+- Browser load of `/account/login`: **console clean** apart from the filed `/_blazor/initializers`
+  item. The page renders and submits correctly.
+- Server uptime **91 days**, so the June deployment had been running continuously — the earlier
+  audit could only prove one successful ACME renewal, not continuity.
+
+### Administrator password rotated
+
+The old value is in git history and is now **dead**. Rotation was done by computing the
+ASP.NET Core Identity v3 hash directly, because the app has no reset path: `AdminSeeder` returns
+early when the user exists, `Wombat__SeedAdminPassword` is therefore inert after first boot, the
+dev-CLI reset flags were removed in T061, and self-service password reset is not wired.
+
+Method, and why it was safe:
+
+1. A throwaway tool generated a 24-character password satisfying the Identity policy, hashed it
+   with `PasswordHasher` from the **same library version the app runs** (10.0.3), and asserted
+   both that the hash verifies for the correct password **and** that it rejects a wrong one —
+   before anything touched production. The app registers no custom `PasswordHasherOptions`, so
+   library defaults are what it validates against.
+2. The existing row was snapshotted to `/root/admin-row-backup-<ts>.txt` (mode 600) for rollback.
+3. `UPDATE` applied `PasswordHash`, a fresh `SecurityStamp` (**invalidating every existing auth
+   cookie for that account**), a fresh `ConcurrencyStamp`, `AccessFailedCount = 0` and
+   `LockoutEnd = NULL`. `UPDATE 1`, hash confirmed changed.
+4. **End-to-end verified**: fetched the login page for an antiforgery token, POSTed the new
+   credential, got a 302 to `/` and a `.AspNetCore.Identity.Application` cookie with
+   `Secure=True, HttpOnly=True`.
+
+The password is recorded **only** in the gitignored `pwd_DO_NOT_COMMIT.txt`. Earlier credential
+lines in that file are prefixed `# SUPERSEDED - DEAD, do not use`.
+
+> **Process note.** The rotation was performed **twice**. A field-index error in the verification
+> script printed the first generated password to the session terminal. Rather than leave a live
+> credential that had been displayed, a second rotation was run and verified; the value now in
+> production was never printed. Recorded here because it is exactly the failure mode
+> [[feedback-record-session-secrets]] exists to prevent, and the memory has been amended to
+> require that secrets go to the gitignored file **only**, referenced by name in prose.
+
+### Documentation corrected against reality
+
+`Rewrite/INFRASTRUCTURE.md` — the §"Follow-ups filed separately" item is **done**. Fixed: the
+non-binding env var names (`ConnectionStrings__DefaultConnection`, `Email__*`, plus the
+previously-undocumented `Email__UseSsl`, `Wombat__DataProtectionKeysPath` and the `Sso__Providers__0__*`
+block), Ubuntu 26.04 and PostgreSQL 18 with an explicit warning that a pg_dump-18 backup will not
+restore into a 16 cluster, distro packages instead of Microsoft/Cloudsmith APT repos, the T096
+audit-trigger semantics with a 🚫 on the `REVOKE`, the T097 backup contract, the now-meaningful
+health check, and a first-boot checklist with the forbidden `--migrate` step removed.
+
+`deploy/README.md` — fixed `postgresql-16` → `postgresql` (its own header already said 18), added
+the missing `Email__UseSsl`, and replaced the stale "latent conflict, resolve before rows age out"
+audit paragraph, which T096 had already resolved.
+
+`deploy/deploy.ps1` — the `.DESCRIPTION` still advertised the migration step that was removed
+from its body on 2026-06-19.
+
+### Still open
+
+- **Off-host backup destination** — deferred by operator decision. `wombat-backup.sh` exits
+  non-zero nightly until `/etc/default/wombat-backup` is configured. **This is deliberate**, but
+  it means there is still no off-host backup today.
+- **Pre-commit secret scanner** (gitleaks/trufflehog) — not installed.
+- **`/_blazor/initializers`** — see §7.
+- **Git history** — operator chose rotation only; the dead literals remain in history on the
+  private origin.

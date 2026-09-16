@@ -38,7 +38,7 @@ then install the same package.)
 ### 3. PostgreSQL
 
 ```bash
-apt install -y postgresql-16
+apt install -y postgresql          # 18.x on Ubuntu 26.04 — do NOT pin 16: pg_dump 18 backups will not restore into a 16 cluster
 sudo -u postgres createuser --pwprompt wombat   # enter a strong random password
 sudo -u postgres createdb -O wombat wombat
 # Verify:
@@ -49,9 +49,13 @@ psql -h 127.0.0.1 -U wombat -d wombat -c 'SELECT 1;'
 (`audit_entries_immutable`) that raises an exception on any UPDATE/DELETE of
 `AuditEntries` — for **all** roles, including the table owner. So the manual
 `REVOKE UPDATE, DELETE ON "AuditEntries" FROM wombat;` mentioned in older docs is
-**redundant and not applied here**. (Note: `AuditLogRetentionJob` deletes 2-year-old
-rows to archive them, which the trigger will block — a latent conflict that is dormant
-on a fresh DB. Resolve before the first rows age out; see `Rewrite/current_state.md`.)
+**redundant and not applied here** — and applying it now would actively break archival.
+
+**Resolved by T096** (migration `20260619065511_T096_AuditDeleteForArchival`): the trigger
+still raises on every `UPDATE`, and on `DELETE` **unless** the transaction sets
+`SET LOCAL wombat.allow_audit_delete = 'on'`. `AuditLogRetentionJob` opts in explicitly inside
+its own transaction; nothing else does. The "latent conflict" this paragraph used to warn about
+is gone. A table-level `REVOKE` cannot be bypassed by the GUC, which is why it must stay unapplied.
 
 ### 4. Config directory
 
@@ -78,6 +82,7 @@ Email__SmtpUser=wombat@example.com
 Email__SmtpPassword=REDACTED
 Email__FromAddress=no-reply@example.com
 Email__FromName=Wombat
+Email__UseSsl=false          # true for implicit SSL on port 465 (this deployment uses 465 + true)
 Wombat__BaseUrl=https://wombat.example.com
 Wombat__SeedAdminEmail=renier@rcl.co.za
 Wombat__SeedAdminPassword=REDACTED
