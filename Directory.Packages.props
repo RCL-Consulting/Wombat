@@ -1,7 +1,28 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Lets the pins in the "transitive security pins" group below actually take effect. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+
+  <!--
+    Transitive security pins. These packages are not referenced directly by any Wombat
+    project — they arrive through Swashbuckle, Testcontainers and bUnit — but the versions
+    those parents resolve to carry published advisories, and NuGetAudit (warnings-as-errors
+    in Release) fails the build on them. Each pin stays inside the parent's major version so
+    the parent's API contract is unchanged.
+
+    Review when the parent packages are next upgraded; if a parent starts resolving a
+    patched version on its own, the corresponding pin can be dropped.
+  -->
+  <ItemGroup Label="Transitive security pins">
+    <!-- GHSA-v5pm-xwqc-g5wc (high). Via Swashbuckle.AspNetCore. Patched from 2.7.5. -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
+    <!-- GHSA-q939-rpr3-3284 (high). Via Testcontainers.PostgreSql, test-only. -->
+    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
+    <!-- GHSA-pgww-w46g-26qg (moderate). Via bunit, test-only. -->
+    <PackageVersion Include="AngleSharp" Version="1.8.1" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageVersion Include="bunit" Version="1.39.5" />
@@ -19,6 +40,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

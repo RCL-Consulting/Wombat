@@ -1,3 +1,6 @@
+@using Wombat.Web.Security
+@inject IHttpContextAccessor HttpContextAccessor
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +16,9 @@
     <ResourcePreloader />
     <link rel="stylesheet" href="/app.css" />
     <link rel="stylesheet" href="/Wombat.Web.styles.css" />
-    <ImportMap />
+    @* ImportMap renders an inline <script type="importmap">, so it needs the request's
+       CSP nonce — see SecurityHeadersMiddleware. *@
+    <ImportMap nonce="@CspNonce" />
     <HeadOutlet />
 </head>
 
@@ -29,3 +34,8 @@
 </body>
 
 </html>
+
+@code {
+    private string? CspNonce =>
+        HttpContextAccessor.HttpContext?.Items[SecurityHeadersMiddleware.NonceItemKey] as string;
+}

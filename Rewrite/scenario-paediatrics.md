@@ -580,7 +580,7 @@ The full cast of expected dashboards on first login:
 | `khumalo@kgk.wombat.local` | Fatima Khumalo | Assessor | AssessorDashboard |
 | `vanrensburg@sun.ac.za` | John van Rensburg | CommitteeMember | CommitteeMemberDashboard |
 
-Actual: All 7 primary registrations completed. Each invitee auto-logged in and rendered the role-appropriate dashboard (Smit→CoordinatorDashboard with Stalled/Invitations/Quick action panels; Zulu/Naidoo/Botha/van Rensburg→CommitteeMemberDashboard with Trainees-approaching-completion + Programme overview; Patel/Khumalo→AssessorDashboard with Pending requests/Accepted needing action/Recent decisions/Actions). Password used for all 7: `Act2Pass!123` (saved in `pwd_DO_NOT_COMMIT.txt` per the session-secrets memory rule). Form pre-fill confirmed email + role; First/Last name + password + confirm were the only operator inputs.
+Actual: All 7 primary registrations completed. Each invitee auto-logged in and rendered the role-appropriate dashboard (Smit→CoordinatorDashboard with Stalled/Invitations/Quick action panels; Zulu/Naidoo/Botha/van Rensburg→CommitteeMemberDashboard with Trainees-approaching-completion + Programme overview; Patel/Khumalo→AssessorDashboard with Pending requests/Accepted needing action/Recent decisions/Actions). Password used for all 7: `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>` (saved in `pwd_DO_NOT_COMMIT.txt` per the session-secrets memory rule). Form pre-fill confirmed email + role; First/Last name + password + confirm were the only operator inputs.
 Gap: None observed for the primary flow. See Step 2.2.b + Phase 2.B.b for the secondary-invitation finding (A2-3).
 
 ### Step 2.3.b — Mbatha attaches secondary Assessor role to Zulu / Naidoo / Botha

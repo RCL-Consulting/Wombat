@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MediatR;
 using Wombat.Application;
@@ -19,6 +21,7 @@ using Wombat.Infrastructure;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Web.Components;
+using Wombat.Web.Security;
 using Wombat.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,7 +67,41 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<IScopedSender, ScopedSender>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHealthChecks();
+
+// Health: a liveness-only probe reports "Healthy" while PostgreSQL is unreachable, which
+// would let the health cron skip its restart and let a deploy gate report success against
+// an unusable app. Probe the database the app actually depends on.
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>("database");
+
+const string LoginRateLimitPolicy = "login";
+
+// Login throttling. Identity lockout (see AddInfrastructure) caps attempts per *account*;
+// this caps them per client IP so an attacker cannot spread a password-spray across many
+// accounts, and cannot lock a legitimate user out by burning their attempts for them.
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy(LoginRateLimitPolicy, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: TruncateLoginIp(httpContext.Connection.RemoteIpAddress) ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+            }));
+
+    // This endpoint is a browser form post, so a bare 429 would render as a blank error
+    // page. Redirect (302) back to the login form with an explanation instead, and set
+    // Retry-After so non-browser clients still learn how long to wait.
+    options.OnRejected = (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = "300";
+        context.HttpContext.Response.Redirect(
+            BuildLoginUrl(null, "Too many sign-in attempts. Please wait a few minutes and try again."));
+        return ValueTask.CompletedTask;
+    };
+});
 
 // DataProtection: persist keys so auth cookies / antiforgery tokens survive restarts.
 // Under systemd (ProtectSystem=strict + a homeless service user) the default key
@@ -95,8 +132,13 @@ forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
+// Security headers (CSP nonce, nosniff, referrer policy) — before anything that can write
+// a response, so static files and error pages carry them too.
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
@@ -133,7 +175,7 @@ app.MapPost("/account/login/submit", async (
         request.Email.Trim(),
         request.Password,
         request.RememberMe,
-        lockoutOnFailure: false);
+        lockoutOnFailure: true);
 
     if (result.Succeeded)
     {
@@ -152,6 +194,24 @@ app.MapPost("/account/login/submit", async (
 
         return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
     }
+    else if (result.IsLockedOut)
+    {
+        // Distinguished in the audit log so an admin can see a lockout trip, but the
+        // user-facing message stays generic: saying "this account is locked" would
+        // confirm the address exists.
+        await auditWriter.WriteAsync(AuditEntry.Create(
+            occurredAt: DateTime.UtcNow,
+            category: AuditCategory.Authentication,
+            action: "LoginLockedOut",
+            success: false,
+            actorIpAddress: ip,
+            actorUserAgent: ua,
+            errorMessage: "Account locked after repeated failed sign-in attempts."));
+
+        return Results.LocalRedirect(BuildLoginUrl(
+            request.ReturnUrl,
+            "Too many failed sign-in attempts. Please try again later or reset your password."));
+    }
     else
     {
         // Record failed login without leaking whether the user account exists.
@@ -168,6 +228,7 @@ app.MapPost("/account/login/submit", async (
     }
 })
 .AllowAnonymous()
+.RequireRateLimiting(LoginRateLimitPolicy)
 ;
 
 app.MapPost("/account/register/submit", async (

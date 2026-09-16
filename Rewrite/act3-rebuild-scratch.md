@@ -13,7 +13,7 @@ via the visual builder", "Full 3.A–3.I").
 Activities 0; CurriculumItemProgresses 0.
 
 ## Environment facts (verified against the clean DB)
-- DB: `wombat_t002_verify`, user `wombat`, pw `3Uca!yptus#12`, host 127.0.0.1:5432.
+- DB: `wombat_t002_verify`, user `wombat`, pw — see pwd_DO_NOT_COMMIT.txt, host 127.0.0.1:5432.
 - psql: `C:\Program Files\PostgreSQL\16\bin\psql.exe`.
 - Dev server: start with `$env:ASPNETCORE_ENVIRONMENT='Development'` then
   `dotnet run --project src/Wombat.Web/Wombat.Web.csproj` (WITHOUT `--no-launch-profile`,
@@ -82,7 +82,7 @@ valid workflow/credit. Two Dlamini Mini-CEX drafts (activities 1 & 2) exist but 
 until the workflow is fixed. Browser got signed out.
 
 ### Step A — re-login + fix AT 11 workflow/credit, then republish
-1. Browser: http://localhost:5080 → sign in **Mbatha** `mbatha@kgk.wombat.local` / `Mbatha@KGK2026!`.
+1. Browser: http://localhost:5080 → sign in **Mbatha** `mbatha@kgk.wombat.local` / `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>`.
 2. Go to `/admin/activity-types/11` → **Workflow** tab → clear the textarea → paste EXACTLY:
    ```json
    {"version":1,"initial_state":"draft","states":[{"key":"draft","label":"Draft"},{"key":"submitted","label":"Submitted"},{"key":"rated","label":"Rated"},{"key":"completed","label":"Completed","terminal":true}],"transitions":[{"key":"submit","from":"draft","to":"submitted","actor":"role:Trainee"},{"key":"accept","from":"submitted","to":"rated","actor":"field:assessor_user_id"},{"key":"complete","from":"rated","to":"completed","actor":"field:assessor_user_id"},{"key":"recall","from":"submitted","to":"draft","actor":"role:Trainee"}]}
@@ -113,23 +113,23 @@ they should still submit fine. Reach each via `/activities/{id}`, Submit (actor 
 - [x] 3.A pre: mini_cex_paed v2 built + published (12 fields/3 sect, correct workflow/credit). Snapshot `act3R-minicex-published`.
 - [x] 3.A/3.B/3.C — Dlamini ×2 Mini-CEX (lvl 3+4), Naidoo accept+complete. PAED-001: 2/30 reached 1. Snapshot `act3R-A-C`.
       Then: Dlamini ×2 Mini-CEX already drafted (act 1 = overall 3, act 2 = overall 4); Submit both →
-      Naidoo (`naidoo@kgk…`/`Act2Pass!123`) accept+complete both → verify PAED-001 item 2 credit
+      Naidoo (credentials in pwd_DO_NOT_COMMIT.txt) accept+complete both → verify PAED-001 item 2 credit
       (expect CountsSoFar=2, MinimumLevelReachedCount=1; Dlamini stage 3, min 4 → only the lvl-4 reaches)
       + `/portfolio/progress` shows it.
 - [x] 3.D — build procedure_log_paed (id 15) v2: form = procedure_code(Choice), supervision_level(Scale→scale2),
       self_rating(Scale); workflow `{"version":1,"initial_state":"draft","states":[{"key":"draft","label":"Draft"},{"key":"logged","label":"Logged","terminal":true}],"transitions":[{"key":"log","from":"draft","to":"logged","actor":"role:Trainee"}]}`;
       credit `{"counts_for":[{"curriculum_item_match":{"epa_field":"epa_id"},"minimum_level_field":"supervision_level","amount":1}]}` (add an `epa_id` EPA field too).
-      du Plessis (`duplessis@kgk…`/`Act2Pass!123`) ×5 logs on PAED-011 (supervision 2,2,3,3,4) → expect PAED-011 item 12: 5/30, reached 3 (stage-2 min 3).
+      du Plessis (credentials in pwd_DO_NOT_COMMIT.txt) ×5 logs on PAED-011 (supervision 2,2,3,3,4) → expect PAED-011 item 12: 5/30, reached 3 (stage-2 min 3).
 - [x] 3.E — build dops_paed (id 14) v2 (4-state workflow/credit verbatim from Step A; minimum_level_field=overall_level):
       form = epa_id(EPA), assessor_user_id(User), procedure_code(Choice incl "Lumbar puncture (infant)"),
       indication(Text), complications(Text), 5 Scale steps (preparation/consent/landmarks/technique/aftercare→scale2)
       + overall_level(Scale→scale2). **Before play:** NULL Patel training: `UPDATE "AssessorProfiles" SET "TrainingCompletedOn"=NULL WHERE "UserId"='6b236065-634d-4309-9115-c9eb95b15bbd';` (document the tweak; record old value 2021-05-10 to restore if wanted).
-      Mahlangu (`mahlangu@kgk…`/`Act2Pass!123`) DOPS all steps + overall = level 2 → Patel accept+complete.
+      Mahlangu (credentials in pwd_DO_NOT_COMMIT.txt) DOPS all steps + overall = level 2 → Patel accept+complete.
       **Observe:** does Wombat block/flag an in-training (null TrainingCompletedOn) assessor completing? And
       PAED-010 item 11 credit for a STAGE-1 trainee where stage-min JSON has no "1" key {"2":2,"3":3,"4":4}
       (what does GetMinimumLevelForStage fall back to? expect volume 1; reached = depends on fallback).
 - [x] 3.F — build msf_paed (id 16) v2: workflow draft→open→closing→closed (open actor role:Trainee; closing/closed actor `creator`).
-      Molefe (`molefe@kgk…`/`Act2Pass!123`) open MSF; advance via /admin/jobs MsfClosing or workflow widget to closed.
+      Molefe (credentials in pwd_DO_NOT_COMMIT.txt) open MSF; advance via /admin/jobs MsfClosing or workflow widget to closed.
 - [x] 3.G — Mahlangu stale Mini-CEX (activity 10, backdated 15d). Smit panel shows "No stalled requests" — gap F-3G-1.
 - [x] 3.H — Audit log clean: all lifecycle events present, [PRINCIPAL] intact, no JsonException.
 - [x] 3.I — Dashboard sweep: all 5 trainees verified. No crashes. See findings in current_state.md.

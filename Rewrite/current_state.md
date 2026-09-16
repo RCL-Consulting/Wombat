@@ -2,6 +2,71 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION 2026-09-16 (Opus) — **T097: security posture hardening** — the documented controls were fiction; now they are real 🔐
+
+**Context:** first session in ~3 months (last commit 2026-06-20). Ran a full repo + production audit
+before touching anything. Production is **healthy** — `https://wombat.rcl.co.za` 200 OK, Let's Encrypt
+cert auto-renewed 2026-08-16 (valid to 2026-11-14), so Caddy's ACME has been running unattended.
+Build clean (0 warnings, warnings-as-errors on); **426 tests green** (Domain 50, Application 314,
+Architecture 19, Web 43) — zero drift from the counts recorded in June.
+
+**🚨 The audit's central finding: three security controls `CLAUDE.md` lists as shipped did not exist.**
+No rate limiter anywhere in `Wombat.Web` (the only one in the solution covers `MsfRespond` on the **Api**
+host, which is not the host serving the site); no CSP in the codebase at all; no `nosniff`. Plus
+`lockoutOnFailure: false` with **no `options.Lockout` block**, so no account could ever lock. Compounded
+by the seeded production admin password sitting in plaintext in tracked, pushed `current_state.md`
+against a public admin username in `deploy/README.md` — valid-credential replay on an unthrottled,
+un-lockable login form.
+
+**T097 shipped (all verified on the wire against a locally-run build):**
+- **Two-layer login throttling** — Identity lockout (5 attempts / 15 min) + an IP fixed-window
+  limiter (10 / 5 min) on `/account/login/submit`. `UseRateLimiter` precedes `UseAntiforgery`, so
+  tokenless attempts are still counted. Verified: attempts 1–10 pass to antiforgery, **11 trips**.
+  New `LoginLockedOut` audit action; the user-facing message never confirms an account exists.
+- **Nonce-backed CSP + `nosniff` + `Referrer-Policy` + `X-Frame-Options`** via new
+  `Security/SecurityHeadersMiddleware.cs`. The nonce is required because `<ImportMap />` emits an
+  inline `<script type="importmap">` — plain `script-src 'self'` would kill Blazor module loading.
+  Verified: header nonce **matches** the rendered tag. `style-src` keeps `'unsafe-inline'` (~51
+  components use `style="..."`); `script-src` does not.
+- **Backups that survive the host** — `wombat-backup.sh` now bundles DB **+ `wombat.env` + the
+  DataProtection key ring**, `age`-encrypts it, and ships off-host. **Exits non-zero if the off-host
+  leg is unconfigured** instead of silently skipping (how it stayed broken for months). It refuses
+  to ship `wombat.env` unencrypted.
+- **`/health` can now fail** — `AddDbContextCheck` added; it previously returned 200 with Postgres
+  down, which both the restart cron and the deploy gate trusted.
+- **Credential + dependency hygiene** — password literals scrubbed from all tracked docs (pointers to
+  `pwd_DO_NOT_COMMIT.txt` instead); plaintext dev connection string removed from `appsettings.json`
+  so the documented startup fail-fast is real; three transitive packages with published advisories
+  pinned (`Microsoft.OpenApi` 2.12.2, `SSH.NET` 2026.0.0, `AngleSharp` 1.8.1) — these began failing
+  `NuGetAudit` on the fresh restore.
+
+**Also corrected — a data-residency fact nobody had checked:** `wombat.rcl.co.za` → 172.236.8.144 is
+Akamai/Linode **London**, and `rcl.co.za`/`mail.rcl.co.za` → 72.9.157.238 is **Dallas, Texas** — the
+same single-operator box serving as both **git origin and SMTP relay**. So SA trainee data spans three
+jurisdictions today, and POPIA §72 (cross-border transfer, no SA adequacy list) is an open question.
+Linode's API confirms **no African region** exists, so repatriation means a different provider, not a
+region change.
+
+**▶ NEXT — production actions T097 could NOT do from here (all need the live host):**
+1. **Rotate the production Administrator password** — treat the old one as disclosed. Scrubbing the
+   working tree does **not** remove it from git history on origin.
+2. **Decide on git history** (rewrite vs. rely on rotation). Origin is private, which bounds it.
+3. **Configure the off-host backup** — generate the `age` keypair, keep the private half off both
+   machines, pick a destination, rehearse a restore. Until then the script exits non-zero nightly.
+4. **Deploy** — none of T097 is live until `deploy/deploy.ps1` runs. Smoke-test the CSP and the
+   rate limiter immediately after.
+5. Consider a pre-commit secret scanner so the credential leak cannot recur.
+
+**Model note:** **Opus** for the deploy + rotation (production-touching, needs care). **Sonnet** is fine
+for the `INFRASTRUCTURE.md` rewrite noted below.
+
+**Known-stale, filed not fixed:** `Rewrite/INFRASTRUCTURE.md` is actively misleading — env var names
+that would not bind (`Wombat__ConnectionStrings__Default`, `Wombat__Email__*`), Postgres 16 vs the live
+18.4, a `--migrate` step `deploy/README.md` explicitly forbids, and a `REVOKE` that would re-break T096
+audit archival. Needs its own task. Task file: `Tasks/T097-security-posture-hardening.md`.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-06-19/20 (Opus) — **Wombat is LIVE in production at https://wombat.rcl.co.za** 🏁 (T015 deploy + SMTP wired + T096 audit fix + T016 close-out — all verified)
 
 **The rewrite is deployed and serving in production.** Drove the full first-boot checklist over SSH from the Windows dev box onto a freshly-rebuilt Linode. Verified end-to-end (login through Caddy issues a Secure auth cookie; admin nav renders; 10-page authenticated smoke test). **5 commits on `master` (`7709666`..`a8d44cd`); NOT pushed (held at user's request).**
@@ -18,7 +83,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 **Two production-correctness code fixes shipped (were missing, now live + committed):**
 1. `Program.cs` **`UseForwardedHeaders`** (X-Forwarded-Proto/-For) — without it, behind Caddy the app saw `http` and auth/antiforgery cookies weren't `Secure`. Verified: login cookie now carries `Secure`.
 2. `Program.cs` **persist DataProtection keys** to `Wombat:DataProtectionKeysPath` — the homeless service user + `ProtectSystem=strict` made the default `$HOME/.aspnet` unwritable → keys were ephemeral (every restart logged everyone out). Verified: key file stable across restart.
-Plus new `appsettings.Production.json` (logging) and a new **`deploy/deploy.ps1`** (Windows tar+scp deploy; `deploy.sh` needs rsync, absent on Windows). Deploy artifacts updated to match reality (Caddyfile domain, gcServer, backup-as-postgres-superuser fix, README for 26.04). Secrets recorded in `pwd_DO_NOT_COMMIT.txt` (DB pw, PseudonymSalt, admin pw `Ex4-4cUvS@jkyHZY`).
+Plus new `appsettings.Production.json` (logging) and a new **`deploy/deploy.ps1`** (Windows tar+scp deploy; `deploy.sh` needs rsync, absent on Windows). Deploy artifacts updated to match reality (Caddyfile domain, gcServer, backup-as-postgres-superuser fix, README for 26.04). Secrets recorded in `pwd_DO_NOT_COMMIT.txt` (DB pw, PseudonymSalt, admin pw).
 
 **✅ Audit retention/trigger conflict FIXED (T096, 2026-06-19).** The `audit_entries_immutable` trigger blocked the `AuditLogRetentionJob` archival DELETE. Fixed: trigger now permits DELETE only when a transaction sets `SET LOCAL wombat.allow_audit_delete='on'` (custom GUC, no superuser); the job opts in via an explicit transaction. UPDATEs and all other DELETEs still raise. Migration `20260619065511_T096_AuditDeleteForArchival` (SQL-only); job uses concrete `ApplicationDbContext`. Validated on a throwaway restore (delete blocked w/o GUC, update blocked w/ GUC, delete OK w/ GUC) + applied to production (function confirmed GUC-gated). Task file `Tasks/T096-*.md`.
 
@@ -139,7 +204,7 @@ existing Act-2 panel (created pre-fix) was **backfilled** `InstitutionId=2` via 
 
 **End state (DB):** 5 CommitteeReviews (all terminal: 4 Ratified + 1 Final-after-appeal), 6 CommitteeDecisions
 (1 superseding), 3 EntrustmentDecisions (Molefe), 1 CommitteeAppeal (resolved Remitted). **Snapshot
-`t091-act4-complete`** banks the full state. No new secrets (reused `Mbatha@KGK2026!` / `Act2Pass!123`).
+`t091-act4-complete`** banks the full state. No new secrets (reused `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` / `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>`).
 
 **▶ NEXT: Act 5 (graduation + portfolio PDF).** Restore `t091-act4-complete`. Follow `scenario-paediatrics.md`
 Act 5: Molefe's final Pre-graduation review (review 1 is already Pre-graduation + Ratified — Act 5 may need a
@@ -181,7 +246,7 @@ All staging verified in DB before each publish; staging promoted to main on publ
 - **3.H** `/admin/audit` (Mbatha): 143 entries, full lifecycle (Create/Transition + Save/Publish ActivityType) with **real principal names**, no JsonException, no raw `[PRINCIPAL]` (T045 holds).
 - **3.I** du Plessis `/portfolio/progress` renders all 15 adopted EPAs; PAED-011 shows `5/30 · reached 3/30 · Minimum level 3 (year 2)` — dashboard reads adopted-curriculum credit correctly.
 
-**Snapshots banked:** **`t091-act3-schemas`** (4 types published, 0 activities) and **`t091-act3-complete`** (full Act-3 end-state: 10 activities, 4 credit rows). No new secrets (reused `Mbatha@KGK2026!` / `Act2Pass!123`).
+**Snapshots banked:** **`t091-act3-schemas`** (4 types published, 0 activities) and **`t091-act3-complete`** (full Act-3 end-state: 10 activities, 4 credit rows). No new secrets (reused `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` / `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>`).
 
 **2 minor observations (non-blocking, not ticketed):** (1) Coordinator "Stalled requests" panel shows the trainee as a **raw UserId GUID** instead of a name (cosmetic). (2) The `/activities/new` **Submit** button on a type whose first draft transition isn't keyed `submit` (e.g. procedure_log's `log`) records a **FAILED TransitionActivityCommand** in the audit log but harmlessly leaves a draft — the trainee then Logs from the detail page. Minor robustness nit.
 
@@ -200,7 +265,7 @@ Ndlovu prof6 (all curriculum 2, adoption 1); assessors Naidoo/Patel(InTraining)/
 **Continued the fresh-DB replay forward: Act 2 is now COMPLETE end-to-end**, driven entirely by Mbatha
 (InstitutionalAdmin) with **no Administrator workarounds** — exercising the T092 fix in the real narrative.
 - 11 invitations issued as Mbatha (Coordinator / 3×CommitteeMember / 2×Assessor / van Rensburg external CM /
-  4×Trainee) + all registered (pw `Act2Pass!123`). Zulu/Naidoo/Botha given **+Assessor** via `/admin/users`.
+  4×Trainee) + all registered (pw — see pwd_DO_NOT_COMMIT.txt). Zulu/Naidoo/Botha given **+Assessor** via `/admin/users`.
 - **5 assessor profiles** (Patel In-training, rest Trained; training status is now an **enum** — old A2-5 closed).
 - **All 5 KGK trainees admitted** (Molefe/Dlamini/duPlessis/Mahlangu/Ndlovu) — DB-verified every profile pins
   **AdoptionId 1**, CurriculumId 2, stages 4/3/2/1/1. Adoption gate + version-pinning holds for the whole cohort.
@@ -295,7 +360,7 @@ admin workaround), build the remaining 9 activity types, then Acts 3–5 (activi
 Web 43, Infrastructure 10. **⚠️ Tooling:** dev server via the **PowerShell** tool (background); **stop it before**
 `dotnet test`/`build`/`db-snapshot take|restore`; `psql` at `C:\Program Files\PostgreSQL\16\bin\psql.exe` — use ASCII
 **here-strings** piped to psql (the `-c "...\"...\""` double-quote escaping fails in PowerShell). Reused secrets
-`Mbatha@KGK2026!` / `Act2Pass!123` (already in `pwd_DO_NOT_COMMIT.txt`).
+`<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` / `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>` (already in `pwd_DO_NOT_COMMIT.txt`).
 
 ---
 
@@ -318,7 +383,7 @@ before pushing. (Older session blocks below still say "nothing pushed" — true 
   boot crashed (exit 82, FK violation). Now set from the DEMO institution; `AdoptionId` left null (dev seed bypasses
   the admit gate; CreditApplier scopes by CurriculumId + InstitutionId).
 - DB-verified seed: Demo College → General Medicine (CollegeId set) → SubSpeciality → IM curriculum + trainee profile.
-- **UI-validated (Playwright, admin@wombat.local / ChangeThisAdmin123!):** `/admin/colleges` lists the College;
+- **UI-validated (Playwright, admin@wombat.local / `<default admin pw — see pwd_DO_NOT_COMMIT.txt>`):** `/admin/colleges` lists the College;
   `/admin/colleges/1/specialities` (P5d) shows "College: Demo College"; **`/admin/adoptions`** (Administrator picks
   Demo Institution → adoptable-curricula picker → **adopted IM Core Curriculum**) → "Curriculum adopted." + active
   row, **DB-verified** (`InstitutionCurriculumAdoptions` Id 1, active); `/admin/curricula` shows the new **College**
@@ -682,7 +747,7 @@ play-through from `tools\db-snapshot.ps1 restore act5-v2-final` (or an earlier p
 and DB-verified at every step.** Final snapshot **`act5-v2-final`** is the full end-state. Per-act snapshots:
 `after-act-1-replay-v2`, `after-act-2-replay-v2`, `act3-v2-AD`, `act3-v2-final`, `act4-v2-final`, `act5-v2-final`.
 **Dev server is STOPPED.** No product code changed across the whole replay; no new secrets (reused
-`Mbatha@KGK2026!` / `Act2Pass!123` / `ChangeThisAdmin123!`).
+`<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` / `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>` / `<default admin pw — see pwd_DO_NOT_COMMIT.txt>`).
 
 **Final state (DB-verified):** 16 users; 5 active trainee profiles + **1 completed (Molefe, graduated:
 Trainee role removed, profile inactive)**; 10 activities; 6 committee reviews; **15 EntrustmentDecisions
@@ -805,9 +870,9 @@ notably cleaner than the original Act-2 play-through — every prior workaround 
 **Act-2 end-state (DB-verified counts):** 16 users (14 KGK-relevant + 2 Demo-institution seed users),
 **5 AssessorProfiles**, **6 TraineeProfiles** (5 KGK + 1 demo), **1 DecisionPanel** (4 members),
 12 invitations (all Accepted, **no stale duplicates**), 0 activities / 0 reviews / 0 STARs.
-- **People (all pw `Act2Pass!123`):** Smit=Coordinator; Zulu/Naidoo/Botha=CommitteeMember+Assessor;
+- **People (all pw — see pwd_DO_NOT_COMMIT.txt):** Smit=Coordinator; Zulu/Naidoo/Botha=CommitteeMember+Assessor;
   Patel/Khumalo=Assessor; van Rensburg=external CommitteeMember; Molefe/Dlamini/du Plessis/Mahlangu/
-  Ndlovu=Trainee. (Mbatha stays `Mbatha@KGK2026!`.)
+  Ndlovu=Trainee. (Mbatha stays `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>`.)
 - **AssessorProfiles (TrainingStatus enum, T065):** Zulu/Naidoo/Botha/Khumalo=Trained(3),
   Patel=InTraining(1); all SpecialityId 2. van Rensburg has none (committee-only). Qualifications is
   **[Required]** — filled with a generic FCPaed(SA) line.
@@ -879,7 +944,7 @@ the UI"). **No product code changed; nothing committed except this handoff.**
 - **1.A ✓** institution **KGK** (id 2), speciality **Paediatrics** (id 2), sub-speciality **General
   Paediatrics** (id 2) — bootstrap admin.
 - **1.B ✓** **Mbatha** invited (InstitutionalAdmin) + registered via the inline registration URL (no SMTP
-  needed; T051). Password `Mbatha@KGK2026!` (already in pwd file). Logged-in flows work.
+  needed; T051). Password `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` (already in pwd file). Logged-in flows work.
 - **1.C ✓** **Paed General Entrustment Scale** (id 2), 5 ten-Cate levels — bootstrap admin (scales are
   Administrator-only, T057).
 - **1.D ✓** **15 EPAs** PAED-001…015 (EPA ids **2–16**; Core 1–13, Elective 14–15) — as Mbatha.
@@ -906,7 +971,7 @@ and DELETE are not permitted"** EF exception (during DevUserSeeder user upsert) 
 seed correctly. Worth a task if it recurs (likely the audit interceptor attempting an UPDATE on an
 existing dev user). Not yet ticketed.
 
-**▶ Resume:** restore `act1-v2-pre-activitytypes`, log in as **Mbatha** (`Mbatha@KGK2026!`), build the 10
+**▶ Resume:** restore `act1-v2-pre-activitytypes`, log in as **Mbatha** (`<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>`), build the 10
 activity types via `/admin/activity-types/new` (minimal), then **Act 2** (onboarding). **Sonnet** is fine
 for the grind. Useful automation pattern this session: drive Blazor forms with one `browser_evaluate`
 that sets `#id` values, dispatches `input`+`change`, waits ~400ms, then clicks the submit button — works
@@ -1038,7 +1103,7 @@ fixes + Molefe-review tagged PreGraduation. Restore with `tools\db-snapshot.ps1 
 The pure `act5-complete` is kept unchanged as the Act 5 play-through record. The T082 migration was
 applied to the live dev DB via `dotnet ef database update` before snapshotting.
 
-**No new secrets** — reused `admin@wombat.local` / `ChangeThisAdmin123!` for the browser verification;
+**No new secrets** — reused `admin@wombat.local` / `<default admin pw — see pwd_DO_NOT_COMMIT.txt>` for the browser verification;
 all already in `pwd_DO_NOT_COMMIT.txt`.
 
 **▶ Recommended next: the Appendix** cross-cutting spot-checks (data rights, scheduled jobs, SSO,
@@ -1089,7 +1154,7 @@ Mark-complete, Trainee role removed; both new migrations applied). Earlier check
 `act4-A-scheduled`, `act4-molefe-ratified`, `act4-complete`, `act4-complete-t076`, `act5-complete`.
 Restore with `tools\db-snapshot.ps1 restore <name>`.
 
-**No new secrets** — reused `Mbatha@KGK2026!` (Mbatha) and the shared `Act2Pass!123`
+**No new secrets** — reused `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` (Mbatha) and the shared `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>`
 (Zulu / Mahlangu / Smit), already in `pwd_DO_NOT_COMMIT.txt`.
 
 **Open follow-ups (deferred, documented):** review-type field on committee reviews (F-4B-1 d — Annual
@@ -1203,7 +1268,7 @@ template-clone briefly drops the app's DB connections and 500s the in-flight req
 Also: the **Bash tool runs bash, not PowerShell** — start the dev server via the PowerShell tool
 (`$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run …`) or it silently no-ops.
 
-**No new secrets** — reused Mbatha `Mbatha@KGK2026!` and scenario shared `Act2Pass!123` (Zulu,
+**No new secrets** — reused Mbatha `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` and scenario shared `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>` (Zulu,
 Mahlangu), already in `pwd_DO_NOT_COMMIT.txt`.
 
 **Commit:** T075 (code + tests) + doc updates landed in **`46126bf`** on `master` (10 files,
@@ -1292,7 +1357,7 @@ Rancher Desktop / Podman / Docker Desktop to run it, or run in CI).
 **DB snapshots added:** `act3-replay-verified`, `act3-D-verified` (latest; PAED-001 + PAED-011 credited,
 Mini-CEX v2 + procedure_log_paed v2 published). `tools\db-snapshot.ps1 restore act3-D-verified`.
 
-**No new secrets created** (reused `Mbatha@KGK2026!` / `Act2Pass!123`, already in pwd_DO_NOT_COMMIT.txt).
+**No new secrets created** (reused `<Mbatha pw — see pwd_DO_NOT_COMMIT.txt>` / `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>`, already in pwd_DO_NOT_COMMIT.txt).
 
 ### ⚠️ 2026-05-30 (later, Opus): act3-* snapshots CORRUPTED — Act 3 being rebuilt from clean Act-2 state
 **Do NOT restore `act3-D-verified` / any `act3-*` snapshot** — they were polluted by **another
@@ -1310,7 +1375,7 @@ before any lifecycle credits. **Model: Sonnet for the play-through grind; escala
 findings / domain calls / handoff.**
 
 Dev server: `$env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run --project src/Wombat.Web/Wombat.Web.csproj`
-(NOT `--no-launch-profile`). DB `wombat_t002_verify` user `wombat` pw `3Uca!yptus#12`; psql at
+(NOT `--no-launch-profile`). DB `wombat_t002_verify` user `wombat` pw — see pwd_DO_NOT_COMMIT.txt; psql at
 `C:\Program Files\PostgreSQL\16\bin\psql.exe`. Keep psql calls SOLO (a failing call cancels its batch).
 
 Smaller alt tasks if preferred: **T070** (assessor rating-edit/note in Rated state — Sonnet) or the
@@ -1523,7 +1588,7 @@ all in place now, so 3.D–3.I can be driven realistically.
 - `519286c` — docs: record 37be4ec commit hash in handoff (1 file; 1 insertion / 1 deletion).
 - _docs: finalize 2026-05-29 session log_ — this commit.
 
-**Memory file unchanged this session.** Existing `feedback_record_session_secrets` memory was honoured: scenario users' shared password (`Act2Pass!123`) and Mbatha's password (`Mbatha@KGK2026!`) re-recorded in `pwd_DO_NOT_COMMIT.txt` with a note that they correspond to the `after-act-1-replay` / `after-act-2-replay` snapshots, so any session restoring those snapshots can sign in without re-driving registration.
+**Memory file unchanged this session.** Existing `feedback_record_session_secrets` memory was honoured: scenario users' shared password (see pwd_DO_NOT_COMMIT.txt) and Mbatha's password (see pwd_DO_NOT_COMMIT.txt) re-recorded in `pwd_DO_NOT_COMMIT.txt` with a note that they correspond to the `after-act-1-replay` / `after-act-2-replay` snapshots, so any session restoring those snapshots can sign in without re-driving registration.
 
 **Session finalized.** Handoff ready for the next session — recommended pickup is **Play Act 3** with **Opus**, starting from `tools\db-snapshot.ps1 restore after-act-2-replay`.
 
@@ -1543,7 +1608,7 @@ all in place now, so 3.D–3.I can be driven realistically.
 **Test additions (16 new):** `UserAdministrationTests` (12 — scope guards, role-mutation rejections, password reset forwarding, lockout self-refusal + admin-refusal, invitation sweep + cross-institution rejection, AssignableRoles assertion); `AcceptInvitationAutoRevokeTests` (1 — auto-revokes other Active same-email invitations on registration); `UsersListSmokeTests` (1 bUnit — 2 rows render + filter narrows to one). The Application stub `StubUserAdministrationService` was updated for the new interface methods.
 
 **Browser-verified end-to-end (Playwright):**
-- As Administrator: `/admin/users` lists 16 seeded users; opened Patel's detail, reset password to `PatelT061!2026`, signed out, signed back in as `patel@kgk.wombat.local` with the new password → dashboard reachable.
+- As Administrator: `/admin/users` lists 16 seeded users; opened Patel's detail, reset password to a value recorded in pwd_DO_NOT_COMMIT.txt, signed out, signed back in as `patel@kgk.wombat.local` with the new password → dashboard reachable.
 - As Mbatha (InstitutionalAdmin): `/admin/users` shows 14 rows — all KGK users + the global Administrator. Demo Institution users hidden. Direct nav to a Demo user's detail URL renders "User unavailable" (out-of-scope = 404, not 403). On Zulu (CommitteeMember + Assessor): add-role picker correctly excludes Administrator, PendingTrainee, CommitteeMember, Assessor. Added Coordinator → success Alert. Removed Coordinator → success Alert. Lockout → status flips to "Locked out". Reactivate → status back to "Active".
 
 **Known UX wart noted, not blocking (deferred):** On first nav to `/admin/users/{userId}` immediately after clicking a list row, the document.title sometimes lags at "Users" while the h1 updates correctly. Same family as T057's `<PageTitle>` re-eval issue. Hard reload of the detail URL renders the title correctly. Doesn't affect functionality.

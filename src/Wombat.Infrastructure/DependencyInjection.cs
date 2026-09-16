@@ -55,6 +55,13 @@ public static class DependencyInjection
             options.Password.RequiredLength = 12;
             options.Password.RequiredUniqueChars = 4;
             options.SignIn.RequireConfirmedAccount = false;
+
+            // Per-account brute-force protection. The login endpoint passes
+            // lockoutOnFailure: true, so these bounds are what actually apply.
+            // Enabled for every new user, including the seeded administrator.
+            options.Lockout.AllowedForNewUsers = true;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>()
