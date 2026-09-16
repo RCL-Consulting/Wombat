@@ -145,3 +145,53 @@ These are deliberately out of scope for a code change and must be done against t
 - `AllowedHosts: "*"`, and `ForwardedHeaders` trusting any proxy — both safe only because
   Kestrel binds loopback-only behind Caddy. Worth an explicit comment and a revisit if the
   bind address ever changes.
+
+---
+
+## 7. Post-deploy addendum (same session) — fingerprinted static assets required auth
+
+Browser verification after the first deploy surfaced a **pre-existing** defect, unrelated to
+the CSP but found by looking properly for the first time.
+
+`src/Wombat.Infrastructure/Identity/AuthorizationPolicies.cs:31` sets a `FallbackPolicy` of
+`RequireAuthenticatedUser()`. Every endpoint inherits it — including the fingerprinted
+static-asset endpoints registered by `app.MapStaticAssets()`. So for an anonymous visitor:
+
+- `/Components/Layout/ReconnectModal.abdmv1u4y3.razor.js` → **302** to `/account/login`
+- the browser received HTML, the subresource-integrity check failed, and the script was **blocked**
+
+Non-fingerprinted paths (`/wombat.js`, `/app.css`) were unaffected, because `UseStaticFiles()`
+runs *before* authorization. That asymmetry is what made this invisible for months: the site
+looked fine, and only the import-map-referenced assets failed.
+
+**Fixed:** `app.MapStaticAssets().AllowAnonymous();` — static assets are public by nature and
+were already served publicly by `UseStaticFiles` on their unfingerprinted paths.
+
+**Verified on production after redeploy:** the fingerprinted asset returns **200**,
+`text/javascript`, 2448 bytes, and its SHA-256 is
+`5u+v90fOttEFzE2qHMGMOXmy93Ik/BaGqLrrnu6mdGU=` — an exact match for the integrity value
+declared in the import map. The browser console SRI error is gone.
+
+### Filed, NOT fixed — `/_blazor/initializers` has the same root cause
+
+The same fallback policy makes `/_blazor/initializers` return 302 → login HTML for anonymous
+users, so Blazor's JS-initializer fetch fails with
+`Unexpected token '<', "<!DOCTYPE "... is not valid JSON` in the console.
+
+No functional impact observed: the login page renders and submits correctly (the form is a
+plain HTML POST), and authenticated users satisfy the fallback policy so their circuits are
+unaffected.
+
+The conventional fix is `.AllowAnonymous()` on `MapRazorComponents<App>()`, relying on
+per-page `[Authorize]` plus `AuthorizeRouteView` instead of the endpoint fallback. Groundwork
+for that decision, already done here:
+
+- `Routes.razor` **does** use `AuthorizeRouteView` with a `RedirectToLogin` NotAuthorized branch.
+- 62 of 66 routable pages carry an explicit `@attribute [Authorize...]`.
+- The 4 without are `Home.razor` (self-protecting — its entire body is inside `<AuthorizeView>`),
+  `Error.razor`, `Logout.razor` and `PlaceholderPage.razor` — all benign if anonymous.
+
+So the change is *probably* safe. It was deliberately **not** made in this session: it removes
+a defence-in-depth layer on a live system holding identifiable trainee data, in exchange for
+fixing a console error with no user-visible effect. That trade deserves its own task and its
+own verification pass, not a tail-end edit after two production deploys.

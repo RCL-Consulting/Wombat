@@ -145,7 +145,14 @@ app.UseAntiforgery();
 
 app.MapHealthChecks("/health").AllowAnonymous();
 
-app.MapStaticAssets();
+// AllowAnonymous is required: AuthorizationPolicies sets a FallbackPolicy of
+// RequireAuthenticatedUser, which every endpoint inherits — including the fingerprinted
+// static-asset endpoints this registers. Without it, anonymous requests for a fingerprinted
+// asset (e.g. ReconnectModal.<hash>.razor.js, referenced from the import map) redirect to
+// /account/login, so the browser receives HTML, the subresource-integrity check fails, and
+// the script is blocked. Non-fingerprinted paths were unaffected because UseStaticFiles
+// runs before authorization, which is what made this asymmetric and easy to miss.
+app.MapStaticAssets().AllowAnonymous();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
