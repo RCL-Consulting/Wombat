@@ -188,3 +188,69 @@ Phases 1–2 give a faithful catalogue. Phase 3 is what makes v11.1 a rule rathe
    with an 11-month academic year.
 4. Do the 78 descriptors need to be individually assessable/creditable, or are they narrative scope
    for the EPA? This decides whether gap 3 is a schema change or a documentation field.
+
+---
+
+## Progress log
+
+### 2026-09-16 — pre-work: the two live defects fixed (no catalogue data yet)
+
+Started on the traps rather than the catalogue, because trap 1 would otherwise have silently
+hidden any six-rung data created later: an observation at the top rung would simply not appear,
+with no error to investigate.
+
+**Trajectory now accepts rungs above 5.** `GetEpaTrajectoryForTrainee` rejected any rating
+outside 1..5 and `continue`d past the whole activity. Replaced with a `MaxPlausibleRung` sanity
+bound (20) that still rejects a mis-mapped percentage or year but no longer encodes an assumption
+about how many rungs a scale has.
+
+**The chart axis grows to fit.** `TrajectoryChart.MaxRating` defaulted to a hard `5`, plotting
+anything higher off the top. It is now `int?`; unset, it derives `Math.Max(5, points.Max(rating))`,
+so a five-rung scale renders exactly as before and a six-rung scale renders correctly.
+
+**Credit resolves the stage from the encounter date, not today.** `CreditApplier` called
+`GetStage(DateOnly.FromDateTime(DateTime.UtcNow))`, so replaying history judged every past
+encounter against the trainee's *current* year. Now resolved from the activity's `CreatedOn`
+(with fallbacks to the earliest transition, then now, so an activity with no date set does not
+resolve to year 0001 and a null stage). Live submissions are unaffected — `CreatedOn` is
+effectively today — but `RebuildCurriculumProgress` no longer rewrites the meaning of
+`MinimumLevelReachedCount`.
+
+**Graduated trainees are no longer wiped by a rebuild.** The trainee lookup filtered on
+`IsActive`, which `TraineeProfile.Complete()` clears on graduation. Since the rebuild deletes
+every progress row before replaying, alumni came back with zero and could not be restored by
+re-running it. The filter is gone; an active profile is still preferred when a user has more
+than one.
+
+**Trajectory tool families extended** for v11.1 (`cca`, `rca`, `case_note_review`,
+`chart_stimulated_recall`, `direct_observation`, `observed_clinical_exam`) so those tools chart
+as soon as the activity types exist.
+
+> **A broader fix was tried and reverted.** Making an unrecognised activity type fall back to its
+> own display name — rather than being excluded — looked like the right cure for the hard-coded
+> list. It is not: the existing test `IgnoresUnratedActivityTypes` correctly asserts that a
+> trainee-authored `reflective_note` must not appear on an **entrustment** trajectory, and the
+> fallback would have put any type carrying a numeric field onto it. The allow-list stays. The
+> real fix is a flag on `ActivityType` marking it as producing an entrustment rating, so
+> admin-built tools chart without a code change — **added to the gap list below.**
+
+**Tests:** +5 in `Wombat.Application.Tests`, +2 in `Wombat.Web.Tests` (319 and 45; 433 across the
+four suites). Each fails against the pre-change code: rung 6 dropped, implausible rating drawn,
+year-1 encounter judged at the year-3 minimum, graduated trainee credited nothing, axis capped at 5.
+
+**Process note:** the first test run reported all-green against **stale binaries** because
+`dotnet test --no-build` resolves `bin/x64/Release` while `dotnet build Wombat.sln` writes
+`bin/Release`. Two genuine failures were hiding behind that. `CLAUDE.md` now says not to use
+`--no-build` in this repo.
+
+### Added to the gap list
+
+| # | Gap | Kind | Effort |
+|---|---|---|---|
+| 9 | `ActivityType` has no flag marking it as producing an entrustment rating, so the trajectory and the committee sampling warnings both rely on hard-coded key lists. An institution that builds its own rated tool through the Activity builder is invisible to both — which defeats the platform's premise that new tools need no developer. | schema | small |
+
+### Still not started
+
+Everything in "Suggested phasing" below. No entrustment scale has been created, no EPA data
+loaded, no catalogue retired. **The scale-pinning decision above is still open and still blocks
+Phase 1.**

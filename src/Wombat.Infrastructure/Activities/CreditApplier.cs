@@ -38,9 +38,21 @@ public sealed class CreditApplier : ICreditApplier
         var creditKey = GetCreditKey(completedActivity);
 
         // Credit only accrues against the trainee's own portfolio: the national curriculum version their
-        // institution adopted, plus that institution's local extras. Without an active trainee profile
-        // there is nothing to credit against. (T091 phase 4.)
-        var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, cancellationToken);
+        // institution adopted, plus that institution's local extras. Without a trainee profile there is
+        // nothing to credit against. (T091 phase 4.)
+        //
+        // The stage is resolved from WHEN THE ACTIVITY HAPPENED, not from today. This matters because
+        // the stage selects the curriculum item's effective minimum level (T073): an encounter observed
+        // in year 1 must be judged against the year-1 minimum for ever, not against whatever year the
+        // trainee has since reached. Getting this wrong made RebuildCurriculumProgress re-score a
+        // trainee's whole history against their current year and silently change what
+        // MinimumLevelReachedCount meant.
+        //
+        // CreatedOn is the best encounter date the model currently holds — the WBA schemas carry no
+        // observation date of their own (see T098 gap 2). For a live submission it is effectively
+        // today, so normal credit is unchanged; only replayed history is corrected.
+        var observedOn = DateOnly.FromDateTime(ResolveObservationDate(completedActivity));
+        var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, observedOn, cancellationToken);
         if (trainee is null)
         {
             return [];
@@ -171,11 +183,50 @@ public sealed class CreditApplier : ICreditApplier
         return false;
     }
 
-    private async Task<TraineeContext?> ResolveTraineeAsync(string traineeUserId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Best available date for when the activity actually happened, used to resolve the trainee's
+    /// programme stage.
+    /// </summary>
+    /// <remarks>
+    /// Preference order: the activity's own <c>CreatedOn</c> (set when the WBA is logged, so closest
+    /// to the encounter), then the earliest recorded transition, then now. The fallbacks matter
+    /// because an activity constructed without <c>CreatedOn</c> would otherwise date to year 0001,
+    /// land before every programme start date, and resolve to a null stage — quietly falling back
+    /// to the flat minimum instead of the stage minimum.
+    /// </remarks>
+    private static DateTime ResolveObservationDate(Activity activity)
     {
+        if (activity.CreatedOn != default)
+        {
+            return activity.CreatedOn;
+        }
+
+        var earliestTransition = activity.Transitions
+            .Where(transition => transition.OccurredOn != default)
+            .Select(transition => transition.OccurredOn)
+            .DefaultIfEmpty(default)
+            .Min();
+
+        return earliestTransition != default ? earliestTransition : DateTime.UtcNow;
+    }
+
+    private async Task<TraineeContext?> ResolveTraineeAsync(
+        string traineeUserId,
+        DateOnly observedOn,
+        CancellationToken cancellationToken)
+    {
+        // Deliberately NOT filtered on IsActive. TraineeProfile.Complete() clears IsActive on
+        // graduation, so filtering here meant a graduated trainee earned no credit — harmless for
+        // live submissions (they no longer submit), but destructive under
+        // RebuildCurriculumProgress, which deletes every progress row before replaying: alumni
+        // came back with nothing and could not be restored by re-running the rebuild.
+        // Prefer an active profile when a user somehow has more than one, then the most recent.
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.UserId == traineeUserId && p.IsActive, cancellationToken);
+            .Where(p => p.UserId == traineeUserId)
+            .OrderByDescending(p => p.IsActive)
+            .ThenByDescending(p => p.ProgrammeStartDate)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (profile is null)
         {
@@ -185,7 +236,7 @@ public sealed class CreditApplier : ICreditApplier
         return new TraineeContext(
             profile.CurriculumId,
             profile.InstitutionId,
-            profile.GetStage(DateOnly.FromDateTime(DateTime.UtcNow)));
+            profile.GetStage(observedOn));
     }
 
     private sealed record TraineeContext(int CurriculumId, int InstitutionId, int? Stage);

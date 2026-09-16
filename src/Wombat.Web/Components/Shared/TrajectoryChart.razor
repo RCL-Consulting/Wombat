@@ -12,7 +12,7 @@ else
        aria-label="@AriaLabel"
        preserveAspectRatio="xMidYMid meet">
     <g class="trajectory-chart-grid">
-      @for (var yValue = MinRating; yValue <= MaxRating; yValue++)
+      @for (var yValue = MinRating; yValue <= EffectiveMaxRating; yValue++)
       {
         var y = YScale(yValue);
         <line x1="@Fmt(PlotLeftPx)" y1="@Fmt(y)"
@@ -80,7 +80,24 @@ else
   [Parameter] public int Width { get; set; } = 600;
   [Parameter] public int Height { get; set; } = 200;
   [Parameter] public int MinRating { get; set; } = 1;
-  [Parameter] public int MaxRating { get; set; } = 5;
+
+  /// <summary>
+  /// Top of the Y axis. Leave unset to derive it from the data.
+  /// </summary>
+  /// <remarks>
+  /// This used to default to a hard 5, which silently plotted any higher rung off the top of
+  /// the chart. Entrustment scales are data — the paediatric v11.1 ladder has six rungs — so
+  /// the default now grows to fit, while still showing the familiar 1–5 axis for a five-rung
+  /// scale so existing charts are unchanged.
+  /// </remarks>
+  [Parameter] public int? MaxRating { get; set; }
+
+  private const int DefaultMaxRating = 5;
+
+  private int EffectiveMaxRating =>
+    MaxRating ?? (Points.Count == 0
+      ? DefaultMaxRating
+      : Math.Max(DefaultMaxRating, Points.Max(point => point.Rating)));
 
   private const int LeftMargin = 40;
   private const int RightMargin = 12;
@@ -110,7 +127,7 @@ else
   private double YScale(double rating)
   {
     var plotHeight = PlotBottomPx - PlotTopPx;
-    var range = MaxRating - MinRating;
+    var range = EffectiveMaxRating - MinRating;
     if (range <= 0)
     {
       return PlotTopPx + plotHeight / 2.0;

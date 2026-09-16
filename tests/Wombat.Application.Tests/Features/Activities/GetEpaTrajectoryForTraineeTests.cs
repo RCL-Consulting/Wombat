@@ -205,6 +205,68 @@ public sealed class GetEpaTrajectoryForTraineeTests
         trajectory.Points[0].Rating.Should().Be(4);
     }
 
+    [Fact]
+    public async Task IncludesRatingsAboveFive()
+    {
+        // Regression (T098): the rating guard was hard-coded to 1..5, so an observation recorded
+        // on a scale with more rungs was dropped silently — no error, no log, no gap in the chart.
+        // The paediatric v11.1 ladder has six rungs (1, 2, 3a, 3b, 4, 5), so rung 6 must survive.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 6, new DateTime(2026, 2, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Points.Should().ContainSingle();
+        trajectory.Points[0].Rating.Should().Be(6);
+    }
+
+    [Fact]
+    public async Task IgnoresImplausibleRatings()
+    {
+        // The 1..5 clamp was removed, but a value that cannot be a rung at all (a mis-mapped
+        // percentage, a year) must still be rejected rather than drawn.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 2026, new DateTime(2026, 2, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task MapsVersionElevenAssessmentFamilies()
+    {
+        // T098: v11.1 names CCA, RCA, chart-stimulated recall and case note review as WBA tools.
+        // They must chart as assessment evidence once those activity types exist.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var cca = await SeedActivityTypeAsync(dbContext, "cca");
+        var rca = await SeedActivityTypeAsync(dbContext, "rca");
+        var csr = await SeedActivityTypeAsync(dbContext, "chart_stimulated_recall");
+
+        AddRatedActivity(dbContext, cca, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, rca, "trainee-1", "assessor-b", 7, 4, new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, csr, "trainee-1", "assessor-c", 7, 5, new DateTime(2026, 2, 9, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Points.Select(p => p.Source).Should().Equal("Case analysis", "Case analysis", "Conversation");
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

@@ -149,6 +149,89 @@ public sealed class CreditApplierTests
         progress.MinimumLevelReachedCount.Should().Be(1); // would be 0 if gated on the flat target (4)
     }
 
+    [Fact]
+    public async Task ApplyAsync_ResolvesStageFromObservationDate_NotToday()
+    {
+        // Regression (T098): the stage was resolved from DateTime.UtcNow, so replaying an old
+        // encounter judged it against the trainee's CURRENT year. Here a year-1 encounter (level 2,
+        // meeting the year-1 minimum of 2) is credited for a trainee who is now in year 3 — under
+        // the old behaviour it would have been judged against the year-3 minimum of 4 and failed.
+        await using var dbContext = CreateDbContext();
+        dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "IV access" });
+        dbContext.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 4000,
+            CurriculumId = 3000,
+            EpaId = 5000,
+            RequiredCount = 30,
+            MinimumLevelOrder = 4,
+            MinimumLevelByStageJson = """{"1":2,"2":3,"3":4,"4":4}""",
+            WindowMonths = 36
+        });
+        var programmeStart = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-800); // trainee is now ~year 3
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            CurriculumId = 3000,
+            ProgrammeStartDate = programmeStart,
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(1),
+            IsActive = true
+        });
+        dbContext.SaveChanges();
+
+        var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 2 }""");
+        activity.CreatedOn = programmeStart.AddDays(30).ToDateTime(TimeOnly.MinValue); // observed in year 1
+        var applier = new CreditApplier(dbContext);
+
+        await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        var progress = await dbContext.CurriculumItemProgresses.SingleAsync();
+        progress.CountsSoFar.Should().Be(1);
+        progress.MinimumLevelReachedCount.Should().Be(1); // year-1 minimum (2) met at the time observed
+    }
+
+    [Fact]
+    public async Task ApplyAsync_CreditsGraduatedTrainee()
+    {
+        // Regression (T098): the trainee lookup filtered on IsActive, which TraineeProfile.Complete()
+        // clears on graduation. Harmless for live submissions, but RebuildCurriculumProgress deletes
+        // every progress row before replaying — so alumni came back with nothing, unrecoverably.
+        await using var dbContext = CreateDbContext();
+        dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "IV access" });
+        dbContext.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 4000,
+            CurriculumId = 3000,
+            EpaId = 5000,
+            RequiredCount = 30,
+            MinimumLevelOrder = 2,
+            WindowMonths = 36
+        });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 1,
+            UserId = "trainee-1",
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1500),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-30),
+            IsActive = false // graduated
+        });
+        dbContext.SaveChanges();
+
+        var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 3 }""");
+        activity.CreatedOn = DateTime.UtcNow.AddDays(-400);
+        var applier = new CreditApplier(dbContext);
+
+        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        updated.Should().ContainSingle();
+        var progress = await dbContext.CurriculumItemProgresses.SingleAsync();
+        progress.CountsSoFar.Should().Be(1);
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

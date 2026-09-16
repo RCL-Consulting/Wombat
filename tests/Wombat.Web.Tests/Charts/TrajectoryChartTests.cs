@@ -52,6 +52,40 @@ public sealed class TrajectoryChartTests : TestContext
     }
 
     [Fact]
+    public void AxisGrowsToFitRatingsAboveFive()
+    {
+        // Regression (T098): MaxRating defaulted to a hard 5, so a six-rung scale plotted its top
+        // rung off the top of the chart. The axis now grows to fit the data.
+        var points = new[]
+        {
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 3),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 6)
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(p => p.Points, points));
+
+        // 1..6 => 6 ticks
+        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(6);
+    }
+
+    [Fact]
+    public void AxisStaysAtFiveForAFiveRungScale()
+    {
+        // The familiar 1-5 axis must be unchanged for existing five-rung data.
+        var points = new[]
+        {
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 4)
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(p => p.Points, points));
+
+        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(5);
+    }
+
+    [Fact]
     public void RendersFirstAndLastDateLabels()
     {
         var points = new[]
