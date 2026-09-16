@@ -2,6 +2,46 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION 2026-09-16 (Opus) — **T098 filed: Paediatric EPA v11.1 gap analysis** (analysis only, no code)
+
+The College of Paediatricians' **EPA v11.1** (Sept 2026) was supplied as `EPA version 11.1.docx`.
+Extracted, parsed and diffed against Wombat. **Nothing was implemented** — `Tasks/T098-epa-v11-adoption.md`
+holds the full gap list and a four-phase plan; machine-readable source data is banked in `Tasks/T098-data/`
+(`annexure-a.json` = 15 EPAs with Y1–Y4 curves, tools, frequency; `epa-detail.json` = descriptions + all
+78 descriptors). Extraction validated two ways: per-EPA descriptor counts match Annexure A's column and the
+total matches the document's own stated 78.
+
+**Headline:** loading the catalogue is mostly **data**; making Wombat *enforce* v11.1 is substantial code.
+
+**Already supported (data, not code):** the six-rung scale `1, 2, 3a, 3b, 4, 5` is storable as-is
+(`EntrustmentLevel` is `(int Order, string Label)`, no validator caps the count) and an Administrator can
+build it via the T054 UI unaided; the Y1–Y4 curve is exactly `CurriculumItem.MinimumLevelByStageJson`, already
+enforced by T073; formative-vs-summative is already structural (T031); `EntrustmentDecision` is already per-EPA.
+
+**🚨 Decide before entering any v11.1 data:** nothing binds a stored level to a scale —
+`MinimumLevelOrder`, the stage map, activity `DataJson` values and `MsfResponseAnswer.ScaleValue` are all bare
+ints with no `ScaleId`. Inserting 3a/3b **silently re-points every stored 4 and 5** (today's "4 = Independent"
+becomes v11.1's "4 = 3b"). Issued STARs are safe (FK); curriculum minimums and historical ratings are not.
+
+**Biggest gaps:** no time dimension in the credit engine at all (so "six per annum, resetting each year" cannot
+be represented even as data); no encounter date on WBA schemas; no home for the 78 descriptors; no domain field;
+8 of 14 WBA tools unseeded; MSF has no EPA link and no credit path; no per-EPA panel routing for the neonatal CCC.
+
+**Pre-existing defects found en route (live today, independent of v11.1):** the trajectory chart **silently
+drops any rating above 5** and recognises only 4 tool families; editing seeded schema JSON is **inert** on an
+existing DB (`DataSeeder` skips existing keys) while `SchemaValidator` enforces the `options` list, so a 6th rung
+is rejected at submit until the types are re-published; and **`RebuildCurriculumProgress` wipes graduated
+trainees' progress irrecoverably** and re-scores all history against the trainee's *current* year.
+
+**▶ NEXT:** answer the four open questions in T098 (is v11.1 final or still the "DRAFT — FOR DISCUSSION" on its
+cover? does the 55/year include MSF? academic year or trainee start date? are descriptors assessable?), then
+Phase 1. **Model: Opus** — the scale-pinning decision is a data-integrity call, not a typing job.
+
+**Note:** `EPA version 11.1.docx` itself is still **untracked**. Decide whether the source document belongs in
+the repo as the record behind `T098-data/`.
+
+---
+
 ## ⭐ SESSION 2026-09-16 (Opus) — **T097 DEPLOYED + admin password rotated + docs corrected** ✅
 
 **Everything below is live on production and verified there**, not just committed.
