@@ -33,6 +33,16 @@ existing DB (`DataSeeder` skips existing keys) while `SchemaValidator` enforces 
 is rejected at submit until the types are re-published; and **`RebuildCurriculumProgress` wipes graduated
 trainees' progress irrecoverably** and re-scores all history against the trainee's *current* year.
 
+**Pre-work done (commit `a121bed`):** two live defects fixed before touching the catalogue, because the
+first would have hidden any six-rung data created later — the trajectory query no longer drops ratings above 5
+(and the chart axis grows to fit), credit now resolves the trainee's stage from the **encounter date** rather
+than today, and graduated trainees are no longer wiped by `RebuildCurriculumProgress`. +7 regression tests
+(**433** across four suites), each failing against the pre-change code. A broader trajectory fix was tried and
+**reverted** — letting unknown activity types fall back to their display name would have put trainee-authored
+reflective notes on an *entrustment* trajectory; the real fix is a flag on `ActivityType` (now gap 9).
+**`CLAUDE.md` now forbids `dotnet test --no-build` here** — it resolves `bin/x64/Release` while the solution
+build writes `bin/Release`, and it reported a false green over two genuine failures during this work.
+
 **▶ NEXT:** answer the four open questions in T098 (is v11.1 final or still the "DRAFT — FOR DISCUSSION" on its
 cover? does the 55/year include MSF? academic year or trainee start date? are descriptors assessable?), then
 Phase 1. **Model: Opus** — the scale-pinning decision is a data-integrity call, not a typing job.

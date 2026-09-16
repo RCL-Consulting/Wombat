@@ -1,6 +1,6 @@
 # T098 — Adopt the Paediatric EPA catalogue v11.1
 
-## Status: NOT STARTED — gap analysis complete (2026-09-16), no code or data written
+## Status: IN PROGRESS — pre-work done (two live defects fixed, 2026-09-16). No catalogue data loaded yet; Phase 1 blocked on the scale-pinning decision below.
 
 ## Source
 
