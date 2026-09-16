@@ -379,3 +379,6 @@ recovery/
 
 # Scratch scripts piped to the deploy server over SSH (not part of the repo)
 deploy/.remote/
+
+# Local .NET SDK / workload cache created by tooling in the repo root — never source.
+.dotnet/

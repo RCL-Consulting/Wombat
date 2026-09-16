@@ -1,0 +1,522 @@
+{
+  "source": "EPA version 11.1.docx - College of Paediatricians of South Africa, September 2026",
+  "catalogueVersion": "11.1",
+  "scale": {
+    "name": "CPSA Paediatric Entrustment Scale v11.1",
+    "description": "Six rungs in four bands. Only level 3 is split: the gap between \"check everything with me\" and \"call me if you are worried\" is the whole of a registrar’s third year.",
+    "levels": [
+      {
+        "order": 1,
+        "label": "1",
+        "description": "Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares, observes actively, and may not enact or document decisions."
+      },
+      {
+        "order": 2,
+        "label": "2",
+        "description": "Direct supervision. Supervisor present throughout, sharing the task or watching silently, ready to step in. The plan may be entirely the trainee’s, but nothing is acted on without sign-off."
+      },
+      {
+        "order": 3,
+        "label": "3a",
+        "description": "Indirect supervision, decisions checked. Supervisor on site or immediately available and reviews findings, working diagnosis and plan before they are enacted. Trainee may act alone on routine assessment, investigation and supportive care within protocol."
+      },
+      {
+        "order": 4,
+        "label": "3b",
+        "description": "Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed rather than consulted."
+      },
+      {
+        "order": 5,
+        "label": "4",
+        "description": "Unsupervised practice. The trainee carries the responsibility for the activity."
+      },
+      {
+        "order": 6,
+        "label": "5",
+        "description": "Supervises others. The trainee carries the responsibility and can supervise juniors in the activity."
+      }
+    ]
+  },
+  "epas": [
+    {
+      "code": "PAED-001",
+      "number": 1,
+      "title": "Providing paediatric emergency care to children",
+      "domain": "Ambulatory, Emergency and Critical Care in Children",
+      "domainCode": "AEC",
+      "description": "Recognise and manage paediatric emergencies, including anaphylaxis, seizures, shock and respiratory distress.",
+      "descriptors": [
+        "1.1 Manage paediatric patients requiring resuscitation",
+        "1.2 Provide initial evaluation and management of an acutely ill or injured paediatric patient",
+        "1.3 Formulate and implement a diagnostic and therapeutic plan for common paediatric emergencies",
+        "1.4 Perform common emergency procedures",
+        "1.5 Use point-of-care ultrasound (POCUS) in emergency care"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "DOPS",
+        "Mini-CEX",
+        "CCA",
+        "CBD",
+        "MSF",
+        "RCA",
+        "Clinical audit",
+        "Reflective exercise"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-002",
+      "number": 2,
+      "title": "Managing common paediatric presentations",
+      "domain": "Ambulatory, Emergency and Critical Care in Children",
+      "domainCode": "AEC",
+      "description": "This EPA focuses on diagnosing and treating common paediatric presentations, such as respiratory infections, gastroenteritis, skin infections, and other ambulatory presentations prevalent in the South African context. Trainees must demonstrate proficiency in the assessment, diagnosis and management of these presentations in both outpatient and inpatient settings.",
+      "descriptors": [
+        "2.1 Diagnose common paediatric presentations",
+        "2.2 Present and discuss the differential diagnoses of children with a common condition",
+        "2.3 Perform procedures related to common presentations",
+        "2.4 Apply safe prescribing in the management of children with common presentations",
+        "2.5 Monitor a common condition according to severity and escalate care appropriately",
+        "2.6 Apply antimicrobial stewardship in the management of children with acute illness",
+        "2.7 Apply fluid and nutritional management in children with acute illness",
+        "2.8 Execute an appropriate discharge and follow-up plan"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Mini-CEX",
+        "CBD",
+        "DOPS",
+        "Direct observation",
+        "CCA",
+        "Chart-stimulated recall",
+        "MSF",
+        "RCA",
+        "Clinical audit"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-003",
+      "number": 3,
+      "title": "Providing intensive care to children",
+      "domain": "Ambulatory, Emergency and Critical Care in Children",
+      "domainCode": "AEC",
+      "description": "This EPA focuses on the care of critically ill or injured children in the paediatric intensive care unit (PICU). The registrar must promptly recognise a child who requires intensive care because of a deteriorating condition or a life-threatening emergency, lead life-saving procedures, manage ventilated patients and coordinate a large team during emergencies.",
+      "descriptors": [
+        "3.1 Manage the resuscitation of a child in an intensive care unit",
+        "3.2 Manage a new patient admission to the PICU",
+        "3.3 Manage the ongoing care of patients in a PICU",
+        "3.4 Manage complications in patients in a PICU",
+        "3.5 Perform the procedures required in a PICU",
+        "3.6 Manage the referral of children from a PICU to a general care unit or institution"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Mini-CEX",
+        "CCA",
+        "CBD",
+        "MSF",
+        "RCA",
+        "DOPS",
+        "Clinical audit",
+        "Reflective exercise"
+      ],
+      "currency": "Essential — annually (12 months)"
+    },
+    {
+      "code": "PAED-004",
+      "number": 4,
+      "title": "Managing common neonatal conditions",
+      "domain": "Care for the Newborn",
+      "domainCode": "CN",
+      "description": "This EPA focuses on the care of the newborn in the labour ward, the postnatal ward, the kangaroo mother care unit, the Level 1 nursery and the newborn follow-up visit. The registrar must examine the newborn, recognise and treat the conditions commonly encountered in the first days and weeks of life, establish safe feeding, thermal care and growth, lead resuscitation at delivery, and identify the baby whose needs exceed Level 1 care and arrange timely referral. The care of neonates requiring high-care or intensive care is covered by EPA 5.",
+      "descriptors": [
+        "4.1 Perform and document the routine examination of the newborn",
+        "4.2 Provide resuscitation and immediate care of the newborn at delivery",
+        "4.3 Manage the common conditions of the newborn in a Level 1 setting",
+        "4.4 Establish feeding, thermal care and growth, including kangaroo mother care",
+        "4.5 Perform the core procedures of newborn care",
+        "4.6 Recognise the newborn who is deteriorating and refer for a higher level of care",
+        "4.7 Communicate with and counsel the caregivers of a newborn",
+        "4.8 Execute an appropriate discharge, immunisation and follow-up plan"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Mini-CEX",
+        "CBD",
+        "DOPS",
+        "CCA",
+        "Direct observation",
+        "MSF"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-005",
+      "number": 5,
+      "title": "Providing neonatal care in intensive and high-care settings",
+      "domain": "Care for the Newborn",
+      "domainCode": "CN",
+      "description": "This EPA focuses on the care of very sick, small or premature newborns in the neonatal intensive care unit (NICU) and the neonatal high-care unit. The registrar must promptly recognise a deteriorating neonate, perform life-saving procedures, manage respiratory and feeding support, and lead neonatal resuscitation.",
+      "descriptors": [
+        "5.1 Provide neonatal resuscitation",
+        "5.2 Manage preterm neonates",
+        "5.3 Manage complex neonates",
+        "5.4 Perform core neonatal procedures",
+        "5.5 Manage the referral of neonates with complex presentations",
+        "5.6 Manage the transport of neonates with complex presentations",
+        "5.7 Manage the long-term follow-up of complex neonatal patients"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "CBD",
+        "DOPS",
+        "MSF"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-006",
+      "number": 6,
+      "title": "Managing long-term health conditions (LTHCs)",
+      "domain": "Chronic, Developmental and Preventive Care",
+      "domainCode": "CDP",
+      "description": "This EPA focuses on the comprehensive care of children living with Long-term health conditions and chronic illness.",
+      "descriptors": [
+        "6.1 Manage a patient with a long-term health condition, including clinical assessment, investigation and management",
+        "6.2 Perform procedures on patients with LTHCs",
+        "6.3 Develop and implement a multi-disciplinary plan to manage a child with a LTHC",
+        "6.4 Present patients with LTHCs at a clinical or academic meeting"
+      ],
+      "observationsPerYear": 4,
+      "frequencyText": "Four per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Direct observation",
+        "Mini-CEX",
+        "DOPS",
+        "Case note review",
+        "MSF"
+      ],
+      "currency": "Essential — annually (12 months)"
+    },
+    {
+      "code": "PAED-007",
+      "number": 7,
+      "title": "Maintaining and promoting the health and well-being of children",
+      "domain": "Chronic, Developmental and Preventive Care",
+      "domainCode": "CDP",
+      "description": "This EPA focuses on promoting children's health and development at every stage so that they can live healthy lives and reach their full potential. Preventing mortality and morbidity through preventive medicine, such as immunisation, is central to this activity.",
+      "descriptors": [
+        "7.1 Perform well-baby checks",
+        "7.2 Perform developmental and growth screening",
+        "7.3 Administer vaccinations to infants",
+        "7.4 Evaluate and complete the Road to Health booklet"
+      ],
+      "observationsPerYear": 2,
+      "frequencyText": "Two per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Mini-CEX",
+        "DOPS",
+        "Directly observed clinical examination",
+        "MSF"
+      ],
+      "currency": "Essential — annually (each year for progression)"
+    },
+    {
+      "code": "PAED-008",
+      "number": 8,
+      "title": "Evaluating and managing neurodevelopmental and behavioural presentations in children",
+      "domain": "Chronic, Developmental and Preventive Care",
+      "domainCode": "CDP",
+      "description": "This EPA focuses on identifying, assessing and supporting children with developmental delay or behavioural differences, including autism spectrum disorder (ASD), attention-deficit/hyperactivity disorder (ADHD), cerebral palsy, global developmental delay and learning difficulties.",
+      "descriptors": [
+        "8.1 Conduct a developmental and behavioural assessment",
+        "8.2 Formulate a differential diagnosis and an initial management plan for a child with a neurodevelopmental condition",
+        "8.3 Coordinate multidisciplinary care for children with neurodevelopmental presentations"
+      ],
+      "observationsPerYear": 1,
+      "frequencyText": "One per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "Mini-CEX",
+        "DOPS",
+        "CBD",
+        "MSF",
+        "Reflective exercise"
+      ],
+      "currency": "Essential — annually (as rotation allows)"
+    },
+    {
+      "code": "PAED-009",
+      "number": 9,
+      "title": "Providing care for an adolescent patient",
+      "domain": "Chronic, Developmental and Preventive Care",
+      "domainCode": "CDP",
+      "description": "This EPA focuses on meeting the distinct physical, emotional, and social health needs of adolescent patients (the second decade of life). This EPA includes screening for risk behaviour, managing confidentiality, and supporting the patient to take responsibility for their own health decisions.",
+      "descriptors": [
+        "9.1 Manage acute presentations in adolescent patients",
+        "9.2 Manage an adolescent with long-term health conditions",
+        "9.3 Develop a plan for the transition of a patient with an LTHC into adult care"
+      ],
+      "observationsPerYear": 1,
+      "frequencyText": "One per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "Direct observation",
+        "CBD",
+        "MSF"
+      ],
+      "currency": "Required — opportunity with adolescents with LTHCs"
+    },
+    {
+      "code": "PAED-010",
+      "number": 10,
+      "title": "Leading and operating within a clinical team",
+      "domain": "Leadership, Population and Systems Health",
+      "domainCode": "LPS",
+      "description": "This EPA involves demonstrating effective clinical leadership in a paediatric healthcare setting. The trainee is expected to lead a multidisciplinary team, manage clinical operations and ensure high-quality patient care. This includes decision-making, communication and conflict resolution.",
+      "descriptors": [
+        "10.1 Prioritise tasks and manage time efficiently while on call",
+        "10.2 Facilitate effective handover to other healthcare providers",
+        "10.3 Collaborate effectively with interprofessional team members to ensure comprehensive patient care",
+        "10.4 Coordinate patient discharge plans",
+        "10.5 Conduct a clinical audit",
+        "10.6 Complete a patient safety incident report",
+        "10.7 Participate in a quality improvement project"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "MSF",
+        "Direct observation"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-011",
+      "number": 11,
+      "title": "Managing population health challenges",
+      "domain": "Leadership, Population and Systems Health",
+      "domainCode": "LPS",
+      "description": "Advocate effectively for, and coordinate interventions in, paediatric community-based care, healthcare policy and intersectoral collaboration.",
+      "descriptors": [
+        "11.1 Coordinate a mortality and morbidity meeting",
+        "11.2 Present health statistics at a meeting",
+        "11.3 Compile a quality referral to community-based or multisectoral stakeholders"
+      ],
+      "observationsPerYear": 1,
+      "frequencyText": "One per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "MSF",
+        "CBD",
+        "Direct observation"
+      ],
+      "currency": "Essential — annually (12 months)"
+    },
+    {
+      "code": "PAED-012",
+      "number": 12,
+      "title": "Communicating with and counselling patients, caregivers and healthcare teams",
+      "domain": "Ethics, Communication, Education and Palliative Care",
+      "domainCode": "ECP",
+      "description": "This EPA focuses on sharing clear health information with patients and their families, and with colleagues across the healthcare team. The registrar must convey medical information in an easy-to-understand way, listen well, and work effectively as a team member.",
+      "descriptors": [
+        "12.1 Communicate effectively with patients and families in emergency settings",
+        "12.2 Communicate effectively with patients and families in the neonatal ICU, neonatal high care and PICU",
+        "12.3 Counsel caregivers about immunisation, growth charts and dysmorphism",
+        "12.4 Demonstrate counselling for common presentations",
+        "12.5 Lead a counselling session with the family of a child with an LTHC",
+        "12.6 Demonstrate counselling in palliative care scenarios",
+        "12.7 Communicate effectively with healthcare colleagues"
+      ],
+      "observationsPerYear": 6,
+      "frequencyText": "Six per annum",
+      "stageLevels": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 6
+      },
+      "minimumLevelOrder": 6,
+      "wbaTools": [
+        "Mini-CEX",
+        "MSF",
+        "CBD",
+        "Chart-stimulated recall"
+      ],
+      "currency": "Essential — each semester (six months)"
+    },
+    {
+      "code": "PAED-013",
+      "number": 13,
+      "title": "Managing child protection, legal and ethical aspects of children at risk",
+      "domain": "Ethics, Communication, Education and Palliative Care",
+      "domainCode": "ECP",
+      "description": "This EPA focuses on the skills required to manage child protection cases effectively, including the legal, ethical and multidisciplinary aspects of safeguarding at-risk children.",
+      "descriptors": [
+        "13.1 Assess and document the signs of abuse or neglect",
+        "13.2 Complete a report of suspected child abuse",
+        "13.3 Refer to social and legal services (Child Protection Unit)"
+      ],
+      "observationsPerYear": 1,
+      "frequencyText": "One per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "MSF",
+        "Direct observation",
+        "CBD",
+        "Mini-CEX"
+      ],
+      "currency": "Essential — annually (as opportunity allows)"
+    },
+    {
+      "code": "PAED-014",
+      "number": 14,
+      "title": "Providing palliative and end-of-life care",
+      "domain": "Ethics, Communication, Education and Palliative Care",
+      "domainCode": "ECP",
+      "description": "Support children by focusing on comfort, pain management, and emotional support for both the patient and their family.",
+      "descriptors": [
+        "14.1 Provide consultation for children requiring a palliative care approach",
+        "14.2 Draw up an advance care plan",
+        "14.3 Use appropriate pain management strategies in paediatric cases",
+        "14.4 Participate in the certification of brain death"
+      ],
+      "observationsPerYear": 1,
+      "frequencyText": "One per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "MSF",
+        "Reflective exercise",
+        "CBD"
+      ],
+      "currency": "Required — annually (12 months)"
+    },
+    {
+      "code": "PAED-015",
+      "number": 15,
+      "title": "Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research",
+      "domain": "Ethics, Communication, Education and Palliative Care",
+      "domainCode": "ECP",
+      "description": "This EPA covers the registrar's ability to teach and to practise evidence-based paediatrics ethically. They teach medical students, junior trainees, the interprofessional team and caregivers, adapting content and language to the learner. They formulate clinical questions, appraise the literature, and apply the evidence to the patient in front of them. Both carry ethical obligations to the patient whose case is used, to the learner, and to the integrity of the evidence. Artificial intelligence is used transparently and with verification, and never as a substitute for the registrar's own clinical reasoning.",
+      "descriptors": [
+        "15.1 Plan and deliver a structured teaching session for medical students or junior trainees",
+        "15.2 Provide teaching within the interprofessional team during ward rounds, handover or debriefing",
+        "15.3 Deliver caregiver or community education appropriate to the context and health literacy",
+        "15.4 Formulate a clinical question, appraise the literature, and present the evidence at a journal club or clinical meeting",
+        "15.5 Apply ethical principles in teaching and in evidence-based practice, including the responsible use of AI tools",
+        "15.6 Give and receive constructive feedback, and demonstrate reflective practice"
+      ],
+      "observationsPerYear": 2,
+      "frequencyText": "Two per annum",
+      "stageLevels": {
+        "1": 2,
+        "2": 3,
+        "3": 4,
+        "4": 5
+      },
+      "minimumLevelOrder": 5,
+      "wbaTools": [
+        "Direct observation",
+        "CBD",
+        "Learner feedback",
+        "MSF",
+        "Portfolio and logbook review"
+      ],
+      "currency": "Essential — observed each semester; annual entrustment decision"
+    }
+  ]
+}

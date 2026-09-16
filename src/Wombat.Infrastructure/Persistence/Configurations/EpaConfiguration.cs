@@ -12,6 +12,7 @@ public sealed class EpaConfiguration : IEntityTypeConfiguration<Epa>
         builder.ToTable("Epas");
         builder.Property(entity => entity.Code).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.Title).HasMaxLength(200).IsRequired();
+        builder.Property(entity => entity.Domain).HasMaxLength(200);
         builder.Property(entity => entity.Description).HasMaxLength(4000);
         builder.Property(entity => entity.RequiredKnowledgeSkills).HasMaxLength(8000);
 

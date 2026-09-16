@@ -460,6 +460,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     await roleSeeder.SeedAsync();
     await adminSeeder.SeedAsync();
     await dataSeeder.SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<PaediatricCatalogueSeeder>().SeedAsync();
 
     if (app.Environment.IsDevelopment())
     {
