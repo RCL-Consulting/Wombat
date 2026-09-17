@@ -390,3 +390,34 @@ Paediatrics; `scale_key` resolves to the six-rung scale.
 - The rung picker renders "Order. Label", so rung 3a shows as "3. 3a". Cosmetic, in
   `ActivityReferenceDataService`.
 - The old scenario `*_paed` activity types and `PAED-*` EPAs still sit alongside the new catalogue.
+
+### 2026-09-17 — phase 2a follow-ups verified and filed as their own tasks
+
+The "Still open after Phase 2a" list above was checked against the source and the dev database. It was
+accurate but incomplete, and one item was materially wrong. Each surviving item now has its own task file,
+per the append-only rule.
+
+| Was listed as | Now |
+|---|---|
+| "T070 blocks end-to-end rating entry" | **Correct, and larger than filed.** T070 rewritten with verified ground truth + an 11-step plan. `requires_fields` cannot be used to derive the assessor's editable set — it widens the full Submit validation pass and is never read by `WorkflowEvaluator`. The model is an `editable_by` actor rule on section/field/state. |
+| "a paediatric trainee needs a `UserSpecialityScope` row … and a fresh sign-in" | **→ T099.** Understated: `UserSpecialityScopes` holds **zero** rows for Speciality 3, so the entire catalogue is invisible to every non-admin user, not just to one test trainee. |
+| "Seeded WBA schemas still cap the scale at 5 options … next task" | **→ T103.** The general problem is that *any* seed JSON edit is inert on an existing DB (`PaediatricCatalogueSeeder.cs:113` skips existing keys). Needs a canonicalising `ActivityTypeSeedRefresher`, not a per-type re-publish. |
+| "Ten v11.1 tools remain unseeded" | **Confirmed**, and the annexure union is exactly 14 tools with 4 seeded. Two of the ten are not plain activity-type seeds: **MSF is a first-class aggregate** (`Wombat.Domain/MultiSourceFeedback/`) with no activity-type key, and the seeded generic `reflective_note` is Speciality-scoped to the demo General Medicine speciality, so it is not the v11.1 reflective exercise. Decide those two separately. |
+| "The rung picker renders 'Order. Label' … Cosmetic" | **→ T100.** Six sites concatenate; a further eight print the bare ordinal with no label; one PDF site prints the raw `DataJson` integer with no scale mapping at all. |
+| "The old scenario `*_paed` types and `PAED-*` EPAs still sit alongside" | **→ T104.** Only **four** `*_paed` types exist, not ten. The codes do not collide (unique index is `(SubSpecialityId, Code)`). Nothing in `src` seeds this data, every relevant FK is `RESTRICT`, and deactivating an EPA does not hide it. This is a hand-run live migration carrying the 5-rung/6-rung re-point hazard — **do it last**. |
+
+Also filed from the same pass: **T101** (activity read authorization), **T102** (trainee can self-assign as
+assessor and self-award credit), **T105** (every transition validates in full Submit mode, so a half-filled
+draft cannot be cancelled) and **T106** (ten smaller verified activity-platform gaps).
+
+**Phase 3 is two changes, not one.** `observed_on` is captured by all four new schemas but is read by
+**nothing** — `CreditApplier.cs:199` and `GetEpaTrajectoryForTraineeQuery.cs:141` both still date
+observations from `Activity.CreatedOn`. The bucketing date has to be wired before per-year buckets mean
+anything. Blast radius of the period key itself is now enumerated in T106 item 10 and in the session handoff:
+a new column plus a new unique index on `CurriculumItemProgressConfiguration.cs:16` (hand-written migration
+**with** its `.Designer.cs` and a snapshot update), `CreditApplier.cs:74-107`,
+`RebuildCurriculumProgressCommand.cs:30-32`, eight progress readers and two UI sites.
+
+**Also worth knowing before phase 3:** `CurriculumItem.WindowMonths` already exists, is validated and is
+editable in the admin UI — and the credit engine never reads it. Its only consumer is `AdmitTrainee.cs:126`.
+Do not assume a currency window is already enforced.

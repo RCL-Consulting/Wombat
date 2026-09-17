@@ -2,6 +2,80 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## 🔄 SESSION IN PROGRESS — 2026-09-17 (Opus) — **T070 re-scoped from verified ground truth; eight follow-ups filed**
+
+Started by verifying the 2026-09-16 handoff's "▶ NEXT" against the actual source and the dev database rather
+than trusting it. **T070 is confirmed as the critical path** and is larger than it was filed. Eight new task
+files were opened for work the handoff either understated or did not mention.
+
+### What the verification changed
+
+**T070's filed text names a `Rated` state that does not exist.** CPSA runs `draft -> requested -> completed`;
+the legacy seeds run `requested -> accepted -> completed`. The gate is **data, not a state name** — the bound
+assessor is whoever `DataJson["assessor_user_id"]` names.
+
+**The obvious narrow fix does not work.** Deriving the assessor's editable field set from the transition's
+`requires_fields` only works on the four `_cpsa` tools T098 phase 2a happened to author that way.
+`requires_fields` is a *validation* list folded into the full Submit pass — it widens validation, never
+scopes it, and `WorkflowEvaluator` never reads it at all. On the legacy `mini_cex` (14 of 14 fields
+`required: true`) the assessor would get 4 of 10 of their own fields and `complete` would still throw. The
+correct model is an **`editable_by` actor rule on the schema section/field and the workflow state** — which
+also means admin-built tools work without a code change, per the platform premise.
+
+**The backend was never the gap.** `TransitionActivityCommand.DataPatchJson` exists and
+`ActivityService.cs:129-131` already merges it. `ActivityView.razor:86` passes a literal `null`, and
+`ActivityDetail.razor:1` hard-codes `ReadOnly="true"`. `ActivityForm` already supports editing
+(`DataJsonChanged`) and needs no work beyond per-field locking.
+
+### 🚨 Nothing paediatric is reachable in the product today (T099)
+
+Verified on the dev DB: `UserSpecialityScopes` holds **only SpecialityId 1 and 2 — zero rows for Speciality 3
+(CPSA)**, while all four `_cpsa` tools are Speciality-scoped to 3. `ListActivityTypesQuery.cs:36` therefore
+filters them out of `/activities/new` for every user, and `ActivityReferenceDataService.cs:88-93` hides the
+15 new EPAs from non-admins. The catalogue is live in code and invisible in the product. **T070 cannot be
+verified end to end until this is fixed** — and it is a few scope rows plus a fresh sign-in.
+
+### Other corrections to the record
+
+- **Only FOUR `*_paed` activity types exist** (ids 11-14), not the ten described at `current_state.md:1016`
+  and `act3-rebuild-scratch.md:47-49`. Any retirement plan sized off those docs is 2.5x too big.
+- **The old/new `PAED-*` "collision" cannot happen** — the unique index is `(SubSpecialityId, Code)` filtered
+  on College-owned rows, and the two sets sit under different sub-specialities. But the **scale re-point
+  hazard is dormant, not gone**: SubSpeciality 2 defaults to the 5-rung scale and 3 to the 6-rung ladder, so
+  re-pinning a `TraineeProfile` from Curriculum 2 to Curriculum 3 silently re-points every stored 4 and 5.
+- **Nothing in `src` seeds the legacy paediatric data** — it is operator-built from the scenario replay, every
+  relevant FK is `RESTRICT`, and deactivating an EPA does not hide it
+  (`GetCurriculumProgressForTrainee.cs:67-80` never filters `Epa.IsActive`). Retiring it is a hand-run live
+  migration that must be repeated on production.
+- **Two live authorization holes**, both pre-existing: any authenticated user can read any activity's full
+  `DataJson` by id (T101), and a trainee can name **themselves** as assessor and self-award credit (T102).
+- `observed_on` exists in all four new schemas but **is read by nothing** — credit and the trajectory both
+  still date off `Activity.CreatedOn`. Phase 3 is therefore two changes, not one.
+
+### Task files opened
+
+| Task | What |
+|---|---|
+| T099 | CPSA catalogue unreachable — no user scoped to Speciality 3 |
+| T100 | Entrustment rungs render as "Order. Label" -> "3. 3a"; 6 concat sites + 8 bare-ordinal sites enumerated |
+| T101 | `GetActivityByIdQuery` has no read authorization |
+| T102 | Trainee can self-assign as assessor and self-award credit |
+| T103 | Seeded activity-type JSON edits are inert on an existing DB (T098 phase 2b) |
+| T104 | Retire the legacy FCPaed paediatric world — hand-run live migration, scale hazard |
+| T105 | Every transition validates in full Submit mode, so a half-filled draft cannot be cancelled |
+| T106 | Activity-platform backlog (10 smaller verified gaps) |
+
+`T070-assessor-rating-edit-and-note.md` rewritten with the verified ground truth and an 11-step plan.
+
+### ▶ NEXT — T099 then T070
+
+T099 first (minutes, and it gates verification), then T070 in two commits: steps 1-4 (DSL + permission
+engine + service + MediatR, no UI change, defaults backwards-compatible), then steps 5-11 (Web surface,
+seeds, docs). **Opus.** After that, in order: T100, T101, T103, seed the ten remaining v11.1 tools, T104,
+T098 phase 3.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-09-16 (Opus) — **T097 security shipped + deployed; T098 EPA v11.1 catalogue live in code** 🏁
 
 **Last commit `ec6d587`. `origin/master` in sync (0 unpushed). Build clean (0 warnings, warnings-as-errors on).
