@@ -485,3 +485,60 @@ The automated suites cover the contract end to end at the service and component 
 clicked through it.** The browser verification — Act 3 Step 3.5, as an assessor on a CPSA Mini-CEX —
 needs a **fresh database** (see above) or T103, plus the T099 scope rows (done on dev, 2026-09-17).
 Until that run happens, treat "the assessor can enter a rating" as green-by-test, not green-by-use.
+
+---
+
+## Browser-verified — 2026-09-17
+
+Act 3 Step 3.5 driven end to end in a real browser against the dev database, after T103 landed the
+refreshed schemas. **The task's own verification criteria are met.**
+
+**As the trainee (dlamini) at `/activities/new`,** picking Mini-CEX (CPSA):
+
+- The Request section rendered editable; **Entrustment and Feedback rendered `disabled`.** The trainee
+  cannot self-rate — step 8 working, live.
+- Submitted successfully ("Activity submitted."), landing in `requested`.
+
+**As the bound assessor (naidoo) at `/activities/11`:**
+
+```
+SELECT epa_id            disabled=true     <- trainee's request fields, locked
+SELECT assessor_user_id  disabled=true
+INPUT  observed_on       disabled=true
+SELECT setting           disabled=true
+INPUT  presenting_problem disabled=true
+SELECT complexity        disabled=true
+SELECT overall_level     disabled=false    <- assessor's fields, editable
+TEXTAREA strengths       disabled=false
+TEXTAREA improvements    disabled=false
+TEXTAREA plan            disabled=false
+buttons: Complete, Decline, Discard changes
+```
+
+Rated at the **top rung (order 6, label "5")**, all three feedback fields filled, pressed **Complete**.
+State went to `completed`. The history card rendered all three transitions.
+
+Stored `DataJson` afterwards — the assessor's values present, the trainee's request fields unchanged:
+
+```json
+{"epa_id":"17","assessor_user_id":"346a885d…","observed_on":"2026-09-15","setting":"emergency_unit",
+ "presenting_problem":"Infant with bronchiolitis…","complexity":"moderate","overall_level":"6",
+ "strengths":"Structured assessment…","improvements":"Consider earlier…","plan":"Review two further…"}
+```
+
+`SchemaVersion` = 2, i.e. the T103-refreshed schema. **T070 is green by use, not only by test.**
+
+### One thing did NOT work, and it is not T070 — filed as T108
+
+**No `CurriculumItemProgress` row was created.** The trainee is pinned to curriculum 2 (FCPaed), the CPSA
+EPA belongs to curriculum 3, and `CreditApplier` credits only the adopted curriculum — correct T091
+behaviour. But it means the encounter counted for nothing, silently, with no error anywhere.
+
+That is a consequence of T099 opening the *scope* gate without the *adoption* gate: the picker now offers
+30 EPAs, fifteen of which are uncreditable for these trainees, with nothing distinguishing them. See
+**T108**.
+
+### Two known defects confirmed live, as filed
+
+- **T100:** the rung picker rendered `1. 1 / 2. 2 / 3. 3a / 4. 3b / 5. 4 / 6. 5`.
+- **T106 item 4:** the assessor inbox showed the trainee's raw `SubjectUserId` GUID.

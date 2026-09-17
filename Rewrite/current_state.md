@@ -2,6 +2,67 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070 + T103 shipped and browser-verified; T108 found** 🏁
+
+**Build clean (0 warnings). 665 tests green.** Commits `62f9547` (docs), `c33c14b` (T070), `d7a3084` (T103).
+Dev server stopped. Snapshot `pre-t103-refresh` taken before the refresher first ran.
+
+### ✅ An assessor can now enter a rating, verified in a browser
+
+Act 3 Step 3.5 driven end to end on dev. Trainee created a CPSA Mini-CEX — **Entrustment and Feedback
+rendered `disabled` for them**, so no self-rating. The bound assessor opened it and got the mirror image:
+request fields locked, `overall_level` / `strengths` / `improvements` / `plan` editable. Rated at the **top
+rung (order 6, label "5")**, pressed Complete, state went `completed`, and `DataJson` holds the assessor's
+values with the trainee's request fields unchanged. `SchemaVersion` = 2, the T103-refreshed schema.
+
+**T070 is green by use, not only by test.** Full record in its task file.
+
+### 🚨 T108 — the encounter counted for nothing, and nothing said so
+
+No `CurriculumItemProgress` row was created. The trainee is pinned to curriculum 2 (FCPaed); the CPSA EPA
+belongs to curriculum 3; `CreditApplier` credits only the adopted curriculum. That is correct T091
+behaviour — but the activity completed, the data stored, and **nothing counted, with no error on any
+screen**.
+
+This is a consequence of **T099**: scope and adoption are two independent gates and only the first was
+opened. The EPA picker now offers **30 EPAs** — `PAED-001..015` twice, different titles, no visual
+distinction — and fifteen of them are uncreditable for these trainees. Before T099 the catalogue was
+invisible, which was a more honest failure than one that looks like it works.
+
+**Recommended fix is not T104.** Filter the EPA picker to the subject's adopted curriculum
+(`ActivityReferenceDataService`) — a defect in its own right, not specific to paediatrics. And make a
+completed activity that credited nothing say so somewhere; silent non-credit is how a registrar reaches
+the end of a year believing 55 encounters were logged.
+
+### Confirmed live, as already filed
+
+**T100** — the rung picker renders `1. 1 / 2. 2 / 3. 3a / 4. 3b / 5. 4 / 6. 5`.
+**T106 item 4** — the assessor inbox shows the trainee's raw `SubjectUserId` GUID.
+**T107** — activities created before T103 stay pinned to their old version and are permanently
+uncompletable, while the UI still offers their assessor a Complete button.
+
+### ▶ NEXT
+
+1. **T108** — filter the EPA picker to the adopted curriculum, and surface zero-credit completions. It is
+   the difference between a catalogue that works and one that appears to. **Opus** (the adoption/scope
+   interaction is a judgement call, not a typing job).
+2. **T100** (rung labels) and **T106 item 4** (raw GUIDs) — both cheap, both on surfaces a clinician reads
+   daily. **Sonnet.**
+3. **T107** (stranded activities), then **T101** (activity read authorization).
+4. Then the catalogue work proper: seed the ten remaining v11.1 tools — deciding **T102** fixes 2-3 first,
+   since every one carries a `user` field — then **T104**, then **T098 phase 3**.
+
+### Outstanding, not tasks
+
+- **Production still needs T099's scope rows**, and now also needs the T108 decision before anyone uses the
+  catalogue there. Nothing on production has been touched.
+- **`EPA version 11.1.docx` is still untracked** — the only record of what `T098-data/` was derived from.
+  Commit or gitignore deliberately. (The EPA Book textbook PDF is now gitignored: 16MB of third-party
+  copyright that was one `git add -A` from entering a deployed branch's history.)
+- Dev activity id 11 left in place as evidence for T108.
+
+---
+
 ## ▶ T103 DONE — 2026-09-17 (Opus) — **seed-file edits now reach existing databases**
 
 **Build clean (0 warnings, warnings-as-errors on). 665 tests green** — Domain 59, Application 349,
