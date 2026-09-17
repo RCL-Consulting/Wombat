@@ -1,7 +1,7 @@
 # T070 — No assessor rating-edit / assessor-note surface
 
-**Status:** DONE (2026-09-17, Opus) — code + tests, build clean, 563 tests green. Not yet exercised in a
-browser; see "What is still not proven" below.
+**Status:** DONE (2026-09-17, Opus) — code + tests **and browser-verified end to end on dev**. See the
+"Browser-verified" section at the foot of this file; it supersedes "What is still not proven" above it.
 **Originally filed:** 2026-05-29, during the Act 3 play-through.
 **Re-scoped:** 2026-09-17, after verifying the whole path against the source. It is larger than filed.
 **Model:** Opus — it adds a DSL property, a permission engine and a new editable surface across five layers.
@@ -479,7 +479,8 @@ work on navigation.
   correctly threaded it through `BuilderModels` rather than passing `null`, which would have dropped it on
   the first admin save), but it must be authored as raw JSON. Recorded in T106.
 
-### What is still not proven
+### What is still not proven *(SUPERSEDED — see "Browser-verified" below; kept as the record of what was
+outstanding at the moment of the commit)*
 
 The automated suites cover the contract end to end at the service and component level. **Nobody has
 clicked through it.** The browser verification — Act 3 Step 3.5, as an assessor on a CPSA Mini-CEX —

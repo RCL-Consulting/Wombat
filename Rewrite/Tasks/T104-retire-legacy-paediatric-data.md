@@ -92,3 +92,7 @@ real FK and is therefore safe; everything else is not.
 ## Related
 
 T098 gap 8. Depends on T099 (scope) being settled first. Do after T070, T100, T103.
+
+**Blocked by T109.** Re-pinning a trainee from curriculum 2 to curriculum 3 is exactly the cross-scale
+remap T109 describes: the two curricula carry minima on a five-rung and a six-rung scale, and nothing
+binds a stored ordinal to either. Do not re-pin anyone until T109 is resolved.

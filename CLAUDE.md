@@ -31,7 +31,7 @@ evaluators, and renderers.
 | UI | Blazor Interactive Server; use `IScopedSender` (not `ISender`) in interactive components |
 | Design system | Custom CSS in `app.css` per `Rewrite/DESIGN.md`; no Bootstrap, no MudBlazor, no Radzen, no jQuery |
 | ORM | EF Core 10 with PostgreSQL (`Npgsql`); migrations applied at startup |
-| Database | PostgreSQL; `jsonb` columns for activity schema/workflow/credit/data |
+| Database | PostgreSQL; `jsonb` columns for activity schema/workflow/credit/data. **Never compare a stored `jsonb` value against serializer output as a raw string** — Postgres discards the submitted bytes and re-renders its own text (keys reordered, separators inserted), so nothing stored is ever byte-equal to what was written. Compare canonical-to-canonical: parse both sides and re-serialise. |
 | MediatR | v12.x maximum — **do not upgrade to paid v13** |
 | Clinical dates | `DateOnly` for calendar dates; `DateTime` only for timestamps and audit events |
 | PDF generation | QuestPDF (portfolio export in T023) |
@@ -64,6 +64,7 @@ Wombat/
 ├── tests/
 │   ├── Wombat.Domain.Tests/
 │   ├── Wombat.Application.Tests/
+│   ├── Wombat.Infrastructure.Tests/ ← seed integrity, EF-backed services, DSL round-trips
 │   ├── Wombat.Architecture.Tests/ ← enforces layer boundaries
 │   ├── Wombat.Integration.Tests/
 │   └── Wombat.Web.Tests/          ← bUnit smoke tests (added in T010)
@@ -153,7 +154,31 @@ Wombat has:
 Runtime services in Infrastructure:
 - `SchemaValidator` — validates `DataJson` against the form schema.
 - `WorkflowEvaluator` — evaluates available transitions for a `ClaimsPrincipal`.
+- `ActorRuleMatcher` — the one implementation of the actor grammar (`subject`, `creator`, `role:`,
+  `scope:`, `field:`, combined with `|` and `+`). Shared by transition authorization and field-write
+  authorization so the two cannot drift.
+- `FieldPermissionEvaluator` — resolves which fields an actor may write, as the conjunction of the
+  workflow state's `editable_by` and the field's (falling back to its section's). Default is
+  `subject|creator`, which reproduces pre-T070 behaviour, so a type declaring nothing is unchanged.
 - `CreditApplier` — matches completed activities to curriculum items and applies credit.
+
+### Editing a seed folder
+
+`DataSeeder` and `PaediatricCatalogueSeeder` **skip any activity-type key that already exists**, so editing
+`Activities/Seeds/<key>/*.json` does nothing to a database that already holds that type.
+`ActivityTypeSeedRefresher` (T103) closes that at startup: it canonicalises the on-disk seed and the stored
+version through the DSL parsers, compares, and publishes a new version when they differ — provided the type
+is still seed-owned, has no draft in flight, and its newest version was published by the seeder.
+
+Three things follow:
+- **A new seed folder must also be registered in `ActivityTypeSeedCatalogue`**, or the refresher will not
+  see it.
+- **Parse is not enough — a DSL property must be emitted in `Serialize` too.** `ActivityType.SaveDraft`
+  round-trips Parse+Serialize, so a property with no `Serialize` half is dropped at publish with no error:
+  the JSON parses, the builder shows the setting, the feature silently dies. `SeedRoundTripTests` guards
+  this; add to it when you add a property.
+- **In-flight activities stay pinned to their old version** and are not unblocked by a republish.
+- `Wombat__RefreshSeededActivityTypes=false` disables the republish while still logging what differs.
 
 Read `Rewrite/CUSTOMIZATION.md` for the full model.
 
@@ -205,6 +230,10 @@ dotnet test tests/Wombat.Domain.Tests/Wombat.Domain.Tests.csproj
 
 # Application tests (the primary test suite)
 dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj
+
+# Infrastructure tests — seed integrity, activity runtime services, DSL round-trips.
+# Do NOT skip this one: it is the second-largest suite and it guards the seed corpus.
+dotnet test tests/Wombat.Infrastructure.Tests/Wombat.Infrastructure.Tests.csproj
 
 # Architecture boundary tests
 dotnet test tests/Wombat.Architecture.Tests/Wombat.Architecture.Tests.csproj

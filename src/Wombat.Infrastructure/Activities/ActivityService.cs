@@ -207,9 +207,14 @@ public sealed class ActivityService : IActivityService
             // its transition stays null for ever.
             //
             // Both writes land in the SaveChangesAsync below, so the stamp is atomic with the credit
-            // it describes. Note this is TransitionAsync only: RebuildCurriculumProgress must never
-            // stamp, because re-applying already-credited work legitimately returns zero rows and
-            // would re-flag every correctly-credited activity in the database.
+            // it describes.
+            //
+            // Stamped on the transition path only, and that is a GAP rather than a design.
+            // RebuildCurriculumProgress deletes every progress row before replaying
+            // (RebuildCurriculumProgressCommand.cs:30-32), so it re-credits properly — meaning a stale
+            // zero left by a since-corrected curriculum is never cleared, and the warning banner stays
+            // on for ever after the exact remediation it tells the reader to perform. Making the
+            // rebuild stamp is the fix; recorded as T106 item 12.
             var credited = await _creditApplier.ApplyAsync(
                 activity,
                 new ActivityType

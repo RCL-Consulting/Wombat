@@ -18,7 +18,9 @@ Epa 17 (CPSA PAED-001) -> CurriculumItem 17 -> CurriculumId = 3   (Paediatric EP
 InstitutionCurriculumAdoptions: exactly one row — institution 2 -> curriculum 2
 ```
 
-`CreditApplier` credits only the adopted curriculum version (T091, by design and correctly). The EPA the
+`CreditApplier` credits against the trainee's **pinned** curriculum (`TraineeProfile.CurriculumId`), which
+is set at admission — *not* against the institution's current adoption. The distinction matters and this
+line originally got it wrong; see the Resolution section. The EPA the
 trainee picked is not in their curriculum, so no item matched and no credit was applied.
 
 ## Root cause — two gates, and only one was opened
@@ -38,6 +40,11 @@ has no way to tell which fifteen.
 more honest failure. Making it visible without adoption is worse: it looks like it works.
 
 ## Fix — the picker should not offer what cannot be credited
+
+> ⚠️ **SUPERSEDED IN ONE DETAIL — read the Resolution section before implementing anything here.**
+> Option 1 below says to scope by the subject's *active adoption*. That is wrong and was deliberately
+> **not** done: `CreditApplier` reads `TraineeProfile.CurriculumId`, never
+> `InstitutionCurriculumAdoptions`. The shipped predicate joins `CurriculumItems`.
 
 1. **Filter the EPA options to the subject's adopted curriculum.** `ActivityReferenceDataService` scopes
    EPA options by institution/speciality; it should additionally scope by the subject's active adoption

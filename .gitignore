@@ -375,6 +375,14 @@ EPA Book/*.pdf
 EPA Book/epa-book.md
 EPA Book/epa-book.clean.md
 EPA Book/*.py
+EPA Book/README.md
+
+# EPA version 11.1.docx — the College's source document behind Tasks/T098-data/*.json.
+# Ignored deliberately, not by oversight: its cover reads "DRAFT — FOR DISCUSSION. Content is
+# subject to revision", and it is the College's document to distribute, not ours. The derived
+# JSON IS committed and is the record this repo relies on. Reverse this line if the College
+# confirms v11.1 final and agrees to it living here.
+/EPA version *.docx
 
 # Browser-verification artifacts (Playwright MCP cache + ad-hoc screenshots)
 .playwright-mcp/

@@ -4,8 +4,11 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070, T103, T108 shipped; T109 is the new top defect** 🏁
 
-**Build clean (0 warnings). 698 tests green** — Domain 59, Application 363, Infrastructure 171,
-Architecture 19, Web 86 (was 494 at session start). Dev server stopped. Snapshot `pre-t103-refresh`.
+**Last commit `f6c611a`** (session commits: `62f9547` docs, `c33c14b` T070, `d7a3084` T103,
+`9623e2d` browser verification, `f6c611a` T108). **Build clean, 0 warnings. 698 tests green** —
+Domain 59, Application 363, Infrastructure 171, Architecture 19, Web 86; was 494 at session start.
+`Wombat.Integration.Tests` was **not** run (needs Docker), so 698 is five suites, not the whole repo.
+Dev server stopped. DB snapshot `pre-t103-refresh` taken before the refresher first ran.
 
 ### The chain this session followed
 
@@ -22,8 +25,9 @@ comparison would have republished everything on every boot, for ever.
 
 **T108** — verifying T070 in the browser showed the encounter counted for nothing, silently. Scope and
 adoption are two independent gates and T099 only opened the first. The EPA picker now mirrors
-`CreditApplier`'s predicate exactly, and a completion that credited nothing says so on the activity and in
-its history.
+`CreditApplier`'s predicate — with one deliberate divergence, that it also requires `Epa.IsActive`, which
+can only make it offer less than the engine would credit, never more. A completion that credited nothing
+now says so on the activity and in its history.
 
 > **The scout corrected this file's own recommendation.** T108's fix text said to scope by the subject's
 > *active adoption*. `CreditApplier` never reads `InstitutionCurriculumAdoptions` — it reads
@@ -36,7 +40,11 @@ its history.
 T108's narrowing converts silent **no**-credit into silent **wrong** credit for one combination. A trainee
 pinned to a five-rung curriculum filing a six-rung CPSA tool can now only pick a five-rung EPA, so
 `MeetsMinimumLevel` compares a rating of `4` — CPSA's rung **"3b", still needing supervision** — against a
-curriculum-2 minimum of `4` meaning **"Independent"**, and credits it.
+curriculum-2 minimum of `4` meaning **"Independent"**, and counts the minimum as reached.
+
+To be precise about which counter is corrupted: `CountsSoFar` increments regardless of level, so volume was
+never at risk. What goes wrong is **`MinimumLevelReachedCount`** — the trainee is recorded as having
+demonstrated independent practice on the strength of an assessment that said they still need supervision.
 
 The mis-comparison was always reachable; T108 removed the alternative, which was the right thing to do. It
 is the concrete instance of the scale-pinning hazard T098 identified and left open: nothing binds a stored
@@ -50,17 +58,44 @@ level to a scale. **Wrong credit is worse than absent credit.**
    cheap, both on surfaces a clinician reads daily. **Sonnet.**
 3. **T101** (activity read authorization) — also closes T108's cross-institution disclosure note.
 4. **T107** (activities stranded on old pinned versions), then the catalogue work: the ten remaining v11.1
-   tools (decide **T102** fixes 2-3 first), **T104**, **T098 phase 3**.
+   tools — decide **T102** fixes 2-3 **and T105** first, because both change how a tool must be authored
+   and every one of the ten carries a `user` field. Then **T104** (blocked by T109), **T098 phase 3**.
+
+**T105** is the one most easily lost: every transition validates the whole schema in Submit mode, so a
+half-filled draft cannot be cancelled, and that constraint is *why* the CPSA seeds leave assessor fields
+un-required. Authoring ten more tools without settling it bakes the workaround in ten more times.
+
+### 🚨 READ BEFORE THE NEXT PRODUCTION DEPLOY
+
+Nothing on production was touched this session, but **the next deploy is not a routine one.** It will run
+`ActivityTypeSeedRefresher` against production for the first time. Expect, on that boot:
+
+1. **~9 seeded activity types republished to v2** — whatever differs there; production was never inspected,
+   so **count activities per seed type on production first** rather than assuming dev's split.
+2. **T070's removal of `terminal: true` from `declined`/`cancelled` goes live.** That is the fix for
+   cancelling a WBA awarding curriculum credit, but it changes terminal-state semantics and `CreditApplier`
+   fires on terminal states.
+3. **Every in-flight production activity is stranded** (**T107**): it stays pinned to its old version, so
+   the assessor still cannot rate it, and the UI still offers a Complete button that can never succeed.
+   There is no re-pin path anywhere in the codebase.
+4. **A binary rollback does not undo a version bump.** After `mv app.prev app && systemctl restart`, the DB
+   holds v2 while the rolled-back binary ships the old seed files — whose refresher then publishes v3 with
+   the old content. Set `Wombat__RefreshSeededActivityTypes=false` around a rollback.
+
+Neither `INFRASTRUCTURE.md` nor `deploy/README.md` mentions that setting yet — worth adding before the
+deploy rather than after.
 
 ### Outstanding, not tasks
 
-- **Production is untouched** and needs T099's scope rows, the T108 decision, and a count of affected rows
-  before T104.
-- **`EPA version 11.1.docx` is still untracked** — the only record of what `T098-data/` was derived from.
-  The EPA Book textbook PDF is now gitignored (16MB of third-party copyright, one `git add -A` from a
-  deployed branch's history).
-- Dev activity id 11 is left in place as T108 evidence; its `CreditedItemCount` is `null`, not `0`, because
-  the stamp postdates it — do not read the absent banner as the fix failing.
+- **Production also needs** T099's scope rows and the T108 decision before anyone uses the catalogue there.
+- Dev activity id 11 is left in place as T108 evidence (completed, credited nothing). **The T108 migration
+  has not been applied to the dev database yet** — `CreditedItemCount` does not exist as a column there
+  until the app is next started. Do not read a failed query, or the absent banner, as the fix failing.
+- **`EPA version 11.1.docx` is now gitignored**, deliberately rather than by oversight: its cover reads
+  "DRAFT — FOR DISCUSSION" and it is the College's document to distribute. The derived JSON in
+  `Tasks/T098-data/` is committed and is the record this repo relies on. Reverse the `.gitignore` line if
+  the College confirms v11.1 final and agrees to it living here. The EPA Book textbook PDF, its derived
+  full text and its generated chapter index are ignored for copyright.
 
 ---
 

@@ -1,6 +1,12 @@
 # T098 — Adopt the Paediatric EPA catalogue v11.1
 
-## Status: IN PROGRESS — pre-work done (two live defects fixed, 2026-09-16). No catalogue data loaded yet; Phase 1 blocked on the scale-pinning decision below.
+## Status: IN PROGRESS — **phases 1 and 2a are DONE and live** (catalogue seeded 2026-09-16, four CPSA WBA tools bound to the six-rung ladder). Phases 2c-4 open.
+
+> The 'no catalogue data loaded / Phase 1 blocked' wording that stood here until 2026-09-17 was stale by a
+> day. The scale-pinning decision it referred to was resolved by the operator confirming nothing is live;
+> the hazard itself survives as **T109** and is now the most serious open defect in the credit path.
+> Reachability and seed-propagation gaps found since: **T099** (nobody scoped to the new speciality),
+> **T103** (seed edits inert on an existing DB — shipped), **T108** (uncreditable EPAs offered — shipped).
 
 ## Source
 

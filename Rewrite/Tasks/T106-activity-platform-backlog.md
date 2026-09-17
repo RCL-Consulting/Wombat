@@ -103,3 +103,36 @@ schema/workflow JSON to say who owns which field.
 That is a direct dent in the platform premise. An actor-rule input on the section and field editors in
 `ActivityTypeEdit.razor` (and on the state editor, once T019-d's visual workflow editor exists) is the
 fix. Worth its own task when picked up.
+
+## 12. `RebuildCurriculumProgress` does not stamp `CreditedItemCount`, so a stale zero is never cleared (added 2026-09-17)
+
+T108 stamps the credit outcome on the transition, and `ActivityView` warns when it is `0`. But the stamp
+happens only on the transition path. `RebuildCurriculumProgressCommand` deletes every progress row and
+replays, so it re-credits properly — and leaves the old `0` in place.
+
+The consequence is precise and bad: an administrator fixes the curriculum, runs a rebuild, the activity
+now credits, and **the warning banner telling them to fix it stays on for ever.** The remediation T108
+points the reader at is the one thing that cannot clear T108's own warning.
+
+Fix: stamp from the rebuild path too. It is the same three-valued logic against the same
+`ICreditApplier` return, and it is what makes the signal trustworthy rather than sticky.
+
+## 13. `AssessorPendingNudgeJob` reads the live workflow, not the pinned version (added 2026-09-17)
+
+Noted while building T103. The job reads `ActivityType.WorkflowJson` — the *current* published version —
+while each activity validates against the version it was created under. None of T103's nine republishes
+renamed or removed a state key, so nudges are unaffected today.
+
+A future seed edit that renamed a state would silently stop nudging every activity pinned to the old
+version: no error, no log, just assessors who stop being chased. Audit every reader of the live
+`WorkflowJson`/`SchemaJson` for the same assumption.
+
+## 14. A zero-credit completion is only visible one activity at a time (added 2026-09-17)
+
+T108's warning is per-activity. A registrar has to open each record to discover the pattern, which is
+exactly the failure mode the task was filed against — "fifty-five encounters logged, nothing counted" is a
+statement about a *year*, not about one form.
+
+The surface that closes it is a column on `MyActivities`: widen `ActivitySummaryDto` and have
+`ListActivitiesBySubjectQuery` correlate the last transition's `CreditedItemCount`. Cheap now that the
+data exists.

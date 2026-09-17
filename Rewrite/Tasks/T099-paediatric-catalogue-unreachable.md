@@ -1,6 +1,7 @@
 # T099 — The CPSA paediatric catalogue is seeded but unreachable by every non-admin user
 
-**Status:** open
+**Status:** open — **dev done 2026-09-17** (10 users scoped, see Progress at the foot). Production
+outstanding, and nothing provisions these rows on a fresh database.
 **Surfaced:** 2026-09-17, verifying the T098 phase-2a handoff against the dev database.
 **Severity:** High — blocks end-to-end verification of T070 and makes the whole v11.1 catalogue invisible
 in the product. Cheap to fix.
