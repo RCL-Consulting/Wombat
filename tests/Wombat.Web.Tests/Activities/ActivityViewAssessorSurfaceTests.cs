@@ -63,6 +63,14 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         }
         """;
 
+    private const string CreditRulesJson = """
+        {
+          "counts_for": [
+            { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1 }
+          ]
+        }
+        """;
+
     // What the trainee filed: the request keys, and a rating the assessor has not entered yet.
     private const string StoredDataJson = """{"epa_id":"3","assessor_user_id":"assessor-1"}""";
 
@@ -219,8 +227,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var transitions = new[]
         {
-            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}"),
-            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}")
+            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null),
+            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null)
         };
 
         var cut = RenderPage(new FakeSender(Detail(NoOne(), transitions: transitions)));
@@ -262,7 +270,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         string state = "requested",
         string dataJson = StoredDataJson,
         IReadOnlyList<ActivityTransitionDto>? transitions = null,
-        IReadOnlyList<ActivityActionDto>? availableActions = null)
+        IReadOnlyList<ActivityActionDto>? availableActions = null,
+        string creditRulesJson = CreditRulesJson)
     {
         var activity = new ActivityDto(
             7,
@@ -273,6 +282,7 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
             SchemaJson,
             WorkflowJson,
             "[]",
+            creditRulesJson,
             "trainee-1",
             "trainee-1",
             state,

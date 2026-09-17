@@ -140,7 +140,9 @@ public sealed class RuntimeRendererTests : TestContext
         public int EpaCalls { get; private set; }
 
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEpaOptionsAsync(
-            System.Security.Claims.ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+            System.Security.Claims.ClaimsPrincipal principal,
+            EpaOptionScope? scope = null,
+            CancellationToken cancellationToken = default)
         {
             EpaCalls++;
             return Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
@@ -150,7 +152,9 @@ public sealed class RuntimeRendererTests : TestContext
     private sealed class PopulatedReferenceDataService : StubActivityReferenceDataService
     {
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEpaOptionsAsync(
-            System.Security.Claims.ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+            System.Security.Claims.ClaimsPrincipal principal,
+            EpaOptionScope? scope = null,
+            CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(
                 [new ActivityCatalogueOption("1", "PAED-001 — Acute admission")]);
 

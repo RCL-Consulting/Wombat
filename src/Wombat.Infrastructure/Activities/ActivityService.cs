@@ -5,6 +5,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
 
@@ -191,18 +192,33 @@ public sealed class ActivityService : IActivityService
             SchemaValidationMode.Submit,
             transition.RequiresFields));
 
-        activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
+        var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
-        if (targetState.Terminal)
+        if (targetState.Terminal && DeclaresCredit(version.CreditRulesJson))
         {
-            await _creditApplier.ApplyAsync(
+            // Stamp the outcome onto the transition that caused it. Until T108 this result was
+            // discarded, which made "credited nothing" indistinguishable from "credited" at every
+            // surface in the product: no return value read, no domain event, no log line.
+            //
+            // The `counts_for` gate is checked BEFORE the call, not after, and that is what stops the
+            // signal crying wolf: a reflective note, journal club, procedure log, QI project, research
+            // output or teaching session declares an empty `counts_for`, so it is never evaluated and
+            // its transition stays null for ever.
+            //
+            // Both writes land in the SaveChangesAsync below, so the stamp is atomic with the credit
+            // it describes. Note this is TransitionAsync only: RebuildCurriculumProgress must never
+            // stamp, because re-applying already-credited work legitimately returns zero rows and
+            // would re-flag every correctly-credited activity in the database.
+            var credited = await _creditApplier.ApplyAsync(
                 activity,
                 new ActivityType
                 {
                     CreditRulesJson = version.CreditRulesJson
                 },
                 cancellationToken);
+
+            record.CreditedItemCount = credited.Count;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -241,6 +257,19 @@ public sealed class ActivityService : IActivityService
             OrderBySchema(schema, writableFieldKeys),
             availableActions);
     }
+
+    /// <summary>
+    /// Whether the pinned version declares any credit at all — the anti-cry-wolf gate for the T108
+    /// signal, and the same test <c>CreditApplier</c> makes first thing.
+    /// </summary>
+    /// <remarks>
+    /// Blank rules count as "credits nothing" rather than an error: a type published without a credit
+    /// block should still be completable, and before T108 an empty string here threw out of the
+    /// terminal transition.
+    /// </remarks>
+    private static bool DeclaresCredit(string creditRulesJson)
+        => !string.IsNullOrWhiteSpace(creditRulesJson) &&
+           CreditRulesParser.Parse(creditRulesJson).CountsFor.Count > 0;
 
     /// <summary>Writable keys in schema declaration order, so the UI can render them predictably.</summary>
     private static IReadOnlyList<string> OrderBySchema(FormSchema schema, IReadOnlySet<string> writableFieldKeys)
@@ -439,6 +468,7 @@ public sealed class ActivityService : IActivityService
             pinnedVersion.SchemaJson,
             pinnedVersion.WorkflowJson,
             pinnedVersion.DisplayFieldsJson,
+            pinnedVersion.CreditRulesJson,
             activity.SubjectUserId,
             activity.CreatedByUserId,
             activity.CurrentState,
@@ -457,7 +487,8 @@ public sealed class ActivityService : IActivityService
                     entity.ActorUserId,
                     entity.OccurredOn,
                     entity.Note,
-                    entity.SnapshotJson))
+                    entity.SnapshotJson,
+                    entity.CreditedItemCount))
                 .ToList());
     }
 }

@@ -1,6 +1,16 @@
-<ActivityForm SchemaJson="@SchemaJson" DataJson="@DataJson" ReadOnly="true" />
+<ActivityForm SchemaJson="@SchemaJson"
+              DataJson="@DataJson"
+              SubjectUserId="@SubjectUserId"
+              CreditRulesJson="@CreditRulesJson"
+              ReadOnly="true" />
 
 @code {
   [Parameter, EditorRequired] public string SchemaJson { get; set; } = default!;
   [Parameter] public string DataJson { get; set; } = "{}";
+
+  // Forwarded so a read-only render narrows the same way the editable one does — and, more to the
+  // point, so a stored EPA outside the subject's curriculum is still offered back and still shows
+  // on the page instead of collapsing to "Select…" (T108).
+  [Parameter] public string? SubjectUserId { get; set; }
+  [Parameter] public string? CreditRulesJson { get; set; }
 }

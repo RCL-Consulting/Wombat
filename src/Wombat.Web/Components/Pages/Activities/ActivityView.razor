@@ -18,6 +18,19 @@
   <Alert Kind="danger">@_actionError</Alert>
 }
 
+@if (CreditedNothing)
+{
+  @* T108. A completed activity that matched no curriculum item used to be indistinguishable from a
+     credited one at every surface in the product. This is the one place a clinician is certain to
+     look. It cannot fire on an activity type that credits nothing by design: the server only
+     records a count at all when the pinned version declares a non-empty `counts_for`. *@
+  <Alert Kind="warning">
+    This activity is complete, but it counted towards no curriculum requirement. The EPA it was
+    recorded against is most likely not part of this trainee's curriculum. The record is kept —
+    please raise it with the programme administrator so it can be credited correctly.
+  </Alert>
+}
+
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
   @if (_activity is not null)
   {
@@ -40,7 +53,10 @@
              save channel there is, so offering inputs with no action available would let someone
              type a reflection and lose it on navigation. Restore the editable branch here if a
              standalone save command ever lands (T106 item 1). *@
-          <ActivityDetail SchemaJson="@_activity.SchemaJson" DataJson="@_activity.DataJson" />
+          <ActivityDetail SchemaJson="@_activity.SchemaJson"
+                          DataJson="@_activity.DataJson"
+                          SubjectUserId="@_activity.SubjectUserId"
+                          CreditRulesJson="@_activity.CreditRulesJson" />
         }
         else
         {
@@ -49,8 +65,12 @@
             with the action you choose — nothing is stored until then.
           </Alert>
 
+          @* SubjectUserId, not the principal: the actor here is usually the assessor, and the EPAs
+             that can be credited are the subject's (T108). *@
           <ActivityForm SchemaJson="@_activity.SchemaJson"
                         DataJson="@_workingDataJson"
+                        SubjectUserId="@_activity.SubjectUserId"
+                        CreditRulesJson="@_activity.CreditRulesJson"
                         EditableFieldKeys="_editable"
                         DataJsonChanged="OnDataChanged" />
 
@@ -72,6 +92,7 @@
             <th>State</th>
             <th>Actor</th>
             <th>When</th>
+            <th>Credit</th>
             <th>Note</th>
           </tr>
         </HeaderRow>
@@ -81,6 +102,7 @@
             <td>@($"{transition.FromState} → {transition.ToState}")</td>
             <td>@transition.ActorUserId</td>
             <td>@transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@CreditLabel(transition.CreditedItemCount)</td>
             <td>@(string.IsNullOrWhiteSpace(transition.Note) ? "—" : transition.Note)</td>
           </tr>
         </Row>
@@ -111,6 +133,25 @@
   private bool _loading = true;
   private string? _loadError;
   private string? _actionError;
+
+  /// <summary>
+  /// True when a transition on this activity was evaluated for credit and credited nothing (T108).
+  /// </summary>
+  /// <remarks>
+  /// <c>null</c> — credit was never evaluated — is not a warning: it is the permanent state of a
+  /// reflective note, a journal club entry, a procedure log, and of every transition recorded before
+  /// the outcome started being stamped. Only an explicit zero means "we looked, and nothing counted".
+  /// </remarks>
+  private bool CreditedNothing
+    => _activity?.Transitions.Any(transition => transition.CreditedItemCount == 0) == true;
+
+  private static string CreditLabel(int? creditedItemCount) => creditedItemCount switch
+  {
+    null => "—",
+    0 => "None",
+    1 => "1 item",
+    _ => $"{creditedItemCount} items"
+  };
 
   protected override async Task OnParametersSetAsync()
   {

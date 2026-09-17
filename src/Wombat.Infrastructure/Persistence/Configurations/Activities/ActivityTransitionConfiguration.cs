@@ -16,6 +16,11 @@ public sealed class ActivityTransitionConfiguration : IEntityTypeConfiguration<A
         builder.Property(entity => entity.Note).HasMaxLength(4000);
         builder.Property(entity => entity.SnapshotJson).HasColumnType("jsonb").IsRequired();
         builder.Property(entity => entity.OccurredOn).HasColumnType("timestamp with time zone");
+
+        // Nullable on purpose — null means "credit was never evaluated for this move", which is the
+        // honest value for every row written before T108 and for every transition on an activity type
+        // that credits nothing by design.
+        builder.Property(entity => entity.CreditedItemCount);
         builder.HasIndex(entity => new { entity.ActivityId, entity.OccurredOn });
     }
 }

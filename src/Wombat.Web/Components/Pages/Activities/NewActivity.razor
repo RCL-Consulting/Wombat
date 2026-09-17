@@ -39,8 +39,12 @@
 
 @if (_selectedEditor is not null)
 {
+  @* The creator IS the subject here — this page files an activity about the current user — so the
+     EPA picker narrows to what would actually credit for them (T108). *@
   <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
                 DataJson="@_dataJson"
+                SubjectUserId="@_currentUserId"
+                CreditRulesJson="@(_selectedEditor.PublishedCreditRulesJson ?? _selectedEditor.DraftCreditRulesJson)"
                 EditableFieldKeys="_editableFieldKeys"
                 DataJsonChanged="OnDataChanged" />
 
@@ -56,6 +60,10 @@
   private int _selectedActivityTypeId;
   private string _dataJson = "{}";
 
+  // The subject of anything created here. Held rather than re-read per render because the EPA
+  // picker's option list is keyed on it (T108).
+  private string? _currentUserId;
+
   // The fields this creator owns on the selected type (T070). Null means "no per-field
   // restriction", which is both the pre-T070 behaviour and the fallback whenever the set cannot be
   // resolved — the server filters the submitted data either way.
@@ -66,6 +74,7 @@
   protected override async Task OnInitializedAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     _activityTypes.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(authState.User)));
   }
 

@@ -120,6 +120,27 @@ else if (_schema is not null)
   [Parameter] public bool ReadOnly { get; set; }
 
   /// <summary>
+  /// The trainee this activity is ABOUT, when one is known. Credit follows the subject, not the
+  /// viewer: on the detail page the principal is usually the assessor, and on the builder preview
+  /// there is no subject at all. Null leaves every picker at its claims-based default (T108).
+  /// </summary>
+  [Parameter] public string? SubjectUserId { get; set; }
+
+  /// <summary>
+  /// The credit rules of the version this form is rendering — the PINNED version for an existing
+  /// activity, the published-or-draft rules on the creation page.
+  /// </summary>
+  /// <remarks>
+  /// Carried as raw DSL for the same reason <see cref="SchemaJson" /> and the workflow JSON are: it
+  /// is what tells the renderer WHICH EPA field the credit engine will actually read. The field key
+  /// is not the contract — <c>epa_field</c> is a free-form string in the credit rules and nothing
+  /// validates it against the schema — so "the EPA that will be credited" can only be answered by
+  /// intersecting the two. A reflective note declares an epa field and an empty <c>counts_for</c>;
+  /// an MSF form credits a fixed curriculum item and never reads its epa field. Neither is narrowed.
+  /// </remarks>
+  [Parameter] public string? CreditRulesJson { get; set; }
+
+  /// <summary>
   /// The field keys this actor may write, as resolved server-side by the field-permission
   /// evaluator (T070). <c>null</c> means "no per-field restriction" and keeps the pre-T070
   /// behaviour exactly: every field follows <see cref="ReadOnly" /> alone. An empty set locks
@@ -132,7 +153,11 @@ else if (_schema is not null)
   private FormSchema? _schema;
   private JsonObject _data = [];
   private string? _loadError;
-  private string? _loadedSchemaJson;
+  private string? _loadedOptionsKey;
+
+  // Schema field keys the pinned credit rules actually read as the EPA to credit. Empty for every
+  // activity type that credits nothing, and for one that credits a fixed curriculum item.
+  private IReadOnlySet<string> _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
 
   private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
 
@@ -146,10 +171,14 @@ else if (_schema is not null)
       // Reloading them on every value change would re-query the DB on each edit and can trigger
       // concurrent DbContext use when edits arrive in quick succession. Claim the schema before the
       // await so a re-entrant OnParametersSetAsync (fired by a rapid edit) skips the reload.
-      if (!string.Equals(_loadedSchemaJson, SchemaJson, StringComparison.Ordinal))
+      // The reload key is the schema PLUS everything else the option lists now depend on. Keying it
+      // on the schema alone would serve one subject's creditable EPAs to the next (T108).
+      var optionsKey = string.Join('\u001f', SchemaJson, SubjectUserId ?? string.Empty, CreditRulesJson ?? string.Empty);
+      if (!string.Equals(_loadedOptionsKey, optionsKey, StringComparison.Ordinal))
       {
         _schema = FormSchemaParser.Parse(SchemaJson);
-        _loadedSchemaJson = SchemaJson;
+        _loadedOptionsKey = optionsKey;
+        _creditedEpaFieldKeys = ResolveCreditedEpaFieldKeys();
         await LoadOptionsAsync();
       }
 
@@ -161,7 +190,8 @@ else if (_schema is not null)
       _schema = null;
       _data = [];
       _catalogueOptionsByField.Clear();
-      _loadedSchemaJson = null;
+      _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+      _loadedOptionsKey = null;
     }
   }
 
@@ -294,7 +324,12 @@ else if (_schema is not null)
     {
       IReadOnlyList<ActivityCatalogueOption>? options = field.Type switch
       {
-        FieldType.Epa => await ReferenceDataService.GetEpaOptionsAsync(principal),
+        FieldType.Epa => await ReferenceDataService.GetEpaOptionsAsync(
+          principal,
+          new EpaOptionScope(
+            SubjectUserId,
+            _creditedEpaFieldKeys.Contains(field.Key),
+            GetString(field.Key))),
         FieldType.User => await ReferenceDataService.GetAssessorOptionsAsync(principal),
         FieldType.Scale => await ReferenceDataService.GetEntrustmentScaleLevelOptionsAsync(field.ScaleKey),
         _ when !string.IsNullOrWhiteSpace(field.CatalogueKey)
@@ -308,6 +343,18 @@ else if (_schema is not null)
       }
     }
   }
+
+  /// <summary>
+  /// Which schema field keys the credit rules name as the EPA to credit.
+  /// </summary>
+  /// <remarks>
+  /// Only <c>curriculum_item_match.epa_field</c> counts. A directive matching a fixed
+  /// <c>curriculum_item_id</c> or a <c>curriculum_item_field</c> never reads an EPA, so an epa field
+  /// alongside it is contextual metadata and narrowing it would hide choices that change nothing.
+  /// Unparseable rules are not this method's error to surface — fall back to no narrowing.
+  /// </remarks>
+  private IReadOnlySet<string> ResolveCreditedEpaFieldKeys()
+    => CreditRuleFields.ResolveCreditedEpaFieldKeys(CreditRulesJson);
 
   private static int CompareNumeric(string left, string right)
   {

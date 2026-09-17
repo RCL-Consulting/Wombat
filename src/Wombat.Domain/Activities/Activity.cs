@@ -20,7 +20,13 @@ public sealed class Activity
     public ActivityType ActivityType { get; set; } = null!;
     public ICollection<ActivityTransition> Transitions { get; set; } = [];
 
-    public void ApplyTransition(Workflow.Workflow workflow, string transitionKey, string actorUserId, string newDataJson, string? note)
+    /// <summary>
+    /// Applies a declared transition and records it. Returns the recorded
+    /// <see cref="ActivityTransition" /> so the caller can stamp the outcome of anything that runs
+    /// as a consequence of the move — credit, for one (T108) — onto the very row it belongs to,
+    /// rather than fishing the newest one back out of the collection.
+    /// </summary>
+    public ActivityTransition ApplyTransition(Workflow.Workflow workflow, string transitionKey, string actorUserId, string newDataJson, string? note)
     {
         ArgumentNullException.ThrowIfNull(workflow);
         ArgumentException.ThrowIfNullOrWhiteSpace(transitionKey);
@@ -44,7 +50,7 @@ public sealed class Activity
         DataJson = normalizedDataJson;
         UpdatedOn = DateTime.UtcNow;
 
-        Transitions.Add(new ActivityTransition
+        var record = new ActivityTransition
         {
             FromState = previousState,
             ToState = transition.To,
@@ -53,6 +59,9 @@ public sealed class Activity
             OccurredOn = UpdatedOn,
             Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
             SnapshotJson = normalizedDataJson
-        });
+        };
+
+        Transitions.Add(record);
+        return record;
     }
 }

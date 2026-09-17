@@ -51,6 +51,12 @@ public sealed record ActivityTypeEditorDto(
     DateTime? StagingUpdatedOn,
     IReadOnlyList<ActivityTypeVersionDto> Versions);
 
+/// <summary>
+/// One recorded workflow move. <paramref name="CreditedItemCount" /> is the T108 signal: <c>null</c>
+/// when credit was never evaluated for this move (non-terminal, or a version that credits nothing by
+/// design), <c>0</c> when it was evaluated and matched no curriculum item, otherwise the number of
+/// curriculum items credited.
+/// </summary>
 public sealed record ActivityTransitionDto(
     int Id,
     string FromState,
@@ -59,7 +65,8 @@ public sealed record ActivityTransitionDto(
     string ActorUserId,
     DateTime OccurredOn,
     string? Note,
-    string SnapshotJson);
+    string SnapshotJson,
+    int? CreditedItemCount);
 
 public sealed record ActivityDto(
     int Id,
@@ -70,6 +77,10 @@ public sealed record ActivityDto(
     string SchemaJson,
     string WorkflowJson,
     string DisplayFieldsJson,
+    // The pinned version's credit rules, carried for the same reason SchemaJson and WorkflowJson are:
+    // the renderer has to know which EPA field the credit engine will actually read before it can
+    // narrow that field's options to what would be credited (T108).
+    string CreditRulesJson,
     string SubjectUserId,
     string CreatedByUserId,
     string CurrentState,

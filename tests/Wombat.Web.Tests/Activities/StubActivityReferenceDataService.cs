@@ -14,7 +14,7 @@ internal class StubActivityReferenceDataService : IActivityReferenceDataService
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
 
     public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetEpaOptionsAsync(
-        ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+        ClaimsPrincipal principal, EpaOptionScope? scope = null, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
 
     public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(

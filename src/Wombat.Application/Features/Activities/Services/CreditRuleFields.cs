@@ -1,0 +1,72 @@
+using Wombat.Domain.Activities.Credit;
+
+namespace Wombat.Application.Features.Activities.Services;
+
+/// <summary>
+/// Reads an activity type's credit rules to answer one question the UI needs: which schema fields does
+/// the credit engine actually read an EPA out of? (T108)
+/// </summary>
+/// <remarks>
+/// This lives in Application rather than in the Blazor component that needs it because
+/// <c>CLAUDE.md</c> forbids a <c>.razor</c> file from touching Domain types — the credit DSL and its
+/// parser are Domain. It returns plain strings, so the component stays on the right side of that line.
+/// </remarks>
+public static class CreditRuleFields
+{
+    /// <summary>
+    /// The set of field keys whose value the credit engine will look an EPA up by.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Mirrors the precedence in <c>CreditApplier.ResolveCurriculumItemsAsync</c>, which tests
+    /// <c>curriculum_item_id</c> first, then <c>curriculum_item_field</c>, and only reads
+    /// <c>epa_field</c> when neither is set. Nothing in <c>CreditRulesParser</c> makes the three
+    /// mutually exclusive, so a rule block can name an <c>epa_field</c> the engine provably never
+    /// reads. Narrowing a picker on that field would hide choices that cannot affect credit.
+    /// </para>
+    /// <para>
+    /// An unparseable or absent rule set yields an empty set — no narrowing. Surfacing a malformed
+    /// credit block is the builder's job, not the runtime form's, and failing open here keeps a
+    /// required field submittable.
+    /// </para>
+    /// </remarks>
+    public static IReadOnlySet<string> ResolveCreditedEpaFieldKeys(string? creditRulesJson)
+    {
+        var creditedFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+
+        if (string.IsNullOrWhiteSpace(creditRulesJson))
+        {
+            return creditedFieldKeys;
+        }
+
+        CreditRules creditRules;
+        try
+        {
+            creditRules = CreditRulesParser.Parse(creditRulesJson);
+        }
+        catch (Exception)
+        {
+            // Deliberately broad. CreditRulesParser raises CreditRulesParseException for the shapes it
+            // checks, but a JSON value of the wrong primitive type surfaces as InvalidOperationException
+            // out of System.Text.Json. Neither is this method's error to report.
+            return creditedFieldKeys;
+        }
+
+        foreach (var directive in creditRules.CountsFor)
+        {
+            var matchRule = directive.CurriculumItemMatchRule;
+            if (matchRule.CurriculumItemId.HasValue ||
+                !string.IsNullOrWhiteSpace(matchRule.CurriculumItemField))
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(matchRule.EpaField))
+            {
+                creditedFieldKeys.Add(matchRule.EpaField);
+            }
+        }
+
+        return creditedFieldKeys;
+    }
+}

@@ -2,6 +2,68 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070, T103, T108 shipped; T109 is the new top defect** 🏁
+
+**Build clean (0 warnings). 698 tests green** — Domain 59, Application 363, Infrastructure 171,
+Architecture 19, Web 86 (was 494 at session start). Dev server stopped. Snapshot `pre-t103-refresh`.
+
+### The chain this session followed
+
+**T070** — assessors can enter ratings. `editable_by` actor rules on the schema section, schema field and
+workflow state; the writable set is the conjunction, defaulting to `subject|creator` so nothing already
+published changed. **Browser-verified**: the trainee sees Entrustment/Feedback disabled, the bound assessor
+sees the mirror image, rates at the top rung, completes, and `DataJson` carries the assessor's values.
+
+**T103** — that was inert on every existing database, because both seeders skip keys that already exist.
+`ActivityTypeSeedRefresher` canonicalises on-disk seeds and republishes what differs. Run twice against the
+real dev DB: `9 republished, 5 unchanged`, then `0 republished, 14 unchanged`. The columns are `jsonb`, so
+Postgres re-renders what it stores and nothing is ever byte-equal to `Serialize` output — a raw-string
+comparison would have republished everything on every boot, for ever.
+
+**T108** — verifying T070 in the browser showed the encounter counted for nothing, silently. Scope and
+adoption are two independent gates and T099 only opened the first. The EPA picker now mirrors
+`CreditApplier`'s predicate exactly, and a completion that credited nothing says so on the activity and in
+its history.
+
+> **The scout corrected this file's own recommendation.** T108's fix text said to scope by the subject's
+> *active adoption*. `CreditApplier` never reads `InstitutionCurriculumAdoptions` — it reads
+> `TraineeProfile.CurriculumId`, pinned at admission. An adoption-based filter would have hidden creditable
+> EPAs from every trainee on a superseded version, and emptied the picker for any trainee whose institution
+> has no adoption row. The predicate joins `CurriculumItems` instead.
+
+### 🚨 T109 — now the most serious open defect
+
+T108's narrowing converts silent **no**-credit into silent **wrong** credit for one combination. A trainee
+pinned to a five-rung curriculum filing a six-rung CPSA tool can now only pick a five-rung EPA, so
+`MeetsMinimumLevel` compares a rating of `4` — CPSA's rung **"3b", still needing supervision** — against a
+curriculum-2 minimum of `4` meaning **"Independent"**, and credits it.
+
+The mis-comparison was always reachable; T108 removed the alternative, which was the right thing to do. It
+is the concrete instance of the scale-pinning hazard T098 identified and left open: nothing binds a stored
+level to a scale. **Wrong credit is worse than absent credit.**
+
+### ▶ NEXT
+
+1. **T109** — stop offering an activity type whose scale differs from the subject's curriculum's (small,
+   the same predicate as T108 one level up), then pin the ordinal to a scale properly. **Opus.**
+2. **T100** (rung labels — confirmed live as `3. 3a`) and **T106 item 4** (raw GUIDs in the inbox). Both
+   cheap, both on surfaces a clinician reads daily. **Sonnet.**
+3. **T101** (activity read authorization) — also closes T108's cross-institution disclosure note.
+4. **T107** (activities stranded on old pinned versions), then the catalogue work: the ten remaining v11.1
+   tools (decide **T102** fixes 2-3 first), **T104**, **T098 phase 3**.
+
+### Outstanding, not tasks
+
+- **Production is untouched** and needs T099's scope rows, the T108 decision, and a count of affected rows
+  before T104.
+- **`EPA version 11.1.docx` is still untracked** — the only record of what `T098-data/` was derived from.
+  The EPA Book textbook PDF is now gitignored (16MB of third-party copyright, one `git add -A` from a
+  deployed branch's history).
+- Dev activity id 11 is left in place as T108 evidence; its `CreditedItemCount` is `null`, not `0`, because
+  the stamp postdates it — do not read the absent banner as the fix failing.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070 + T103 shipped and browser-verified; T108 found** 🏁
 
 **Build clean (0 warnings). 665 tests green.** Commits `62f9547` (docs), `c33c14b` (T070), `d7a3084` (T103).
