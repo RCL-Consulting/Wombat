@@ -91,3 +91,15 @@ Validated `GreaterThan(0)` at `ManageCurriculumItems.cs:41,57`, carried through 
 UI. Its sole consumer is `AdmitTrainee.cs:126` (`GetDefaultCompletionMonths`, taking the max across items to
 derive an expected completion date). `CreditApplier` never reads it. Anyone assuming "the currency window is
 already enforced" would be wrong — relevant to T098 phase 3.
+
+## 11. The visual builder has no editor for `editable_by` (added 2026-09-17)
+
+T070 added `editable_by` to the schema section, schema field and workflow state DSL. It **round-trips**
+through the visual builder unharmed — `BuilderSectionModel` / `BuilderFieldModel` carry it through
+`Parse` and `ToJson`, so an admin saving from the builder no longer silently discards a rule authored in
+raw JSON — but there is no input for it. An institution building its own rated tool must hand-edit the
+schema/workflow JSON to say who owns which field.
+
+That is a direct dent in the platform premise. An actor-rule input on the section and field editors in
+`ActivityTypeEdit.razor` (and on the state editor, once T019-d's visual workflow editor exists) is the
+fix. Worth its own task when picked up.

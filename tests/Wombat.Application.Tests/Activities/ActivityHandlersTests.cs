@@ -30,7 +30,8 @@ public sealed class ActivityHandlersTests
             dbContext,
             new SchemaValidator(),
             new WorkflowEvaluator(),
-            new CreditApplier(dbContext));
+            new CreditApplier(dbContext),
+            new FieldPermissionEvaluator());
 
         IRequestHandler<CreateActivityCommand, Wombat.Application.Features.Activities.Dtos.ActivityDto> createHandler =
             new CreateActivityCommandHandler(activityService);

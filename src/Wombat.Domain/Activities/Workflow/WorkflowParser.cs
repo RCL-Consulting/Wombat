@@ -42,6 +42,11 @@ public static class WorkflowParser
                 writer.WriteBoolean("terminal", true);
             }
 
+            if (state.EditableBy is not null)
+            {
+                writer.WriteString("editable_by", ActorRuleParser.Serialize(state.EditableBy));
+            }
+
             writer.WriteEndObject();
         }
 
@@ -175,12 +180,23 @@ public static class WorkflowParser
     private static WorkflowState ParseState(JsonElement element)
     {
         EnsureObject(element, "State must be an object.");
-        EnsureAllowedProperties(element, ["key", "label", "terminal"], "state");
+        EnsureAllowedProperties(element, ["key", "label", "terminal", "editable_by"], "state");
 
         return new WorkflowState(
             GetRequiredString(element, "key"),
             GetRequiredString(element, "label"),
-            GetBooleanOrDefault(element, "terminal"));
+            GetBooleanOrDefault(element, "terminal"),
+            ParseOptionalActorRule(element, "editable_by"));
+    }
+
+    private static ActorRule? ParseOptionalActorRule(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var property) || property.ValueKind is JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        return ActorRuleParser.Parse(GetRequiredTrimmedStringValue(property, propertyName));
     }
 
     private static WorkflowTransition ParseTransition(JsonElement element)

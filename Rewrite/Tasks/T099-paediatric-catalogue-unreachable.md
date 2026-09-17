@@ -74,3 +74,36 @@ Sign in as a paediatric trainee (fresh sign-in, not a resumed session) and confi
 ## Related
 
 Prerequisite for verifying [T070]. Interacts with [T104] (retiring the old FCPaed paediatric world).
+
+---
+
+## Progress — 2026-09-17: dev database done, production outstanding
+
+Option 1 (additive) applied to the dev database:
+
+```sql
+insert into "UserSpecialityScopes" ("UserId","SpecialityId")
+select distinct "UserId", 3 from "UserSpecialityScopes" where "SpecialityId" = 2
+on conflict ("UserId","SpecialityId") do nothing;   -- INSERT 0 10
+```
+
+All ten KGK paediatric users — 4 trainees (dlamini, duplessis, mahlangu, ndlovu), 5 assessors (botha,
+khumalo, naidoo, patel, zulu) and molefe — now hold **both** Speciality 2 and Speciality 3. The legacy
+FCPaed world is untouched, so nothing that worked before stops working.
+
+Row counts after: Speciality 1 = 2 users, Speciality 2 = 10, Speciality 3 = 10.
+
+**A fresh sign-in is required** before it takes effect — the filter reads claims baked into the auth
+cookie, not the database.
+
+### Still open
+
+- **Production has the identical problem.** `PaediatricCatalogueSeeder` runs at startup there too, so the
+  catalogue exists and no production user is scoped to the new speciality. Nothing has been changed on
+  production. This needs to be an explicit deployment step, not a discovery.
+- **A fresh database has it too.** Nothing provisions these rows; the next developer to drop and recreate
+  the dev DB will hit the same invisible-catalogue symptom. Decide whether
+  `PaediatricCatalogueSeeder` should scope a nominated verification cohort, or whether this belongs in the
+  admin UI as an ordinary operator action (which is what it is, in production terms).
+- **Noticed en route, unrelated:** `molefe@kgk.wombat.local` holds **no roles at all**, so that account
+  can do nothing in the product. Pre-existing; worth a look when next in `/admin/users`.

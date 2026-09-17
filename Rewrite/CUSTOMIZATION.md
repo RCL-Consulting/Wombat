@@ -139,9 +139,9 @@ A workflow is a state machine defined as data. Minimum viable shape:
   "initial_state": "requested",
   "states": [
     { "key": "requested", "label": "Requested" },
-    { "key": "accepted", "label": "Accepted" },
-    { "key": "declined", "label": "Declined", "terminal": true },
-    { "key": "cancelled", "label": "Cancelled", "terminal": true },
+    { "key": "accepted", "label": "Accepted", "editable_by": "field:assessor_user_id" },
+    { "key": "declined", "label": "Declined" },
+    { "key": "cancelled", "label": "Cancelled" },
     { "key": "completed", "label": "Completed", "terminal": true }
   ],
   "transitions": [
@@ -154,6 +154,67 @@ A workflow is a state machine defined as data. Minimum viable shape:
 ```
 
 Workflows can also be simpler — a Research Output might just be `draft → submitted → approved` with the subject trainee submitting and a SpecialityAdmin approving. Each activity type picks its own shape.
+
+### `terminal` means "credit fires here"
+
+Only mark a state terminal if reaching it should **count**. `CreditApplier` runs on any transition into
+a terminal state, and an abandoned request still carries a filled-in `epa_id` — so a terminal `declined`
+or `cancelled` awards curriculum credit for an assessment that was refused or withdrawn. Dead-end states
+that are not achievements simply declare no outgoing transitions; that is enough to end the activity.
+`SeedParseTests.NoSeededWorkflow_MarksAnAbandonmentStateTerminal` enforces this across every seed.
+
+## Field ownership — `editable_by` (T070)
+
+Who may *take* a transition is `actor`. Who may *write* a given field is `editable_by`, and it is declared
+in three places, all optional:
+
+```json
+// workflow.json — the state gate
+{ "key": "requested", "label": "Requested", "editable_by": "field:assessor_user_id" }
+```
+
+```json
+// schema.json — the section gate, with a per-field override
+{
+  "key": "assessment",
+  "title": "Entrustment",
+  "editable_by": "field:assessor_user_id",
+  "fields": [
+    { "key": "overall_level", "type": "scale", "label": "Overall level" },
+    { "key": "trainee_comment", "type": "longtext", "label": "Trainee's reflection", "editable_by": "subject" }
+  ]
+}
+```
+
+Both take the same actor grammar as `actor` (`subject`, `creator`, `role:X`, `scope:X`,
+`field:<key>`, combined with `|` for any and `+` for all).
+
+**The effective rule is a conjunction:** the actor must satisfy the **state** rule *and* the field's own
+rule, where a field falls back to its section's rule. Field beats section beats the default.
+
+**The default is `subject|creator`**, which reproduces the pre-T070 `CanEditDraft` test exactly — so every
+`ActivityTypeVersion` already published keeps its existing behaviour without a republish. Declaring nothing
+changes nothing.
+
+Three rules worth knowing before you author a type:
+
+1. **A terminal state, or any state with no outgoing transitions, is writable by nobody.** A transition is
+   the only save channel, so a form nobody can submit is a form that loses work.
+2. **At creation the state gate is ignored** (`procedure_log` and `journal_club` have a terminal initial
+   state and would otherwise be uncreatable), and the field rules are evaluated against **empty** data. A
+   `field:` rule reads its answer out of `DataJson`; evaluating it against what the caller just submitted
+   would let the caller name themself and unlock the fields the rule protects.
+3. **A field a `field:` rule points at may not name the activity's subject.** Otherwise a trainee names
+   themself as assessor, rates themself and takes their own `complete`. Enforced in `ActivityService`;
+   the general form — validating a `user` value against the users the caller may nominate — is T102.
+
+**There is no hard-coded assessor-note field.** Assessor narrative is an ordinary schema field the admin
+marks assessor-owned (`strengths` / `improvements` / `plan` on the CPSA seeds). That is distinct from
+`ActivityTransition.Note`, which is a workflow annotation: it is what `requires_note` demands, it is shown
+in the activity history, and it is invisible to credit and to reports.
+
+**The builder has no editor for `editable_by` yet.** It round-trips through the visual builder unharmed,
+but an admin must author it in the raw schema/workflow JSON for now.
 
 ## Credit rules
 

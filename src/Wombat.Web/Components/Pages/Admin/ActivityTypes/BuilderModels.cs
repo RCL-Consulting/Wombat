@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Web.Components.Pages.Admin.ActivityTypes;
 
@@ -21,6 +22,7 @@ internal sealed class BuilderSchemaModel
                 ShowIfField = section.ShowIf?.Field,
                 ShowIfOperator = section.ShowIf?.Operator,
                 ShowIfValue = section.ShowIf?.Value,
+                EditableBy = section.EditableBy,
                 Fields = section.Fields.Select(field => new BuilderFieldModel
                 {
                     Key = field.Key,
@@ -38,7 +40,8 @@ internal sealed class BuilderSchemaModel
                     MaxLength = field.Validation?.MaxLength?.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ShowIfField = field.ShowIf?.Field,
                     ShowIfOperator = field.ShowIf?.Operator,
-                    ShowIfValue = field.ShowIf?.Value
+                    ShowIfValue = field.ShowIf?.Value,
+                    EditableBy = field.EditableBy
                 }).ToList()
             });
         }
@@ -64,8 +67,10 @@ internal sealed class BuilderSchemaModel
                     NullIfWhiteSpace(field.CatalogueKey),
                     NullIfWhiteSpace(field.ScaleKey),
                     BuildValidation(field),
-                    BuildVisibility(field.ShowIfField, field.ShowIfOperator, field.ShowIfValue)))
-                .ToList()))
+                    BuildVisibility(field.ShowIfField, field.ShowIfOperator, field.ShowIfValue),
+                    field.EditableBy))
+                .ToList(),
+                section.EditableBy))
             .ToList());
 
         return FormSchemaParser.Serialize(schema);
@@ -205,6 +210,13 @@ internal sealed class BuilderSectionModel
     public string? ShowIfOperator { get; set; }
     public string? ShowIfValue { get; set; }
     public List<BuilderFieldModel> Fields { get; set; } = [];
+
+    /// <summary>
+    /// Carried through the builder round-trip verbatim. The builder has no editor for it yet
+    /// (T070 step 1 is the DSL only), so preserving the parsed rule is what stops a save from
+    /// silently dropping an <c>editable_by</c> authored in the raw JSON.
+    /// </summary>
+    public ActorRule? EditableBy { get; set; }
 }
 
 internal sealed class BuilderFieldModel
@@ -225,4 +237,9 @@ internal sealed class BuilderFieldModel
     public string? ShowIfField { get; set; }
     public string? ShowIfOperator { get; set; }
     public string? ShowIfValue { get; set; }
+
+    /// <summary>
+    /// Carried through the builder round-trip verbatim; see <see cref="BuilderSectionModel.EditableBy"/>.
+    /// </summary>
+    public ActorRule? EditableBy { get; set; }
 }

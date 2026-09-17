@@ -1,3 +1,5 @@
+using Wombat.Domain.Activities.Workflow;
+
 namespace Wombat.Domain.Activities.Schema;
 
 public sealed record FormField(
@@ -10,4 +12,5 @@ public sealed record FormField(
     string? CatalogueKey,
     string? ScaleKey,
     FieldValidation? Validation,
-    VisibilityCondition? ShowIf);
+    VisibilityCondition? ShowIf,
+    ActorRule? EditableBy);

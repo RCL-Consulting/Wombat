@@ -1,18 +1,13 @@
 @using System.Globalization
 @using Wombat.Application.Features.Activities.Dtos
-@using Wombat.Application.Features.Activities.Services
-@using Wombat.Domain.Activities
-@using Wombat.Domain.Activities.Workflow
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IWorkflowEvaluator WorkflowEvaluator
 
-@if (_actions.Count > 0)
+@if (Actions.Count > 0)
 {
   <div class="form-actions">
-    @foreach (var action in _actions)
+    @foreach (var action in Actions)
     {
       <button type="button" class="btn btn-primary" @onclick="() => RequestTransitionAsync(action)">
-        @action.Label
+        @ToLabel(action.TransitionKey)
       </button>
     }
   </div>
@@ -31,38 +26,23 @@
 }
 
 @code {
-  [Parameter, EditorRequired] public ActivityDto Activity { get; set; } = default!;
+  /// <summary>
+  /// The transitions the server has already decided this actor may perform, from
+  /// <c>ActivityDetailDto.AvailableActions</c>. This component is purely presentational (T070).
+  /// It used to re-evaluate the workflow client-side against a synthetic
+  /// <c>new ActivityType()</c>, which defaults <c>Scope</c> to <c>Global</c> and <c>ScopeId</c> to
+  /// null — so every <c>scope:</c> actor rule evaluated false in the button list while the server
+  /// would have allowed the transition. Evaluating once, server-side, also stops the whole workflow
+  /// being re-parsed on every parent render.
+  /// </summary>
+  [Parameter, EditorRequired] public IReadOnlyList<ActivityActionDto> Actions { get; set; } = [];
+
   [Parameter] public EventCallback<(string TransitionKey, string? Note)> OnTransitionRequested { get; set; }
 
-  private readonly List<AvailableAction> _actions = [];
-  private AvailableAction? _selectedAction;
+  private ActivityActionDto? _selectedAction;
   private string? _note;
 
-  protected override async Task OnParametersSetAsync()
-  {
-    _actions.Clear();
-
-    var workflow = WorkflowParser.Parse(Activity.WorkflowJson);
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    var candidate = new Activity
-    {
-      ActivityType = new ActivityType(),
-      CurrentState = Activity.CurrentState,
-      SubjectUserId = Activity.SubjectUserId,
-      CreatedByUserId = Activity.CreatedByUserId,
-      DataJson = Activity.DataJson
-    };
-
-    foreach (var transition in workflow.Transitions.Where(transition => transition.From.Contains(Activity.CurrentState, StringComparer.Ordinal)))
-    {
-      if (WorkflowEvaluator.Evaluate(workflow, candidate, transition.Key, authState.User).Allowed)
-      {
-        _actions.Add(new AvailableAction(transition.Key, ToLabel(transition.Key), transition.RequiresNote));
-      }
-    }
-  }
-
-  private async Task RequestTransitionAsync(AvailableAction action)
+  private async Task RequestTransitionAsync(ActivityActionDto action)
   {
     if (action.RequiresNote)
     {
@@ -71,7 +51,7 @@
       return;
     }
 
-    await OnTransitionRequested.InvokeAsync((action.Key, null));
+    await OnTransitionRequested.InvokeAsync((action.TransitionKey, null));
   }
 
   private async Task ConfirmSelectedTransitionAsync()
@@ -81,7 +61,7 @@
       return;
     }
 
-    await OnTransitionRequested.InvokeAsync((_selectedAction.Key, _note));
+    await OnTransitionRequested.InvokeAsync((_selectedAction.TransitionKey, _note));
     ClearSelection();
   }
 
@@ -97,6 +77,4 @@
         var value when string.IsNullOrWhiteSpace(value) => key,
         var value => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value)
       };
-
-  private sealed record AvailableAction(string Key, string Label, bool RequiresNote);
 }

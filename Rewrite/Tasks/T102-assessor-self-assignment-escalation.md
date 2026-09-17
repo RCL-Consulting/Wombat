@@ -62,3 +62,27 @@ of them will carry a `user` field.
 ## Related
 
 T070 (makes the field load-bearing for write permission), T101 (same family — activity authorization).
+
+---
+
+## Progress — 2026-09-17: fix 1 landed with T070
+
+Fix 1 (the narrow guard) shipped as part of T070, because T070 makes `assessor_user_id` decide **write
+ownership** as well as transition rights — a reviewer demonstrated the complete path: subject names
+themself in `draft`, matches `field:assessor_user_id` from `requested` on, rates themself, takes their own
+`complete`, and `CreditApplier` awards the credit.
+
+`ActivityService.ThrowIfActorFieldNamesSubject` now refuses — at create **and** on the patch merge — any
+data in which a field referenced by a `field:` actor rule (anywhere in the workflow's transitions or state
+`editable_by`, or the schema's section/field `editable_by`) resolves to the activity's `SubjectUserId`.
+It is driven off the parsed rules rather than a hard-coded field name, so it covers admin-built types too.
+
+Tests: `Create_SubjectNamesThemselfAsTheAssessor_IsRejected` and
+`Transition_SubjectRetargetsTheAssessorFieldToThemself_IsRejected`, both verified to fail against the
+pre-fix code.
+
+**Fixes 2 and 3 remain open and this task stays open.** Nothing yet validates that a submitted
+`user`-typed value names someone who actually holds the required role, or who is inside the caller's
+scope — `SchemaValidator` still routes `FieldType.User` to plain string validation. A trainee can still
+nominate an arbitrary user id that the picker never offered; they simply cannot nominate *themself*.
+Decide this before the remaining ten v11.1 tools are seeded, since every one carries a `user` field.

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Domain.Activities.Schema;
 
@@ -39,6 +40,11 @@ public static class FormSchemaParser
             if (section.ShowIf is not null)
             {
                 WriteVisibilityCondition(writer, "show_if", section.ShowIf);
+            }
+
+            if (section.EditableBy is not null)
+            {
+                writer.WriteString("editable_by", SerializeActorRule(section.EditableBy));
             }
 
             writer.WritePropertyName("fields");
@@ -118,6 +124,11 @@ public static class FormSchemaParser
                     WriteVisibilityCondition(writer, "show_if", field.ShowIf);
                 }
 
+                if (field.EditableBy is not null)
+                {
+                    writer.WriteString("editable_by", SerializeActorRule(field.EditableBy));
+                }
+
                 writer.WriteEndObject();
             }
 
@@ -156,7 +167,7 @@ public static class FormSchemaParser
     private static FormSection ParseSection(JsonElement element)
     {
         EnsureObject(element, "Section must be an object.");
-        EnsureAllowedProperties(element, ["key", "title", "show_if", "fields"], "section");
+        EnsureAllowedProperties(element, ["key", "title", "show_if", "editable_by", "fields"], "section");
 
         var key = GetRequiredString(element, "key");
         var title = GetRequiredString(element, "title");
@@ -173,7 +184,12 @@ public static class FormSchemaParser
             throw new SchemaParseException($"Section '{key}' must contain at least one field.");
         }
 
-        return new FormSection(key, title, ParseOptionalVisibilityCondition(element, "show_if"), fields);
+        return new FormSection(
+            key,
+            title,
+            ParseOptionalVisibilityCondition(element, "show_if"),
+            fields,
+            ParseOptionalActorRule(element, "editable_by"));
     }
 
     private static FormField ParseField(JsonElement element)
@@ -181,7 +197,7 @@ public static class FormSchemaParser
         EnsureObject(element, "Field must be an object.");
         EnsureAllowedProperties(
             element,
-            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "validation", "show_if"],
+            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "validation", "show_if", "editable_by"],
             "field");
 
         return new FormField(
@@ -194,7 +210,43 @@ public static class FormSchemaParser
             GetOptionalTrimmedString(element, "catalogue"),
             GetOptionalTrimmedString(element, "scale_key"),
             ParseOptionalValidation(element, "validation"),
-            ParseOptionalVisibilityCondition(element, "show_if"));
+            ParseOptionalVisibilityCondition(element, "show_if"),
+            ParseOptionalActorRule(element, "editable_by"));
+    }
+
+    /// <summary>
+    /// Parses an optional <c>editable_by</c> actor rule. The grammar lives in the Workflow
+    /// namespace, so its parse failures arrive as <see cref="WorkflowParseException"/> and are
+    /// re-thrown as <see cref="SchemaParseException"/> to keep schema errors on one exception type.
+    /// </summary>
+    private static ActorRule? ParseOptionalActorRule(JsonElement element, string propertyName)
+    {
+        var value = GetOptionalTrimmedString(element, propertyName);
+        if (value is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return ActorRuleParser.Parse(value);
+        }
+        catch (WorkflowParseException exception)
+        {
+            throw new SchemaParseException($"Property '{propertyName}' is invalid: {exception.Message}");
+        }
+    }
+
+    private static string SerializeActorRule(ActorRule actorRule)
+    {
+        try
+        {
+            return ActorRuleParser.Serialize(actorRule);
+        }
+        catch (WorkflowParseException exception)
+        {
+            throw new SchemaParseException($"Property 'editable_by' cannot be serialized: {exception.Message}");
+        }
     }
 
     private static VisibilityCondition? ParseOptionalVisibilityCondition(JsonElement element, string propertyName)

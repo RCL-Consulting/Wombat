@@ -1,5 +1,8 @@
 @page "/activities/{ActivityId:int}"
 @attribute [Authorize]
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Commands.TransitionActivity
+@using Wombat.Application.Features.Activities.Queries.GetActivityById
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -24,14 +27,68 @@
         <p><strong>Type:</strong> @_activity.ActivityTypeName</p>
         <p><strong>State:</strong> @_activity.CurrentState</p>
         <p><strong>Version:</strong> @_activity.SchemaVersion</p>
-        <ActivityWorkflowActions Activity="_activity" OnTransitionRequested="HandleTransitionAsync" />
+        <ActivityWorkflowActions Actions="_actions" OnTransitionRequested="HandleTransitionAsync" />
       </aside>
 
       <section class="detail-card">
         <h3>Activity details</h3>
-        <ActivityDetail SchemaJson="@_activity.SchemaJson" DataJson="@_activity.DataJson" />
+
+        @if (_editable.Count == 0 || _actions.Count == 0)
+        {
+          @* Read-only when no field is writable by this actor in this state (a non-bound user, or a
+             finished activity) AND when there is nothing to submit with. A transition is the only
+             save channel there is, so offering inputs with no action available would let someone
+             type a reflection and lose it on navigation. Restore the editable branch here if a
+             standalone save command ever lands (T106 item 1). *@
+          <ActivityDetail SchemaJson="@_activity.SchemaJson" DataJson="@_activity.DataJson" />
+        }
+        else
+        {
+          <Alert Kind="info">
+            You can fill in the fields that are enabled below. Your entries are submitted together
+            with the action you choose — nothing is stored until then.
+          </Alert>
+
+          <ActivityForm SchemaJson="@_activity.SchemaJson"
+                        DataJson="@_workingDataJson"
+                        EditableFieldKeys="_editable"
+                        DataJsonChanged="OnDataChanged" />
+
+          <FormActions>
+            <button id="discard-changes" type="button" class="btn btn-outline" disabled="@(!_hasPendingChanges)" @onclick="DiscardChanges">
+              Discard changes
+            </button>
+          </FormActions>
+        }
       </section>
     </div>
+
+    <section class="detail-card mt-3">
+      <h3>History</h3>
+      <DataTable TItem="ActivityTransitionDto" Items="_activity.Transitions" Caption="Workflow history">
+        <HeaderRow>
+          <tr>
+            <th>Action</th>
+            <th>State</th>
+            <th>Actor</th>
+            <th>When</th>
+            <th>Note</th>
+          </tr>
+        </HeaderRow>
+        <Row Context="transition">
+          <tr>
+            <td>@transition.TransitionKey</td>
+            <td>@($"{transition.FromState} → {transition.ToState}")</td>
+            <td>@transition.ActorUserId</td>
+            <td>@transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@(string.IsNullOrWhiteSpace(transition.Note) ? "—" : transition.Note)</td>
+          </tr>
+        </Row>
+        <Empty>
+          <div class="detail-card detail-card--empty-compact">No workflow actions have been recorded yet.</div>
+        </Empty>
+      </DataTable>
+    </section>
   }
 </StatePanel>
 
@@ -39,6 +96,18 @@
   [Parameter] public int ActivityId { get; set; }
 
   private ActivityDto? _activity;
+  private IReadOnlyList<ActivityActionDto> _actions = [];
+
+  // The field keys this actor may write right now, as the server resolved them (T070). Empty means
+  // the page stays read-only. A set rather than the DTO's list because ActivityForm and
+  // ActivityDataPatch both do a Contains per field.
+  private IReadOnlySet<string> _editable = new HashSet<string>(StringComparer.Ordinal);
+
+  // The form's working copy. It diverges from _activity.DataJson while the actor types and is
+  // reconciled with the server on every successful load.
+  private string _workingDataJson = "{}";
+  private bool _hasPendingChanges;
+
   private bool _loading = true;
   private string? _loadError;
   private string? _actionError;
@@ -51,7 +120,8 @@
 
     try
     {
-      _activity = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityById.GetActivityByIdQuery(ActivityId));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await LoadAsync(authState.User);
     }
     catch (Exception exception)
     {
@@ -61,6 +131,47 @@
     {
       _loading = false;
     }
+  }
+
+  /// <summary>
+  /// Loads the activity together with the two things that need a principal: the writable field set
+  /// and the available transitions. Both are re-read after every transition, because the actions an
+  /// actor may take and the fields they may write are properties of the state just moved to.
+  /// </summary>
+  /// <remarks>
+  /// This query performs no read authorization — any authenticated user who knows an id can load
+  /// any activity (T101). What it does decide is whether this page is editable.
+  /// </remarks>
+  private async Task LoadAsync(ClaimsPrincipal user)
+  {
+    var detail = await Sender.Send(new GetActivityByIdQuery(ActivityId, user));
+
+    _activity = detail.Activity;
+    _actions = detail.AvailableActions;
+    _editable = new HashSet<string>(detail.EditableFieldKeys, StringComparer.Ordinal);
+    _workingDataJson = detail.Activity.DataJson;
+    _hasPendingChanges = false;
+  }
+
+  private void OnDataChanged(string dataJson)
+  {
+    _workingDataJson = dataJson;
+
+    // "Pending" means the diff the server would actually receive is non-empty — retyping a value
+    // back to what is stored leaves nothing to submit.
+    _hasPendingChanges = _activity is not null &&
+      ActivityDataPatch.Build(_activity.DataJson, _workingDataJson, _editable) is not null;
+  }
+
+  private void DiscardChanges()
+  {
+    if (_activity is null)
+    {
+      return;
+    }
+
+    _workingDataJson = _activity.DataJson;
+    _hasPendingChanges = false;
   }
 
   private async Task HandleTransitionAsync((string TransitionKey, string? Note) request)
@@ -75,19 +186,33 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
-      _activity = await Sender.Send(new Wombat.Application.Features.Activities.Commands.TransitionActivity.TransitionActivityCommand(
+      // The edits ride the transition rather than being saved separately: one command, one
+      // SaveChanges, so an assessor's rating and the move to `completed` are atomic and
+      // CreditApplier — which runs after the merge, on a terminal target state — grades the value
+      // the assessor just entered (T070).
+      //
+      // The patch names only the keys this actor owns and only those whose value actually changed.
+      // That is what keeps ActivityService.MergeWritableKeys from rejecting the transition: it
+      // throws on any patched key the actor does not own whose value differs from what is stored.
+      var dataPatchJson = ActivityDataPatch.Build(_activity.DataJson, _workingDataJson, _editable);
+
+      await Sender.Send(new TransitionActivityCommand(
         _activity.Id,
         request.TransitionKey,
         userId,
         authState.User,
-        null,
+        dataPatchJson,
         request.Note));
+
+      await LoadAsync(authState.User);
     }
     catch (Exception exception)
     {
+      // The working copy is deliberately left alone: a rejected transition (a missing required
+      // field, say) must not discard what the actor typed.
       _actionError = exception.Message;
     }
   }

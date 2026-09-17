@@ -1,11 +1,13 @@
 @page "/activities/new"
 @attribute [Authorize]
+@using System.Security.Claims
 @using Wombat.Application.Features.Activities.Services
 @using Wombat.Domain.Activities
 @using Wombat.Domain.Activities.Workflow
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IWorkflowEvaluator WorkflowEvaluator
+@inject IFieldPermissionEvaluator FieldPermissionEvaluator
 
 <PageTitle>New Activity</PageTitle>
 
@@ -37,7 +39,10 @@
 
 @if (_selectedEditor is not null)
 {
-  <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)" DataJson="@_dataJson" DataJsonChanged="OnDataChanged" />
+  <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
+                DataJson="@_dataJson"
+                EditableFieldKeys="_editableFieldKeys"
+                DataJsonChanged="OnDataChanged" />
 
   <FormActions>
     <button type="button" class="btn btn-outline" @onclick="SaveDraftAsync">Save draft</button>
@@ -50,6 +55,11 @@
   private ActivityTypeEditorDto? _selectedEditor;
   private int _selectedActivityTypeId;
   private string _dataJson = "{}";
+
+  // The fields this creator owns on the selected type (T070). Null means "no per-field
+  // restriction", which is both the pre-T070 behaviour and the fallback whenever the set cannot be
+  // resolved — the server filters the submitted data either way.
+  private IReadOnlySet<string>? _editableFieldKeys;
   private string? _error;
   private string? _status;
 
@@ -67,12 +77,14 @@
     if (_selectedActivityTypeId <= 0)
     {
       _selectedEditor = null;
+      _editableFieldKeys = null;
       return;
     }
 
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId, authState.User));
     _dataJson = "{}";
+    _editableFieldKeys = ResolveEditableFieldKeys(authState.User);
   }
 
   private Task OnDataChanged(string dataJson)
@@ -105,7 +117,7 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
       var draft = await Sender.Send(new Wombat.Application.Features.Activities.Commands.CreateActivity.CreateActivityCommand(
@@ -132,7 +144,12 @@
             transitionKey,
             userId,
             authState.User,
-            _dataJson,
+            // No patch: CreateActivityCommand above already persisted this data, filtered to the
+            // fields the creator owns (T070). Re-sending the raw form here would be rejected if a
+            // field the creator does not own had been stripped at create — the echo would no longer
+            // match what is stored and the write gate would fire. The form no longer offers those
+            // fields (EditableFieldKeys above), so this is belt and braces.
+            null,
             null));
           _status = "Activity submitted.";
         }
@@ -151,7 +168,7 @@
   // Resolves the first transition out of the workflow's initial state that the current user is allowed
   // to take, so the "Submit" button advances any activity type (mini_cex "submit", procedure_log "log",
   // MSF "open") rather than failing on a hard-coded "submit" key. Returns null if none is available.
-  private string? ResolveInitialTransitionKey(System.Security.Claims.ClaimsPrincipal user, string userId)
+  private string? ResolveInitialTransitionKey(ClaimsPrincipal user, string userId)
   {
     var workflowJson = _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
     if (string.IsNullOrWhiteSpace(workflowJson))
@@ -160,14 +177,7 @@
     }
 
     var workflow = WorkflowParser.Parse(workflowJson);
-    var candidate = new Activity
-    {
-      ActivityType = new ActivityType(),
-      CurrentState = workflow.InitialState,
-      SubjectUserId = userId,
-      CreatedByUserId = userId,
-      DataJson = _dataJson
-    };
+    var candidate = BuildCandidate(workflow, userId);
 
     foreach (var transition in workflow.Transitions
       .Where(transition => transition.From.Contains(workflow.InitialState, StringComparer.Ordinal)))
@@ -180,4 +190,69 @@
 
     return null;
   }
+
+  // T070 step 8: lock the fields this creator does not own, so a trainee filing a CPSA WBA gets the
+  // Request section and sees Entrustment/Feedback disabled instead of filling in a rating the server
+  // then silently strips (CreateDraftAsync filters the submitted data to the same set).
+  //
+  // This is the cheap slice the task recommends: the schema and workflow are the ones this page has
+  // already loaded for the renderer, and the evaluator is the same one the server uses, called the
+  // same way — ignoreStateGate: true, because procedure_log and journal_club declare a terminal
+  // initial state and would otherwise be uncreatable.
+  //
+  // It is resolved once per selected type, against an empty form, rather than re-evaluated as the
+  // creator types. The only rule whose answer could change mid-form is `field:` — a creator naming
+  // themselves in assessor_user_id would unlock the assessor's own sections — and that is precisely
+  // the self-assessment the platform should not be inviting (T070 open decision 3). Where the two
+  // differ, the UI is the stricter; the create-time filter is the gate either way.
+  private IReadOnlySet<string>? ResolveEditableFieldKeys(ClaimsPrincipal user)
+  {
+    var schemaJson = _selectedEditor?.PublishedSchemaJson ?? _selectedEditor?.DraftSchemaJson;
+    var workflowJson = _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
+    var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    // No identity means no subject/creator rule can match, and an empty set would lock the entire
+    // creation form rather than part of it. Fall back to no restriction and let the server filter.
+    if (string.IsNullOrWhiteSpace(schemaJson) ||
+        string.IsNullOrWhiteSpace(workflowJson) ||
+        string.IsNullOrWhiteSpace(userId))
+    {
+      return null;
+    }
+
+    try
+    {
+      var workflow = WorkflowParser.Parse(workflowJson);
+
+      return FieldPermissionEvaluator.GetWritableFieldKeys(
+        FormSchemaParser.Parse(schemaJson),
+        workflow,
+        BuildCandidate(workflow, userId),
+        user,
+        ignoreStateGate: true);
+    }
+    catch (Exception)
+    {
+      // An unparseable schema or workflow is ActivityForm's error to surface, not this method's.
+      return null;
+    }
+  }
+
+  // The activity that would be created if the form were submitted now. Scope and ScopeId are carried
+  // over from the editor DTO so `scope:` actor rules evaluate the way they will server-side: a
+  // default-constructed ActivityType is Global with a null ScopeId, under which every scope rule is
+  // false.
+  private Activity BuildCandidate(Workflow workflow, string userId)
+    => new()
+    {
+      ActivityType = new ActivityType
+      {
+        Scope = _selectedEditor?.Scope ?? ActivityScope.Global,
+        ScopeId = _selectedEditor?.ScopeId
+      },
+      CurrentState = workflow.InitialState,
+      SubjectUserId = userId,
+      CreatedByUserId = userId,
+      DataJson = _dataJson
+    };
 }

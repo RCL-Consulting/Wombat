@@ -73,6 +73,36 @@ public sealed class SeedParseTests
         dbContext.ActivityTypes.Should().HaveCount(10);
     }
 
+    /// <summary>
+    /// Credit fires on any transition into a terminal state (ActivityService), and an abandoned
+    /// request still carries a filled-in epa_id — so a terminal `declined` or `cancelled` counts a
+    /// refused or withdrawn assessment toward the trainee's observation volume.
+    /// </summary>
+    /// <remarks>
+    /// This was latent until T070 dropped `required: true` from the legacy seeds' assessor fields:
+    /// before that, `decline` and `cancel` could not satisfy the full Submit-mode validation pass
+    /// and so were unreachable. Making them usable made the credit path reachable with them.
+    /// </remarks>
+    [Fact]
+    public void NoSeededWorkflow_MarksAnAbandonmentStateTerminal()
+    {
+        string[] abandonmentStates = ["declined", "cancelled", "rejected", "withdrawn"];
+
+        foreach (var directory in EnumerateSeedDirectories())
+        {
+            var workflow = WorkflowParser.Parse(File.ReadAllText(Path.Combine(directory, "workflow.json")));
+
+            foreach (var state in workflow.States.Where(state => state.Terminal))
+            {
+                abandonmentStates.Should().NotContain(
+                    state.Key,
+                    "a terminal '{0}' in {1} would award curriculum credit for an assessment that was refused or withdrawn",
+                    state.Key,
+                    Path.GetFileName(directory));
+            }
+        }
+    }
+
     private static IEnumerable<string> EnumerateSeedDirectories()
         => Directory.EnumerateDirectories(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds"))
             .Where(path => !string.Equals(Path.GetFileName(path), "README.md", StringComparison.OrdinalIgnoreCase));

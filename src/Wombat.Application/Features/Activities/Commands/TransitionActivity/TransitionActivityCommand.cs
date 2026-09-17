@@ -1,18 +1,26 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 
 namespace Wombat.Application.Features.Activities.Commands.TransitionActivity;
 
+/// <remarks>
+/// <c>DataPatchJson</c> and <c>Note</c> are redacted from the audit summary. The
+/// AuditPipelineBehavior audits every request whose type name ends in "Command" and
+/// AuditPayloadSerializer writes its properties into SummaryJson; from T070 onward the patch
+/// carries the assessor's clinical narrative (strengths / improvements / plan) on every
+/// completion, and the note carries the decline reason. Neither belongs in the audit log. (T070)
+/// </remarks>
 public sealed record TransitionActivityCommand(
     int ActivityId,
     string TransitionKey,
     string ActorUserId,
     ClaimsPrincipal Principal,
-    string? DataPatchJson = null,
-    string? Note = null) : IRequest<ActivityDto>;
+    [property: Redact] string? DataPatchJson = null,
+    [property: Redact] string? Note = null) : IRequest<ActivityDto>;
 
 public sealed class TransitionActivityCommandValidator : AbstractValidator<TransitionActivityCommand>
 {

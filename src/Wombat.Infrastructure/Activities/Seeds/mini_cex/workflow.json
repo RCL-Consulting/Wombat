@@ -3,10 +3,10 @@
   "initial_state": "requested",
   "states": [
     { "key": "requested", "label": "Requested" },
-    { "key": "accepted", "label": "Accepted" },
+    { "key": "accepted", "label": "Accepted", "editable_by": "field:assessor_user_id" },
     { "key": "completed", "label": "Completed", "terminal": true },
-    { "key": "declined", "label": "Declined", "terminal": true },
-    { "key": "cancelled", "label": "Cancelled", "terminal": true }
+    { "key": "declined", "label": "Declined" },
+    { "key": "cancelled", "label": "Cancelled" }
   ],
   "transitions": [
     { "key": "accept", "from": "requested", "to": "accepted", "actor": "field:assessor_user_id" },

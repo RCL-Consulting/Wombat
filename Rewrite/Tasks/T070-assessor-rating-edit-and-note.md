@@ -1,7 +1,7 @@
 # T070 — No assessor rating-edit / assessor-note surface
 
-**Status:** open — **the critical path.** Blocks every rated activity in the product, including the whole
-CPSA v11.1 catalogue (T098).
+**Status:** DONE (2026-09-17, Opus) — code + tests, build clean, 563 tests green. Not yet exercised in a
+browser; see "What is still not proven" below.
 **Originally filed:** 2026-05-29, during the Act 3 play-through.
 **Re-scoped:** 2026-09-17, after verifying the whole path against the source. It is larger than filed.
 **Model:** Opus — it adds a DSL property, a permission engine and a new editable surface across five layers.
@@ -392,3 +392,96 @@ filters them out of `/activities/new` for every non-admin user.
 ## Related
 
 Blocks T098 phase 2c onward. Prerequisite: T099. Interacts with T101, T102, T103, T105, T106.
+
+---
+
+## Resolution — 2026-09-17
+
+Implemented as planned, then adversarially reviewed by three independent reviewers (authorization,
+backwards-compatibility, ordinary correctness) reading the finished diff. **The review found two
+regressions this work introduced and one pre-existing escalation it made fully reachable.** All three are
+fixed below; each fix carries a regression test that was verified to fail against the pre-fix code.
+
+**Build clean (0 warnings, warnings-as-errors on). 563 tests green** — Domain 59 (+9), Application 349
+(+19), Infrastructure 59 (+9), Architecture 19, Web 77 (+32).
+
+### Landed as planned
+
+Steps 1-9 and 11. `editable_by` parses, serialises and round-trips on schema sections, schema fields and
+workflow states; `ActorRuleMatcher` is extracted and `WorkflowEvaluatorTests` passes untouched;
+`IFieldPermissionEvaluator` computes the state ∧ field conjunction with the `subject|creator` default;
+`ActivityService` filters at create, merges only writable keys, and exposes `GetDetailAsync`;
+`GetActivityByIdQuery` returns `ActivityDetailDto`; `TransitionActivityCommand.DataPatchJson` and `Note`
+are `[Redact]`ed; `ActivityForm` locks per field on the C# guard rather than the `disabled` attribute;
+`ActivityWorkflowActions` is presentational; `ActivityView` renders the editable surface and a history
+card; `NewActivity` locks assessor fields at creation; the four `_cpsa` and four legacy WBA seeds declare
+ownership; `CUSTOMIZATION.md` documents the DSL.
+
+### Fixed after review
+
+**1. The create-time permission check resolved against caller-controlled data (HIGH, introduced here).**
+`CreateDraftAsync` assigned `activity.DataJson = submittedDataJson` *before* calling
+`GetWritableFieldKeys`. A `field:` rule reads its answer out of `DataJson`, so a creator naming themself
+in `assessor_user_id` unlocked the assessor-owned sections and their self-rating survived the filter —
+defeating the exact hole step 3(a) exists to close. The activity is now built with **empty** data while
+the writable set is computed; at creation nobody is bound by a data field yet, so only column-backed
+rules (`subject`, `creator`), roles and scope can match.
+*Test:* `Create_CreatorNamesThemselfAsTheAssessor_StillDropsTheAssessorOwnedFields`.
+
+**2. Cancelling or declining a legacy WBA awarded curriculum credit (HIGH, introduced here).**
+Step 9 dropped `required: true` from the legacy seeds' assessor fields, which made `cancel` and `decline`
+satisfiable for the first time. In `mini_cex` / `dops` / `cbd` / `acat` the `declined` and `cancelled`
+states were `terminal: true`, and `CreditApplier` fires on **any** terminal target state — so a withdrawn
+request counted toward the trainee's observation volume. Reproduced by execution before the fix:
+`cancel OK -> state=cancelled`, `CurriculumItemProgress.CountsSoFar = 1`.
+
+Those states are now non-terminal, matching the CPSA design T098 phase 2a established. `research_output`'s
+terminal `rejected` was the same latent defect and is fixed with them — it is harmless today
+(`"counts_for": []`) and it is a dead end either way, but leaving one seed violating the new invariant
+would be arbitrary. **This is the one change in this commit outside T070's stated scope.**
+*Test:* `SeedParseTests.NoSeededWorkflow_MarksAnAbandonmentStateTerminal`, across every seed.
+
+**3. A trainee could name themself as assessor and self-award credit (HIGH, pre-existing — T102).**
+The subject legitimately owns `assessor_user_id` while the request is still theirs, so they could point
+it at themself in `draft`, and from `requested` on they matched every `field:assessor_user_id` rule —
+their own `complete` included. Pre-existing, but T070 makes that field decide **write ownership** as well
+as transition rights, so the narrow half of T102 could not wait: `ActivityService` now refuses, at create
+and on the patch merge, any value that makes an actor-binding field name the activity's subject.
+The general fix — validating a `user` value against the users the caller may legitimately nominate —
+remains T102.
+*Tests:* `Create_SubjectNamesThemselfAsTheAssessor_IsRejected`,
+`Transition_SubjectRetargetsTheAssessorFieldToThemself_IsRejected`.
+
+**4. A dead-end state handed out a live form with no way to save it (MEDIUM).**
+The CPSA workflows mark `declined` / `cancelled` non-terminal *on purpose* (see fix 2), so the terminal
+flag alone did not close the write surface: the subject got enabled inputs on a refused activity.
+`IsStateWritable` now also denies any state with no outgoing transitions — a dead end is as final as a
+terminal state. `ActivityView` additionally falls back to read-only whenever no action is available,
+because a transition is the only save channel there is and an editable form with no Save silently loses
+work on navigation.
+*Test:* `GetWritableFieldKeys_InANonTerminalStateWithNoWayOut_IsWritableByNobody`.
+
+### Deliberately not fixed here
+
+- **On an existing database this task changes nothing for the seeded types.** `PaediatricCatalogueSeeder`
+  and `DataSeeder` skip keys that already exist, so the `editable_by` declarations reach a **fresh**
+  database only. Dev and production keep their pinned v1 schemas, where no `editable_by` exists, the
+  `subject|creator` default applies to every field, and the assessor's writable set is empty — i.e. the
+  symptom persists there until **T103** lands. The engine is correct and inert. This is the single most
+  important thing to know about this commit.
+- **A consequence of that:** on the live database, legacy types in a non-terminal state give the *subject*
+  the new editable surface (the default rule matches them), including over assessor-owned fields. They
+  cannot save it — `cancel` still fails the old all-required validation — but it looks wrong. T103 closes
+  it by landing the seeds' explicit rules.
+- `UpdateDraftAsync` is the one write path the field gate does not cover. It has zero dispatch sites, so
+  it is latent — but it is where a `SaveActivityDataCommand` would land. Recorded as T106 item 1.
+- No builder UI for `editable_by`. It round-trips through the visual builder unharmed (the implementer
+  correctly threaded it through `BuilderModels` rather than passing `null`, which would have dropped it on
+  the first admin save), but it must be authored as raw JSON. Recorded in T106.
+
+### What is still not proven
+
+The automated suites cover the contract end to end at the service and component level. **Nobody has
+clicked through it.** The browser verification — Act 3 Step 3.5, as an assessor on a CPSA Mini-CEX —
+needs a **fresh database** (see above) or T103, plus the T099 scope rows (done on dev, 2026-09-17).
+Until that run happens, treat "the assessor can enter a rating" as green-by-test, not green-by-use.

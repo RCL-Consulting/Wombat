@@ -61,6 +61,7 @@
     {
       "key": "assessment",
       "title": "Entrustment",
+      "editable_by": "field:assessor_user_id",
       "fields": [
         {
           "key": "overall_level",
@@ -78,6 +79,7 @@
     {
       "key": "feedback",
       "title": "Feedback",
+      "editable_by": "field:assessor_user_id",
       "fields": [
         {
           "key": "strengths",

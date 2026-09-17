@@ -2,7 +2,79 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## 🔄 SESSION IN PROGRESS — 2026-09-17 (Opus) — **T070 re-scoped from verified ground truth; eight follow-ups filed**
+## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070 SHIPPED: assessors can enter ratings; T099 done on dev** 🏁
+
+**Build clean (0 warnings, warnings-as-errors on). 563 tests green** — Domain 59, Application 349,
+Infrastructure 59, Architecture 19, Web 77 (was 494 across five suites). Dev server not started.
+Two commits: `62f9547` (docs) and the T070 implementation.
+
+### T070 — the assessor can now enter a rating
+
+`editable_by` is now an actor rule on the schema **section**, the schema **field** and the workflow
+**state**; the effective writable set is the conjunction of the state rule and the field rule, defaulting
+to `subject|creator` so nothing already published changes behaviour. `ActivityService` filters at create,
+merges only the keys the actor owns, and hands the Web layer a writable set; `ActivityView` renders an
+editable form for the bound assessor and sends the rating as the transition's `DataPatchJson`, so the
+rating lands atomically with the state change and `CreditApplier` grades the **assessor's** value.
+`ActivityWorkflowActions` is now presentational, which also fixed a real bug: it had been evaluating
+`scope:` rules against a fabricated `new ActivityType()` that always defaulted to Global.
+
+**Three adversarial reviewers read the finished diff and found two regressions the work introduced plus
+one pre-existing escalation it made fully reachable.** All fixed, each with a regression test verified to
+fail against the pre-fix code:
+
+1. **Create-time permission check resolved against caller-controlled data.** A `field:` rule reads its
+   answer out of `DataJson`, and the writable set was computed *after* the caller's payload was assigned —
+   so naming yourself in `assessor_user_id` unlocked the assessor sections and kept your self-rating. Now
+   computed against empty data.
+2. **Cancelling or declining a legacy WBA awarded curriculum credit.** Dropping `required: true` from the
+   legacy seeds made `cancel`/`decline` satisfiable for the first time, and those states were
+   `terminal: true` — credit fires on any terminal state. Reproduced by execution, then fixed by making
+   them non-terminal (the CPSA design). `research_output`'s terminal `rejected` fixed with them.
+3. **A trainee could name themself assessor and self-award credit** (the narrow half of T102). The subject
+   legitimately owns `assessor_user_id` in draft, so T070 made that field decide write ownership too.
+   `ActivityService` now refuses any value that makes an actor-binding field name the activity's subject.
+
+Plus: a dead-end state (no outgoing transitions) is now writable by nobody, and `ActivityView` falls back
+to read-only when no action is available — a transition is the only save channel, so an editable form with
+no Save silently loses work.
+
+### 🚨 On an existing database this changes nothing yet
+
+`PaediatricCatalogueSeeder.cs:113` and `DataSeeder.cs:248-251` skip keys that already exist, so the
+`editable_by` declarations reach a **fresh** database only. Dev and production keep their pinned v1
+schemas, where the `subject|creator` default applies to every field and the assessor's writable set is
+empty — **the symptom persists there until T103 lands.** The engine is correct and inert. A side effect on
+the live DB: legacy types in a non-terminal state give the *subject* the new editable surface (they cannot
+save it — the old all-required validation still rejects), which looks wrong until T103 closes it.
+
+**T103 is therefore the next task, not a nice-to-have.**
+
+### T099 — done on dev, outstanding on production
+
+Ten KGK paediatric users now hold Speciality 3 as well as 2, so the four `_cpsa` tools and the 15 CPSA EPAs
+pass the scope filter. Additive — the legacy FCPaed world is untouched. **Production has the identical
+problem and has not been touched.**
+
+### ▶ NEXT — T103, then browser-verify T070
+
+1. **T103** — `ActivityTypeSeedRefresher`. Until it lands, T070 is invisible on every existing database.
+   Idempotency is the whole ballgame: canonicalise through Parse+Serialize and assert a second run does
+   not bump `Version`. **Opus.**
+2. **Browser-verify T070** — Act 3 Step 3.5 as an assessor on a CPSA Mini-CEX. Needs a fresh DB or T103.
+   Nobody has clicked through this yet; it is green-by-test, not green-by-use.
+3. Then: T100 (rung labels), T101 (activity read authorization), seed the ten remaining v11.1 tools,
+   T104 (retire the legacy paediatric world), T098 phase 3 (per-year quota — wire `observed_on` first).
+
+### Still open from the morning's verification pass
+
+T102 fixes 2-3 (validate `user` values against the users the caller may nominate — decide before the ten
+remaining tools are seeded), T105 (every transition validates in full Submit mode), T106 (11 backlog items,
+including no builder UI for `editable_by`).
+
+---
+
+## 🔄 SESSION 2026-09-17 (Opus) — **T070 re-scoped from verified ground truth; eight follow-ups filed**
 
 Started by verifying the 2026-09-16 handoff's "▶ NEXT" against the actual source and the dev database rather
 than trusting it. **T070 is confirmed as the critical path** and is larger than it was filed. Eight new task

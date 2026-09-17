@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
@@ -11,21 +12,26 @@ namespace Wombat.Infrastructure.Activities;
 
 public sealed class ActivityService : IActivityService
 {
+    private const string EmptyObjectJson = "{}";
+
     private readonly IApplicationDbContext _dbContext;
     private readonly ISchemaValidator _schemaValidator;
     private readonly IWorkflowEvaluator _workflowEvaluator;
     private readonly ICreditApplier _creditApplier;
+    private readonly IFieldPermissionEvaluator _fieldPermissionEvaluator;
 
     public ActivityService(
         IApplicationDbContext dbContext,
         ISchemaValidator schemaValidator,
         IWorkflowEvaluator workflowEvaluator,
-        ICreditApplier creditApplier)
+        ICreditApplier creditApplier,
+        IFieldPermissionEvaluator fieldPermissionEvaluator)
     {
         _dbContext = dbContext;
         _schemaValidator = schemaValidator;
         _workflowEvaluator = workflowEvaluator;
         _creditApplier = creditApplier;
+        _fieldPermissionEvaluator = fieldPermissionEvaluator;
     }
 
     public async Task<ActivityDto> CreateDraftAsync(CreateActivityInput input, CancellationToken cancellationToken = default)
@@ -42,8 +48,7 @@ public sealed class ActivityService : IActivityService
 
         var schema = FormSchemaParser.Parse(activityType.SchemaJson);
         var workflow = WorkflowParser.Parse(activityType.WorkflowJson);
-        var normalizedDataJson = NormalizeObjectJson(input.InitialDataJson);
-        ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
+        var submittedDataJson = NormalizeObjectJson(input.InitialDataJson);
 
         var utcNow = DateTime.UtcNow;
         var activity = new Activity
@@ -54,10 +59,39 @@ public sealed class ActivityService : IActivityService
             SubjectUserId = input.SubjectUserId.Trim(),
             CreatedByUserId = input.CreatedByUserId.Trim(),
             CurrentState = workflow.InitialState,
-            DataJson = normalizedDataJson,
+            // Deliberately EMPTY while the writable set is computed below. See the note there.
+            DataJson = EmptyObjectJson,
             CreatedOn = utcNow,
             UpdatedOn = utcNow
         };
+
+        // T070: the creator may only supply the fields they own, so a trainee cannot pre-fill the
+        // assessor's ratings and make `complete` satisfiable before the assessor ever sees the form.
+        // Keys outside the writable set (including keys the schema does not declare at all) are
+        // dropped silently rather than rejected — a create is not a patch, and rejecting would break
+        // every caller that echoes a full form.
+        //
+        // The permission check runs against EMPTY data, not against what the caller submitted. A
+        // `field:` rule reads its answer out of DataJson, so evaluating it against the caller's own
+        // payload lets the caller grant themselves the rule: name yourself in `assessor_user_id`
+        // and the assessor-owned sections unlock, self-rating and all. At creation nobody is bound
+        // by a data field yet, so the only rules that can match here are the ones backed by real
+        // columns (`subject`, `creator`), roles and scope.
+        //
+        // The state gate is ignored here because procedure_log and journal_club declare a terminal
+        // initial state; gating on it would make those types uncreatable.
+        var writableFieldKeys = _fieldPermissionEvaluator.GetWritableFieldKeys(
+            schema,
+            workflow,
+            activity,
+            input.Principal,
+            ignoreStateGate: true);
+
+        var normalizedDataJson = FilterToWritableKeys(submittedDataJson, writableFieldKeys);
+        ThrowIfActorFieldNamesSubject(schema, workflow, normalizedDataJson, activity.SubjectUserId);
+        activity.DataJson = normalizedDataJson;
+
+        ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
 
         activity.Transitions.Add(new ActivityTransition
         {
@@ -126,9 +160,30 @@ public sealed class ActivityService : IActivityService
             throw new InvalidOperationException($"Transition '{input.TransitionKey}' requires a note.");
         }
 
-        var mergedDataJson = string.IsNullOrWhiteSpace(input.DataPatchJson)
-            ? activity.DataJson
-            : MergeJsonObjects(activity.DataJson, input.DataPatchJson);
+        // The writable set is computed AFTER the transition gate above and BEFORE the merge below,
+        // against the PRE-transition state and the PRE-patch data. Both orderings are load-bearing:
+        // a patch must not be able to authorise its own transition, and the actor's permissions are
+        // those of the state they are acting from, not the state they are moving to.
+        var mergedDataJson = activity.DataJson;
+        if (!string.IsNullOrWhiteSpace(input.DataPatchJson))
+        {
+            var writableFieldKeys = _fieldPermissionEvaluator.GetWritableFieldKeys(
+                schema,
+                workflow,
+                activity,
+                input.Principal);
+
+            mergedDataJson = MergeWritableKeys(
+                activity.DataJson,
+                input.DataPatchJson,
+                writableFieldKeys,
+                activity.CurrentState);
+
+            // The subject legitimately owns `assessor_user_id` while the request is still theirs to
+            // edit, so the merge above will happily accept a patch that points it at themselves —
+            // and from the next state on, every `field:assessor_user_id` rule would match them.
+            ThrowIfActorFieldNamesSubject(schema, workflow, mergedDataJson, activity.SubjectUserId);
+        }
 
         ThrowIfInvalid(_schemaValidator.Validate(
             schema,
@@ -156,6 +211,44 @@ public sealed class ActivityService : IActivityService
 
     public async Task<ActivityDto> GetAsync(int activityId, CancellationToken cancellationToken = default)
         => Map(await LoadActivityAsync(activityId, cancellationToken));
+
+    public async Task<ActivityDetailDto> GetDetailAsync(
+        int activityId,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        var activity = await LoadActivityAsync(activityId, cancellationToken);
+        var version = GetPinnedVersion(activity);
+        var schema = FormSchemaParser.Parse(version.SchemaJson);
+        var workflow = WorkflowParser.Parse(version.WorkflowJson);
+
+        var writableFieldKeys = _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, principal);
+
+        // Evaluated against the REAL loaded ActivityType, which LoadActivityAsync Includes. The Web
+        // layer used to build a synthetic ActivityType for this, defaulting Scope to Global and
+        // ScopeId to null, so every `scope:` rule evaluated false in the button list while the server
+        // would have allowed the transition. (T070)
+        var availableActions = workflow.Transitions
+            .Where(transition => transition.From.Contains(activity.CurrentState, StringComparer.Ordinal))
+            .Where(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed)
+            .Select(transition => new ActivityActionDto(transition.Key, transition.RequiresNote))
+            .ToList();
+
+        return new ActivityDetailDto(
+            Map(activity),
+            OrderBySchema(schema, writableFieldKeys),
+            availableActions);
+    }
+
+    /// <summary>Writable keys in schema declaration order, so the UI can render them predictably.</summary>
+    private static IReadOnlyList<string> OrderBySchema(FormSchema schema, IReadOnlySet<string> writableFieldKeys)
+        => schema.Sections
+            .SelectMany(section => section.Fields)
+            .Select(field => field.Key)
+            .Where(writableFieldKeys.Contains)
+            .ToList();
 
     private async Task<Activity> LoadActivityAsync(int activityId, CancellationToken cancellationToken)
     {
@@ -193,6 +286,70 @@ public sealed class ActivityService : IActivityService
         throw new InvalidOperationException(message);
     }
 
+    /// <summary>
+    /// Refuses data in which a field that decides who may act on the activity names the activity's
+    /// own subject.
+    /// </summary>
+    /// <remarks>
+    /// A <c>field:</c> rule — <c>field:assessor_user_id</c> on the CPSA seeds — makes whoever that
+    /// field names the actor for a transition and, since T070, the owner of the fields that
+    /// transition fills in. The subject legitimately owns that field while the request is still
+    /// theirs to edit, which is the whole escalation: name yourself, and you may rate yourself and
+    /// take your own <c>complete</c>, awarding your own curriculum credit. Nothing else in the
+    /// pipeline catches it — <c>SchemaValidator</c> treats a <c>user</c> field as a plain string
+    /// and the assessor picker is a UI affordance, not a check.
+    ///
+    /// This is the narrow guard. The general one — validating a <c>user</c> value against the users
+    /// the caller may legitimately nominate — is T102.
+    /// </remarks>
+    private static void ThrowIfActorFieldNamesSubject(
+        FormSchema schema,
+        Workflow workflow,
+        string dataJson,
+        string subjectUserId)
+    {
+        if (string.IsNullOrWhiteSpace(subjectUserId))
+        {
+            return;
+        }
+
+        var actorFieldNames = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var transition in workflow.Transitions)
+        {
+            ActorRuleMatcher.CollectUserFieldNames(transition.Actor, actorFieldNames);
+        }
+
+        foreach (var state in workflow.States)
+        {
+            ActorRuleMatcher.CollectUserFieldNames(state.EditableBy, actorFieldNames);
+        }
+
+        foreach (var section in schema.Sections)
+        {
+            ActorRuleMatcher.CollectUserFieldNames(section.EditableBy, actorFieldNames);
+            foreach (var field in section.Fields)
+            {
+                ActorRuleMatcher.CollectUserFieldNames(field.EditableBy, actorFieldNames);
+            }
+        }
+
+        foreach (var fieldName in actorFieldNames)
+        {
+            var value = ActorRuleMatcher.ReadUserFieldValue(dataJson, fieldName);
+            if (string.Equals(value, subjectUserId, StringComparison.Ordinal))
+            {
+                var label = schema.Sections
+                    .SelectMany(section => section.Fields)
+                    .FirstOrDefault(field => string.Equals(field.Key, fieldName, StringComparison.Ordinal))
+                    ?.Label ?? fieldName;
+
+                throw new InvalidOperationException(
+                    $"{label}: this decides who may act on the activity, so it cannot name the person the activity is about.");
+            }
+        }
+    }
+
     private static string NormalizeObjectJson(string json)
     {
         using var document = JsonDocument.Parse(json);
@@ -204,7 +361,22 @@ public sealed class ActivityService : IActivityService
         return JsonSerializer.Serialize(document.RootElement);
     }
 
-    private static string MergeJsonObjects(string currentJson, string patchJson)
+    /// <summary>
+    /// Shallow top-level merge restricted to the keys this actor owns (T070).
+    /// </summary>
+    /// <remarks>
+    /// A key the actor may write is applied. A key they may not write is ignored when the patch
+    /// carries the value already stored — full-form post-backs echo every field, including locked
+    /// ones, and without that carve-out the rule would fire on untouched data. A key they may not
+    /// write whose value actually differs throws: that is the case where an assessor's `complete`
+    /// patch would otherwise rewrite <c>epa_id</c> or <c>assessor_user_id</c> and redirect which
+    /// curriculum item gets credited.
+    /// </remarks>
+    private static string MergeWritableKeys(
+        string currentJson,
+        string patchJson,
+        IReadOnlySet<string> writableFieldKeys,
+        string currentState)
     {
         using var currentDocument = JsonDocument.Parse(currentJson);
         using var patchDocument = JsonDocument.Parse(patchJson);
@@ -220,10 +392,38 @@ public sealed class ActivityService : IActivityService
 
         foreach (var property in patchDocument.RootElement.EnumerateObject())
         {
-            merged[property.Name] = property.Value.Clone();
+            if (writableFieldKeys.Contains(property.Name))
+            {
+                merged[property.Name] = property.Value.Clone();
+                continue;
+            }
+
+            var isUnchanged = merged.TryGetValue(property.Name, out var storedValue) &&
+                              JsonElement.DeepEquals(storedValue, property.Value);
+
+            if (!isUnchanged)
+            {
+                throw new InvalidOperationException(
+                    $"Field '{property.Name}' cannot be written in state '{currentState}' by the current actor.");
+            }
         }
 
         return JsonSerializer.Serialize(merged);
+    }
+
+    /// <summary>
+    /// Drops every key the actor does not own. Used at creation, where silently ignoring an
+    /// unowned key is right (see <see cref="CreateDraftAsync" />).
+    /// </summary>
+    private static string FilterToWritableKeys(string dataJson, IReadOnlySet<string> writableFieldKeys)
+    {
+        using var document = JsonDocument.Parse(dataJson);
+
+        var retained = document.RootElement.EnumerateObject()
+            .Where(property => writableFieldKeys.Contains(property.Name))
+            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
+
+        return JsonSerializer.Serialize(retained);
     }
 
     private static ActivityDto Map(Activity activity)

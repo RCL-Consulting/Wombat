@@ -80,6 +80,29 @@ public sealed record ActivityDto(
     DateTime UpdatedOn,
     IReadOnlyList<ActivityTransitionDto> Transitions);
 
+/// <summary>
+/// A workflow transition the current actor is allowed to perform from the activity's current state,
+/// evaluated server-side against the real pinned <c>ActivityType</c> (T070). The display label is the
+/// caller's business — <c>ActivityWorkflowActions</c> title-cases the key.
+/// </summary>
+public sealed record ActivityActionDto(
+    string TransitionKey,
+    bool RequiresNote);
+
+/// <summary>
+/// An activity plus the two things that can only be worked out with a principal in hand:
+/// which fields this actor may write right now, and which transitions they may perform.
+/// </summary>
+/// <remarks>
+/// T070. <see cref="EditableFieldKeys"/> is in schema order. It is empty for a terminal activity,
+/// for an actor the state's <c>editable_by</c> rule excludes, and for an unrelated user — which is
+/// what keeps non-bound users read-only.
+/// </remarks>
+public sealed record ActivityDetailDto(
+    ActivityDto Activity,
+    IReadOnlyList<string> EditableFieldKeys,
+    IReadOnlyList<ActivityActionDto> AvailableActions);
+
 public sealed record ActivitySummaryDto(
     int Id,
     int ActivityTypeId,

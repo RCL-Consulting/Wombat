@@ -100,6 +100,7 @@ public static class DependencyInjection
         services.AddScoped<IActivityReferenceDataService, ActivityReferenceDataService>();
         services.AddScoped<ISchemaValidator, SchemaValidator>();
         services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
+        services.AddScoped<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
         services.AddScoped<ICreditApplier, CreditApplier>();
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;

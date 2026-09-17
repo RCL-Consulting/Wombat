@@ -5,7 +5,7 @@
     { "key": "draft", "label": "Draft" },
     { "key": "submitted", "label": "Submitted" },
     { "key": "verified", "label": "Verified", "terminal": true },
-    { "key": "rejected", "label": "Rejected", "terminal": true }
+    { "key": "rejected", "label": "Rejected" }
   ],
   "transitions": [
     { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "requires_fields": ["output_type", "title", "authors", "venue", "activity_date", "trainee_role", "abstract"] },

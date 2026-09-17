@@ -78,7 +78,7 @@ public sealed class WorkflowEvaluatorTests
         => new(
             1,
             "draft",
-            [new WorkflowState("draft", "Draft", false), new WorkflowState("done", "Done", true)],
+            [new WorkflowState("draft", "Draft", false, null), new WorkflowState("done", "Done", true, null)],
             [new WorkflowTransition("act", ["draft"], "done", ActorRuleParser.Parse(actorRule), false, [])]);
 
     private static Activity CreateActivity(ActivityScope scope, int scopeId)

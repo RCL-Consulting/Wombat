@@ -37,23 +37,23 @@ else if (_schema is not null)
                 case FieldType.Text:
                 case FieldType.Signature:
                 case FieldType.ProcedureRef:
-                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.LongText:
-                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
+                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
                   break;
                 case FieldType.Number:
                 case FieldType.Likert:
                 case FieldType.Rating:
-                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Date:
-                  <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Choice:
                 case FieldType.Epa:
                 case FieldType.User:
-                  <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                  <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                     <option value="">Select…</option>
                     @foreach (var option in GetOptions(field))
                     {
@@ -65,7 +65,7 @@ else if (_schema is not null)
                   var scaleOptions = GetOptions(field);
                   if (scaleOptions.Count > 0)
                   {
-                    <select id="@field.Key" class="form-select" disabled="@ReadOnly" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                    <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                       <option value="">Select…</option>
                       @foreach (var option in scaleOptions)
                       {
@@ -75,7 +75,7 @@ else if (_schema is not null)
                   }
                   else
                   {
-                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@ReadOnly" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   }
                   break;
                 case FieldType.MultiChoice:
@@ -88,7 +88,7 @@ else if (_schema is not null)
                           class="form-check-input"
                           type="checkbox"
                           checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
-                          disabled="@ReadOnly"
+                          disabled="@IsFieldLocked(field.Key)"
                           @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
                         <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
                       </div>
@@ -118,6 +118,15 @@ else if (_schema is not null)
   [Parameter, EditorRequired] public string SchemaJson { get; set; } = default!;
   [Parameter] public string DataJson { get; set; } = "{}";
   [Parameter] public bool ReadOnly { get; set; }
+
+  /// <summary>
+  /// The field keys this actor may write, as resolved server-side by the field-permission
+  /// evaluator (T070). <c>null</c> means "no per-field restriction" and keeps the pre-T070
+  /// behaviour exactly: every field follows <see cref="ReadOnly" /> alone. An empty set locks
+  /// every field, which is what keeps non-bound users read-only on the detail page.
+  /// </summary>
+  [Parameter] public IReadOnlySet<string>? EditableFieldKeys { get; set; }
+
   [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
 
   private FormSchema? _schema;
@@ -155,6 +164,15 @@ else if (_schema is not null)
       _loadedSchemaJson = null;
     }
   }
+
+  /// <summary>
+  /// A field is locked when the whole form is read-only, or when a writable set was supplied and
+  /// does not name it. The <c>disabled</c> attribute is only a hint to the browser — the guards in
+  /// <see cref="UpdateValue" /> and <see cref="ToggleMultiChoice" /> call this too, so a forged
+  /// event on a locked field changes nothing.
+  /// </summary>
+  private bool IsFieldLocked(string key)
+    => ReadOnly || (EditableFieldKeys is not null && !EditableFieldKeys.Contains(key));
 
   private string GetString(string key)
   {
@@ -222,7 +240,7 @@ else if (_schema is not null)
 
   private async Task UpdateValue(string key, string? value)
   {
-    if (ReadOnly)
+    if (IsFieldLocked(key))
     {
       return;
     }
@@ -241,7 +259,7 @@ else if (_schema is not null)
 
   private async Task ToggleMultiChoice(string key, string option, bool selected)
   {
-    if (ReadOnly)
+    if (IsFieldLocked(key))
     {
       return;
     }

@@ -15,22 +15,24 @@
     {
       "key": "assessment",
       "title": "Assessment",
+      "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "preparation", "type": "scale", "label": "Preparation", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "consent", "type": "scale", "label": "Consent and explanation", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "technique", "type": "scale", "label": "Technical performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+        { "key": "preparation", "type": "scale", "label": "Preparation", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "consent", "type": "scale", "label": "Consent and explanation", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "technique", "type": "scale", "label": "Technical performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
       ]
     },
     {
       "key": "feedback",
       "title": "Feedback",
+      "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "strengths", "type": "longtext", "label": "Strengths", "required": true },
-        { "key": "improvements", "type": "longtext", "label": "Areas for improvement", "required": true },
-        { "key": "plan", "type": "longtext", "label": "Agreed plan", "required": true }
+        { "key": "strengths", "type": "longtext", "label": "Strengths" },
+        { "key": "improvements", "type": "longtext", "label": "Areas for improvement" },
+        { "key": "plan", "type": "longtext", "label": "Agreed plan" }
       ]
     }
   ]

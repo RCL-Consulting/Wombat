@@ -161,4 +161,67 @@ public sealed class CpsaWbaSeedTests
         Workflow(key).Transitions.Single(transition => transition.Key == "complete")
             .RequiresFields.Should().Contain(assessorEntered);
     }
+
+    [Theory]
+    [MemberData(nameof(SeedKeys))]
+    public void AssessorOwnershipIsDeclaredOnTheRequestedStateAndTheAssessorSections(string key)
+    {
+        // Ownership is declared, never inferred. Without 'editable_by' on the requested state the
+        // bound assessor falls back to the subject|creator default and cannot write a rating at all;
+        // without it on the two assessor sections the state gate would hand them the whole form.
+        //
+        // The request section deliberately keeps the default. That is the one assertion here with
+        // teeth: if request were assessor-owned, a 'complete' patch could rewrite epa_id,
+        // assessor_user_id or observed_on and silently redirect which curriculum item gets credited.
+        ActorRule assessor = new FieldUserActorRule("assessor_user_id");
+
+        Workflow(key).States.Single(state => state.Key == "requested")
+            .EditableBy.Should().Be(assessor);
+
+        var sections = Schema(key).Sections.ToDictionary(section => section.Key, StringComparer.Ordinal);
+        sections["assessment"].EditableBy.Should().Be(assessor);
+        sections["feedback"].EditableBy.Should().Be(assessor);
+        sections["request"].EditableBy.Should().BeNull();
+    }
+
+    public static TheoryData<string> LegacySeedKeys =>
+    [
+        "mini_cex",
+        "dops",
+        "cbd",
+        "acat"
+    ];
+
+    [Theory]
+    [MemberData(nameof(LegacySeedKeys))]
+    public void LegacyAssessorSectionsAreAssessorOwnedAndNotSchemaRequired(string key)
+    {
+        // The legacy seeds shipped with every field required, including all of the assessor's own.
+        // Because every transition validates the whole schema in Submit mode, that made 'accept' and
+        // 'cancel' unsatisfiable: the assessor cannot fill the ratings before accepting, and the
+        // schema refuses to let them accept without. Dropping 'required' moves the gate onto
+        // requires_fields on 'complete', where it belongs.
+        ActorRule assessor = new FieldUserActorRule("assessor_user_id");
+        var schema = Schema(key);
+        var assessorSections = schema.Sections
+            .Where(section => !string.Equals(section.Key, "request", StringComparison.Ordinal))
+            .ToList();
+
+        assessorSections.Should().HaveCount(2);
+        assessorSections.Should().OnlyContain(section => section.EditableBy == assessor);
+        assessorSections.SelectMany(section => section.Fields)
+            .Should().NotBeEmpty().And.OnlyContain(field => !field.Required);
+
+        // The post-acceptance state, not 'requested' — the legacy workflows route the assessor
+        // through accept first, and 'accept' carries no requires_fields.
+        Workflow(key).States.Single(state => state.Key == "accepted")
+            .EditableBy.Should().Be(assessor);
+
+        // Whatever 'complete' demands must be a field the assessor is actually allowed to write,
+        // or completion is unreachable for every legacy type.
+        Workflow(key).Transitions.Single(transition => transition.Key == "complete")
+            .RequiresFields.Should().NotBeEmpty()
+            .And.BeSubsetOf(assessorSections.SelectMany(section => section.Fields).Select(field => field.Key));
+    }
 }
+
