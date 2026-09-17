@@ -68,7 +68,8 @@ public sealed class PaediatricCatalogueSeeder
     }
 
     /// <summary>
-    /// The paediatric WBA tools, seeded Speciality-scoped to Paediatrics.
+    /// Creates the paediatric WBA tools, Speciality-scoped to Paediatrics. The four keys themselves
+    /// live in <see cref="ActivityTypeSeedCatalogue"/>, which the seed refresher reads too.
     /// </summary>
     /// <remarks>
     /// These cannot be seeded by <see cref="DataSeeder"/>: it hard-codes the demo speciality as the
@@ -80,74 +81,54 @@ public sealed class PaediatricCatalogueSeeder
     /// <item>A SUFFIX, not a prefix: the EPA trajectory query matches an assessment family by exact
     /// key or by a "&lt;family&gt;_" prefix, so "mini_cex_cpsa" charts as Direct observation while
     /// "cpsa_mini_cex" would silently never appear on any trajectory.</item>
-    /// <item><c>_cpsa</c>, not <c>_paed</c>: ActivityType.Key is globally unique and
-    /// <see cref="EnsureActivityTypesAsync"/> skips keys that already exist, so a collision is a
-    /// SILENT no-op, not an error. Earlier scenario play-throughs left institution-scoped
-    /// "mini_cex_paed" and "dops_paed" types behind, which swallowed two of these four seeds.
-    /// Naming them for the owning College keeps them unambiguous.</item>
+    /// <item><c>_cpsa</c>, not <c>_paed</c>: ActivityType.Key is globally unique and this method
+    /// skips keys that already exist, so a collision is a SILENT no-op, not an error. Earlier
+    /// scenario play-throughs left institution-scoped "mini_cex_paed" and "dops_paed" types behind,
+    /// which swallowed two of these four seeds. Naming them for the owning College keeps them
+    /// unambiguous. T103 did not fix that hazard — a seed key that collides with an operator-built
+    /// type is still a silent no-op here, and the refresher will not touch it either.</item>
     /// </list>
     /// </para>
     /// </remarks>
-    private static readonly (string Key, string Name, string Description)[] ActivityTypeSeeds =
-    [
-        ("mini_cex_cpsa", "Mini-CEX (Paediatrics)",
-            "Mini clinical evaluation exercise - direct observation of a focused clinical encounter, followed by immediate feedback."),
-        ("dops_cpsa", "DOPS (Paediatrics)",
-            "Direct observation of procedural skills - technique, patient interaction and safety."),
-        ("cbd_cpsa", "Case-Based Discussion (Paediatrics)",
-            "Structured discussion of a case the trainee has managed, exploring clinical reasoning and decision-making."),
-        ("direct_observation_cpsa", "Direct Observation (Paediatrics)",
-            "Observation of the trainee in routine practice - ward rounds, handover and family meetings."),
-    ];
-
-    private const string SeedActorUserId = "seed-system";
-
     private async Task EnsureActivityTypesAsync(int specialityId, CancellationToken cancellationToken)
     {
         var existingKeys = await _dbContext.ActivityTypes
             .Select(entity => entity.Key)
             .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
 
-        foreach (var (key, name, description) in ActivityTypeSeeds)
+        // Creation only; ActivityTypeSeedRefresher (T103) carries later seed edits into types that
+        // already exist. The keys and the empty display-fields rule live in the shared catalogue so
+        // the refresher reproduces this seeder's own behaviour rather than guessing at it.
+        foreach (var seed in ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege))
         {
-            if (existingKeys.Contains(key))
+            if (existingKeys.Contains(seed.Key))
             {
                 continue;
             }
 
-            var schemaJson = await ReadActivitySeedFileAsync(key, "schema.json", cancellationToken);
-            var workflowJson = await ReadActivitySeedFileAsync(key, "workflow.json", cancellationToken);
-            var creditJson = await ReadActivitySeedFileAsync(key, "credit.json", cancellationToken);
+            var schemaJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "schema.json", cancellationToken);
+            var workflowJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "workflow.json", cancellationToken);
+            var creditJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "credit.json", cancellationToken);
+            var displayFieldsJson = ActivityTypeSeedCatalogue.BuildDisplayFieldsJson(seed, schemaJson);
 
             var activityType = new ActivityType
             {
-                Key = key,
-                Name = name,
-                Description = description,
-                Scope = ActivityScope.Speciality,
+                Key = seed.Key,
+                Name = seed.Name,
+                Description = seed.Description,
+                Scope = seed.Scope,
                 ScopeId = specialityId,
-                OwnerUserId = SeedActorUserId,
+                OwnerUserId = ActivityTypeSeedCatalogue.SeedActorUserId,
                 CreatedOn = DateTime.UtcNow,
                 IsActive = true
             };
 
-            activityType.SaveDraft(schemaJson, workflowJson, creditJson, "[]", SeedActorUserId);
-            activityType.PublishDraft(SeedActorUserId);
+            activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
+            activityType.PublishDraft(ActivityTypeSeedCatalogue.SeedActorUserId);
 
             _dbContext.ActivityTypes.Add(activityType);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-    }
-
-    private static async Task<string> ReadActivitySeedFileAsync(string key, string fileName, CancellationToken cancellationToken)
-    {
-        var path = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, fileName);
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException($"Seed file '{fileName}' for activity type '{key}' was not found.", path);
-        }
-
-        return await File.ReadAllTextAsync(path, cancellationToken);
     }
 
     private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(CancellationToken cancellationToken)

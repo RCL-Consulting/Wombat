@@ -462,6 +462,11 @@ await using (var scope = app.Services.CreateAsyncScope())
     await dataSeeder.SeedAsync();
     await scope.ServiceProvider.GetRequiredService<PaediatricCatalogueSeeder>().SeedAsync();
 
+    // Both seeders above skip keys that already exist, so a seed-file edit only ever reached a
+    // fresh database. This carries those edits into existing types by publishing a new version
+    // (T103). It never throws and never reverts operator work; see ActivityTypeSeedRefresher.
+    await scope.ServiceProvider.GetRequiredService<ActivityTypeSeedRefresher>().RefreshAsync();
+
     if (app.Environment.IsDevelopment())
     {
         var devUserSeeder = scope.ServiceProvider.GetRequiredService<DevUserSeeder>();

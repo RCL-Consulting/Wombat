@@ -10,4 +10,18 @@ public sealed class WombatOptions
     public string? SeedAdminEmail { get; set; }
     public string? SeedAdminPassword { get; set; }
     public string? PseudonymSalt { get; set; }
+
+    /// <summary>
+    /// Whether startup carries edits to the activity-type seed folders into types that already
+    /// exist, by publishing a new version (T103). On by default — without it a seed edit reaches a
+    /// fresh database only.
+    /// </summary>
+    /// <remarks>
+    /// The kill switch is <c>Wombat__RefreshSeededActivityTypes=false</c>. When it is off the
+    /// refresher still runs read-only and logs what it would have republished, so a stale seed is a
+    /// visible no-op rather than a silent one. Turning it off is worth doing around a rollback: a
+    /// binary rollback does not undo a version bump, so the older binary's older seed files would
+    /// diff again and publish a third version.
+    /// </remarks>
+    public bool RefreshSeededActivityTypes { get; set; } = true;
 }

@@ -25,3 +25,25 @@ Caveats:
 - `procedure_log`, `research_output`, `teaching_session`, `qi_project`, and `journal_club` currently seed with no credit directives because the curriculum model only supports EPA-targeted progress today.
 - `dops` captures both a procedure and an EPA. The procedure catalogue is the operational record; the EPA field keeps the seed immediately useful with the current curriculum-credit engine.
 - `procedure_catalogue` is a reference table, not embedded in schema JSON. Choice fields can reference it via `"catalogue": "procedure_catalogue"`.
+
+## Editing a seed after it has been seeded (T103)
+
+`DataSeeder` and `PaediatricCatalogueSeeder` only ever *create*. They skip any key that already exists, so
+editing a file here used to change nothing on a database where the type was already present, with no error
+and no log line.
+
+`ActivityTypeSeedRefresher` runs at startup after both seeders and closes that gap: it canonicalises each
+folder through the DSL parsers, compares it against the published version canonicalised the same way, and
+publishes a new version when they differ. Three things follow from that:
+
+- **Edit freely, restart, and the change is live for new activities.** Existing activities stay pinned to
+  the version they were created against — that is deliberate, and it means a fix here does not reach an
+  activity that is already in flight.
+- **A type an operator has customised is never reverted.** The refresher skips a type whose newest version
+  was published by anyone other than `seed-system`, or which has a draft in flight, and logs why.
+- **Adding a folder is not enough.** The key, name, description and display-fields rule live in
+  `ActivityTypeSeedCatalogue`; a folder missing from it is never seeded and never refreshed.
+  `ActivityTypeSeedRefresherTests.Catalogue_CoversEverySeedFolderOnDisk` fails if the two drift apart.
+
+Set `Wombat__RefreshSeededActivityTypes=false` to turn the republish off. The diff still runs and still
+logs what it would have done.

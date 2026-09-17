@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
@@ -9,22 +8,6 @@ namespace Wombat.Infrastructure.Persistence;
 
 public sealed class DataSeeder
 {
-    private const string SeedActorUserId = "seed-system";
-
-    private static readonly SeedDefinition[] ActivityTypeSeeds =
-    [
-        new("mini_cex", "Mini-CEX", "Mini clinical evaluation exercise.", ActivityScope.Speciality),
-        new("dops", "DOPS", "Direct observation of procedural skills.", ActivityScope.Speciality),
-        new("cbd", "Case-based Discussion", "Structured case-based discussion.", ActivityScope.Speciality),
-        new("acat", "ACAT", "Acute care assessment tool.", ActivityScope.Speciality),
-        new("reflective_note", "Reflective Note", "Structured reflective note using the situation-task-action-result frame.", ActivityScope.Speciality),
-        new("procedure_log", "Procedure Log", "Self-logged procedural experience.", ActivityScope.Speciality),
-        new("research_output", "Research Output", "Publication, poster, or presentation evidence.", ActivityScope.Speciality),
-        new("teaching_session", "Teaching Session", "Teaching activity delivered by the trainee.", ActivityScope.Speciality),
-        new("qi_project", "QI Project", "Quality-improvement project with fixed PDSA sections.", ActivityScope.Speciality),
-        new("journal_club", "Journal Club", "Journal club attendance or presentation log.", ActivityScope.Speciality)
-    ];
-
     private static readonly ProcedureSeed[] ProcedureSeeds =
     [
         new("abdominal_paracentesis", "Abdominal paracentesis", "General medicine"),
@@ -243,17 +226,19 @@ public sealed class DataSeeder
             .Select(entity => entity.Key)
             .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
 
-        foreach (var seed in ActivityTypeSeeds)
+        // Creation only. Evolving a type that already exists is ActivityTypeSeedRefresher's job
+        // (T103) — editing a seed file used to be a silent no-op here.
+        foreach (var seed in ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.Generic))
         {
             if (existingKeys.Contains(seed.Key))
             {
                 continue;
             }
 
-            var schemaJson = await ReadSeedFileAsync(seed.Key, "schema.json", cancellationToken);
-            var workflowJson = await ReadSeedFileAsync(seed.Key, "workflow.json", cancellationToken);
-            var creditJson = await ReadSeedFileAsync(seed.Key, "credit.json", cancellationToken);
-            var displayFieldsJson = BuildDisplayFieldsJson(schemaJson);
+            var schemaJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "schema.json", cancellationToken);
+            var workflowJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "workflow.json", cancellationToken);
+            var creditJson = await ActivityTypeSeedCatalogue.ReadSeedFileAsync(seed.Key, "credit.json", cancellationToken);
+            var displayFieldsJson = ActivityTypeSeedCatalogue.BuildDisplayFieldsJson(seed, schemaJson);
 
             var activityType = new ActivityType
             {
@@ -262,40 +247,17 @@ public sealed class DataSeeder
                 Description = seed.Description,
                 Scope = seed.Scope,
                 ScopeId = specialityId,
-                OwnerUserId = SeedActorUserId,
+                OwnerUserId = ActivityTypeSeedCatalogue.SeedActorUserId,
                 CreatedOn = DateTime.UtcNow,
                 IsActive = true
             };
 
-            activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, SeedActorUserId);
-            activityType.PublishDraft(SeedActorUserId);
+            activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
+            activityType.PublishDraft(ActivityTypeSeedCatalogue.SeedActorUserId);
 
             _dbContext.ActivityTypes.Add(activityType);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-    }
-
-    private static string BuildDisplayFieldsJson(string schemaJson)
-    {
-        var fields = FormSchemaParser.Parse(schemaJson)
-            .Sections
-            .SelectMany(section => section.Fields)
-            .Select(field => field.Key)
-            .Take(3)
-            .ToArray();
-
-        return System.Text.Json.JsonSerializer.Serialize(fields);
-    }
-
-    private static async Task<string> ReadSeedFileAsync(string activityKey, string fileName, CancellationToken cancellationToken)
-    {
-        var path = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", activityKey, fileName);
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException($"Seed file '{fileName}' for activity type '{activityKey}' was not found.", path);
-        }
-
-        return await File.ReadAllTextAsync(path, cancellationToken);
     }
 
     private sealed record DemoSeedContext(
@@ -308,10 +270,4 @@ public sealed class DataSeeder
         string Key,
         string Name,
         string Category);
-
-    private sealed record SeedDefinition(
-        string Key,
-        string Name,
-        string Description,
-        ActivityScope Scope);
 }

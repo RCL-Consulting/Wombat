@@ -367,6 +367,15 @@ Wombat_ref_old_DO_NOT_COMMIT/
 Rewrite/.dotnet/
 EPA Book/chapters/
 
+# EPA Book — third-party copyrighted textbook (ten Cate et al.) and its derived full text.
+# `critique.md` and `evaluation.md` in that folder ARE tracked: they are our own analysis and
+# contain only citations. The book itself must never enter git history — it is 16MB, it is not
+# ours to redistribute, and removing it later would need a history rewrite on a deployed branch.
+EPA Book/*.pdf
+EPA Book/epa-book.md
+EPA Book/epa-book.clean.md
+EPA Book/*.py
+
 # Browser-verification artifacts (Playwright MCP cache + ad-hoc screenshots)
 .playwright-mcp/
 /*.png

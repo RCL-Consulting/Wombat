@@ -99,7 +99,16 @@ public sealed class ActivityType
         StagingUpdatedOn = null;
     }
 
-    private static string NormalizeDisplayFieldsJson(string displayFieldsJson)
+    /// <summary>
+    /// Canonicalises a display-fields array the way <see cref="SaveDraft"/> stores it.
+    /// </summary>
+    /// <remarks>
+    /// Public because the seed refresher (T103) has to compare a stored value against a desired one
+    /// in the same form. <c>DisplayFieldsJson</c> is a <c>jsonb</c> column, so the bytes PostgreSQL
+    /// hands back are its own rendering, never the bytes that were written — only a canonical-to-
+    /// canonical comparison is stable across a round trip through the database.
+    /// </remarks>
+    public static string NormalizeDisplayFieldsJson(string displayFieldsJson)
     {
         using var document = System.Text.Json.JsonDocument.Parse(displayFieldsJson);
         if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)

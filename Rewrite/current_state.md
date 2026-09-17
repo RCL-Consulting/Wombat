@@ -2,6 +2,67 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ▶ T103 DONE — 2026-09-17 (Opus) — **seed-file edits now reach existing databases**
+
+**Build clean (0 warnings, warnings-as-errors on). 665 tests green** — Domain 59, Application 349,
+Infrastructure 161 (was 59), Architecture 19, Web 77.
+
+**Run twice against the real dev database, and the numbers came out exactly as predicted:**
+
+```
+boot 1:  9 republished, 5 unchanged, 0 skipped (0 of them failed), 0 pending, of 14 seeded types
+boot 2:  0 republished, 14 unchanged, 0 skipped (0 of them failed), 0 pending, of 14 seeded types
+```
+
+Idempotency is therefore proven against real PostgreSQL, not just in-memory — which mattered, because the
+four JSON columns are `jsonb`: Postgres discards the submitted bytes and re-renders its own text, so
+**nothing stored is ever byte-equal to `Serialize` output**, not even for a seed file that never changed. A
+raw-string comparison would have republished all fourteen types on every boot forever. Both sides go
+through Parse+Serialize before comparison; canonicalisation is a fixed point, asserted per file per DSL.
+
+Verified in the database afterwards: `mini_cex_cpsa` v2 carries `editable_by: field:assessor_user_id` on
+its `requested` state and its assessment/feedback sections; the four operator-built `*_paed` types were not
+touched; all 18 types still have an `ActivityTypeVersion` row for their current version (no orphans).
+Snapshot `pre-t103-refresh` taken before the first run.
+
+`ActivityTypeSeedRefresher` runs at startup after both seeders. It canonicalises each of the fourteen seed
+folders through the DSL parsers, canonicalises the published version the same way, and republishes when
+they differ — unless the type is operator-owned, was last published by someone other than `seed-system`, or
+has a draft in flight. Full write-up in `Rewrite/Tasks/T103-activity-type-seed-refresher.md`.
+
+The decisive detail: the four JSON columns are `jsonb`, so **what PostgreSQL hands back is its own
+rendering and is never byte-equal to what was written** — not even for a seed file that has never changed.
+A raw-string comparison would have bumped `Version` on every boot forever, and the in-memory test provider
+would have passed it green. Both sides go through Parse + Serialize; the idempotency test writes the
+PostgreSQL rendering into the column on purpose so the failure mode is actually exercised.
+
+Second detail worth carrying forward: **`OwnerUserId` does not distinguish a customised seeded type from a
+pristine one.** `SaveActivityTypeDraftCommand` assigns it only when creating a type, so an admin who edits
+and publishes `mini_cex` still reads as `seed-system` forever. The guard that works is
+`ActivityTypeVersion.PublishedByUserId` on the newest version row.
+
+`Wombat__RefreshSeededActivityTypes=false` is the kill switch; the diff still runs and logs either way.
+Worth setting around a rollback — a binary rollback does not undo a version bump.
+
+**Expected first run on dev** (scout-verified against the dev DB, not yet executed): 5 unchanged
+(`journal_club`, `procedure_log`, `qi_project`, `reflective_note`, `teaching_session`), 9 republished to v2
+(`acat`, `cbd`, `cbd_cpsa`, `direct_observation_cpsa`, `dops`, `dops_cpsa`, `mini_cex`, `mini_cex_cpsa`,
+`research_output`), and the four operator-built `*_paed` types untouched. Second boot: nothing.
+**Production was never inspected — count activities per seed type there before deploying.**
+
+### ▶ NEXT
+
+1. **Start the dev server and read the refresh log**, then **browser-verify T070** on a **freshly created**
+   CPSA Mini-CEX. A republish does not unblock an activity already in flight — existing activities stay
+   pinned to v1 and still cannot take a rating. That pinning is correct; it is also why an existing
+   activity is the wrong thing to test with.
+2. Then: T100 (rung labels), T101 (activity read authorization), seed the ten remaining v11.1 tools,
+   T104 (retire the legacy paediatric world), T098 phase 3 (per-year quota — wire `observed_on` first).
+
+Filed but not fixed here: `AssessorPendingNudgeJob` reads the **live** workflow rather than the pinned one,
+so a future seed edit that renames a state key would silently stop nudges for in-flight activities. Nothing
+in this republish renames a state, so it is latent, not live.
+
 ## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070 SHIPPED: assessors can enter ratings; T099 done on dev** 🏁
 
 **Build clean (0 warnings, warnings-as-errors on). 563 tests green** — Domain 59, Application 349,
@@ -39,7 +100,7 @@ Plus: a dead-end state (no outgoing transitions) is now writable by nobody, and 
 to read-only when no action is available — a transition is the only save channel, so an editable form with
 no Save silently loses work.
 
-### 🚨 On an existing database this changes nothing yet
+### 🚨 On an existing database this changed nothing — until T103 landed (see above)
 
 `PaediatricCatalogueSeeder.cs:113` and `DataSeeder.cs:248-251` skip keys that already exist, so the
 `editable_by` declarations reach a **fresh** database only. Dev and production keep their pinned v1
