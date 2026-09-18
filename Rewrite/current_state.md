@@ -4,9 +4,14 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## ⭐ SESSION FINALIZED — 2026-09-18 (Opus) — **T109 shipped: entrustment ordinals are pinned to a scale** 🏁
 
-**Build clean, 0 warnings. 735 tests green** — Domain 69, Application 387, Infrastructure 171,
-Architecture 19, Web 89; was 698 at session start. `Wombat.Integration.Tests` was **not** run (needs
-Docker), so 735 is five suites, not the whole repo. No dev server run this session; nothing on production
+**Last commit `d5025e6`** (one commit this session, on `master`). **Build clean, 0 warnings. 735 tests
+green** — Domain 69, Application 387, Infrastructure 171, Architecture 19, Web 89; was 698 at session start.
+`Wombat.Integration.Tests` was **not** run (needs Docker), so 735 is five suites, not the whole repo.
+
+**Verified by test, NOT in a browser.** No dev server was run this session, and that is not an oversight
+that can be corrected by running one: the migration backfills nothing, so no curriculum in the dev database
+is pinned to a scale, and the mis-crediting scenario is therefore unreachable through the UI until someone
+pins curriculum 2. The browser check belongs with NEXT item 1, which does the pinning. Nothing on production
 was touched.
 
 ### T109 — a rating on one ladder can no longer be counted against a minimum on another
@@ -52,14 +57,17 @@ one. A wrong pin refuses credit for ever, so nothing guesses.
 2. **T110** (`or_scale` resolves to nothing) — but **reconcile the duplicate five-rung ladder first**:
    `"O-R Scale"` and the browser-made `"Paed General Entrustment Scale"` look like the same ten-Cate ladder
    with two ids. Binding tools to one while a curriculum is pinned to the other mass-refuses real credit.
+   **Opus** — the reconciliation is a live-data judgement, and getting it wrong is destructive.
 3. **T100** (rung labels, live as `3. 3a`) and **T106 item 4** (raw GUIDs in the assessor inbox). Both cheap,
    both on surfaces a clinician reads daily. **Sonnet.**
 4. **T101** (activity read authorization), then **T107** (stranded activities). Both land in
-   `ActivityService.GetDetailAsync`, which is the single chokepoint for each.
+   `ActivityService.GetDetailAsync`, which is the single chokepoint for each. **Opus** — T101 is a security
+   boundary and T107 has no re-pin path anywhere, so both need design, not typing.
 5. **T105** before authoring the ten remaining v11.1 tools — every transition validates the whole schema in
    Submit mode, so a half-filled draft cannot be cancelled, and that is *why* the CPSA seeds leave assessor
-   fields un-required. Authoring ten more bakes the workaround in ten more times.
-6. **T111** (dashboard link preselects nothing) whenever convenient.
+   fields un-required. Authoring ten more bakes the workaround in ten more times. **Opus** for T105 itself
+   (it changes how every tool must be authored); **Sonnet** for the ten tools once it is settled.
+6. **T111** (dashboard link preselects nothing) whenever convenient. **Sonnet.**
 
 ### What T109 did NOT close
 

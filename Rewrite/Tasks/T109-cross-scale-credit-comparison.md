@@ -1,6 +1,6 @@
 # T109 — A rating on one entrustment scale is compared against a minimum on another, and silently credits
 
-**Status:** open — **the most serious open defect in the credit path**
+**Status:** **SHIPPED 2026-09-18**, commit `d5025e6` — verified by test, **not yet in a browser** (see below).
 **Surfaced:** 2026-09-17, adversarial review of T108.
 **Severity:** High — this is silently **wrong** credit, which is worse than T108's silently **absent**
 credit. A trainee can be recorded as having met a supervision minimum they have not met.
@@ -229,8 +229,23 @@ matching pre-flight checks as well. Without them an administrator deleting a pin
 
 ### Verification
 
-- A trainee pinned to a five-rung curriculum, filing a six-rung CPSA tool, counts for volume and **not** for
-  the minimum, and the refusal is visible on the progress row and the transition.
-- The legitimate case is unaffected: a CPSA-curriculum trainee using a CPSA tool credits exactly as now.
-- Every currently-crediting combination still credits: no scale field, unresolvable `scale_key`,
+All three criteria are covered by automated tests, in
+`tests/Wombat.Application.Tests/Activities/CreditApplierScalePinningTests.cs` and
+`tests/Wombat.Domain.Tests/Epas/EntrustmentLevelComparerTests.cs`:
+
+- ✅ A trainee pinned to a five-rung curriculum, filing a six-rung CPSA tool, counts for volume and **not**
+  for the minimum, and the refusal is visible on the progress row and the transition.
+- ✅ The legitimate case is unaffected: a CPSA-curriculum trainee using a CPSA tool credits exactly as now.
+- ✅ Every currently-crediting combination still credits: no scale field, unresolvable `scale_key`,
   `minimum_level_fixed`, unpinned curriculum item.
+
+**Browser verification is deliberately outstanding, and it is blocked on a data step rather than on code.**
+No curriculum in the dev database is pinned to a scale — the migration backfills nothing by design — so the
+mis-crediting scenario cannot be reproduced through the UI until curriculum 2 (`FCPaed(SA) Part 1`) is
+pinned to the five-rung ladder via Admin → Curricula → items → **Scale**. Pinning it *is* the first item of
+the next session, so the browser check belongs there: pin, file a CPSA Mini-CEX as a curriculum-2 trainee,
+and confirm the activity shows the cross-scale banner while `CountsSoFar` still increments.
+
+Before pinning, check which sub-speciality curriculum 2 actually sits under. The repository cannot answer
+that, and it decides whether `PaediatricCatalogueSeeder.EnsureDefaultScaleAsync` has already overwritten
+that sub-speciality's default entrustment scale.
