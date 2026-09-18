@@ -21,8 +21,26 @@ public sealed class CurriculumItem
     public double? Weight { get; set; }
     public string? MinimumLevelByStageJson { get; set; }
 
+    /// <summary>
+    /// The entrustment scale <see cref="MinimumLevelOrder" /> — and every value inside
+    /// <see cref="MinimumLevelByStageJson" /> — is expressed on. Null means unpinned (T109).
+    /// </summary>
+    /// <remarks>
+    /// Null is a permanent, meaningful state, not a migration artefact awaiting cleanup. An unpinned item
+    /// compares ordinals exactly as Wombat did before T109, so leaving it null changes nothing; pinning it
+    /// to the WRONG ladder silently refuses credit the trainee legitimately earned. That asymmetry is why
+    /// nothing infers this value: the only automatic pins come from the seeders that author the minima and
+    /// therefore know which ladder they were written against. In particular it is NOT inferred from
+    /// <c>Curriculum.SubSpeciality.DefaultEntrustmentScaleId</c>, which
+    /// <c>PaediatricCatalogueSeeder.EnsureDefaultScaleAsync</c> force-overwrites on every boot and which
+    /// cannot differ between two versions of one curriculum anyway, <c>CloneAsNewVersion</c> copying
+    /// <c>SubSpecialityId</c>.
+    /// </remarks>
+    public int? ScaleId { get; set; }
+
     public Curriculum Curriculum { get; set; } = null!;
     public Wombat.Domain.Epas.Epa Epa { get; set; } = null!;
+    public Wombat.Domain.Epas.EntrustmentScale? Scale { get; set; }
 
     public int GetMinimumLevelForStage(int? traineeStage)
     {

@@ -35,6 +35,7 @@
               <th>EPA</th>
               <th>Required count</th>
               <th>Minimum level</th>
+              <th>Scale</th>
               <th>Per-stage minima</th>
               <th>Window months</th>
               <th>Weight</th>
@@ -57,6 +58,15 @@
                   </td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
+                  <td>
+                    <InputSelect class="form-select" TValue="int?" @bind-Value="_itemModel.ScaleId">
+                      <option value="">Not pinned</option>
+                      @foreach (var scale in _scales)
+                      {
+                        <option value="@scale.Id">@scale.Name</option>
+                      }
+                    </InputSelect>
+                  </td>
                   <td><InputText class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3}' /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" /></td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.Weight" /></td>
@@ -72,6 +82,7 @@
                   <td>@item.EpaCode - @item.EpaTitle</td>
                   <td>@item.RequiredCount</td>
                   <td>@item.MinimumLevelOrder</td>
+                  <td>@(item.ScaleName ?? "Not pinned")</td>
                   <td>@(item.MinimumLevelByStageJson ?? "—")</td>
                   <td>@item.WindowMonths</td>
                   <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
@@ -113,6 +124,17 @@
             <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" />
           </FormField>
 
+          <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
+            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?" @bind-Value="_itemModel.ScaleId">
+              <option value="">Not pinned</option>
+              @foreach (var scale in _scales)
+              {
+                <option value="@scale.Id">@scale.Name</option>
+              }
+            </InputSelect>
+            <small class="muted">The ladder the minimum level above is expressed on. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.</small>
+          </FormField>
+
           <FormField Label="Per-stage minima (JSON)" InputId="curriculum-item-stage-levels" FullWidth="true">
             <InputText id="curriculum-item-stage-levels" class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3,"3":4}' />
             <small class="muted">Optional JSON object keyed by training year. Overrides the flat minimum level when the trainee is at that year.</small>
@@ -141,6 +163,7 @@
 
   private CurriculumDto? _curriculum;
   private IReadOnlyList<EpaDto> _epas = [];
+  private IReadOnlyList<EntrustmentScaleDto> _scales = [];
   private readonly CurriculumItemFormModel _itemModel = new();
   private int? _editingItemId;
   private string? _loadError;
@@ -169,6 +192,7 @@
       }
 
       _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId, authState.User));
+      _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
       ResetItemModel();
     }
     catch (Exception exception)
@@ -184,7 +208,11 @@
   private async Task AddItemAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User)), "Curriculum item added.");
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item added."))
+    {
+      return;
+    }
+
     ResetItemModel();
   }
 
@@ -197,6 +225,7 @@
     _itemModel.WindowMonths = item.WindowMonths;
     _itemModel.Weight = item.Weight;
     _itemModel.MinimumLevelByStageJson = item.MinimumLevelByStageJson;
+    _itemModel.ScaleId = item.ScaleId;
   }
 
   private void CancelEdit()
@@ -213,7 +242,14 @@
     }
 
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User)), "Curriculum item saved.");
+    // Only leave edit mode when the command actually succeeded. A rejected scale pin (T109) is the common
+    // case now, and closing the row on rejection throws away everything the operator typed while showing
+    // them an error about it.
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item saved."))
+    {
+      return;
+    }
+
     _editingItemId = null;
     ResetItemModel();
   }
@@ -224,7 +260,8 @@
     await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId, authState.User)), "Curriculum item removed.");
   }
 
-  private async Task RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
+  /// <summary>Returns false when the command was rejected, so the caller can keep the form as it is.</summary>
+  private async Task<bool> RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
   {
     _saving = true;
     _actionError = null;
@@ -234,10 +271,12 @@
     {
       _curriculum = await action();
       _statusMessage = successMessage;
+      return true;
     }
     catch (Exception exception)
     {
       _actionError = exception.Message;
+      return false;
     }
     finally
     {
@@ -253,6 +292,7 @@
     _itemModel.WindowMonths = 12;
     _itemModel.Weight = null;
     _itemModel.MinimumLevelByStageJson = null;
+    _itemModel.ScaleId = null;
   }
 
   private static string? EmptyToNull(string? value)
@@ -276,5 +316,8 @@
 
     [StringLength(1000)]
     public string? MinimumLevelByStageJson { get; set; }
+
+    /// <summary>Null means unpinned, which compares ordinals exactly as Wombat did before T109.</summary>
+    public int? ScaleId { get; set; }
   }
 }

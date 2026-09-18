@@ -173,7 +173,8 @@ public sealed class DataSeeder
                 EpaId = epa.Id,
                 RequiredCount = 5,
                 MinimumLevelOrder = 4,
-                WindowMonths = 12
+                WindowMonths = 12,
+                ScaleId = scale.Id
             });
 
             _dbContext.Curricula.Add(curriculum);
@@ -186,11 +187,26 @@ public sealed class DataSeeder
                 EpaId = epa.Id,
                 RequiredCount = 5,
                 MinimumLevelOrder = 4,
-                WindowMonths = 12
+                WindowMonths = 12,
+                ScaleId = scale.Id
             });
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        // Provenance pin (T109). MinimumLevelOrder = 4 above means "Independent" on the O-R Scale this
+        // method seeds, and this seeder is the only author of that number, so it is the one place that
+        // can state the ladder without guessing. Applied to rows seeded before T109 too — pinning is
+        // idempotent and nothing else may infer it.
+        //
+        // Scoped to the single EPA this seeder authors. An admin who adds their own item to the demo
+        // curriculum chose their own minima, on a ladder this seeder has no way to know.
+        foreach (var item in curriculum.Items.Where(entity => entity.EpaId == epa.Id && entity.ScaleId is null))
+        {
+            item.ScaleId = scale.Id;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new DemoSeedContext(institution.Id, specialityId, subSpecialityId, epa.Id);
     }

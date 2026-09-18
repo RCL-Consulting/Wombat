@@ -21,6 +21,9 @@ public sealed class ActivityTransitionConfiguration : IEntityTypeConfiguration<A
         // honest value for every row written before T108 and for every transition on an activity type
         // that credits nothing by design.
         builder.Property(entity => entity.CreditedItemCount);
+
+        // Same three-valued contract, same reason (T109): null means credit was never evaluated here.
+        builder.Property(entity => entity.CreditScaleMismatchCount);
         builder.HasIndex(entity => new { entity.ActivityId, entity.OccurredOn });
     }
 }

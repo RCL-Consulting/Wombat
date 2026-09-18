@@ -219,11 +219,16 @@ public sealed class ActivityService : IActivityService
                 activity,
                 new ActivityType
                 {
-                    CreditRulesJson = version.CreditRulesJson
+                    CreditRulesJson = version.CreditRulesJson,
+                    // The pinned schema, not the live one: it declares the `scale_key` of the field the
+                    // credit directive gates on, and that is what binds the achieved ordinal to a ladder
+                    // (T109). Pinning means the binding cannot drift under the activity.
+                    SchemaJson = version.SchemaJson
                 },
                 cancellationToken);
 
-            record.CreditedItemCount = credited.Count;
+            record.CreditedItemCount = credited.UpdatedRows.Count;
+            record.CreditScaleMismatchCount = credited.ScaleMismatchCount;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -493,7 +498,8 @@ public sealed class ActivityService : IActivityService
                     entity.OccurredOn,
                     entity.Note,
                     entity.SnapshotJson,
-                    entity.CreditedItemCount))
+                    entity.CreditedItemCount,
+                    entity.CreditScaleMismatchCount))
                 .ToList());
     }
 }

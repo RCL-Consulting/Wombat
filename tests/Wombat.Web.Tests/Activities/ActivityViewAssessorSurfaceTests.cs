@@ -227,8 +227,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var transitions = new[]
         {
-            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null),
-            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null)
+            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null),
+            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null)
         };
 
         var cut = RenderPage(new FakeSender(Detail(NoOne(), transitions: transitions)));

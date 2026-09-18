@@ -38,6 +38,9 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
             {
                 throw new InvalidOperationException($"An entrustment scale named '{trimmedName}' already exists.");
             }
+
+            await EntrustmentScaleReferences.ThrowIfNamedByAPublishedSchemaAsync(
+                _dbContext, scale.Name, "Renaming it", cancellationToken);
         }
 
         scale.Name = trimmedName;
@@ -61,6 +64,16 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
                 throw new InvalidOperationException(
                     "One or more levels are referenced by entrustment decisions and cannot be removed.");
             }
+
+            // A pinned curriculum item asserts that its ordinals are rungs on this scale (T109). The
+            // validator forces the incoming set to be contiguous from 1, so a removal always removes the
+            // TOP rung — exactly the one an "Independent" or "Supervises others" minimum is most likely to
+            // name. Losing it would make that minimum permanently unreachable, silently.
+            await EntrustmentScaleReferences.ThrowIfPinnedItemNeedsARemovedRungAsync(
+                _dbContext,
+                scale.Id,
+                request.Levels.Select(level => level.Order).ToHashSet(),
+                cancellationToken);
 
             foreach (var removed in removedLevels)
             {
@@ -104,4 +117,5 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
                 .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
                 .ToList());
     }
+
 }

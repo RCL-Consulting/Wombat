@@ -72,7 +72,7 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
                 true,
                 entity.Items
                     .OrderBy(item => item.Epa.Code)
-                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson))
+                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
                     .ToList()))
             .ToListAsync(cancellationToken);
     }
@@ -108,7 +108,7 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
                     true,
                     entity.Items
                         .OrderBy(item => item.Epa.Code)
-                        .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson))
+                        .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
                         .ToList()),
                 CollegeId = entity.SubSpeciality.Speciality.CollegeId
             })

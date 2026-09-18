@@ -23,5 +23,15 @@ public sealed class CurriculumItemConfiguration : IEntityTypeConfiguration<Curri
             .WithMany()
             .HasForeignKey(entity => entity.OwningInstitutionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Nullable on purpose: an unpinned item compares ordinals exactly as it did before T109. Restrict
+        // rather than SetNull, because silently unpinning a curriculum when a scale is deleted is how the
+        // defect comes back.
+        builder.HasOne(entity => entity.Scale)
+            .WithMany()
+            .HasForeignKey(entity => entity.ScaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(entity => entity.ScaleId);
     }
 }

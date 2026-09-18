@@ -245,11 +245,13 @@ dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj
 Always run architecture tests after adding any project reference — they guard layer
 boundaries. Integration tests require Docker for Testcontainers.
 
-**Do not pass `--no-build` to `dotnet test` in this repo.** `dotnet build Wombat.sln` and
-`dotnet test <csproj>` resolve different output paths (`bin/x64/Release` vs `bin/Release`), so
-`--no-build` will happily execute a stale assembly and report a green suite for code that does
-not compile the behaviour you just wrote. It reports passes for tests your change should have
-broken. Always let `dotnet test` do its own build.
+**Do not pass `--no-build` to `dotnet test` or `dotnet ef` in this repo.** `dotnet build Wombat.sln` and
+the per-project tools resolve different output paths (`bin/x64/Release` vs `bin/Release`), so
+`--no-build` will happily load a stale assembly. For `dotnet test` that means a green suite for code that
+does not compile the behaviour you just wrote — it reports passes for tests your change should have
+broken. For `dotnet ef migrations add` it is worse and quieter: the stale model matches the snapshot, so
+EF finds no changes and writes an **empty migration** that compiles, ships, and does nothing. Always let
+the tool do its own build, and always read a generated migration before trusting it.
 
 ## Build and run
 

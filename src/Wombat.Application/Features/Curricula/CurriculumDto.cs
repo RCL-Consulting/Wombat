@@ -24,4 +24,7 @@ public sealed record CurriculumItemDto(
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,
-    string? MinimumLevelByStageJson);
+    string? MinimumLevelByStageJson,
+    /// <summary>The entrustment scale the minima above are expressed on, or null when unpinned (T109).</summary>
+    int? ScaleId = null,
+    string? ScaleName = null);

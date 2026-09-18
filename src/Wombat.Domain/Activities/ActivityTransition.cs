@@ -32,5 +32,16 @@ public sealed class ActivityTransition
     /// </remarks>
     public int? CreditedItemCount { get; set; }
 
+    /// <summary>
+    /// How many curriculum items this transition counted for volume but refused the minimum on, because the
+    /// assessment's entrustment ladder and the curriculum item's were both known and different (T109).
+    /// </summary>
+    /// <remarks>
+    /// Three-valued on the same contract as <see cref="CreditedItemCount" />: <c>null</c> means credit was
+    /// never evaluated for this move, <c>0</c> means it was evaluated and nothing was refused, and
+    /// <c>&gt; 0</c> is the count refused. Rows written before T109 stay <c>null</c>.
+    /// </remarks>
+    public int? CreditScaleMismatchCount { get; set; }
+
     public Activity Activity { get; set; } = null!;
 }

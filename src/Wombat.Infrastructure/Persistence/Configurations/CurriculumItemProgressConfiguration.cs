@@ -20,5 +20,14 @@ public sealed class CurriculumItemProgressConfiguration : IEntityTypeConfigurati
             .WithMany()
             .HasForeignKey(entity => entity.CurriculumItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // The scale this row's stored tally was computed on (T109). Shadow FK — the progress row has no
+        // reason to navigate to a scale, but the reference must not be allowed to dangle.
+        builder.HasOne<Wombat.Domain.Epas.EntrustmentScale>()
+            .WithMany()
+            .HasForeignKey(entity => entity.MinimumLevelScaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(entity => entity.MinimumLevelScaleId);
     }
 }

@@ -63,7 +63,7 @@ public sealed class PaediatricCatalogueSeeder
         var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
         await EnsureDefaultScaleAsync(subSpecialityId, scale.Id, cancellationToken);
         var epaIdsByCode = await EnsureEpasAsync(subSpecialityId, catalogue.Epas, cancellationToken);
-        await EnsureCurriculumAsync(subSpecialityId, catalogue, epaIdsByCode, cancellationToken);
+        await EnsureCurriculumAsync(subSpecialityId, scale.Id, catalogue, epaIdsByCode, cancellationToken);
         await EnsureActivityTypesAsync(specialityId, cancellationToken);
     }
 
@@ -280,6 +280,7 @@ public sealed class PaediatricCatalogueSeeder
 
     private async Task EnsureCurriculumAsync(
         int subSpecialityId,
+        int scaleId,
         CatalogueSeed catalogue,
         IReadOnlyDictionary<string, int> epaIdsByCode,
         CancellationToken cancellationToken)
@@ -314,16 +315,44 @@ public sealed class PaediatricCatalogueSeeder
                 continue;
             }
 
-            curriculum.Items.Add(BuildCurriculumItem(epaId, seed));
+            curriculum.Items.Add(BuildCurriculumItem(epaId, scaleId, seed));
+        }
+
+        // Provenance pin (T109). Every minimum in this curriculum is read straight out of EPA v11.1, whose
+        // rungs ARE the six-rung ladder EnsureScaleAsync seeds, so this seeder knows the ladder for certain
+        // — which nothing downstream does.
+        //
+        // Scoped to the EPAs THIS CATALOGUE declares, not to `OwningInstitutionId is null`. National core
+        // is not a synonym for seeded: a CollegeAdmin may add their own national item to this curriculum
+        // through the admin UI, and its minima were authored against a ladder this seeder cannot know.
+        // Pinning those would assert something untrue, and a wrong pin refuses credit for ever.
+        //
+        // Deliberately NOT derived from SubSpeciality.DefaultEntrustmentScaleId, even though
+        // EnsureDefaultScaleAsync has just set it to this very scale. That field is a committee-picker
+        // default an admin may change at any time, and reading it back would silently re-pin a whole
+        // curriculum the next time someone did.
+        var seededEpaIds = catalogue.Epas
+            .Select(seed => epaIdsByCode.TryGetValue(seed.Code, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .ToHashSet();
+
+        foreach (var item in curriculum.Items.Where(entity =>
+                     entity.OwningInstitutionId is null &&
+                     entity.ScaleId is null &&
+                     seededEpaIds.Contains(entity.EpaId)))
+        {
+            item.ScaleId = scaleId;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private static CurriculumItem BuildCurriculumItem(int epaId, EpaSeed seed) => new()
+    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed) => new()
     {
         EpaId = epaId,
         OwningInstitutionId = null,
+        // The ladder v11.1's minima are expressed on (T109).
+        ScaleId = scaleId,
         // LOSSY: v11.1 states an ANNUAL quota that resets each year ("Six per annum"), but
         // RequiredCount is a whole-programme total and CurriculumItemProgress holds one lifetime
         // row per (item, trainee). Multiplying up preserves the total volume while losing the

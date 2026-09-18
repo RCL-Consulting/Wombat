@@ -15,7 +15,8 @@ public sealed record AddCurriculumItemCommand(
     int WindowMonths,
     double? Weight,
     string? MinimumLevelByStageJson,
-    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
+    ClaimsPrincipal Principal,
+    int? ScaleId = null) : IRequest<CurriculumDto>;
 
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
@@ -26,7 +27,8 @@ public sealed record UpdateCurriculumItemCommand(
     int WindowMonths,
     double? Weight,
     string? MinimumLevelByStageJson,
-    ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
+    ClaimsPrincipal Principal,
+    int? ScaleId = null) : IRequest<CurriculumDto>;
 
 public sealed record RemoveCurriculumItemCommand(int CurriculumId, int ItemId, ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
@@ -137,6 +139,9 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             throw new InvalidOperationException("This curriculum already contains the selected EPA.");
         }
 
+        await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
+            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+
         curriculum.Items.Add(new CurriculumItem
         {
             EpaId = request.EpaId,
@@ -145,7 +150,8 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             MinimumLevelOrder = request.MinimumLevelOrder,
             WindowMonths = request.WindowMonths,
             Weight = request.Weight,
-            MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson)
+            MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson),
+            ScaleId = request.ScaleId
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -197,12 +203,16 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
             throw new InvalidOperationException("This curriculum already contains the selected EPA.");
         }
 
+        await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
+            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+
         item.EpaId = request.EpaId;
         item.RequiredCount = request.RequiredCount;
         item.MinimumLevelOrder = request.MinimumLevelOrder;
         item.WindowMonths = request.WindowMonths;
         item.Weight = request.Weight;
         item.MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson);
+        item.ScaleId = request.ScaleId;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

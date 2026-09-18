@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Forms;
@@ -45,6 +46,31 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
             throw new InvalidOperationException(
                 "This entrustment scale is referenced by one or more MSF questions and cannot be deleted.");
         }
+
+        // T109 pinned curriculum minima and scored progress rows to scales, both ON DELETE RESTRICT.
+        // Without these two checks the delete reaches the database and comes back as a raw
+        // DbUpdateException, which is a stack trace where an explanation belongs.
+        var curriculumRefs = await _dbContext.Set<CurriculumItem>()
+            .AnyAsync(item => item.ScaleId == request.Id, cancellationToken);
+        if (curriculumRefs)
+        {
+            throw new InvalidOperationException(
+                "This entrustment scale is pinned to one or more curriculum items and cannot be deleted.");
+        }
+
+        var progressRefs = await _dbContext.Set<CurriculumItemProgress>()
+            .AnyAsync(progress => progress.MinimumLevelScaleId == request.Id, cancellationToken);
+        if (progressRefs)
+        {
+            throw new InvalidOperationException(
+                "Trainee progress has been scored against this entrustment scale and it cannot be deleted.");
+        }
+
+        // Deleting a scale a schema binds to by name does exactly what renaming one does — the key stops
+        // resolving and the cross-scale refusal can never fire for that type again — so the same guard has
+        // to stand on this door too (T109).
+        await EntrustmentScaleReferences.ThrowIfNamedByAPublishedSchemaAsync(
+            _dbContext, scale.Name, "Deleting it", cancellationToken);
 
         var levelIds = scale.Levels.Select(level => level.Id).ToList();
         if (levelIds.Count > 0)

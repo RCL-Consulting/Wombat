@@ -31,6 +31,21 @@
   </Alert>
 }
 
+@if (CreditedAcrossScales)
+{
+  @* T109. The encounter counted towards the required volume, but the supervision level could not be
+     compared: the rating is on one entrustment ladder and the curriculum requirement is on another,
+     where the same number means a different amount of supervision. Refusing the comparison is the
+     safe answer, and saying so is the honest one — an unexplained shortfall on the progress page is
+     how a registrar reaches the end of a year believing a requirement was met. *@
+  <Alert Kind="warning">
+    This activity counted towards the required number of observations, but not towards the
+    supervision level. The rating was recorded on a different entrustment scale from the one this
+    trainee's curriculum requirement uses, so the two levels are not comparable. Please raise it with
+    the programme administrator: the curriculum item's scale may need to be corrected.
+  </Alert>
+}
+
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
   @if (_activity is not null)
   {
@@ -144,6 +159,17 @@
   /// </remarks>
   private bool CreditedNothing
     => _activity?.Transitions.Any(transition => transition.CreditedItemCount == 0) == true;
+
+  /// <summary>
+  /// True when a transition counted this activity's volume but refused its supervision level, because
+  /// the rating and the curriculum requirement sit on different entrustment scales (T109).
+  /// </summary>
+  /// <remarks>
+  /// Same three-valued contract as <c>CreditedItemCount</c>: <c>null</c> means credit was never
+  /// evaluated and is not a warning. Only a positive count is.
+  /// </remarks>
+  private bool CreditedAcrossScales
+    => _activity?.Transitions.Any(transition => transition.CreditScaleMismatchCount > 0) == true;
 
   private static string CreditLabel(int? creditedItemCount) => creditedItemCount switch
   {

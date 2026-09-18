@@ -60,9 +60,12 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 activity,
                 new ActivityType
                 {
-                    CreditRulesJson = pinnedVersion.CreditRulesJson
+                    CreditRulesJson = pinnedVersion.CreditRulesJson,
+                    // Same pinned schema the live path passes, so a replay reaches the same scale bindings
+                    // and therefore the same credit as the original completion did (T109).
+                    SchemaJson = pinnedVersion.SchemaJson
                 },
-                cancellationToken)).Count;
+                cancellationToken)).UpdatedRows.Count;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);

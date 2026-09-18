@@ -20,7 +20,7 @@ public sealed class CreditApplierTests
         var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 4 }""");
         var applier = new CreditApplier(dbContext);
 
-        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
         await dbContext.SaveChangesAsync();
 
         updated.Should().ContainSingle();
@@ -39,7 +39,7 @@ public sealed class CreditApplierTests
         var activity = CreateCompletedActivity("""{ "epa_id": 9999, "score": 4 }""");
         var applier = new CreditApplier(dbContext);
 
-        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
         await dbContext.SaveChangesAsync();
 
         updated.Should().BeEmpty();
@@ -57,7 +57,7 @@ public sealed class CreditApplierTests
         var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 2 }""");
         var applier = new CreditApplier(dbContext);
 
-        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
         await dbContext.SaveChangesAsync();
 
         updated.Should().ContainSingle();
@@ -224,7 +224,7 @@ public sealed class CreditApplierTests
         activity.CreatedOn = DateTime.UtcNow.AddDays(-400);
         var applier = new CreditApplier(dbContext);
 
-        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
         await dbContext.SaveChangesAsync();
 
         updated.Should().ContainSingle();
@@ -327,7 +327,7 @@ public sealed class CreditApplierTests
         var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 4 }""");
         var applier = new CreditApplier(dbContext);
 
-        var updated = await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
+        var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
         await dbContext.SaveChangesAsync();
 
         updated.Should().BeEmpty();

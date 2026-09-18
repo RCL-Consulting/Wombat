@@ -38,7 +38,11 @@ public sealed class Curriculum
                     MinimumLevelOrder = item.MinimumLevelOrder,
                     WindowMonths = item.WindowMonths,
                     Weight = item.Weight,
-                    MinimumLevelByStageJson = item.MinimumLevelByStageJson
+                    MinimumLevelByStageJson = item.MinimumLevelByStageJson,
+                    // Carried deliberately: the cloned minima are the same numbers on the same ladder, so
+                    // dropping the pin here would silently unpin every item of every new curriculum version
+                    // and regenerate the T109 defect one version at a time.
+                    ScaleId = item.ScaleId
                 })
                 .ToList()
         };

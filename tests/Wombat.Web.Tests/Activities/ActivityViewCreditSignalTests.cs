@@ -85,6 +85,39 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         cut.Markup.Should().NotContain("counted towards no curriculum requirement");
     }
 
+    [Fact]
+    public void ACompletionRefusedAcrossScales_IsFlagged()
+    {
+        // T109. The encounter counted towards volume, so the T108 "credited nothing" banner is silent —
+        // and without this one the refusal of the supervision level would appear nowhere at all, leaving
+        // an unexplained shortfall on the progress page as the only clue.
+        var cut = RenderPage(Completion(creditedItemCount: 1, creditScaleMismatchCount: 1));
+
+        cut.Markup.Should().Contain("alert-warning");
+        cut.Markup.Should().Contain("different entrustment scale");
+        cut.Markup.Should().NotContain("counted towards no curriculum requirement",
+            "volume did count — this is a different failure from T108's");
+    }
+
+    [Fact]
+    public void ACompletionCreditedOnTheSameScale_IsNotFlagged()
+    {
+        var cut = RenderPage(Completion(creditedItemCount: 1, creditScaleMismatchCount: 0));
+
+        cut.Markup.Should().NotContain("alert-warning");
+        cut.Markup.Should().NotContain("different entrustment scale");
+    }
+
+    [Fact]
+    public void ACompletionWhereCreditWasNeverEvaluated_IsNotFlaggedAcrossScales()
+    {
+        // Null means "not evaluated", which is the permanent state of every pre-T109 row. It is not a
+        // warning, and treating it as one would light the banner on the entire existing history.
+        var cut = RenderPage(Completion(creditedItemCount: null, creditScaleMismatchCount: null));
+
+        cut.Markup.Should().NotContain("different entrustment scale");
+    }
+
     private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail)
     {
         Services.AddSingleton<IScopedSender>(new FakeSender(detail));
@@ -95,7 +128,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         return cut;
     }
 
-    private static ActivityDetailDto Completion(int? creditedItemCount)
+    private static ActivityDetailDto Completion(int? creditedItemCount, int? creditScaleMismatchCount = null)
     {
         var transition = new ActivityTransitionDto(
             1,
@@ -106,7 +139,8 @@ public sealed class ActivityViewCreditSignalTests : TestContext
             new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc),
             null,
             "{}",
-            creditedItemCount);
+            creditedItemCount,
+            creditScaleMismatchCount);
 
         var activity = new ActivityDto(
             11,

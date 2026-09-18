@@ -5,7 +5,9 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
+using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Infrastructure.Activities;
@@ -19,7 +21,7 @@ public sealed class CreditApplier : ICreditApplier
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyList<CurriculumItemProgress>> ApplyAsync(
+    public async Task<CreditApplicationResult> ApplyAsync(
         Activity completedActivity,
         ActivityType activityType,
         CancellationToken cancellationToken = default)
@@ -31,7 +33,7 @@ public sealed class CreditApplier : ICreditApplier
         var rules = CreditRulesParser.Parse(activityType.CreditRulesJson);
         if (rules.CountsFor.Count == 0)
         {
-            return [];
+            return CreditApplicationResult.Empty;
         }
 
         using var document = JsonDocument.Parse(completedActivity.DataJson);
@@ -55,21 +57,41 @@ public sealed class CreditApplier : ICreditApplier
         var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, observedOn, cancellationToken);
         if (trainee is null)
         {
-            return [];
+            return CreditApplicationResult.Empty;
         }
 
         var updatedRows = new List<CurriculumItemProgress>();
+        var scaleMismatchCount = 0;
+        var unverifiedLevelCount = 0;
+
+        // The ladder an achieved ordinal sits on is declared by the `scale_key` of the schema field the
+        // directive names, and the schema here is the one the activity is PINNED to — so this answer is
+        // fixed for the life of the activity and replays identically under RebuildCurriculumProgress (T109).
+        var achievedScaleIds = await ResolveAchievedScaleIdsAsync(activityType.SchemaJson, rules, cancellationToken);
 
         foreach (var directive in rules.CountsFor)
         {
             var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
+            int? achievedScaleId = null;
+            if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
+                achievedScaleIds.TryGetValue(directive.MinimumLevelField, out var resolvedScaleId))
+            {
+                achievedScaleId = resolvedScaleId;
+            }
+
             foreach (var curriculumItem in curriculumItems)
             {
                 // A completed activity that matches a curriculum item always counts toward volume
                 // (CountsSoFar). The entrustment level is a separate progression signal: a completion
                 // below the curriculum item's required level still counts as evidence, but only
                 // contributes to MinimumLevelReachedCount when the level is actually met. (T071)
-                var minimumLevelReached = MeetsMinimumLevel(curriculumItem, directive, document.RootElement, trainee.Stage);
+                //
+                // Since T109 that gate can also be REFUSED outright: when the assessment's ladder and the
+                // item's are both known and different, the ordinals mean different things and comparing
+                // them is worse than not counting. Volume still counts — the encounter did happen.
+                var comparison = CompareMinimumLevel(
+                    curriculumItem, directive, document.RootElement, trainee.Stage, achievedScaleId);
+                var minimumLevelReached = comparison.MinimumMet;
 
                 var progressSet = _dbContext.Set<CurriculumItemProgress>();
                 var progress = progressSet.Local.SingleOrDefault(
@@ -102,6 +124,30 @@ public sealed class CreditApplier : ICreditApplier
                     progress.MinimumLevelReachedCount += directive.Amount;
                 }
 
+                // The progress counters are amount-weighted, so they stay comparable with CountsSoFar and
+                // MinimumLevelReachedCount beside them. The per-call counters count curriculum ITEMS, so
+                // they stay comparable with CreditedItemCount, which is a row count — the transition stamp
+                // must not be able to exceed the number of items the same transition credited.
+                switch (comparison.Basis)
+                {
+                    case LevelComparisonBasis.ScaleMismatch:
+                        progress.ScaleMismatchCount += directive.Amount;
+                        scaleMismatchCount++;
+                        break;
+
+                    case LevelComparisonBasis.Unpinned:
+                        progress.UnverifiedLevelCount += directive.Amount;
+                        unverifiedLevelCount++;
+                        break;
+
+                    case LevelComparisonBasis.SameScale:
+                        // The only case where the stored tally rests on a verified ladder. Record which one,
+                        // so a later re-pin of the curriculum item makes this row detectably stale rather
+                        // than quietly wrong.
+                        progress.MinimumLevelScaleId = curriculumItem.ScaleId;
+                        break;
+                }
+
                 progress.LastActivityId = completedActivity.Id;
                 progress.LastUpdated = DateTime.UtcNow;
                 progress.CreditedActivityKeysJson = JsonSerializer.Serialize(creditedKeys.OrderBy(value => value));
@@ -110,8 +156,95 @@ public sealed class CreditApplier : ICreditApplier
             }
         }
 
-        return updatedRows;
+        return new CreditApplicationResult(updatedRows, scaleMismatchCount, unverifiedLevelCount);
     }
+
+    /// <summary>
+    /// Maps each level-gated directive's field key to the entrustment scale that field's values sit on,
+    /// as declared by its <c>scale_key</c> in the pinned schema (T109).
+    /// </summary>
+    /// <remarks>
+    /// Every failure to resolve is silent and returns nothing for that key, which lands the comparison in
+    /// <see cref="LevelComparisonBasis.Unpinned" /> — the pre-T109 behaviour. That covers an empty schema
+    /// (the synthetic <c>ActivityType</c> the older call sites passed), a schema that no longer parses, a
+    /// field with no <c>scale_key</c>, and a <c>scale_key</c> naming no scale in the database. The last of
+    /// those is not hypothetical: the four generic WBA seeds declare <c>or_scale</c> while the seeded scale
+    /// is named <c>O-R Scale</c>, so they resolve to nothing and must go on comparing exactly as they do now.
+    /// </remarks>
+    private async Task<IReadOnlyDictionary<string, int>> ResolveAchievedScaleIdsAsync(
+        string? schemaJson,
+        CreditRules rules,
+        CancellationToken cancellationToken)
+    {
+        var gatedFieldKeys = rules.CountsFor
+            .Select(directive => directive.MinimumLevelField)
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(key => key!)
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (gatedFieldKeys.Count == 0 || string.IsNullOrWhiteSpace(schemaJson))
+        {
+            return EmptyScaleIds;
+        }
+
+        FormSchema schema;
+        try
+        {
+            schema = FormSchemaParser.Parse(schemaJson);
+        }
+        catch (SchemaParseException)
+        {
+            return EmptyScaleIds;
+        }
+
+        var scaleKeysByField = schema.Sections
+            .SelectMany(section => section.Fields)
+            .Where(field => gatedFieldKeys.Contains(field.Key) && !string.IsNullOrWhiteSpace(field.ScaleKey))
+            .GroupBy(field => field.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().ScaleKey!, StringComparer.Ordinal);
+
+        if (scaleKeysByField.Count == 0)
+        {
+            return EmptyScaleIds;
+        }
+
+        var resolved = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var (fieldKey, scaleKey) in scaleKeysByField)
+        {
+            var scaleId = await ResolveScaleIdAsync(scaleKey, cancellationToken);
+            if (scaleId.HasValue)
+            {
+                resolved[fieldKey] = scaleId.Value;
+            }
+        }
+
+        return resolved;
+    }
+
+    /// <summary>
+    /// Resolves a schema <c>scale_key</c> to a scale id by numeric id or exact name — the same match
+    /// <c>ActivityReferenceDataService</c> uses to render the rung options, so the engine and the picker
+    /// cannot disagree about which ladder a field is on.
+    /// </summary>
+    private async Task<int?> ResolveScaleIdAsync(string scaleKey, CancellationToken cancellationToken)
+    {
+        // Deliberately character-for-character the query in
+        // ActivityReferenceDataService.GetEntrustmentScaleLevelOptionsAsync, including the trim, the
+        // discarded TryParse result (a non-numeric key leaves scaleId at 0, which matches no row) and the
+        // single OR. Two subtly different resolutions would mean the rung the assessor picked and the
+        // ladder the engine scored it on could come from different scales.
+        var key = scaleKey.Trim();
+        _ = int.TryParse(key, out var scaleId);
+
+        return await _dbContext.Set<EntrustmentScale>()
+            .AsNoTracking()
+            .Where(scale => scale.Id == scaleId || scale.Name == key)
+            .Select(scale => (int?)scale.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static readonly IReadOnlyDictionary<string, int> EmptyScaleIds =
+        new Dictionary<string, int>(StringComparer.Ordinal);
 
     private async Task<IReadOnlyList<CurriculumItem>> ResolveCurriculumItemsAsync(
         CurriculumItemMatchRule matchRule,
@@ -152,16 +285,17 @@ public sealed class CreditApplier : ICreditApplier
         return [];
     }
 
-    private static bool MeetsMinimumLevel(
+    private static LevelComparison CompareMinimumLevel(
         CurriculumItem curriculumItem,
         CreditDirective directive,
         JsonElement data,
-        int? traineeStage)
+        int? traineeStage,
+        int? achievedScaleId)
     {
         if (string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
             string.IsNullOrWhiteSpace(directive.MinimumLevelFixed))
         {
-            return true;
+            return EntrustmentLevelComparer.NotGated();
         }
 
         // Gate on the level required for the trainee's current stage, not the flat target level, so
@@ -171,16 +305,20 @@ public sealed class CreditApplier : ICreditApplier
         if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
             TryGetInt32(data, directive.MinimumLevelField, out var providedLevel))
         {
-            return providedLevel >= requiredLevel;
+            return EntrustmentLevelComparer.Compare(
+                providedLevel, achievedScaleId, requiredLevel, curriculumItem.ScaleId);
         }
 
         if (!string.IsNullOrWhiteSpace(directive.MinimumLevelFixed) &&
             int.TryParse(directive.MinimumLevelFixed, CultureInfo.InvariantCulture, out var fixedLevel))
         {
-            return fixedLevel >= requiredLevel;
+            // A literal in the credit rules names no schema field and therefore has no scale of its own.
+            // It stays unpinned by construction, which means it compares exactly as it always has.
+            return EntrustmentLevelComparer.Compare(
+                fixedLevel, providedScaleId: null, requiredLevel, curriculumItem.ScaleId);
         }
 
-        return false;
+        return new LevelComparison(false, LevelComparisonBasis.ValueMissing);
     }
 
     /// <summary>

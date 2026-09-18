@@ -2,6 +2,95 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-18 (Opus) — **T109 shipped: entrustment ordinals are pinned to a scale** 🏁
+
+**Build clean, 0 warnings. 735 tests green** — Domain 69, Application 387, Infrastructure 171,
+Architecture 19, Web 89; was 698 at session start. `Wombat.Integration.Tests` was **not** run (needs
+Docker), so 735 is five suites, not the whole repo. No dev server run this session; nothing on production
+was touched.
+
+### T109 — a rating on one ladder can no longer be counted against a minimum on another
+
+The maintainer chose **option 1** (pin the ordinal properly), not the cheaper picker filter. Designed three
+ways and adversarially judged; no design survived both a correctness and a production-safety lens unamended,
+so what shipped is the synthesis. Full design, with the rejected alternatives and their reasons, is in the
+task file.
+
+- **Curriculum side is a real column**: `CurriculumItem.ScaleId`, nullable FK.
+- **Activity side is derived, not stored**: the credited field's `scale_key`, read from the **pinned**
+  schema version, so the binding cannot drift under an in-flight activity and replays identically.
+- **`EntrustmentLevelComparer`** (Domain, pure) returns `(MinimumMet, Basis)` over `NoGate` /
+  `ValueMissing` / `SameScale` / `Unpinned` / `ScaleMismatch`. Only `ScaleMismatch` refuses.
+- **It never throws.** Credit runs between `ApplyTransition` and the single `SaveChanges`, so throwing would
+  roll back a completed assessment in front of the assessor. Volume always counts; only the minimum is
+  withheld.
+- **`Unpinned` is the load-bearing default** — no scale field, an unresolvable `scale_key`,
+  `minimum_level_fixed`, an unpinned item all compare exactly as before. **Nothing that credits today stops
+  crediting.**
+
+### 🚨 The migration backfills NOTHING, deliberately — so deploying changes no trainee's progress
+
+Every design proposed backfilling from `Curriculum.SubSpeciality.DefaultEntrustmentScaleId`, and both
+production-safety judges killed it, for two separately-verified reasons:
+
+1. `PaediatricCatalogueSeeder.EnsureDefaultScaleAsync:223-236` **force-overwrites that field to the six-rung
+   CPSA scale on every boot**, clobbering the admin's own choice. On a booted database it returns the wrong
+   ladder for a five-rung curriculum — the backfill would have *certified* the defect.
+2. `CloneAsNewVersion` copies `SubSpecialityId`, so all versions of a curriculum share one default and the
+   inference cannot express T109's scenario at all.
+
+Pins arrive only by provenance (each seeder pins the EPAs **it** authors) or by an administrator choosing
+one. A wrong pin refuses credit for ever, so nothing guesses.
+
+### ▶ NEXT
+
+1. **Pin curriculum 2 (`FCPaed(SA) Part 1`) on dev, then on production.** Until someone does, the reported
+   scenario still compares five-rung minima against six-rung CPSA ratings — now visibly, as
+   `UnverifiedLevelCount`, rather than silently. Admin → Curricula → items → **Scale**. Check first which
+   sub-speciality curriculum 2 actually sits under; the repo cannot tell you, and it decides whether the
+   seeder has already overwritten that sub-speciality's default. **Opus** for the judgement, not the typing.
+2. **T110** (`or_scale` resolves to nothing) — but **reconcile the duplicate five-rung ladder first**:
+   `"O-R Scale"` and the browser-made `"Paed General Entrustment Scale"` look like the same ten-Cate ladder
+   with two ids. Binding tools to one while a curriculum is pinned to the other mass-refuses real credit.
+3. **T100** (rung labels, live as `3. 3a`) and **T106 item 4** (raw GUIDs in the assessor inbox). Both cheap,
+   both on surfaces a clinician reads daily. **Sonnet.**
+4. **T101** (activity read authorization), then **T107** (stranded activities). Both land in
+   `ActivityService.GetDetailAsync`, which is the single chokepoint for each.
+5. **T105** before authoring the ten remaining v11.1 tools — every transition validates the whole schema in
+   Submit mode, so a half-filled draft cannot be cancelled, and that is *why* the CPSA seeds leave assessor
+   fields un-required. Authoring ten more bakes the workaround in ten more times.
+6. **T111** (dashboard link preselects nothing) whenever convenient.
+
+### What T109 did NOT close
+
+- **The refusal is surfaced on the activity, not on the progress page.** `ActivityView` warns.
+  `CurriculumItemProgress.ScaleMismatchCount` / `UnverifiedLevelCount` are stored and read by nothing.
+- **Already mis-credited rows are not repaired.** Pinning changes future completions; it does not revisit
+  `MinimumLevelReachedCount` already awarded. The only remedy is `RebuildCurriculumProgressCommand`, which
+  **still has no caller anywhere in the product** and still stamps nothing (T106 item 12). Note it deletes
+  every progress row and commits before replaying, with no per-activity try/catch — do not reach for it
+  casually on production.
+- **`scale_key` still binds by mutable name.** Renaming or deleting such a scale is now blocked rather than
+  silently breaking, but the durable fix is to resolve it to an id at publish time. Backlog.
+
+### 🚨 READ BEFORE THE NEXT PRODUCTION DEPLOY
+
+Everything the 2026-09-17 entry said still applies **unchanged** — the first `ActivityTypeSeedRefresher` run
+against production, `terminal: true` coming off `declined`/`cancelled`, every in-flight activity stranded
+(T107), and `Wombat__RefreshSeededActivityTypes=false` around any rollback. That entry is below; read it.
+
+T109 adds nothing to that hazard: its migration adds five nullable/defaulted columns and writes no data, and
+the seeders' pins touch only rows they authored.
+
+### Tooling note
+
+`dotnet ef migrations add --no-build` produced a **silently empty migration** — it loaded the stale
+`bin/Release` assembly while `dotnet build Wombat.sln` writes to `bin/x64/Release`, so the stale model matched
+the snapshot and EF found nothing to do. Same output-path split CLAUDE.md already documented for
+`dotnet test`; the warning now covers `dotnet ef` too. Always read a generated migration before trusting it.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-09-17 (Opus) — **T070, T103, T108 shipped; T109 is the new top defect** 🏁
 
 **Last commit `f6c611a`** (session commits: `62f9547` docs, `c33c14b` T070, `d7a3084` T103,

@@ -66,7 +66,10 @@ public sealed record ActivityTransitionDto(
     DateTime OccurredOn,
     string? Note,
     string SnapshotJson,
-    int? CreditedItemCount);
+    int? CreditedItemCount,
+    // No default: this is the only signal that a completion counted for volume but was refused its
+    // supervision level, and a defaulted argument is one a future call site can silently drop (T109).
+    int? CreditScaleMismatchCount);
 
 public sealed record ActivityDto(
     int Id,
