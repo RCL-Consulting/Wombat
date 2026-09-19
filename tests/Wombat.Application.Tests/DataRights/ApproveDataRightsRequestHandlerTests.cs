@@ -26,9 +26,12 @@ public sealed class ApproveDataRightsRequestHandlerTests
             [new Claim(ClaimTypes.NameIdentifier, "admin-1"), new Claim(ClaimTypes.Role, WombatRoles.Administrator)],
             "test"));
 
-    private static async Task<Guid> SeedSubmittedAsync(ApplicationDbContext db, DataRightsRequestType type)
+    private static async Task<Guid> SeedSubmittedAsync(
+        ApplicationDbContext db,
+        DataRightsRequestType type,
+        int? institutionId = null)
     {
-        var entity = DataRightsRequest.Create("user-1", "User One", type, "reason", DateTime.UtcNow);
+        var entity = DataRightsRequest.Create("user-1", "User One", type, "reason", DateTime.UtcNow, institutionId);
         db.Set<DataRightsRequest>().Add(entity);
         await db.SaveChangesAsync();
         return entity.Id;
@@ -98,4 +101,73 @@ public sealed class ApproveDataRightsRequestHandlerTests
         result.Status.Should().Be(DataRightsRequestStatus.Completed);
         executor.Calls.Should().Be(0);
     }
+
+    /// <summary>
+    /// T112, at the handler rather than the helper. Approving an Erasure runs
+    /// <see cref="IErasureExecutor"/>, which irreversibly pseudonymises the subject's record — so the
+    /// institution check has to be wired into THIS path, not merely available in a static class. The
+    /// executor call count is the assertion that matters: a refusal that still erased would be worse
+    /// than no gate at all.
+    /// </summary>
+    [Fact]
+    public async Task Approve_Erasure_ByACoordinatorFromAnotherInstitution_IsRefusedAndErasesNothing()
+    {
+        await using var db = CreateDb();
+        var id = await SeedSubmittedAsync(db, DataRightsRequestType.Erasure, institutionId: 1);
+        var executor = new RecordingErasureExecutor();
+        var handler = CreateHandler(db, executor, salt: "pepper");
+
+        var act = () => handler.Handle(
+            new ApproveDataRightsRequestCommand(id, "approved", Coordinator(institutionId: 2)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        executor.Calls.Should().Be(0);
+
+        var stored = await db.Set<DataRightsRequest>().AsNoTracking().FirstAsync(r => r.Id == id);
+        stored.Status.Should().Be(DataRightsRequestStatus.Submitted, "a refused approval must change nothing");
+    }
+
+    [Fact]
+    public async Task Approve_Erasure_ByACoordinatorInTheSameInstitution_Proceeds()
+    {
+        await using var db = CreateDb();
+        var id = await SeedSubmittedAsync(db, DataRightsRequestType.Erasure, institutionId: 1);
+        var executor = new RecordingErasureExecutor();
+        var handler = CreateHandler(db, executor, salt: "pepper");
+
+        var result = await handler.Handle(
+            new ApproveDataRightsRequestCommand(id, "approved", Coordinator(institutionId: 1)),
+            CancellationToken.None);
+
+        executor.Calls.Should().Be(1);
+        result.Status.Should().Be(DataRightsRequestStatus.Completed);
+    }
+
+    /// <summary>An unstamped request is Administrator-only; erasure is irreversible.</summary>
+    [Fact]
+    public async Task Approve_Erasure_OfAnUnstampedRequest_IsRefusedToAScopedCoordinator()
+    {
+        await using var db = CreateDb();
+        var id = await SeedSubmittedAsync(db, DataRightsRequestType.Erasure);
+        var executor = new RecordingErasureExecutor();
+        var handler = CreateHandler(db, executor, salt: "pepper");
+
+        var act = () => handler.Handle(
+            new ApproveDataRightsRequestCommand(id, "approved", Coordinator(institutionId: 1)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        executor.Calls.Should().Be(0);
+    }
+
+    private static ClaimsPrincipal Coordinator(int institutionId)
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "coord-1"),
+                new Claim(Wombat.Application.Common.Security.WombatClaimTypes.InstitutionId, institutionId.ToString()),
+                new Claim(ClaimTypes.Role, Wombat.Domain.Identity.WombatRoles.Coordinator)
+            ],
+            "test"));
+
 }

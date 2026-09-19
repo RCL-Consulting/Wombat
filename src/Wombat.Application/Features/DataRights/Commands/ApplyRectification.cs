@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Commands;
 
@@ -51,11 +50,14 @@ public sealed class ApplyRectificationCommandHandler : IRequestHandler<ApplyRect
 
     public async Task<DataRightsRectificationDto> Handle(ApplyRectificationCommand request, CancellationToken cancellationToken)
     {
-        DemandReviewAccess(request.Principal);
 
         var dataRightsRequest = await _dbContext.Set<DataRightsRequest>()
             .FirstOrDefaultAsync(r => r.Id == request.RequestId, cancellationToken)
             ?? throw new InvalidOperationException("Data rights request not found.");
+        // T112: the gate runs AFTER the load, because it is the REQUEST's institution being checked,
+        // not merely the caller's role. Refusal and not-found are both thrown before anything is
+        // mutated, so a caller out of scope changes nothing.
+        DataRightsAuthorization.DemandRectificationAccess(request.Principal, dataRightsRequest);
 
         if (dataRightsRequest.Type != DataRightsRequestType.Rectification)
             throw new InvalidOperationException("Only rectification requests accept rectification records.");
@@ -85,12 +87,4 @@ public sealed class ApplyRectificationCommandHandler : IRequestHandler<ApplyRect
             rectification.AppliedOn);
     }
 
-    private static void DemandReviewAccess(ClaimsPrincipal principal)
-    {
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.SpecialityAdmin))
-            return;
-
-        throw new UnauthorizedAccessException("Only administrators and speciality admins may apply rectifications.");
-    }
 }

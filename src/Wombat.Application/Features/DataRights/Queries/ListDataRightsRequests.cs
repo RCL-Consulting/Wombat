@@ -1,20 +1,26 @@
-using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Queries;
 
+/// <remarks>
+/// <c>Principal</c> sits ahead of the paging parameters deliberately: it is the authorization input,
+/// and a security parameter must not be optional. Until T112 it was last AND defaulted to null, and
+/// the handler skipped its check when it was — so a caller who passed nothing was authorized by
+/// omission.
+/// </remarks>
 public sealed record ListDataRightsRequestsQuery(
     DataRightsRequestType? Type,
     DataRightsRequestStatus? Status,
     string? RequesterUserId,
+    ClaimsPrincipal Principal,
     int Page = 1,
-    int PageSize = 25,
-    ClaimsPrincipal? Principal = null) : IRequest<PagedDataRightsResult>;
+    int PageSize = 25) : IRequest<PagedDataRightsResult>;
 
 public sealed class ListDataRightsRequestsQueryValidator : AbstractValidator<ListDataRightsRequestsQuery>
 {
@@ -36,10 +42,26 @@ public sealed class ListDataRightsRequestsQueryHandler : IRequestHandler<ListDat
 
     public async Task<PagedDataRightsResult> Handle(ListDataRightsRequestsQuery request, CancellationToken cancellationToken)
     {
-        if (request.Principal is not null)
-            DemandReviewAccess(request.Principal);
+        // T112: this used to read `if (request.Principal is not null)`, on a record whose Principal
+        // defaulted to null — so a caller who simply passed nothing was authorized by omission. The
+        // parameter is now required and the check unconditional.
+        if (!DataRightsAuthorization.CanReviewAnything(request.Principal))
+        {
+            throw new UnauthorizedAccessException(DataRightsAuthorization.RefusalMessage);
+        }
 
         var query = _dbContext.Set<DataRightsRequest>().AsQueryable();
+
+        // ...and the role check alone is not the boundary: it says the caller reviews SOMETHING, not
+        // whose. A global Administrator sees every institution; everyone else sees their own, and a
+        // reviewer with no institution claim sees nothing rather than everything.
+        if (!request.Principal.IsAdministrator())
+        {
+            var scopedInstitutionId = request.Principal.GetInstitutionId();
+            query = scopedInstitutionId.HasValue
+                ? query.Where(r => r.InstitutionId == scopedInstitutionId.Value)
+                : query.Where(_ => false);
+        }
 
         if (request.Type is not null)
             query = query.Where(r => r.Type == request.Type.Value);
@@ -67,12 +89,4 @@ public sealed class ListDataRightsRequestsQueryHandler : IRequestHandler<ListDat
         return new PagedDataRightsResult(items, totalCount, request.Page, request.PageSize);
     }
 
-    private static void DemandReviewAccess(ClaimsPrincipal principal)
-    {
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.Coordinator))
-            return;
-
-        throw new UnauthorizedAccessException("Only administrators and coordinators may list all data rights requests.");
-    }
 }

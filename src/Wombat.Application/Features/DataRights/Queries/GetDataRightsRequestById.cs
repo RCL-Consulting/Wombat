@@ -4,7 +4,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Queries;
 
@@ -34,9 +33,13 @@ public sealed class GetDataRightsRequestByIdQueryHandler : IRequestHandler<GetDa
     {
         var entity = await _dbContext.Set<DataRightsRequest>()
             .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Data rights request not found.");
+            // Same string the gate throws below. RequestDetail.razor renders ex.Message straight into
+            // an alert, so a distinct not-found message would tell a Coordinator "this id exists, at
+            // another institution" apart from "this id does not exist" — the oracle the single
+            // RefusalMessage exists to prevent.
+            ?? throw new UnauthorizedAccessException(DataRightsAuthorization.RefusalMessage);
 
-        DemandAccess(request.Principal, entity);
+        DataRightsAuthorization.DemandReadAccess(request.Principal, entity);
 
         return new DataRightsRequestDto(
             entity.Id,
@@ -52,16 +55,4 @@ public sealed class GetDataRightsRequestByIdQueryHandler : IRequestHandler<GetDa
             entity.CompletedOn);
     }
 
-    private static void DemandAccess(ClaimsPrincipal principal, DataRightsRequest entity)
-    {
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.Coordinator))
-            return;
-
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.Equals(userId, entity.RequesterUserId, StringComparison.Ordinal))
-            return;
-
-        throw new UnauthorizedAccessException("You are not authorized to view this request.");
-    }
 }

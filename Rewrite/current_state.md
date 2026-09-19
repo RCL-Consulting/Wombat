@@ -2,6 +2,36 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ T112 SHIPPED — 2026-09-19 (Opus) — **data rights is institution-scoped; the export narrowed to the data subject**
+
+**Build clean, 0 warnings. 822 tests green** — Domain 69, Application 470, Infrastructure 171,
+Architecture 23, Web 89. Migration applied to dev. **Not browser-verified** — dev holds zero data-rights
+requests, so there was nothing to walk; see NEXT.
+
+Every handler in the feature gated on **role alone**, six hand-written copies of it. Any `Coordinator`,
+in any institution, could list, open, download and **approve the erasure of** any other institution's
+request — erasure being irreversible, and a subject access report being everything the product holds
+about one person. `ListDataRightsRequestsQuery.Principal` was optional *and last*, and the handler read
+`if (request.Principal is not null)`, so a caller passing nothing was authorized by omission.
+
+`DataRightsRequest` now carries a stamped `InstitutionId` and one `DataRightsAuthorization` predicate
+replaces all six gates. The export is deliberately **narrower** than the metadata read — only the data
+subject and a global Administrator — because scoping the request row does not scope the bundle it
+releases, and the only download link in the product is on the subject's own profile page anyway.
+
+### 🚨 The security property had no test at all
+
+The review deleted the institution conjunction and **all 449 Application tests still passed**: every
+reviewer-path test used an Administrator principal, which short-circuits before the comparison. There are
+now 21 tests that cover it; re-running the same mutation fails **8**, one of which asserts the erasure
+executor was never called. Worth remembering as a pattern — an authorization helper tested only through
+its privileged caller is not tested.
+
+Full account, and four things left open (who the officer should be; speciality-scoping for rectification;
+erasure crossing institutions by person; unaudited privileged reads) in the task file.
+
+---
+
 ## ⭐ SESSION FINALIZED — 2026-09-19 (Opus) — **T101 shipped: the activity read boundary is closed** 🏁
 
 **Build clean, 0 warnings. 796 tests green** — Domain 69, Application 444, Infrastructure 171,
@@ -73,10 +103,9 @@ activity for ever** with no role able to move it.
 
 ### ▶ NEXT
 
-1. **T112 — data rights.** The review found it is *wider* than the hole T101 closed: any Coordinator, any
-   institution, downloads any trainee's complete activity data as a ZIP, and can approve another
-   institution's **Erasure**. Needs a product decision (who the data-rights officer is) before code.
-   **Opus.**
+1. **Browser-verify T112**, which nothing has done — dev holds no data-rights requests. Submit one as a
+   trainee in each institution, then confirm a Coordinator sees only their own, cannot open the other,
+   and that the subject can download while the Coordinator cannot. **Sonnet.**
 2. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — still outstanding from the last session, and the repo
    *does* say which sub-speciality it sits under (`Rewrite/scenario-paediatrics.md:160`, `:216`,
    `:229-247`); the previous handoff was wrong that it could not. 15 rows of data entry. Record the chosen

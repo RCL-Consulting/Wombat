@@ -73,3 +73,60 @@ It is the exact pattern the comment at `ExportPortfolio.cs:83-88` now says must 
 
 Same defect class as [T101], found while closing it. [T101] fixed the activity surface and the portfolio
 export; this is the third door and was deliberately deferred because it needs a product decision.
+
+---
+
+## Shipped — 2026-09-19
+
+Scoped the existing holders; **did not** choose the holders. Which roles ought to hold a statutory
+data-rights power is a product question, and answering it in a security commit would have silently
+changed who can do what. The role sets are preserved exactly: `Coordinator` for review/decision,
+`SpecialityAdmin` for rectification, `Administrator` globally. **That question is still open** — see
+"Still open" below.
+
+### What changed
+
+- **`DataRightsRequest.InstitutionId`**, nullable, stamped at submission from the submitting
+  principal's own claim (the submitter *is* the data subject, so no lookup and nothing to go stale).
+  Migration `20260919111354_T112_DataRightsInstitutionScope` backfills from `AspNetUsers."InstitutionId"`,
+  which is the same column the `institution_id` claim is issued from.
+- **`DataRightsAuthorization`** replaces six hand-written, role-only gates with one predicate that
+  conjoins the request's institution. A null stamp matches no scoped reviewer — erasure is
+  irreversible, so an unplaceable request withholds the power rather than spreading it.
+- **`ListDataRightsRequestsQuery`**'s `Principal` was optional *and last*, and the handler read
+  `if (request.Principal is not null)` — a caller passing nothing was authorized by omission. It is now
+  required, ahead of the paging parameters, and the query filters by institution (count included, or it
+  would leak the other institution's volume).
+- **The export is narrower than the metadata read.** Scoping the request row does not scope the bundle
+  it releases: the access report is assembled by *person*, so it can carry rows stamped to other
+  institutions — an assessor who covered a rotation elsewhere, a trainee who transferred. Those rows are
+  the subject's personal data and belong in *their* report, but a reviewer in scope for the request
+  cannot open them individually. `DemandExportAccess` therefore admits only the data subject and a
+  global Administrator. Nothing is lost: the only download link in the product is on the subject's own
+  profile page (`Profile/DataRights.razor:107`). The reviewer approves; the subject collects.
+
+### The review caught that none of this was tested
+
+An adversarial review deleted the institution conjunction from `CanAct` and **all 449 Application tests
+still passed**. Every pre-existing reviewer-path test used an `Administrator` principal, which
+short-circuits before the comparison is ever reached, and the first batch of new tests exercised the
+list query's LINQ filter rather than the gate.
+
+`DataRightsAuthorizationTests` and three handler-level tests now cover it. Re-running the same mutation
+fails **8** tests, including one asserting `IErasureExecutor` was never called — a refusal that still
+erased would be worse than no gate.
+
+### Still open
+
+- **Who the data-rights officer should be.** "Any Coordinator" is unlikely to be the right answer for a
+  statutory function, and `InstitutionalAdmin` — admitted by the activity read gate — is not admitted
+  here. Needs a product decision, then a small change to the two role arrays.
+- **`SpecialityAdmin` rectification is institution-scoped but not speciality-scoped**, unlike both T101
+  gates. Latent: `ApplyRectificationCommand` and `CompleteRectificationRequestCommand` have no caller
+  outside the feature folder today. Close it when a UI is built for them.
+- **`ErasureExecutor` is scoped to the person, not the row.** Approving an erasure pseudonymises every
+  row belonging to that person, including ones stamped to institutions the approver cannot read. That is
+  inherent to erasing a person rather than a record, and cannot be fixed by scoping the request; it needs
+  a decision about whether a cross-institution erasure requires a global Administrator.
+- **Privileged reads leave no audit row.** `AuditPipelineBehavior` audits `*Command` only, so
+  `GetDataRightsRequestByIdQuery` is unaudited. See [T114].

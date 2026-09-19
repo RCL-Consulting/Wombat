@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Commands;
 
@@ -42,7 +41,6 @@ public sealed class RejectDataRightsRequestCommandHandler : IRequestHandler<Reje
 
     public async Task<DataRightsRequestDto> Handle(RejectDataRightsRequestCommand request, CancellationToken cancellationToken)
     {
-        DemandReviewAccess(request.Principal);
 
         var actorUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException("User identity is required.");
@@ -50,6 +48,10 @@ public sealed class RejectDataRightsRequestCommandHandler : IRequestHandler<Reje
         var entity = await _dbContext.Set<DataRightsRequest>()
             .FirstOrDefaultAsync(r => r.Id == request.RequestId, cancellationToken)
             ?? throw new InvalidOperationException("Data rights request not found.");
+        // T112: the gate runs AFTER the load, because it is the REQUEST's institution being checked,
+        // not merely the caller's role. Refusal and not-found are both thrown before anything is
+        // mutated, so a caller out of scope changes nothing.
+        DataRightsAuthorization.DemandReviewAccess(request.Principal, entity);
 
         entity.Reject(actorUserId, request.DecisionNote, DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -68,12 +70,4 @@ public sealed class RejectDataRightsRequestCommandHandler : IRequestHandler<Reje
             entity.CompletedOn);
     }
 
-    private static void DemandReviewAccess(ClaimsPrincipal principal)
-    {
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.Coordinator))
-            return;
-
-        throw new UnauthorizedAccessException("Only administrators and coordinators may review data rights requests.");
-    }
 }

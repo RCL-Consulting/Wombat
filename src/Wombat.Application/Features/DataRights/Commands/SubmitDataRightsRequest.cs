@@ -1,7 +1,8 @@
-using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using System.Security.Claims;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Identity;
@@ -66,7 +67,16 @@ public sealed class SubmitDataRightsRequestCommandHandler : IRequestHandler<Subm
         }
 
         var utcNow = DateTime.UtcNow;
-        var entity = DataRightsRequest.Create(userId, displayName, request.Type, request.Reason, utcNow);
+        var entity = DataRightsRequest.Create(
+            userId,
+            displayName,
+            request.Type,
+            request.Reason,
+            utcNow,
+            // T112: the submitter IS the data subject, so their own claim is the authoritative answer
+            // to "where does this request belong" — no lookup, and nothing to go stale. Null when they
+            // carry no institution claim, which leaves the request Administrator-only.
+            request.Principal.GetInstitutionId());
 
         _dbContext.Set<DataRightsRequest>().Add(entity);
         await _dbContext.SaveChangesAsync(cancellationToken);

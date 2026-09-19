@@ -10,6 +10,11 @@ public sealed class DataRightsRequestConfiguration : IEntityTypeConfiguration<Da
     {
         builder.ToTable("DataRightsRequests");
 
+        // T112: the list path filters on this on every page load. No FK — the column is a snapshot of
+        // where the requester was when they asked, and restructuring the institution tree must not
+        // cascade into, or be blocked by, a historical statutory request.
+        builder.HasIndex(e => e.InstitutionId);
+
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id)
             .HasColumnType("uuid")
