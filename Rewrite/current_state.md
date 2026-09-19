@@ -2,6 +2,43 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## 📋 2026-09-19 (Opus) — **The EPA programme is now planned: `Rewrite/EPA-PROGRAMME.md`**
+
+Start there for anything EPA. It carries the full inventory with a READY / NEEDS A DECISION verdict per
+item, the dependency-ordered waves, **25 numbered decisions**, and an honest list of what is still not
+planned.
+
+Five missing task files were written: **[T119]** `observed_on` · **[T120]** the ten remaining tools ·
+**[T121]** MSF credit · **[T122]** the EPA→tool allow-list · **[T123]** the three UI defects from [T118].
+
+**Ready to start today, no decision needed:** T119, T123 d1 and d3, T111, T099, the
+`RebuildCurriculumProgressCommand` fixes, T106 item 14, and the MSF scope/reminder defects.
+
+**Four findings the planning pass turned up that were not on anyone's list:**
+
+- **`MsfInvitationExpiryReminderJob.cs:57` mails the token *hash* as the token**, so every MSF expiry
+  reminder is a dead link. That is on [T121]'s critical path — a campaign that never reaches its minimum
+  responses can never be released and so can never credit.
+- **`RebuildCurriculumProgressCommand` is not atomic**: `:30-32` deletes every progress row and saves
+  before the replay saves at `:71`. A failure in between zeroes every trainee. It also still has no caller.
+- **`GetSamplingConcentrationWarnings.cs:92-99` matches activity keys exactly** against `mini_cex`,
+  `dops`, `cbd`, `acat` — so the committee's sampling report has been blind to the entire paediatric
+  catalogue since the day it was seeded.
+- **No MSF command or query takes a `ClaimsPrincipal`**; `ListMsfCampaignsForCoordinatorQuery` returns
+  every campaign in every institution. The folder predates T056 — same family as [T112] and [T117].
+
+**Still not planned even now** (§5 of the programme): phase 3 and phase 4 have no task files of their own;
+file attachments are a real feature nobody has designed; portfolio-and-logbook review needs a design
+rather than a form; learner feedback is designed nowhere; a tool-mix rule would be an invention because
+Annexure A supplies no sub-quotas.
+
+**The critical path is the College, not engineering.** 16 of the 25 decisions are content questions —
+including whether v11.1 is final at all, what CCA stands for, and whether MSF counts toward the 55
+encounters. [T120] recommends extracting page 8 of `EPA version 11.1.docx` ("Standard assessment
+information sources") as the first action, because it may collapse four of them at once.
+
+---
+
 ## ⭐ 2026-09-19 (Opus) — **Wave 0 done: the v11.1 catalogue has credited for the first time**
 
 The maintainer decided to complete all outstanding EPA work, and chose the evidence run first. It was the
