@@ -1004,6 +1004,17 @@ fieldset legend {
   stroke-width: 1.5;
 }
 
+/* A rating that is not a rung on the axis ladder — recorded against a different scale. Kept and drawn
+   hollow rather than dropped, because the trainee did not create the mismatch and the observation is
+   real; excluded from the polyline, because joining two incommensurable ordinals implies a trend that
+   is not there. (T123) */
+.trajectory-chart-dot.is-off-scale {
+  fill: var(--surface-color);
+  stroke: var(--muted-text);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
 .trajectory-chart-x-label,
 .trajectory-chart-y-label {
   fill: var(--muted-text);

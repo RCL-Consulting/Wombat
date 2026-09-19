@@ -262,6 +262,7 @@
               <h4>@trajectory.EpaCode — @trajectory.EpaTitle</h4>
               <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
               <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+                               Rungs="@BuildRungs(trajectory)"
                                AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
             </article>
           }
@@ -456,6 +457,13 @@
   private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
     => trajectory.Points
       .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source))
+      .ToArray();
+
+  // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.
+  // Empty when nothing is pinned, which draws the numeric axis this chart drew before T123.
+  private static IReadOnlyList<TrajectoryChart.Rung> BuildRungs(EpaTrajectoryDto trajectory)
+    => trajectory.Rungs
+      .Select(rung => new TrajectoryChart.Rung(rung.Order, rung.Label))
       .ToArray();
 
   private async Task ExecuteAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -346,6 +347,159 @@ public sealed class GetEpaTrajectoryForTraineeTests
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
+    }
+
+
+    // ---- T123 defect 1: the ladder is resolved server-side from the trainee's pinned curriculum item ----
+
+    [Fact]
+    public async Task PinnedCurriculumItem_CarriesTheLadderAndLabelsEveryRating()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 4, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.ScaleId.Should().Be(42);
+        trajectory.ScaleName.Should().Be("CPSA Paediatric Entrustment Scale v11.1");
+        trajectory.Rungs.Select(rung => rung.Label).Should().Equal("1", "2", "3a", "3b", "4", "5");
+
+        // The whole point: ordinal 5 is the College's rung "4".
+        trajectory.Points.Select(point => point.Rating).Should().Equal(3, 5);
+        trajectory.Points.Select(point => point.RatingLabel).Should().Equal("3a", "4");
+    }
+
+    [Fact]
+    public async Task UnpinnedCurriculumItem_CarriesNoLadderAndFallsBackToTheOrdinal()
+    {
+        // Curriculum 2 is 0/15 pinned on dev. Unpinned is a permanent state, not a migration artefact,
+        // and every legacy trajectory must render exactly as it did before T123.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: false);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.ScaleId.Should().BeNull();
+        trajectory.ScaleName.Should().BeNull();
+        trajectory.Rungs.Should().BeEmpty();
+        trajectory.Points.Single().RatingLabel.Should().Be("3");
+    }
+
+    [Fact]
+    public async Task NoTraineeProfile_CarriesNoLadder()
+    {
+        // A PendingTrainee has no profile. Nothing here may throw or hide the observations.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Rungs.Should().BeEmpty();
+        trajectory.Points.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task ARatingThatIsNotARungOnThePinnedLadder_KeepsTheOrdinalAsItsLabel()
+    {
+        // How a rating recorded on another scale reaches the chart. It is not dropped; the component
+        // draws it hollow and leaves it out of the line.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 9, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Single().Points.Single().RatingLabel.Should().Be("9");
+    }
+
+    [Fact]
+    public async Task AGraduatedTraineesProfileStillResolvesTheLadder()
+    {
+        // The profile rule is active-first then latest ProgrammeStartDate, NOT filtered on IsActive --
+        // the same rule the credit engine's picker uses, so the two cannot disagree about which row is
+        // in force. A graduated registrar still has a trajectory worth reading.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true, profileIsActive: false);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Single().Points.Single().RatingLabel.Should().Be("4");
+    }
+
+    private static async Task SeedCpsaCurriculumAsync(
+        ApplicationDbContext dbContext,
+        string traineeUserId,
+        bool pin,
+        bool profileIsActive = true)
+    {
+        dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale
+        {
+            Id = 42, Name = "CPSA Paediatric Entrustment Scale v11.1"
+        });
+        var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
+        for (var order = 1; order <= labels.Length; order++)
+        {
+            dbContext.Set<EntrustmentLevel>().Add(new EntrustmentLevel
+            {
+                Id = 4200 + order, ScaleId = 42, Order = order, Label = labels[order - 1]
+            });
+        }
+
+        dbContext.Set<Curriculum>().Add(new Curriculum
+        {
+            Id = 55, SubSpecialityId = 1, Name = "Paediatric EPA Curriculum",
+            Version = "11.1", EffectiveFrom = new DateOnly(2026, 1, 1), IsActive = true
+        });
+        dbContext.Set<CurriculumItem>().Add(new CurriculumItem
+        {
+            Id = 555, CurriculumId = 55, EpaId = 7, RequiredCount = 6,
+            MinimumLevelOrder = 6, WindowMonths = 12, ScaleId = pin ? 42 : null
+        });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 5555, UserId = traineeUserId, CurriculumId = 55,
+            ProgrammeStartDate = new DateOnly(2026, 1, 1),
+            ExpectedCompletionDate = new DateOnly(2029, 12, 31),
+            IsActive = profileIsActive
+        });
+        await dbContext.SaveChangesAsync();
     }
 
     private static ApplicationDbContext CreateDbContext()

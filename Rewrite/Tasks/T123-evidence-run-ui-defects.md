@@ -1,6 +1,40 @@
 # T123 — Three clinician-facing defects the first v11.1 run exposed: a five-point axis, two identical tools, and a menu from the wrong world
 
-**Status:** open
+**Status:** defect 1 **DONE** 2026-09-19 (step 1 only — step 2 and the full D30 need [T126]).
+Defect 3 **DONE** 2026-09-19. Defect 2 is a data edit awaiting D31, and defect 3's narrowing has
+now closed it for trainees.
+
+### Corrections applied 2026-09-19 while implementing
+
+Several line references had drifted and two claims were wrong; recorded here so the argument above can
+still be checked against the code.
+
+- `CreditApplier.ResolveAchievedScaleIdsAsync` is at **`:177-225`**, `ResolveScaleIdAsync` at **`:232-247`**,
+  the "identical on purpose" comment at **`:234-238`**, the `or_scale` remark at **`:169-176`**.
+  `ActivityReferenceDataService.GetEntrustmentScaleLevelOptionsAsync` is **`:287-318`**, and the half that
+  makes a numeric key work is `:296`, not the `:299-303` cited.
+- **"Do not write a fourth copy" — there were two**, not three: `CreditApplier` and
+  `ActivityReferenceDataService`. (`EntrustmentScaleReferences.cs:66` is a *name-only* matcher, a
+  different and weaker rule — it cannot see a schema that binds by numeric id, i.e. every legacy `_paed`
+  type, which is its own defect.) The id-or-name rule now lives once, in
+  `Wombat.Application/Features/Epas/EntrustmentRungLabels.cs`, and the picker was re-pointed at it.
+  `CreditApplier` keeps its own, named from the shared one.
+- **`MinRating` was already a `[Parameter]`**, so `Rungs` overrides a parameter rather than a derived
+  value. Precedence is now stated in the component: rungs win.
+- **The grid loop was an integer stepper**, so `Rungs.Min/Max(Order)` would have assumed contiguity. It
+  iterates the rung list instead, and a ladder with a deleted middle rung draws one tick per rung.
+- 🚨 **`RenderYAxisLabel` emits a raw `MarkupString` with no HTML encoding** (`RenderXAxisLabel` next door
+  encodes). Substituting an operator-editable `EntrustmentLevel.Label` into it, as D29 asks, was an
+  injection hole the fix would have introduced. It now encodes, and there is a test.
+- **`ChartPoint.Label` is not a rung label.** Both call sites pass `point.Source`
+  ("Direct observation") and the column above it was headed "Source". The rung label needed a second
+  field. Also: finding 8 is closed and the column is renamed **"Evidence type"**.
+- **The profile rule has a trap.** `GetCurriculumProgressForTrainee.cs:56-58` — the *other* query on
+  `MyProgress` — resolves the **active** profile, while `ResolveCreditableEpaIdsAsync` resolves
+  active-first-then-latest and does **not** filter on `IsActive`. The chart follows the credit engine's
+  rule, deliberately, and says so in a remark.
+
+**Status (original):** open
 **Surfaced:** 2026-09-19, the Wave-0 evidence run — `Rewrite/Tasks/T118-v11-1-evidence-run-findings.md`
 findings 5, 6 and 7.
 **Severity:** Medium-High. None of these corrupts data. All three are read or acted on by a registrar or an
