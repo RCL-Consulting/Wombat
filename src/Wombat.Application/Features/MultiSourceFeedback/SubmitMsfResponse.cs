@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.MultiSourceFeedback;
@@ -8,7 +9,18 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 public sealed record SubmitMsfResponseAnswerItem(int QuestionId, int? ScaleValue, string? LongText);
 
-public sealed record SubmitMsfResponseCommand(string Token, IReadOnlyList<SubmitMsfResponseAnswerItem> Answers) : IRequest;
+/// <remarks>
+/// Both properties are redacted from the audit summary. The AuditPipelineBehavior audits every
+/// request whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson. <c>Answers</c> carries the respondent's free-text judgement of a named colleague,
+/// which multi-source feedback only works because it is confidential and aggregated — the audit
+/// table showed it un-aggregated and attributable. <c>Token</c> is the respondent's single-use link
+/// and would let a reader re-open or overwrite their response. Nothing identifying the campaign is
+/// lost: the row still records that a response was submitted, when, and from where. (T101)
+/// </remarks>
+public sealed record SubmitMsfResponseCommand(
+    [property: Redact] string Token,
+    [property: Redact] IReadOnlyList<SubmitMsfResponseAnswerItem> Answers) : IRequest;
 
 public sealed class SubmitMsfResponseCommandValidator : AbstractValidator<SubmitMsfResponseCommand>
 {

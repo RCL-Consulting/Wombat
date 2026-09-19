@@ -30,6 +30,11 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
         var pendingReviewCount = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Where(a => a.CurrentState == "submitted" || a.CurrentState == "in_review")
+            // Counted across the whole database until T101: a sub-speciality admin's "pending
+            // review" tile reported every institution's backlog. Activities carry their own
+            // SubSpecialityId stamp now, so the count answers for the sub-specialities this admin is
+            // scoped to. A null stamp belongs to nobody's programme and is counted by nobody.
+            .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
             .CountAsync(cancellationToken);
 
         var traineeProfiles = await _dbContext.Set<TraineeProfile>()

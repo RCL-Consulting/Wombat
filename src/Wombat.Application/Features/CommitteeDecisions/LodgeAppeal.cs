@@ -4,10 +4,19 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Application.Audit;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
-public sealed record LodgeAppealCommand(int ReviewId, string Reason, ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
+/// <remarks>
+/// <c>Reason</c> is redacted from the audit summary: it is the trainee's own grounds for appealing
+/// a progression decision, written in the expectation that the appeal panel reads it — not every
+/// administrator with access to the audit log. (T101)
+/// </remarks>
+public sealed record LodgeAppealCommand(
+    int ReviewId,
+    [property: Redact] string Reason,
+    ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
 
 public sealed class LodgeAppealCommandValidator : AbstractValidator<LodgeAppealCommand>
 {

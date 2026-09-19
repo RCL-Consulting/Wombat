@@ -17,6 +17,27 @@
   <Alert Kind="danger">@_error</Alert>
 }
 
+@* An incomplete report is not a quiet one: without this banner, "some of this trainee's evidence
+   is outside what you may read" would render exactly like "we checked the sampling and it is
+   clean", on a page where the next click decides whether someone progresses. Not dismissible for
+   the same reason. *@
+@if (_samplingReport is { EvidenceComplete: false })
+{
+  <Alert Kind="danger">
+    <div>
+      <h3>Sampling figures are incomplete</h3>
+      <p>
+        @_samplingReport.WithheldRatedActivities rated observation@(_samplingReport.WithheldRatedActivities == 1 ? string.Empty : "s")
+        in this review window @(_samplingReport.WithheldRatedActivities == 1 ? "is" : "are") outside what your account may read —
+        evidence held by another institution, or recorded before this trainee transferred. Every sampling
+        figure on this page was computed without @(_samplingReport.WithheldRatedActivities == 1 ? "it" : "them").
+        Treat the absence of a concentration warning as unknown rather than clean, and ask a panel member
+        with the full record before you rely on these counts.
+      </p>
+    </div>
+  </Alert>
+}
+
 @if (_samplingReport is { AnyWarning: true })
 {
   <Alert Kind="warning" Dismissible="true">
@@ -25,7 +46,8 @@
       <p class="muted">
         @_samplingReport.TotalRatedActivities rated observation@(_samplingReport.TotalRatedActivities == 1 ? string.Empty : "s")
         from @_samplingReport.DistinctAssessorCount distinct assessor@(_samplingReport.DistinctAssessorCount == 1 ? string.Empty : "s")
-        in the review window. Acknowledge in the decision rationale if these warnings are relevant.
+        @(_samplingReport.EvidenceComplete ? "in the review window" : "of those you may read in the review window").
+        Acknowledge in the decision rationale if these warnings are relevant.
       </p>
       <ul class="list-unstyled">
         @foreach (var epa in _samplingReport.PerEpa)
@@ -326,9 +348,9 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
-      _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId));
-      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId));
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
+      _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId, authState.User));
       if (_epas.Count == 0)
       {
         _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(authState.User));
@@ -404,7 +426,7 @@
         Array.Empty<EntrustmentEvidenceLinkInput>(),
         authState.User));
       _pending = new PendingDecisionFormModel();
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _status = "Pending entrustment decision staged.";
     }
     catch (Exception exception)
@@ -422,7 +444,7 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId));
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _status = "Pending entrustment decision removed.";
     }
     catch (Exception exception)

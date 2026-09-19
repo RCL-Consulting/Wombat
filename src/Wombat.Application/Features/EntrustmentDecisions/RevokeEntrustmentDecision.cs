@@ -2,15 +2,24 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
+/// <remarks>
+/// <c>Reason</c> is redacted from the audit summary. The AuditPipelineBehavior audits every request
+/// whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; withdrawing an entrustment is the most damaging thing that can be written about a
+/// trainee and the reason text usually says why — a concern, an incident, a performance judgement.
+/// The decision id and the actor stay in the clear, so the audit row still proves who revoked what
+/// and when; the narrative is read from the decision, under its own access control. (T101)
+/// </remarks>
 public sealed record RevokeEntrustmentDecisionCommand(
     int DecisionId,
-    string Reason,
+    [property: Redact] string Reason,
     ClaimsPrincipal Principal) : IRequest<EntrustmentDecisionDto>;
 
 public sealed class RevokeEntrustmentDecisionCommandValidator : AbstractValidator<RevokeEntrustmentDecisionCommand>

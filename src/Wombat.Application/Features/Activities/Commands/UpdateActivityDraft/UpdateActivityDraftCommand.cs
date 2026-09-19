@@ -1,15 +1,24 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 
 namespace Wombat.Application.Features.Activities.Commands.UpdateActivityDraft;
 
+/// <remarks>
+/// <c>NewDataJson</c> is redacted from the audit summary, for the same reason
+/// TransitionActivityCommand redacts its patch. The AuditPipelineBehavior audits every request
+/// whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; this property is the whole form state on every keystroke-driven save, so leaving
+/// it unmarked wrote more copies of the trainee's clinical data into the audit table than exist in
+/// the activity table itself. The activity id and actor stay in the clear. (T101)
+/// </remarks>
 public sealed record UpdateActivityDraftCommand(
     int ActivityId,
     string ActorUserId,
-    string NewDataJson,
+    [property: Redact] string NewDataJson,
     ClaimsPrincipal Principal) : IRequest<ActivityDto>;
 
 public sealed class UpdateActivityDraftCommandValidator : AbstractValidator<UpdateActivityDraftCommand>

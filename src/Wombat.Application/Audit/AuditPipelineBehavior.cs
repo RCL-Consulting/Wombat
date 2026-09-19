@@ -36,6 +36,16 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
         var action = typeof(TRequest).Name;
         var occurredAt = DateTime.UtcNow;
 
+        // Stamp the actor's institution on every command row. Command rows used to be written with
+        // InstitutionId == null, and the audit queries treated null as "a global event anyone may
+        // read" — so an InstitutionalAdmin in institution A could open institution B's command rows,
+        // SummaryJson and all, at /admin/audit/{id}. The queries now fail closed on null, which means
+        // a row without this stamp is Administrator-only and its institution's admins never see it. (T101)
+        //
+        // Resolved AFTER the handler runs, both here and in the catch: a handler whose caller is
+        // anonymous declares the scope itself (IAuditContextProvider.DeclareInstitution), and a
+        // handler that throws — a revoked invitation token being retried, say — has usually declared
+        // before it threw, which is the row the issuing admin most needs to see.
         try
         {
             var response = await next();
@@ -49,6 +59,7 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
                 actorDisplay: _contextProvider.UserDisplay,
                 actorIpAddress: _contextProvider.IpAddress,
                 actorUserAgent: _contextProvider.UserAgent,
+                institutionId: _contextProvider.InstitutionId,
                 summaryJson: AuditPayloadSerializer.Serialize(request)),
                 cancellationToken);
 
@@ -65,6 +76,7 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
                 actorDisplay: _contextProvider.UserDisplay,
                 actorIpAddress: _contextProvider.IpAddress,
                 actorUserAgent: _contextProvider.UserAgent,
+                institutionId: _contextProvider.InstitutionId,
                 summaryJson: AuditPayloadSerializer.Serialize(request),
                 errorMessage: ex.Message),
                 cancellationToken);

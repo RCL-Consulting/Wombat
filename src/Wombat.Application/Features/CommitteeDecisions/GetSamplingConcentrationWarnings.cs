@@ -1,16 +1,41 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Queries;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
-public sealed record GetSamplingConcentrationWarningsQuery(int ReviewId)
+/// <summary>
+/// Assessor- and source-concentration warnings for one review's evidence.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Carries the caller because the report is computed from the trainee's activity rows, and named a
+/// review id only — so any caller who could reach it could pull an out-of-institution trainee's
+/// rating counts and their assessors' user ids out of it. Two gates answer that, and they answer
+/// different questions. The review ladder decides whether this caller may have a report about this
+/// review at all; reaching a review you have no business in is now a refusal rather than a report
+/// that happens to be empty. The row filter then decides which evidence rows go into the
+/// arithmetic, and it can still withhold rows from someone the ladder admitted. (T101)
+/// </para>
+/// <para>
+/// That second case is the dangerous one, because the output is a statistic. An External panel
+/// member sitting on a review outside their own institution, or a trainee who transferred mid-year,
+/// leaves rows the caller may not read — and a mean computed on what is left is not a weaker
+/// version of the right answer, it is a different answer. Dropping the dominant assessor's rows
+/// clears a concentration warning; dropping anyone's rows can invent a
+/// fewer-than-three-assessors one. So the report reports its own completeness, and a caller who was
+/// shown less than the whole is told so rather than being handed a clean-looking number.
+/// </para>
+/// </remarks>
+public sealed record GetSamplingConcentrationWarningsQuery(int ReviewId, ClaimsPrincipal Principal)
     : IRequest<SamplingConcentrationReportDto>;
 
 public sealed class GetSamplingConcentrationWarningsQueryValidator
@@ -27,7 +52,18 @@ public sealed record SamplingConcentrationReportDto(
     int TotalRatedActivities,
     int DistinctAssessorCount,
     bool AnyWarning,
-    IReadOnlyList<EpaSamplingConcentrationDto> PerEpa);
+    IReadOnlyList<EpaSamplingConcentrationDto> PerEpa,
+    int WithheldRatedActivities)
+{
+    /// <summary>
+    /// Whether every rated observation in the review window went into the numbers above. When this
+    /// is false the report is arithmetic on a subset and its silence means nothing — the absence of
+    /// a warning is then "we could not look", not "we looked and it is clean". A panel deciding
+    /// whether a trainee progresses has to be able to tell those two apart, so the page renders the
+    /// incomplete case as its own statement rather than as an empty warning list.
+    /// </summary>
+    public bool EvidenceComplete => WithheldRatedActivities == 0;
+}
 
 public sealed record EpaSamplingConcentrationDto(
     int EpaId,
@@ -75,20 +111,38 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
     {
         var review = await _dbContext.Set<CommitteeReview>()
             .AsNoTracking()
+            .Include(entity => entity.Panel)
+                .ThenInclude(panel => panel.Members)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
+
+        CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
         var fromUtc = review.ReviewPeriodFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var toUtcExclusive = review.ReviewPeriodTo.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
 
-        var activities = await _dbContext.Set<Activity>()
+        // The denominator is the rated evidence in the window, whether or not this caller may read
+        // it. Counting it first is what lets the report distinguish a clean sample from a sample it
+        // was only shown part of; narrowing it to the rating-bearing types keeps a withheld
+        // reflective note from being reported as missing evidence, since nothing unrated would have
+        // entered the arithmetic anyway.
+        var ratedActivityKeys = SourceByActivityKey.Keys.ToArray();
+        var ratedInWindow = _dbContext.Set<Activity>()
             .AsNoTracking()
-            .Include(activity => activity.ActivityType)
             .Where(activity =>
                 activity.SubjectUserId == review.TraineeUserId &&
                 activity.CreatedOn >= fromUtc &&
-                activity.CreatedOn < toUtcExclusive)
+                activity.CreatedOn < toUtcExclusive &&
+                ratedActivityKeys.Contains(activity.ActivityType.Key));
+
+        var ratedInWindowCount = await ratedInWindow.CountAsync(cancellationToken);
+
+        var activities = await ratedInWindow
+            .Include(activity => activity.ActivityType)
+            .WhereReadableBy(request.Principal)
             .ToListAsync(cancellationToken);
+
+        var withheldRatedActivities = ratedInWindowCount - activities.Count;
 
         var ratings = new List<(int EpaId, string AssessorUserId, WbaSourceCategory Source)>();
         foreach (var activity in activities)
@@ -119,7 +173,8 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
                 TotalRatedActivities: 0,
                 DistinctAssessorCount: 0,
                 AnyWarning: false,
-                PerEpa: Array.Empty<EpaSamplingConcentrationDto>());
+                PerEpa: Array.Empty<EpaSamplingConcentrationDto>(),
+                withheldRatedActivities);
         }
 
         var epaIds = ratings.Select(rating => rating.EpaId).Distinct().ToArray();
@@ -179,7 +234,8 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
             totalRated,
             distinctAssessorsOverall,
             AnyWarning: perEpa.Count > 0,
-            perEpa);
+            perEpa,
+            withheldRatedActivities);
     }
 
     private static bool TryParseRating(string dataJson, out int epaId, out string assessorUserId)

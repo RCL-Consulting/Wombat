@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
@@ -8,6 +9,10 @@ using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
+using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Activities;
 
@@ -51,17 +56,26 @@ public sealed class ActivityService : IActivityService
         var workflow = WorkflowParser.Parse(activityType.WorkflowJson);
         var submittedDataJson = NormalizeObjectJson(input.InitialDataJson);
 
+        var subjectUserId = input.SubjectUserId.Trim();
+        var subjectScope = await ResolveSubjectScopeAsync(subjectUserId, cancellationToken);
+
         var utcNow = DateTime.UtcNow;
         var activity = new Activity
         {
             ActivityTypeId = activityType.Id,
             ActivityType = activityType,
             SchemaVersion = activityType.Version,
-            SubjectUserId = input.SubjectUserId.Trim(),
+            SubjectUserId = subjectUserId,
             CreatedByUserId = input.CreatedByUserId.Trim(),
             CurrentState = workflow.InitialState,
             // Deliberately EMPTY while the writable set is computed below. See the note there.
             DataJson = EmptyObjectJson,
+            // T101: the activity's own organisational home, snapshotted now. Read authorization and
+            // every `scope:` actor rule resolve from these rather than from the activity type, so
+            // oversight follows the trainee the assessment is about. See Activity.InstitutionId.
+            InstitutionId = subjectScope.InstitutionId,
+            SpecialityId = subjectScope.SpecialityId,
+            SubSpecialityId = subjectScope.SubSpecialityId,
             CreatedOn = utcNow,
             UpdatedOn = utcNow
         };
@@ -235,17 +249,22 @@ public sealed class ActivityService : IActivityService
         return Map(activity);
     }
 
-    public async Task<ActivityDto> GetAsync(int activityId, CancellationToken cancellationToken = default)
-        => Map(await LoadActivityAsync(activityId, cancellationToken));
-
-    public async Task<ActivityDetailDto> GetDetailAsync(
+    public async Task<ActivityDetailDto?> GetDetailAsync(
         int activityId,
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        var activity = await LoadActivityAsync(activityId, cancellationToken);
+        var activity = await FindActivityAsync(activityId, cancellationToken);
+        if (activity is null || !IsReadableBy(activity, principal))
+        {
+            // One outcome for "no such activity" and "not yours", so incrementing the id in the
+            // address bar cannot enumerate. The Web layer renders null as "Activity unavailable";
+            // it must not be turned back into a message that distinguishes the two. (T101)
+            return null;
+        }
+
         var version = GetPinnedVersion(activity);
         var schema = FormSchemaParser.Parse(version.SchemaJson);
         var workflow = WorkflowParser.Parse(version.WorkflowJson);
@@ -290,13 +309,353 @@ public sealed class ActivityService : IActivityService
             .ToList();
 
     private async Task<Activity> LoadActivityAsync(int activityId, CancellationToken cancellationToken)
+        => await FindActivityAsync(activityId, cancellationToken)
+            ?? throw new InvalidOperationException("The activity could not be found.");
+
+    private async Task<Activity?> FindActivityAsync(int activityId, CancellationToken cancellationToken)
     {
         return await _dbContext.Set<Activity>()
             .Include(entity => entity.ActivityType)
                 .ThenInclude(activityType => activityType.Versions)
             .Include(entity => entity.Transitions)
-            .SingleOrDefaultAsync(entity => entity.Id == activityId, cancellationToken)
-            ?? throw new InvalidOperationException("The activity could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == activityId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Whether this principal may read this activity at all. (T101)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Before T101 the only check on the read path was a null check on the principal, so any
+    /// authenticated user — including a PendingTrainee holding no programme role — could read any
+    /// activity's clinical data and full transition history by putting an integer in the URL.
+    /// </para>
+    /// <para>
+    /// The set is deliberately a SUPERSET of everyone who can act on the activity. A read gate
+    /// narrower than the write gate produces buttons that 404 and inbox rows that cannot be opened,
+    /// so the declared-rule arm below asks <see cref="ActorRuleMatcher" /> — the same matcher
+    /// <see cref="WorkflowEvaluator" /> and <see cref="FieldPermissionEvaluator" /> use — about every
+    /// rule the pinned version declares anywhere, with the state gate dropped. If any rule could ever
+    /// name this principal in any state, they may read it now.
+    /// </para>
+    /// <para>
+    /// Scope arms resolve from the activity's own stamped columns, never from the activity type's
+    /// scope: oversight follows the trainee the assessment is about. An activity with no stamped
+    /// scope satisfies no scoped arm.
+    /// </para>
+    /// </remarks>
+    private bool IsReadableBy(Activity activity, ClaimsPrincipal principal)
+    {
+        if (principal.IsAdministrator())
+        {
+            return true;
+        }
+
+        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(callerUserId) &&
+            (string.Equals(activity.SubjectUserId, callerUserId, StringComparison.Ordinal) ||
+             string.Equals(activity.CreatedByUserId, callerUserId, StringComparison.Ordinal) ||
+             // Anyone who has already moved this activity keeps sight of what they did. Without this
+             // an assessor who declines a WBA loses the record of their own decision the moment the
+             // trainee re-assigns the assessor field.
+             activity.Transitions.Any(transition =>
+                 string.Equals(transition.ActorUserId, callerUserId, StringComparison.Ordinal))))
+        {
+            return true;
+        }
+
+        if (IsScopedOverseerOf(activity, principal))
+        {
+            return true;
+        }
+
+        return MatchesAnyDeclaredActorRule(activity, principal);
+    }
+
+    /// <summary>
+    /// Programme oversight: the roles that supervise a trainee may read that trainee's assessments,
+    /// each at the level of the tree they are scoped to. A null stamp never matches. (T101)
+    /// </summary>
+    /// <remarks>
+    /// EVERY arm carries the institution, including the speciality ones. A speciality is owned by a
+    /// College and is therefore a NATIONAL id (<see cref="Wombat.Domain.Institutions.Speciality.CollegeId" />),
+    /// so <c>IsInSpeciality</c> alone would let one hospital's SpecialityAdmin read every paediatric
+    /// trainee in the country. CLAUDE.md is explicit that a SpecialityAdmin is scoped to one speciality
+    /// *within an institution*; the claim pair expresses that, neither claim on its own does.
+    /// </remarks>
+    private static bool IsScopedOverseerOf(Activity activity, ClaimsPrincipal principal)
+    {
+        if (activity.InstitutionId is not int institutionId ||
+            principal.GetInstitutionId() != institutionId)
+        {
+            return false;
+        }
+
+        if (principal.IsInstitutionalAdmin() ||
+            principal.IsInRole(WombatRoles.Coordinator) ||
+            principal.IsInRole(WombatRoles.CommitteeMember))
+        {
+            return true;
+        }
+
+        if (activity.SpecialityId is int specialityId &&
+            principal.IsInRole(WombatRoles.SpecialityAdmin) &&
+            principal.IsInSpeciality(specialityId))
+        {
+            return true;
+        }
+
+        return activity.SubSpecialityId is int subSpecialityId &&
+               principal.IsInRole(WombatRoles.SubSpecialityAdmin) &&
+               principal.IsInSubSpeciality(subSpecialityId);
+    }
+
+    /// <summary>
+    /// Whether any actor rule the pinned version declares — on a transition, a state, a section or a
+    /// field — names this principal, ignoring which state the activity is actually in. (T101)
+    /// </summary>
+    /// <remarks>
+    /// A bare <c>role:</c> rule is NOT honoured here. Unqualified, it would turn any workflow that
+    /// says "a Coordinator may approve this" into a grant to read every activity of that type in
+    /// every institution — a read gate widened by an unrelated seed edit. A role token only counts
+    /// when it is conjoined with something that binds it to this activity, which is what every rule
+    /// in the seed corpus does today (<c>role:SpecialityAdmin+scope:speciality</c>). Role-only
+    /// oversight is granted by <see cref="IsScopedOverseerOf" />, where the scope is explicit.
+    /// </remarks>
+    private static bool MatchesAnyDeclaredActorRule(Activity activity, ClaimsPrincipal principal)
+    {
+        ActivityTypeVersion? version;
+        FormSchema schema;
+        Wombat.Domain.Activities.Workflow.Workflow workflow;
+
+        try
+        {
+            version = GetPinnedVersion(activity);
+            schema = FormSchemaParser.Parse(version.SchemaJson);
+            workflow = WorkflowParser.Parse(version.WorkflowJson);
+        }
+        // SchemaParseException and WorkflowParseException derive from Exception directly, and the
+        // parsers WRAP JsonException into them — so filtering on JsonException here caught nothing a
+        // parser actually throws, and a malformed pinned version escaped to ActivityView as a parser
+        // message while a nonexistent id rendered "Activity unavailable". That told the two apart,
+        // which is the one thing this method exists to prevent. ArgumentException covers a blank
+        // SchemaJson reaching ThrowIfNullOrWhiteSpace.
+        catch (Exception exception) when (exception is InvalidOperationException
+                                              or JsonException
+                                              or SchemaParseException
+                                              or WorkflowParseException
+                                              or ArgumentException)
+        {
+            // An unreadable pinned version must not become a disclosure: refuse rather than reveal
+            // that the id exists and its schema is broken. A caller admitted by an arm above still
+            // gets the real exception, because this runs only after those have all declined.
+            return false;
+        }
+
+        return DeclaredActorRules(schema, workflow)
+            .Select(DropUnqualifiedRoleArms)
+            .Any(rule => rule is not null && ActorRuleMatcher.Matches(rule, activity, principal));
+    }
+
+    private static IEnumerable<ActorRule> DeclaredActorRules(FormSchema schema, Workflow workflow)
+    {
+        foreach (var transition in workflow.Transitions)
+        {
+            yield return transition.Actor;
+        }
+
+        foreach (var state in workflow.States)
+        {
+            if (state.EditableBy is not null)
+            {
+                yield return state.EditableBy;
+            }
+        }
+
+        foreach (var section in schema.Sections)
+        {
+            if (section.EditableBy is not null)
+            {
+                yield return section.EditableBy;
+            }
+
+            foreach (var field in section.Fields)
+            {
+                if (field.EditableBy is not null)
+                {
+                    yield return field.EditableBy;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Rewrites a declared rule into the part of it that may grant a READ, or null if none of it may.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A role token with nothing conjoined to bind it to this activity is dropped. Unqualified, it
+    /// would turn "a Coordinator may approve this" in one seed into a grant to read every activity of
+    /// that type in every institution — a read boundary widened by an unrelated seed edit. Scoped
+    /// oversight is granted by <see cref="IsScopedOverseerOf" />, where the scope is explicit.
+    /// </para>
+    /// <para>
+    /// The rewrite is per ARM, not per rule. An earlier version answered "does this rule contain an
+    /// unqualified role?" and discarded the whole rule if so — which threw away the bound arms with
+    /// it. <c>field:assessor_user_id|role:Coordinator</c> parses as one <c>Any</c> node, so the named
+    /// assessor lost their read while <see cref="WorkflowEvaluator" /> still let them act: the row
+    /// appeared in their inbox and opening it said "Activity unavailable". That is precisely the
+    /// buttons-that-404 failure this class exists to prevent, caused by the guard against it.
+    /// </para>
+    /// <para>
+    /// <c>Any</c> keeps its qualified arms. <c>All</c> is kept only when at least one conjunct binds
+    /// to the activity — <c>role:A+role:B</c> binds nothing, and neither does <c>role:X+scope:global</c>,
+    /// whose scope token reads the activity TYPE and so is the same for every activity of that type.
+    /// </para>
+    /// </remarks>
+    private static ActorRule? DropUnqualifiedRoleArms(ActorRule rule)
+    {
+        switch (rule)
+        {
+            case NamedRoleActorRule:
+                return null;
+
+            case CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.Any:
+            {
+                var kept = combined.Rules
+                    .Select(DropUnqualifiedRoleArms)
+                    .Where(child => child is not null)
+                    .Select(child => child!)
+                    .ToList();
+
+                return kept.Count switch
+                {
+                    0 => null,
+                    1 => kept[0],
+                    _ => combined with { Rules = kept }
+                };
+            }
+
+            case CombinedActorRule combined when combined.CombinationKind == ActorRuleCombinationKind.All:
+                // Kept whole — narrowing a conjunction would WIDEN it — but only if something in it
+                // actually binds to this activity.
+                return combined.Rules.Any(BindsToTheActivity) ? combined : null;
+
+            default:
+                return rule;
+        }
+    }
+
+    /// <summary>Whether a rule ties its answer to this particular activity rather than to its type.</summary>
+    private static bool BindsToTheActivity(ActorRule rule)
+        => rule switch
+        {
+            SubjectUserActorRule or CreatorUserActorRule or FieldUserActorRule => true,
+            ScopeMatchActorRule scope => !string.Equals(scope.Scope, "global", StringComparison.Ordinal),
+            CombinedActorRule combined => combined.Rules.Any(BindsToTheActivity),
+            _ => false
+        };
+
+    /// <summary>
+    /// Where the subject trains, read once at creation and stamped onto the activity. (T101)
+    /// </summary>
+    /// <remarks>
+    /// Prefers the active profile; a trainee who has graduated or been withdrawn keeps their most
+    /// recent one, so activities logged afterwards still carry a scope. Null for a subject with no
+    /// profile at all, which withholds scoped oversight rather than granting it.
+    /// </remarks>
+    private async Task<(int? InstitutionId, int? SpecialityId, int? SubSpecialityId)> ResolveSubjectScopeAsync(
+        string subjectUserId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(subjectUserId))
+        {
+            return (null, null, null);
+        }
+
+        // Resolved one level at a time, NOT as a single join through
+        // TraineeProfile -> Curriculum -> SubSpeciality. Those navigations are required, so one query
+        // would be an INNER join: a curriculum row that has gone missing would take the institution
+        // down with it, even though the institution sits on the profile itself. Each level degrades
+        // on its own instead, and the most important stamp — the institution — survives the other two
+        // failing. Three primary-key lookups, once, on a create.
+        var profile = await _dbContext.Set<TraineeProfile>()
+            .Where(entity => entity.UserId == subjectUserId)
+            .OrderByDescending(entity => entity.IsActive)
+            .ThenByDescending(entity => entity.Id)
+            .Select(entity => new { entity.InstitutionId, entity.CurriculumId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (profile is null)
+        {
+            return await ResolveScopeFromIdentityAsync(subjectUserId, cancellationToken);
+        }
+
+        var subSpecialityId = await _dbContext.Set<Curriculum>()
+            .Where(entity => entity.Id == profile.CurriculumId)
+            .Select(entity => (int?)entity.SubSpecialityId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var specialityId = subSpecialityId is null
+            ? null
+            : await _dbContext.Set<SubSpeciality>()
+                .Where(entity => entity.Id == subSpecialityId.Value)
+                .Select(entity => (int?)entity.SpecialityId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+        return (profile.InstitutionId, specialityId, subSpecialityId);
+    }
+
+    /// <summary>
+    /// The fallback for a subject who is not an admitted trainee: their own identity record. (T101)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Not every activity is about a trainee. An invited user is given an institution and speciality
+    /// scopes by <c>InvitedUserProvisioner</c> at acceptance, while a <c>TraineeProfile</c> is created
+    /// only later by <c>AdmitTrainee</c> — and nothing stops them filing a reflective note in between.
+    /// </para>
+    /// <para>
+    /// Without this, such an activity was stamped with nothing, and the seeded reflective-note family
+    /// offers only <c>role:SpecialityAdmin+scope:speciality</c> out of <c>submitted</c>. A null stamp
+    /// matches no <c>scope:</c> rule for anybody, and neither <see cref="WorkflowEvaluator" /> nor
+    /// <c>TransitionAsync</c> has an Administrator bypass — so the row was frozen in <c>submitted</c>
+    /// for ever, unreadable by the admin who should have acted on it. Reading the same facts the login
+    /// claims are issued from is not a guess; it is the same answer one step earlier.
+    /// </para>
+    /// <para>
+    /// A user holding several speciality scopes yields null rather than an arbitrary pick: the column
+    /// holds one id, and choosing between them would be inventing an answer. That leaves the residual
+    /// frozen-row case for a subject with no institution at all — see T116.
+    /// </para>
+    /// </remarks>
+    private async Task<(int? InstitutionId, int? SpecialityId, int? SubSpecialityId)> ResolveScopeFromIdentityAsync(
+        string subjectUserId,
+        CancellationToken cancellationToken)
+    {
+        var institutionId = await _dbContext.Set<WombatIdentityUser>()
+            .Where(entity => entity.Id == subjectUserId)
+            .Select(entity => entity.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var specialityIds = await _dbContext.Set<WombatIdentityUserSpecialityScope>()
+            .Where(entity => entity.UserId == subjectUserId)
+            .Select(entity => entity.SpecialityId)
+            .Distinct()
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        var subSpecialityIds = await _dbContext.Set<WombatIdentityUserSubSpecialityScope>()
+            .Where(entity => entity.UserId == subjectUserId)
+            .Select(entity => entity.SubSpecialityId)
+            .Distinct()
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        return (
+            institutionId,
+            specialityIds.Count == 1 ? specialityIds[0] : null,
+            subSpecialityIds.Count == 1 ? subSpecialityIds[0] : null);
     }
 
     private static ActivityTypeVersion GetPinnedVersion(Activity activity)

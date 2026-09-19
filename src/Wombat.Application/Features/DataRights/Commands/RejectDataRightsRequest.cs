@@ -2,15 +2,23 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Commands;
 
+/// <remarks>
+/// <c>DecisionNote</c> is redacted from the audit summary, for the same reason as on
+/// ApproveDataRightsRequestCommand: the AuditPipelineBehavior would otherwise write the reviewer's
+/// narrative about a named data subject's request into SummaryJson. A rejection note says more than
+/// an approval does — it has to argue why the data is being kept. The RequestId stays in the
+/// clear. (T101)
+/// </remarks>
 public sealed record RejectDataRightsRequestCommand(
     Guid RequestId,
-    string DecisionNote,
+    [property: Redact] string DecisionNote,
     ClaimsPrincipal Principal) : IRequest<DataRightsRequestDto>;
 
 public sealed class RejectDataRightsRequestCommandValidator : AbstractValidator<RejectDataRightsRequestCommand>

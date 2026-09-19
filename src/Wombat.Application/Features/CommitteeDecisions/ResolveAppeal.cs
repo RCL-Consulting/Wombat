@@ -4,15 +4,21 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Application.Audit;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
+/// <remarks>
+/// <c>RemittedRationale</c> and <c>RemittedConditions</c> are redacted for the same reason as
+/// <see cref="RecordCommitteeDecisionCommand" />'s: they are the committee's judgement of a named
+/// trainee. <c>Outcome</c> and <c>RemittedCategory</c> stay in the clear. (T101)
+/// </remarks>
 public sealed record ResolveAppealCommand(
     int ReviewId,
     CommitteeAppealOutcome Outcome,
     CommitteeDecisionCategory? RemittedCategory,
-    string? RemittedRationale,
-    string? RemittedConditions,
+    [property: Redact] string? RemittedRationale,
+    [property: Redact] string? RemittedConditions,
     ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
 
 public sealed class ResolveAppealCommandValidator : AbstractValidator<ResolveAppealCommand>

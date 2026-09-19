@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MediatR;
 using Wombat.Application;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Audit;
@@ -189,6 +190,11 @@ app.MapPost("/account/login/submit", async (
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
         var display = user is not null ? $"{user.FirstName} {user.LastName}".Trim() : null;
 
+        // Stamped so an InstitutionalAdmin keeps sight of their own users' sign-ins. T101 removed
+        // the "null institution means everyone may read it" catch-all from the audit queries, so an
+        // unstamped row is now Administrator-only. The two FAILED paths below stay unstamped on
+        // purpose: resolving an institution there would confirm the account exists, which is exactly
+        // what their generic messages are written to avoid.
         await auditWriter.WriteAsync(AuditEntry.Create(
             occurredAt: DateTime.UtcNow,
             category: AuditCategory.Authentication,
@@ -197,7 +203,8 @@ app.MapPost("/account/login/submit", async (
             actorUserId: user?.Id,
             actorDisplay: display,
             actorIpAddress: ip,
-            actorUserAgent: ua));
+            actorUserAgent: ua,
+            institutionId: user?.InstitutionId));
 
         return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
     }
@@ -206,13 +213,22 @@ app.MapPost("/account/login/submit", async (
         // Distinguished in the audit log so an admin can see a lockout trip, but the
         // user-facing message stays generic: saying "this account is locked" would
         // confirm the address exists.
+        //
+        // Stamped, unlike LoginFailed below. A lockout only trips on an account that exists, and it
+        // can only ever be that account's own institution — so naming the locked-out user to their
+        // own InstitutionalAdmin discloses nothing they cannot already read off /admin/users, while
+        // leaving the row unstamped made it Administrator-only and defeated the reason it is written.
+        // The generic response above is unchanged; this is the log, not the reply. (T101)
         await auditWriter.WriteAsync(AuditEntry.Create(
             occurredAt: DateTime.UtcNow,
             category: AuditCategory.Authentication,
             action: "LoginLockedOut",
             success: false,
+            actorUserId: loginUser?.Id,
+            actorDisplay: loginUser is not null ? $"{loginUser.FirstName} {loginUser.LastName}".Trim() : null,
             actorIpAddress: ip,
             actorUserAgent: ua,
+            institutionId: loginUser?.InstitutionId,
             errorMessage: "Account locked after repeated failed sign-in attempts."));
 
         return Results.LocalRedirect(BuildLoginUrl(
@@ -388,6 +404,9 @@ app.MapPost("/account/logout", async (
 {
     var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var display = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+    // Read BEFORE SignOutAsync — afterwards the principal is gone and the row would be unstamped,
+    // i.e. Administrator-only under T101's audit scoping.
+    var institutionId = httpContext.User.GetInstitutionId();
 
     await signInManager.SignOutAsync();
 
@@ -398,7 +417,8 @@ app.MapPost("/account/logout", async (
         success: true,
         actorUserId: userId,
         actorDisplay: display,
-        actorIpAddress: TruncateLoginIp(httpContext.Connection.RemoteIpAddress)));
+        actorIpAddress: TruncateLoginIp(httpContext.Connection.RemoteIpAddress),
+        institutionId: institutionId));
 
     return Results.LocalRedirect("/account/login");
 });

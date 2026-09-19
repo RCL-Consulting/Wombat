@@ -47,11 +47,15 @@ public sealed class GetAuditEntryByIdQueryHandler : IRequestHandler<GetAuditEntr
             return entry;
         }
 
-        // InstitutionalAdmin: visible if no institution (global event) or matches their scope.
-        if (entry.InstitutionId is null)
-        {
-            return entry;
-        }
-        return request.Principal.CanAccessInstitution(entry.InstitutionId.Value) ? entry : null;
+        // A row with no institution has unknown scope, not global scope. Letting a scoped admin open
+        // it was the single worst leak in the product: command rows were all unstamped, and SummaryJson
+        // is rendered raw on AuditDetail, so /admin/audit/{id} handed an InstitutionalAdmin in
+        // institution A the clinical form submissions of institution B's trainees. Unknown scope is now
+        // Administrator-only. Null (404), not an exception (403), so the id's existence is not confirmed.
+        // See ListAuditEntriesQueryHandler for the matching list-side predicate. (T101)
+        return entry.InstitutionId is int scopedInstitutionId
+            && request.Principal.CanAccessInstitution(scopedInstitutionId)
+                ? entry
+                : null;
     }
 }

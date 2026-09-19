@@ -1,8 +1,11 @@
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Activities;
@@ -22,7 +25,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.EpaId.Should().Be(7);
@@ -43,7 +46,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         result.Select(dto => dto.EpaCode).Should().Equal("EPA-03", "EPA-07");
     }
@@ -59,7 +62,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         result.Should().BeEmpty();
     }
@@ -87,7 +90,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         result.Should().BeEmpty();
     }
@@ -108,6 +111,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         var result = await handler.Handle(
             new GetEpaTrajectoryForTraineeQuery(
                 "trainee-1",
+                Principal("trainee-1"),
                 From: new DateOnly(2026, 1, 1),
                 To: new DateOnly(2026, 3, 31)),
             CancellationToken.None);
@@ -129,7 +133,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Should().ContainSingle();
@@ -149,7 +153,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Select(p => p.Source).Should().Equal("Direct observation", "Conversation");
@@ -168,7 +172,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Should().ContainSingle();
@@ -198,7 +202,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Should().ContainSingle();
@@ -219,7 +223,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Should().ContainSingle();
@@ -239,7 +243,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         result.Should().BeEmpty();
     }
@@ -261,10 +265,81 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1"), CancellationToken.None);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
 
         var trajectory = result.Should().ContainSingle().Subject;
         trajectory.Points.Select(p => p.Source).Should().Equal("Case analysis", "Case analysis", "Conversation");
+    }
+
+    [Fact]
+    public async Task WithholdsTrajectoryFromACallerWhoDoesNotOverseeTheTrainee()
+    {
+        // The trainee id is caller-supplied, so this is the door T101 closed: a signed-in user who
+        // is neither the subject nor an overseer used to get ratings, assessor ids and activity ids
+        // for anyone they cared to name. Empty, not an error — the chart has nothing to draw.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc), specialityId: 4);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("stranger-1")), CancellationToken.None);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ShowsTrajectoryToTheSpecialityAdminTheActivityIsStampedTo()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        // Stamped to speciality 4 AND institution 9. T101 conjoins them, because a Speciality is
+        // College-owned and its id is therefore national.
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc), specialityId: 4, institutionId: 9);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery(
+                "trainee-1",
+                Principal("speciality-admin-1", role: WombatRoles.SpecialityAdmin, specialityId: 4, institutionId: 9)),
+            CancellationToken.None);
+
+        result.Should().ContainSingle();
+
+        var elsewhere = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery(
+                "trainee-1",
+                Principal("speciality-admin-2", role: WombatRoles.SpecialityAdmin, specialityId: 4, institutionId: 10)),
+            CancellationToken.None);
+
+        elsewhere.Should().BeEmpty("the speciality id is national; the institution must match too");
+    }
+
+    private static ClaimsPrincipal Principal(string userId, string? role = null, int? specialityId = null, int? institutionId = null)
+    {
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId) };
+        if (role is not null)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        if (specialityId.HasValue)
+        {
+            claims.Add(new Claim(WombatClaimTypes.SpecialityId, specialityId.Value.ToString()));
+        }
+
+        if (institutionId.HasValue)
+        {
+            claims.Add(new Claim(WombatClaimTypes.InstitutionId, institutionId.Value.ToString()));
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 
     private static ApplicationDbContext CreateDbContext()
@@ -304,7 +379,9 @@ public sealed class GetEpaTrajectoryForTraineeTests
         string assessor,
         int epaId,
         int overall,
-        DateTime createdOn)
+        DateTime createdOn,
+        int? specialityId = null,
+        int? institutionId = null)
     {
         var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\", \"overall\": \"{overall}\"}}";
         dbContext.Activities.Add(new Activity
@@ -317,7 +394,9 @@ public sealed class GetEpaTrajectoryForTraineeTests
             CurrentState = "completed",
             DataJson = dataJson,
             CreatedOn = createdOn,
-            UpdatedOn = createdOn
+            UpdatedOn = createdOn,
+            SpecialityId = specialityId,
+            InstitutionId = institutionId
         });
     }
 }

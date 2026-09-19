@@ -17,6 +17,39 @@ public sealed class Activity
     public DateTime CreatedOn { get; set; }
     public DateTime UpdatedOn { get; set; }
 
+    /// <summary>
+    /// Where this activity sits organisationally, stamped at creation from the subject's
+    /// <see cref="Wombat.Domain.Identity.TraineeProfile" />. (T101)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// These are the activity's OWN scope, not its <see cref="ActivityType" />'s. The type's
+    /// <c>Scope</c>/<c>ScopeId</c> say which programme may *offer* the tool; these say which
+    /// programme the assessment is *about*. They diverge in practice — a trainee in one speciality
+    /// filing a tool published by another — and before T101 the actor grammar's <c>scope:</c> rules
+    /// resolved against the type, so a SpecialityAdmin overseeing the trainee did not match while an
+    /// admin of the tool's speciality did. Oversight follows the trainee, so it resolves from here.
+    /// </para>
+    /// <para>
+    /// Stamped rather than derived so that read authorization is a column comparison rather than a
+    /// three-table join, and so that a trainee transferring institutions does not retroactively move
+    /// the visibility of assessments written about them elsewhere.
+    /// </para>
+    /// <para>
+    /// Null when the subject had no trainee profile at creation — a self-logged activity by a user
+    /// who is not an admitted trainee. Null never matches a <c>scope:</c> rule and never satisfies a
+    /// scoped read, so an unstamped activity is readable only by the people named on it. That is the
+    /// safe direction: it withholds oversight rather than granting it.
+    /// </para>
+    /// </remarks>
+    public int? InstitutionId { get; set; }
+
+    /// <inheritdoc cref="InstitutionId" />
+    public int? SpecialityId { get; set; }
+
+    /// <inheritdoc cref="InstitutionId" />
+    public int? SubSpecialityId { get; set; }
+
     public ActivityType ActivityType { get; set; } = null!;
     public ICollection<ActivityTransition> Transitions { get; set; } = [];
 

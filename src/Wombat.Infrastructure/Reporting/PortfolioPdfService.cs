@@ -13,6 +13,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Application.Features.Activities.Queries;
 
 namespace Wombat.Infrastructure.Reporting;
 
@@ -113,7 +114,14 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .Include(profile => profile.Curriculum)
                 .ThenInclude(curriculum => curriculum.SubSpeciality)
                     .ThenInclude(sub => sub.Speciality)
-            .FirstOrDefaultAsync(profile => profile.UserId == request.TraineeUserId, cancellationToken);
+            .Where(profile => profile.UserId == request.TraineeUserId)
+            // Same tie-break as ExportPortfolio.ResolveTraineeScopeAsync and
+            // ActivityService.ResolveSubjectScopeAsync. Unordered, this picked an arbitrary profile, so
+            // a trainee with two could get a PDF branded and headed by the institution that did NOT
+            // grant the access. (T101)
+            .OrderByDescending(profile => profile.IsActive)
+            .ThenByDescending(profile => profile.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
         // The curriculum is national now (T091); the trainee's institution is held directly on the profile.
         var institution = traineeProfile is not null
@@ -127,11 +135,15 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
                 .FirstOrDefaultAsync(b => b.InstitutionId == institution.Id, cancellationToken)
             : null;
 
+        // WhereReadableBy makes the bundle exactly the union of the rows the caller could open one at a
+        // time. Authorising the export from the trainee's CURRENT profile while selecting on subject
+        // alone let the two disagree in both directions — see PortfolioExportRequest. (T101)
         var activitiesQuery = _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
             .Include(activity => activity.Transitions)
-            .Where(activity => activity.SubjectUserId == request.TraineeUserId);
+            .Where(activity => activity.SubjectUserId == request.TraineeUserId)
+            .WhereReadableBy(request.Principal);
 
         if (request.FromDate.HasValue)
         {

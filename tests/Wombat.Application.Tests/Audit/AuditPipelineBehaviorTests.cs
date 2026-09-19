@@ -88,8 +88,104 @@ public sealed class AuditPipelineBehaviorTests
         capturedEntry!.Action.Should().Be(nameof(ExplicitAuditedRequest));
     }
 
+    /// <summary>
+    /// The stale-cookie case: /account/register/submit is anonymous, so the principal the pipeline
+    /// sees is either empty or the previously registered user's. The handler resolves the real scope
+    /// from the invitation and declares it, and the row must land there — which means the pipeline
+    /// has to read the institution after the handler ran, not before. (T101)
+    /// </summary>
+    [Fact]
+    public async Task Handle_HandlerDeclaresInstitution_StampsDeclaredScopeNotPrincipals()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var context = new DeclarableAuditContext(principalInstitutionId: 9);
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, context);
+
+        await behavior.Handle(new TestCommand("hello"), Declaring(context, 3, "ok"), CancellationToken.None);
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.InstitutionId.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task Handle_CommandThrowsAfterDeclaring_StampsDeclaredScope()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var context = new DeclarableAuditContext(principalInstitutionId: null);
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, context);
+
+        var act = async () => await behavior.Handle(
+            new TestCommand("boom"),
+            DeclaringThenFailing<string>(context, 3),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.Success.Should().BeFalse();
+        capturedEntry.InstitutionId.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task Handle_HandlerDeclaresNothing_StampsPrincipalsScope()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var context = new DeclarableAuditContext(principalInstitutionId: 9);
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, context);
+
+        await behavior.Handle(new TestCommand("hello"), Next("ok"), CancellationToken.None);
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.InstitutionId.Should().Be(9);
+    }
+
     private static RequestHandlerDelegate<T> Next<T>(T value)
         => () => Task.FromResult(value);
+
+    private static RequestHandlerDelegate<T> Declaring<T>(IAuditContextProvider context, int institutionId, T value)
+        => () =>
+        {
+            context.DeclareInstitution(institutionId);
+            return Task.FromResult(value);
+        };
+
+    private static RequestHandlerDelegate<T> DeclaringThenFailing<T>(IAuditContextProvider context, int institutionId)
+        => () =>
+        {
+            context.DeclareInstitution(institutionId);
+            throw new InvalidOperationException("Boom!");
+        };
+
+    /// <summary>
+    /// Mirrors HttpAuditContextProvider: a declaration made during the dispatch overrides the
+    /// principal-derived institution for the rest of it.
+    /// </summary>
+    private sealed class DeclarableAuditContext(int? principalInstitutionId) : IAuditContextProvider
+    {
+        private int? _declared;
+
+        public string? UserId => "user-1";
+        public string? UserDisplay => "Test User";
+        public string? IpAddress => "10.0.0.0/24";
+        public string? UserAgent => "Test/1.0";
+        public int? InstitutionId => _declared ?? principalInstitutionId;
+        public void DeclareInstitution(int institutionId) => _declared = institutionId;
+    }
 
     private static RequestHandlerDelegate<T> FailingNext<T>()
         => () => throw new InvalidOperationException("Boom!");

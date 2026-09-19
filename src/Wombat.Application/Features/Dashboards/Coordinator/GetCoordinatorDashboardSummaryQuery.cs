@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Activities.Queries;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Invitations;
 
@@ -40,7 +41,12 @@ public sealed class GetCoordinatorDashboardSummaryQueryHandler
         var stalledQuery = _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(a => a.ActivityType)
-            .Where(a => a.CurrentState == "submitted" && a.UpdatedOn < stallCutoff);
+            .Where(a => a.CurrentState == "submitted" && a.UpdatedOn < stallCutoff)
+            // The stall panel used to be unscoped while the invitation panel beside it was scoped,
+            // so a coordinator saw every institution's stalled activities — ids and subject names,
+            // each one a link to /activities/{id}. The same read rule that guards the activity
+            // itself now decides what reaches this list. (T101)
+            .WhereReadableBy(request.Principal);
 
         var stalledActivities = await stalledQuery
             .OrderBy(a => a.UpdatedOn)

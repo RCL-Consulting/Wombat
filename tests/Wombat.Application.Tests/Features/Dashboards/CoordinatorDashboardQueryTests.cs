@@ -133,8 +133,19 @@ public sealed class CoordinatorDashboardQueryTests
         {
             Id = 1, ActivityTypeId = 1, SubjectUserId = "trainee-1",
             CreatedByUserId = "trainee-1", CurrentState = "submitted",
-            DataJson = "{}", SchemaVersion = 1,
+            DataJson = "{}", SchemaVersion = 1, InstitutionId = 1,
             CreatedOn = DateTime.UtcNow.AddDays(-12), UpdatedOn = DateTime.UtcNow.AddDays(-10)
+        });
+
+        // Equally stalled, but somebody else's institution. The panel used to list it: the stall
+        // query carried no institution filter at all, so a coordinator saw every institution's
+        // backlog, ids and subject names included. (T101)
+        db.Activities.Add(new Activity
+        {
+            Id = 2, ActivityTypeId = 1, SubjectUserId = "trainee-9",
+            CreatedByUserId = "trainee-9", CurrentState = "submitted",
+            DataJson = "{}", SchemaVersion = 1, InstitutionId = 2,
+            CreatedOn = DateTime.UtcNow.AddDays(-12), UpdatedOn = DateTime.UtcNow.AddDays(-11)
         });
 
         db.SaveChanges();

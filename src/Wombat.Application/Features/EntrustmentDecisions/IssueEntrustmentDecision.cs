@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
@@ -9,6 +10,15 @@ using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
+/// <remarks>
+/// <c>Rationale</c> is redacted from the audit summary. The AuditPipelineBehavior audits every
+/// request whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; this is the committee's written justification for the level it authorised a named
+/// trainee to practise at, which is the trainee's record, not an administrative fact. It is already
+/// persisted on the decision itself, where it is read under the decision's own access control — the
+/// audit copy only added an ungated second one. The trainee, EPA, level and dates stay in the clear:
+/// they are the decision, and an audit row that cannot say what was decided is worthless. (T101)
+/// </remarks>
 public sealed record IssueEntrustmentDecisionCommand(
     string TraineeUserId,
     int EpaId,
@@ -16,7 +26,7 @@ public sealed record IssueEntrustmentDecisionCommand(
     DateOnly IssuedOn,
     DateOnly? ExpiresOn,
     int CommitteeReviewId,
-    string Rationale,
+    [property: Redact] string Rationale,
     IReadOnlyList<EntrustmentEvidenceLinkInput> EvidenceLinks,
     ClaimsPrincipal Principal) : IRequest<EntrustmentDecisionDto>;
 

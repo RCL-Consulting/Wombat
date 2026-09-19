@@ -1,15 +1,24 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Commands;
 
+/// <remarks>
+/// <c>Reason</c> is redacted from the audit summary. The AuditPipelineBehavior audits every request
+/// whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; this is the data subject stating, in their own words and up to 4000 characters, why
+/// they want their data erased or corrected — health, harassment, a dispute. Copying it into a
+/// general-purpose admin table is the opposite of what the request asks for. <c>Type</c> stays in
+/// the clear so the log still shows which right was exercised and when. (T101)
+/// </remarks>
 public sealed record SubmitDataRightsRequestCommand(
     DataRightsRequestType Type,
-    string Reason,
+    [property: Redact] string Reason,
     ClaimsPrincipal Principal) : IRequest<DataRightsRequestDto>;
 
 public sealed class SubmitDataRightsRequestCommandValidator : AbstractValidator<SubmitDataRightsRequestCommand>

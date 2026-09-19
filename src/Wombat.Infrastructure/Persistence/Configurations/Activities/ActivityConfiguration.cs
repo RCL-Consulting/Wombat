@@ -21,6 +21,14 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         builder.HasIndex(entity => entity.CreatedOn);
         builder.HasIndex(entity => entity.DataJson).HasMethod("gin");
 
+        // T101: read authorization filters lists by the activity's own scope, so these are read-path
+        // indexes, not FKs. No foreign key is declared deliberately — the columns are a snapshot of
+        // where the subject trained at creation, and a later restructure of the institution tree must
+        // not cascade into, or be blocked by, historical assessments.
+        builder.HasIndex(entity => entity.InstitutionId);
+        builder.HasIndex(entity => entity.SpecialityId);
+        builder.HasIndex(entity => entity.SubSpecialityId);
+
         builder.HasMany(entity => entity.Transitions)
             .WithOne(entity => entity.Activity)
             .HasForeignKey(entity => entity.ActivityId)

@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Domain.DataRights;
@@ -10,9 +11,16 @@ using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.DataRights.Commands;
 
+/// <remarks>
+/// <c>DecisionNote</c> is redacted from the audit summary. The AuditPipelineBehavior audits every
+/// request whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; the note discusses a named data subject's request and normally restates what they
+/// asked to have removed. The RequestId stays in the clear — it is the join back to the request
+/// record, which is where the note is read from under that feature's own access control. (T101)
+/// </remarks>
 public sealed record ApproveDataRightsRequestCommand(
     Guid RequestId,
-    string DecisionNote,
+    [property: Redact] string DecisionNote,
     ClaimsPrincipal Principal) : IRequest<DataRightsRequestDto>;
 
 public sealed class ApproveDataRightsRequestCommandValidator : AbstractValidator<ApproveDataRightsRequestCommand>

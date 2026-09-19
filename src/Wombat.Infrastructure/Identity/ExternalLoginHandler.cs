@@ -167,7 +167,12 @@ public sealed class ExternalLoginHandler
             actorUserId: user.Id,
             actorDisplay: $"{user.FirstName} {user.LastName}".Trim(),
             actorIpAddress: ipAddress,
-            actorUserAgent: userAgent));
+            actorUserAgent: userAgent,
+            // Stamped like SsoLogin and SsoFirstLogin below. An unstamped row is Administrator-only
+            // since T101, and this is the row an account-takeover investigation starts from: the
+            // moment an external identity was bound to an existing local account. The institution's
+            // own admin is the one who would notice it. (T101)
+            institutionId: user.InstitutionId));
 
         return await SignInExistingUserAsync(user, providerKey, groupIds, null, null, ipAddress, userAgent, cancellationToken);
     }

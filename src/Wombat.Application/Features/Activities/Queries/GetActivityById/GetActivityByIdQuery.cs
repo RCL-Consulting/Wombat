@@ -10,14 +10,13 @@ namespace Wombat.Application.Features.Activities.Queries.GetActivityById;
 /// transitions (T070).
 /// </summary>
 /// <remarks>
-/// IMPORTANT: <c>Principal</c> is used ONLY to compute the writable set and the action
-/// list. This query still performs NO read authorization — any authenticated user who knows an
-/// activity id can load it, exactly as before T070. Do not read the ClaimsPrincipal here as a gate
-/// that is not there; read scoping is T101.
+/// <c>Principal</c> is both the read gate and the input to the writable set. Returns null when the
+/// activity does not exist OR the caller may not read it — one answer for both, so the id space
+/// cannot be walked (T101).
 /// </remarks>
-public sealed record GetActivityByIdQuery(int ActivityId, ClaimsPrincipal Principal) : IRequest<ActivityDetailDto>;
+public sealed record GetActivityByIdQuery(int ActivityId, ClaimsPrincipal Principal) : IRequest<ActivityDetailDto?>;
 
-public sealed class GetActivityByIdQueryHandler : IRequestHandler<GetActivityByIdQuery, ActivityDetailDto>
+public sealed class GetActivityByIdQueryHandler : IRequestHandler<GetActivityByIdQuery, ActivityDetailDto?>
 {
     private readonly IActivityService _activityService;
 
@@ -26,6 +25,6 @@ public sealed class GetActivityByIdQueryHandler : IRequestHandler<GetActivityByI
         _activityService = activityService;
     }
 
-    public Task<ActivityDetailDto> Handle(GetActivityByIdQuery request, CancellationToken cancellationToken)
+    public Task<ActivityDetailDto?> Handle(GetActivityByIdQuery request, CancellationToken cancellationToken)
         => _activityService.GetDetailAsync(request.ActivityId, request.Principal, cancellationToken);
 }

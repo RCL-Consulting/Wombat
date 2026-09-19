@@ -2,6 +2,99 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-19 (Opus) — **T101 shipped: the activity read boundary is closed** 🏁
+
+**Build clean, 0 warnings. 796 tests green** — Domain 69, Application 444, Infrastructure 171,
+Architecture 23, Web 89; was 735 at session start. `Wombat.Integration.Tests` **not** run (needs Docker),
+so 796 is five suites, not the whole repo. Migration applied to dev and the backfill verified on all 11
+rows. **Not browser-verified** — see NEXT item 1.
+
+### The hole
+
+`ActivityService.GetDetailAsync`'s entire read gate was `ArgumentNullException.ThrowIfNull(principal)`.
+`/activities/{id}` is a bare `[Authorize]` page over a sequential identity column, so **any** authenticated
+user — including a PendingTrainee holding no programme role — read any assessment's full `DataJson` and
+transition history by typing integers in the address bar. A green test asserted that as correct behaviour.
+
+### What shipped
+
+- **`Activity` carries its own scope**: `InstitutionId` / `SpecialityId` / `SubSpecialityId`, stamped at
+  creation from the subject's `TraineeProfile`, falling back to their identity record when there is none.
+  Migration `20260919081749_T101_ActivityScopeStamp` backfills with the identical derivation.
+- **`ActivityService.IsReadableBy`** — Administrator, subject, creator, any prior transition actor, scoped
+  oversight, and anyone the pinned workflow's own actor rules name (via `ActorRuleMatcher`, so read and act
+  cannot drift). `ActivityReadScope.WhereReadableBy` is the list-shaped half.
+- **Refusal is `null`** for "not found" and "not yours" alike. `GetAsync` — principal-less, zero callers —
+  was deleted rather than gated.
+- **Also closed**: the audit log (~20 `[Redact]`s, institution stamping, null-institution catch-all
+  removed), the portfolio export, and five previously unscoped queries.
+
+### 🚨 `scope:` changed meaning — this is a behaviour change, not a refactor
+
+`ActorRuleMatcher` resolved `scope:` against **`ActivityType.ScopeId`** — who may *offer* the tool — not
+who the assessment is *about*. Dev activity 11 proves it was backwards: a type scoped to speciality 3
+about a subject in speciality 2, so the admin who oversees that trainee did **not** match and an unrelated
+one did. It now resolves from the activity's stamp, **conjoined with the institution** because a
+`Speciality` carries a `CollegeId` and is therefore a national id. All six `scope:` tokens in the seed
+corpus are `role:SpecialityAdmin+scope:speciality`, so that is exactly what changed.
+
+### Credentials were in the audit log
+
+`AcceptInvitationCommand.Password`, `.Token` and `ResetUserPasswordCommand.NewPassword` reached
+`SummaryJson` **in plaintext** — confirmed against `git diff`, not inferred. Now redacted, along with
+committee judgement prose, appeal grounds, MSF narrative and rectification values.
+
+### An adversarial review found four defects in this work before commit
+
+All fixed; full account in the task file. The two that matter: the speciality arms were **national**
+(one hospital's SpecialityAdmin could have exported every trainee in that speciality countrywide — wider
+than the hole being closed, and three new tests pinned it as correct), and a null stamp **froze an
+activity for ever** with no role able to move it.
+
+### ▶ NEXT
+
+1. **Browser-verify T101 end to end**, which nothing this session did. Sign in as an unrelated trainee and
+   walk `/activities/{id}` — expect "Activity unavailable"; then as the bound assessor, the subject, an
+   in-institution Coordinator, and a SpecialityAdmin from another institution. **Sonnet** for the walk,
+   **Opus** if anything disagrees with the tests.
+2. **T112 — data rights.** The review found it is *wider* than the hole T101 closed: any Coordinator, any
+   institution, downloads any trainee's complete activity data as a ZIP, and can approve another
+   institution's **Erasure**. Needs a product decision (who the data-rights officer is) before code.
+   **Opus.**
+3. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — still outstanding from the last session, and the repo
+   *does* say which sub-speciality it sits under (`Rewrite/scenario-paediatrics.md:160`, `:216`,
+   `:229-247`); the previous handoff was wrong that it could not. 15 rows of data entry. Record the chosen
+   scale id in the T110 file. **Sonnet.**
+4. **T110** (`or_scale` resolves to nothing) and the duplicate five-rung ladder. **Opus.**
+5. **T113 / T117** (remaining caller-supplied trainee ids; the weekly digest's national roster), then
+   **T114** / **T115** / **T116**. **Sonnet** except T116.
+6. Unchanged from before: **T100** + **T106 item 4**, **T107**, **T105** before the ten remaining v11.1
+   tools, **T111**.
+
+### Still true from earlier sessions
+
+The production-deploy hazards below (first `ActivityTypeSeedRefresher` run, `terminal: true` coming off
+`declined`/`cancelled`, T107 stranding, `Wombat__RefreshSeededActivityTypes=false` around a rollback) are
+unchanged — but read them through the standing correction above: they are defects to fix, not rows to
+protect.
+
+---
+
+## 🚨 STANDING CORRECTION — 2026-09-19 — nothing is live; compatibility is not a constraint
+
+Confirmed by the maintainer: **`wombat.rcl.co.za` is deployed but not in service.** It and the dev
+database hold **scenario-execution data only** — no real trainees, assessors or clinical records.
+
+**Every "production safety" argument recorded below this line is mis-weighted and must be re-read in that
+light.** The 🚨 READ BEFORE THE NEXT PRODUCTION DEPLOY sections, the T109 decision not to backfill, "a
+wrong pin refuses credit for ever", "every in-flight production activity is stranded" — all of these
+priced the loss of rows that are regenerable by re-running a runbook. None of them is a reason to prefer a
+compatible design over a correct one.
+
+The hazards themselves are still real as *defects* (T107 stranding is a bug whether or not anyone is
+using it). What changes is the remedy: fix the design, re-seed, and replay the scenario — do not build
+migration-safe machinery to preserve scenario rows. See the CLAUDE.md section of the same name.
+
 ## ⭐ SESSION FINALIZED — 2026-09-18 (Opus) — **T109 shipped: entrustment ordinals are pinned to a scale** 🏁
 
 **Last commit `d5025e6`** (one commit this session, on `master`). **Build clean, 0 warnings. 735 tests

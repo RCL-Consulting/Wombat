@@ -4,14 +4,22 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Application.Audit;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
+/// <remarks>
+/// <c>Rationale</c> and <c>Conditions</c> are redacted from the audit summary. They are the
+/// committee's written judgement of a named trainee's progression — the most sensitive prose the
+/// product holds — and the audit log is read through a different, coarser gate than the review
+/// itself. <c>ReviewId</c>, <c>Category</c> and the actor stay in the clear, which is what makes
+/// the entry useful: who decided what, and when. (T101)
+/// </remarks>
 public sealed record RecordCommitteeDecisionCommand(
     int ReviewId,
     CommitteeDecisionCategory Category,
-    string Rationale,
-    string? Conditions,
+    [property: Redact] string Rationale,
+    [property: Redact] string? Conditions,
     ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
 
 public sealed class RecordCommitteeDecisionCommandValidator : AbstractValidator<RecordCommitteeDecisionCommand>

@@ -79,7 +79,7 @@
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
       _progress = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId));
-      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId));
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId, authState.User));
     }
     catch (Exception exception)
     {

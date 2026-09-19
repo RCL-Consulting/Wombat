@@ -8,6 +8,7 @@ using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
+using System.Security.Claims;
 
 namespace Wombat.Infrastructure.Tests.Reporting;
 
@@ -29,7 +30,7 @@ public sealed class PortfolioPdfServiceTests
     {
         await using var db = SeededDb();
         var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
-        var request = new PortfolioExportRequest("trainee-1", null, null);
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
 
         var first = await service.GenerateAsync(request, CancellationToken.None);
         var second = await service.GenerateAsync(request, CancellationToken.None);
@@ -45,7 +46,7 @@ public sealed class PortfolioPdfServiceTests
     {
         await using var db = SeededDb();
         var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
-        var request = new PortfolioExportRequest("trainee-1", null, null);
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
 
         var withStar = await service.GenerateAsync(request, CancellationToken.None);
 
@@ -81,4 +82,12 @@ public sealed class PortfolioPdfServiceTests
         // Never reached: the seeded data has no released MSF campaigns.
         public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign) => throw new NotSupportedException();
     }
+
+    /// <summary>
+    /// T101: the PDF's contents now obey the caller's read scope. These tests are about rendering, so
+    /// they export as the subject, which resolves to exactly that trainee's own activities.
+    /// </summary>
+    private static ClaimsPrincipal SubjectPrincipal(string userId)
+        => new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test"));
+
 }

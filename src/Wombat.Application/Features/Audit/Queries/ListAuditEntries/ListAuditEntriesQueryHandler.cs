@@ -30,9 +30,15 @@ public sealed class ListAuditEntriesQueryHandler : IRequestHandler<ListAuditEntr
             {
                 return new PagedAuditResult(Array.Empty<AuditEntryDto>(), 0, request.Page, request.PageSize);
             }
-            // InstitutionalAdmin sees their institution's entries plus global (no-institution) entries.
+            // A null InstitutionId is NOT "a global event everyone may read" — it is a row whose scope
+            // is unknown, written by an actor with no institution claim (a global Administrator, a
+            // background job). Admitting those to a scoped admin turned the audit log into a
+            // cross-institution read channel: the pipeline stamped no institution on ANY command row,
+            // so every InstitutionalAdmin could read every institution's command SummaryJson — raw
+            // activity form data included — through this page. Unknown scope fails closed to
+            // Administrator only; known scope is stamped by AuditPipelineBehavior. (T101)
             var institutionId = scopedInstitutionId.Value;
-            query = query.Where(e => e.InstitutionId == null || e.InstitutionId == institutionId);
+            query = query.Where(e => e.InstitutionId == institutionId);
         }
 
         if (!string.IsNullOrWhiteSpace(request.ActorUserId))

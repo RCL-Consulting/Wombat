@@ -1,13 +1,25 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Users.Commands.ResetUserPassword;
 
-public sealed record ResetUserPasswordCommand(string UserId, string NewPassword, ClaimsPrincipal Principal) : IRequest;
+/// <remarks>
+/// <c>NewPassword</c> is redacted from the audit summary. The AuditPipelineBehavior audits every
+/// request whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; without this marker the admin-chosen password was stored in the audit table in
+/// plaintext, next to the UserId it belongs to, and rendered raw on AuditDetail — undoing the point
+/// of hashing it in Identity. The UserId stays in the clear: who was reset, and by whom, is exactly
+/// what this row exists to record. (T101)
+/// </remarks>
+public sealed record ResetUserPasswordCommand(
+    string UserId,
+    [property: Redact] string NewPassword,
+    ClaimsPrincipal Principal) : IRequest;
 
 public sealed class ResetUserPasswordCommandValidator : AbstractValidator<ResetUserPasswordCommand>
 {

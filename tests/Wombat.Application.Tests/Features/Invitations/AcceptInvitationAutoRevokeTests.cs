@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Invitations;
@@ -69,7 +70,7 @@ public sealed class AcceptInvitationAutoRevokeTests
         db.Set<Invitation>().AddRange(primary, secondaryActive, alreadyRevoked, otherEmail);
         await db.SaveChangesAsync();
 
-        var handler = new AcceptInvitationCommandHandler(db, _tokenService, new StubProvisioner());
+        var handler = new AcceptInvitationCommandHandler(db, _tokenService, new StubProvisioner(), new NullAuditContext());
         var result = await handler.Handle(
             new AcceptInvitationCommand(token, "Pass!2026", "Sam", "Smit"),
             CancellationToken.None);
@@ -95,6 +96,21 @@ public sealed class AcceptInvitationAutoRevokeTests
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options);
+
+    /// <summary>
+    /// The handler declares the invitation's institution to the audit pipeline (T101); nothing about
+    /// the sweep depends on it, so this swallows the declaration. AcceptInvitationAuditScopeTests
+    /// covers the stamping itself.
+    /// </summary>
+    private sealed class NullAuditContext : IAuditContextProvider
+    {
+        public string? UserId => null;
+        public string? UserDisplay => null;
+        public string? IpAddress => null;
+        public string? UserAgent => null;
+        public int? InstitutionId => null;
+        public void DeclareInstitution(int institutionId) { }
+    }
 
     private sealed class StubProvisioner : IInvitedUserProvisioner
     {

@@ -220,29 +220,65 @@ public sealed class ActivityFieldPermissionTests
     }
 
     [Fact]
-    public async Task GetDetail_ReturnsTheWritableSetAndActionsForTheBoundAssessorAndNothingForAnyoneElse()
+    public async Task GetDetail_ReturnsTheWritableSetAndActionsForTheBoundAssessor()
     {
         await using var dbContext = CreateContext();
         var activityService = CreateService(dbContext);
         SeedRequestedActivity(dbContext, storedOverallLevel: 2);
 
-        IRequestHandler<GetActivityByIdQuery, ActivityDetailDto> getHandler =
+        IRequestHandler<GetActivityByIdQuery, ActivityDetailDto?> getHandler =
             new GetActivityByIdQueryHandler(activityService);
 
         var assessorView = await getHandler.Handle(
             new GetActivityByIdQuery(700, CreatePrincipal("assessor-1")),
             CancellationToken.None);
 
-        assessorView.EditableFieldKeys.Should().BeEquivalentTo(["overall_level", "strengths", "improvements", "plan"]);
+        assessorView.Should().NotBeNull();
+        assessorView!.EditableFieldKeys.Should().BeEquivalentTo(["overall_level", "strengths", "improvements", "plan"]);
         assessorView.AvailableActions.Select(action => action.TransitionKey).Should().Contain("complete");
+    }
+
+    /// <summary>
+    /// T101. Before the read gate this returned the activity — full clinical DataJson and the whole
+    /// transition history — to any authenticated caller, and this test asserted that as correct
+    /// behaviour on the strength of the writable set coming back empty. An empty writable set is not
+    /// a confidentiality boundary; it only means the stranger cannot TYPE anything.
+    /// </summary>
+    [Fact]
+    public async Task GetDetail_RefusesAStrangerOutright()
+    {
+        await using var dbContext = CreateContext();
+        var activityService = CreateService(dbContext);
+        SeedRequestedActivity(dbContext, storedOverallLevel: 2);
+
+        IRequestHandler<GetActivityByIdQuery, ActivityDetailDto?> getHandler =
+            new GetActivityByIdQueryHandler(activityService);
 
         var strangerView = await getHandler.Handle(
             new GetActivityByIdQuery(700, CreatePrincipal("stranger-1")),
             CancellationToken.None);
 
-        strangerView.EditableFieldKeys.Should().BeEmpty();
-        strangerView.AvailableActions.Should().BeEmpty();
-        strangerView.Activity.CurrentState.Should().Be("requested");
+        strangerView.Should().BeNull();
+    }
+
+    /// <summary>
+    /// T101. The refusal above must be indistinguishable from an id that was never issued, or the
+    /// caller can still map the id space by comparing responses.
+    /// </summary>
+    [Fact]
+    public async Task GetDetail_AnswersARefusedIdExactlyAsItAnswersAnUnusedOne()
+    {
+        await using var dbContext = CreateContext();
+        var activityService = CreateService(dbContext);
+        SeedRequestedActivity(dbContext, storedOverallLevel: 2);
+
+        var stranger = CreatePrincipal("stranger-1");
+
+        var refused = await activityService.GetDetailAsync(700, stranger, CancellationToken.None);
+        var neverIssued = await activityService.GetDetailAsync(999_999, stranger, CancellationToken.None);
+
+        refused.Should().BeNull();
+        neverIssued.Should().BeNull();
     }
 
     // ─── Fixtures ────────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Domain.Reporting;
 using Wombat.Infrastructure.Persistence;
+using System.Security.Claims;
 
 namespace Wombat.Infrastructure.DataRights;
 
@@ -152,8 +153,17 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
         byte[]? pdfBytes = null;
         try
         {
+            // T101 made the portfolio's CONTENTS obey the caller's read scope. The caller here is not
+            // the operator running the export — it is the DATA SUBJECT. A subject access request must
+            // return everything held about that person, so scoping the bundle to whoever clicked the
+            // button would make the statutory answer incomplete. A principal carrying only the
+            // subject's own id resolves, through WhereReadableBy, to exactly their own activities.
+            var subjectPrincipal = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim(ClaimTypes.NameIdentifier, userId)],
+                "data-subject-access-request"));
+
             var pdfResult = await _pdfService.GenerateAsync(
-                new PortfolioExportRequest(userId, null, null),
+                new PortfolioExportRequest(userId, null, null, subjectPrincipal),
                 cancellationToken);
             pdfBytes = pdfResult.PdfBytes;
         }

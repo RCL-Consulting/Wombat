@@ -1,10 +1,21 @@
 using FluentValidation;
 using MediatR;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-public sealed record ReleaseMsfCampaignCommand(int CampaignId, string ReviewerUserId, string? Narrative) : IRequest;
+/// <remarks>
+/// <c>Narrative</c> is redacted from the audit summary. The AuditPipelineBehavior audits every
+/// request whose type name ends in "Command" and AuditPayloadSerializer writes its properties into
+/// SummaryJson; this is the reviewer's written summary of what colleagues said about a named
+/// trainee, up to 4000 characters of it, and it does not belong in an admin-searchable table. The
+/// campaign and reviewer ids stay in the clear — who released what, and when. (T101)
+/// </remarks>
+public sealed record ReleaseMsfCampaignCommand(
+    int CampaignId,
+    string ReviewerUserId,
+    [property: Redact] string? Narrative) : IRequest;
 
 public sealed class ReleaseMsfCampaignCommandValidator : AbstractValidator<ReleaseMsfCampaignCommand>
 {

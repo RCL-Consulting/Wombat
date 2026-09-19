@@ -15,7 +15,7 @@ public sealed class WorkflowEvaluatorTests
     [Fact]
     public void Evaluate_CoversSubjectCreatorRoleScopeAnyAndAllRules()
     {
-        var activity = CreateActivity(ActivityScope.Speciality, 120);
+        var activity = CreateActivity(ActivityScope.Speciality, 120, institutionId: 7, specialityId: 120);
 
         _evaluator.Evaluate(CreateWorkflow("subject"), activity, "act", CreatePrincipal("subject-1"))
             .Allowed.Should().BeTrue();
@@ -26,7 +26,9 @@ public sealed class WorkflowEvaluatorTests
         _evaluator.Evaluate(CreateWorkflow("role:Assessor"), activity, "act", CreatePrincipal("u-1", roles: [WombatRoles.Assessor]))
             .Allowed.Should().BeTrue();
 
-        _evaluator.Evaluate(CreateWorkflow("scope:speciality"), activity, "act", CreatePrincipal("u-1", specialityIds: [120]))
+        // Both claims: a Speciality is College-owned and therefore national, so T101 conjoins the
+        // institution — the speciality claim alone is not a match.
+        _evaluator.Evaluate(CreateWorkflow("scope:speciality"), activity, "act", CreatePrincipal("u-1", institutionId: 7, specialityIds: [120]))
             .Allowed.Should().BeTrue();
 
         _evaluator.Evaluate(CreateWorkflow("subject+role:Assessor"), activity, "act", CreatePrincipal("subject-1", roles: [WombatRoles.Assessor]))
@@ -34,6 +36,46 @@ public sealed class WorkflowEvaluatorTests
 
         _evaluator.Evaluate(CreateWorkflow("creator|role:Assessor"), activity, "act", CreatePrincipal("u-1", roles: [WombatRoles.Assessor]))
             .Allowed.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// T101. A <c>scope:</c> rule asks where the SUBJECT trains, not which programme published the
+    /// tool. Before T101 it compared against <c>ActivityType.ScopeId</c>, so the admin of the tool's
+    /// speciality — who has no relationship to the trainee — matched, and the admin who actually
+    /// oversees the trainee did not. The dev database contains exactly this shape.
+    /// </summary>
+    [Fact]
+    public void Evaluate_ScopeRulesFollowTheSubjectNotTheActivityType()
+    {
+        // A tool published by speciality 7, filed about a trainee who trains in speciality 2 at
+        // institution 5.
+        var activity = CreateActivity(ActivityScope.Speciality, 7, institutionId: 5, specialityId: 2);
+        var workflow = CreateWorkflow("role:SpecialityAdmin+scope:speciality");
+
+        var overseesTheTrainee = CreatePrincipal("admin-2", institutionId: 5, specialityIds: [2], roles: [WombatRoles.SpecialityAdmin]);
+        var ownsTheToolOnly = CreatePrincipal("admin-7", institutionId: 5, specialityIds: [7], roles: [WombatRoles.SpecialityAdmin]);
+
+        // Right speciality, wrong hospital: a national speciality id is not on its own a grant.
+        var rightSpecialityElsewhere = CreatePrincipal("admin-2b", institutionId: 6, specialityIds: [2], roles: [WombatRoles.SpecialityAdmin]);
+
+        _evaluator.Evaluate(workflow, activity, "act", overseesTheTrainee).Allowed.Should().BeTrue();
+        _evaluator.Evaluate(workflow, activity, "act", ownsTheToolOnly).Allowed.Should().BeFalse();
+        _evaluator.Evaluate(workflow, activity, "act", rightSpecialityElsewhere).Allowed.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Fail closed: an activity with no stamp satisfies no <c>scope:</c> rule, rather than matching
+    /// everyone or falling back to the activity type.
+    /// </summary>
+    [Fact]
+    public void Evaluate_AnUnstampedActivitySatisfiesNoScopeRule()
+    {
+        var activity = CreateActivity(ActivityScope.Speciality, 7);
+        var workflow = CreateWorkflow("role:SpecialityAdmin+scope:speciality");
+
+        _evaluator.Evaluate(workflow, activity, "act",
+            CreatePrincipal("admin-7", institutionId: 5, specialityIds: [7], roles: [WombatRoles.SpecialityAdmin]))
+            .Allowed.Should().BeFalse();
     }
 
     [Fact]
@@ -81,16 +123,30 @@ public sealed class WorkflowEvaluatorTests
             [new WorkflowState("draft", "Draft", false, null), new WorkflowState("done", "Done", true, null)],
             [new WorkflowTransition("act", ["draft"], "done", ActorRuleParser.Parse(actorRule), false, [])]);
 
-    private static Activity CreateActivity(ActivityScope scope, int scopeId)
+    /// <summary>
+    /// <paramref name="typeScope" />/<paramref name="typeScopeId" /> are the ACTIVITY TYPE's scope —
+    /// who may offer the tool. The stamps are the ACTIVITY's own scope — where the subject trains.
+    /// T101 made <c>scope:</c> rules read the stamps, so the two are separate parameters here on
+    /// purpose; see <see cref="Evaluate_ScopeRulesFollowTheSubjectNotTheActivityType" />.
+    /// </summary>
+    private static Activity CreateActivity(
+        ActivityScope typeScope,
+        int typeScopeId,
+        int? institutionId = null,
+        int? specialityId = null,
+        int? subSpecialityId = null)
         => new()
         {
             SubjectUserId = "subject-1",
             CreatedByUserId = "creator-1",
             CurrentState = "draft",
+            InstitutionId = institutionId,
+            SpecialityId = specialityId,
+            SubSpecialityId = subSpecialityId,
             ActivityType = new ActivityType
             {
-                Scope = scope,
-                ScopeId = scopeId
+                Scope = typeScope,
+                ScopeId = typeScopeId
             }
         };
 

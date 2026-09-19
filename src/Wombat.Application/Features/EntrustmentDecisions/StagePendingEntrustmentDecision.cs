@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
@@ -10,6 +11,14 @@ using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
+/// <remarks>
+/// <c>Rationale</c> is redacted from the audit summary, for the same reason as on
+/// IssueEntrustmentDecisionCommand: the AuditPipelineBehavior would otherwise write the committee's
+/// written justification about a named trainee into SummaryJson. Staging is edited repeatedly before
+/// the decision is issued, so leaving it unmarked also preserved every superseded draft of that
+/// reasoning — including wording the committee chose to withdraw. The ids, level and dates stay in
+/// the clear. (T101)
+/// </remarks>
 public sealed record StagePendingEntrustmentDecisionCommand(
     int ReviewId,
     int? PendingId,
@@ -17,7 +26,7 @@ public sealed record StagePendingEntrustmentDecisionCommand(
     int AuthorisedLevelId,
     DateOnly IssuedOn,
     DateOnly? ExpiresOn,
-    string Rationale,
+    [property: Redact] string Rationale,
     IReadOnlyList<EntrustmentEvidenceLinkInput> EvidenceLinks,
     ClaimsPrincipal Principal) : IRequest<PendingEntrustmentDecisionDto>;
 

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using FluentValidation;
 using MediatR;
@@ -9,8 +10,19 @@ using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 
+/// <summary>
+/// One trainee's entrustment trajectory: extracted ratings, each carrying the activity id it came
+/// from and the assessor who gave it.
+/// </summary>
+/// <remarks>
+/// <see cref="Principal" /> sits second rather than last because the optional date bounds must keep
+/// their defaults, and a parameter that decides what a caller may see is not one to leave optional.
+/// Without it this query answered on a caller-supplied trainee id alone — ratings and deep-linkable
+/// activity ids for any trainee named. (T101)
+/// </remarks>
 public sealed record GetEpaTrajectoryForTraineeQuery(
     string TraineeUserId,
+    ClaimsPrincipal Principal,
     DateOnly? From = null,
     DateOnly? To = null) : IRequest<IReadOnlyList<EpaTrajectoryDto>>;
 
@@ -109,7 +121,12 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         var query = _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
-            .Where(activity => activity.SubjectUserId == traineeUserId);
+            .Where(activity => activity.SubjectUserId == traineeUserId)
+            // The trainee id is whatever the caller asked about, so the rows are cut down to what
+            // this caller may read: a trainee asking about themselves matches on SubjectUserId,
+            // anyone else must oversee the programme each activity is stamped to. Out of scope
+            // draws an empty chart rather than raising — a refusal would confirm the trainee. (T101)
+            .WhereReadableBy(request.Principal);
 
         if (request.From.HasValue)
         {

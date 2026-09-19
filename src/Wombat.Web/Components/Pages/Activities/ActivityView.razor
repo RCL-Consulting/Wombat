@@ -206,12 +206,23 @@
   /// actor may take and the fields they may write are properties of the state just moved to.
   /// </summary>
   /// <remarks>
-  /// This query performs no read authorization — any authenticated user who knows an id can load
-  /// any activity (T101). What it does decide is whether this page is editable.
+  /// A null result means the activity does not exist OR this user may not read it (T101) — one
+  /// answer for both, so that walking the id space discloses nothing. Render it as the empty state
+  /// and do NOT surface a message that tells the two apart.
   /// </remarks>
   private async Task LoadAsync(ClaimsPrincipal user)
   {
     var detail = await Sender.Send(new GetActivityByIdQuery(ActivityId, user));
+
+    if (detail is null)
+    {
+      _activity = null;
+      _actions = [];
+      _editable = new HashSet<string>(StringComparer.Ordinal);
+      _workingDataJson = "{}";
+      _hasPendingChanges = false;
+      return;
+    }
 
     _activity = detail.Activity;
     _actions = detail.AvailableActions;

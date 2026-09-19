@@ -46,7 +46,7 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("The current user identifier is missing.");
-      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject.ListActivitiesBySubjectQuery(userId)));
+      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject.ListActivitiesBySubjectQuery(userId, authState.User)));
     }
     catch (Exception exception)
     {

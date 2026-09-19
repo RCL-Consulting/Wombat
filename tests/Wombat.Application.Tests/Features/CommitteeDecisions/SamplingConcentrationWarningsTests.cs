@@ -1,15 +1,24 @@
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
 public sealed class SamplingConcentrationWarningsTests
 {
+    /// <summary>The institution running the review, and the stamp on its evidence rows.</summary>
+    private const int HostInstitution = 1;
+
+    /// <summary>Where an External panel member — or a trainee's pre-transfer evidence — comes from.</summary>
+    private const int OtherInstitution = 2;
+
     [Fact]
     public async Task NoRatedEvidence_ReturnsEmptyReport()
     {
@@ -17,7 +26,7 @@ public sealed class SamplingConcentrationWarningsTests
         var reviewId = await SeedReviewAsync(dbContext);
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeFalse();
         report.PerEpa.Should().BeEmpty();
@@ -39,7 +48,7 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeTrue();
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
@@ -66,7 +75,7 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
         warning.SingleSource.Should().BeTrue();
@@ -89,7 +98,7 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
         warning.FewerThanThreeAssessors.Should().BeTrue();
@@ -115,7 +124,7 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeFalse();
         report.PerEpa.Should().BeEmpty();
@@ -136,7 +145,7 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(0);
         report.AnyWarning.Should().BeFalse();
@@ -153,10 +162,160 @@ public sealed class SamplingConcentrationWarningsTests
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
-        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId), CancellationToken.None);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(0);
         report.AnyWarning.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RefusesACallerWithNoClaimOnTheReview()
+    {
+        // The report is computed from the trainee's activity rows, so naming a review id used to be
+        // enough to pull another institution's rating counts and assessor ids out of it. It is now a
+        // refusal rather than an empty report: a caller with no business in the review should not be
+        // able to tell an empty sample from one they were never shown. (T101)
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddActivity(dbContext, miniCex, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var act = () => handler.Handle(
+            new GetSamplingConcentrationWarningsQuery(reviewId, Principal("stranger-1")), CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task RefusesACoordinatorFromAnotherInstitution()
+    {
+        // A Coordinator used to be waived past the panel check by role alone, which made every
+        // institution's committee evidence readable by any institution's administrative staff.
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var act = () => handler.Handle(
+            new GetSamplingConcentrationWarningsQuery(
+                reviewId, Principal("coord-2", WombatRoles.Coordinator, OtherInstitution)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task ExternalPanelMember_IsToldTheSampleIsIncompleteRatherThanClean()
+    {
+        // An External panel member sits on the panel precisely because they come from elsewhere, so
+        // the read filter withholds every row stamped to the host institution. Without the withheld
+        // count the panel's independent voice would be handed a silent report and read it as a clean
+        // sample, on a progression decision.
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(
+            new GetSamplingConcentrationWarningsQuery(
+                reviewId, Principal("external-1", WombatRoles.CommitteeMember, OtherInstitution)),
+            CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(0);
+        report.AnyWarning.Should().BeFalse();
+        report.EvidenceComplete.Should().BeFalse();
+        report.WithheldRatedActivities.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task CommitteeMemberInTheHostInstitution_SeesTheWholeSample()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+        var cbd = await SeedActivityTypeAsync(dbContext, "cbd");
+
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, cbd, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(
+            new GetSamplingConcentrationWarningsQuery(
+                reviewId, Principal("member-1", WombatRoles.CommitteeMember, HostInstitution)),
+            CancellationToken.None);
+
+        report.EvidenceComplete.Should().BeTrue();
+        report.WithheldRatedActivities.Should().Be(0);
+        report.TotalRatedActivities.Should().Be(3);
+        report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7)
+            .Which.OneAssessorOverHalf.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PartiallyWithheldEvidence_FlagsTheWarningItInventedAsIncomplete()
+    {
+        // The transferred trainee: rows recorded before the transfer keep the old institution's
+        // stamp and drop out of the host's view. The whole sample here is three assessors across two
+        // sources — no warning — but the two rows this caller may read are one assessor, which the
+        // arithmetic reports as a concentration. The count is honest, the warning is an artefact of
+        // the filter, and only EvidenceComplete tells the panel which of the two it is looking at.
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+        var cbd = await SeedActivityTypeAsync(dbContext, "cbd");
+
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, cbd, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 2, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc), OtherInstitution);
+        AddActivity(dbContext, cbd, "trainee-1", "assessor-c", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), OtherInstitution);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(
+            new GetSamplingConcentrationWarningsQuery(
+                reviewId, Principal("member-1", WombatRoles.CommitteeMember, HostInstitution)),
+            CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(2);
+        report.WithheldRatedActivities.Should().Be(2);
+        report.EvidenceComplete.Should().BeFalse();
+        report.AnyWarning.Should().BeTrue();
+        report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7)
+            .Which.FewerThanThreeAssessors.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// These tests are about the concentration arithmetic, so they read as a global Administrator —
+    /// the one caller neither gate narrows. Who may ask for the report at all is exercised by
+    /// RefusesACallerWithNoClaimOnTheReview and RefusesACoordinatorFromAnotherInstitution; what the
+    /// arithmetic is allowed to run on, by the panel-member tests above.
+    /// </summary>
+    private static ClaimsPrincipal AdministratorPrincipal()
+        => Principal("admin-1", WombatRoles.Administrator);
+
+    private static ClaimsPrincipal Principal(string userId, string? role = null, int? institutionId = null)
+    {
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId) };
+        if (role is not null)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        if (institutionId.HasValue)
+        {
+            claims.Add(new Claim(WombatClaimTypes.InstitutionId, institutionId.Value.ToString()));
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 
     private static ApplicationDbContext CreateDbContext()
@@ -171,6 +330,23 @@ public sealed class SamplingConcentrationWarningsTests
     {
         var epa = new Epa { Id = 7, SubSpecialityId = 1, Code = "EPA-07", Title = "Emergency triage", IsActive = true };
         dbContext.Epas.Add(epa);
+
+        // The panel is real here because the report now climbs the review ladder before it counts
+        // anything, and that ladder asks who sits on the panel.
+        dbContext.DecisionPanels.Add(new DecisionPanel
+        {
+            Id = 1,
+            Name = "Paediatrics ARCP",
+            Scope = DecisionPanelScope.Institution,
+            InstitutionId = HostInstitution,
+            CreatedOn = DateTime.UtcNow,
+            Members =
+            [
+                new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair },
+                new DecisionPanelMember { UserId = "member-1", Role = DecisionPanelMemberRole.Member },
+                new DecisionPanelMember { UserId = "external-1", Role = DecisionPanelMemberRole.External }
+            ]
+        });
 
         var review = new CommitteeReview
         {
@@ -208,7 +384,8 @@ public sealed class SamplingConcentrationWarningsTests
         string subject,
         string assessor,
         int epaId,
-        DateTime createdOn)
+        DateTime createdOn,
+        int? institutionId = null)
     {
         var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\"}}";
         dbContext.Activities.Add(new Activity
@@ -216,6 +393,7 @@ public sealed class SamplingConcentrationWarningsTests
             ActivityTypeId = activityType.Id,
             ActivityType = activityType,
             SchemaVersion = activityType.Version,
+            InstitutionId = institutionId,
             SubjectUserId = subject,
             CreatedByUserId = assessor,
             CurrentState = "completed",

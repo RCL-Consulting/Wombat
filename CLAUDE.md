@@ -279,6 +279,26 @@ development. Production startup fails fast if it is missing.
 - Process manager: systemd
 - See `Rewrite/INFRASTRUCTURE.md` for the full server layout.
 
+### 🚨 Nothing is live — compatibility is not a constraint
+
+`wombat.rcl.co.za` is **deployed and reachable, not in service**. It and the local dev database hold
+**scenario-execution data only** — rows produced by replaying the `Rewrite/scenario-*.md` runbooks. There
+are no real trainees, no real assessors, and no real clinical records anywhere.
+
+**Therefore backward compatibility is not a design constraint.** Prefer the correct end state over the
+migration-safe one:
+
+- Destructive migrations, dropped columns, re-seeding from scratch and re-authoring seed JSON are all
+  available. A backfill that would have to guess should be replaced by regenerating the data.
+- Do not spend design effort on day-one lockout matrices, "who stops being able to work", or
+  union-rather-than-conjunction hedges whose only purpose is preserving existing rows.
+- Do not discount a defect's severity because live exposure is limited. There is no live exposure;
+  severity is about whether the design is right.
+- This licenses *changing* the scenario data, not skipping verification against it. It remains the
+  test corpus, and a change still has to be shown working end to end.
+
+Delete this section the day Wombat takes on real users — every decision above flips.
+
 ## Task management
 
 All task state lives in the `Rewrite/` folder. Before starting any work, read:
