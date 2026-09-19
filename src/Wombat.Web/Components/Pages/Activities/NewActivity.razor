@@ -71,11 +71,56 @@
   private string? _error;
   private string? _status;
 
+  /// <summary>
+  /// Optional deep link: <c>/activities/new?type=mini_cex</c> preselects that activity type.
+  /// </summary>
+  /// <remarks>
+  /// This is an activity-type KEY, not an id, because a key is stable across databases and an id is
+  /// not — a link that travels in an email or a dashboard button cannot carry an id. It is resolved
+  /// against the list this page has already loaded, which is scope-filtered AND ladder-filtered, so a
+  /// key the caller may not use simply is not there and the picker stays unset. Resolving it against
+  /// the database instead would bypass both filters and turn a convenience link into an
+  /// authorization statement, which it must never be. (T111)
+  /// </remarks>
+  [SupplyParameterFromQuery(Name = "type")]
+  public string? TypeKey { get; set; }
+
   protected override async Task OnInitializedAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    _activityTypes.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(authState.User)));
+    // The creator IS the subject here, so the type picker narrows to tools whose rating ladder this
+    // trainee's curriculum could actually credit — the same reasoning the EPA picker below already
+    // applies to EPAs (T123 defect 3). Permissive wherever the subject cannot be resolved.
+    _activityTypes.AddRange(await Sender.Send(
+      new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(
+        authState.User, _currentUserId)));
+
+    await PreselectFromQueryAsync();
+  }
+
+  private async Task PreselectFromQueryAsync()
+  {
+    if (string.IsNullOrWhiteSpace(TypeKey))
+    {
+      return;
+    }
+
+    var match = _activityTypes.FirstOrDefault(
+      item => string.Equals(item.Key, TypeKey.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    if (match is null)
+    {
+      // Not published, out of scope, on the wrong ladder, or simply renamed. Leave the picker unset;
+      // the link is a convenience and a dead one is not an error worth showing.
+      return;
+    }
+
+    _selectedActivityTypeId = match.Id;
+
+    // Setting the bound field alone would select the <option> and render no form, because the schema
+    // is loaded by @bind:after on the element's change event, which code does not raise.
+    await LoadSelectedTypeAsync();
   }
 
   private async Task LoadSelectedTypeAsync()

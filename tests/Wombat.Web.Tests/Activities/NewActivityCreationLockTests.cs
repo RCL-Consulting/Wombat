@@ -3,6 +3,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
@@ -103,6 +104,60 @@ public sealed class NewActivityCreationLockTests : TestContext
         // carries the request key only.
         cut.Find("#overall_level").GetAttribute("value").Should().BeEmpty();
         cut.Find("#epa_id").GetAttribute("value").Should().Be("3");
+    }
+
+
+    // ---- T111: /activities/new?type=<key> preselects that type ----
+
+    [Fact]
+    public void AQueryStringTypeKey_PreselectsTheTypeAndRendersItsForm()
+    {
+        // The defect: the page declared no [SupplyParameterFromQuery], so ?type= was discarded and the
+        // trainee landed on a form that looked like it should already know what they clicked.
+        NavigateWithType("mini_cex_cpsa");
+
+        var cut = RenderComponent<NewActivity>();
+
+        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
+        cut.Find("#activity-type").GetAttribute("value").Should().Be("2");
+    }
+
+    [Fact]
+    public void TheKeyMatchIsCaseInsensitive()
+    {
+        NavigateWithType("  Mini_CEX_CPSA  ");
+
+        var cut = RenderComponent<NewActivity>();
+
+        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
+    }
+
+    [Fact]
+    public void AKeyThatResolvesToNothing_LeavesThePickerUnsetAndDoesNotThrow()
+    {
+        // Not published, out of scope, on the wrong ladder (T123 d3), or simply renamed. The link is a
+        // convenience; it must never become an authorization statement, and a dead one is not an error.
+        NavigateWithType("a_type_this_caller_cannot_see");
+
+        var cut = RenderComponent<NewActivity>();
+
+        cut.Find("#activity-type").GetAttribute("value").Should().Be("0");
+        cut.FindAll("#epa_id").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void NoTypeKey_BehavesExactlyAsBefore()
+    {
+        var cut = RenderComponent<NewActivity>();
+
+        cut.Find("#activity-type").GetAttribute("value").Should().Be("0");
+        cut.FindAll("#epa_id").Should().BeEmpty();
+    }
+
+    private void NavigateWithType(string typeKey)
+    {
+        var navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(navigation.GetUriWithQueryParameter("type", typeKey));
     }
 
     private IRenderedComponent<NewActivity> SelectTheActivityType()
