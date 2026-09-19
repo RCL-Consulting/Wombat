@@ -7,7 +7,27 @@ This file is the live handoff between sessions. Every session ends by editing th
 **Build clean, 0 warnings. 796 tests green** — Domain 69, Application 444, Infrastructure 171,
 Architecture 23, Web 89; was 735 at session start. `Wombat.Integration.Tests` **not** run (needs Docker),
 so 796 is five suites, not the whole repo. Migration applied to dev and the backfill verified on all 11
-rows. **Not browser-verified** — see NEXT item 1.
+rows. **✅ Browser-verified end to end** — see below.
+
+### ✅ Browser verification (dev, `localhost:5080`, activity 1 — subject Dlamini, institution 2)
+
+| Signed in as | Relationship to activity 1 | Result |
+|---|---|---|
+| `ndlovu@kgk` (Trainee, inst 2) | none — the headline case | **Activity unavailable** |
+| `ndlovu@kgk` → `/activities/999999` | id never issued | **byte-identical page** — enumeration closed |
+| `dlamini@kgk` (Trainee, inst 2) | the subject | reads it |
+| `committee@wombat.local` (CommitteeMember, inst **1**) | oversight, wrong institution | **Activity unavailable** |
+| `smit@kgk` (Coordinator, inst 2) | oversight, right institution | reads it, fields disabled |
+
+The last two are the institution conjunct in both directions — the defect the review caught late, where a
+speciality/oversight claim alone would have been a national grant. The Coordinator's page renders the real
+clinical content (EPA PAED-001, assessor David Naidoo, entrustment "3. Indirect supervision") with every
+control `disabled`, so the positive case is a genuine read and not an empty shell.
+
+Credentials used: dev seeder (`trainee@` / `committee@wombat.local`) and the shared scenario password for
+the `kgk` users — both in `pwd_DO_NOT_COMMIT.txt`. Note `dotnet run --no-launch-profile` starts in
+**Production** and therefore skips user-secrets; set `ASPNETCORE_ENVIRONMENT=Development` or the host dies
+on "Connection string 'DefaultConnection' was not found".
 
 ### The hole
 
@@ -53,22 +73,18 @@ activity for ever** with no role able to move it.
 
 ### ▶ NEXT
 
-1. **Browser-verify T101 end to end**, which nothing this session did. Sign in as an unrelated trainee and
-   walk `/activities/{id}` — expect "Activity unavailable"; then as the bound assessor, the subject, an
-   in-institution Coordinator, and a SpecialityAdmin from another institution. **Sonnet** for the walk,
-   **Opus** if anything disagrees with the tests.
-2. **T112 — data rights.** The review found it is *wider* than the hole T101 closed: any Coordinator, any
+1. **T112 — data rights.** The review found it is *wider* than the hole T101 closed: any Coordinator, any
    institution, downloads any trainee's complete activity data as a ZIP, and can approve another
    institution's **Erasure**. Needs a product decision (who the data-rights officer is) before code.
    **Opus.**
-3. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — still outstanding from the last session, and the repo
+2. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — still outstanding from the last session, and the repo
    *does* say which sub-speciality it sits under (`Rewrite/scenario-paediatrics.md:160`, `:216`,
    `:229-247`); the previous handoff was wrong that it could not. 15 rows of data entry. Record the chosen
    scale id in the T110 file. **Sonnet.**
-4. **T110** (`or_scale` resolves to nothing) and the duplicate five-rung ladder. **Opus.**
-5. **T113 / T117** (remaining caller-supplied trainee ids; the weekly digest's national roster), then
+3. **T110** (`or_scale` resolves to nothing) and the duplicate five-rung ladder. **Opus.**
+4. **T113 / T117** (remaining caller-supplied trainee ids; the weekly digest's national roster), then
    **T114** / **T115** / **T116**. **Sonnet** except T116.
-6. Unchanged from before: **T100** + **T106 item 4**, **T107**, **T105** before the ten remaining v11.1
+5. Unchanged from before: **T100** + **T106 item 4**, **T107**, **T105** before the ten remaining v11.1
    tools, **T111**.
 
 ### Still true from earlier sessions
