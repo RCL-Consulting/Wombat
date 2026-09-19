@@ -5,8 +5,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 ## ⭐ T112 SHIPPED — 2026-09-19 (Opus) — **data rights is institution-scoped; the export narrowed to the data subject**
 
 **Build clean, 0 warnings. 822 tests green** — Domain 69, Application 470, Infrastructure 171,
-Architecture 23, Web 89. Migration applied to dev. **Not browser-verified** — dev holds zero data-rights
-requests, so there was nothing to walk; see NEXT.
+Architecture 23, Web 89. Migration applied to dev. **✅ Browser-verified end to end** — see the table below.
 
 Every handler in the feature gated on **role alone**, six hand-written copies of it. Any `Coordinator`,
 in any institution, could list, open, download and **approve the erasure of** any other institution's
@@ -29,6 +28,34 @@ its privileged caller is not tested.
 
 Full account, and four things left open (who the officer should be; speciality-scoping for rectification;
 erasure crossing institutions by person; unaudited privileged reads) in the task file.
+
+### ✅ Browser verification (dev, `localhost:5080`)
+
+Two Access requests were submitted through the UI — `trainee@wombat.local` (institution 1) and
+`dlamini@kgk.wombat.local` (institution 2) — and both stamped their submitter's own institution, which is
+the submission path proven end to end.
+
+| Step | Result |
+|---|---|
+| Coordinator `smit@kgk` (inst 2) opens `/admin/data-rights` | **one row only**, and *"Showing 1–1 of 1"* — the COUNT is scoped too, not just the page |
+| …navigates directly to the institution-1 request's GUID | *"You are not authorized to access this data-rights request."* |
+| …navigates to a GUID that does not exist | **byte-identical page** — the existence oracle is closed |
+| …opens the institution-2 request | full detail, Approve/Reject offered; approving reaches `Completed` |
+| …then requests the download for the request they just approved | **404** — reviewers read metadata, not the bundle |
+| Subject `dlamini` downloads their own | **the ZIP downloads** |
+| Subject requests the *other* subject's download | **404** |
+
+The audit half of [T101] was confirmed live on the same pass: `Login`/`Logout` rows now carry an
+institution, and both `SubmitDataRightsRequestCommand` and `ApproveDataRightsRequestCommand` rows are
+stamped **and** redacted.
+
+**Gotcha for the next session:** probing the download endpoint with `fetch()` from the browser console
+returns **204 with no body** even when it works — a local download manager intercepts it. It is not a
+defect; click the link, or check the server side. I chased this briefly before the maintainer pointed it
+out.
+
+**Left in the dev database as evidence:** the two Access requests above (one Completed). They are
+scenario artefacts, not real requests.
 
 ---
 
@@ -103,13 +130,10 @@ activity for ever** with no role able to move it.
 
 ### ▶ NEXT
 
-1. **Browser-verify T112**, which nothing has done — dev holds no data-rights requests. Submit one as a
-   trainee in each institution, then confirm a Coordinator sees only their own, cannot open the other,
-   and that the subject can download while the Coordinator cannot. **Sonnet.**
-2. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — still outstanding from the last session, and the repo
-   *does* say which sub-speciality it sits under (`Rewrite/scenario-paediatrics.md:160`, `:216`,
-   `:229-247`); the previous handoff was wrong that it could not. 15 rows of data entry. Record the chosen
-   scale id in the T110 file. **Sonnet.**
+1. **Pin curriculum 2 (`FCPaed(SA) Part 1`)** — outstanding since 2026-09-18. The repo *does* say which
+   sub-speciality it sits under (`Rewrite/scenario-paediatrics.md:160`, `:216`, `:229-247`). 15 rows of
+   data entry; record the chosen scale id in the T110 file. **Sonnet.**
+2. **T110** (`or_scale` resolves to nothing) and the duplicate five-rung ladder. **Opus.**
 3. **T110** (`or_scale` resolves to nothing) and the duplicate five-rung ladder. **Opus.**
 4. **T113 / T117** (remaining caller-supplied trainee ids; the weekly digest's national roster), then
    **T114** / **T115** / **T116**. **Sonnet** except T116.
