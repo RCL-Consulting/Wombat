@@ -9,10 +9,10 @@ namespace Wombat.Infrastructure.Activities;
 /// The one implementation of "what date did this happen". (T119)
 /// </summary>
 /// <remarks>
-/// Shared by <see cref="ActivityService" />, which stamps on every write, and by
-/// <see cref="ActivityObservationDateRestamper" />, which fills in rows written before their schema
-/// declared a pointer. Two implementations would drift, and the thing they would disagree about is which
-/// stage a completion was graded against — the <see cref="ActorRuleMatcher" /> lesson restated.
+/// Used by <see cref="ActivityService" />, which stamps on every write. It is a separate type rather
+/// than a private method so that the next caller reuses it instead of writing a second one: two
+/// implementations would drift, and the thing they would disagree about is which stage a completion was
+/// graded against — the <see cref="ActorRuleMatcher" /> lesson restated.
 /// </remarks>
 internal static class ObservationDateResolver
 {

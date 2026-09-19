@@ -478,52 +478,29 @@ minimum belongs to once two are possible.
 
 ---
 
-## 🚨 CORRECTION — 2026-09-19, during implementation — the restamper cannot convert activity 12
+## 🚨 CORRECTION — 2026-09-19 — the restamper was compatibility flailing. Deleted.
 
-This task predicted: *"On dev this converts exactly one row: activity 12, whose `DataJson` holds
-`observed_on` `2026-03-10`."* **That is wrong, and it is wrong for the reason [T107] exists.**
+This task specified an `ActivityObservationDateRestamper` to give already-stored activities the date
+their clinician typed, and agonised over whether it should resolve the pointer from the **pinned**
+schema version or the **newest** one that declares it.
 
-Verified after shipping the restamper and booting the app:
+**Both the component and the question were a mistake.** They exist only to repair rows that are
+regenerable scenario-replay data. CLAUDE.md's standing rule is explicit: *"A backfill that would have to
+guess should be replaced by regenerating the data"*, and *"do not spend design effort on … hedges whose
+only purpose is preserving existing rows"*. The restamper was exactly that, and the pinned-vs-newest
+debate was a compatibility argument dressed up as a design decision.
 
-| | |
-|---|---|
-| `ActivityTypeVersions` for type 17 | v1 no pointer · v2 no pointer · **v3 pointer present** |
-| `Activities.SchemaVersion` for activity 12 | **2** |
+Removed: `ActivityObservationDateRestamper`, `WombatOptions.RestampActivityObservationDates`, its DI
+registration and its `Program.cs` call.
 
-`ActivityTypeSeedRefresher` published v3 carrying `observation_date_field` exactly as intended. Activity
-12 stays pinned to v2, which predates the pointer, so the restamper resolves against a schema that
-declares nothing and correctly leaves the row on the fallback. The implementation does what this task
-argues for; the prediction forgot that the row was pinned to a pre-pointer version.
+**What remains is the actual feature.** `ActivityService` stamps the encounter date on every write, so
+every activity created from now on carries the date its clinician typed. The migration gives existing
+rows `CreatedOn` with `ObservedOnSource = CreatedOn`, which is not a repair — it is the honest statement
+that nobody told us when those encounters happened. If correct dates are wanted on the twelve dev rows,
+**re-run the scenario runbook or file fresh activities**; filing one through the UI took under a minute
+during the T118 evidence run.
 
-### The consequence, stated plainly: the restamper is inert
+`ObservedOnSource` stays, and not for the legacy corpus. `reflective_note` and `qi_project` have no
+encounter date by their nature and never will, so a permanent way to say *"this date is the filing
+timestamp, not a clinical fact"* is a forward-looking requirement, not a migration artefact.
 
-It only ever helps a row that is pinned to a version which **does** declare a pointer but which was
-nonetheless never stamped — that is, one created after the pointer was published but before T119's code
-shipped. On dev that window is empty, and on any deployment it is a single boot wide. **As built, the
-component does nothing.** It is kept because it is idempotent, costs one filtered query per boot, and
-reports under its kill switch — but nobody should believe it is repairing the corpus.
-
-### The decision this raises
-
-> **Should the restamp resolve against the PINNED version, or against the newest version that declares a
-> pointer?**
-
-The two halves of this task's design are in tension and only one can hold:
-
-- **Pinned (as built).** Honours the T109 principle quoted above — a binding must not drift under an
-  activity already in flight. Cost: every activity created before its type gained a pointer keeps the
-  audit clock for ever, correctly labelled `ObservedOnSource = CreatedOn`. On dev that is all twelve.
-- **Newest pointer-declaring version.** Would convert activity 12 and any future equivalent. The argument
-  for it: a pointer names *which field holds the date*, which is a weaker, more stable claim than the one
-  T109 was protecting. T109 was guarding what an ordinal **means** — a 4 on a five-rung ladder is not a 4
-  on a six-rung one. A field key just locates a value a clinician typed into a box labelled "Date
-  observed"; re-reading it does not reinterpret it. The risk is a type that reuses a key for a different
-  purpose across versions, which nothing in the corpus does.
-
-My recommendation is the second, scoped tightly: resolve the pointer from the newest version that
-declares one, still read the value out of the activity's own `DataJson`, and still only touch rows whose
-source is `CreatedOn`. But it reverses a decision this file argues at length, so it is recorded here
-rather than taken quietly.
-
-Either way this does **not** block the rest of T119: new activities are stamped correctly at creation,
-which is the behaviour the task exists to deliver.

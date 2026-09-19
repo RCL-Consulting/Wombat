@@ -24,16 +24,4 @@ public sealed class WombatOptions
     /// diff again and publish a third version.
     /// </remarks>
     public bool RefreshSeededActivityTypes { get; set; } = true;
-
-    /// <summary>
-    /// Whether startup gives already-stored activities the encounter date their clinician typed, once
-    /// the schema version they are pinned to declares an <c>observation_date_field</c> (T119).
-    /// </summary>
-    /// <remarks>
-    /// The kill switch is <c>Wombat__RestampActivityObservationDates=false</c>. Off, the pass still runs
-    /// read-only and logs how many rows it would have moved, so a corpus still dated by the audit clock
-    /// is visible rather than silent. It only ever touches rows whose date is still the creation
-    /// timestamp, so it cannot overwrite a corrected date and is safe to leave on.
-    /// </remarks>
-    public bool RestampActivityObservationDates { get; set; } = true;
 }

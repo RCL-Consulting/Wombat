@@ -19,7 +19,6 @@ using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure;
-using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Web.Components;
@@ -488,11 +487,6 @@ await using (var scope = app.Services.CreateAsyncScope())
     // (T103). It never throws and never reverts operator work; see ActivityTypeSeedRefresher.
     await scope.ServiceProvider.GetRequiredService<ActivityTypeSeedRefresher>().RefreshAsync();
 
-    // T119, and it must run AFTER the refresher: the migration backfills every encounter date from the
-    // creation timestamp because at migration time no published schema declares an
-    // observation_date_field yet. This pass gives those rows the date their clinician actually typed,
-    // now that the pointer exists. Idempotent, and it never overwrites a date someone has corrected.
-    await scope.ServiceProvider.GetRequiredService<ActivityObservationDateRestamper>().RestampAsync();
 
     if (app.Environment.IsDevelopment())
     {
