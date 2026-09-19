@@ -4,9 +4,10 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 
-**Build clean, 0 warnings. 870 tests green** — Domain 69, Application 500, Infrastructure 177,
-Architecture 23, Web 101; was 824. `Wombat.Integration.Tests` **not** run (needs Docker). Tree clean.
-**Browser-verified end to end on dev.** Production untouched and still unverified.
+**Build clean, 0 warnings. 876 tests green** — Domain 69, Application 503, Infrastructure 177,
+Architecture 23, Web 103; was 824. `Wombat.Integration.Tests` **not** run (needs Docker). Tree clean.
+**Browser-verified end to end on dev, twice** — once after the changes and again after the review fixes.
+Production untouched and still unverified.
 
 ### Shipped
 
@@ -75,6 +76,36 @@ Plus: [T100]'s stated regression risk was **backwards**. It claimed the legacy O
 `1`..`5` so the change would be invisible there. The labels are words, every `EntrustmentDecision` on dev
 is on that ladder, and they all change visibly (`4. Unsupervised` → `Unsupervised`). The test it asked for
 would have failed on correct behaviour.
+
+### 🚨 The adversarial review found three real defects in this session's own work
+
+A five-dimension review of the session diff, each finding independently verified by an agent told to
+refute it. Most findings were refuted. **Three survived and all three were genuine** — and the first is the
+one worth remembering:
+
+1. **The fix for D30 committed the erasure D30 exists to prevent.** `YScale` extrapolates and never
+   clamps; pinning the axis to the ladder removed the growth-to-fit that had guaranteed every point
+   landed inside the viewBox. An off-ladder rating got a negative `cy` and the browser clipped it away
+   (`svg:not(:root)` is `overflow: hidden`). The picture silently lost an observation the screen-reader
+   table still listed. **And my test certified it** — it counted DOM circles, which pass whether or not
+   anything is visible. The axis range now widens to contain every point while the ticks still come from
+   the ladder, and the test asserts the coordinate.
+2. **Both new ladder resolvers omitted `OwningInstitutionId`**, which `CreditApplier` and
+   `ResolveCreditableEpaIdsAsync` both apply. Curriculum rows are shared across adopting institutions and
+   `CurriculumItems` is unique on `(CurriculumId, EpaId)`, so another institution's local item is the only
+   row for its EPA — its ladder would have become a trainee's chart axis and narrowed their picker. **The
+   XML remarks I wrote claimed parity with the engine; they were true of the profile lookup and false of
+   the item query.**
+3. **The axis-label budget was applied per rung**, so a ladder like `1, 2, 3a, 3b, "4 (independent)", 5`
+   rendered `1, 2, 3a, 3b, 5, 5` — the substituted ordinal is the rung above's real name, and the
+   distinct-labels validator cannot catch a collision between a printed ordinal and a stored label.
+
+Both fixes were re-checked by reverting them and confirming the new tests fail.
+
+**The lesson, and it is the same one as [T119]'s restamper:** the recon pass and the review pass each
+caught defects that reading the task file could not. Three specified fixes were wrong *as specified* —
+including an HTML-injection hole D29 asked for by name — and three more were introduced by me and caught
+only because something adversarial went looking.
 
 ### ▶ NEXT
 
