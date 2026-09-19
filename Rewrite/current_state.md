@@ -4,7 +4,7 @@ This file is the live handoff between sessions. Every session ends by editing th
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 
-**Build clean, 0 warnings. 876 tests green** — Domain 69, Application 503, Infrastructure 177,
+**Build clean, 0 warnings. 875 tests green** — Domain 69, Application 503, Infrastructure 177,
 Architecture 23, Web 103; was 824. `Wombat.Integration.Tests` **not** run (needs Docker). Tree clean.
 **Browser-verified end to end on dev, twice** — once after the changes and again after the review fixes.
 Production untouched and still unverified.
@@ -100,7 +100,9 @@ one worth remembering:
    rendered `1, 2, 3a, 3b, 5, 5` — the substituted ordinal is the rung above's real name, and the
    distinct-labels validator cannot catch a collision between a printed ordinal and a stored label.
 
-Both fixes were re-checked by reverting them and confirming the new tests fail.
+**All three fixes were re-checked by reverting them and confirming the new tests fail** — a test that
+passes before the fix guards nothing, and the clipping test was exactly that until it asserted a
+coordinate instead of a DOM node count.
 
 **The lesson, and it is the same one as [T119]'s restamper:** the recon pass and the review pass each
 caught defects that reading the task file could not. Three specified fixes were wrong *as specified* —
