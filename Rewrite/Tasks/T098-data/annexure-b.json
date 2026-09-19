@@ -1,0 +1,202 @@
+{
+ "source": "EPA version 11.1.docx, Annexure B — What version 11.1 asks for, per registrar per year",
+ "extracted": "2026-09-19",
+ "totals": {
+  "observations_per_year": 55,
+  "observations_per_semester": 25,
+  "entrustment_decisions_per_year": 21,
+  "semester_decided_epas": [
+   1,
+   2,
+   4,
+   5,
+   10,
+   12
+  ],
+  "annually_decided_epas": [
+   3,
+   6,
+   7,
+   8,
+   9,
+   11,
+   13,
+   14,
+   15
+  ]
+ },
+ "notes": [
+  "per_semester is null for the five EPAs at one per annum; Annexure B prints an em-dash. Its prose: 'The remaining 5 are scheduled throughout the year as opportunities arise.'",
+  "y1..y4 agree with Annexure A exactly (9 EPAs on the 3a/3b/4/5 curve, 6 on the 2/3a/3b/4 curve).",
+  "entrustment_decision is the CCC cadence and is INDEPENDENT of the observation cadence: EPA 3 is observed six per annum (3 per semester) but decided annually.",
+  "Annexure B prose says MSF is specified in ELEVEN of the fifteen EPAs; Annexure A lists MSF on ALL FIFTEEN. Unresolved source contradiction.",
+  "For EPAs 4 and 5 the decision is taken by the neonatal team Clinical Competency Committee."
+ ],
+ "epas": [
+  {
+   "no": 1,
+   "title": "Providing paediatric emergency care to children",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 2,
+   "title": "Managing common paediatric presentations",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 3,
+   "title": "Providing intensive care to children",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 4,
+   "title": "Managing common neonatal conditions",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 5,
+   "title": "Providing neonatal care in intensive and high-care settings",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 6,
+   "title": "Managing long-term health conditions (LTHCs)",
+   "per_year": 4,
+   "per_semester": 2,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 7,
+   "title": "Maintaining and promoting the health and well-being of children",
+   "per_year": 2,
+   "per_semester": 1,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 8,
+   "title": "Evaluating and managing neurodevelopmental and behavioural presentations in children",
+   "per_year": 1,
+   "per_semester": null,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 9,
+   "title": "Providing care for an adolescent patient",
+   "per_year": 1,
+   "per_semester": null,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 10,
+   "title": "Leading and operating within a clinical team",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 11,
+   "title": "Managing population health challenges",
+   "per_year": 1,
+   "per_semester": null,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 12,
+   "title": "Communicating with and counselling patients, caregivers and healthcare teams",
+   "per_year": 6,
+   "per_semester": 3,
+   "y1": "3a",
+   "y2": "3b",
+   "y3": "4",
+   "y4": "5",
+   "entrustment_decision": "Each semester"
+  },
+  {
+   "no": 13,
+   "title": "Managing child protection, legal and ethical aspects of children at risk",
+   "per_year": 1,
+   "per_semester": null,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 14,
+   "title": "Providing palliative and end-of-life care",
+   "per_year": 1,
+   "per_semester": null,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  },
+  {
+   "no": 15,
+   "title": "Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research",
+   "per_year": 2,
+   "per_semester": 1,
+   "y1": "2",
+   "y2": "3a",
+   "y3": "3b",
+   "y4": "4",
+   "entrustment_decision": "Annually"
+  }
+ ]
+}

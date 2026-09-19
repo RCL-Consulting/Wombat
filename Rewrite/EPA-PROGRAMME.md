@@ -68,8 +68,8 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | NEEDS A DECISION | M | **D23** |
 | [T110] | `scale_key: "or_scale"` resolves to nothing for four generic seeds; two five-rung ladders are the same ladder duplicated | NEEDS A DECISION | S code, operator data | **D25** |
 | [T107] | Activities pinned to a superseded schema version are uncompletable and the UI still offers the button | NEEDS A DECISION | S | **D33** |
-| [T121] | **MSF is required by all 15 EPAs and can credit none.** Synthetic activity on release, `MsfCampaignEpa` join, `msf_cpsa` seed | NEEDS A DECISION | L | **D8–D11**. Design is complete and blocked by nothing else |
-| [T120] group 1 | Five plain seeds — `cca_cpsa`, `rca_cpsa`, `chart_stimulated_recall_cpsa`, `case_note_review_cpsa`, `observed_clinical_exam_cpsa` — plus fixing `GetSamplingConcentrationWarnings.cs:92-99` | NEEDS A DECISION | M | **D1–D6**. Prefers T105 and T102 fix 2 |
+| [T121] | **MSF is required by 11 or 15 EPAs — the source says both (D37) — and can credit none.** Synthetic activity on release, `MsfCampaignEpa` join, `msf_cpsa` seed | NEEDS A DECISION | L | **D8–D11**. Design is complete and blocked by nothing else |
+| [T120] group 1 | Five plain seeds — `cca_cpsa`, `rca_cpsa`, `chart_stimulated_recall_cpsa`, `case_note_review_cpsa`, `observed_clinical_exam_cpsa` — plus fixing `GetSamplingConcentrationWarnings.cs:92-99`. **[T124] argues this is really three**: page 8 defines CCA as documentation review + reasoning discussion, which is what "case note review" and "chart-stimulated recall" describe | NEEDS A DECISION | M | **D1, D4, D6** (D2/D3/D5 closed). Prefers T105 and T102 fix 2 |
 | [T120] reflective | `reflective_exercise_cpsa` | NEEDS A DECISION | S | **D6, D7** |
 | [T120] group 2 | `clinical_audit_cpsa`, `portfolio_review_cpsa` — both want an attachment and `FieldType.File` is a reserved word, not a feature | NEEDS A DECISION | L | **D34**. Attachments are their own task |
 | [T122] | The EPA→tool allow-list is parsed by nothing: every CPSA tool can credit every CPSA EPA | NEEDS A DECISION | M | **D12, D20, D21**. Composes with T123 d3 |
@@ -102,6 +102,22 @@ blocks, which would have been free (`TraineeProfile.GetStage`, `TraineeProfile.c
 exactly that and `CreditApplier` already uses it), because a shared boundary is what makes a departmental
 "how are we doing this semester" view computable at all. **Consequence: `GetStage` and the period resolver
 now disagree by construction — see D17.**
+
+**D2 — Does page 8 define the instruments? — CLOSED 2026-09-19. No.** Page 8 holds *two* sections and the
+EPAs cite the second: "Workplace-based assessment (WBA) tools" defines **nine** tools in one sentence each,
+and "Standard assessment information sources" lists **four information sources** (clinical documentation ·
+colleagues · patients, guardians and family · the candidate) that ground every summative decision. No field
+sets, no per-tool scale, no structure. **The form designs still have to be commissioned.** Full extraction
+in [T124]; data in `T098-data/page-8-wba-tools.json`.
+
+**D3 — What is CCA? — CLOSED 2026-09-19. "Clinical Case Analysis"** — *"review of clinical documentation
+and discussion of the reasoning and management plan recorded."* The reconciling reading recommended here
+was right; the expansion guessed here was wrong. Seed `cca_cpsa`, display "Clinical Case Analysis
+(Paediatrics)". No split needed — EPA 1/3's "case discussion" and EPA 2's "notes audit" are both instances
+of the one definition.
+
+**D5 — What does RCA stand for? — CLOSED 2026-09-19. "Random Case Analysis"** — *"review of cases selected
+at random from the trainee's records to identify knowledge gaps."* Recommendation confirmed verbatim.
 
 ### 3B. For the College / CPSA content owner
 
@@ -248,6 +264,25 @@ Today they are carried as narrative: `PaediatricCatalogueSeeder.cs:262-268` join
 **Recommendation: narrative, and confirm it.** If the answer is "assessable", it is the largest single
 unplanned item in the programme and needs its own task before anything else is built on top.
 
+**D37 — Is MSF specified on eleven EPAs or on fifteen? The document says both.** *(new 2026-09-19, [T124])*
+Annexure A lists `MSF` in the `tools` cell of **15 of 15** EPAs. Annexure B's prose says *"Multi-source
+feedback is specified in **eleven** of the fifteen EPAs."* Same document, same version.
+**This does not change any recommendation** — MSF is the most-required tool in the catalogue either way,
+and [T121]'s defect stands — but it changes the arithmetic quoted to the College in D8 and D9: D9's "15 × 8
+= 120 questionnaires per registrar per year" becomes 88, and D8's "30 of the 55" becomes 22.
+**Recommendation: one line in the same message as D1.** Cheap to ask, and [T121] opens with Annexure A's
+side stated as fact.
+
+**D38 — Does a committee decision have to record what it was grounded in?** *(new 2026-09-19, [T124])*
+Page 4 of the source is unambiguous: *"The summative entrustment decision for an EPA is taken by the
+Clinical Competency Committee, drawing on the standard assessment information sources set out on page 8 —
+**never by a single assessor and never from a single form**."* Wombat today lets a committee record an
+entrustment decision with **no stated evidence basis at all**.
+*Options:* a phase-4 requirement (the decision names the evidence it drew on) · guidance only · nothing.
+**Recommendation: a phase-4 requirement, written into phase 4's task file** — which does not exist yet
+(§5 item 1). It is the College's own words about what a decision *is*, not a product preference. Note this
+is the maintainer's call on scope, not a content question, so it does not need to go to the College.
+
 ### 3C. For the maintainer — these gate a wave
 
 **D17 — `GetStage` and the period resolver disagree by construction. Which one moves?**
@@ -376,9 +411,15 @@ which was the point.
 
 Four independent threads, all startable today.
 
-1. **Send the College D1, D3–D16.** One message. It is the critical path for Waves 3 and 4 and everything
-   else runs while it is outstanding.
-2. **Extract page 8 (D2).** The cheapest action in the programme. It may collapse D3, D4, D5 and D6.
+1. **Send the College D1, D4, D6–D16 and D37.** One message. It is the critical path for Waves 3 and 4 and
+   everything else runs while it is outstanding. D3 and D5 no longer need asking — page 8 answered them.
+2. ~~**Extract page 8 (D2).**~~ **DONE 2026-09-19 — [T124].** It closed D2 (the answer is *no*: page 8
+   defines nine tools in one sentence each and four *information sources*, and specifies no field sets),
+   closed D3 (CCA = **Clinical Case Analysis**) and D5 (RCA = **Random Case Analysis**), and evidenced D4
+   and D12: the document **defines nine tools and Annexure A uses fourteen**, with a clean partition —
+   every tool on ≥3 EPAs is defined, every tool on ≤2 is not. It also extracted **Annexure B for the first
+   time** (`T098-data/annexure-b.json`), which hands phase 3 a published per-semester column and phase 4 a
+   decision cadence, and it found a **source contradiction about MSF** (D37).
 3. **[T119] — `observed_on`.** *Opus.* The largest ready item and the one that unblocks the most. Ship the
    stamp → boot (migration, refresher, restamper) → fix and run the rebuild → verify on Ndlovu's
    trajectory, whose point must move from 2026-09-19 to 2026-03-10. Fix `RebuildCurriculumProgressCommand`
@@ -524,6 +565,9 @@ Honest list. Each of these is known, none has a task file, and several are large
 [T110] `…T110-or-scale-key-mismatch.md` · [T111] `…T111-new-activity-type-query-parameter-ignored.md` ·
 [T118] `…T118-v11-1-evidence-run-findings.md` · [T119] `…T119-wire-observed-on-as-the-encounter-date.md` ·
 [T120] `…T120-remaining-v11-1-wba-tools.md` · [T121] `…T121-msf-cannot-credit-an-epa.md` ·
-[T122] `…T122-enforce-epa-tool-mapping.md` · [T123] `…T123-evidence-run-ui-defects.md`
+[T122] `…T122-enforce-epa-tool-mapping.md` · [T123] `…T123-evidence-run-ui-defects.md` ·
+[T124] `…T124-page-8-extraction-findings.md`
 
-Annexure source data: `Tasks/T098-data/annexure-a.json`, `Tasks/T098-data/epa-detail.json`.
+Source data extracted from `EPA version 11.1.docx`: `Tasks/T098-data/annexure-a.json` ·
+`Tasks/T098-data/annexure-b.json` (new, [T124]) · `Tasks/T098-data/page-8-wba-tools.json` (new, [T124]) ·
+`Tasks/T098-data/epa-detail.json`.

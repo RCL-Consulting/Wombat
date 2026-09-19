@@ -1,0 +1,58 @@
+{
+ "source": "EPA version 11.1.docx, page 8 — 'Workplace-based assessment (WBA) tools' and 'Standard assessment information sources'",
+ "extracted": "2026-09-19",
+ "answers": {
+  "D2": "NO — page 8 does not specify the instruments. It defines the TOOLS (nine, one sentence each) and then, separately, the four INFORMATION SOURCES that ground every summative decision. Neither is a form specification: no field sets, no per-tool rating scale, no required/optional structure. The form designs still have to be asked for.",
+  "D3": "CCA = 'Clinical Case Analysis'. The reconciling reading is correct: its definition is documentation review AND discussion of the reasoning, in one instrument.",
+  "D5": "RCA = 'Random Case Analysis'. Confirms the recommendation verbatim."
+ },
+ "wba_tools_defined_on_page_8": [
+  {
+   "abbreviation": "Mini-CEX",
+   "definition": "Mini-Clinical Evaluation Exercise — direct observation of a focused clinical encounter, followed by immediate feedback."
+  },
+  {
+   "abbreviation": "DOPS",
+   "definition": "Direct Observation of Procedural Skills — observation of a trainee performing a procedure, assessing technique, patient interaction and safety."
+  },
+  {
+   "abbreviation": "CBD",
+   "definition": "Case-Based Discussion — a structured discussion of a case the trainee has managed, exploring clinical reasoning and decision-making."
+  },
+  {
+   "abbreviation": "CCA",
+   "definition": "Clinical Case Analysis — review of clinical documentation and discussion of the reasoning and management plan recorded."
+  },
+  {
+   "abbreviation": "RCA",
+   "definition": "Random Case Analysis — review of cases selected at random from the trainee's records to identify knowledge gaps."
+  },
+  {
+   "abbreviation": "MSF",
+   "definition": "Multi-Source Feedback — structured feedback from colleagues across the multidisciplinary team and, where appropriate, from patients' families."
+  },
+  {
+   "abbreviation": "Direct observation",
+   "definition": "Observation of the trainee in routine clinical practice, including ward rounds, handover and family meetings."
+  },
+  {
+   "abbreviation": "Clinical audit",
+   "definition": "A cycle of measurement against an agreed standard, followed by change and re-measurement."
+  },
+  {
+   "abbreviation": "Reflective exercise",
+   "definition": "A written or verbal reflection on a challenging case or critical incident, discussed with a supervisor or mentor."
+  }
+ ],
+ "standard_assessment_information_sources": {
+  "preamble": "The same set of information sources grounds the summative entrustment decision for every EPA in this document. It is therefore set out once here rather than repeated in each EPA.",
+  "sources": [
+   "Clinical documentation — notes, referrals, discharge summaries and prescriptions.",
+   "Colleagues — consultants, registrars, peers and members of the multidisciplinary team, including nursing and allied health staff and support services such as radiology and laboratory services.",
+   "Patients, guardians and family members — their experience of the care provided.",
+   "The candidate — self-reflection on the milestones achieved, and learning plans that promote progressive milestone achievement."
+  ],
+  "closing": "Each EPA specifies how often the activity should be observed, and who takes the summative entrustment decision."
+ },
+ "governance_statement_from_page_4": "The summative entrustment decision for an EPA is taken by the Clinical Competency Committee, drawing on the standard assessment information sources set out on page 8 — never by a single assessor and never from a single form."
+}
