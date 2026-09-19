@@ -2,6 +2,69 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## 🚨 CORRECTION — 2026-09-19 — "no curriculum is pinned" is FALSE, and T110 is live
+
+Verified on dev while answering "is the EPA work complete?":
+
+| Curriculum | Items | Pinned to a scale |
+|---|---|---|
+| 1 `IM Core Curriculum` 2026.1 | 1 | **1** |
+| 2 `FCPaed(SA) Part 1` 2026.1 | 15 | **0** |
+| 3 `Paediatric EPA Curriculum` 11.1 | 15 | **15** |
+
+The 2026-09-18 entry says *"no curriculum in the dev database is pinned to a scale"* and the NEXT list has
+been built on that ever since. It is wrong. T109's **migration** backfills nothing — that part is true and
+deliberate — but the **seeders pin**: `PaediatricCatalogueSeeder.cs:338-345` and `DataSeeder.cs:204-207`
+set `ScaleId` on any item they author. Curriculum 2 is unpinned only because no seeder authors it.
+
+**Two consequences.** T110 (`or_scale` resolves to nothing) is **live, not latent** — curriculum 1 is
+pinned and has a trainee, so generic Mini-CEX/CBD/DOPS/ACAT completions there already fall to
+`Unpinned` comparison. And T109's browser check was never actually blocked on pinning curriculum 2;
+curriculum 3 could have been used all along.
+
+### The v11.1 catalogue has never been used
+
+0 trainees on curriculum 3, no `InstitutionCurriculumAdoptions` row for it, and it has never credited
+anything — all four `CurriculumItemProgress` rows belong to curriculum 2 and predate the catalogue. The
+one completed CPSA activity produced no progress row (it is the T108 evidence row).
+
+So phase 3, the ten remaining tools, and the severity ranking of T100/T110 are all being planned against
+**no evidence**. See the EPA status section below.
+
+### EPA completeness, as at 2026-09-19
+
+**Done:** T091; T098 phase 1 (6-rung scale, 15 EPAs, 5 domains, curriculum 3 with 15 pinned items);
+phase 2a (4 CPSA tools); T103; T108; T109.
+
+**Not done:**
+- **T098 phase 3 — the annual quota. Not started, biggest single gap.** Annexure A states per-annum
+  frequencies; `PaediatricCatalogueSeeder.cs:359-361` collapses them to a single lossy `RequiredCount`,
+  and `CurriculumItemProgress` has no period column. Needs a design decision first.
+- **T098 phase 4** (governance: neonatal CCC routing, semester cadence) — not started.
+- **Ten of the fourteen v11.1 WBA tools are unbuilt.** No EPA is uncovered; ten *tools* are missing. The
+  worst is **MSF**, required by all 15 EPAs: the aggregate exists and is fully built but has **no
+  `EpaId` and no credit path**. `reflective_note` is half-there with `counts_for: []`, so it cannot
+  credit. **T105 must land first** or the `requires_fields` workaround is baked in ten more times.
+- **`observed_on` is captured by all four CPSA schemas and read by nothing** — `grep observed_on
+  --include=*.cs src/` returns nothing; `CreditApplier` dates encounters from `Activity.CreatedOn`.
+  Must be fixed *before* phase 3, which buckets by date.
+- **The EPA→tool mapping is unenforced.** `wbaTools` in the catalogue JSON is read only by a test; the
+  seeder's `EpaSeed` record does not deserialize it, so every CPSA tool can credit any of the 15 EPAs.
+- **T110, T100, T104, T105, T107, T102 fixes 2–3, T111, T099 on production** — all open.
+
+### ▶ Recommended next, replacing "pin curriculum 2"
+
+**Put a trainee on curriculum 3 and run one CPSA assessment end to end** — adoption row, sub-speciality
+scope, one `mini_cex_cpsa` through to `completed`. Pinning curriculum 2 buys less: it is precisely the
+world **T104 exists to retire**, so it is 15 rows of data entry into a curriculum scheduled for deletion.
+One real run would settle whether the six-rung ladder credits correctly, whether `3. 3a` is merely ugly
+or actually blocking, and whether the lossy `RequiredCount` reads as absurd on a real progress page.
+
+**Unknown:** production. Nothing this session touched `wombat.rcl.co.za`; its pinning, adoption and
+stranded-activity state are unverified.
+
+---
+
 ## ⭐ T112 SHIPPED — 2026-09-19 (Opus) — **data rights is institution-scoped; the export narrowed to the data subject**
 
 **Build clean, 0 warnings. 822 tests green** — Domain 69, Application 470, Infrastructure 171,
