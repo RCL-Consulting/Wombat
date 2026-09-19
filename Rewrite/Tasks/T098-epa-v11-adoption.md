@@ -427,3 +427,46 @@ a new column plus a new unique index on `CurriculumItemProgressConfiguration.cs:
 **Also worth knowing before phase 3:** `CurriculumItem.WindowMonths` already exists, is validated and is
 editable in the admin UI — and the credit engine never reads it. Its only consumer is `AdmitTrainee.cs:126`.
 Do not assume a currency window is already enforced.
+
+---
+
+## DECISION — 2026-09-19 — the period anchor for phase 3 is the **fixed academic year**
+
+Open question 3 (`:193-194`) is closed. "Six per annum" means a **fixed national academic year**
+(Annexure B: *"about 5 a month across an eleven-month academic year"*), **subdivided into two
+semesters** (*"25 of the 55 fall in each semester … the remaining 5 are scheduled throughout the year
+as opportunities arise"*).
+
+Chosen over trainee-anchored 365-day blocks, which would have been free — `TraineeProfile.GetStage`
+(`:66-75`) already computes exactly that and `CreditApplier` already uses it to select a stage minimum.
+The academic year was chosen because it is what the College document says and because a shared boundary
+is what makes a departmental "how are we doing this semester" view computable at all; trainee-anchored
+periods give no two registrars the same boundary.
+
+### What this decision obliges
+
+1. **`GetStage` and the period resolver must be reconciled.** They now disagree by construction: stage
+   is a 365-day block from `ProgrammeStartDate`, the period is a fixed calendar window. One of them
+   moves, or they stay separate concepts with separate names and the difference is documented. Decide
+   this *explicitly* — silently having two notions of "year" is how the lossy `RequiredCount` happened.
+2. **Mid-year starters get a short first period.** A registrar starting in August does not get eleven
+   months before the boundary. Needs a rule: pro-rata the quota, exempt the partial period, or carry
+   forward. Not decided.
+3. **The academic year's actual boundaries are not in the repo.** Annexure B says eleven months; it does
+   not say which. Needs the month, and probably needs to be configurable per College rather than a
+   constant.
+4. **Semesters are required, not optional** — 7 of 15 EPAs are decided per semester. Their `currency`
+   string (`"Essential — each semester (six months)"` vs `"… annually (12 months)"`) is present in
+   `paediatric-epa-v11.1.json` on every EPA but is deserialized by nothing: `EpaSeed`
+   (`PaediatricCatalogueSeeder.cs:397-405`) declares no `currency` property. A `PeriodKind` should be
+   seeded explicitly rather than parsed out of prose.
+5. **`CurriculumItem.WindowMonths` already exists**, is admin-editable and validated, and is read by
+   nothing in the credit path (T106:88-94). An implementer will find a period-shaped column already
+   there. Say whether phase 3 uses it or leaves it.
+
+### Still open on phase 3 after this decision
+
+The column set and types on `CurriculumItemProgress` and `CurriculumItem`; the migration story for the
+four existing progress rows; the back-compat rule for the eight existing progress readers; and whether
+`RequiredCount` becomes per-period or gains a sibling. **And `observed_on` must be wired first** — it is
+the bucketing date, it is captured by all four CPSA schemas, and it is read by no C# code today.

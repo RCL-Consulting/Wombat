@@ -2,6 +2,63 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ 2026-09-19 (Opus) — **Wave 0 done: the v11.1 catalogue has credited for the first time**
+
+The maintainer decided to complete all outstanding EPA work, and chose the evidence run first. It was the
+right call — the catalogue had never been used, so every severity judgement about it was a guess.
+
+Through the UI on dev: institution 2 adopted curriculum 3; Ndlovu was moved onto it; a `mini_cex_cpsa`
+was filed against PAED-001 with `observed_on` 2026-03-10 and completed by Naidoo at **3a**. Result:
+`CreditedItemCount = 1`, no scale mismatch, a progress row with `CountsSoFar = 1` and
+`MinimumLevelReachedCount = 1`. **T109, T073's per-stage minimum, T101's stamping, T070's field ownership
+and T108's EPA narrowing all hold on real data.**
+
+**Eight findings, three of them new and unfiled — full detail in [T118].** The ones that change priorities:
+
+- **T100 is understated.** The picker reads `1. 1 · 2. 2 · 3. 3a · 4. 3b · 5. 4 · 6. 5`. Rung 4 renders as
+  "5. 4". The progress page separately says *"Minimum level 3"* for a rung called **3a** — and there is no
+  rung "3" on this ladder. Update the task before fixing it; its stated premise about numeric labels is
+  wrong for this scale.
+- **The quota is visibly wrong.** The progress page reads **"1 / 24"** for an EPA requiring six per annum
+  (the seeder multiplies by four programme years). Other EPAs read 0/4, 0/8, 0/16. A registrar cannot tell
+  what is expected this year. This is phase 3 made concrete and it is the most visible gap in the product.
+- **`observed_on` is now a proven display defect**, not a theoretical one: the encounter was March, the
+  trajectory plots September. Still unfiled as its own task.
+- **NEW — the trajectory chart has a five-point axis for a six-rung ladder.**
+- **NEW — two indistinguishable "Mini-CEX (Paediatrics)" and two "DOPS (Paediatrics)"** in the type
+  picker, because the legacy `*_paed` types share display names with the `*_cpsa` ones. A trainee picking
+  the wrong one gets no credit. **This is a reason to bring [T104] forward rather than leave it last.**
+- **NEW — a v11.1 trainee is still offered the four legacy institution-scoped types.** T108 narrowed the
+  EPA picker; nothing narrows the type picker.
+
+### DECISION — the phase-3 period anchor is the fixed academic year
+
+"Six per annum" means a **fixed national academic year**, subdivided into two semesters (Annexure B:
+*"eleven-month academic year … 25 of the 55 fall in each semester"*). Chosen over trainee-anchored 365-day
+blocks, which would have been free — `TraineeProfile.GetStage` already computes exactly that — because a
+shared boundary is what makes a departmental per-semester view computable. **`GetStage` and the period
+resolver now disagree by construction and must be reconciled.** Obligations and what remains open are in
+[T098]'s decision section.
+
+### ▶ NEXT
+
+1. **Update [T100]** from the evidence above, then fix it — it is now the cheapest clinician-visible win
+   and its premise is wrong as written. **Sonnet.**
+2. **File `observed_on` as its own task and wire it.** It is the bucketing date for phase 3, so nothing in
+   phase 3 can start first. **Opus** — it re-dates T073's stage minimum on existing rows.
+3. **Reconsider [T104]'s position.** It was "do this last"; findings 6 and 7 make the two paediatric
+   worlds actively confusing to a trainee today. **Opus** — destructive.
+4. Then **T105** (before the ten tools), then phase 3 proper.
+5. Eleven decisions remain open from the readiness review — see the session summary; the period anchor was
+   the twelfth and is now closed.
+
+### Evidence left on dev
+
+Adoption row 2, Ndlovu on curriculum 3, activity 12 completed and credited, one progress row on item 17.
+**Ndlovu has not been moved back to curriculum 2** — reversible at `/admin/trainees/edit?id=6`.
+
+---
+
 ## 🚨 CORRECTION — 2026-09-19 — "no curriculum is pinned" is FALSE, and T110 is live
 
 Verified on dev while answering "is the EPA work complete?":
