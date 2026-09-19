@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "observation_date_field": "observed_on",
   "sections": [
     {
       "key": "request",
@@ -7,6 +8,7 @@
       "fields": [
         { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
         { "key": "assessor_user_id", "type": "user", "label": "Assessor user id", "help_text": "Use the target assessor's user id for now.", "required": true },
+        { "key": "observed_on", "type": "date", "label": "Date observed", "help_text": "When the encounter happened, not when this form is completed.", "required": true },
         { "key": "setting", "type": "choice", "label": "Clinical setting", "required": true, "options": ["ward", "clinic", "emergency_unit", "call_review"] },
         { "key": "presenting_complaint", "type": "text", "label": "Presenting complaint", "required": true },
         { "key": "complexity", "type": "choice", "label": "Case complexity", "required": true, "options": ["low", "moderate", "high"] }

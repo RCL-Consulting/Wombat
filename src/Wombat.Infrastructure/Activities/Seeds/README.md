@@ -25,6 +25,12 @@ Caveats:
 - `procedure_log`, `research_output`, `teaching_session`, `qi_project`, and `journal_club` currently seed with no credit directives because the curriculum model only supports EPA-targeted progress today.
 - `dops` captures both a procedure and an EPA. The procedure catalogue is the operational record; the EPA field keeps the seed immediately useful with the current curriculum-credit engine.
 - `procedure_catalogue` is a reference table, not embedded in schema JSON. Choice fields can reference it via `"catalogue": "procedure_catalogue"`.
+- Every seed that records when its encounter happened names that field at the root of `schema.json`:
+  `"observation_date_field": "observed_on"` (T119). `ActivityService` stamps `Activity.ObservedOn` from the
+  named field, and every date the product filters, plots, credits and prints comes from that column. A seed
+  that carries a date field but forgets the pointer is not refused — it silently falls back to the row's
+  audit timestamp, which is the defect T119 exists to remove. `reflective_note` and `qi_project` declare no
+  pointer on purpose: a reflection and a months-long QI project have no single encounter date.
 
 ## Editing a seed after it has been seeded (T103)
 

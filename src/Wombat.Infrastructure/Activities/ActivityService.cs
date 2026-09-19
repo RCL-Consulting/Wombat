@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -108,6 +109,9 @@ public sealed class ActivityService : IActivityService
 
         ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
 
+        // T119: after the writable-key filter, so the stamp reflects what was actually stored.
+        StampObservedOn(activity, schema, normalizedDataJson);
+
         activity.Transitions.Add(new ActivityTransition
         {
             FromState = workflow.InitialState,
@@ -147,6 +151,9 @@ public sealed class ActivityService : IActivityService
 
         activity.DataJson = normalizedDataJson;
         activity.UpdatedOn = DateTime.UtcNow;
+
+        // T119: a trainee correcting the encounter date before submitting must not leave a stale stamp.
+        StampObservedOn(activity, schema, normalizedDataJson);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return Map(activity);
@@ -205,6 +212,12 @@ public sealed class ActivityService : IActivityService
             mergedDataJson,
             SchemaValidationMode.Submit,
             transition.RequiresFields));
+
+        // T119. Ordering here is load-bearing twice: stamping BEFORE ApplyTransition keeps the column and
+        // the transition's SnapshotJson in agreement, and stamping before the credit call below is the
+        // whole point of the task — CreditApplier picks the curriculum item's effective minimum from the
+        // stage the trainee was in ON THE ENCOUNTER DATE.
+        StampObservedOn(activity, schema, mergedDataJson);
 
         var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
@@ -555,6 +568,10 @@ public sealed class ActivityService : IActivityService
             CombinedActorRule combined => combined.Rules.Any(BindsToTheActivity),
             _ => false
         };
+
+    /// <summary>Stamps the encounter date from the pinned schema. Safe to call repeatedly. (T119)</summary>
+    private static void StampObservedOn(Activity activity, FormSchema schema, string dataJson)
+        => ObservationDateResolver.Stamp(activity, schema, dataJson);
 
     /// <summary>
     /// Where the subject trains, read once at creation and stamped onto the activity. (T101)

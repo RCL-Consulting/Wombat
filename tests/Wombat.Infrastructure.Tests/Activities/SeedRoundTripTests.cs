@@ -156,6 +156,72 @@ public sealed class SeedRoundTripTests
     }
 
     /// <summary>
+    /// T119 added a root <c>observation_date_field</c> pointer at the field that records when the
+    /// encounter happened. Named explicitly for the same reason <c>editable_by</c> is: a Serialize
+    /// that forgets it fails here by name rather than as an opaque corpus-wide diff.
+    /// </summary>
+    /// <remarks>
+    /// This particular loss is invisible in the product rather than noisy. An activity whose pinned
+    /// schema carries no pointer falls back to the audit clock, so it silently dates itself by when
+    /// the paperwork was filed instead of when the encounter happened — which is precisely the
+    /// defect T119 exists to remove, quietly re-created by a missing Serialize half.
+    /// </remarks>
+    [Fact]
+    public void ObservationDateField_SurvivesParseSerializeParse()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "observation_date_field": "observed_on",
+              "sections": [
+                {
+                  "key": "request",
+                  "title": "Request",
+                  "fields": [
+                    { "key": "observed_on", "type": "date", "label": "Date observed", "required": true }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().Contain("\"observation_date_field\":\"observed_on\"");
+        FormSchemaParser.Parse(canonical).ObservationDateField.Should().Be("observed_on");
+        AssertNothingLost(schemaJson, canonical, "observation_date_field fixture");
+    }
+
+    /// <summary>
+    /// The mirror. <c>reflective_note</c> and <c>qi_project</c> deliberately declare no pointer — a
+    /// reflection and a months-long QI project have no single encounter date — so canonicalisation
+    /// must not invent one and make them assert a date they do not hold.
+    /// </summary>
+    [Fact]
+    public void ObservationDateField_StaysAbsentWhenTheSchemaDeclaresNone()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "reflection",
+                  "title": "Reflection",
+                  "fields": [
+                    { "key": "what_i_learned", "type": "longtext", "label": "What I learned" }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().NotContain("observation_date_field");
+        FormSchemaParser.Parse(canonical).ObservationDateField.Should().BeNull();
+    }
+
+    /// <summary>
     /// The no-loss assertion is only worth having if it actually fails when a property is dropped.
     /// </summary>
     [Fact]

@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "observation_date_field": "session_date",
   "sections": [
     {
       "key": "attendance",

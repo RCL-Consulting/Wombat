@@ -163,6 +163,9 @@ public sealed class CommitteeDecisionHandlersTests
             CurrentState = "draft",
             DataJson = """{ "title": "Observed consultation" }""",
             CreatedOn = new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc),
+            // T119: production stamps this in ActivityService; a fixture that builds the
+            // entity directly must set it, or it defaults to 0001-01-01.
+            ObservedOn = DateOnly.FromDateTime(new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc)),
             UpdatedOn = new DateTime(2026, 2, 2, 8, 0, 0, DateTimeKind.Utc)
         };
 

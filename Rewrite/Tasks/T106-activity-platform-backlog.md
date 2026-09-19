@@ -104,7 +104,7 @@ That is a direct dent in the platform premise. An actor-rule input on the sectio
 `ActivityTypeEdit.razor` (and on the state editor, once T019-d's visual workflow editor exists) is the
 fix. Worth its own task when picked up.
 
-## 12. `RebuildCurriculumProgress` does not stamp `CreditedItemCount`, so a stale zero is never cleared (added 2026-09-17)
+## 12. ✅ DONE 2026-09-19 (with T119) — `RebuildCurriculumProgress` did not stamp `CreditedItemCount`, so a stale zero was never cleared (added 2026-09-17)
 
 T108 stamps the credit outcome on the transition, and `ActivityView` warns when it is `0`. But the stamp
 happens only on the transition path. `RebuildCurriculumProgressCommand` deletes every progress row and
@@ -116,6 +116,48 @@ points the reader at is the one thing that cannot clear T108's own warning.
 
 Fix: stamp from the rebuild path too. It is the same three-valued logic against the same
 `ICreditApplier` return, and it is what makes the signal trustworthy rather than sticky.
+
+### Resolution
+
+Picked up with [T119], which is what finally makes a rebuild something anyone actually runs: wiring
+`Activity.ObservedOn` re-dates every completion, and a rebuild is the only thing in the product that can
+move a stored tally.
+
+`RebuildCurriculumProgressCommandHandler` now stamps `CreditedItemCount` **and**
+`CreditScaleMismatchCount` (T109's sibling, which would otherwise have been left stale by the same
+omission) onto the transition it credited against. Three things make the stamp mean what T108 says it
+means:
+
+- **The `counts_for` gate is checked before the applier is called**, exactly as
+  `ActivityService.TransitionAsync` checks it — not read back out of a zero in the result. Reading the
+  result instead would stamp `0` on every reflective note, journal club, procedure log, QI project,
+  research output and teaching session, which credit nothing by design and must stay `null`.
+- **The transition stamped is selected with the same expression `CreditApplier.GetCreditKey` uses**
+  (newest by `OccurredOn`), so the stamp and the dedupe key describe the same move rather than two
+  different ones.
+- **The stamps are applied after the replay finishes**, so the only writes outstanding while the replay
+  can still throw are the progress rows.
+
+Two further defects in the same handler were fixed alongside, because a stamp is no use on a command
+nobody dares run:
+
+- **Atomicity.** It used to delete every `CurriculumItemProgress` row and *save*, then replay and save
+  again — a failure in between left every trainee in the system on zero progress. It now zeroes the
+  pre-existing rows **in place**, replays into them, and commits once; EF wraps one `SaveChangesAsync`
+  in one transaction, so this needs no `BeginTransaction` seam on `IApplicationDbContext` (which exposes
+  none) and stays exercisable on the in-memory provider (which has none). A replay that throws restores
+  the rows it zeroed and detaches the ones it added, so a failed rebuild cannot leave a poisoned context
+  for the next `SaveChanges` in the same scope either.
+- **Reach.** It takes a `ClaimsPrincipal` and refuses anyone who is not a global `Administrator`, and an
+  optional `TraineeUserId` that confines both the zeroing and the replay to one trainee — which is what
+  [T119] wants, a rebuild aimed at the rows whose dates actually moved rather than a global wipe. It
+  returns counts of what it moved instead of a bare `int`.
+
+Still **no entry point**, deliberately: where an Administrator-only button lives, what its confirmation
+says and how the result is shown are UI questions with a DESIGN.md pass attached. What changed is that
+wiring one is now a presentation job with no remaining hazard behind it.
+
+Tests: `tests/Wombat.Application.Tests/Activities/RebuildCurriculumProgressTests.cs`.
 
 ## 13. `AssessorPendingNudgeJob` reads the live workflow, not the pinned version (added 2026-09-17)
 

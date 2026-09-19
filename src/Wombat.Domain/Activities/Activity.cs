@@ -18,6 +18,39 @@ public sealed class Activity
     public DateTime UpdatedOn { get; set; }
 
     /// <summary>
+    /// When the encounter actually happened, as distinct from when the paperwork was filed. (T119)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Resolved from the field the PINNED schema's <c>observation_date_field</c> names, and stamped by
+    /// <c>ActivityService</c> on every write — create, draft update and transition — so it cannot go
+    /// stale when a trainee corrects the date before submitting. Pinned rather than live, for the reason
+    /// T109 already recorded: a binding must not drift under an activity that is already in flight.
+    /// </para>
+    /// <para>
+    /// Before this existed, every date-shaped question in the product — which stage the trainee was in
+    /// when it happened, where the point sits on a trajectory, which evidence falls inside a committee
+    /// review window, what the exported portfolio prints — was answered with <see cref="CreatedOn" />,
+    /// the audit clock. The four CPSA schemas collect the real date and captioned it "When the encounter
+    /// happened, not when this form is completed", and nothing read it.
+    /// </para>
+    /// <para>
+    /// Non-null on purpose. A nullable column would push <c>COALESCE</c> into four SQL sites and into
+    /// every phase-3 <c>GROUP BY</c>, which is both an index problem and four chances to forget; the
+    /// provenance lives in <see cref="ObservedOnSource" /> instead.
+    /// </para>
+    /// <para>
+    /// <b>Not the same question as a trainee's current stage.</b> A progress page asks "what is expected
+    /// of me this year?" and is right to use today. This asks "when did this happen?". After T119 the
+    /// minimum a page displays and the minimum a completion was graded against can legitimately differ.
+    /// </para>
+    /// </remarks>
+    public DateOnly ObservedOn { get; set; }
+
+    /// <inheritdoc cref="ObservationDateSource" />
+    public ObservationDateSource ObservedOnSource { get; set; }
+
+    /// <summary>
     /// Where this activity sits organisationally, stamped at creation from the subject's
     /// <see cref="Wombat.Domain.Identity.TraineeProfile" />. (T101)
     /// </summary>

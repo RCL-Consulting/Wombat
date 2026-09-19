@@ -399,6 +399,9 @@ public sealed class SamplingConcentrationWarningsTests
             CurrentState = "completed",
             DataJson = dataJson,
             CreatedOn = createdOn,
+            // T119: production stamps this in ActivityService; a fixture that builds the
+            // entity directly must set it, or it defaults to 0001-01-01.
+            ObservedOn = DateOnly.FromDateTime(createdOn),
             UpdatedOn = createdOn
         });
     }

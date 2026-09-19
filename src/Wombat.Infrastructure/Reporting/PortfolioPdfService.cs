@@ -145,21 +145,28 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .Where(activity => activity.SubjectUserId == request.TraineeUserId)
             .WhereReadableBy(request.Principal);
 
+        // A portfolio period is a clinical period, not a filing period, so the bundle is cut on the
+        // ENCOUNTER date: an assessment of a March encounter belongs in a March-to-June portfolio even if
+        // the paperwork landed in September. (T119, decision D2.)
+        //
+        // The bounds stay DateOnly against a DateOnly column rather than widening to UTC instants — it
+        // keeps the index on ObservedOn usable, and TimeOnly.MaxValue was a day-boundary trap besides.
         if (request.FromDate.HasValue)
         {
-            var fromUtc = request.FromDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            activitiesQuery = activitiesQuery.Where(activity => activity.CreatedOn >= fromUtc);
+            var fromDate = request.FromDate.Value;
+            activitiesQuery = activitiesQuery.Where(activity => activity.ObservedOn >= fromDate);
         }
 
         if (request.ToDate.HasValue)
         {
-            var toUtc = request.ToDate.Value.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
-            activitiesQuery = activitiesQuery.Where(activity => activity.CreatedOn <= toUtc);
+            var toDate = request.ToDate.Value;
+            activitiesQuery = activitiesQuery.Where(activity => activity.ObservedOn <= toDate);
         }
 
         var activities = await activitiesQuery
             .OrderBy(activity => activity.ActivityType.Name)
-            .ThenByDescending(activity => activity.CreatedOn)
+            // Newest encounter first, to agree with the date the PDF prints beside each activity. (T119)
+            .ThenByDescending(activity => activity.ObservedOn)
             .ToListAsync(cancellationToken);
 
         var schemaVersionIds = activities

@@ -50,10 +50,13 @@ public sealed class CreditApplier : ICreditApplier
         // trainee's whole history against their current year and silently change what
         // MinimumLevelReachedCount meant.
         //
-        // CreatedOn is the best encounter date the model currently holds — the WBA schemas carry no
-        // observation date of their own (see T098 gap 2). For a live submission it is effectively
-        // today, so normal credit is unchanged; only replayed history is corrected.
-        var observedOn = DateOnly.FromDateTime(ResolveObservationDate(completedActivity));
+        // Since T119 that date is a real column: the clinician's own encounter date, resolved by
+        // ActivityService from the field the PINNED schema's observation_date_field names and stamped on
+        // every write. It used to be CreatedOn — the audit clock — behind a fallback chain that lived
+        // here. The chain is gone because ObservedOn is never null and the fallback now happens once, at
+        // the stamp, where ObservedOnSource records that it happened. There must be exactly one
+        // implementation of "what date did this happen", and it is not this one.
+        var observedOn = completedActivity.ObservedOn;
         var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, observedOn, cancellationToken);
         if (trainee is null)
         {
@@ -319,33 +322,6 @@ public sealed class CreditApplier : ICreditApplier
         }
 
         return new LevelComparison(false, LevelComparisonBasis.ValueMissing);
-    }
-
-    /// <summary>
-    /// Best available date for when the activity actually happened, used to resolve the trainee's
-    /// programme stage.
-    /// </summary>
-    /// <remarks>
-    /// Preference order: the activity's own <c>CreatedOn</c> (set when the WBA is logged, so closest
-    /// to the encounter), then the earliest recorded transition, then now. The fallbacks matter
-    /// because an activity constructed without <c>CreatedOn</c> would otherwise date to year 0001,
-    /// land before every programme start date, and resolve to a null stage — quietly falling back
-    /// to the flat minimum instead of the stage minimum.
-    /// </remarks>
-    private static DateTime ResolveObservationDate(Activity activity)
-    {
-        if (activity.CreatedOn != default)
-        {
-            return activity.CreatedOn;
-        }
-
-        var earliestTransition = activity.Transitions
-            .Where(transition => transition.OccurredOn != default)
-            .Select(transition => transition.OccurredOn)
-            .DefaultIfEmpty(default)
-            .Min();
-
-        return earliestTransition != default ? earliestTransition : DateTime.UtcNow;
     }
 
     private async Task<TraineeContext?> ResolveTraineeAsync(

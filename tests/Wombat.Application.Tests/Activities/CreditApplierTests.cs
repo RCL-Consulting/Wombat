@@ -181,7 +181,9 @@ public sealed class CreditApplierTests
         dbContext.SaveChanges();
 
         var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 2 }""");
-        activity.CreatedOn = programmeStart.AddDays(30).ToDateTime(TimeOnly.MinValue); // observed in year 1
+        activity.CreatedOn = programmeStart.AddDays(30).ToDateTime(TimeOnly.MinValue);
+        // T119: the encounter date is what selects the stage minimum now, not the filing timestamp.
+        activity.ObservedOn = programmeStart.AddDays(30); // observed in year 1
         var applier = new CreditApplier(dbContext);
 
         await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None);
@@ -222,6 +224,7 @@ public sealed class CreditApplierTests
 
         var activity = CreateCompletedActivity("""{ "epa_id": 5000, "score": 3 }""");
         activity.CreatedOn = DateTime.UtcNow.AddDays(-400);
+        activity.ObservedOn = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-400)); // T119
         var applier = new CreditApplier(dbContext);
 
         var updated = (await applier.ApplyAsync(activity, CreateActivityType(), CancellationToken.None)).UpdatedRows;
@@ -350,6 +353,17 @@ public sealed class CreditApplierTests
                 """
         };
 
+    /// <summary>
+    /// A completed activity observed TODAY unless a test says otherwise.
+    /// </summary>
+    /// <remarks>
+    /// T119: <c>ObservedOn</c> must be set here, not left to default. Production always arrives through
+    /// <c>ActivityService</c>, which stamps it; a fixture that builds the entity directly gets
+    /// <c>default(DateOnly)</c> = 0001-01-01, which precedes every <c>ProgrammeStartDate</c>, so
+    /// <c>GetStage</c> returns null and the gate quietly falls back to the flat <c>MinimumLevelOrder</c>
+    /// instead of the stage minimum. That is a silent wrong answer, not a failure — which is exactly how
+    /// it was found.
+    /// </remarks>
     private static Activity CreateCompletedActivity(string dataJson, int activityId = 100)
         => new()
         {
@@ -357,6 +371,7 @@ public sealed class CreditApplierTests
             SubjectUserId = "trainee-1",
             CurrentState = "completed",
             DataJson = dataJson,
+            ObservedOn = DateOnly.FromDateTime(DateTime.UtcNow),
             Transitions =
             [
                 new ActivityTransition

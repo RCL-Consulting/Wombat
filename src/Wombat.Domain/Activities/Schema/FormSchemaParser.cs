@@ -28,6 +28,15 @@ public static class FormSchemaParser
         using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteNumber("version", schema.Version);
+
+        // MUST be emitted. ActivityType.SaveDraft round-trips Parse+Serialize, so a property with no
+        // Serialize half is dropped at publish with no error: the JSON parses, the builder shows the
+        // setting, the feature dies silently. CLAUDE.md names this trap; SeedRoundTripTests guards it.
+        if (schema.ObservationDateField is not null)
+        {
+            writer.WriteString("observation_date_field", schema.ObservationDateField);
+        }
+
         writer.WritePropertyName("sections");
         writer.WriteStartArray();
 
@@ -145,7 +154,7 @@ public static class FormSchemaParser
     private static FormSchema ParseSchema(JsonElement root)
     {
         EnsureObject(root, "Schema root must be an object.");
-        EnsureAllowedProperties(root, ["version", "sections"], "schema");
+        EnsureAllowedProperties(root, ["version", "sections", "observation_date_field"], "schema");
 
         var version = GetRequiredInt(root, "version");
         var sectionsElement = GetRequiredProperty(root, "sections");
@@ -161,7 +170,27 @@ public static class FormSchemaParser
             throw new SchemaParseException("Schema must contain at least one section.");
         }
 
-        return new FormSchema(version, sections);
+        var observationDateField = GetOptionalTrimmedString(root, "observation_date_field");
+        if (observationDateField is not null)
+        {
+            // Validated at parse time so a bad pointer is refused at publish rather than discovered on
+            // the first completion. Refusing `datetime` rather than truncating it is deliberate: every
+            // candidate field in the seed corpus is a `date`, and accepting both invites a timezone
+            // argument this does not need. (T119)
+            var target = sections
+                .SelectMany(section => section.Fields)
+                .FirstOrDefault(field => string.Equals(field.Key, observationDateField, StringComparison.Ordinal))
+                ?? throw new SchemaParseException(
+                    $"observation_date_field '{observationDateField}' does not match any field in the schema.");
+
+            if (target.Type != FieldType.Date)
+            {
+                throw new SchemaParseException(
+                    $"observation_date_field '{observationDateField}' must point at a 'date' field, but it is '{target.Type}'.");
+            }
+        }
+
+        return new FormSchema(version, sections, observationDateField);
     }
 
     private static FormSection ParseSection(JsonElement element)

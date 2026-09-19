@@ -52,16 +52,23 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
 
     private async Task<IReadOnlyList<CommitteeEvidence>> BuildEvidenceSnapshotAsync(CommitteeReview review, CancellationToken cancellationToken)
     {
-        var fromUtc = review.ReviewPeriodFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var toUtcExclusive = review.ReviewPeriodTo.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        // A review period is a clinical period: the panel is judging what the trainee DID between these
+        // dates, so evidence falls in the window by its encounter date, not by when the form was filed.
+        // An encounter in March that reached the system in September belongs to the March review. (T119,
+        // decision D2 — and note this is a visible change to what a panel is shown.)
+        //
+        // Both bounds are DateOnly against a DateOnly column, inclusive at each end, which is what the
+        // AddDays(1)-exclusive instant was emulating. The MSF window below already compared this way.
+        var fromDate = review.ReviewPeriodFrom;
+        var toDate = review.ReviewPeriodTo;
 
         var activities = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
             .Where(activity =>
                 activity.SubjectUserId == review.TraineeUserId &&
-                activity.CreatedOn >= fromUtc &&
-                activity.CreatedOn < toUtcExclusive)
+                activity.ObservedOn >= fromDate &&
+                activity.ObservedOn <= toDate)
             .OrderByDescending(activity => activity.UpdatedOn)
             .ToListAsync(cancellationToken);
 

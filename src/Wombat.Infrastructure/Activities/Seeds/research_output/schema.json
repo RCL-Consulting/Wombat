@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "observation_date_field": "activity_date",
   "sections": [
     {
       "key": "output",

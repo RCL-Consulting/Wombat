@@ -112,12 +112,19 @@ public sealed class CpsaWbaSeedTests
 
     [Theory]
     [MemberData(nameof(SeedKeys))]
-    public void CapturesTheEncounterDate(string key)
+    public void CapturesTheEncounterDateAndPointsAtIt(string key)
     {
-        // The older seeds carry no observation date, so the only date available is the audit
-        // timestamp. These capture the real one, ready for the per-year quota work (T098 phase 3).
-        Schema(key).Sections.SelectMany(section => section.Fields)
+        // Capturing the date was only ever half of it. Until T119 the field was validated, stored in
+        // DataJson and read by nothing at all: every date the product showed or credited against came
+        // from the row's audit timestamp. The root pointer is what makes ActivityService stamp
+        // Activity.ObservedOn from this field, so a schema that keeps the field but loses the pointer
+        // is silently back to being dated by whenever the paperwork was filed.
+        var schema = Schema(key);
+
+        schema.Sections.SelectMany(section => section.Fields)
             .Should().Contain(field => field.Key == "observed_on" && field.Type == FieldType.Date);
+
+        schema.ObservationDateField.Should().Be("observed_on");
     }
 
     [Theory]
@@ -222,6 +229,25 @@ public sealed class CpsaWbaSeedTests
         Workflow(key).Transitions.Single(transition => transition.Key == "complete")
             .RequiresFields.Should().NotBeEmpty()
             .And.BeSubsetOf(assessorSections.SelectMany(section => section.Fields).Select(field => field.Key));
+    }
+
+    [Theory]
+    [MemberData(nameof(LegacySeedKeys))]
+    public void LegacySeedsCaptureTheEncounterDateInTheRequestSection(string key)
+    {
+        // These four shipped with no date field at all, so every one of them was dated for ever by
+        // whenever its form happened to be filed. T119 gave them observed_on, and 'request' is the
+        // section it has to live in: that section keeps the default subject|creator permission, so
+        // the trainee states the date when raising the request and the assessor cannot move it
+        // afterwards. In an assessor-owned section a 'complete' patch could re-date the encounter,
+        // and with it the training stage its credit is graded against.
+        var schema = Schema(key);
+
+        schema.Sections.Single(section => section.Key == "request").Fields
+            .Should().Contain(field =>
+                field.Key == "observed_on" && field.Type == FieldType.Date && field.Required);
+
+        schema.ObservationDateField.Should().Be("observed_on");
     }
 }
 

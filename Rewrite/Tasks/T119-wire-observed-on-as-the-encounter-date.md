@@ -475,3 +475,55 @@ Touches [T073]'s per-stage minimum, which is what makes the re-dating consequent
 about, and probably a fix to, [T106] item 12 and `RebuildCurriculumProgressCommand`'s atomicity. Adjacent
 to [T100], which owns the progress page's ambiguous minimum line and should say which stage a displayed
 minimum belongs to once two are possible.
+
+---
+
+## 🚨 CORRECTION — 2026-09-19, during implementation — the restamper cannot convert activity 12
+
+This task predicted: *"On dev this converts exactly one row: activity 12, whose `DataJson` holds
+`observed_on` `2026-03-10`."* **That is wrong, and it is wrong for the reason [T107] exists.**
+
+Verified after shipping the restamper and booting the app:
+
+| | |
+|---|---|
+| `ActivityTypeVersions` for type 17 | v1 no pointer · v2 no pointer · **v3 pointer present** |
+| `Activities.SchemaVersion` for activity 12 | **2** |
+
+`ActivityTypeSeedRefresher` published v3 carrying `observation_date_field` exactly as intended. Activity
+12 stays pinned to v2, which predates the pointer, so the restamper resolves against a schema that
+declares nothing and correctly leaves the row on the fallback. The implementation does what this task
+argues for; the prediction forgot that the row was pinned to a pre-pointer version.
+
+### The consequence, stated plainly: the restamper is inert
+
+It only ever helps a row that is pinned to a version which **does** declare a pointer but which was
+nonetheless never stamped — that is, one created after the pointer was published but before T119's code
+shipped. On dev that window is empty, and on any deployment it is a single boot wide. **As built, the
+component does nothing.** It is kept because it is idempotent, costs one filtered query per boot, and
+reports under its kill switch — but nobody should believe it is repairing the corpus.
+
+### The decision this raises
+
+> **Should the restamp resolve against the PINNED version, or against the newest version that declares a
+> pointer?**
+
+The two halves of this task's design are in tension and only one can hold:
+
+- **Pinned (as built).** Honours the T109 principle quoted above — a binding must not drift under an
+  activity already in flight. Cost: every activity created before its type gained a pointer keeps the
+  audit clock for ever, correctly labelled `ObservedOnSource = CreatedOn`. On dev that is all twelve.
+- **Newest pointer-declaring version.** Would convert activity 12 and any future equivalent. The argument
+  for it: a pointer names *which field holds the date*, which is a weaker, more stable claim than the one
+  T109 was protecting. T109 was guarding what an ordinal **means** — a 4 on a five-rung ladder is not a 4
+  on a six-rung one. A field key just locates a value a clinician typed into a box labelled "Date
+  observed"; re-reading it does not reinterpret it. The risk is a type that reuses a key for a different
+  purpose across versions, which nothing in the corpus does.
+
+My recommendation is the second, scoped tightly: resolve the pointer from the newest version that
+declares one, still read the value out of the activity's own `DataJson`, and still only touch rows whose
+source is `CreatedOn`. But it reverses a decision this file argues at length, so it is recorded here
+rather than taken quietly.
+
+Either way this does **not** block the rest of T119: new activities are stamped correctly at creation,
+which is the behaviour the task exists to deliver.

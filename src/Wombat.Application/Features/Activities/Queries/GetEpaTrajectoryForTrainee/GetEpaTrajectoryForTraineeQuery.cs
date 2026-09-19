@@ -128,16 +128,23 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             // draws an empty chart rather than raising — a refusal would confirm the trainee. (T101)
             .WhereReadableBy(request.Principal);
 
+        // The window selects on the ENCOUNTER date, not the filing date, so an assessment of a March
+        // encounter filed in September is inside a March window and outside a September one. (T119)
+        //
+        // The bounds stay DateOnly and compare against a DateOnly column rather than being widened to
+        // UTC instants: it keeps the index on ObservedOn usable, and it removes the boundary defect the
+        // instants had — an activity created 00:30 SAST fell on the previous UTC day and dropped out of
+        // a window that began that morning.
         if (request.From.HasValue)
         {
-            var fromUtc = request.From.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            query = query.Where(activity => activity.CreatedOn >= fromUtc);
+            var from = request.From.Value;
+            query = query.Where(activity => activity.ObservedOn >= from);
         }
 
         if (request.To.HasValue)
         {
-            var toUtcExclusive = request.To.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            query = query.Where(activity => activity.CreatedOn < toUtcExclusive);
+            var to = request.To.Value;
+            query = query.Where(activity => activity.ObservedOn <= to);
         }
 
         var activities = await query.ToListAsync(cancellationToken);
@@ -155,7 +162,14 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                 continue;
             }
 
-            var observedOn = DateOnly.FromDateTime(activity.CreatedOn);
+            // The x-axis is the encounter date the clinician stated, which is what this chart has always
+            // claimed to plot and never did — it plotted CreatedOn, the audit clock. (T119)
+            //
+            // NOT exposed here: activity.ObservedOnSource. When it is CreatedOn, nobody stated a date and
+            // this point is sitting on the filing date, which the chart presents as though it were a
+            // clinical fact. Marking those as undated evidence is T119 decision D4, deliberately left to a
+            // follow-up so it lands with T100's neighbouring label fixes rather than ahead of them.
+            var observedOn = activity.ObservedOn;
             rawPoints.Add((epaId, new TrajectoryPointDto(activity.Id, observedOn, rating, source, assessorUserId)));
         }
 

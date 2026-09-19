@@ -19,6 +19,11 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         builder.HasIndex(entity => new { entity.ActivityTypeId, entity.CurrentState, entity.SubjectUserId });
         builder.HasIndex(entity => entity.SubjectUserId);
         builder.HasIndex(entity => entity.CreatedOn);
+
+        // T119: every window filter, trajectory sort and (from phase 3) period GROUP BY runs on this.
+        // Non-null, so it is directly indexable and directly groupable — which is why the column is not
+        // nullable with a COALESCE at each site.
+        builder.HasIndex(entity => entity.ObservedOn);
         builder.HasIndex(entity => entity.DataJson).HasMethod("gin");
 
         // T101: read authorization filters lists by the activity's own scope, so these are read-path

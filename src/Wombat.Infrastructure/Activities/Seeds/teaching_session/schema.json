@@ -1,11 +1,13 @@
 {
   "version": 1,
+  "observation_date_field": "observed_on",
   "sections": [
     {
       "key": "session",
       "title": "Teaching session",
       "fields": [
         { "key": "topic", "type": "text", "label": "Topic", "required": true },
+        { "key": "observed_on", "type": "date", "label": "Date delivered", "help_text": "When the encounter happened, not when this form is completed.", "required": true },
         { "key": "audience_type", "type": "choice", "label": "Audience", "required": true, "options": ["students", "interns", "registrars", "multidisciplinary_team", "public"] },
         { "key": "audience_count", "type": "number", "label": "Audience count", "required": true, "validation": { "min": 1 } },
         { "key": "duration_minutes", "type": "number", "label": "Duration in minutes", "required": true, "validation": { "min": 1 } },

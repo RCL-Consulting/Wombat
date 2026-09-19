@@ -67,8 +67,15 @@ internal static class ActivitiesSectionComponent
                     text.Span($"#{activity.Id}").FontSize(8).FontColor(Colors.Grey.Darken1);
                     text.Span($"  State: {activity.CurrentState}").FontSize(8);
                 });
+                // The encounter date, not the filing date — the column the PDF is also filtered and
+                // sorted on, so a reader cannot be shown a row whose printed date sits outside the
+                // period on the cover page. (T119)
+                //
+                // Where this came from ObservedOnSource.CreatedOn nobody stated a date and this is the
+                // audit clock printed as though it were clinical. Saying so on the line is T119 decision
+                // D4, left to the follow-up that owns the display pass.
                 row.ConstantItem(100).AlignRight().Text(
-                    activity.CreatedOn.ToString("yyyy-MM-dd")).FontSize(8).FontColor(Colors.Grey.Darken1);
+                    activity.ObservedOn.ToString("yyyy-MM-dd")).FontSize(8).FontColor(Colors.Grey.Darken1);
             });
 
             var key = (activity.ActivityTypeId, activity.SchemaVersion);

@@ -118,8 +118,16 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
 
         CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
-        var fromUtc = review.ReviewPeriodFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var toUtcExclusive = review.ReviewPeriodTo.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        // Bunching is a question about clinical practice — was this trainee only ever watched by one
+        // assessor, in one narrow stretch of the period? — so the window selects on the encounter date
+        // rather than the filing date, and matches the evidence snapshot StartCommitteeReview builds for
+        // the same review. Two windows over the same period that disagreed about which activities are in
+        // it would make the warnings describe a different sample from the one the panel is reading. (T119)
+        //
+        // DateOnly bounds against a DateOnly column, inclusive at both ends as the AddDays(1)-exclusive
+        // instant was; it also keeps the index on ObservedOn usable.
+        var fromDate = review.ReviewPeriodFrom;
+        var toDate = review.ReviewPeriodTo;
 
         // The denominator is the rated evidence in the window, whether or not this caller may read
         // it. Counting it first is what lets the report distinguish a clean sample from a sample it
@@ -131,8 +139,8 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
             .AsNoTracking()
             .Where(activity =>
                 activity.SubjectUserId == review.TraineeUserId &&
-                activity.CreatedOn >= fromUtc &&
-                activity.CreatedOn < toUtcExclusive &&
+                activity.ObservedOn >= fromDate &&
+                activity.ObservedOn <= toDate &&
                 ratedActivityKeys.Contains(activity.ActivityType.Key));
 
         var ratedInWindowCount = await ratedInWindow.CountAsync(cancellationToken);
