@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -293,28 +294,21 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return [];
         }
 
-        var key = scaleKey.Trim();
-        _ = int.TryParse(key, out var scaleId);
+        // The id-or-exact-name rule lives in EntrustmentRungLabels so the picker, the portfolio PDF and
+        // the trajectory chart cannot drift apart about which ladder a scale_key names.
+        var rungs = await EntrustmentRungLabels.LoadForScaleKeysAsync(
+            _dbContext, [scaleKey], cancellationToken);
 
-        var resolvedScaleId = await _dbContext.Set<EntrustmentScale>()
-            .AsNoTracking()
-            .Where(scale => scale.Id == scaleId || scale.Name == key)
-            .Select(scale => (int?)scale.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (resolvedScaleId is null)
-        {
-            return [];
-        }
-
-        return await _dbContext.Set<EntrustmentLevel>()
-            .AsNoTracking()
-            .Where(level => level.ScaleId == resolvedScaleId.Value)
-            .OrderBy(level => level.Order)
-            .Select(level => new ActivityCatalogueOption(
-                level.Order.ToString(),
-                level.Order + ". " + level.Label))
-            .ToListAsync(cancellationToken);
+        // Value is the Order because that is what gets stored in DataJson and compared by
+        // CreditApplier; Label is the rung as the College prints it. T100: the two are different
+        // numbers on the CPSA ladder (Order 5 is rung "4"), so concatenating them told an assessor
+        // two things and let them believe either.
+        return rungs
+            .RungsOf(rungs.ResolveScaleKey(scaleKey))
+            .Select(rung => new ActivityCatalogueOption(
+                rung.Order.ToString(),
+                rung.Label))
+            .ToList();
     }
 
     private static string FormatUserLabel(UserIdentityDetails user)

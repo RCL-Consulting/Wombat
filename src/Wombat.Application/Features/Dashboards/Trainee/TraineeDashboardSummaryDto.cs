@@ -13,6 +13,11 @@ public sealed record CurriculumProgressItem(
     int RequiredCount,
     bool IsComplete,
     int EffectiveMinimumLevelOrder,
+    /// <summary>
+    /// <see cref="EffectiveMinimumLevelOrder" /> rendered as the rung a clinician reads — "3a", not "3"
+    /// (T100). Falls back to the ordinal as text when the curriculum item is unpinned.
+    /// </summary>
+    string EffectiveMinimumLevelLabel,
     int MinimumLevelReachedCount,
     int? TraineeStage);
 

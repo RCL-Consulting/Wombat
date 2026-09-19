@@ -78,7 +78,8 @@ public sealed class RuntimeRendererTests : TestContext
         rendered.FindAll("select").Should().HaveCount(3);
         rendered.Markup.Should().Contain("PAED-001 — Acute admission");
         rendered.Markup.Should().Contain("Dr Naidoo (naidoo@kgk)");
-        rendered.Markup.Should().Contain("4. Indirect supervision");
+        rendered.Markup.Should().Contain("Indirect supervision");
+        rendered.Markup.Should().NotContain("4. Indirect supervision");
         rendered.Markup.Should().NotContain("type=\"number\"");
     }
 
@@ -166,6 +167,6 @@ public sealed class RuntimeRendererTests : TestContext
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleLevelOptionsAsync(
             string? scaleKey, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(
-                [new ActivityCatalogueOption("4", "4. Indirect supervision")]);
+                [new ActivityCatalogueOption("4", "Indirect supervision")]);
     }
 }

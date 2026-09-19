@@ -51,7 +51,7 @@ internal static class EntrustmentSummaryComponent
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(decision.Epa.Code).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(decision.Epa.Title).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(2)
-                        .Text($"{decision.AuthorisedLevel.Order}. {decision.AuthorisedLevel.Label}").Style(cellStyle);
+                        .Text(decision.AuthorisedLevel.Label).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(2).Text(decision.IssuedOn.ToString("yyyy-MM-dd")).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(2)
                         .Text(decision.ExpiresOn.HasValue ? decision.ExpiresOn.Value.ToString("yyyy-MM-dd") : "—").Style(cellStyle);

@@ -62,6 +62,8 @@ public sealed class GetCurriculumProgressForTraineeTests
         paed001.RequiredCount.Should().Be(30);
         paed001.MinimumLevelReachedCount.Should().Be(0);
         paed001.EffectiveMinimumLevelOrder.Should().Be(4);
+        // Unpinned item: the label degrades to the ordinal, which is the pre-T100 rendering.
+        paed001.EffectiveMinimumLevelLabel.Should().Be("4");
         paed001.IsComplete.Should().BeFalse();
         paed001.LastUpdated.Should().Be(new DateTime(2026, 2, 9, 8, 0, 0, DateTimeKind.Utc));
     }
@@ -78,6 +80,66 @@ public sealed class GetCurriculumProgressForTraineeTests
             new GetCurriculumProgressForTraineeQuery("trainee-without-profile"), CancellationToken.None);
 
         result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task PinnedItem_RendersTheRungLabelTheCollegePrints_NotTheOrdinal()
+    {
+        // T100/T118 finding 2. On the CPSA v11.1 ladder the ordinal and the rung are different
+        // numbers: ordinal 4 is rung "3b". The progress page said "Minimum level 4", naming a rung
+        // that is on the ladder but is NOT the one required.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        SeedCpsaLadderAndPinItem1(db);
+        db.SaveChanges();
+
+        var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
+        var result = await handler.Handle(
+            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        var paed001 = result.Single(r => r.EpaCode == "PAED-001");
+        paed001.EffectiveMinimumLevelOrder.Should().Be(4, "the stored ordinal is the comparison key and does not move");
+        paed001.EffectiveMinimumLevelLabel.Should().Be("3b");
+
+        // PAED-002 is on the same curriculum but was left unpinned, so it still degrades to the ordinal.
+        result.Single(r => r.EpaCode == "PAED-002").EffectiveMinimumLevelLabel.Should().Be("3");
+    }
+
+    [Fact]
+    public async Task PinnedItem_WhoseOrdinalIsNotARungOnItsScale_FallsBackToTheOrdinal()
+    {
+        // A pin can outlive the rung it names (T109: nothing protects the rungs from being removed
+        // underneath a pinned item). Print the number rather than nothing.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        SeedCpsaLadderAndPinItem1(db);
+        db.Set<EntrustmentLevel>().Remove(db.Set<EntrustmentLevel>().Local.Single(l => l.Order == 4));
+        db.SaveChanges();
+
+        var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
+        var result = await handler.Handle(
+            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
+
+        result.Single(r => r.EpaCode == "PAED-001").EffectiveMinimumLevelLabel.Should().Be("4");
+    }
+
+    private static void SeedCpsaLadderAndPinItem1(ApplicationDbContext db)
+    {
+        db.Set<EntrustmentScale>().Add(new EntrustmentScale
+        {
+            Id = 7, Name = "CPSA Paediatric Entrustment Scale v11.1"
+        });
+        var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
+        for (var order = 1; order <= labels.Length; order++)
+        {
+            db.Set<EntrustmentLevel>().Add(new EntrustmentLevel
+            {
+                Id = 100 + order, ScaleId = 7, Order = order, Label = labels[order - 1]
+            });
+        }
+
+        // SeedCurriculum has added but not saved, so reach for the tracked entity.
+        db.CurriculumItems.Local.Single(i => i.Id == 1).ScaleId = 7;
     }
 
     private static ApplicationDbContext CreateDb()

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -55,9 +56,13 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
                     p.MinimumLevelReachedCount,
                     p.CurriculumItem.RequiredCount,
                     p.CurriculumItem.MinimumLevelOrder,
-                    p.CurriculumItem.MinimumLevelByStageJson
+                    p.CurriculumItem.MinimumLevelByStageJson,
+                    p.CurriculumItem.ScaleId
                 })
                 .ToListAsync(cancellationToken);
+
+            var rungs = await EntrustmentRungLabels.LoadAsync(
+                _dbContext, progressRows.Select(row => row.ScaleId), cancellationToken);
 
             foreach (var row in progressRows)
             {
@@ -74,6 +79,7 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
                     row.RequiredCount,
                     row.CountsSoFar >= row.RequiredCount,
                     effectiveMinimum,
+                    rungs.Format(row.ScaleId, effectiveMinimum),
                     row.MinimumLevelReachedCount,
                     traineeStage));
             }

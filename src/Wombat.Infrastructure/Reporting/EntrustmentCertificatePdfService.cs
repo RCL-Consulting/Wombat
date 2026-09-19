@@ -102,7 +102,7 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
                 c.Item().Text(t =>
                 {
                     t.Span("Authorised level: ").FontSize(10);
-                    t.Span($"{data.AuthorisedLevelOrder}. {data.AuthorisedLevelLabel}").Bold().FontSize(11);
+                    t.Span(data.AuthorisedLevelLabel).Bold().FontSize(11);
                 });
                 if (!string.IsNullOrWhiteSpace(data.AuthorisedLevelDescription))
                 {

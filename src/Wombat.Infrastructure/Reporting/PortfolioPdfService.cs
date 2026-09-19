@@ -7,6 +7,7 @@ using QuestPDF.Infrastructure;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.CommitteeDecisions;
@@ -92,7 +93,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
             if (data.ActivitiesByType.Count > 0)
             {
-                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions));
+                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions, data.RungLabels));
             }
 
             if (data.MsfReports.Count > 0)
@@ -190,6 +191,31 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             }
         }
 
+        // T100: a Scale field stores an ordinal. On the CPSA ladder ordinal 5 is rung "4", so a PDF
+        // printing the raw number tells the reader the wrong rung. Resolve every ladder the loaded
+        // schemas name, once, and hand the map to the composer (which has no database).
+        var scaleKeys = new List<string?>();
+        foreach (var version in schemaVersions.Values)
+        {
+            FormSchema schema;
+            try
+            {
+                schema = FormSchemaParser.Parse(version.SchemaJson);
+            }
+            catch
+            {
+                continue;
+            }
+
+            scaleKeys.AddRange(schema.Sections
+                .SelectMany(section => section.Fields)
+                .Where(field => field.Type == FieldType.Scale)
+                .Select(field => field.ScaleKey));
+        }
+
+        var rungLabels = await EntrustmentRungLabels.LoadForScaleKeysAsync(
+            _dbContext, scaleKeys, cancellationToken);
+
         var activitiesByType = activities
             .GroupBy(activity => activity.ActivityType.Name)
             .ToDictionary(group => group.Key, group => group.ToList());
@@ -268,6 +294,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             Activities: activities,
             ActivitiesByType: activitiesByType,
             SchemaVersions: schemaVersions,
+            RungLabels: rungLabels,
             CommitteeReviews: committeeReviews,
             EntrustmentDecisions: entrustmentDecisions,
             MsfReports: msfReports,
@@ -287,6 +314,7 @@ internal sealed record PortfolioData(
     List<Activity> Activities,
     Dictionary<string, List<Activity>> ActivitiesByType,
     Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> SchemaVersions,
+    EntrustmentRungLookup RungLabels,
     List<CommitteeReview> CommitteeReviews,
     List<EntrustmentDecision> EntrustmentDecisions,
     List<MsfCampaignAggregateReportDto> MsfReports,

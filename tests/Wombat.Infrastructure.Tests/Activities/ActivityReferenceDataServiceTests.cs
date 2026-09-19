@@ -109,7 +109,8 @@ public sealed class ActivityReferenceDataServiceTests
 
         var byId = await service.GetEntrustmentScaleLevelOptionsAsync("2");
         byId.Select(o => o.Value).Should().Equal("1", "2");
-        byId[0].Label.Should().Be("1. Observation only");
+        // T100: the Value stays the Order (the stored, compared datum); the Label is the rung alone.
+        byId[0].Label.Should().Be("Observation only");
 
         var byName = await service.GetEntrustmentScaleLevelOptionsAsync("Paed General Entrustment Scale");
         byName.Should().HaveCount(2);

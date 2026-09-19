@@ -2,6 +2,7 @@ using System.Text.Json;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 
@@ -12,7 +13,8 @@ internal static class ActivitiesSectionComponent
     public static void Compose(
         IContainer container,
         Dictionary<string, List<Activity>> activitiesByType,
-        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions)
+        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        EntrustmentRungLookup rungLabels)
     {
         container.Column(column =>
         {
@@ -23,7 +25,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var (typeName, activities) in activitiesByType.OrderBy(pair => pair.Key))
             {
-                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions));
+                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions, rungLabels));
             }
         });
     }
@@ -32,7 +34,8 @@ internal static class ActivitiesSectionComponent
         IContainer container,
         string typeName,
         List<Activity> activities,
-        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions)
+        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        EntrustmentRungLookup rungLabels)
     {
         container.Column(column =>
         {
@@ -46,7 +49,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var activity in activities)
             {
-                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions));
+                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions, rungLabels));
             }
         });
     }
@@ -54,7 +57,8 @@ internal static class ActivitiesSectionComponent
     private static void ComposeActivity(
         IContainer container,
         Activity activity,
-        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions)
+        Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        EntrustmentRungLookup rungLabels)
     {
         container.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(column =>
         {
@@ -81,7 +85,7 @@ internal static class ActivitiesSectionComponent
             var key = (activity.ActivityTypeId, activity.SchemaVersion);
             if (schemaVersions.TryGetValue(key, out var version))
             {
-                RenderDataFromSchema(column, version.SchemaJson, activity.DataJson);
+                RenderDataFromSchema(column, version.SchemaJson, activity.DataJson, rungLabels);
             }
             else
             {
@@ -90,7 +94,8 @@ internal static class ActivitiesSectionComponent
         });
     }
 
-    private static void RenderDataFromSchema(ColumnDescriptor column, string schemaJson, string dataJson)
+    private static void RenderDataFromSchema(
+        ColumnDescriptor column, string schemaJson, string dataJson, EntrustmentRungLookup rungLabels)
     {
         FormSchema? schema;
         try
@@ -123,6 +128,14 @@ internal static class ActivitiesSectionComponent
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     continue;
+                }
+
+                // T100: a Scale field holds the ordinal, which is the comparison key and not the rung.
+                // Print the rung the College prints. Falls back to the stored number when the ladder
+                // does not resolve — which is the pre-T100 rendering, not a blank.
+                if (field.Type == FieldType.Scale && int.TryParse(value, out var order))
+                {
+                    value = rungLabels.FormatByScaleKey(field.ScaleKey, order);
                 }
 
                 column.Item().PaddingLeft(8).Text(text =>

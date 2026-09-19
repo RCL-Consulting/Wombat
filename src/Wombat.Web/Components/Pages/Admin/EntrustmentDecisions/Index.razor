@@ -70,7 +70,7 @@ else
           <tr>
             <td><code>@decision.TraineeUserId</code></td>
             <td>@decision.EpaCode — @decision.EpaTitle</td>
-            <td>@decision.AuthorisedLevelOrder. @decision.AuthorisedLevelLabel</td>
+            <td>@decision.AuthorisedLevelLabel</td>
             <td>@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
             <td>@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
             <td><span class="badge badge-@decision.Status.ToString().ToLowerInvariant()">@decision.Status</span></td>

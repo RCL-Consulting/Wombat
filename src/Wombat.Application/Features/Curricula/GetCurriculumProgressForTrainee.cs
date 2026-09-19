@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Dashboards.Trainee;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 
@@ -34,6 +35,11 @@ public sealed record TraineeCurriculumProgressDto(
     int RequiredCount,
     bool IsComplete,
     int EffectiveMinimumLevelOrder,
+    /// <summary>
+    /// <see cref="EffectiveMinimumLevelOrder" /> rendered as the rung a clinician reads — "3a", not "3"
+    /// (T100). Falls back to the ordinal as text when the item is unpinned.
+    /// </summary>
+    string EffectiveMinimumLevelLabel,
     int MinimumLevelReachedCount,
     int? TraineeStage,
     DateTime? LastUpdated);
@@ -76,7 +82,8 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
                 EpaTitle = item.Epa.Title,
                 item.RequiredCount,
                 item.MinimumLevelOrder,
-                item.MinimumLevelByStageJson
+                item.MinimumLevelByStageJson,
+                item.ScaleId
             })
             .ToListAsync(cancellationToken);
 
@@ -84,6 +91,9 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
         {
             return Array.Empty<TraineeCurriculumProgressDto>();
         }
+
+        var rungs = await EntrustmentRungLabels.LoadAsync(
+            _dbContext, items.Select(item => item.ScaleId), cancellationToken);
 
         var progressByItem = await _dbContext.Set<CurriculumItemProgress>()
             .AsNoTracking()
@@ -110,6 +120,7 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
             };
 
             var completed = progress?.CountsSoFar ?? 0;
+            var effectiveMinimum = levelTemplate.GetMinimumLevelForStage(stage);
             result.Add(new TraineeCurriculumProgressDto(
                 item.Id,
                 item.EpaCode,
@@ -117,7 +128,8 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
                 completed,
                 item.RequiredCount,
                 completed >= item.RequiredCount,
-                levelTemplate.GetMinimumLevelForStage(stage),
+                effectiveMinimum,
+                rungs.Format(item.ScaleId, effectiveMinimum),
                 progress?.MinimumLevelReachedCount ?? 0,
                 stage,
                 progress?.LastUpdated));

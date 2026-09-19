@@ -39,7 +39,8 @@ public interface IActivityReferenceDataService
 
     /// <summary>
     /// Ordered levels of the entrustment scale identified by <paramref name="scaleKey"/> (matched by
-    /// id or name). Value is the level order; Label is "order. label". Empty when unresolved.
+    /// id or name). Value is the level order — that is what is stored and compared. Label is the rung
+    /// label alone, which is what a clinician reads. Empty when unresolved.
     /// </summary>
     Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleLevelOptionsAsync(
         string? scaleKey,
