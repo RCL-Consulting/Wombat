@@ -2,6 +2,63 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION FINALIZED — 2026-09-19 (Opus) — **T101, T112, T119 shipped; the EPA programme is planned** 🏁
+
+**Build clean, 0 warnings. 824 tests green** — Domain 69, Application 477, Infrastructure 177,
+Architecture 23, Web 89; was 735 at session start. `Wombat.Integration.Tests` **not** run (needs Docker).
+Tree clean. Nothing on production was touched, and production remains unverified for everything below.
+
+### Shipped
+
+| | |
+|---|---|
+| **[T101]** | The activity read boundary, plus the two wider doors beside it — the audit log (credentials were reaching `SummaryJson` in **plaintext**) and the portfolio export. Browser-verified. |
+| **[T112]** | Data rights scoped to the institution; the export narrowed to the data subject. Browser-verified. |
+| **[T119]** | The encounter date a clinician types is now the date the product uses. |
+
+Plus **Wave 0**: the v11.1 catalogue credited for the first time ever, and **six task files** — [T118]
+(evidence findings), [T119]–[T123] — and `Rewrite/EPA-PROGRAMME.md`.
+
+### 🚨 The lesson of the day, twice over: apply "compatibility is not a constraint", do not merely agree with it
+
+1. A three-design review panel ranked a minimal security gate first almost entirely **because it broke
+   nothing**. With compatibility off the table the design they ranked *last* was correct. [T101] shipped
+   that one.
+2. [T119] shipped an `ActivityObservationDateRestamper` whose only job was to give old rows the dates new
+   rows get. It turned out inert, and the task file then weighed *how to fix it* rather than *whether it
+   should exist*. The maintainer called it compatibility flailing. It was. **Deleted in `1e8823b`.**
+
+**The tell:** anything whose only purpose is making old rows look like new ones — a guessing backfill, a
+restamper, a migration-safe hedge — should be deleted and the data regenerated. On this project the
+scenario corpus is a test fixture, not history.
+
+### ▶ NEXT
+
+Work from **`Rewrite/EPA-PROGRAMME.md`** — inventory, waves, 25 numbered decisions, and an honest list of
+what is still unplanned.
+
+1. **[T123] d1 and d3**, and **[T111]** — all READY, small, no decision needed. **Sonnet.**
+2. **[T100]** — rewrite its premise from [T118] first: it assumes rung labels are numeric and the ordinal
+   is the useful part, and on the six-rung CPSA ladder the ordinal is actively misleading (`5. 4` for
+   rung 4). Then fix six sites. **Sonnet.**
+3. **The 25 decisions.** 16 are content questions for the College. [T120] recommends extracting **page 8
+   of `EPA version 11.1.docx`** ("Standard assessment information sources") first — it may collapse four
+   at once.
+4. Then **[T105]** (before the ten tools), **[T121]** MSF, and phase 3 — for which [T119] has now
+   delivered a trustworthy date to bucket on.
+
+### Known open, not lost
+
+- **Production is unverified** for T101, T112 and T119, and [T099]'s scope rows are still outstanding
+  there.
+- **Ndlovu is still on curriculum 3** from the evidence run — reversible at `/admin/trainees/edit?id=6`.
+- The four defects the planning pass surfaced and nobody had filed: the **MSF expiry reminder mails the
+  token hash**, so every reminder link is dead; `RebuildCurriculumProgressCommand` **deletes before it
+  replays**; the committee sampling report has been **blind to the paediatric catalogue** since it was
+  seeded; and no MSF command or query takes a `ClaimsPrincipal`.
+
+---
+
 ## 📋 2026-09-19 (Opus) — **The EPA programme is now planned: `Rewrite/EPA-PROGRAMME.md`**
 
 Start there for anything EPA. It carries the full inventory with a READY / NEEDS A DECISION verdict per
