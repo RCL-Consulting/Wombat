@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bunit;
 using FluentAssertions;
 using Wombat.Web.Components.Shared;
@@ -111,6 +112,13 @@ public sealed class TrajectoryChartTests : TestContext
         cut.FindAll("circle.trajectory-chart-dot").Count.Should().Be(3, "the observation is real and stays on the page");
         cut.FindAll("circle.is-off-scale").Count.Should().Be(1);
 
+        // Counting DOM nodes is not enough: YScale extrapolates and does not clamp, so pinning the
+        // axis to the ladder put an off-ladder point at a negative cy, outside the viewBox, where the
+        // browser clips it away. "Kept, drawn hollow" has to mean kept ON THE CANVAS.
+        var cy = double.Parse(
+            cut.Find("circle.is-off-scale").GetAttribute("cy")!, CultureInfo.InvariantCulture);
+        cy.Should().BeInRange(0, 200, "a point outside the 600x200 viewBox is clipped and invisible");
+
         // Two on-ladder points remain, so the line joins exactly those two.
         cut.Find("polyline.trajectory-chart-line").GetAttribute("points")!
             .Split(' ').Should().HaveCount(2);
@@ -172,6 +180,60 @@ public sealed class TrajectoryChartTests : TestContext
         cut.FindAll("text.trajectory-chart-y-label")
             .Select(node => node.TextContent)
             .Should().Equal("1", "3b", "5");
+    }
+
+
+    [Fact]
+    public void EveryPointLandsInsideTheViewBox_EvenWhenTheLadderDoesNotContainIt()
+    {
+        // The regression that matters. Before the axis came from the scale it grew to fit the data, so
+        // nothing could fall off the canvas. Pinning it to the ladder removed that guarantee.
+        var points = new[]
+        {
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 1),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 9)
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(p => p.Points, points)
+            .Add(p => p.Rungs, CpsaLadder));
+
+        foreach (var dot in cut.FindAll("circle.trajectory-chart-dot"))
+        {
+            var cy = double.Parse(dot.GetAttribute("cy")!, CultureInfo.InvariantCulture);
+            cy.Should().BeInRange(0, 200);
+        }
+
+        // The ticks still come from the ladder, not from the widened range.
+        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(6);
+    }
+
+    [Fact]
+    public void AnOrdinalIsNotSubstitutedOnTheAxisWhenItIsAnotherRungsName()
+    {
+        // Orders are contiguous from 1 and labels are administrator free text, so on a split ladder one
+        // rung's ordinal can be another rung's LABEL. Printing it gives two ticks reading "5" at
+        // different heights, the lower one wrong by a rung.
+        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 1) };
+        var ladder = new[]
+        {
+            new TrajectoryChart.Rung(1, "1"), new TrajectoryChart.Rung(2, "2"),
+            new TrajectoryChart.Rung(3, "3a"), new TrajectoryChart.Rung(4, "3b"),
+            new TrajectoryChart.Rung(5, "4 (independent)"), new TrajectoryChart.Rung(6, "5")
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(p => p.Points, points)
+            .Add(p => p.Rungs, ladder));
+
+        var labels = cut.FindAll("text.trajectory-chart-y-label")
+            .Select(node => node.TextContent).ToArray();
+
+        labels.Should().OnlyHaveUniqueItems("two ticks with the same name is worse than a truncated one");
+        labels.Should().HaveCount(6);
+        labels[5].Should().Be("5", "rung 6 keeps its own short label");
+        labels[4].Should().NotBe("5", "that is rung 6's name; rung 5 must not borrow it");
+        cut.Find("table.visually-hidden").TextContent.Should().Contain("1");
     }
 
     [Fact]

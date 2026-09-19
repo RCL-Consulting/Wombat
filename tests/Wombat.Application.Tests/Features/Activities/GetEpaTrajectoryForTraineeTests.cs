@@ -463,11 +463,36 @@ public sealed class GetEpaTrajectoryForTraineeTests
         result.Single().Points.Single().RatingLabel.Should().Be("4");
     }
 
+    [Fact]
+    public async Task AnotherInstitutionsLocalCurriculumItemIsNotThisTraineesLadder()
+    {
+        // Same predicate as the picker and as CreditApplier. Without it, a trainee at institution 2
+        // would read their chart against institution 99's ladder -- and their own correctly-rated
+        // observations would be marked "not a rung on this scale" against a scale never theirs.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true, owningInstitutionId: 99);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.ScaleId.Should().BeNull();
+        trajectory.Rungs.Should().BeEmpty();
+        trajectory.Points.Single().RatingLabel.Should().Be("3");
+    }
+
     private static async Task SeedCpsaCurriculumAsync(
         ApplicationDbContext dbContext,
         string traineeUserId,
         bool pin,
-        bool profileIsActive = true)
+        bool profileIsActive = true,
+        int? owningInstitutionId = null)
     {
         dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale
         {
@@ -490,11 +515,12 @@ public sealed class GetEpaTrajectoryForTraineeTests
         dbContext.Set<CurriculumItem>().Add(new CurriculumItem
         {
             Id = 555, CurriculumId = 55, EpaId = 7, RequiredCount = 6,
-            MinimumLevelOrder = 6, WindowMonths = 12, ScaleId = pin ? 42 : null
+            MinimumLevelOrder = 6, WindowMonths = 12, ScaleId = pin ? 42 : null,
+            OwningInstitutionId = owningInstitutionId
         });
         dbContext.Set<TraineeProfile>().Add(new TraineeProfile
         {
-            Id = 5555, UserId = traineeUserId, CurriculumId = 55,
+            Id = 5555, UserId = traineeUserId, CurriculumId = 55, InstitutionId = 2,
             ProgrammeStartDate = new DateOnly(2026, 1, 1),
             ExpectedCompletionDate = new DateOnly(2029, 12, 31),
             IsActive = profileIsActive

@@ -294,22 +294,30 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     {
         var none = new PinnedLadders([], [], EntrustmentRungLookup.Empty);
 
-        var curriculumId = await _dbContext.Set<TraineeProfile>()
+        var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
             .OrderByDescending(entity => entity.IsActive)
             .ThenByDescending(entity => entity.ProgrammeStartDate)
-            .Select(entity => (int?)entity.CurriculumId)
+            .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (curriculumId is null)
+        if (profile is null)
         {
             return none;
         }
 
+        // The owner predicate is not optional. A national curriculum row is SHARED by every adopting
+        // institution (AdoptCurriculumCommandHandler never clones it) and CurriculumItems is uniquely
+        // indexed on (CurriculumId, EpaId), so an institution-local item added by institution B is the
+        // ONLY row for that EPA. Without this, a trainee at institution A would take B's ladder as
+        // their chart's axis — and then have their own correctly-rated observations marked "not a rung
+        // on this scale" against a ladder that was never theirs.
         var pins = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
-            .Where(item => item.CurriculumId == curriculumId.Value && epaIds.Contains(item.EpaId))
+            .Where(item => item.CurriculumId == profile.CurriculumId
+                && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
+                && epaIds.Contains(item.EpaId))
             .Select(item => new { item.EpaId, item.ScaleId })
             .ToListAsync(cancellationToken);
 

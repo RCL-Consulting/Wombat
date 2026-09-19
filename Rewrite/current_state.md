@@ -2,7 +2,107 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION FINALIZED — 2026-09-19 (Opus) — **T101, T112, T119 shipped; the EPA programme is planned** 🏁
+## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
+
+**Build clean, 0 warnings. 870 tests green** — Domain 69, Application 500, Infrastructure 177,
+Architecture 23, Web 101; was 824. `Wombat.Integration.Tests` **not** run (needs Docker). Tree clean.
+**Browser-verified end to end on dev.** Production untouched and still unverified.
+
+### Shipped
+
+| | |
+|---|---|
+| **[T124]** | Page 8 of `EPA version 11.1.docx` read at last. **D2, D3 and D5 close**; D4 and D12 gain hard evidence; **Annexure B extracted for the first time**; two new decisions (D37, D38) |
+| **[T100]** | The rung a clinician reads, on all three tiers — the six concatenation sites, the two "Minimum level N" pages, and the portfolio PDF that printed a raw `DataJson` integer |
+| **[T123] d1** | The trajectory axis is the pinned ladder, not the range of the data |
+| **[T123] d3** | The activity-type picker narrows to tools the subject's curriculum can actually credit — T109's unshipped option 2 |
+| **[T111]** | `/activities/new?type=` works, and the dashboard link stopped lying |
+
+Filed on the way: **[T125]** (admin curriculum minima are unguided integer writes), **[T126]** (nothing can
+say which ladder an activity was rated on), **[T127]** (a failed Submit leaves an orphan draft).
+
+### The headline: page 8 was worth more than the fix that sent me there
+
+The programme called extracting page 8 *"the cheapest action in the programme"*. It was, and it paid twice.
+
+**The document defines nine WBA tools. Annexure A uses fourteen.** The partition has no counter-example in
+either direction: **every tool used on three or more EPAs is defined; every tool used on one or two is
+not.** That is D12's *"one document written by several hands"* with the committee's own instrument set
+visible underneath — and it probably turns [T120]'s five Group-1 seeds into three. CCA is **Clinical Case
+Analysis** (*"review of clinical documentation and discussion of the reasoning"*), which is what "case note
+review" and "chart-stimulated recall" describe. **The merge is still the College's to make, not Wombat's.**
+
+**Annexure B had never been extracted at all.** It is now `T098-data/annexure-b.json` and it is
+self-consistent (55/year, 25/semester, 21 decisions). It hands phase 3 a **published per-semester column**
+— the five one-per-annum EPAs carry an em-dash, not a half — and phase 4 a **decision cadence independent
+of the observation cadence** (EPA 3 is observed six per annum and decided annually).
+
+**And the source contradicts itself:** Annexure A puts MSF on 15 EPAs, Annexure B's prose says 11. [T121]
+opens with Annexure A's side stated as fact. That is **D37**, one line to ask.
+
+### What browser verification proved, and what it caught
+
+On dev, as Ndlovu (curriculum 3) and Dlamini (curriculum 2):
+
+- The rating picker reads **`1 · 2 · 3a · 3b · 4 · 5`**, values still 1–6. It read `5. 4` for rung 4.
+- The progress page reads **"Minimum level 3a (year 1)"** across all 15 EPAs — 3a on nine, 2 on six,
+  which independently matches Annexure B's 9/6 split.
+- The trajectory draws **six ticks labelled `1 2 3a 3b 4 5`**; tooltip "Rung 4"; table "4".
+- Ndlovu's type picker: **four types, no duplicates.** The legacy `_paed` four are gone — which closes
+  defect 2 for trainees without the rename.
+- **Dlamini's picker is unchanged, item for item — all eight, duplicates included** — and her charts still
+  draw the numeric axis. The permissive fallback works.
+- A fresh Mini-CEX filed for **2026-02-14** and rated at ordinal 5 credited, and **plots at February**.
+
+**Caught by doing it rather than reading it: [T127].** My first Submit failed validation on two required
+fields. `CreateActivityCommand` had already committed, the page kept no reference, and the retry created a
+*second* activity. Activity **13 on dev is that orphan.** It compounds with [T105] — whole-schema
+Submit-mode validation on every transition is exactly what makes the failing path ordinary.
+
+### 🚨 The recon paid for itself three times
+
+A mapping pass before writing any code found three things the task files had wrong and that would have
+shipped as defects:
+
+1. **`RenderYAxisLabel` emits a raw `MarkupString` with no HTML encoding** (`RenderXAxisLabel` beside it
+   encodes). D29 asks for an operator-editable rung label on that axis — **the fix as specified was an
+   injection hole.** It encodes now, with a test.
+2. **The grid was an integer stepper**, so `Rungs.Min/Max(Order)` would have assumed contiguous ordinals.
+3. **`ChartPoint.Label` was never a rung label** — both call sites pass the evidence source, and the
+   column above it said "Source". That column is why T118 filed finding 8; it now reads "Evidence type".
+
+Plus: [T100]'s stated regression risk was **backwards**. It claimed the legacy O-R Scale was labelled
+`1`..`5` so the change would be invisible there. The labels are words, every `EntrustmentDecision` on dev
+is on that ladder, and they all change visibly (`4. Unsupervised` → `Unsupervised`). The test it asked for
+would have failed on correct behaviour.
+
+### ▶ NEXT
+
+Wave 1 is closed except **[T099] on production**. Work from `Rewrite/EPA-PROGRAMME.md`.
+
+1. **Send the College D1, D4, D6–D16 and D37.** D2/D3/D5 are answered. [T124] carries a proposed
+   nine-vs-fourteen mapping they can accept or reject line by line. **This is the critical path.**
+2. **[T105]** (D22) — it gates the ten tools, and [T127] is now a second reason to want it.
+3. **[T121] MSF** — highest-value item; fix the expiry reminder first (it mails the token *hash*, **and**
+   builds a host-relative URL with no base — two fixes, not one).
+4. **Phase 3** — write its task file first. Annexure B now supplies the per-semester column it needs.
+
+**Small and ready:** [T127], [T125], [T126], [T106] item 14, the `RebuildCurriculumProgressCommand` fixes,
+the MSF scope defects. **Sonnet** for all of these except [T126] (schema-DSL change) and phase 3.
+
+### Known open, not lost
+
+- **Production unverified** for T101, T112, T119 and everything above; [T099]'s scope rows still outstanding.
+- **[T123] d2** (rename the legacy four) still wants D31, but d3 has removed the sting for trainees —
+  `/admin/activity-types` is now the only surface showing the duplicate pair.
+- **Ndlovu is still on curriculum 3**, now with **two** credited activities (12 and 14) and orphan draft 13.
+- ⚠ **[T110] and [T123] d3 must be sequenced.** T110 makes the four generic seeds resolve to a ladder, at
+  which point d3's predicate starts hiding them from six-rung trainees. Arguably correct; definitely
+  visible. Whichever lands second re-checks the other.
+
+---
+
+## 📋 2026-09-19 (Opus) — **T101, T112, T119 shipped; the EPA programme is planned**
 
 **Build clean, 0 warnings. 824 tests green** — Domain 69, Application 477, Infrastructure 177,
 Architecture 23, Web 89; was 735 at session start. `Wombat.Integration.Tests` **not** run (needs Docker).

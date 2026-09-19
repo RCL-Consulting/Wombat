@@ -235,30 +235,36 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
     /// </summary>
     /// <remarks>
     /// The profile is resolved active-first then by latest <c>ProgrammeStartDate</c> and is NOT filtered
-    /// on <c>IsActive</c> — the same rule as
-    /// <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so this picker and the EPA
-    /// picker beside it on the same page cannot disagree about which profile row is in force.
+    /// on <c>IsActive</c>, and the items are scoped by <c>OwningInstitutionId</c> — both the same rules
+    /// as <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so this picker and the EPA
+    /// picker beside it on the same page cannot disagree about which curriculum items are in force.
     /// </remarks>
     private async Task<HashSet<int>> ResolveSubjectScaleIdsAsync(
         string subjectUserId,
         CancellationToken cancellationToken)
     {
-        var curriculumId = await _dbContext.Set<TraineeProfile>()
+        var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(entity => entity.UserId == subjectUserId)
             .OrderByDescending(entity => entity.IsActive)
             .ThenByDescending(entity => entity.ProgrammeStartDate)
-            .Select(entity => (int?)entity.CurriculumId)
+            .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (curriculumId is null)
+        if (profile is null)
         {
             return [];
         }
 
+        // Scoped by owner exactly as CreditApplier and ResolveCreditableEpaIdsAsync are. A national
+        // curriculum row is shared across adopting institutions and CurriculumItems is unique on
+        // (CurriculumId, EpaId), so another institution's local item is the only row for its EPA —
+        // and without this predicate its ladder would decide which tools this trainee is offered.
         var scaleIds = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
-            .Where(item => item.CurriculumId == curriculumId.Value && item.ScaleId != null)
+            .Where(item => item.CurriculumId == profile.CurriculumId
+                && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
+                && item.ScaleId != null)
             .Select(item => item.ScaleId!.Value)
             .Distinct()
             .ToListAsync(cancellationToken);

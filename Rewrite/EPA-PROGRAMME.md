@@ -58,12 +58,12 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | Task | What it is | Verdict | Size | Depends on |
 |---|---|---|---|---|
 | [T119] | Wire `observed_on`: a declared schema pointer, a stamped `Activity.ObservedOn` column, every reader on the column | **READY** | M | nothing. D21–D23 change defaults, not the start |
-| [T123] d1 | Trajectory axis and labels resolved from the pinned scale server-side | **READY** | S | rendering rules D29/D30; re-check charts with T110 |
-| [T123] d3 | Narrow the activity-type picker by the subject's pinned ladder (T109's unshipped option 2) | **READY** | S | one SQL check against dev before relying on it |
+| [T123] d1 | Trajectory axis and labels resolved from the pinned scale server-side | **DONE 2026-09-19** | S | step 2 and full D30 deferred to [T126]; re-check charts with T110 |
+| [T123] d3 | Narrow the activity-type picker by the subject's pinned ladder (T109's unshipped option 2) | **DONE 2026-09-19** | S | SQL check passed; ⚠ must be sequenced with [T110] |
 | [T123] d2 | Two "Mini-CEX (Paediatrics)", two "DOPS (Paediatrics)" in the picker | NEEDS A DECISION | S | **D31**. Data edit, no code |
-| [T111] | `/activities/new?type=mini_cex` is silently ignored | **READY** | S | — |
+| [T111] | `/activities/new?type=mini_cex` is silently ignored | **DONE 2026-09-19** | S | — |
 | [T099] | Speciality-3 scope rows on **production**; nothing provisions them on a fresh database | **READY** | S | production access |
-| [T100] | Entrustment rungs render as `"{Order}. {Label}"` — 6 sites; 8 more print a bare ordinal; 1 PDF site prints a raw `DataJson` integer | NEEDS A DECISION | M | **D32**, and D29 for the axis. Rewrite the task's premise from T118 first — it is wrong as written |
+| [T100] | Entrustment rungs render as `"{Order}. {Label}"` — 6 sites; 8 more print a bare ordinal; 1 PDF site prints a raw `DataJson` integer | **DONE 2026-09-19** | M | premise rewritten (it was wrong twice); admin editor split out as [T125] |
 | [T105] | Every transition validates the whole schema in Submit mode, so a half-filled draft cannot be cancelled | NEEDS A DECISION | M | **D22** |
 | [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | NEEDS A DECISION | M | **D23** |
 | [T110] | `scale_key: "or_scale"` resolves to nothing for four generic seeds; two five-rung ladders are the same ladder duplicated | NEEDS A DECISION | S code, operator data | **D25** |
@@ -78,6 +78,9 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T104] | Retire the legacy FCPaed world — 4 activity types, 15 EPAs, curriculum 2, 5 trainee profiles | NEEDS A DECISION | M, hand-run | **D24**. If D24 says re-pin, also curriculum 2 pinned + a documented ordinal remap |
 | Rebuild fixes | `RebuildCurriculumProgressCommand` has **no caller** (only `ActivityReadBoundaryTests.cs:60`), is **not atomic** (`:30-32` deletes and saves before the replay saves at `:71`), and does not stamp `CreditedItemCount` ([T106] item 12) | **READY** | S | rides T119, which is the change that makes a rebuild necessary |
 | [T106] item 14 | A zero-credit completion is visible one activity at a time; "55 logged, nothing counted" is a statement about a year | **READY** | S | — |
+| [T125] | An admin sets a curriculum minimum by typing a bare integer against an invisible ladder — an unguided write, not a mislabelled read | **READY** | S | split out of [T100] |
+| [T126] | Nothing can say which ladder a given activity was rated on: no declared rated field, no navigation to the pinned version | **READY** | M | blocks [T123] d1 step 2 and full D30 |
+| [T127] | A failed Submit leaves an orphan draft, and the retry makes another | **READY** | S | compounds with [T105] |
 | MSF defects | `MsfInvitationExpiryReminderJob.cs:57` mails the token **hash** as the token, so every expiry reminder is a dead link; `ListMsfCampaignsForCoordinator` returns every campaign in every institution; no MSF command takes a `ClaimsPrincipal` | **READY** | S / M | the reminder link is on [T121]'s critical path — a campaign that never reaches 8 responses can never be released and never credits |
 | [T118] | Holding file | — | — | closes as its findings land: 1–2 → T100, 3 → phase 3, 4 → T119, 5–7 → T123, 8 → already closed as not-a-defect |
 
@@ -426,11 +429,14 @@ Four independent threads, all startable today.
    in the same session: it has no caller, it is not atomic, and it does not stamp `CreditedItemCount`. **Do
    not give it a button before it is transactional** — a failure between `:30-32` and `:71` leaves every
    trainee in the system with zero progress.
-4. **The clinician-facing reading of every number**, in parallel: rewrite [T100]'s premise from T118 (it is
-   wrong as written — it assumes the ordinal is the useful part) and fix it; [T123] d1 (axis from the
-   scale) alongside it, since they are the same defect on three surfaces; [T123] d3 (picker narrowing)
-   after the one SQL check against dev; [T111]; [T099] on production. *Sonnet* for all of these except the
-   T100 premise rewrite.
+4. ~~**The clinician-facing reading of every number.**~~ **DONE 2026-09-19**, browser-verified on dev.
+   [T100] tiers 1–3 (premise rewritten first — it was wrong twice), [T123] d1 (axis from the scale),
+   [T123] d3 (picker narrowing — the SQL check passed: the four `_paed` types declare `scale_key` **"2"**,
+   a raw id, and curriculum 3 pins scale 3, so all four drop off a v11.1 trainee's menu, which is more
+   than the task predicted) and [T111]. **[T099] on production is the only part outstanding.**
+   Three defects in the specified fixes were caught before they shipped — an HTML-injection hole in D29's
+   axis label, an integer-stepper assumption about contiguous ordinals, and `ChartPoint.Label` not being a
+   rung label at all. Split out: [T125], [T126], [T127].
 
 **Unblocks:** phase 3 (which cannot bucket without a date), and a registrar being able to read their own
 progress page.
@@ -566,7 +572,10 @@ Honest list. Each of these is known, none has a task file, and several are large
 [T118] `…T118-v11-1-evidence-run-findings.md` · [T119] `…T119-wire-observed-on-as-the-encounter-date.md` ·
 [T120] `…T120-remaining-v11-1-wba-tools.md` · [T121] `…T121-msf-cannot-credit-an-epa.md` ·
 [T122] `…T122-enforce-epa-tool-mapping.md` · [T123] `…T123-evidence-run-ui-defects.md` ·
-[T124] `…T124-page-8-extraction-findings.md`
+[T124] `…T124-page-8-extraction-findings.md` ·
+[T125] `…T125-curriculum-item-minima-are-unguided-integer-writes.md` ·
+[T126] `…T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md` ·
+[T127] `…T127-a-failed-submit-leaves-an-orphan-draft-behind.md`
 
 Source data extracted from `EPA version 11.1.docx`: `Tasks/T098-data/annexure-a.json` ·
 `Tasks/T098-data/annexure-b.json` (new, [T124]) · `Tasks/T098-data/page-8-wba-tools.json` (new, [T124]) ·

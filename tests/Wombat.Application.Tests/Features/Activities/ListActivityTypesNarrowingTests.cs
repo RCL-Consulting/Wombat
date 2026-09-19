@@ -156,6 +156,55 @@ public sealed class ListActivityTypesNarrowingTests
         offered.Should().Contain("mini_cex_paed");
     }
 
+    [Fact]
+    public async Task AnotherInstitutionsLocalCurriculumItemDoesNotDecideThisTraineesMenu()
+    {
+        // A national curriculum row is SHARED by every adopting institution and CurriculumItems is
+        // unique on (CurriculumId, EpaId), so an institution-local item added by institution 99 is the
+        // only row for its EPA. Unscoped, its ladder would narrow institution 2's trainee's picker.
+        // CreditApplier and ResolveCreditableEpaIdsAsync both scope on OwningInstitutionId; so must this.
+        await using var db = CreateDb();
+        SeedLadders(db);
+        SeedTypes(db);
+        SeedTrainee(db, "ndlovu", pinnedTo: null, institutionId: 2);
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 903, CurriculumId = 90, EpaId = 3, RequiredCount = 1,
+            MinimumLevelOrder = 3, WindowMonths = 12,
+            ScaleId = CpsaScaleId, OwningInstitutionId = 99
+        });
+        await db.SaveChangesAsync();
+
+        var offered = await Offer(db, "ndlovu");
+
+        offered.Should().Contain("mini_cex_paed",
+            "institution 99's pin is not this trainee's ladder, so nothing may be narrowed by it");
+        offered.Should().HaveCount(6);
+    }
+
+    [Fact]
+    public async Task ThisInstitutionsOwnLocalItemDoesDecideTheMenu()
+    {
+        // The other half of the same predicate: a local item this trainee's institution added counts,
+        // exactly as it counts for credit.
+        await using var db = CreateDb();
+        SeedLadders(db);
+        SeedTypes(db);
+        SeedTrainee(db, "ndlovu", pinnedTo: null, institutionId: 2);
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 904, CurriculumId = 90, EpaId = 3, RequiredCount = 1,
+            MinimumLevelOrder = 3, WindowMonths = 12,
+            ScaleId = CpsaScaleId, OwningInstitutionId = 2
+        });
+        await db.SaveChangesAsync();
+
+        var offered = await Offer(db, "ndlovu");
+
+        offered.Should().Contain("mini_cex_cpsa");
+        offered.Should().NotContain("mini_cex_paed");
+    }
+
     private static async Task<IReadOnlyList<string>> Offer(ApplicationDbContext db, string subjectUserId)
     {
         var handler = new ListActivityTypesQueryHandler(db);
@@ -246,7 +295,7 @@ public sealed class ListActivityTypesNarrowingTests
         });
     }
 
-    private static void SeedTrainee(ApplicationDbContext db, string userId, int? pinnedTo)
+    private static void SeedTrainee(ApplicationDbContext db, string userId, int? pinnedTo, int institutionId = 2)
     {
         db.Set<Curriculum>().Add(new Curriculum
         {
@@ -260,7 +309,7 @@ public sealed class ListActivityTypesNarrowingTests
         });
         db.Set<TraineeProfile>().Add(new TraineeProfile
         {
-            Id = 90, UserId = userId, CurriculumId = 90,
+            Id = 90, UserId = userId, CurriculumId = 90, InstitutionId = institutionId,
             ProgrammeStartDate = new DateOnly(2026, 1, 1),
             ExpectedCompletionDate = new DateOnly(2029, 12, 31),
             IsActive = true

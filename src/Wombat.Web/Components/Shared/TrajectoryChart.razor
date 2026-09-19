@@ -124,11 +124,25 @@ else
 
   private bool HasRungs => Rungs.Count > 0;
 
-  private int EffectiveMinRating => HasRungs ? Rungs.Min(rung => rung.Order) : MinRating;
+  /// <summary>
+  /// The plotted range. With rungs it is the ladder — but always widened to contain every point.
+  /// </summary>
+  /// <remarks>
+  /// The widening is not cosmetic. <c>YScale</c> extrapolates linearly and does not clamp, so a rating
+  /// outside the range maps outside the viewBox and the browser clips it away: <c>svg:not(:root)</c> is
+  /// <c>overflow: hidden</c> by default and nothing overrides it. Before rungs existed the axis grew to
+  /// fit the data, so this could not happen. Pinning the range to the ladder without this would silently
+  /// delete exactly the off-ladder point the component promises to keep and draw hollow — a picture
+  /// missing an observation, with the screen-reader table still listing it.
+  /// </remarks>
+  private int EffectiveMinRating =>
+    HasRungs
+      ? Math.Min(Rungs.Min(rung => rung.Order), Points.Count == 0 ? int.MaxValue : Points.Min(point => point.Rating))
+      : MinRating;
 
   private int EffectiveMaxRating =>
     HasRungs
-      ? Rungs.Max(rung => rung.Order)
+      ? Math.Max(Rungs.Max(rung => rung.Order), Points.Count == 0 ? int.MinValue : Points.Max(point => point.Rating))
       : MaxRating ?? (Points.Count == 0
         ? DefaultMaxRating
         : Math.Max(DefaultMaxRating, Points.Max(point => point.Rating)));
@@ -145,11 +159,7 @@ else
       {
         return Rungs
           .OrderBy(rung => rung.Order)
-          .Select(rung => (
-            rung.Order,
-            rung.Label.Length <= MaxAxisLabelChars
-              ? rung.Label
-              : rung.Order.ToString(CultureInfo.InvariantCulture)))
+          .Select(rung => (rung.Order, AxisTextFor(rung)))
           .ToArray();
       }
 
@@ -161,6 +171,33 @@ else
 
       return ticks;
     }
+  }
+
+  /// <summary>
+  /// What a rung is called on the axis, inside the label budget.
+  /// </summary>
+  /// <remarks>
+  /// The ordinal is only safe to substitute when it is not some OTHER rung's name. Ordinals are
+  /// contiguous from 1 and labels are administrator free text, so on a ladder like
+  /// <c>1, 2, 3a, 3b, "4 (independent)", 5</c> the Order-5 rung would fall back to "5" — which is the
+  /// real name of the rung above it, giving two ticks reading "5" at different heights, the lower one
+  /// wrong by a rung. Truncating instead is uglier and always names the right rung. The full label is
+  /// in the tooltip and the screen-reader table either way.
+  /// </remarks>
+  private string AxisTextFor(Rung rung)
+  {
+    if (rung.Label.Length <= MaxAxisLabelChars)
+    {
+      return rung.Label;
+    }
+
+    var ordinal = rung.Order.ToString(CultureInfo.InvariantCulture);
+    var collides = Rungs.Any(other =>
+      other.Order != rung.Order && string.Equals(other.Label, ordinal, StringComparison.Ordinal));
+
+    return collides
+      ? rung.Label[..Math.Max(1, MaxAxisLabelChars - 1)] + "…"
+      : ordinal;
   }
 
   /// <summary>
