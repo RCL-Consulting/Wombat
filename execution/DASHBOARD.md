@@ -7,7 +7,6 @@
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
 | queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A `user`-typed field accepts any user id, unchecked for role or scope |  |
-| queued | [T110](tasks/queued/T110-or-scale-key-mismatch.md) | P1 | `scale_key: 'or_scale'` resolves to nothing, and four seeded tools qui |  |
 | queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P1 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
 | queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
@@ -34,7 +33,7 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 
-Done: 94 task(s).
+Done: 95 task(s).
 
 ## From STATE.md
 
@@ -50,9 +49,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+a0894f5 docs(execution): demonstrate T126's off-ladder rule end to end on dev
 7c94f53 docs(execution): browser-verify T134, and record that T126 cannot fire on current data
 8971dd7 chore(execution): bring STATE back under its 60-line cap
 4d8646e docs(execution): browser-verify T133 against the dev database
 88e5398 fix(admin): the visual builder erased every root schema pointer it did not know about (T133)
-50aa464 fix(committee): a v11.1 trainee's sampling report said there was no rated evidence (T134)
 ```

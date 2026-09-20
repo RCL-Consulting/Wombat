@@ -52,9 +52,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent
 
 - 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
-  operator draft save. **Browser-verified**: a draft save now preserves both, and the stored v4
-  row really carries T126's pointer.
+  operator draft save. **Browser-verified.**
+- 2026-09-20: **T110 shipped** — four generic seeds declared `scale_key: "or_scale"` and bound to
+  nothing; 23 fields rebound to the scale's exact name, plus the corpus guard whose absence was the
+  root cause. **D25's ladder merge is still open** but nothing pins the duplicate, so it is a tidy-up.
 - 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
   rated evidence. One shared classifier answers it now. **Browser-verified on review 5.**
-- 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against
-  (`rated_level_field`); no migration needed. Found and filed T133 and T134.

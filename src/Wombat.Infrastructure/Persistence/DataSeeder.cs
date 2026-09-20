@@ -8,6 +8,18 @@ namespace Wombat.Infrastructure.Persistence;
 
 public sealed class DataSeeder
 {
+    /// <summary>
+    /// The name of the generic observation-to-entrustment scale this seeder creates.
+    /// </summary>
+    /// <remarks>
+    /// A constant rather than a literal because a schema's <c>scale_key</c> binds to a scale by its
+    /// EXACT NAME — there is no key column — so this string is a contract with the seed corpus,
+    /// not an implementation detail. The four generic WBA seeds declared <c>or_scale</c> against it for
+    /// months and bound to nothing at all, because nothing compared the two. `SeedScaleKeyTests` now
+    /// does, and references this. (T110)
+    /// </remarks>
+    public const string OrScaleName = "O-R Scale";
+
     private static readonly ProcedureSeed[] ProcedureSeeds =
     [
         new("abdominal_paracentesis", "Abdominal paracentesis", "General medicine"),
@@ -110,13 +122,13 @@ public sealed class DataSeeder
 
         var scale = await _dbContext.EntrustmentScales
             .Include(entity => entity.Levels)
-            .SingleOrDefaultAsync(entity => entity.Name == "O-R Scale", cancellationToken);
+            .SingleOrDefaultAsync(entity => entity.Name == OrScaleName, cancellationToken);
 
         if (scale is null)
         {
             scale = new EntrustmentScale
             {
-                Name = "O-R Scale",
+                Name = OrScaleName,
                 Description = "Standard 1-5 observation-to-entrustment scale.",
                 Levels =
                 [

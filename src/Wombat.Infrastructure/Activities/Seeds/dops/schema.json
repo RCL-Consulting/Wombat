@@ -20,12 +20,12 @@
       "title": "Assessment",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "preparation", "type": "scale", "label": "Preparation", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "consent", "type": "scale", "label": "Consent and explanation", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "technique", "type": "scale", "label": "Technical performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+        { "key": "preparation", "type": "scale", "label": "Preparation", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "consent", "type": "scale", "label": "Consent and explanation", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "technique", "type": "scale", "label": "Technical performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
       ]
     },
     {

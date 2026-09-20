@@ -2,32 +2,32 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-20b (Opus) — the College's answers, T133, T134, T126, T132
+## Session 2026-09-20b (Opus) — the College's answers, and T110/T126/T132/T133/T134
 
-Four application tasks shipped, fourteen product decisions closed, one upstream harness fix.
+Five application tasks shipped, fourteen product decisions closed, one upstream harness fix.
 
 ### Done
 
-- **[T133] — the visual builder erased every root schema pointer on every operator draft save.**
-  A live T119 regression, and after T134 it un-declared a committee statistic. Three parts, and the
-  first two are **not separable**: carry the pointer through, AND drop one whose field was deleted
-  (the parser refuses an orphan and `SaveDraft` runs the parser, so carrying it alone would brick
-  the type through the only door there is), AND a Form-tab control + publish warnings so neither is
-  silent. `BuilderSchemaModel` had **no test of any kind** — `InternalsVisibleTo` added.
+- **[T133] — the visual builder erased every root schema pointer on every operator draft
+  save** — a live T119 regression. Carry-through **plus** dropping an orphaned pointer (else the
+  type is unsaveable) **plus** a Form-tab control. `BuilderSchemaModel` had no test at all.
+  **Browser-verified.**
+- **[T110] — four generic seeds bound their rating scale to nothing.** They declared
+  `scale_key: "or_scale"`; the seeded scale is named `"O-R Scale"`, and a scale_key binds by exact
+  name. 23 fields rebound, plus the corpus guard whose absence was the root cause. **D25's ladder
+  merge stays open** but nothing pins the duplicate, so it is a tidy-up and no chart changed.
 - **[T134] — a v11.1 trainee's committee sampling report said there was NO rated evidence.**
-  The gate matched EXACT keys over four legacy tools, so the whole seeded CPSA set fell outside it.
-  One shared `RatedActivityTypes` now answers it: **declared rating (T126) OR known family**. The
-  disjunction is the point — a pointer-only gate leaves the `*_paed` types reading zero and forces
-  rewriting the fixture, the only evidence legacy behaviour is unchanged. **Fixture untouched.**
-  Two duplicate maps retired; `WbaSourceCategory` deleted with both members grep proved dead.
+  The gate matched EXACT keys over four legacy tools. One shared `RatedActivityTypes` answers it
+  now: **declared rating (T126) OR known family** — the disjunction keeps the `*_paed` types
+  counted and the test fixture untouched. Two duplicate maps retired. **Browser-verified.**
 - **The College answered all fourteen decisions — [T129] closed.** Transcribed into
   `EPA-PROGRAMME.md` § 3A-ii. **[T120], [T121], [T122] and [T130] are all released.** Six needed a
-  second pass — D6 "all rated" would have had trainees rating themselves; D12 answered a different
-  pairing; D13 blank; D8 "not sure"; D7 unanswered; D15 ambiguous. All put back, and answered.
+  second pass, and putting them back was worth it — D6's "all rated" would have had trainees
+  rating themselves, D13 was blank, D8 "not sure". Two residual questions below.
 - **Renumbered [T121]'s local `D1`–`D4`** to the College's **D9, D8, D10, D11**; they collided.
-- **[T126] — an activity can now say which ladder it was rated against.** `rated_level_field`
-  on `FormSchema`; eight seeds declare it. D30's off-ladder rule works. **The composite FK the task
-  specified was NOT built** — snapshot columns carry no FK, nothing filters on a rating.
+- **[T126] — an activity can now say which ladder it was rated against** (`rated_level_field`),
+  and D30's off-ladder rule works. **No migration and no FK** — Activity's snapshot columns carry
+  none by design, and nothing filters on a rating.
 - **[T132]** — MSF expiry reminders mailed the token *hash*; now re-issued. Filed [T130]/[T131];
   re-rated the queue EPA-first; [T128] to `blocked/`; retitled [T102].
 
@@ -70,8 +70,8 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 ### Verification status
 
 - `dotnet build Wombat.sln -c Release` — **0 warnings, 0 errors**.
-- Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **207**,
-  Architecture **23**, Web **111** — **963 total**, up from 875 at session start. Integration is
+- Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **236**,
+  Architecture **23**, Web **111** — **992 total**, up from 875 at session start. Integration is
   Docker-gated and was not run.
 - T126, T132, T133 and T134 each **verified to fail against the unfixed code**, and T126, T133 and
   T134 **browser-verified on dev** — T126's off-ladder rule demonstrated end to end by filing a

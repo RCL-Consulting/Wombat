@@ -18,12 +18,12 @@
       "title": "Assessment",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "initial_assessment", "type": "scale", "label": "Initial assessment", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "investigation", "type": "scale", "label": "Investigation planning", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "management", "type": "scale", "label": "Management", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "handover", "type": "scale", "label": "Handover", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "team_leadership", "type": "scale", "label": "Team leadership", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "or_scale" }
+        { "key": "initial_assessment", "type": "scale", "label": "Initial assessment", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "investigation", "type": "scale", "label": "Investigation planning", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "management", "type": "scale", "label": "Management", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "handover", "type": "scale", "label": "Handover", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "team_leadership", "type": "scale", "label": "Team leadership", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
       ]
     },
     {
