@@ -2,7 +2,7 @@
 id: T019-c
 title: "Nested and repeatable sections"
 status: queued
-priority: P2
+priority: P3
 ---
 # T019-c — Nested and repeatable sections
 

@@ -2,7 +2,7 @@
 id: T128
 title: "The nightly backup is encrypted-capable but has nowhere to go, so it stays on one disk"
 status: queued
-priority: P2
+priority: P1
 created: 2026-09-20
 ---
 # T128 — The nightly backup is encrypted-capable but has nowhere to go, so it stays on one disk

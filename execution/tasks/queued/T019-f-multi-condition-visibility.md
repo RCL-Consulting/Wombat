@@ -2,7 +2,7 @@
 id: T019-f
 title: "Multi-condition visibility"
 status: queued
-priority: P2
+priority: P3
 ---
 # T019-f — Multi-condition visibility
 

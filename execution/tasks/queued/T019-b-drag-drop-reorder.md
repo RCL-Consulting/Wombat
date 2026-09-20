@@ -2,7 +2,7 @@
 id: T019-b
 title: "Drag-and-drop reordering in the builder"
 status: queued
-priority: P2
+priority: P3
 ---
 # T019-b — Drag-and-drop reordering in the builder
 

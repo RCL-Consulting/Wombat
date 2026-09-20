@@ -1,5 +1,5 @@
 ---
-id: T127-a
+id: T127
 title: "Every failed Submit on /activities/new leaves a half-filled draft behind, and the next attempt makes another"
 status: queued
 priority: P2

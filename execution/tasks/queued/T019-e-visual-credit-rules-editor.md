@@ -2,7 +2,7 @@
 id: T019-e
 title: "Visual credit-rules editor"
 status: queued
-priority: P2
+priority: P3
 ---
 # T019-e — Visual credit-rules editor
 

@@ -2,7 +2,7 @@
 id: T019-g
 title: "Schema templates, copy-from-existing, and advanced signature capture"
 status: queued
-priority: P2
+priority: P3
 ---
 # T019-g — Schema templates, copy-from-existing, and advanced signature capture
 

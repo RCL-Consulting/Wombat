@@ -10,7 +10,10 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 26 queued; the P1s are **T099**, **T102**, **T121**, **T128**.
+- Nothing in `in_progress/`. 26 queued. **P1: T102, T121, T122, T128** — plus **T099**, which
+  says "dev done 2026-09-17" but was never deployed or verified, so it stays open.
+- **T102 is the sharpest of them:** a trainee can name themselves as their own assessor and
+  self-award entrustment credit. T128 is blocked on you; the other three are ready to pick up.
 - The last session was a rationalisation pass: reference trees, stale plan docs, deploy
   artifacts and 39 dev-DB snapshots retired; a production backup found broken and fixed.
 - This execution workspace was bootstrapped then too. Task lanes were derived from

@@ -2,10 +2,15 @@
 id: T106
 title: "Activity platform backlog: smaller gaps found while mapping the transition pipeline"
 status: queued
-priority: P2
+priority: P3
 created: 2026-09-17
 ---
 # T106 — Activity platform backlog: smaller gaps found while mapping the transition pipeline
+
+> **This is a holding file, not a task.** It is a container for findings that have not been
+> split out yet. **Do not "do" T106** — pick an item from the list below, file it with
+> `harness.py task new`, and strike it through here. T106 closes when the list is empty.
+> Rated P3 on 2026-09-20 so it stops ranking alongside actionable defects.
 
 **Status:** open (a holding file — split any item into its own task when it is picked up)
 **Surfaced:** 2026-09-17, verifying the T070 / T098 handoff against the source.
