@@ -84,4 +84,18 @@ if ($LASTEXITCODE) { throw 'remote deploy failed' }
 
 Remove-Item -Force $Tgz
 
+# The cron scripts have no other deployment path. /opt/wombat/app is all the block above
+# touches, so before this step /usr/local/bin/wombat-*.sh was whatever first-boot installed
+# — which is how T097's backup rewrite sat undeployed for three months while the docs
+# described it as live. Sync them every deploy instead.
+Write-Host '==> Syncing cron scripts to /usr/local/bin ...' -ForegroundColor Cyan
+$CronScripts = @('wombat-backup.sh', 'wombat-health.sh')
+foreach ($s in $CronScripts) {
+    scp -q (Join-Path $PSScriptRoot $s) "${Remote}:/tmp/$s.new"
+    if ($LASTEXITCODE) { throw "scp of $s failed" }
+}
+# tr -d '\r' because the repo checkout is CRLF on Windows and bash will not run that.
+ssh $Remote 'for s in wombat-backup.sh wombat-health.sh; do tr -d "\r" < /tmp/$s.new > /usr/local/bin/$s && chmod +x /usr/local/bin/$s && rm -f /tmp/$s.new && echo "    $s $(sha256sum /usr/local/bin/$s | cut -c1-12)"; done'
+if ($LASTEXITCODE) { throw 'cron script sync failed' }
+
 Write-Host '==> Deploy complete.' -ForegroundColor Green

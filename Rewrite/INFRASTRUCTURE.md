@@ -341,6 +341,22 @@ mails you. It refuses to ship `wombat.env` unencrypted. Configure in `/etc/defau
 (mode 600): `WOMBAT_BACKUP_AGE_RECIPIENT`, plus one of `WOMBAT_BACKUP_RCLONE_REMOTE` or
 `WOMBAT_BACKUP_REMOTE`.
 
+> **This described the repo file rather than the server until 2026-09-20.** For 94 days
+> `/usr/local/bin/wombat-backup.sh` was the 2026-06-17 version (1924 B vs 6321 B): database
+> dump only, no `wombat.env`, no key ring, no `age`, no off-host, exit 0. The cron scripts
+> had **no deployment path** — `deploy.ps1`/`deploy.sh` ship only `Wombat.Web` to
+> `/opt/wombat/app`, and `/usr/local/bin/*` was installed by hand once at first boot — so
+> T097's rewrite never left the repo.
+>
+> **Both fixed:** the hardened script is installed (sha `95845015c6e9`) and both deploy
+> scripts now sync `/usr/local/bin/wombat-*.sh` every run. The nightly job consequently
+> **exits 1** until `/etc/default/wombat-backup` exists — correct behaviour, tracked as
+> **T128**, and there is still no off-host copy.
+>
+> `wombat.service`, `Caddyfile.wombat` and `appsettings.Production.json` remain
+> install-once-by-hand. Before trusting a claim about server behaviour, `sha256sum` the
+> deployed file against the repo.
+
 Cron — installed to `/etc/cron.d/wombat-backup`, where the **user field is mandatory**:
 
 ```

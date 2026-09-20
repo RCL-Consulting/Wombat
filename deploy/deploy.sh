@@ -58,4 +58,16 @@ echo "==> Waiting for health check..."
 sleep 5
 ssh "$REMOTE" "curl -sf http://127.0.0.1:5080/health && echo ' OK'"
 
+# The cron scripts have no other deployment path. The rsync above covers /opt/wombat/app
+# only, so before this step /usr/local/bin/wombat-*.sh was whatever first-boot installed —
+# which is how T097's backup rewrite sat undeployed for three months while the docs
+# described it as live. Sync them every deploy instead.
+echo "==> Syncing cron scripts to /usr/local/bin ..."
+for s in wombat-backup.sh wombat-health.sh; do
+    # tr -d '\r' because a Windows checkout is CRLF and bash will not run that.
+    tr -d '\r' < "$SCRIPT_DIR/$s" \
+        | ssh "$REMOTE" "sudo tee /usr/local/bin/$s >/dev/null && sudo chmod +x /usr/local/bin/$s"
+    echo "    $s"
+done
+
 echo "==> Deploy complete."

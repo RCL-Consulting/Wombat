@@ -180,6 +180,19 @@ server before this step, or the ACME challenge will fail.
 
 ### 9. Health check cron
 
+> **Steps 9 and 10 bootstrap these scripts; every later deploy re-syncs them.** Since
+> 2026-09-20 `deploy.ps1` and `deploy.sh` copy `deploy/wombat-*.sh` to `/usr/local/bin/` on
+> every run. Before that they did not, and nothing else did either — which is how the T097
+> backup rewrite sat undeployed for three months while these docs described it as live.
+>
+> `wombat.service`, `Caddyfile.wombat` and `appsettings.Production.json` are **still**
+> install-once-by-hand. After editing any of them, re-run the relevant step, and check drift:
+>
+> ```bash
+> ssh root@<host> 'sha256sum /usr/local/bin/wombat-*.sh /etc/systemd/system/wombat.service'
+> sha256sum deploy/wombat-*.sh deploy/wombat.service
+> ```
+
 ```bash
 cp deploy/wombat-health.sh /usr/local/bin/wombat-health.sh
 chmod +x /usr/local/bin/wombat-health.sh

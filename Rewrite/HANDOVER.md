@@ -149,12 +149,27 @@ recipient whose private key lives on neither machine, then shipped off-host. Con
 off-host leg is unconfigured or `age` is missing**, so cron mails you, and it refuses to
 ship `wombat.env` unencrypted.
 
-> **Unverified at the time of writing.** The project record says the off-host leg has never
-> been configured on this box. If that is still true, the nightly job is exiting non-zero
-> and **every backup is sitting on the same disk as the database it backs up** — which is
-> not a backup. One disk failure, theft or fire is simultaneously total data loss *and*
-> total disclosure of named doctors' competence records. **Check this first:**
-> `cat /etc/default/wombat-backup` and `tail /var/log/wombat-backup.log`.
+> **Live state, verified and fixed 2026-09-20.**
+>
+> For 94 days none of the paragraph above was true of this box. `/usr/local/bin/wombat-backup.sh`
+> was still the **2026-06-17** version (1924 B vs the repo's 6321): database dump only, no
+> `wombat.env`, no key ring, no `age`, no off-host — and it **exited 0**, so cron reported
+> success every night and T097's "fails loudly instead" was true only of the repo file.
+> Root cause: the cron scripts had **no deployment path**. Both halves are now closed —
+> the hardened script is installed (sha `95845015c6e9`, matching the repo) and
+> `deploy.ps1`/`deploy.sh` sync `/usr/local/bin/wombat-*.sh` on every deploy.
+>
+> **The nightly job now exits 1, on purpose.** Confirmed by running it: it writes the
+> three-part bundle (`database.dump` + `wombat.env` + `keys/`, 104 KB) and then refuses to
+> ship it, because `/etc/default/wombat-backup` does not exist. `age` and `rclone` are not
+> installed. **So there is still no off-host backup** — everything sits on `/dev/sda` beside
+> the database. Expect a nightly cron mail until [T128] is done; that is the control
+> working, not a fault.
+>
+> **What is genuinely fine:** the dumps restore. Rehearsed 2026-09-20 against
+> `wombat-2026-09-20.dump` — 444 TOC entries, clean restore, 10 roles / 1 user /
+> 31 migrations. Production holds the seeded admin and seed data only, so little is at risk
+> *today*. See `Rewrite/Tasks/T128-off-host-backup-destination.md`.
 
 **Rehearse a restore.** A backup nobody has restored is a hypothesis. There is a script
 for it — `deploy/verify/restore-rehearsal.sh` restores the newest dump into a throwaway
@@ -217,8 +232,14 @@ Structural, and true as of 2026-09-20:
 
 - **No real users.** See the warning at the top. Everything in the database is scenario
   data.
-- **Off-host backup status unverified** — see the backup section. Treat as the top risk
-  until checked.
+- **There is no off-host backup** — see the backup section. The nightly job now fails loudly
+  rather than silently, but everything still sits on one disk. Top risk; tracked as
+  **[T128]**, and expect a cron mail every night until it is closed.
+- **Server-side files can drift from the repo.** The cron scripts used to have no deployment
+  path at all, which is how T097's backup rewrite sat undeployed for three months. Both
+  deploy scripts now sync `/usr/local/bin/wombat-*.sh`, but `wombat.service`, the Caddyfile
+  and `appsettings.Production.json` are **still** install-once-by-hand. Before trusting any
+  claim about server behaviour, compare: `sha256sum` the deployed file against the repo.
 - **1 vCPU / 1 GB**, half the documented minimum. Fine for scenario replay; resize before a
   real cohort.
 - **SSO is built but not activated.** T027 shipped the OIDC wiring, the group-to-role
@@ -235,9 +256,11 @@ Structural, and true as of 2026-09-20:
 
 ## First month of real use — do these in order
 
-1. **Verify the off-host encrypted backup leg, then rehearse a restore.** Nothing else on
-   this list matters if the box dies. Check `/etc/default/wombat-backup`, then run
-   `deploy/verify/restore-rehearsal.sh`.
+1. **Configure the off-host encrypted backup leg — [T128].** Nothing else on this list
+   matters if the box dies. Generate an `age` keypair whose private half lives on neither
+   machine, `apt install age`, create `/etc/default/wombat-backup`, then rehearse a restore
+   **from the off-host copy** with `deploy/verify/restore-rehearsal.sh`. The local restore
+   already passes; retrieval is the untested half.
 2. **Resize the Linode** before the first real cohort. RAM is the constraint.
 3. **Delete the "Nothing is live" section from `CLAUDE.md`** the day a real trainee is
    admitted, and re-read every decision it licensed — destructive migrations and re-seeding

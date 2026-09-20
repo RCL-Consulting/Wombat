@@ -2,7 +2,7 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: reference trees, stale documents, five defects, deploy artifacts, and a credential found in scratch**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation, and the production backup that had been lying for 94 days**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
@@ -175,11 +175,65 @@ live secret values — **none appears**. Documented in `deploy/README.md` § Ver
 scripts. The `.gitignore` rule stays, with a comment recording why: ad-hoc server scripts
 are still useful, but a credential must never be pasted into one.
 
-**▶ NEXT.** Unchanged, and now cheaper: **verify the off-host backup leg on the live box**
-(`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`), then run
-`deploy/verify/restore-rehearsal.sh`. Needs SSH to production, so not done here. —
-**Sonnet** (read-only check, then configure if absent). Everything on the Wave 1 list below
-stands unchanged.
+### Part 6 — the backup check on production, which found a worse thing than it went looking for
+
+Went to verify the off-host leg. It is unconfigured, as the record said. **But the script on
+the box was not the script in the repo.**
+
+`/usr/local/bin/wombat-backup.sh` was the **2026-06-17** version — 1924 B against the repo's
+6321. T097 rewrote it on 2026-09-16 and the rewrite never left the repo. What actually ran
+nightly for 94 days: a database dump and nothing else. No `wombat.env`, so the
+**non-rotatable `Wombat__PseudonymSalt` was in no backup at all**. No DataProtection keys, so
+a restore would log everyone out. No `age`, no off-host. And it **exited 0**, so cron
+reported success every night — T097's own "Still open" note says the script *"exits non-zero
+nightly… this is deliberate"*, which was true of the repo file and false of the box.
+
+**Root cause, and it generalises: the cron scripts had no deployment path.** `deploy.ps1` and
+`deploy.sh` ship only `Wombat.Web` to `/opt/wombat/app`; `/usr/local/bin/*` was installed by
+hand, once, at first boot. Editing the repo copy looked effective and was inert — the same
+shape as the seed-refresher problem in `CLAUDE.md`. **A control that is written, documented
+and never installed is exactly the failure mode T097 was opened to fix, recurring one level
+up.**
+
+Swept every server-side artifact rather than stopping at the first hit:
+
+| | repo vs deployed |
+|---|---|
+| `wombat-backup.sh` | **drifted** — 6321 B vs 1924 B |
+| `wombat.service` | differs by one comment line; functionally identical |
+| `wombat-health.sh` | identical |
+| `Caddyfile.wombat` | identical |
+
+**Both halves closed.** The hardened script is installed (sha `95845015c6e9`, matching the
+repo; the June version kept at `/root/wombat-backup.sh.2026-06-17.bak`), and both deploy
+scripts now sync `/usr/local/bin/wombat-*.sh` on every run — that sync leg was exercised
+against production, not just written.
+
+**Proved by running it, not by reading it:** the nightly job now writes the three-part bundle
+(`database.dump` + `wombat.env` + `keys/` — 104 KB) and then **exits 1**, refusing to ship
+`wombat.env` unencrypted. Expect a cron mail every night until the destination exists. That
+is the control working.
+
+**The restore rehearsal passes.** `deploy/verify/restore-rehearsal.sh` against
+`wombat-2026-09-20.dump`: 444 TOC entries, clean restore, **10 roles / 1 user / 31
+migrations** — production holds the seeded admin and seed data only, which is why little is
+at risk *today* despite 94 days of a broken control.
+
+Filed **[T128]** for the destination: an `age` keypair whose private half lives on neither
+machine, `apt install age`, `/etc/default/wombat-backup`, and a rehearsal **from the
+retrieved off-host copy** rather than the local one. Object storage over `rclone` is the
+recommendation; `rsync` to the `rcl.co.za` box is fastest and weakest — same operator, same
+city, and it relays all Wombat mail.
+
+Corrected in `HANDOVER.md`, `INFRASTRUCTURE.md`, `T097` and `deploy/README.md`, all four of
+which asserted the hardened behaviour as live.
+
+**▶ NEXT.** **[T128]** is the only open operational item and it is blocked on one decision —
+where the off-host copy goes. Everything else this session is done. A smaller follow-on:
+`wombat.service`, `Caddyfile.wombat` and `appsettings.Production.json` are still
+install-once-by-hand, so the same drift can still happen to them; extending the deploy sync
+or adding a drift check to `deploy/verify/` would close that class for good. — **Sonnet**.
+Everything on the Wave 1 list below stands unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 

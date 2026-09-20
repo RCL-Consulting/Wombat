@@ -274,6 +274,27 @@ from its body on 2026-06-19.
 - **Off-host backup destination** — deferred by operator decision. `wombat-backup.sh` exits
   non-zero nightly until `/etc/default/wombat-backup` is configured. **This is deliberate**, but
   it means there is still no off-host backup today.
+
+  > **Correction, 2026-09-20.** The sentence above was false of the live box for 94 days.
+  > §4's rewrite never reached the server: `/usr/local/bin/wombat-backup.sh` was still the
+  > 2026-06-17 version (1924 B vs the repo's 6321 B), which dumps the database only — no
+  > `wombat.env`, no DataProtection key ring, no `age`, no off-host — and **exits 0**. The
+  > loud nightly failure this section describes never happened; cron reported success every
+  > night. Root cause: **the cron scripts have no deployment path.** `deploy.ps1` and
+  > `deploy.sh` ship only `Wombat.Web` to `/opt/wombat/app`; `/usr/local/bin/*` is installed
+  > by hand at first boot (README §9–10), so editing the repo copy is inert — the same shape
+  > as the seed-refresher problem in CLAUDE.md. `wombat-health.sh` and `Caddyfile.wombat`
+  > matched; `wombat.service` differed only by a comment.
+  >
+  > A control that is written, documented and never installed is the exact failure mode this
+  > task was opened to fix, recurring one level up.
+  >
+  > **Both halves closed the same day.** The hardened script is installed (sha
+  > `95845015c6e9`, matching the repo) and `deploy.ps1`/`deploy.sh` now sync
+  > `/usr/local/bin/wombat-*.sh` on every deploy. Run once by hand to prove it: writes the
+  > three-part bundle (`database.dump` + `wombat.env` + `keys/`, 104 KB), refuses to ship it,
+  > **exits 1**. §4's intended behaviour is finally real. The destination itself is still
+  > open and now has its own task — **T128**.
 - **Pre-commit secret scanner** (gitleaks/trufflehog) — not installed.
 - **`/_blazor/initializers`** — see §7.
 - **Git history** — operator chose rotation only; the dead literals remain in history on the
