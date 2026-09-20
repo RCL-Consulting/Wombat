@@ -326,7 +326,7 @@ each has a live source elsewhere, verified before the delete:
   files were hash-compared against the deleted copy and matched.
 
   ```bash
-  git show 55a92c6:Wombat.Web/Views/EPA/Index.cshtml   # one file
+  git show 55a92c6:Wombat.Web/Views/EPAs/EPA.cshtml    # one file
   git worktree add ../wombat-old 55a92c6               # the whole tree
   ```
 
