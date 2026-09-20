@@ -391,8 +391,10 @@ Working rules:
 
 - Continue a task in `in_progress/` unless HANDOFF says otherwise; else take the
   highest-priority unblocked task from `queued/`. Move it with the `task` command below.
-- A task is done when its `done_when` items are each backed by evidence: a test result, a
-  file, a commit. "Code exists" is not done.
+- A task is done when every item in its **`## Verification`** section is backed by evidence:
+  a test result, a file, a commit, a browser check. "Code exists" is not done. (67 of this
+  repo's task files use `## Verification`; none uses the harness template's `done_when`
+  frontmatter, so that field is optional here and `lint` does not ask for it.)
 - Record a decision when reversing it would cost real work. Say what was rejected.
 - Before the session ends, update `execution/HANDOFF.md`. The Stop hook blocks otherwise.
 - Label statements as observed, inferred, or needs-confirmation when the difference matters.

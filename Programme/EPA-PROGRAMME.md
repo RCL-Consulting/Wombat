@@ -92,6 +92,10 @@ decision **D19**.
 
 ## 3. THE DECISION LIST
 
+> **Scope: product decisions only, `D1`–`D38`.** Decisions about *how the project is run* —
+> tooling, workspace layout, process — live in `execution/DECISIONS.md` under a `W-nnn`
+> prefix, deliberately distinct so a bare `D30` can only ever mean this register.
+
 This is the section to work through. Nothing below can be inferred from the source, the code or the
 repository — each is a judgement, and every one of them is currently being made by default rather than
 deliberately.

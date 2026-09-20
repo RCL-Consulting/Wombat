@@ -1,30 +1,41 @@
 ---
-id: 
-title: 
+id:
+title:
 status: queued
 priority: P2
-model: sonnet
 owner: agent
 depends_on: []
-created: 
-done_when:
-  - 
+created:
 ---
 
-## Why
+# <id> — <one line that states the defect or the goal, not the solution>
 
-_What problem this solves, and what happens if it is not done. One paragraph._
+**Severity:** _High / Medium / Low, and why — this is what `priority` above is derived from._
+**Surfaced:** _When and how it was found. "While fixing T100" is worth more than a date alone._
 
-## Approach
+## Symptom
+
+_What is observably wrong, or what is missing. Written so someone who has never seen the code
+can tell whether it is still true._
+
+## Root cause
+
+_Why it happens. If this is not yet known, say so rather than guessing._
+
+## What to build
 
 _The intended shape of the work. Enough that someone else could start it._
 
-## Done when
+## Verification
 
-Each item in the `done_when` frontmatter list, restated with how it will be checked.
-"Code exists" is not a completion signal. Name the test, the output, or the artifact.
+_This repo's completion signal. Each item names how it will be checked — a command, a test,
+an observation. "Code exists" is not a completion signal._
 
-- _criterion_ — checked by _command or observation_
+- [ ] _criterion_ — checked by _command or observation_
+
+## Related
+
+_Task ids, decisions (`D<n>` for product, `W-<n>` for process), files, commits._
 
 ## Notes
 

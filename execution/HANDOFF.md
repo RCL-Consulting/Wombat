@@ -29,16 +29,25 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 ### Fixed upstream in the harness, same day
 
-Bootstrapping this queue exposed two defects in `C:\dev\rcl_execution`, both fixed there with
-tests (suite 92 → 104, `99be1b4` and `b3658b3`):
+Adopting the harness exposed five defects in `C:\dev\rcl_execution`, all fixed there with
+tests — suite **92 → 119**, versions 2.3.0 / 2.4.0 / 2.4.1, pushed:
 
 - **The queue preview and DASHBOARD sorted by filename, then truncated at 12.** Six P3 builder
-  follow-ups filled the window and pushed three P1s out of sight. Both now sort by priority,
-  and the preview says `Showing 12 of 26`.
-- **`context --plain`, `lint` and `status` died on a non-ASCII task title.** Latent — the hook
+  follow-ups filled the window and pushed three P1s out of sight. Both now sort by priority.
+- **`context --plain`, `lint` and `status` died on a non-ASCII task title.** Latent: the hook
   path escapes non-ASCII via `json.dumps`, so nothing exercised it until the reordering pulled
   T122 (`the EPA→tool mapping`) into the window. The ordering fix did not cause it; it removed
   what was hiding it.
+- **`task new` imposed `T-129` on a register spelled `T128`.** It now reads the id style off
+  the tasks present.
+- **`lint --strict` warned `no model` on all 115 files, forever** — a check that cannot be
+  satisfied is one you learn to scroll past. It now nags only about fields some task uses.
+  `lint --strict` here is now **clean**.
+- **`task new` filled fields with a literal `replace("id: ", …)`**, so a template without
+  trailing whitespace silently produced a blank id and title. Found by rewriting our template.
+
+**`done/` now has a soft guide at 200 tasks** (we are at 89). It is the one lane nothing moves
+out of, and every command reads all of it.
 
 ### Traps
 
