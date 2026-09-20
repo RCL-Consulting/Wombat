@@ -12,7 +12,7 @@ and corrected two places where the register disagreed with the prose.
 - **Verified the harness end to end.** `lint --strict` clean; SessionStart `context` emits valid
   hook JSON; Stop `check-handoff` resolves and exits 0; no duplicate ids across lanes; all 115
   task files have a `status:` field matching their lane; DASHBOARD in step; tree clean and level
-  with its origin. `.claude/settings.local.json` is permissions-only and gitignored, so it
+  with `origin/master`. `.claude/settings.local.json` is permissions-only and gitignored, so it
   does not shadow the hooks in the tracked `settings.json`.
 - **Moved T128 to `blocked/`.** STATE's `## Blockers`, HANDOFF and the task file all called it
   blocked on an operator decision, but it sat in `queued/` — so the session-start bundle offered
@@ -24,6 +24,16 @@ and corrected two places where the register disagreed with the prose.
   bundle renders, still advertised the fixed defect. Now: *"A `user`-typed field accepts any user
   id, unchecked for role or scope."* The original framing is kept in the body.
   **The filename keeps the old slug deliberately** — `EPA-PROGRAMME.md:571` cites the path.
+
+### Upstream, in `C:\dev\rcl_execution`
+
+- **rcl-harness 2.4.3** — `fix(lint): a git ref is not a dead route`. `TICKED_REF` claims any
+  backticked token carrying a slash and calls it a path, so this very handoff failed the lint
+  for saying the tree was level with `origin/master`. `stale_refs` now skips `refs/`,
+  `origin/` and `upstream/`; the guard is anchored, so a real path merely containing a remote
+  name is still caught. A remote named anything else still trips — reword, or add it to
+  `GIT_REF`. `TestGitRefsAreNotDeadRoutes`, 4 cases, three verified to fail with the guard
+  removed. Suite **123 → 127**. The sentence above is the live proof.
 
 ### Spot-check of W-002 (lanes were derived, not read)
 
