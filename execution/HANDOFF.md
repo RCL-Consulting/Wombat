@@ -22,7 +22,6 @@ Five application tasks shipped, fourteen product decisions closed, one upstream 
   off-ladder rule works. No migration and no FK.
 - **[T132]** — MSF expiry reminders mailed the token *hash*; now re-issued. Filed [T130]/[T131];
   re-rated the queue EPA-first; [T128] to `blocked/`; retitled [T102].
-
 - **Emptied the dev database and removed three compatibility hedges (W-006).** The operator
   restated that nothing is live. An audit found three places today's work preserved existing rows:
   T134's disjunctive gate, T126's off-ladder rule being inert, and D25's unmerged ladder. Dropping
@@ -62,7 +61,7 @@ Five application tasks shipped, fourteen product decisions closed, one upstream 
 - **The dev database is empty of activities and users beyond the three seeded ones.** Anything you
   remember about dev data is stale, including activity 15 and the scenario logins. Re-run the
   runbooks if you need a populated corpus; the seeded admin/trainee/committee accounts work.
-  In-flight activities stay pinned; `OffLadder = false` means "not knowable", never "on the ladder".
+- **`OffLadder = false` means "no disagreement established"**, never "on the ladder".
 - **`RatedActivityTypes`' family map now only LABELS** — it no longer decides what is rated.
   It retires with [T122]'s `WbaToolKey`.
 - Hooks hard-code `C:\dev\rcl_execution\bin\harness.py` (`main`). Never pass `--no-build`.
@@ -70,11 +69,12 @@ Five application tasks shipped, fourteen product decisions closed, one upstream 
 ### Verification status
 
 - `dotnet build Wombat.sln -c Release` — **0 warnings, 0 errors**.
-- Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **236**,
-  Architecture **23**, Web **111** — **992 total**, up from 875 at session start. Integration is
+- Suites green, no `--no-build`: Domain **78**, Application **546**, Infrastructure **251**,
+  Architecture **23**, Web **111** — **1009 total**, up from 875 at session start. Integration is
   Docker-gated and was not run.
 - T126, T132, T133 and T134 each **verified to fail against the unfixed code**, and T126, T133 and
-  T134 **browser-verified on dev** — T126's off-ladder rule demonstrated end to end by filing a
-  v4-pinned activity and temporarily re-pinning the curriculum ladder.
+  T134 **browser-verified on dev** before the rebuild. T126's off-ladder rule was shown firing end
+  to end; that took a hand-filed activity and a temporary curriculum re-pin then, and takes neither
+  now that every type is at v1 with its pointer.
 - `harness.py lint --strict` clean; harness 2.4.3 pushed upstream, suite 127. Not re-verified:
   `drift-check.sh`, `restore-rehearsal.sh` — unchanged since 2026-09-20a.

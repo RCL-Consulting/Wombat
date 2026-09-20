@@ -49,9 +49,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+db4b67e refactor(activities): rated-ness is what a type declares, not what it is called (W-006)
 b6d594e fix(seeds): the four generic WBA tools bound their rating scale to nothing (T110)
 a0894f5 docs(execution): demonstrate T126's off-ladder rule end to end on dev
 7c94f53 docs(execution): browser-verify T134, and record that T126 cannot fire on current data
 8971dd7 chore(execution): bring STATE back under its 60-line cap
-4d8646e docs(execution): browser-verify T133 against the dev database
 ```
