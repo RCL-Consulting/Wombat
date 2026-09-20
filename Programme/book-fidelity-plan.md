@@ -8,7 +8,7 @@ Companion docs:
 - `EPA Book/evaluation.md` — the 92-requirement scorecard this plan responds to
 - `EPA Book/critique.md` — peer-reviewed challenges to book prescriptions; drives several sequencing and scope decisions below
 - `Programme/PLAN.md` — the master T001–T027 plan (complete)
-- `Programme/current_state.md` — live session handoff
+- `execution/STATE.md` — live session handoff
 
 ## Goal
 
@@ -142,7 +142,7 @@ Infrastructure:
 - EF config + hand-written migration + Designer file
 - Background job `EntrustmentDecisionExpiryJob` (daily) — flips `ExpiresOn` < today to `Status=Expired`, fires email to trainee + coordinator
 
-**Why hard-coded not schema-driven:** matches the reasoning in `Programme/Tasks/T022-committee-decisions.md` — regulatory weight, immutability requirements, appeal pathway, revocation as a first-class event.
+**Why hard-coded not schema-driven:** matches the reasoning in `execution/tasks/done/T022-committee-decisions.md` — regulatory weight, immutability requirements, appeal pathway, revocation as a first-class event.
 
 **Committee integration:** `RecordCommitteeDecisionCommand` (existing, T022) gains an optional list of `entrustmentDecisions[]` to issue as part of ratification. When the committee ratifies, the decisions issue atomically.
 
@@ -287,7 +287,7 @@ Each becomes a task file only when a programme requests it.
 - Native mobile app
 - Knowledge/skills exam integration (separate integration work)
 - Video capture in assessments
-- The T019-b…T019-g builder UX follow-ups — already tracked in `current_state.md`, orthogonal to book fidelity
+- The T019-b…T019-g builder UX follow-ups — already tracked in `execution/STATE.md`, orthogonal to book fidelity
 
 ## Open questions before starting T028
 
@@ -302,4 +302,4 @@ Each becomes a task file only when a programme requests it.
 
 ## Active task
 
-None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `Programme/Tasks/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `current_state.md` to point at the first active one.
+None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `Programme/Tasks/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `execution/STATE.md` to point at the first active one.

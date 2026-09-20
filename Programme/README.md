@@ -1,15 +1,33 @@
 # Wombat Programme — Index
 
-This folder is where the project keeps its head: the plan, the task register, the domain/architecture/design contracts, the scenario runbooks, and the live session handoff. It is written to survive multi-session agentic coding — any session can bootstrap by reading `current_state.md`, then the task file it names, and resume without losing continuity.
+This folder holds **the contracts that change rarely**: the domain model, the architecture and
+design rules, the customization model, the infrastructure and handover docs, the plans, and the
+scenario runbooks.
 
-It began life as `Rewrite/`, the plan for rebuilding Wombat on the ClinicAssist.NET architecture. **That rewrite finished in June 2026** (T001–T027; see `PLAN.md` § Status) and the application has been deployed since 2026-06-19. Everything since — the activity platform, the EPA v11.1 catalogue, security hardening, the operational work — is ordinary product work tracked the same way. The folder was renamed on 2026-09-20 because the old name had outlived what it described.
+**Live state is not here.** It moved to `execution/` on 2026-09-20, where the `rcl-harness`
+script bounds and enforces it:
+
+| Was | Is now |
+|---|---|
+| `Programme/current_state.md` (3,574 lines, read every session) | `execution/STATE.md` (≤60 lines) + `execution/HANDOFF.md` (≤80), both imported automatically |
+| `Programme/Tasks/T0xx-*.md` | `execution/tasks/{queued,in_progress,blocked,done}/` |
+| — | `execution/DECISIONS.md`, `execution/DASHBOARD.md` (generated), `execution/log/` |
+
+The old handoff is archived at `execution/log/_pre_harness_current_state.md`. It is history, not
+state. See the **Execution workspace** section at the end of `CLAUDE.md` for the commands.
 
 ## How to use this folder
 
-1. Start every session by reading `current_state.md`. It names the active task, blockers, and the last verified commit.
-2. Open the task file it points to under `Tasks/`. Each task file has its own Definition of Done, file list, and verification steps.
-3. Work only on that task. When done, update `current_state.md` and check the box in `PLAN.md`.
-4. If the task has to branch (unexpected work), add a new task file rather than mutating the old one — the plan is append-only so git history stays useful.
+You do not read this folder at session start — `CLAUDE.md` imports the state you need. Come here
+when you need a contract:
+
+1. **Writing Razor?** `DESIGN.md`, first, every time.
+2. **Touching the activity platform?** `CUSTOMIZATION.md`, then `DOMAIN.md` for what the words mean.
+3. **Adding a project reference or a handler?** `ARCHITECTURE.md` — the boundaries are test-enforced.
+4. **Operating the live service?** `HANDOVER.md`, then `INFRASTRUCTURE.md`.
+5. **Replaying a scenario?** `scenario-paediatrics.md`; note its findings sections are superseded history.
+
+It began life as `Rewrite/`, the plan for rebuilding Wombat on the ClinicAssist.NET architecture. **That rewrite finished in June 2026** (T001–T027; see `PLAN.md` § Status) and the application has been deployed since 2026-06-19. Everything since — the activity platform, the EPA v11.1 catalogue, security hardening, the operational work — is ordinary product work tracked the same way. The folder was renamed on 2026-09-20 because the old name had outlived what it described.
 
 ## Document map
 
@@ -19,11 +37,14 @@ It began life as `Rewrite/`, the plan for rebuilding Wombat on the ClinicAssist.
 | `DOMAIN.md` | What EPAs, WBAs, STAR and the role hierarchy actually mean. Corrects misunderstandings in the current Wombat model. |
 | `ARCHITECTURE.md` | Clean Architecture / CQRS layout, conventions, non-negotiables. |
 | `DESIGN.md` | The canonical UI/design-system contract: tokens, layout grid, buttons, tables, forms, cards, dashboards, alerts, skeletons, icons, and the `app.css` section order. **Any task that writes Razor must read this first.** |
-| `WORKFLOW.md` | Git branching, session handoff, verification protocol, agent prompts. |
+| `CUSTOMIZATION.md` | The Activity platform: the jsonb schema, workflow and credit DSLs, and where the line between platform and hardcoded sits. |
+| `EPA-PROGRAMME.md` | The CPSA Paediatric v11.1 catalogue programme, its phases and its numbered decisions. |
+| `WORKFLOW.md` | Git branching and verification levels. **Its session-handoff protocol is superseded** by the harness — see the banner at the top of that file. |
 | `INFRASTRUCTURE.md` | Linode server layout, deployment, secrets, backups. |
 | `HANDOVER.md` | Running the live service: what is deployed, config, deploys, backups, logs, known limitations. The T016 deliverable. |
-| `current_state.md` | Live state. Updated at the end of every session. |
-| `Tasks/T0xx-*.md` | Individual task files. One file per unit of work. |
+| `scenario-*.md` | Replay runbooks that produce the scenario test corpus. |
+| `practical-plan.md`, `gui-review-plan.md` | Closed post-rewrite plans, kept as record. |
+| `book-fidelity-plan.md` | Superseded by `practical-plan.md`; kept only because `EPA Book/critique.md` cites it. **Do not execute tasks from it.** |
 
 ## Reference material
 

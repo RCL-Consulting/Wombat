@@ -7,7 +7,7 @@ Polish pass over the Blazor UI now that the practical plan is closed (T035 shipp
 Companion docs:
 - `Programme/DESIGN.md` — canonical design-system contract (rubric defers to it on conflicts)
 - `src/Wombat.Web/wwwroot/app.css` — 885-line token/component anchor
-- `Programme/current_state.md` — live session handoff
+- `execution/STATE.md` — live session handoff
 
 ## Non-goals
 
@@ -151,4 +151,4 @@ Total estimate: **~8 working days** for a single developer, including browser ve
 
 ## Active task
 
-**None — GUI review sequence T037–T042 complete.** See `Programme/current_state.md` for the follow-up backlog and next open item.
+**None — GUI review sequence T037–T042 complete.** See `execution/STATE.md` for the follow-up backlog and next open item.

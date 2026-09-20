@@ -22,7 +22,7 @@ Companion docs:
 - `EPA Book/evaluation.md` — original 92-point fidelity scorecard (reference)
 - `EPA Book/critique.md` — literature-backed reasons we are *not* building some book items (use when a programme director asks "why not X?")
 - `Programme/PLAN.md` — the master T001–T027 plan (complete)
-- `Programme/current_state.md` — live session handoff
+- `execution/STATE.md` — live session handoff
 
 ---
 
@@ -228,6 +228,6 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 
 ## Active task
 
-Practical plan closed (T035 shipped; T036 deferred). Follow-up work now lives in `Programme/gui-review-plan.md`. Live state in `Programme/current_state.md`.
+Practical plan closed (T035 shipped; T036 deferred). Follow-up work now lives in `Programme/gui-review-plan.md`. Live state in `execution/STATE.md`.
 
 Commit after every completed task, per `Programme/WORKFLOW.md`.

@@ -111,7 +111,7 @@ This plan replaces an earlier draft in which T007–T009 built concrete typed ag
 ## Non-negotiables
 
 - No task is "done" until its verification section passes.
-- No commit without updating `current_state.md`.
+- No commit without updating `execution/STATE.md`.
 - No scope creep — unknown work becomes a new task file.
 - Reference ClinicAssist freely for architecture questions, but understand the activity platform is a deliberate departure that ClinicAssist does not have. Do not copy ClinicAssist on anything that touches the activity model — that's where Wombat diverges.
 - Platform stays generic. Resist the urge to add a typed aggregate for "that one annoying case". The annoying case is almost always another schema.
@@ -123,6 +123,6 @@ T001–T027 landed (last verified at T016 commit `864ad3b`). T016's handover doc
 
 Two post-rewrite plans have since opened **and closed**: `Programme/practical-plan.md` (T028–T036, four blocks of pragmatic enhancements oriented around a hospital's training-programme operations rather than academic fidelity — T035 shipped, T036 deferred indefinitely) and `Programme/gui-review-plan.md` (all six clusters complete). **Neither is the live plan any more.**
 
-**Live work is tracked in `Programme/current_state.md` and the task files under `Programme/Tasks/`, not in a plan document.** Read `current_state.md` first; it names the active task and the last verified commit.
+**Live work is tracked in `execution/STATE.md` and the task files under `Programme/Tasks/`, not in a plan document.** Read `execution/STATE.md` first; it names the active task and the last verified commit.
 
 The academic alternative that was drafted and then superseded is `Programme/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it. Its own banner says not to execute tasks from it.

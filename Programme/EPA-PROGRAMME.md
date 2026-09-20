@@ -4,7 +4,7 @@ The one file to run the remaining EPA work from. It does not replace the task fi
 points at one — it says what is outstanding, what is blocked on a decision only a human can take, and in
 what order the pieces have to land.
 
-Read `Programme/current_state.md` first for where the last session stopped. Read this for where the
+Read `execution/STATE.md` first for where the last session stopped. Read this for where the
 programme is going.
 
 ---
@@ -19,7 +19,7 @@ The run, through the UI on dev: institution 2 adopted `Paediatric EPA Curriculum
 from curriculum 2 to curriculum 3; she filed a `mini_cex_cpsa` against PAED-001 with `observed_on`
 **2026-03-10**; Naidoo completed it at **3a**. Result: `CreditedItemCount = 1`,
 `CreditScaleMismatchCount = 0`, one `CurriculumItemProgress` row on item 17 with `CountsSoFar = 1` and
-`MinimumLevelReachedCount = 1`. Full detail in [`Tasks/T118-v11-1-evidence-run-findings.md`].
+`MinimumLevelReachedCount = 1`. Full detail in [`execution/tasks/queued/T118-v11-1-evidence-run-findings.md`].
 
 **What that proved, on real data rather than by reading code:** T109's scale pinning holds (both sides
 resolve to the six-rung CPSA ladder, no mismatch); T073's per-stage minimum works (the item's
@@ -563,7 +563,7 @@ Honest list. Each of these is known, none has a task file, and several are large
 
 ## Task files referenced
 
-[T098] `Tasks/T098-epa-v11-adoption.md` · [T099] `…T099-paediatric-catalogue-unreachable.md` ·
+[T098] `execution/tasks/done/T098-epa-v11-adoption.md` · [T099] `execution/tasks/queued/T099-paediatric-catalogue-unreachable.md` ·
 [T100] `…T100-entrustment-rung-label-display.md` · [T102] `…T102-assessor-self-assignment-escalation.md` ·
 [T104] `…T104-retire-legacy-paediatric-data.md` · [T105] `…T105-transition-validation-scope.md` ·
 [T106] `…T106-activity-platform-backlog.md` · [T107] `…T107-stranded-activities-pinned-to-old-versions.md` ·
@@ -577,6 +577,6 @@ Honest list. Each of these is known, none has a task file, and several are large
 [T126] `…T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md` ·
 [T127] `…T127-a-failed-submit-leaves-an-orphan-draft-behind.md`
 
-Source data extracted from `EPA version 11.1.docx`: `Tasks/T098-data/annexure-a.json` ·
-`Tasks/T098-data/annexure-b.json` (new, [T124]) · `Tasks/T098-data/page-8-wba-tools.json` (new, [T124]) ·
-`Tasks/T098-data/epa-detail.json`.
+Source data extracted from `EPA version 11.1.docx`: `execution/tasks/done/T098-data/annexure-a.json` ·
+`execution/tasks/done/T098-data/annexure-b.json` (new, [T124]) · `execution/tasks/done/T098-data/page-8-wba-tools.json` (new, [T124]) ·
+`execution/tasks/done/T098-data/epa-detail.json`.

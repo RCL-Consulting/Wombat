@@ -1,5 +1,20 @@
 # Agentic Workflow
 
+> **⚠ The session protocol below is superseded, as of 2026-09-20.** It told you to read
+> `current_state.md`, open the task file it names, and update that file before stopping. All
+> three are now done by the `rcl-harness` workspace in `execution/`: `STATE.md` and
+> `HANDOFF.md` are imported into every session, a SessionStart hook injects the active task,
+> and a Stop hook **refuses** to end a session that changed task state without writing a
+> handoff. The commands are in the **Execution workspace** section at the end of `CLAUDE.md`.
+>
+> This mattered because the prose here was never enforced: `current_state.md` reached 3,574
+> lines while this document asked for a concise handoff, and 26 task files said "open" when
+> 7 of them had shipped.
+>
+> **Still current below:** the git branching model, the commit conventions, and the four
+> verification levels. Read those. Treat every reference to `current_state.md` as meaning
+> `execution/STATE.md` plus `execution/HANDOFF.md`.
+
 This document describes how a coding agent should run a session against this plan. Humans running the plan by hand should also follow it — the discipline is what makes the plan resumable.
 
 ## Session protocol

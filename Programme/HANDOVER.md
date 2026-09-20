@@ -2,7 +2,7 @@
 
 The T016 deliverable: what a stranger needs to take over the service. It covers the
 running system, not the codebase — for the code, start at `CLAUDE.md`, then
-`Programme/current_state.md`.
+`execution/STATE.md`.
 
 `deploy/README.md` is the **operational manual** and stays authoritative for every
 command. This file is the orientation around it: what exists, what it costs you to get
@@ -169,7 +169,7 @@ ship `wombat.env` unencrypted.
 > **What is genuinely fine:** the dumps restore. Rehearsed 2026-09-20 against
 > `wombat-2026-09-20.dump` — 444 TOC entries, clean restore, 10 roles / 1 user /
 > 31 migrations. Production holds the seeded admin and seed data only, so little is at risk
-> *today*. See `Programme/Tasks/T128-off-host-backup-destination.md`.
+> *today*. See `execution/tasks/queued/T128-off-host-backup-destination.md`.
 
 **Rehearse a restore.** A backup nobody has restored is a hypothesis. There is a script
 for it — `deploy/verify/restore-rehearsal.sh` restores the newest dump into a throwaway
@@ -217,7 +217,7 @@ This file goes stale. These do not:
 
 | File | What it is |
 |---|---|
-| `Programme/current_state.md` | **Read this first, every session.** The live handoff: active task, last verified commit, blockers. Newest session at the top. |
+| `execution/STATE.md` | **Read this first, every session.** The live handoff: active task, last verified commit, blockers. Newest session at the top. |
 | `deploy/README.md` | The operational manual — first-boot checklist, deploys, rollback, useful commands. |
 | `deploy/verify/*.sh` | Six read-only checks for the live box: restore rehearsal, audit append-only trigger, DataProtection keys, authenticated smoke test, auth-cookie `Secure` flag, and **`drift-check.sh`** — does the server run what the repo says? None hardcodes a credential. |
 | `Programme/INFRASTRUCTURE.md` | The server contract: layout, systemd unit, Caddy, env file, backups, SSO, audit retention. |
@@ -252,7 +252,7 @@ Structural, and true as of 2026-09-20:
   Testcontainers suite has never gated a production deploy.
 - **Migrations apply at startup**, so a bad one fails the service rather than the deploy.
 - **Filed, unfixed defects live in `Programme/Tasks/`.** That folder, not this file, is the
-  register — `current_state.md` names which are in flight.
+  register — `execution/STATE.md` names which are in flight.
 
 ---
 

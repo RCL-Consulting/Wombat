@@ -416,3 +416,7 @@ deploy/.remote/
 
 # Local .NET SDK / workload cache created by tooling in the repo root — never source.
 .dotnet/
+
+# rcl-harness runtime stamp: the SessionStart hook writes it, the Stop hook reads it to
+# tell whether task state changed this session. Per-machine, not shared state.
+execution/.session

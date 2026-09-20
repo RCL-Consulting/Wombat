@@ -148,4 +148,4 @@ These would most change the platform's fidelity to the book:
 
 ### Scope note
 
-Findings are scoped to what the book prescribes; many of the gaps are design choices a programme director might legitimately defer. The T019-b…g follow-ups listed in `Programme/current_state.md` do not cover any of the top-five gaps above — they are builder-UX, not book-fidelity.
+Findings are scoped to what the book prescribes; many of the gaps are design choices a programme director might legitimately defer. The T019-b…g follow-ups listed in `execution/STATE.md` do not cover any of the top-five gaps above — they are builder-UX, not book-fidelity.

@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:\\dev\\rcl_execution\\bin\\harness.py\" context"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:\\dev\\rcl_execution\\bin\\harness.py\" check-handoff"
+          }
+        ]
+      }
+    ]
+  }
+}
