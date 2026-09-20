@@ -27,6 +27,19 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 1. **T128** — pick the off-host backup destination. Everything else is downstream of it.
 2. Then the queued P1s: **T099**, **T102**, **T121**.
 
+### Fixed upstream in the harness, same day
+
+Bootstrapping this queue exposed two defects in `C:\dev\rcl_execution`, both fixed there with
+tests (suite 92 → 104, `99be1b4` and `b3658b3`):
+
+- **The queue preview and DASHBOARD sorted by filename, then truncated at 12.** Six P3 builder
+  follow-ups filled the window and pushed three P1s out of sight. Both now sort by priority,
+  and the preview says `Showing 12 of 26`.
+- **`context --plain`, `lint` and `status` died on a non-ASCII task title.** Latent — the hook
+  path escapes non-ASCII via `json.dumps`, so nothing exercised it until the reordering pulled
+  T122 (`the EPA→tool mapping`) into the window. The ordering fix did not cause it; it removed
+  what was hiding it.
+
 ### Traps
 
 - **The nightly backup now exits 1 on purpose** and will mail you until T128 lands. That is

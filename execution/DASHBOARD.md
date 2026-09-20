@@ -4,32 +4,32 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
+| queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A trainee can name themselves as their own assessor and self-award ent |  |
+| queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
+| queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
+| queued | [T128](tasks/queued/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
+| queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
+| queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
+| queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
+| queued | [T110](tasks/queued/T110-or-scale-key-mismatch.md) | P2 | `scale_key: 'or_scale'` resolves to nothing, and four seeded tools qui |  |
+| queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
+| queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
+| queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P2 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
+| queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
+| queued | [T126](tasks/queued/T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md) | P2 | Nothing can say which entrustment ladder a given activity was rated ag |  |
+| queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
 | queued | [T019-e](tasks/queued/T019-e-visual-credit-rules-editor.md) | P3 | Visual credit-rules editor |  |
 | queued | [T019-f](tasks/queued/T019-f-multi-condition-visibility.md) | P3 | Multi-condition visibility |  |
 | queued | [T019-g](tasks/queued/T019-g-schema-templates-and-copy.md) | P3 | Schema templates, copy-from-existing, and advanced signature capture |  |
-| queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
-| queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A trainee can name themselves as their own assessor and self-award ent |  |
-| queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
-| queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T106](tasks/queued/T106-activity-platform-backlog.md) | P3 | Activity platform backlog: smaller gaps found while mapping the transi |  |
-| queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
-| queued | [T110](tasks/queued/T110-or-scale-key-mismatch.md) | P2 | `scale_key: 'or_scale'` resolves to nothing, and four seeded tools qui |  |
-| queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T114](tasks/queued/T114-audit-log-hygiene.md) | P3 | Audit log hygiene: an unenforced size bound, an unstamped speciality,  |  |
 | queued | [T115](tasks/queued/T115-isinrole-extension-is-dead-code.md) | P3 | `ClaimsPrincipalExtensions.IsInRole` never executes, and every `role:` |  |
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
-| queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
-| queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P2 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
-| queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
-| queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
-| queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
-| queued | [T126](tasks/queued/T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md) | P2 | Nothing can say which entrustment ladder a given activity was rated ag |  |
-| queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
-| queued | [T128](tasks/queued/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 
 Done: 89 task(s).
 
@@ -47,9 +47,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+f14ebf8 chore(execution): walk the queue -- two id/priority corrections and three re-ratings
 637d127 chore: bootstrap the rcl-harness execution workspace
 8ae9357 chore: rename Rewrite/ to Programme/, and stop claiming the rewrite is in progress
 3f8369a deploy: add a drift check, and fix the two things it found on its first run
 3745625 docs: record the recovery/ snapshot cleanup
-702a205 deploy: install the T097 backup script that was never deployed, and give cron scripts a deploy path
 ```
