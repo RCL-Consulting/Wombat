@@ -7,18 +7,21 @@
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
 | queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A `user`-typed field accepts any user id, unchecked for role or scope |  |
+| queued | [T110](tasks/queued/T110-or-scale-key-mismatch.md) | P1 | `scale_key: 'or_scale'` resolves to nothing, and four seeded tools qui |  |
+| queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P1 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
 | queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
+| queued | [T129](tasks/queued/T129-send-the-college-the-v11-1-decision-list.md) | P1 | Send the College the v11.1 decision list |  |
+| queued | [T130](tasks/queued/T130-the-annual-quota.md) | P1 | The annual quota: a trainee cannot see what is expected of them this y |  |
 | queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
 | queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
-| queued | [T110](tasks/queued/T110-or-scale-key-mismatch.md) | P2 | `scale_key: 'or_scale'` resolves to nothing, and four seeded tools qui |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
-| queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P2 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
 | queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
 | queued | [T126](tasks/queued/T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md) | P2 | Nothing can say which entrustment ladder a given activity was rated ag |  |
 | queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
+| queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -42,14 +45,14 @@ This is a reset point, not a diary.
 Wombat is **deployed but not in service** — scenario data only, no real trainees. The live
 workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operational hardening.
 ## Now
-- Nothing in `in_progress/`. 25 queued, 1 blocked. **Ready P1: T099, T102, T121, T122.**
+- Nothing in `in_progress/`. 28 queued, 1 blocked. **All eight P1s are EPA work or gate it:**
 
 ## Recent commits
 
 ```
+2da4d41 docs(execution): record the upstream lint fix, and use the phrasing it permits
+0c1622f docs(execution): block T128, retitle T102 to the defect that is still open
 7fba9d0 docs(execution): finalise the 2026-09-20 session
 a5230dd chore(execution): move the doctrine into the standard layout, retiring Programme/
 c1c1ad4 chore(execution): separate the two decision registers, and match the completion convention
-98e367b chore(execution): priority-ordered queue, after fixing the harness upstream
-f14ebf8 chore(execution): walk the queue -- two id/priority corrections and three re-ratings
 ```

@@ -2,7 +2,7 @@
 id: T110
 title: "`scale_key: 'or_scale'` resolves to nothing, and four seeded tools quietly don't"
 status: queued
-priority: P2
+priority: P1
 created: 2026-09-18
 ---
 # T110 — `scale_key: "or_scale"` resolves to nothing, and four seeded tools quietly don't

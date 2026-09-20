@@ -2,7 +2,7 @@
 id: T120
 title: "Author the ten remaining v11.1 WBA tools, and separate the five an engineer can write from the five only the College can"
 status: queued
-priority: P2
+priority: P1
 created: 2026-09-19
 ---
 # T120 — Author the ten remaining v11.1 WBA tools, and separate the five an engineer can write from the five only the College can
@@ -267,10 +267,10 @@ is a hard constraint — checklist step 10.
 
 - **[T110]** (`or_scale` resolves to nothing) does not touch these. The CPSA seeds bind by the scale's
   exact Name and already resolve.
-- **The `observed_on` wiring task** is not a prerequisite either — but note that these five new seeds will
-  capture `observed_on` and it will keep being ignored, because `CreditApplier.ResolveObservationDate`
-  (`CreditApplier.cs:335`, called at `:56`) uses `Activity.CreatedOn`. Five more tools promising a date
-  that is discarded is five more instances of [T118] finding 4, not a new defect.
+- **The `observed_on` wiring task** ([T119]) **has since shipped** — corrected 2026-09-20. It was not a
+  prerequisite and still is not, but the warning that stood here is now wrong: credit runs off
+  `Activity.ObservedOn`, and `CreditApplier.ResolveObservationDate` with its `CreatedOn` fallback no
+  longer exists. The five new seeds should capture `observed_on` and it **will** be honoured.
 - **[T104]** is not a prerequisite, but the display-name rule in checklist step 4 exists because of it.
 
 ### One live consequence worth recording while you are here

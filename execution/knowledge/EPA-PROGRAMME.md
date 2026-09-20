@@ -57,7 +57,7 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 
 | Task | What it is | Verdict | Size | Depends on |
 |---|---|---|---|---|
-| [T119] | Wire `observed_on`: a declared schema pointer, a stamped `Activity.ObservedOn` column, every reader on the column | **READY** | M | nothing. D21–D23 change defaults, not the start |
+| [T119] | Wire `observed_on`: a declared schema pointer, a stamped `Activity.ObservedOn` column, every reader on the column | **DONE 2026-09-19** | M | shipped. `CreditApplier` credits off `Activity.ObservedOn`; `ResolveObservationDate` and its `CreatedOn` fallback are gone. Unblocks [T130] |
 | [T123] d1 | Trajectory axis and labels resolved from the pinned scale server-side | **DONE 2026-09-19** | S | step 2 and full D30 deferred to [T126]; re-check charts with T110 |
 | [T123] d3 | Narrow the activity-type picker by the subject's pinned ladder (T109's unshipped option 2) | **DONE 2026-09-19** | S | SQL check passed; ⚠ must be sequenced with [T110] |
 | [T123] d2 | Two "Mini-CEX (Paediatrics)", two "DOPS (Paediatrics)" in the picker | NEEDS A DECISION | S | **D31**. Data edit, no code |
@@ -232,7 +232,8 @@ one category and five suppressed, and would credit.
 maintainer's call on the College's steer.
 
 **D12 — Seed the fourteen tool names verbatim, or collapse them with aliases?**
-Annexure A contains pairs that may denote one instrument: "Direct observation" (7 EPAs) vs "Directly
+Annexure A contains pairs that may denote one instrument: "Direct observation" (**8** EPAs — 2, 4, 6,
+9, 10, 11, 13, 15; re-derived from `T098-data/annexure-a.json` 2026-09-20, correcting "7" here) vs "Directly
 observed clinical examination" (PAED-007 only); "CCA" vs "Case note review".
 **Consequence of verbatim, stated plainly:** the seeded `direct_observation_cpsa` would be permitted on
 PAED-006 and **refused on PAED-007**. That may be exactly what the College means, or an artefact of one
@@ -427,7 +428,10 @@ Four independent threads, all startable today.
    every tool on ≥3 EPAs is defined, every tool on ≤2 is not. It also extracted **Annexure B for the first
    time** (`T098-data/annexure-b.json`), which hands phase 3 a published per-semester column and phase 4 a
    decision cadence, and it found a **source contradiction about MSF** (D37).
-3. **[T119] — `observed_on`.** *Opus.* The largest ready item and the one that unblocks the most. Ship the
+3. ~~**[T119] — `observed_on`.**~~ **DONE.** `Activity.ObservedOn` is a real column and credit runs off
+   it; `ResolveObservationDate` is gone. `RebuildCurriculumProgressCommand` was rewritten with it and
+   still has **no production caller** — confirm it is transactional before giving it a button. The
+   original instruction follows, kept because its warning still applies. Ship the
    stamp → boot (migration, refresher, restamper) → fix and run the rebuild → verify on Ndlovu's
    trajectory, whose point must move from 2026-09-19 to 2026-03-10. Fix `RebuildCurriculumProgressCommand`
    in the same session: it has no caller, it is not atomic, and it does not stamp `CreditedItemCount`. **Do
