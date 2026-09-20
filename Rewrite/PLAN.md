@@ -2,7 +2,7 @@
 
 ## Goal
 
-Rewrite Wombat on the ClinicAssist.NET architecture (Clean Architecture + CQRS/MediatR + Blazor Interactive Server + EF Core 10 + PostgreSQL + ASP.NET Core Identity), deployed to Linode (Ubuntu 24.04 + Caddy + systemd), **preserving the original Wombat intent that admins can add new activity types (WBAs, reflections, research outputs, teaching logs, QI projects, anything) without developer involvement.**
+Rewrite Wombat on the ClinicAssist.NET architecture (Clean Architecture + CQRS/MediatR + Blazor Interactive Server + EF Core 10 + PostgreSQL + ASP.NET Core Identity), deployed to Linode (Ubuntu 24.04 + Caddy + systemd — **as built: Ubuntu 26.04**, see `HANDOVER.md`), **preserving the original Wombat intent that admins can add new activity types (WBAs, reflections, research outputs, teaching logs, QI projects, anything) without developer involvement.**
 
 The plan is structured in two parts: a **core** (T001–T016) that stands the platform up, and an **extension** (T017–T027) that adds the customization engine, the real-world features identified during product evaluation, and the operational concerns (audit, data rights, SSO, deployment hardening). The extension is not optional; it is where the difference between "proof of concept" and "real tool" lives.
 
@@ -119,4 +119,10 @@ This plan replaces an earlier draft in which T007–T009 built concrete typed ag
 
 ## Status: complete
 
-T001–T027 landed (last verified at T016 commit `864ad3b`). Post-rewrite work continues under `Rewrite/practical-plan.md` — four blocks of pragmatic enhancements (T028–T036) oriented around a hospital's training-programme operations, not academic fidelity. The academic alternative that was drafted and then superseded is `Rewrite/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it.
+T001–T027 landed (last verified at T016 commit `864ad3b`). T016's handover document is `Rewrite/HANDOVER.md`.
+
+Two post-rewrite plans have since opened **and closed**: `Rewrite/practical-plan.md` (T028–T036, four blocks of pragmatic enhancements oriented around a hospital's training-programme operations rather than academic fidelity — T035 shipped, T036 deferred indefinitely) and `Rewrite/gui-review-plan.md` (all six clusters complete). **Neither is the live plan any more.**
+
+**Live work is tracked in `Rewrite/current_state.md` and the task files under `Rewrite/Tasks/`, not in a plan document.** Read `current_state.md` first; it names the active task and the last verified commit.
+
+The academic alternative that was drafted and then superseded is `Rewrite/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it. Its own banner says not to execute tasks from it.

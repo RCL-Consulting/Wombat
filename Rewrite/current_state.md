@@ -2,7 +2,7 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: the two reference trees, then three stale plan documents**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: two reference trees, three stale documents, and the four defects that fell out**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
@@ -48,12 +48,54 @@ line by line: **0 lines lost from the spec**, and the only 6 dropped from the re
 its old title and the stale `[~]` deferral block, replaced by an `[x]` recording what
 actually happened today.
 
-**▶ NEXT — the cleanup can continue.** Nothing is outstanding to ship. Two candidates noticed
-in passing and **not investigated**: `Rewrite/book-fidelity-plan.md` (PLAN.md:122 says it was
-superseded, and is kept only because `EPA Book/critique.md` cites it), and whether
-`Rewrite/practical-plan.md`'s T028–T036 are still the live post-rewrite plan given that
-T098–T127 all landed outside it. — **Sonnet** for a mechanical pass; **Opus** if the question
-turns into *which plan document is authoritative*. Everything on the Wave 1 list below stands
+### Part 3 — the defects the cleanup uncovered, fixed
+
+Chasing the two "candidates" above turned up four real defects and cleared one false alarm.
+
+**1. `Rewrite/HANDOVER.md` did not exist — written.** T016 step 10 specified it and its
+verification box had been unticked since June, while production ran for three months with no
+document telling a stranger how to operate it. It covers what is deployed, the filesystem
+layout, the config contract and the three keys that behave surprisingly, deploy/rollback,
+backups and restore, logs and health, known limitations, and an ordered first-month list. It
+deliberately does **not** duplicate `deploy/README.md`, which stays the operational manual.
+
+Two things it makes loud, because both are the kind of thing a handover exists to say:
+**the off-host encrypted backup leg is recorded as never configured** — if still true, the
+nightly job is exiting non-zero and every backup sits on the same disk as the database, which
+is not a backup — and **the day a real trainee is admitted, CLAUDE.md's "nothing is live"
+section must be deleted and every decision it licensed re-read.**
+
+**2. `CLAUDE.md` said the deployment target is Ubuntu 24.04. It is 26.04** — has been since the
+box was rebuilt in June. `INFRASTRUCTURE.md`, `deploy/README.md` and `T015` all record 26.04
+correctly; the file every session reads first did not. **This one had teeth:** a session
+trusting it would add the Microsoft and Cloudsmith APT repos that 26.04 does not need, and
+could pin PostgreSQL 16 — and `deploy/README.md` warns that a `pg_dump` 18 backup will not
+restore into a 16 cluster, so that pin silently invalidates every existing backup. Fixed in
+both places, with the consequence stated. `PLAN.md:5` now carries an as-built note.
+
+**3. `PLAN.md`'s "Status: complete" was stale.** It said post-rewrite work *continues* under
+`Rewrite/practical-plan.md`. That plan closed (T035 shipped, T036 deferred), and so did
+`gui-review-plan.md`. It now says both are closed and that live work is tracked in
+`current_state.md` and `Rewrite/Tasks/`, not in a plan document.
+
+**4. T016's verification checkboxes were all unticked** including two that are now true.
+Reconciled honestly: `dotnet test`, `HANDOVER.md` and "old Wombat source is gone" ticked with
+dates; the eight production scenarios and the `journalctl` gate left **unticked and annotated**
+— the 2026-06-19 close-out ran a ten-page surface crawl plus an email send, not the eight
+role-played scenarios, and the scenario runbooks have since covered that ground on dev, not
+production.
+
+**False alarm: `Rewrite/book-fidelity-plan.md` is fine.** Its first line is already a banner —
+*"Superseded by `Rewrite/practical-plan.md` … Do not execute tasks from this document."* It is
+correctly labelled and deliberately kept because `EPA Book/critique.md` cites its reasoning.
+Nothing to do.
+
+**▶ NEXT.** Nothing outstanding to ship, and the doc set now has no dangling pointers — the
+only unresolved `.md` citations left are historical ones inside records, and two prose
+ellipses. The highest-value follow-up is not documentation: **verify the off-host backup leg on
+the live box** (`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`) and
+rehearse a restore. That needs SSH to production, so it was not done here. — **Sonnet**
+(read-only check, then configure if absent). Everything on the Wave 1 list below stands
 unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**

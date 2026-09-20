@@ -39,7 +39,7 @@ evaluators, and renderers.
 | Icons | Inline SVGs from Lucide via a shared `Icon.razor` component. **Bootstrap Icons font is not loaded** — `<i class="bi bi-*">` renders nothing |
 | Security | CSP with nonce-backed `script-src`; `X-Content-Type-Options: nosniff`; rate-limited login |
 | Dependency licensing | GPLv3-compatible additions only |
-| Platform | Windows development; Ubuntu 24.04 LTS deployment target |
+| Platform | Windows development; **Ubuntu 26.04 LTS** deployment target (the plan specified 24.04; the live box is 26.04) |
 
 ## Repository layout
 
@@ -77,6 +77,7 @@ Wombat/
 │   ├── CUSTOMIZATION.md           ← the Activity platform (jsonb schema + workflow + credit)
 │   ├── WORKFLOW.md                ← git branching, session handoff protocol
 │   ├── INFRASTRUCTURE.md          ← Linode deployment target
+│   ├── HANDOVER.md                ← running the live service (T016 deliverable)
 │   └── Tasks/T0xx-*.md            ← individual task files
 ├── Directory.Build.props
 ├── Directory.Packages.props
@@ -270,7 +271,10 @@ development. Production startup fails fast if it is missing.
 
 ## Deployment target
 
-- OS: Ubuntu 24.04 LTS on Linode
+- OS: **Ubuntu 26.04 LTS** on Linode. The plan specified 24.04; the box was built on 26.04,
+  where `aspnetcore-runtime-10.0`, `postgresql` (18.x) and `caddy` all come from the **distro
+  repos** — no Microsoft or Cloudsmith APT repo is needed. **Do not pin PostgreSQL 16:** a
+  `pg_dump` 18 backup will not restore into a 16 cluster.
 - Runtime: .NET 10
 - Reverse proxy: Caddy (TLS + port forwarding)
 - Database: PostgreSQL (local for Phase 1; managed later if justified)

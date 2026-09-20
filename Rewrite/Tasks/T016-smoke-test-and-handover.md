@@ -63,10 +63,19 @@ Run through every core flow on the deployed instance as a human, catch anything 
 ## Verification
 
 - [ ] All 8 scenarios above execute successfully on the production instance.
-- [ ] No errors in `journalctl -u wombat` during the run.
-- [ ] `dotnet test` (run against the repo as it stands) is fully green.
-- [ ] `HANDOVER.md` exists and would let a stranger take over the service.
-- [ ] Old Wombat source is gone from the main branch.
+      **Not done as written.** The 2026-06-19 close-out ran an authenticated surface crawl
+      of ten admin pages plus an end-to-end email send (see the implementation record), not
+      the eight role-played scenarios. The scenario runbooks under `Rewrite/scenario-*.md`
+      have since covered this ground on **dev**, not production.
+- [ ] No errors in `journalctl -u wombat` during the run. **Never checked as a gate.**
+- [x] `dotnet test` (run against the repo as it stands) is fully green — 426 green at the
+      2026-06-19 close-out; 875 green as of 2026-09-19 (Integration suite is Docker-gated
+      and not run).
+- [x] `HANDOVER.md` exists and would let a stranger take over the service — written
+      2026-09-20 as `Rewrite/HANDOVER.md`. It was outstanding for three months.
+- [x] Old Wombat source is gone from the main branch — the source left the worktree at
+      `c843421` (2026-04-11); the vendored copy under `Wombat_ref_old_DO_NOT_COMMIT/` went
+      at `32e60da` (2026-09-20). It remains in history at `55a92c6`, which is the point.
 
 ## Notes & gotchas
 

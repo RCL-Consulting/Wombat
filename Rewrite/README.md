@@ -19,6 +19,7 @@ This folder is the canonical plan for rewriting Wombat on top of the same archit
 | `DESIGN.md` | The canonical UI/design-system contract: tokens, layout grid, buttons, tables, forms, cards, dashboards, alerts, skeletons, icons, and the `app.css` section order. **Any task that writes Razor must read this first.** |
 | `WORKFLOW.md` | Git branching, session handoff, verification protocol, agent prompts. |
 | `INFRASTRUCTURE.md` | Linode server layout, deployment, secrets, backups. |
+| `HANDOVER.md` | Running the live service: what is deployed, config, deploys, backups, logs, known limitations. The T016 deliverable. |
 | `current_state.md` | Live state. Updated at the end of every session. |
 | `Tasks/T0xx-*.md` | Individual task files. One file per unit of work. |
 
