@@ -180,12 +180,24 @@ flip and belongs with [T133]/[T122]. The KNOWN LIMITATION comment is rewritten t
 - [x] Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **207**,
       Architecture **23**, Web **103** — **955 total**, up from 924
 
-### Not verified
+### Browser-verified 2026-09-20, against the dev database
 
-- **No browser check and no database query.** `dotnet ef` is available but no `psql`; the task's own
-  "Not verified" note asked for a query against `ActivityTypes` to confirm which of the eight seeded
-  types carry the pointer on dev. **The disjunction makes the fix work either way** — that was much of
-  the point of choosing it — but which arm is actually carrying it on dev is still unknown.
-- `StartCommitteeReview` builds its evidence snapshot with no rated filter, so before this change that
-  page showed a populated evidence list beside a report claiming zero. That the two now agree is
-  inferred from the code, not seen.
+Signed in as Administrator, opened `/committee/reviews/5` — trainee
+`c74afb9d-2d5e-4536-a3ff-4a3c5a589094`, on the CPSA v11.1 catalogue. **The Sampling concentration
+warnings panel renders**, reading:
+
+> 1 rated observation from 1 distinct assessor in the review window.
+> **PAED-001 — Providing paediatric emergency care to children** · 1 rating · 1 assessor · 1 source
+> Fewer than three distinct assessors across this EPA's evidence.
+
+That trainee's activities are `mini_cex_cpsa`, confirmed by opening one and seeing the six-rung
+CPSA entrustment field. **Under the old exact-key gate `mini_cex_cpsa` matched nothing**, so
+`TotalRatedActivities` was 0, `AnyWarning` was false, and `ReviewDetail.razor` rendered **no panel
+at all**. The committee was shown nothing where it should have been shown a concentration warning.
+
+### Still not verified
+
+- **The withheld-evidence path** (`EvidenceComplete: false`) was not exercised in the browser; it
+  needs a caller who may read only part of the window. Covered by two handler tests.
+- No review on dev exercises an unfamiliar rated tool, so the `SourceBucket` fallback is
+  test-covered only.

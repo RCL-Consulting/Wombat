@@ -172,12 +172,32 @@ ladder is already on the pinned `ActivityTypeVersion` row, so it is read there.
 - [x] Suites green, no `--no-build`: Domain **78**, Application **513**, Infrastructure **207**,
       Architecture **23**, Web **103** — **924 total**, up from 880
 
-### Not verified
+### Browser-verified 2026-09-20 — and the rule is INERT on every activity now on dev
 
-- **No browser check.** The chart change is a server-computed boolean feeding an existing CSS class
-  (`is-off-scale`) at two call sites — `MyProgress.razor` and `ReviewDetail.razor`, the committee
-  page. No new markup or styling. It has not been seen rendered.
-- **No database was queried.** Whether any activity on dev or production is currently pinned to a
-  version that would now resolve a ladder is unknown. Seeded types republish at next boot, which
-  strands in-flight activities on their old version by design — they resolve nothing and are left
-  alone rather than mis-marked.
+Signed in as `ndlovu@kgk.wombat.local`, a CPSA v11.1 trainee, and opened `/portfolio/progress`.
+The chart renders correctly: the six-rung CPSA axis (`1, 2, 3a, 3b, 4, 5`), two points labelled
+*Rung 4* and *Rung 3a*, sourced "Direct observation", with a matching accessibility table.
+**Neither point is marked off-ladder** — and that is correct, but not for the reason a reader
+would assume.
+
+Opening activity 14 shows it is pinned to schema **version 3**. The seeded types are now at **v4**,
+the version this task added `rated_level_field` to. `ResolveRatedScaleIdsAsync` reads the **pinned**
+version by design, so for a v3-pinned activity it finds no pointer, resolves no ladder, and leaves
+`OffLadder` false — "no disagreement established".
+
+**Consequence, and it belongs in this file rather than being discovered later: every activity
+currently on dev predates the pointer, so the off-ladder rule cannot fire for any of them.** The
+capability is live and correct — the unit tests exercise it directly — but it changes nothing a
+clinician sees until activities are filed against v4 or later. That is the pinning contract working
+as intended, not a defect: republishing must not retroactively re-interpret ratings already filed.
+It does mean **anyone verifying this by looking at the product today will see no difference**, and
+should file a fresh activity first.
+
+The shared classifier that [T134] extracted from this query was verified on the same page: the
+"Direct observation" source label is byte-identical to what charted before the map moved.
+
+### Still not verified
+
+- **A genuinely off-ladder point has never been rendered.** It needs an activity filed against a
+  v4+ schema whose ladder differs from the trainee's pinned curriculum scale. Unit-tested
+  (`ARatingFromAnotherLadderIsMarkedOffLadderEvenWhenItsOrdinalIsValidHere`), never seen.

@@ -34,11 +34,12 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Open questions
 
-- `.github/workflows/WombatWeb20240504122946.yml` — a 2024 Azure workflow from the *old* Wombat, never examined. Probably dead.
+- **T126's off-ladder rule cannot fire on any activity now on dev** — all are pinned to pre-T126
+  schema versions, and the resolver reads the pinned one by design. File a fresh activity to see it.
+
 - Who the RFI actually goes to. The programme says "the College / CPSA content owner"
   throughout and never names a person.
-- Task lanes were derived, not read (W-002). Four spot-checked 2026-09-20 (T099, T102, T110,
-  T113) — none misfiled. 22 unchecked.
+- Task lanes were derived, not read (W-002). Five spot-checked; none misfiled. 22 unchecked.
 
 ## Files to open first
 
@@ -51,10 +52,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent
 
 - 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
-  operator draft save. Carried through, plus a Form-tab control and publish warnings.
-  **Browser-verified**: a draft save now preserves both pointers, and the stored v4 row really
-  carries T126's rating pointer — which also closes T126's own open question.
+  operator draft save. **Browser-verified**: a draft save now preserves both, and the stored v4
+  row really carries T126's pointer.
 - 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
-  rated evidence. One shared classifier now answers it: declared rating (T126) OR known family.
+  rated evidence. One shared classifier answers it now. **Browser-verified on review 5.**
 - 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against
   (`rated_level_field`); no migration needed. Found and filed T133 and T134.

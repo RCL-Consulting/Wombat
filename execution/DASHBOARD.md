@@ -49,9 +49,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+8971dd7 chore(execution): bring STATE back under its 60-line cap
 4d8646e docs(execution): browser-verify T133 against the dev database
 88e5398 fix(admin): the visual builder erased every root schema pointer it did not know about (T133)
 50aa464 fix(committee): a v11.1 trainee's sampling report said there was no rated evidence (T134)
 a1097bd docs(epa): record the College's answers to all fourteen decisions (T129)
-8f23143 feat(activities): declare the rated field on the schema, so a rating knows its ladder (T126)
 ```

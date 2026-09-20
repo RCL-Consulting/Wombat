@@ -49,8 +49,7 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
    - **Is June semester 1 or semester 2?** D13 gave "boundary in June"; recorded Jan–Jun / Jul–Nov.
 2. **[T121] (MSF)** — all four blocking decisions answered; the highest-value released task.
    **[T130]** (the quota) is unblocked too.
-3. **Browser-check T126 and T134** — a v11.1 trainee's trajectory (off-ladder dots) and a
-   committee review's sampling report. Neither has been seen; T133's path now has.
+3. **[T135]** — the sampling denominator/numerator disagreement, found in T134's design pass.
 4. **[T128]** — still blocked on you: destination + `age` key holder.
 
 ### Traps
@@ -58,9 +57,10 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 - **`counts_for` is permanent per pinned version.** `Activity.SchemaVersion` is assigned once, there
   is no re-pin path, and a rebuild replays against the pinned version. "Ship `[]` now and switch
   later" was never available — which is why D8 had to be right first time. It is: MSF gets `[]`.
-- **T133 was browser-verified**; T126's chart and T134's report were **not**. Both still reason
-  from code alone. The app boots fine and the admin credentials are in `pwd_DO_NOT_COMMIT.txt`,
-  so checking the trajectory chart and a committee review is now cheap — do it.
+- **T126's off-ladder rule is INERT on every activity now on dev.** Browser-checked: the chart
+  renders the CPSA axis correctly and marks nothing, because every filed activity is pinned to a
+  **pre-T126 schema version** and the resolver reads the pinned one by design. Correct, and it
+  means **looking at the product today shows no difference** — file a fresh activity first.
   In-flight activities stay pinned; `OffLadder = false` means "not knowable", never "on the ladder".
 - **`lint` tells you to run `trim` when STATE/HANDOFF overflow, and `trim` reports "moved 0".** The
   advice is unactionable; both files were cut by hand. Worth fixing upstream next time you are there.
@@ -74,7 +74,7 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 - Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **207**,
   Architecture **23**, Web **111** — **963 total**, up from 875 at session start. Integration is
   Docker-gated and was not run.
-- T126, T132, T133 and T134 were each **verified to fail against the unfixed code** before being called
-  done — T134 three separate ways, including one that proves the denominator ordering is load-bearing.
+- T126, T132, T133 and T134 each **verified to fail against the unfixed code** before being called
+  done. **T133 and T134 also browser-verified** on dev; T126's chart renders but cannot yet fire.
 - `harness.py lint --strict` clean; harness 2.4.3 pushed upstream, suite 127. Not re-verified:
   `drift-check.sh`, `restore-rehearsal.sh` — unchanged since 2026-09-20a.
