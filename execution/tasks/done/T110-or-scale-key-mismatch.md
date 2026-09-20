@@ -149,3 +149,23 @@ progress** — the improvement applies to completions from here.
   `CreateEntrustmentScaleCommandHandler` never sets one, so a `NOT NULL UNIQUE` column would throw a
   raw index violation on the second admin-created scale. The create path has to be handled first.
 - **No rebuild was run**, so existing completions keep whatever verification state they had.
+
+---
+
+## Amended 2026-09-20 — D25 is closed, by deletion
+
+This file left D25's merge open on the grounds that nothing pinned the duplicate. The dev database
+was then rebuilt (W-006) and the question answered itself: **"Paed General Entrustment Scale" was
+operator data and no longer exists.** Two scales remain — `O-R Scale` and the CPSA ladder — which
+is the end state D25 asked for, reached by discarding the duplicate rather than by re-pointing
+references to it.
+
+The census taken before dropping is worth keeping, because three agents this session could not run
+it: the duplicate **was** real, and the `*_paed` types were `mini_cex_paed`, `dops_paed`,
+`procedure_log_paed`, `msf_paed` — note `procedure_log` and `msf`, not the `cbd_paed`/`acat_paed`
+the surrounding documents imply.
+
+Still open: the **stable slug** D25 calls the better long-term answer. Unaffected by the rebuild —
+`CreateEntrustmentScaleCommandHandler` still never sets one, so the create path has to be handled
+before a `NOT NULL UNIQUE` column can exist.
+

@@ -5,8 +5,14 @@ namespace Wombat.Application.Tests.Features.Activities;
 
 /// <summary>
 /// T134. One answer to "does this type produce an entrustment rating, and what kind of evidence is
-/// it?", replacing three that disagreed. The gate is a disjunction — declared (T126's
-/// <c>rated_level_field</c>) OR a known family — and both arms are load-bearing today.
+/// it?", replacing three that disagreed.
+/// <para>
+/// Two questions, and only one of them is the gate. <b>Rated</b> is what the type DECLARES — T126's
+/// <c>rated_level_field</c>. <b>Category</b> is inferred from the key by a family map, and feeds
+/// labels only. The gate was briefly a disjunction of the two, which meant a type could be counted
+/// as rated on the strength of its NAME; a key called <c>cbd_checklist</c> would have entered a
+/// committee's evidence denominator carrying no rating at all.
+/// </para>
 /// </summary>
 public sealed class RatedActivityTypesTests
 {
@@ -41,6 +47,11 @@ public sealed class RatedActivityTypesTests
         }
         """;
 
+    /// <summary>
+    /// The family map classifies; it no longer decides what is rated. A known key with no declared
+    /// pointer is categorised and is NOT rated — which is the whole change: rated-ness is something a
+    /// type states about itself, not something inferred from what it is called.
+    /// </summary>
     [Theory]
     [InlineData("mini_cex", WbaEvidenceSource.DirectObservation)]
     [InlineData("dops", WbaEvidenceSource.DirectObservation)]
@@ -49,14 +60,12 @@ public sealed class RatedActivityTypesTests
     [InlineData("acat", WbaEvidenceSource.Conversation)]
     [InlineData("cca", WbaEvidenceSource.CaseAnalysis)]
     [InlineData("rca", WbaEvidenceSource.CaseAnalysis)]
-    public void AKnownFamilyIsRatedByItsKeyAlone(string key, WbaEvidenceSource expected)
+    public void AKnownFamilyIsCategorisedButNotRatedOnItsKeyAlone(string key, WbaEvidenceSource expected)
     {
-        // No schema at all: this is the arm that keeps the operator-built *_paed types counted, since
-        // they are in no seeder and can never be given a pointer while T133 stands.
         var verdict = RatedActivityTypes.Classify(key, schemaJson: null);
 
-        verdict.IsRated.Should().BeTrue();
         verdict.Category.Should().Be(expected);
+        verdict.IsRated.Should().BeFalse("a key is a name, not a declaration");
     }
 
     [Theory]
@@ -64,12 +73,21 @@ public sealed class RatedActivityTypesTests
     [InlineData("dops_cpsa", WbaEvidenceSource.DirectObservation)]
     [InlineData("cbd_cpsa", WbaEvidenceSource.Conversation)]
     [InlineData("direct_observation_cpsa", WbaEvidenceSource.DirectObservation)]
-    [InlineData("mini_cex_paed", WbaEvidenceSource.DirectObservation)]
-    public void TheSuffixedFormOfAFamilyMatchesToo(string key, WbaEvidenceSource expected)
+    public void TheSuffixedFormOfAFamilyIsCategorisedToo(string key, WbaEvidenceSource expected)
     {
-        // The defect T134 fixed: these matched nothing under an exact-key test, so a v11.1 trainee's
-        // committee sampling report said there was no rated evidence at all.
         RatedActivityTypes.Classify(key, schemaJson: null).Category.Should().Be(expected);
+    }
+
+    /// <summary>
+    /// D4 made "Case note review" an alias of CCA and D12 made "Directly observed clinical examination"
+    /// the same instrument as Mini-CEX, so neither will ever be seeded and neither has a category.
+    /// </summary>
+    [Theory]
+    [InlineData("case_note_review")]
+    [InlineData("observed_clinical_exam")]
+    public void InstrumentsTheCollegeRetiredHaveNoCategory(string key)
+    {
+        RatedActivityTypes.Classify(key, schemaJson: null).Category.Should().BeNull();
     }
 
     /// <summary>
@@ -94,9 +112,10 @@ public sealed class RatedActivityTypesTests
     }
 
     /// <summary>
-    /// The declaration arm on its own: a tool an institution built under a name no family knows, which
-    /// declares a rating. It counts, and its own key becomes its source bucket so two of them count as
-    /// one source rather than as none.
+    /// The declaration is the gate, whatever the type is called. This is what closed the trajectory's
+    /// KNOWN LIMITATION: an institution's own rated tool charts because it says it is rated, not
+    /// because a hard-coded list has heard of its name. Its evidence reads as its own key until
+    /// [T122] gives it a tool key to classify by.
     /// </summary>
     [Fact]
     public void AnUnfamiliarKeyThatDeclaresARatingIsRated()
@@ -106,6 +125,19 @@ public sealed class RatedActivityTypesTests
         verdict.IsRated.Should().BeTrue();
         verdict.Category.Should().BeNull();
         verdict.SourceBucket.Should().Be("ward_round_review");
+    }
+
+    /// <summary>
+    /// And a KNOWN family that declares a rating is rated for that reason, not for its name.
+    /// </summary>
+    [Fact]
+    public void AKnownFamilyThatDeclaresARatingIsRatedAndCategorised()
+    {
+        var verdict = RatedActivityTypes.Classify("mini_cex_cpsa", DeclaresRating);
+
+        verdict.IsRated.Should().BeTrue();
+        verdict.Category.Should().Be(WbaEvidenceSource.DirectObservation);
+        verdict.SourceBucket.Should().Be("Direct observation");
     }
 
     [Fact]
@@ -128,17 +160,17 @@ public sealed class RatedActivityTypesTests
     }
 
     /// <summary>
-    /// A stored schema that no longer parses is a real defect, but it is not a committee report's to
-    /// raise. The family arm still answers, which is what makes this fix robust to the state of any
-    /// particular database.
+    /// A stored schema that no longer parses declares nothing, so it rates nothing — whatever the type
+    /// is called. The family arm used to rescue it; that was compatibility, not correctness. A type
+    /// whose schema will not parse is a defect to fix, not evidence to count.
     /// </summary>
     [Fact]
-    public void AnUnparseableSchemaUnderAKnownFamilyIsStillRated()
+    public void AnUnparseableSchemaIsNotRatedEvenUnderAKnownFamily()
     {
         var verdict = RatedActivityTypes.Classify("mini_cex_cpsa", "{ not json at all");
 
-        verdict.IsRated.Should().BeTrue();
-        verdict.Category.Should().Be(WbaEvidenceSource.DirectObservation);
+        verdict.IsRated.Should().BeFalse();
+        verdict.Category.Should().Be(WbaEvidenceSource.DirectObservation, "the key still classifies");
     }
 
     [Fact]
@@ -153,8 +185,8 @@ public sealed class RatedActivityTypesTests
     [Fact]
     public void APrefixWithoutTheUnderscoreIsNotAMatch()
     {
-        RatedActivityTypes.Classify("dopsomething", null).IsRated.Should().BeFalse();
-        RatedActivityTypes.Classify("cbdx", null).IsRated.Should().BeFalse();
+        RatedActivityTypes.Classify("dopsomething", null).Category.Should().BeNull();
+        RatedActivityTypes.Classify("cbdx", null).Category.Should().BeNull();
     }
 
     [Fact]

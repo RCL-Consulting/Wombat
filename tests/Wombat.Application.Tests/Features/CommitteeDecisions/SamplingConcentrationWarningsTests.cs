@@ -156,7 +156,7 @@ public sealed class SamplingConcentrationWarningsTests
     {
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
-        var reflectiveNote = await SeedActivityTypeAsync(dbContext, "reflective_note");
+        var reflectiveNote = await SeedUnratedActivityTypeAsync(dbContext, "reflective_note");
 
         AddActivity(dbContext, reflectiveNote, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
@@ -401,7 +401,7 @@ public sealed class SamplingConcentrationWarningsTests
     {
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
-        var custom = await SeedRatedActivityTypeAsync(dbContext, "ward_round_review");
+        var custom = await SeedActivityTypeAsync(dbContext, "ward_round_review");
 
         AddActivity(dbContext, custom, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
         AddActivity(dbContext, custom, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
@@ -422,8 +422,8 @@ public sealed class SamplingConcentrationWarningsTests
     {
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
-        var first = await SeedRatedActivityTypeAsync(dbContext, "ward_round_review");
-        var second = await SeedRatedActivityTypeAsync(dbContext, "handover_review");
+        var first = await SeedActivityTypeAsync(dbContext, "ward_round_review");
+        var second = await SeedActivityTypeAsync(dbContext, "handover_review");
 
         AddActivity(dbContext, first, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
         AddActivity(dbContext, second, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
@@ -486,7 +486,11 @@ public sealed class SamplingConcentrationWarningsTests
     /// its types carry no SchemaJson, and that is what makes the existing suite evidence that legacy
     /// behaviour is genuinely unchanged rather than re-made green.
     /// </summary>
-    private static async Task<ActivityType> SeedRatedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+    /// <summary>
+    /// A type that rates nothing — a reflection, a logbook entry. Six of the fourteen seeds are like
+    /// this, and they must stay out of a committee's evidence arithmetic entirely.
+    /// </summary>
+    private static async Task<ActivityType> SeedUnratedActivityTypeAsync(ApplicationDbContext dbContext, string key)
     {
         var activityType = new ActivityType
         {
@@ -496,27 +500,43 @@ public sealed class SamplingConcentrationWarningsTests
             IsActive = true,
             OwnerUserId = "admin-1",
             CreatedOn = DateTime.UtcNow,
-            SchemaJson = """
-                {
-                  "version": 1,
-                  "rated_level_field": "overall_level",
-                  "sections": [
-                    {
-                      "key": "assessment",
-                      "title": "Assessment",
-                      "fields": [
-                        { "key": "overall_level", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
-                      ]
-                    }
-                  ]
-                }
-                """
+            SchemaJson = UnratedSchemaJson
         };
         dbContext.ActivityTypes.Add(activityType);
         await dbContext.SaveChangesAsync();
         return activityType;
     }
 
+    private const string UnratedSchemaJson = """
+        {
+          "version": 1,
+          "sections": [
+            {
+              "key": "reflection",
+              "title": "Reflection",
+              "fields": [
+                { "key": "what_i_learned", "type": "longtext", "label": "What I learned" }
+              ]
+            }
+          ]
+        }
+        """;
+
+    private const string RatedSchemaJson = """
+        {
+          "version": 1,
+          "rated_level_field": "overall_level",
+          "sections": [
+            {
+              "key": "assessment",
+              "title": "Assessment",
+              "fields": [
+                { "key": "overall_level", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
+              ]
+            }
+          ]
+        }
+        """;
     private static async Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
     {
         var activityType = new ActivityType
@@ -526,7 +546,8 @@ public sealed class SamplingConcentrationWarningsTests
             Version = 1,
             IsActive = true,
             OwnerUserId = "admin-1",
-            CreatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow,
+            SchemaJson = RatedSchemaJson
         };
         dbContext.ActivityTypes.Add(activityType);
         await dbContext.SaveChangesAsync();

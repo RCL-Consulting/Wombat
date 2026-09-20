@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Infrastructure.Persistence;
 
@@ -25,8 +26,9 @@ namespace Wombat.Infrastructure.Tests.Activities;
 /// <para>
 /// Names only, never a raw numeric id. The resolver accepts an id, but an id is a fact about one
 /// database — a seed that shipped <c>"2"</c> would bind to whatever scale happened to be second
-/// wherever it was restored. The four operator-built <c>*_paed</c> types do exactly that; they are not
-/// seeds and are not covered here.
+/// wherever it was restored. Four operator-built <c>*_paed</c> types did exactly that until the dev
+/// database was rebuilt on 2026-09-20; they were never seeds, and nothing outside a seed folder is
+/// covered here.
 /// </para>
 /// </remarks>
 public sealed class SeedScaleKeyTests
@@ -123,6 +125,51 @@ public sealed class SeedScaleKeyTests
 
         SeededScaleNames().Should().Contain(rated.ScaleKey!,
             "'{0}' rates on '{1}', which names no seeded scale", seedKey, rated.ScaleKey);
+    }
+
+    /// <summary>
+    /// The classifier, run over the REAL seed corpus rather than a fixture. (T134)
+    /// </summary>
+    /// <remarks>
+    /// This is the guard that was missing when the gate was widened. The sampling handler's test
+    /// fixture seeded activity types with no schema at all — a shape nothing can publish since T126 —
+    /// so every test passed through the family-name arm and none of them proved that the actual
+    /// seeded tools are recognised as rated. Asserting against the files on disk is what makes the
+    /// declaration-only gate safe: if a seed stops declaring its pointer, this fails by name.
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void TheClassifierAgreesWithWhatTheSeedDeclares(string seedKey)
+    {
+        var schemaPath = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", seedKey, "schema.json");
+        var schemaJson = File.ReadAllText(schemaPath);
+        var declaresRating = FormSchemaParser.Parse(schemaJson).RatedLevelField is not null;
+
+        var verdict = RatedActivityTypes.Classify(seedKey, schemaJson);
+
+        verdict.IsRated.Should().Be(declaresRating,
+            "'{0}' is rated exactly when its schema says so, never because of what it is called", seedKey);
+        verdict.SourceBucket.Should().NotBeNullOrWhiteSpace();
+    }
+
+    /// <summary>
+    /// Eight rated, six not — the split stated as a number, so a new seed cannot quietly change it.
+    /// </summary>
+    [Fact]
+    public void ExactlyEightSeededToolsAreRated()
+    {
+        var rated = Directory
+            .EnumerateDirectories(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds"))
+            .Select(directory => Path.GetFileName(directory)!)
+            .Where(key => RatedActivityTypes.Classify(
+                key,
+                File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, "schema.json"))).IsRated)
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToArray();
+
+        rated.Should().Equal(
+            "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa",
+            "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa");
     }
 
     /// <summary>

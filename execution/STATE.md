@@ -19,7 +19,6 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 - **T130 (the annual quota) and T131 (governance) were filed 2026-09-20.** They are T098
   phases 3 and 4 — planned since 2026-09-19, never filed, therefore invisible to the queue.
   T130 is the most visible gap in the product: the progress page reads "1 / 24".
-- **T102**: the self-naming path closed with T070; a `user`-typed field still accepts any user id.
 
 ## Blockers
 
@@ -34,6 +33,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Open questions
 
+- **The dev database was emptied and rebuilt 2026-09-20** (W-006). 14 seeded types all at v1, no
+  activities, no `*_paed` types, no duplicate ladder, 16/16 curriculum items pinned. Anything you
+  remember about dev data is stale. **Production was deliberately not touched.**
 - **T126's off-ladder rule cannot fire on any activity now on dev** — all are pinned to pre-T126
   schema versions, and the resolver reads the pinned one by design. File a fresh activity to see it.
 
@@ -53,8 +55,6 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 - 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
   operator draft save. **Browser-verified.**
-- 2026-09-20: **T110 shipped** — four generic seeds declared `scale_key: "or_scale"` and bound to
-  nothing; 23 fields rebound to the scale's exact name, plus the corpus guard whose absence was the
-  root cause. **D25's ladder merge is still open** but nothing pins the duplicate, so it is a tidy-up.
-- 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
-  rated evidence. One shared classifier answers it now. **Browser-verified on review 5.**
+- 2026-09-20: **dev DB emptied and three compatibility hedges removed** (W-006). T134's gate is
+  now the declared pointer alone; the trajectory's KNOWN LIMITATION is closed; T126 is no longer
+  inert; D25 closed by deletion. Suites 1009.

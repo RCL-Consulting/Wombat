@@ -233,3 +233,21 @@ without it this rule cannot be demonstrated again.
 Re-pinning the curriculum item **failed silently three times** before succeeding — no message, no
 validation error, the row simply unchanged. The refusal is correct (T109: a minimum of 6 is not a
 rung on a five-rung ladder) but nothing says so. Filed as [T136].
+
+---
+
+## Amended 2026-09-20 — the inertness is gone, and it was never a contract
+
+This file recorded that the off-ladder rule *"cannot fire for any activity currently on dev"* and
+framed it as the pinning contract working as intended. The framing was wrong. It was an artefact of
+a stale corpus, and `CLAUDE.md` is explicit that the data is disposable.
+
+The dev database was dropped and rebuilt (W-006). Every activity type is now at **v1 carrying its
+pointers**, and there are no activities at all — so the next one filed pins to a pointer-carrying
+schema and the rule fires without anyone engineering it. The temporary curriculum re-pin used above
+to demonstrate it is no longer necessary.
+
+The contract itself is unchanged and still right: a republish must not retroactively re-interpret a
+rating already filed. What was wrong was treating a corpus that predated the feature as something to
+accommodate rather than to replace.
+

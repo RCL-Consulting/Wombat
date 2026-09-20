@@ -8,28 +8,30 @@ Five application tasks shipped, fourteen product decisions closed, one upstream 
 
 ### Done
 
-- **[T133] — the visual builder erased every root schema pointer on every operator draft
-  save** — a live T119 regression. Carry-through **plus** dropping an orphaned pointer (else the
-  type is unsaveable) **plus** a Form-tab control. `BuilderSchemaModel` had no test at all.
-  **Browser-verified.**
-- **[T110] — four generic seeds bound their rating scale to nothing.** They declared
-  `scale_key: "or_scale"`; the seeded scale is named `"O-R Scale"`, and a scale_key binds by exact
-  name. 23 fields rebound, plus the corpus guard whose absence was the root cause. **D25's ladder
-  merge stays open** but nothing pins the duplicate, so it is a tidy-up and no chart changed.
-- **[T134] — a v11.1 trainee's committee sampling report said there was NO rated evidence.**
-  The gate matched EXACT keys over four legacy tools. One shared `RatedActivityTypes` answers it
-  now: **declared rating (T126) OR known family** — the disjunction keeps the `*_paed` types
-  counted and the test fixture untouched. Two duplicate maps retired. **Browser-verified.**
-- **The College answered all fourteen decisions — [T129] closed.** Transcribed into
-  `EPA-PROGRAMME.md` § 3A-ii. **[T120], [T121], [T122] and [T130] are all released.** Six needed a
-  second pass, and putting them back was worth it — D6's "all rated" would have had trainees
-  rating themselves, D13 was blank, D8 "not sure". Two residual questions below.
+- **[T133]** — the visual builder erased every root schema pointer on every operator draft save.
+  Carry-through, an orphaned-pointer guard, and a Form-tab control. Browser-verified.
+- **[T110]** — four generic seeds declared `scale_key: "or_scale"` and bound to nothing. 23 fields
+  rebound, plus the corpus guard whose absence was the root cause.
+- **[T134]** — every v11.1 trainee's committee report read zero rated evidence, because the gate
+  matched exact keys over four legacy tools. One shared classifier answers it now. Browser-verified.
+- **The College answered all fourteen decisions — [T129] closed**, transcribed into
+  `EPA-PROGRAMME.md` § 3A-ii. **[T120]/[T121]/[T122]/[T130] released.** Six needed a second pass;
+  D6's "all rated" would have had trainees rating themselves. Two residual questions below.
 - **Renumbered [T121]'s local `D1`–`D4`** to the College's **D9, D8, D10, D11**; they collided.
-- **[T126] — an activity can now say which ladder it was rated against** (`rated_level_field`),
-  and D30's off-ladder rule works. **No migration and no FK** — Activity's snapshot columns carry
-  none by design, and nothing filters on a rating.
+- **[T126]** — an activity can say which ladder it was rated against (`rated_level_field`); D30's
+  off-ladder rule works. No migration and no FK.
 - **[T132]** — MSF expiry reminders mailed the token *hash*; now re-issued. Filed [T130]/[T131];
   re-rated the queue EPA-first; [T128] to `blocked/`; retitled [T102].
+
+- **Emptied the dev database and removed three compatibility hedges (W-006).** The operator
+  restated that nothing is live. An audit found three places today's work preserved existing rows:
+  T134's disjunctive gate, T126's off-ladder rule being inert, and D25's unmerged ladder. Dropping
+  and rebuilding dev removed what all three were protecting, in one act.
+  **18 types → 14, 52 versions → 14 (all v1 with pointers), 15 activities → 0, 3 scales → 2,
+  the four `*_paed` types gone, 16/16 curriculum items pinned.** Then: the gate became the declared
+  pointer alone, the trajectory's **KNOWN LIMITATION closed**, and the sampling fixture — which
+  seeded types with a null `SchemaJson`, a shape unpublishable since T126 — now models a real type.
+  Suites **1009**. **Production deliberately untouched.**
 
 ### Filed, not fixed
 
@@ -55,16 +57,14 @@ Five application tasks shipped, fourteen product decisions closed, one upstream 
 
 ### Traps
 
-- **`counts_for` is permanent per pinned version.** `Activity.SchemaVersion` is assigned once, there
-  is no re-pin path, and a rebuild replays against the pinned version. "Ship `[]` now and switch
-  later" was never available — which is why D8 had to be right first time. It is: MSF gets `[]`.
-- **Activity 15 on dev is the only v4-pinned activity, and it is there on purpose.** Without it,
-  T126's off-ladder rule cannot be demonstrated — every other activity predates the pointer, so
-  nothing resolves and nothing marks. Do not tidy it away.
+- **`counts_for` is permanent per pinned version** — no re-pin path, and a rebuild replays against
+  the pinned one. That is why D8 had to be right first time. MSF gets `[]`.
+- **The dev database is empty of activities and users beyond the three seeded ones.** Anything you
+  remember about dev data is stale, including activity 15 and the scenario logins. Re-run the
+  runbooks if you need a populated corpus; the seeded admin/trainee/committee accounts work.
   In-flight activities stay pinned; `OffLadder = false` means "not knowable", never "on the ladder".
-- **`lint` says run `trim` on overflow; `trim` reports "moved 0".** Unactionable — cut by hand.
-- **The family arm in `RatedActivityTypes` is INTERIM**, retiring with [T122]'s `WbaToolKey`.
-  Tests pin it, so removing it is a decision rather than a discovery.
+- **`RatedActivityTypes`' family map now only LABELS** — it no longer decides what is rated.
+  It retires with [T122]'s `WbaToolKey`.
 - Hooks hard-code `C:\dev\rcl_execution\bin\harness.py` (`main`). Never pass `--no-build`.
 
 ### Verification status

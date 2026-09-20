@@ -57,19 +57,23 @@ public readonly record struct RatedTypeVerdict(bool IsRated, WbaEvidenceSource? 
 /// disagreement was invisible.
 /// </para>
 /// <para>
-/// <b>The gate is a disjunction, and deliberately so.</b> A type is rated if it DECLARES a rating —
-/// T126's <c>rated_level_field</c>, the authoritative answer — <b>or</b> if its key matches a known
-/// tool family. The declaration arm alone would have been cleaner and is wrong today: the four
-/// operator-built <c>*_paed</c> types are in no seeder, <c>ActivityTypeSeedRefresher</c> skips
-/// anything it does not own, and [T133] blocks the only manual route — so they can never carry a
-/// pointer, and a declaration-only gate would leave a second population reading zero in a change made
-/// to stop a population reading zero.
+/// <b>The gate is the declaration, and only the declaration.</b> A type is rated when it declares
+/// <c>rated_level_field</c> (T126) — the authoritative answer, and the one a type states about itself.
 /// </para>
 /// <para>
-/// <b>The family arm is interim.</b> It retires when [T133] makes the pointer authorable through the
-/// builder and [T122] puts <c>WbaToolKey</c> on <c>ActivityType</c> — which the trajectory query's own
-/// KNOWN LIMITATION already names as the real fix. Until then it is what keeps existing evidence
-/// counted, and the tests pin its behaviour so removing it is a decision rather than a discovery.
+/// This was briefly a disjunction, rated when the pointer was declared <b>or</b> the key matched a
+/// known family, because four operator-built <c>*_paed</c> types existed only as scenario rows, could
+/// never be given a pointer, and would otherwise have stopped counting. The dev database was emptied
+/// and rebuilt on 2026-09-20 and those rows are gone: every activity type now comes from a seed
+/// folder and every rated one declares its pointer. The second arm was preserving data that no longer
+/// exists, so it is gone too — CLAUDE.md is explicit that backward compatibility is not a design
+/// constraint here.
+/// </para>
+/// <para>
+/// The family map survives for <b>labelling only</b>. It answers "what kind of evidence is this",
+/// which feeds <c>DistinctSourceCount</c> on the committee sampling report and the trajectory's source
+/// label. It no longer decides what is rated, and it retires entirely with [T122]'s
+/// <c>WbaToolKey</c>.
 /// </para>
 /// </remarks>
 public static class RatedActivityTypes
@@ -81,9 +85,19 @@ public static class RatedActivityTypes
     /// <remarks>
     /// Moved here from <c>GetEpaTrajectoryForTraineeQuery</c> rather than copied — there was already a
     /// second copy in the sampling handler, and a third would have been how the next defect got made.
-    /// Membership is unchanged, including <c>chart_stimulated_recall</c> filed under Conversation: it
-    /// is arguably case analysis, but re-filing it is [T122]'s DECISION 2 and belongs to the College,
-    /// not to a refactor.
+    /// It classifies; it does not gate.
+    /// <para>
+    /// Two entries were removed on 2026-09-20 because the College's reply retired the instruments
+    /// themselves, not merely their names: <c>case_note_review</c> is an alias of CCA (D4) and
+    /// <c>observed_clinical_exam</c> is the same instrument as Mini-CEX (D12). Keeping either would
+    /// have been a category for a tool that will never be seeded.
+    /// </para>
+    /// <para>
+    /// <c>cca</c>, <c>rca</c> and <c>chart_stimulated_recall</c> stay: they are real instruments
+    /// [T120] is queued to author, and this map now only decides what their evidence is CALLED, not
+    /// whether it counts. <c>chart_stimulated_recall</c> is filed under Conversation and is arguably
+    /// case analysis; re-filing it is [T122]'s DECISION 2 and belongs to the College.
+    /// </para>
     /// </remarks>
     private static readonly IReadOnlyDictionary<string, WbaEvidenceSource> SourceByActivityFamily =
         new Dictionary<string, WbaEvidenceSource>(StringComparer.Ordinal)
@@ -91,13 +105,11 @@ public static class RatedActivityTypes
             ["mini_cex"] = WbaEvidenceSource.DirectObservation,
             ["dops"] = WbaEvidenceSource.DirectObservation,
             ["direct_observation"] = WbaEvidenceSource.DirectObservation,
-            ["observed_clinical_exam"] = WbaEvidenceSource.DirectObservation,
             ["cbd"] = WbaEvidenceSource.Conversation,
             ["acat"] = WbaEvidenceSource.Conversation,
             ["chart_stimulated_recall"] = WbaEvidenceSource.Conversation,
             ["cca"] = WbaEvidenceSource.CaseAnalysis,
-            ["rca"] = WbaEvidenceSource.CaseAnalysis,
-            ["case_note_review"] = WbaEvidenceSource.CaseAnalysis
+            ["rca"] = WbaEvidenceSource.CaseAnalysis
         };
 
     /// <summary>
@@ -131,7 +143,7 @@ public static class RatedActivityTypes
         var declaresRating = DeclaresRating(schemaJson);
 
         return new RatedTypeVerdict(
-            IsRated: declaresRating || category is not null,
+            IsRated: declaresRating,
             Category: category,
             SourceBucket: category?.Label() ?? key);
     }

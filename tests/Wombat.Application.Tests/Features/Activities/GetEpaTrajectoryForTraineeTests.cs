@@ -57,7 +57,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
     {
         await using var dbContext = CreateDbContext();
         await SeedCoreAsync(dbContext);
-        var reflectiveNote = await SeedActivityTypeAsync(dbContext, "reflective_note");
+        var reflectiveNote = await SeedUnratedActivityTypeAsync(dbContext, "reflective_note");
 
         AddRatedActivity(dbContext, reflectiveNote, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 10, 9, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
@@ -692,7 +692,19 @@ public sealed class GetEpaTrajectoryForTraineeTests
         await dbContext.SaveChangesAsync();
     }
 
-    private static async Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+    /// <summary>
+    /// A rated type, as the product produces one since T126: its schema declares which field holds
+    /// the entrustment rating. Types with no schema at all used to be seeded here, which is a shape
+    /// nothing can publish — and it is what let the trajectory gate stay on a hard-coded key list.
+    /// </summary>
+    private static Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+        => SeedTypeAsync(dbContext, key, RatedSchemaJson);
+
+    /// <summary>A type that asserts no entrustment level, and must not chart.</summary>
+    private static Task<ActivityType> SeedUnratedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+        => SeedTypeAsync(dbContext, key, UnratedSchemaJson);
+
+    private static async Task<ActivityType> SeedTypeAsync(ApplicationDbContext dbContext, string key, string schemaJson)
     {
         var activityType = new ActivityType
         {
@@ -701,12 +713,44 @@ public sealed class GetEpaTrajectoryForTraineeTests
             Version = 1,
             IsActive = true,
             OwnerUserId = "admin-1",
-            CreatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow,
+            SchemaJson = schemaJson
         };
         dbContext.ActivityTypes.Add(activityType);
         await dbContext.SaveChangesAsync();
         return activityType;
     }
+
+    private const string RatedSchemaJson = """
+        {
+          "version": 1,
+          "rated_level_field": "overall",
+          "sections": [
+            {
+              "key": "assessment",
+              "title": "Assessment",
+              "fields": [
+                { "key": "overall", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
+              ]
+            }
+          ]
+        }
+        """;
+
+    private const string UnratedSchemaJson = """
+        {
+          "version": 1,
+          "sections": [
+            {
+              "key": "reflection",
+              "title": "Reflection",
+              "fields": [
+                { "key": "what_i_learned", "type": "longtext", "label": "What I learned" }
+              ]
+            }
+          ]
+        }
+        """;
 
     private static void AddRatedActivity(
         ApplicationDbContext dbContext,

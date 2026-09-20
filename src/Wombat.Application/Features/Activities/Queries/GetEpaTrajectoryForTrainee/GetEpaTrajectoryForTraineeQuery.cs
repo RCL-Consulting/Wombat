@@ -106,11 +106,11 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     // charted here and counted as no evidence at all there. Both maps are gone; the surviving one
     // moved into the shared classifier unchanged.
     //
-    // KNOWN LIMITATION, narrowed. The shared classifier can now recognise an institution's own rated
-    // tool by its DECLARED rating (T126's rated_level_field), which the old list could not. This
-    // query does not yet take that arm — see the gate in Handle — because widening what charts is a
-    // change a clinician sees and wants a browser check. The real fix remains a flag on ActivityType:
-    // T122's WbaToolKey, which retires the family arm outright.
+    // The KNOWN LIMITATION this carried for months — "an institution that builds its own rated tool
+    // under an unfamiliar key will not chart" — is CLOSED. The gate is now the type's own declared
+    // rated field (T126), so any rated tool charts whatever it is called. What is left is cosmetic:
+    // an unfamiliar tool's evidence SOURCE reads as its raw key rather than a category, until
+    // T122's WbaToolKey gives it one. That retires this map entirely.
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -159,16 +159,17 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         var rawPoints = new List<(int EpaId, TrajectoryPointDto Point)>();
         foreach (var activity in activities)
         {
-            // Gated on the FAMILY arm alone, not on verdict.IsRated, so this stays byte-identical to
-            // what charted before T134. Flipping it to verdict.IsRated is one line and belongs with
-            // [T133] (which makes the pointer authorable) and [T122].
+            // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
+            // That retires the hard-coded family list as a gate: an institution's own rated tool
+            // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
+            // Its source reads as its own key until [T122] gives it a tool key to classify by.
             var verdict = RatedActivityTypes.Classify(activity.ActivityType.Key, activity.ActivityType.SchemaJson);
-            if (verdict.Category is null)
+            if (!verdict.IsRated)
             {
                 continue;
             }
 
-            var source = verdict.Category.Value.Label();
+            var source = verdict.SourceBucket;
 
             if (!TryParseObservation(activity.DataJson, out var epaId, out var rating, out var assessorUserId))
             {

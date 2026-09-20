@@ -207,3 +207,39 @@ at all**. The committee was shown nothing where it should have been shown a conc
   verified fail when the rated filter is moved behind the readability filter.
 - No review on dev exercises an unfamiliar rated tool, so the `SourceBucket` fallback is
   test-covered only.
+
+---
+
+## Amended 2026-09-20 — the disjunction is gone
+
+**The gate is now `declaresRating` alone.** Everything above arguing for the second arm was
+compatibility reasoning, and W-006 removed what it was protecting:
+
+- *"The four `*_paed` types can never carry a pointer."* Two things killed this. It was **already
+  false when written** — [T133] shipped twenty minutes after T134 and added the Form-tab control
+  that sets exactly that pointer. And the types no longer exist: the dev database was rebuilt and
+  they were operator rows in no seeder.
+- *"It would have forced rewriting the test fixture ... the fixture is untouched."* **That reasoning
+  was backwards.** `SeedActivityTypeAsync` created types with `SchemaJson` null — a shape nothing
+  has been able to publish since T126. Every sampling test was passing through the family-name arm,
+  so none of them proved the real CPSA tools are recognised as rated. An untouched fossil is not
+  evidence; it is a restatement of the world the product had already left. The fixture now carries a
+  real schema, with a separate unrated helper for the exclusion case.
+
+A third reason surfaced that nobody had argued: the prefix arm made rated-ness a property of a
+type's **name**, so a type keyed `cbd_checklist` would have entered a committee's evidence
+denominator carrying no rating at all. A declared pointer cannot make that mistake — it names a
+field, and the parser checks that field exists and is scale-typed.
+
+The family map survives for **labelling only**, and lost two entries the College retired today:
+`case_note_review` (D4: an alias of CCA) and `observed_clinical_exam` (D12: the same instrument as
+Mini-CEX). It retires entirely with [T122]'s `WbaToolKey`.
+
+The trajectory query now gates on the same declaration, which **closes its KNOWN LIMITATION**: an
+institution's own rated tool charts because it says it is rated, not because a hard-coded list has
+heard of its name. What is left there is cosmetic — its evidence source reads as its raw key.
+
+New guard, and the one that was missing: `SeedScaleKeyTests.TheClassifierAgreesWithWhatTheSeedDeclares`
+runs `Classify` over the **real seed corpus** rather than a fixture, plus
+`ExactlyEightSeededToolsAreRated` naming all eight. Suites **994 → 1009**.
+
