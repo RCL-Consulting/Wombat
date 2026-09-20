@@ -1,15 +1,17 @@
 ---
 id: T129
 title: Send the College the v11.1 decision list
-status: queued
+status: done
 priority: P1
 owner: operator
 depends_on: []
 created: 2026-09-20
+completed: 2026-09-20
 ---
 
 # T129 — Fourteen product decisions are being taken by default, because nobody has asked the College
 
+**Status:** done 2026-09-20 — all fourteen answered and transcribed.
 **Severity:** High — it is the critical path for Waves 3 and 4 of the EPA programme
 ([`knowledge/EPA-PROGRAMME.md`](../../knowledge/EPA-PROGRAMME.md) § 4). Nothing about it is
 technically hard; it has simply never been sent.
@@ -55,12 +57,32 @@ Remaining work is operator work, not engineering:
 
 ## Verification
 
-- [ ] Addressee and reply-by date filled in — checked by reading the file
-- [ ] Message sent — checked by recording the date and recipient in this task
-- [ ] Each reply transcribed into `EPA-PROGRAMME.md` § 3A with its date — checked by grep for
-      the D-number showing a CLOSED line
-- [ ] Tasks released by each answer re-rated — checked by `harness.py status` and a read of
-      the § 2 inventory's Verdict column
+Sent, answered in two passes, and transcribed. Completed 2026-09-20.
+
+- [x] Message written and sent — `knowledge/college-rfi-v11-1.md`, answers written inline by the
+      College. Eight came back first; the remaining six after D6, D7, D8, D12, D13 and D15 were put
+      back with the reason each was not yet an answer
+- [x] **All fourteen transcribed** into `EPA-PROGRAMME.md` § 3A-ii, each with the option chosen and
+      its consequence — checked by `grep -c "CLOSED 2026-09-20"` returning 14
+- [x] Tasks released re-rated — [T130] unblocked (`depends_on` emptied), [T121]'s four blocking
+      decisions all answered, [T120]'s stated critical path discharged
+- [x] [T121]'s local `D1`–`D4` renumbered to the College's **D9, D8, D10, D11**. They collided head-on
+      with the product register — the exact trap `DECISIONS.md` splits its prefixes to avoid
+
+### Two things the reply did NOT settle
+
+Both are one line from the College, and **neither should be guessed**:
+
+1. **The scope of the "clinical observed interaction" merge.** D12 settled that EPA 7 does not
+   exclude Direct observation, and that a Mini-CEX and a clinical examination are one instrument —
+   which changes no EPA's permitted set, because EPA 7 already names both. But the reply also
+   proposed absorbing *"handover, communication etc."*, and handover is page 8's definition of
+   **Direct observation**, not Mini-CEX. Merging those two changes **eight** EPAs, and makes
+   **EPA 10 — "Leading and operating within a clinical team", published allow-list exactly "MSF,
+   Direct observation (2)" — creditable by a Mini-CEX.** That is what [T122] exists to prevent.
+2. **Whether June falls in semester 1 or semester 2.** D13 gave "boundary in June". Recorded as
+   Jan–Jun / Jul–Nov. A June encounter is the only thing that moves if that is wrong, and [T130]
+   buckets on it.
 
 ## Related
 

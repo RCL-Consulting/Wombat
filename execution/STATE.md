@@ -13,9 +13,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 - Nothing in `in_progress/`. 28 queued, 1 blocked. **All eight P1s are EPA work or gate it:**
   T099, T102, T110, T120, T121, T122, T129, T130. Re-rated 2026-09-20 on the operator's call
   that the EPA work finishes first.
-- **T129 is the critical path and it is yours, not an agent's.** Nine EPA tasks are marked
-  NEEDS A DECISION and wait on fourteen questions the College has never been asked. The message
-  is written — `knowledge/college-rfi-v11-1.md`. Fill in the addressee and send it.
+- **The College has answered all fourteen (T129 done).** Recorded in `EPA-PROGRAMME.md` § 3A-ii.
+  **T120, T121, T122 and T130 are all released.** Two things the reply did not settle, both one
+  line: the scope of the "clinical observed interaction" merge, and whether June is semester 1 or 2.
 - **T130 (the annual quota) and T131 (governance) were filed 2026-09-20.** They are T098
   phases 3 and 4 — planned since 2026-09-19, never filed, therefore invisible to the queue.
   T130 is the most visible gap in the product: the progress page reads "1 / 24".
@@ -28,8 +28,8 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- Send T129. Everything in Waves 3 and 4 is downstream of the reply.
-- Then T120 or T121 — both are College-gated; T121 (MSF) is the highest-value missing tool.
+- **T121 (MSF)** is the highest-value released task; **T130** (the quota) is now unblocked.
+- Ask the two residual College questions before T120 merges any instrument.
 - Decide T128's destination, then `apply` it and rehearse a restore **from the retrieved copy**.
 
 ## Open questions

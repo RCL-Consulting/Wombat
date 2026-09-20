@@ -126,6 +126,130 @@ of the one definition.
 **D5 — What does RCA stand for? — CLOSED 2026-09-19. "Random Case Analysis"** — *"review of cases selected
 at random from the trainee's records to identify knowledge gaps."* Recommendation confirmed verbatim.
 
+### 3A-ii. Closed by the College's reply, 2026-09-20
+
+> The reply is recorded verbatim in `knowledge/college-rfi-v11-1.md`, answers written inline,
+> in two passes: eight came back first, and the remaining six after D6, D12, D13, D8, D7 and D15
+> were put back. **All fourteen are now answered.**
+>
+> Two things were NOT settled by the reply and must not be assumed from it: the **scope of the
+> "clinical observed interaction" merge** (see D12 — merging Mini-CEX with Direct observation makes
+> EPA 10, a leadership EPA, creditable by a Mini-CEX), and **whether June falls in the first
+> semester or the second** (see D13). Both are one line from the College.
+
+**D1 — Is v11.1 final? — CLOSED 2026-09-20. Yes, treat it as final and build from it.** The College's
+words: *"Treat 11.1 as final and build from that"* — option (a) of three. The "DRAFT — FOR DISCUSSION"
+cover is not current. This was the gate on asking for anything else, and it is open. **Consequence:
+[T120]'s critical path is no longer D1; commissioning form designs against v11.1 is now a reasonable
+ask.** If a v11.2 lands, the catalogue versions rather than mutates (T091).
+
+**D4 — Is "Case note review" distinct from CCA? — CLOSED 2026-09-20. No, it is an alias.** Option (b)
+confirmed. EPA 6's *"Case note review"* and EPAs 1–4's *"CCA"* are the same instrument: page 8's
+Clinical Case Analysis, *"review of clinical documentation and discussion of the reasoning and
+management plan recorded"*. **Consequence: `case_note_review_cpsa` is not a seed.** `cca_cpsa` is named
+on EPAs 1, 2, 3, 4 **and 6**, which drops the instrument count from fourteen to thirteen and gives
+[T122]'s allow-list one fewer row to enforce. The alias must be recorded where a reader of Annexure A
+will look for it, or the mapping stops matching the published table line by line.
+
+**D9 — MSF per period or per EPA? — CLOSED 2026-09-20. Per period, covering many EPAs.** Proposed
+default confirmed. Per EPA would have been 15 × 8 = **120 returned questionnaires per registrar per
+year**; per period is about 16. **Consequence: `MsfCampaignEpa` is the join that expresses it, and
+"MSF completed for EPA 7" means "a campaign covering EPA 7 was released this period", not "a campaign
+about EPA 7".** Say that wherever the phrase is printed.
+
+**D10 — Who states the level an MSF asserts? — CLOSED 2026-09-20. The releasing reviewer.** Proposed
+default confirmed: one ordinal recorded by a named clinician alongside the summary they already write,
+never a mean of respondent scores — *"a mean of 3.4 is not a rung on a ladder reading 1, 2, 3a, 3b, 4,
+5"*. Option (a), asking respondents directly, was the only one needing a questionnaire redesign, and it
+was not chosen. **Consequence: the field is optional and authored at release, so `MsfQuestion.ScaleId`
+stays nullable and no aggregation changes.**
+
+**D11 — Must more than one respondent group respond? — CLOSED 2026-09-20. Yes, at least two
+categories must survive suppression.** Proposed default confirmed. A campaign answered entirely by
+eight peer doctors currently passes the release threshold and would credit, showing one category and
+the rest suppressed — which is not multi-source feedback. **Consequence: a predicate on the release
+gate, which changes when campaigns can be released.**
+
+**D14 — A registrar starting mid-year? — CLOSED 2026-09-20. Exempt the partial period.** Proposed
+default confirmed: they start counting at the next boundary, stated plainly on the progress page.
+Pro-rata was rejected because it invents a fraction the College never published, and carry-forward
+because it makes the second period's target unreadable. **Consequence: a rule in [T130]'s period
+resolver, not a target calculation.**
+
+**D16 — Are the 78 descriptors individually assessable? — CLOSED 2026-09-20. No, narrative scope.**
+Option (a) confirmed, which is the status quo: `PaediatricCatalogueSeeder` joins them into
+`Epa.RequiredKnowledgeSkills` as narrative. **Consequence: zero work, and the largest unplanned item in
+the programme is now formally off the table.** Entrustment is judged on the EPA as a whole.
+
+**D37 — Is MSF on eleven EPAs or fifteen? — CLOSED 2026-09-20. Fifteen.** Annexure A's side confirmed
+against Annexure B's prose, which said eleven. **Consequence: [T121] may state 15/15 as fact rather
+than as one of two readings, and D9's arithmetic stands at 120 questionnaires per registrar per year
+under the rejected per-EPA design.** Annexure B's sentence is wrong and should be treated as such
+wherever it is quoted.
+
+
+**D6 — Which instruments produce an entrustment level? — CLOSED 2026-09-20. Nine rated, three
+unrated.** The first reply read *"default all rated"*; put back with the observation that this was not
+the proposed default, the College corrected it to the nine/three split as proposed.
+**Rated** (a named assessor states a level): CBD, Mini-CEX, DOPS, Direct observation, CCA, RCA,
+Chart-stimulated recall, Directly observed clinical examination — and Case note review, which D4 makes
+an alias of CCA rather than a tenth. **Unrated evidence**: Reflective exercise, Clinical audit,
+Portfolio and logbook review. **Consequence: nothing changes.** [T120]'s Group split stands, [T126]'s
+`rated_level_field` policy holds, and the trajectory query's rule that only assessor-rated tools belong
+on an entrustment chart is not contradicted — which "all rated" would have done, since a reflective
+exercise is trainee-authored and rating it would have been a trainee stating their own entrustment
+level ([T102]'s defect class, by design rather than oversight).
+
+**D7 — Does an unrated instrument count toward the annual frequency? — CLOSED 2026-09-20. No.**
+Option (b), **not** the proposed default (a, volume only). An unrated instrument is documentation, not
+assessment, and consumes none of an EPA's published encounters. **Consequence: the three unrated
+instruments carry `"counts_for": []`.** That is also what keeps them clear of the hazard this question
+carried: a directive with neither `minimum_level_field` nor `minimum_level_fixed` returns `NotGated()`,
+which is `MinimumMet: true` — the trainee recorded as having met the supervision minimum on every EPA
+it touched. `counts_for: []` is not that; an empty target list is not an ungated directive.
+
+**D8 — Does MSF consume the 55 encounters? — CLOSED 2026-09-20. No.** Option (c): MSF is required
+evidence tracked in its own right. The 55 keeps meaning the sum of Annexure A's per-EPA quotas.
+**Consequence, and it is why this one had to be right first time: `counts_for` is permanent per pinned
+version.** `Activity.SchemaVersion` is assigned exactly once, there is no re-pin path anywhere
+([T107]), and a rebuild replays each activity against its **pinned** version — so whatever `msf_cpsa`
+v1 ships with is permanent for every activity created under v1, in both directions. "Ship `[]` now and
+switch when it settles" was never available. `msf_cpsa` ships `counts_for: []` from v1.
+
+**D12 — Does EPA 7 exclude general Direct observation? — CLOSED 2026-09-20. No, it does not.**
+**Consequence: EPA 7's allow-list gains Direct observation**, and `observed_clinical_exam_cpsa` is not
+written — the College's first reply said a Mini-CEX and a clinical examination are the same thing, and
+EPA 7 already permits Mini-CEX, so a second seed would be a duplicate in the picker.
+
+> **One piece is still open and must not be assumed.** The first reply also proposed merging Mini-CEX
+> into a new instrument, *"clinical observed interaction ... a mini cex, handover, communication etc."*
+> Re-derived from `T098-data/annexure-a.json`: **Mini-CEX** is named by EPAs 1, 2, 3, 4, 6, 7, 8, 12,
+> 13; **Directly observed clinical examination** by EPA 7 only; **Direct observation** by EPAs 2, 4, 6,
+> 9, 10, 11, 13, 15. Merging Mini-CEX with Directly observed clinical examination changes **no EPA's
+> permitted set** — EPA 7 already names both. Merging Mini-CEX with **Direct observation** changes
+> eight: EPAs 9, 11 and 15 gain a focused-encounter tool, EPAs 1, 3, 8 and 12 gain ward-round
+> observation, and **EPA 10 — "Leading and operating within a clinical team", published allow-list
+> exactly "MSF, Direct observation (2)" — becomes creditable by a Mini-CEX.** That is the defect class
+> [T122] exists to prevent. Note too that the reply's own example list named *handover*, which is page
+> 8's definition of Direct observation, not of Mini-CEX. **Ask before merging.**
+
+**D13 — The academic year and the semester boundary — CLOSED 2026-09-20. January to November, with
+the boundary in June.** Eleven months, matching Annexure B. National, as proposed — a per-institution
+boundary would give two registrars in the same national programme different targets in the same month.
+**Consequence: [T130] is unblocked.** One line is still wanted before it buckets anything: **whether
+June itself falls in the first semester or the second.** Recorded here as Jan–Jun / Jul–Nov, which is
+the reading of "boundary in June" this register has taken; a June encounter is the only thing that
+moves if it is wrong.
+
+**D15 — A deadline for filing after the encounter? — CLOSED 2026-09-20. A soft warning beyond
+fourteen days, and no hard refusal.** Fourteen, not the ninety proposed. **Consequence: this is new
+work, not a change.** Verified 2026-09-20 that no observation-date staleness warning exists today —
+the only 90-day constants in the repository are the portfolio-export and scheduled-job-run retention
+jobs. Fourteen days is tight enough that it will fire routinely, so the "no hard refusal" half is
+load-bearing: a registrar blocked by a date validator types today's date instead, which destroys the
+encounter date that [T119] exists to protect.
+---
+
 ### 3B. For the College / CPSA content owner
 
 These go in one message. They are the critical path for [T120] and [T121], and they are asks of busy

@@ -52,6 +52,8 @@ until a final version is issued; (c) build now and re-version the catalogue when
 
 **No default proposed.** Please answer this one first, even if the rest take longer.
 
+Answer:Treat 11.1 as final and build from that
+
 ---
 
 ## B. The instruments
@@ -68,6 +70,7 @@ review, MSF (5)*.
 
 **Options** — (a) a distinct instrument needing its own form; (b) the same instrument as CCA,
 named differently on EPA 6.
+ Answer (b)
 
 **Proposed default: (b), an alias of CCA.** This is one fewer form to design, and one fewer
 near-identical entry in a list clinicians have to choose from. If they are genuinely
@@ -99,6 +102,9 @@ checked against the published annexure line by line.
 **What we need: confirmation that EPA 7 is meant to exclude general direct observation** — or
 an instruction to treat the two names as one instrument.
 
+Answer: mini CEX and a clinical examination is the same thing. Would propose: clinical observed interaction 
+This will include a mini cex, handover, communication etc.
+
 ### D6 — Which instruments produce an entrustment level, and which are evidence only?
 
 Some tools end in a supervisor stating a level on the entrustment ladder. Others are better
@@ -113,6 +119,8 @@ decides whether each instrument can, by itself, move a trainee's entrustment lev
 - **Unrated evidence** (recorded, but asserts no level): Reflective exercise, Clinical audit,
   Portfolio and logbook review.
 - **MSF** — see section C.
+
+Answer :  default all rated
 
 ### D7 — Does an unrated instrument count toward an EPA's annual frequency?
 
@@ -143,6 +151,7 @@ Same document, same version.
 This does not change any recommendation below, but it does change the arithmetic in D9.
 
 **One line in reply is enough: eleven or fifteen, and if eleven, which four are excluded.**
+Fifteen
 
 ### D9 — Is MSF run once per period across many EPAs, or separately per EPA?
 
@@ -161,6 +170,7 @@ Our system requires a minimum of **8 returned questionnaires** before an MSF can
 **Proposed default: one campaign per period, covering multiple EPAs.** We raise it rather than
 assume it because it changes what a statement like "MSF completed for EPA 7" means on a record
 of progress.
+Answer: Proposed default
 
 ### D10 — Who states the entrustment level that an MSF asserts, if anyone?
 
@@ -176,6 +186,7 @@ evidence and narrative, and asserts no level.
 **Proposed default: (b), the releasing reviewer, with (c) as an acceptable alternative.** Only
 option (a) needs a redesign of the questionnaire, so it is the one we would need told.
 
+Anwer: Propsed default
 ### D8 — Does MSF count toward the 55 encounters a year?
 
 Annexure A's per-EPA frequencies sum to exactly 55, so the 55 appears to *be* the sum of the
@@ -189,6 +200,7 @@ required evidence tracked in its own right and does not consume the encounter co
 **Proposed default: (c) for now, moving to (b) once per-period tracking is built.** This keeps
 the 55 meaning what the College says it means.
 
+Answer: not sure. 
 ### D11 — Must a campaign draw responses from more than one respondent group to count?
 
 Our reports suppress any respondent category with too few responses, to protect anonymity. As
@@ -198,6 +210,8 @@ would count as multi-source feedback, with every other category suppressed.
 **Proposed default: require that at least two respondent categories survive suppression**
 before an MSF counts — on the reasoning that "multi-source" is the point. Please confirm, and
 tell us the minimum number of categories if it is not two.
+
+Answer: Proposed default
 
 ---
 
@@ -219,6 +233,8 @@ same month.
 
 **No default proposed for the dates themselves.** We need the months.
 
+Answer: 
+
 ### D14 — What happens to a registrar who starts mid-year?
 
 They will not have eleven months before the first boundary.
@@ -229,7 +245,7 @@ next boundary; (c) carry the shortfall forward.
 **Proposed default: (b), exempt the partial period,** stated plainly on the trainee's progress
 page. Pro-rata would invent a fraction the College never published. This is a College rule
 rather than a software one, so we would rather be told.
-
+ Answer: default
 ### D15 — Is there a deadline for submitting an assessment after the encounter?
 
 Nothing in the document bounds how long after an encounter an assessment may be filed.
@@ -238,6 +254,7 @@ Nothing in the document bounds how long after an encounter an assessment may be 
 hard limit unless the College wants one: a registrar blocked by a date validator will enter
 today's date instead, which destroys the accuracy of the encounter date — the very thing the
 rule was meant to protect.
+Answer: no default time
 
 ---
 
@@ -257,6 +274,8 @@ right and contributes to the EPA.
 answer because option (b) is a substantially larger piece of work than anything else in this
 message, and it would need to be planned before other work is built on top of it. If the
 College's intent is (b), we would rather know now than discover it later.
+
+Answers: (a) default
 
 ---
 

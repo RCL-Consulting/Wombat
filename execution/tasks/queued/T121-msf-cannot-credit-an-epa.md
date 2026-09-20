@@ -333,7 +333,14 @@ Who supplies the ordinal is a clinical question, not a code one, and it is D3 be
 
 ## 🚨 Decisions — state them, do not let an implementer invent them
 
-### D1 — Is MSF run once per period covering many EPAs, or once per EPA?
+
+> **Renumbered 2026-09-20.** These four were locally numbered D1–D4, which collided head-on
+> with the product register: this task's D1 was the College's **D9**, D2 was **D8**, D3 was **D10**,
+> D4 was **D11**. Same letter, two unrelated sequences, no way to tell from a citation which
+> register you were in — the exact trap `DECISIONS.md` splits `W-nnn` from `D-n` to avoid. They now
+> carry the College's numbers, and all four are answered. See `EPA-PROGRAMME.md` § 3A-ii.
+
+### D9 — Is MSF run once per period covering many EPAs, or once per EPA? — **ANSWERED: per period**
 
 The design above is deliberately neutral: `MsfCampaignEpa` expresses either, and the decision changes
 guidance and coordinator workload, not schema. But the arithmetic is one-sided.
@@ -361,7 +368,7 @@ Two facts to weigh alongside: `CurriculumItemProgress` is one row per (item, tra
 (`CreditApplier.cs:121`) — so per-period campaigns still produce per-item counts, and neither answer
 needs a schema change beyond the join table.
 
-### D2 — Does MSF count toward the 55 observed encounters per year?
+### D8 — Does MSF count toward the 55 observed encounters per year? — **ANSWERED: no**
 
 Annexure A's frequencies sum to exactly 55 (6+6+6+6+6+4+2+1+1+6+1+6+1+1+2), so the 55 **is** the sum
 of the per-EPA quotas — the same number `RequiredCount` encodes, multiplied by four programme years
@@ -390,7 +397,7 @@ Three realistic answers:
 I would choose 3 now and 2 when phase 3 exists. That keeps the 55 meaning what the College says it
 means, and it makes this task's value the *evidence link*, not the count.
 
-### D3 — Who states the entrustment level an MSF asserts, if anyone?
+### D10 — Who states the entrustment level an MSF asserts, if anyone? — **ANSWERED: the releasing reviewer**
 
 The mechanism is settled above (an optional `overall_level`). Who fills it in is not:
 
@@ -408,7 +415,7 @@ I would choose the reviewer, with "nobody" as a perfectly acceptable default —
 both with no code difference, because the field is optional either way. The respondent option is the
 only one that needs new questionnaire design and College sign-off.
 
-### D4 — Does a campaign with suppressed categories still credit?
+### D11 — Does a campaign with suppressed categories still credit? — **ANSWERED: needs two surviving categories**
 
 `ReadyForRelease` counts total responses only (`MsfAggregationService.cs:80`). The per-category
 minimum is enforced *nowhere*: it only suppresses a category's data from the report (`:26-29`). So a

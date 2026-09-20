@@ -11,7 +11,6 @@
 | queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P1 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
 | queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
-| queued | [T129](tasks/queued/T129-send-the-college-the-v11-1-decision-list.md) | P1 | Send the College the v11.1 decision list |  |
 | queued | [T130](tasks/queued/T130-the-annual-quota.md) | P1 | The annual quota: a trainee cannot see what is expected of them this y |  |
 | queued | [T133](tasks/queued/T133-the-visual-builder-erases-every-root-schema-pointer-it-does-not-know-about.md) | P1 | The visual builder erases every root schema pointer it does not know a |  |
 | queued | [T134](tasks/queued/T134-committee-sampling-reports-zero-rated-evidence-for-every-v11-1-trainee.md) | P1 | Committee sampling reports zero rated evidence for every v11.1 trainee |  |
@@ -35,7 +34,7 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 
-Done: 91 task(s).
+Done: 92 task(s).
 
 ## From STATE.md
 
@@ -51,9 +50,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+8f23143 feat(activities): declare the rated field on the schema, so a rating knows its ladder (T126)
 087dd5f fix(msf): the expiry reminder mailed the token hash, as a relative URL (T132)
 842a6ca docs(execution): re-rate the queue EPA-first, and file the three tasks nobody filed
 2da4d41 docs(execution): record the upstream lint fix, and use the phrasing it permits
 0c1622f docs(execution): block T128, retitle T102 to the defect that is still open
-7fba9d0 docs(execution): finalise the 2026-09-20 session
 ```

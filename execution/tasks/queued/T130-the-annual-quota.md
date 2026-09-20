@@ -4,7 +4,7 @@ title: "The annual quota: a trainee cannot see what is expected of them this yea
 status: queued
 priority: P1
 owner: agent
-depends_on: [T129]
+depends_on: []
 created: 2026-09-20
 ---
 
@@ -57,9 +57,16 @@ backfill that has to guess.
 
 ## Decisions this needs first
 
-**From the College, via [T129]:** **D13** (which eleven months, and where the semester boundary
-falls — it cannot be derived and is not in the repo) and **D14** (a registrar who starts
-mid-year).
+**From the College — ANSWERED 2026-09-20, this task is no longer blocked:**
+
+- **D13** — the academic year runs **January to November**, boundary **in June**, national rather than
+  per-institution. Recorded as Jan–Jun / Jul–Nov; **confirm whether June itself is semester 1 or 2**
+  before bucketing anything. A June encounter is the only thing that moves if that reading is wrong.
+- **D14** — a registrar starting mid-year is **exempt for the partial period** and starts counting at
+  the next boundary. Say so on the progress page rather than showing a target they cannot meet.
+- **D7** — an unrated instrument counts toward the frequency **not at all** (`counts_for: []`), so the
+  quota counts rated encounters only. This narrows what this task has to bucket.
+- **D8** — MSF does **not** consume the 55, so the quota and the MSF fan-out never interact here.
 
 **From the maintainer, decidable today** — all three have a recommendation in § 3C:
 
