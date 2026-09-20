@@ -2,7 +2,7 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: two reference trees, three stale documents, and the four defects that fell out**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: two reference trees, three stale documents, five defects, and the deploy artifacts**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
@@ -90,13 +90,53 @@ production.
 correctly labelled and deliberately kept because `EPA Book/critique.md` cites its reasoning.
 Nothing to do.
 
-**▶ NEXT.** Nothing outstanding to ship, and the doc set now has no dangling pointers — the
-only unresolved `.md` citations left are historical ones inside records, and two prose
-ellipses. The highest-value follow-up is not documentation: **verify the off-host backup leg on
-the live box** (`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`) and
-rehearse a restore. That needs SSH to production, so it was not done here. — **Sonnet**
-(read-only check, then configure if absent). Everything on the Wave 1 list below stands
-unchanged.
+### Part 4 — `publish/`, and a documented footgun that pointed the wrong way
+
+Asked whether repo-root `publish/` is standard. It is conventional and used consistently by
+`deploy/README.md`, `deploy.sh` and `deploy.ps1` — but three things around it were not right.
+
+**1. Its `.gitignore` protection was accidental.** The `publish/` line at 180 is the stock
+Visual Studio template's **ClickOnce** entry (`# Click-Once directory`) and matches this path
+by coincidence of name. Prune that dead section in some future tidy-up and 100 MB of binaries
+is one `git add -A` from the repo. There is now a deliberate `/publish/` entry that says so.
+
+**2. `dotnet publish` does not clean its output directory — and `deploy.ps1` shipped that.**
+A file dropped from the project lingers in `publish/`, gets tarred, and lands on the server,
+which extracts into a fresh `app.new`, so the stale file survives the rotation too.
+`deploy.sh` was masked by `rsync --delete`; `deploy.ps1` was not. Both scripts now clear
+`publish/` first — the bash one behind a guard that refuses any path not under `$REPO_ROOT`.
+
+**3. The tarball lived in `deploy/.remote/`** — 44 MB of build output inside a folder of
+otherwise-tracked scripts. It now stages in the **OS temp directory** and is deleted after a
+successful upload. Reclaimed 143 MB of stale artifacts on the way (`publish/` and the tarball
+were both from 2026-09-16, three days and four shipped tasks behind `src/`).
+
+**And the thing worth remembering: CLAUDE.md's `--no-build` warning had the two paths
+swapped.** The hazard is real — two Release output trees exist side by side and drift — but
+the attribution was backwards, and I repeated the error before measuring it. Measured:
+
+| Command | Platform | Writes to |
+|---|---|---|
+| `dotnet build Wombat.sln -c Release` | `Any CPU` — the `.sln` maps every project's `Release\|x64` to `Release\|Any CPU` | `bin/Release/net10.0/` |
+| `dotnet publish`/`test`/`ef` on a **`.csproj`** | `x64` (MSBuild's default here; nothing in the repo sets it) | `bin/x64/Release/net10.0/` |
+
+Confirmed on both `Wombat.Web.csproj` and `Wombat.Application.Tests.csproj` via
+`dotnet msbuild -getProperty:Platform`, and by timestamping both trees across a solution build
+and a publish. CLAUDE.md now carries the table instead of the guess.
+
+**Verified, not assumed:** `bash -n` on `deploy.sh`, the PowerShell AST parser on `deploy.ps1`,
+both branches of the new `rm -rf` guard exercised, `dotnet publish -c Release` run end to end
+(regenerated `publish/`, clean), and `dotnet build Wombat.sln -c Release` — **0 warnings,
+0 errors**. Test suites not re-run; no code changed.
+
+**▶ NEXT.** Nothing outstanding to ship, and the doc set has no dangling pointers — the only
+unresolved `.md` citations left are historical ones inside records, and two prose ellipses.
+The highest-value follow-up is still not documentation: **verify the off-host backup leg on the
+live box** (`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`) and rehearse a
+restore. That needs SSH to production, so it was not done here. — **Sonnet** (read-only check,
+then configure if absent). A second, smaller one: `deploy/.remote/` holds 18 untracked ad-hoc
+shell scripts from the June deployment session, none of them in git. Decide whether any deserve
+tracking before the box is ever rebuilt. Everything on the Wave 1 list below stands unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 

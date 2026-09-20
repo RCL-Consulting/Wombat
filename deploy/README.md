@@ -111,9 +111,17 @@ to enable email later — no redeploy needed.
 From your dev machine (first deploy only — subsequent deploys use `deploy.sh`):
 
 ```bash
+rm -rf publish/          # dotnet publish does NOT clean its output dir
 dotnet publish src/Wombat.Web/Wombat.Web.csproj -c Release -o publish/
 rsync -az --delete publish/ wombat-prod:/opt/wombat/app/
 ```
+
+`publish/` is repo-root build output, gitignored, and both deploy scripts now clear it
+before publishing. Without the wipe a file dropped from the project lingers there and
+ships — `rsync --delete` would catch it, but `deploy.ps1` tars the directory wholesale
+and the server extracts into a fresh `app.new`, so the stale file survives the rotation.
+**Never run the `rsync` line on its own**: `publish/` may hold binaries from an older
+commit.
 
 ### 6. Database migration and seeding
 
@@ -211,10 +219,14 @@ From your dev machine:
 ./deploy/deploy.ps1 -Remote user@host     # e.g. staging
 ```
 
-Both: publish locally (Release), rotate the previous release on the server
-(`/opt/wombat/app` -> `app.prev`), ship the new binaries, restart the service
-(which auto-applies EF migrations on startup via systemd's env), and confirm
-`/health`. `deploy.sh` rsyncs; `deploy.ps1` ships a tarball over scp.
+Both: clear `publish/`, publish locally (Release), rotate the previous release on the
+server (`/opt/wombat/app` -> `app.prev`), ship the new binaries, restart the service
+(which auto-applies EF migrations on startup via systemd's env), and confirm `/health`.
+`deploy.sh` rsyncs; `deploy.ps1` ships a tarball over scp.
+
+`deploy.ps1` stages its tarball in the **OS temp directory**, not in the repo, and deletes
+it after a successful upload. It used to write 44 MB to `deploy/.remote/` — a folder of
+otherwise-tracked scripts is the wrong home for build output, even gitignored.
 
 ## Rollback
 

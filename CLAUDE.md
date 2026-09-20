@@ -245,8 +245,17 @@ Always run architecture tests after adding any project reference — they guard 
 boundaries. Integration tests require Docker for Testcontainers.
 
 **Do not pass `--no-build` to `dotnet test` or `dotnet ef` in this repo.** `dotnet build Wombat.sln` and
-the per-project tools resolve different output paths (`bin/x64/Release` vs `bin/Release`), so
-`--no-build` will happily load a stale assembly. For `dotnet test` that means a green suite for code that
+the per-project tools resolve **different output paths**, so `--no-build` will happily load a stale
+assembly. Measured 2026-09-20, and the direction is the opposite of what you would guess:
+
+| Command | Resolves | Writes to |
+|---|---|---|
+| `dotnet build Wombat.sln -c Release` | `Platform=Any CPU` — the `.sln` maps every project's `Release\|x64` to `Release\|Any CPU` | `bin/Release/net10.0/` |
+| `dotnet publish`/`test`/`ef` on a **`.csproj`** | `Platform=x64` (MSBuild's own default here; nothing in the repo sets it) | `bin/x64/Release/net10.0/` |
+
+Both trees exist side by side and drift apart independently.
+
+For `dotnet test` that means a green suite for code that
 does not compile the behaviour you just wrote — it reports passes for tests your change should have
 broken. For `dotnet ef migrations add` it is worse and quieter: the stale model matches the snapshot, so
 EF finds no changes and writes an **empty migration** that compiles, ships, and does nothing. Always let

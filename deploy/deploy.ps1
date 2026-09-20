@@ -32,14 +32,24 @@ param([string]$Remote = 'root@172.236.8.144')
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $Publish  = Join-Path $RepoRoot 'publish'
-$Tgz      = Join-Path $RepoRoot 'deploy/.remote/publish.tgz'
+# Staged outside the repo. The tarball is transient build output and has no business
+# under deploy/, which otherwise holds tracked scripts. Deleted after a successful
+# upload; a failed run leaves it in the OS temp directory, which is what that is for.
+$Tgz      = Join-Path ([System.IO.Path]::GetTempPath()) "wombat-publish-$PID.tgz"
+
+# `dotnet publish` does not clean its output directory. A file dropped from the project
+# lingers in $Publish, gets tarred, and lands on the server — which extracts into a fresh
+# app.new, so the stale file survives the rotation too. Wipe first.
+if (Test-Path $Publish) {
+    Write-Host '==> Clearing previous publish output...' -ForegroundColor Cyan
+    Remove-Item -Recurse -Force $Publish
+}
 
 Write-Host '==> Publishing Wombat.Web (Release)...' -ForegroundColor Cyan
 dotnet publish (Join-Path $RepoRoot 'src/Wombat.Web/Wombat.Web.csproj') -c Release -o $Publish --nologo
 if ($LASTEXITCODE) { throw 'dotnet publish failed' }
 
 Write-Host '==> Packing tarball...' -ForegroundColor Cyan
-New-Item -ItemType Directory -Force (Split-Path $Tgz) | Out-Null
 tar -czf $Tgz -C $Publish .
 if ($LASTEXITCODE) { throw 'tar failed' }
 
@@ -71,5 +81,7 @@ done
 # tr -d strips CR so the Windows here-string runs as a clean bash script.
 $remoteScript | ssh $Remote "tr -d '\r' | bash -s"
 if ($LASTEXITCODE) { throw 'remote deploy failed' }
+
+Remove-Item -Force $Tgz
 
 Write-Host '==> Deploy complete.' -ForegroundColor Green

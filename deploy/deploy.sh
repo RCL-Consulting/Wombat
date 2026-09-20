@@ -23,6 +23,17 @@ REMOTE="${1:-wombat-prod}"
 REMOTE_APP="/opt/wombat/app"
 REMOTE_PREV="/opt/wombat/app.prev"
 
+# `dotnet publish` does not clean its output directory, so a file dropped from the
+# project lingers in $PUBLISH_DIR. rsync --delete would remove it from the server, but
+# only until someone deploys with deploy.ps1 instead, which tars whatever is here.
+# Wipe first so both scripts ship exactly what the current source produces.
+# Guarded: never rm -rf a path that is empty or not under the repo root.
+[ -n "$REPO_ROOT" ] || { echo "REPO_ROOT did not resolve; refusing to clear anything" >&2; exit 1; }
+case "$PUBLISH_DIR" in
+    "$REPO_ROOT"/?*) rm -rf "$PUBLISH_DIR" ;;
+    *) echo "refusing to clear unexpected publish dir: $PUBLISH_DIR" >&2; exit 1 ;;
+esac
+
 echo "==> Publishing Wombat.Web (Release)..."
 dotnet publish "$REPO_ROOT/src/Wombat.Web/Wombat.Web.csproj" \
     -c Release \

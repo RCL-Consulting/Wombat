@@ -363,6 +363,13 @@ MigrationBackup/
 FodyWeavers.xsd
 /Wombat.Web/appsettings.Local.json
 
+# Deploy output. `deploy/deploy.sh` and `deploy/deploy.ps1` publish Wombat.Web here with
+# `dotnet publish -o publish/` — ~100 MB of binaries at the repo root. There IS a stock
+# `publish/` line further up under "# Click-Once directory", but that is Visual Studio
+# template boilerplate that matches this path by coincidence of name. This entry is the
+# deliberate one: if that dead ClickOnce section is ever pruned, this still holds.
+/publish/
+
 # Reference trees, deleted from the worktree 2026-09-20. The rules stay as a guard:
 # ClinicAssist lives at C:\Users\Renier\ClinicAssist.NET and the old Wombat is in this
 # repo's history at 55a92c6 — neither should ever be vendored back in and committed.
