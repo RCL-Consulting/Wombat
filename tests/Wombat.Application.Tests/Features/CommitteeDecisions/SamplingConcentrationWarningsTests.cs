@@ -362,6 +362,161 @@ public sealed class SamplingConcentrationWarningsTests
         return review.Id;
     }
 
+    /// <summary>
+    /// T134. The rated-type gate matched EXACT keys over mini_cex/dops/cbd/acat, so the whole seeded
+    /// v11.1 tool set fell outside it and a CPSA trainee's report told the panel there was no rated
+    /// evidence to sample. Note the fixture is UNTOUCHED: these types carry no SchemaJson, which is
+    /// what keeps this test evidence rather than a restatement.
+    /// </summary>
+    [Fact]
+    public async Task CpsaToolKeys_AreCountedAsRatedEvidence()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCexCpsa = await SeedActivityTypeAsync(dbContext, "mini_cex_cpsa");
+        var cbdCpsa = await SeedActivityTypeAsync(dbContext, "cbd_cpsa");
+
+        AddActivity(dbContext, miniCexCpsa, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, miniCexCpsa, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, cbdCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(3, "every CPSA tool is rated evidence");
+        report.EvidenceComplete.Should().BeTrue();
+        var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
+        warning.DistinctSourceCount.Should().Be(2, "mini_cex_cpsa is direct observation, cbd_cpsa is conversation");
+        warning.DistinctAssessorCount.Should().Be(2);
+    }
+
+    /// <summary>
+    /// Two ratings from the SAME institution-built rated tool are ONE source, not none. A design that
+    /// drops an unknown family from the numerator would under-report TotalRatedActivities while
+    /// EvidenceComplete still read true — the same lie T134 removes, moved somewhere harder to see.
+    /// </summary>
+    [Fact]
+    public async Task TwoRatingsFromOneUnfamiliarRatedToolAreOneSource()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var custom = await SeedRatedActivityTypeAsync(dbContext, "ward_round_review");
+
+        AddActivity(dbContext, custom, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, custom, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(2, "a declared rating counts even under an unfamiliar key");
+        report.EvidenceComplete.Should().BeTrue();
+        var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
+        warning.DistinctSourceCount.Should().Be(1);
+        warning.SingleSource.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TwoDifferentUnfamiliarRatedToolsAreTwoSources()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var first = await SeedRatedActivityTypeAsync(dbContext, "ward_round_review");
+        var second = await SeedRatedActivityTypeAsync(dbContext, "handover_review");
+
+        AddActivity(dbContext, first, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, second, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7)
+            .Subject.DistinctSourceCount.Should().Be(2);
+    }
+
+    /// <summary>
+    /// Both CPSA observation tools are the same category, so they are one source — which is what makes
+    /// the SingleSource warning meaningful for a v11.1 trainee rather than accidentally absent.
+    /// </summary>
+    [Fact]
+    public async Task TwoCpsaToolsOfTheSameCategoryAreOneSource()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCexCpsa = await SeedActivityTypeAsync(dbContext, "mini_cex_cpsa");
+        var dopsCpsa = await SeedActivityTypeAsync(dbContext, "dops_cpsa");
+
+        AddActivity(dbContext, miniCexCpsa, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, dopsCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
+        warning.DistinctSourceCount.Should().Be(1, "both are direct observation");
+        warning.SingleSource.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// The interim family arm, pinned. The four *_paed types are operator-built, exist in no seeder,
+    /// and cannot be given a pointer while [T133] stands — so removing the family arm later has to be
+    /// a decision with a failing test behind it, not a discovery.
+    /// </summary>
+    [Fact]
+    public async Task AnOperatorBuiltPaedToolIsStillCountedViaTheFamilyArm()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var paed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+
+        AddActivity(dbContext, paed, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(1, "it carries no schema and never will; the family arm is what counts it");
+    }
+
+    /// <summary>
+    /// An opt-in overload. The plain <see cref="SeedActivityTypeAsync" /> is deliberately left alone:
+    /// its types carry no SchemaJson, and that is what makes the existing suite evidence that legacy
+    /// behaviour is genuinely unchanged rather than re-made green.
+    /// </summary>
+    private static async Task<ActivityType> SeedRatedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+    {
+        var activityType = new ActivityType
+        {
+            Key = key,
+            Name = key,
+            Version = 1,
+            IsActive = true,
+            OwnerUserId = "admin-1",
+            CreatedOn = DateTime.UtcNow,
+            SchemaJson = """
+                {
+                  "version": 1,
+                  "rated_level_field": "overall_level",
+                  "sections": [
+                    {
+                      "key": "assessment",
+                      "title": "Assessment",
+                      "fields": [
+                        { "key": "overall_level", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
+                      ]
+                    }
+                  ]
+                }
+                """
+        };
+        dbContext.ActivityTypes.Add(activityType);
+        await dbContext.SaveChangesAsync();
+        return activityType;
+    }
+
     private static async Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
     {
         var activityType = new ActivityType

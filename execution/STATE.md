@@ -50,11 +50,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
-- 2026-09-20: **T126 shipped** — an activity can now say which entrustment ladder it was rated
-  against (`rated_level_field`). No migration: the repo forbids an FK on Activity's snapshot columns,
-  and nothing filters on a rating. Found and filed **T133** (the builder erases root schema pointers)
-  and **T134** (committee sampling reports zero rated evidence for every v11.1 trainee). Suites 924.
-- 2026-09-20: **T132 shipped** — every MSF expiry reminder mailed the token *hash* in a relative URL; it now re-issues.
-- 2026-09-20: queue re-rated EPA-first; T129/T130/T131 filed; four stale paragraphs corrected.
-- 2026-09-20: all project docs now live under `execution/`; `Rewrite/` and `Programme/` gone.
-  See W-001..W-005 in `DECISIONS.md`. T097's backup had never been deployed; **T128** filed.
+- 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
+  rated evidence: the gate matched exact keys over four legacy tools. One shared classifier now
+  answers it — declared rating (T126) OR known family. Two maps retired. Suites 955.
+- 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against
+  (`rated_level_field`). No migration; the repo forbids an FK on Activity's snapshot columns.
+  Found and filed **T133** (the builder erases root schema pointers) and T134.
+- 2026-09-20: **T132 shipped** — MSF expiry reminders mailed the token *hash*; they now re-issue.
+- 2026-09-20: queue re-rated EPA-first; T129–T131 filed; four stale paragraphs corrected.

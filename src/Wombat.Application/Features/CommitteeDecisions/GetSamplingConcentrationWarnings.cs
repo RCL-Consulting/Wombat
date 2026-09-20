@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Queries;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
@@ -78,26 +79,9 @@ public sealed record EpaSamplingConcentrationDto(
     bool SingleSource,
     bool FewerThanThreeAssessors);
 
-public enum WbaSourceCategory
-{
-    DirectObservation = 1,
-    Conversation = 2,
-    LongitudinalObservation = 3,
-    ProductEvaluation = 4
-}
-
 public sealed class GetSamplingConcentrationWarningsQueryHandler
     : IRequestHandler<GetSamplingConcentrationWarningsQuery, SamplingConcentrationReportDto>
 {
-    private static readonly IReadOnlyDictionary<string, WbaSourceCategory> SourceByActivityKey =
-        new Dictionary<string, WbaSourceCategory>(StringComparer.Ordinal)
-        {
-            ["mini_cex"] = WbaSourceCategory.DirectObservation,
-            ["dops"] = WbaSourceCategory.DirectObservation,
-            ["cbd"] = WbaSourceCategory.Conversation,
-            ["acat"] = WbaSourceCategory.Conversation
-        };
-
     private readonly IApplicationDbContext _dbContext;
 
     public GetSamplingConcentrationWarningsQueryHandler(IApplicationDbContext dbContext)
@@ -134,31 +118,52 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
         // was only shown part of; narrowing it to the rating-bearing types keeps a withheld
         // reflective note from being reported as missing evidence, since nothing unrated would have
         // entered the arithmetic anyway.
-        var ratedActivityKeys = SourceByActivityKey.Keys.ToArray();
-        var ratedInWindow = _dbContext.Set<Activity>()
+        // Which types are rated is resolved BEFORE the window query, to a set of ids (T134). The
+        // rated test itself is not SQL-translatable — it reads T126's declared pointer out of the
+        // schema — but it does not need to be. What must stay SQL is the predicate that produces the
+        // denominator, and an int-set Contains is exactly that, still evaluated before the
+        // readability filter below so WithheldRatedActivities keeps its meaning.
+        var inWindow = _dbContext.Set<Activity>()
             .AsNoTracking()
             .Where(activity =>
                 activity.SubjectUserId == review.TraineeUserId &&
                 activity.ObservedOn >= fromDate &&
-                activity.ObservedOn <= toDate &&
-                ratedActivityKeys.Contains(activity.ActivityType.Key));
+                activity.ObservedOn <= toDate);
+
+        var typeIdsInWindow = await inWindow
+            .Select(activity => activity.ActivityTypeId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+
+        var verdicts = await RatedActivityTypes.LoadAsync(_dbContext, typeIdsInWindow, cancellationToken);
+        var ratedTypeIds = verdicts
+            .Where(entry => entry.Value.IsRated)
+            .Select(entry => entry.Key)
+            .ToArray();
+
+        var ratedInWindow = inWindow.Where(activity => ratedTypeIds.Contains(activity.ActivityTypeId));
 
         var ratedInWindowCount = await ratedInWindow.CountAsync(cancellationToken);
 
+        // No Include: the source bucket is looked up by ActivityTypeId, so the navigation is a join
+        // nothing reads any more.
         var activities = await ratedInWindow
-            .Include(activity => activity.ActivityType)
             .WhereReadableBy(request.Principal)
             .ToListAsync(cancellationToken);
 
         var withheldRatedActivities = ratedInWindowCount - activities.Count;
 
-        var ratings = new List<(int EpaId, string AssessorUserId, WbaSourceCategory Source)>();
+        var ratings = new List<(int EpaId, string AssessorUserId, string Source)>();
         foreach (var activity in activities)
         {
-            if (!SourceByActivityKey.TryGetValue(activity.ActivityType.Key, out var source))
-            {
-                continue;
-            }
+            // Every row here is already rated — the gate above said so — so an unknown family must
+            // NOT drop it. It is in the denominator; dropping it from the numerator would under-report
+            // TotalRatedActivities while EvidenceComplete still read true, which is the same lie this
+            // task exists to remove, moved somewhere harder to see. Its own key becomes its source,
+            // so two activities of one unfamiliar type count as one source rather than none.
+            var source = verdicts.TryGetValue(activity.ActivityTypeId, out var verdict)
+                ? verdict.SourceBucket
+                : activity.ActivityTypeId.ToString(CultureInfo.InvariantCulture);
 
             if (!TryParseRating(activity.DataJson, out var epaId, out var assessorUserId))
             {
@@ -207,7 +212,7 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
             var distinctAssessors = assessorGroups.Length;
             var distinctSources = epaRatings
                 .Select(rating => rating.Source)
-                .Distinct()
+                .Distinct(StringComparer.Ordinal)
                 .Count();
 
             var dominant = assessorGroups.FirstOrDefault();

@@ -5,6 +5,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
@@ -99,51 +100,17 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     // out of 100) without re-introducing a hard-coded ceiling that silently hides observations.
     private const int MaxPlausibleRung = 20;
 
-    // Schema-driven activity types carry institution-specific keys (e.g. "mini_cex_paed"),
-    // so we match a known assessment family either exactly or as a "<base>_..." prefix rather
-    // than against a fixed set of literal keys.
+    // Which types are rated, and what evidence they are, now has ONE answer for the whole
+    // repository: RatedActivityTypes (T134). This file used to keep its own family map and the
+    // committee sampling report kept a second, EXACT-key one — which is why every seeded CPSA tool
+    // charted here and counted as no evidence at all there. Both maps are gone; the surviving one
+    // moved into the shared classifier unchanged.
     //
-    // Membership is deliberate: this is an ENTRUSTMENT trajectory, so only assessor-rated
-    // assessment tools belong on it. Trainee-authored types (reflective notes, logbook entries)
-    // are excluded even when they happen to carry a numeric field.
-    //
-    // Extended for the paediatric v11.1 tool set (T098). Tools named by v11.1 but not yet seeded
-    // as activity types are listed here so they chart the moment they are created.
-    //
-    // KNOWN LIMITATION: this is still a hard-coded list, so an institution that builds its own
-    // rated tool through the Activity builder under an unfamiliar key will not chart. The real
-    // fix is a flag on ActivityType marking it as producing an entrustment rating — recorded as
-    // a gap in Tasks/T098-epa-v11-adoption.md rather than guessed at here.
-    private static readonly IReadOnlyDictionary<string, string> SourceByActivityFamily =
-        new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["mini_cex"] = "Direct observation",
-            ["dops"] = "Direct observation",
-            ["direct_observation"] = "Direct observation",
-            ["observed_clinical_exam"] = "Direct observation",
-            ["cbd"] = "Conversation",
-            ["acat"] = "Conversation",
-            ["cca"] = "Case analysis",
-            ["rca"] = "Case analysis",
-            ["case_note_review"] = "Case analysis",
-            ["chart_stimulated_recall"] = "Conversation"
-        };
-
-    private static bool TryResolveSource(string activityTypeKey, out string source)
-    {
-        foreach (var (family, label) in SourceByActivityFamily)
-        {
-            if (activityTypeKey == family ||
-                activityTypeKey.StartsWith(family + "_", StringComparison.Ordinal))
-            {
-                source = label;
-                return true;
-            }
-        }
-
-        source = string.Empty;
-        return false;
-    }
+    // KNOWN LIMITATION, narrowed. The shared classifier can now recognise an institution's own rated
+    // tool by its DECLARED rating (T126's rated_level_field), which the old list could not. This
+    // query does not yet take that arm — see the gate in Handle — because widening what charts is a
+    // change a clinician sees and wants a browser check. The real fix remains a flag on ActivityType:
+    // T122's WbaToolKey, which retires the family arm outright.
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -192,10 +159,16 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         var rawPoints = new List<(int EpaId, TrajectoryPointDto Point)>();
         foreach (var activity in activities)
         {
-            if (!TryResolveSource(activity.ActivityType.Key, out var source))
+            // Gated on the FAMILY arm alone, not on verdict.IsRated, so this stays byte-identical to
+            // what charted before T134. Flipping it to verdict.IsRated is one line and belongs with
+            // [T133] (which makes the pointer authorable) and [T122].
+            var verdict = RatedActivityTypes.Classify(activity.ActivityType.Key, activity.ActivityType.SchemaJson);
+            if (verdict.Category is null)
             {
                 continue;
             }
+
+            var source = verdict.Category.Value.Label();
 
             if (!TryParseObservation(activity.DataJson, out var epaId, out var rating, out var assessorUserId))
             {
