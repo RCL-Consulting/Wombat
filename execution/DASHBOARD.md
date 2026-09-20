@@ -34,7 +34,7 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 
-Done: 89 task(s).
+Done: 90 task(s).
 
 ## From STATE.md
 
@@ -50,9 +50,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+842a6ca docs(execution): re-rate the queue EPA-first, and file the three tasks nobody filed
 2da4d41 docs(execution): record the upstream lint fix, and use the phrasing it permits
 0c1622f docs(execution): block T128, retitle T102 to the defect that is still open
 7fba9d0 docs(execution): finalise the 2026-09-20 session
 a5230dd chore(execution): move the doctrine into the standard layout, retiring Programme/
-c1c1ad4 chore(execution): separate the two decision registers, and match the completion convention
 ```

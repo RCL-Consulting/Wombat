@@ -36,7 +36,7 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
 
     public async Task Handle(OpenMsfCampaignCommand request, CancellationToken cancellationToken)
     {
-        var respondUrl = GetRespondUrl();
+        var respondUrl = _options.RequireMsfRespondUrl();
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .Include(candidate => candidate.Invitations)
@@ -77,20 +77,5 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    private string GetRespondUrl()
-    {
-        if (string.IsNullOrWhiteSpace(_options.MsfRespondUrl))
-        {
-            throw new InvalidOperationException("Wombat:MsfRespondUrl must be configured before opening an MSF campaign.");
-        }
-
-        if (!Uri.TryCreate(_options.MsfRespondUrl, UriKind.Absolute, out var uri))
-        {
-            throw new InvalidOperationException("Wombat:MsfRespondUrl must be an absolute URL.");
-        }
-
-        return uri.ToString().TrimEnd('/');
     }
 }

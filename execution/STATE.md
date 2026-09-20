@@ -52,9 +52,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
+- 2026-09-20: **T132 shipped** — every MSF expiry reminder mailed the token *hash*, as a relative
+  URL. Unusable and unclickable, and the job logged success. It now re-issues. Suites 880.
 - 2026-09-20: queue re-rated EPA-first; T129/T130/T131 filed; four stale paragraphs corrected
   (T119 shipped but was still listed READY, and D12's tool count disagreed with the source).
 - 2026-09-20: all project docs now live under `execution/`; `Rewrite/` and `Programme/` gone.
-  Session-start load 301,455 → ~10,000 bytes. See W-001..W-005 in `DECISIONS.md`.
-- 2026-09-20: T097's backup script had never been deployed — 94 nights of a dump-only backup
-  reporting success, because the cron scripts had no deploy path. Fixed; **T128** filed.
+  See W-001..W-005 in `DECISIONS.md`. T097's backup had never been deployed; **T128** filed.
