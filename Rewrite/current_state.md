@@ -2,7 +2,7 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: two reference trees, three stale documents, five defects, and the deploy artifacts**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: reference trees, stale documents, five defects, deploy artifacts, and a credential found in scratch**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
@@ -129,14 +129,57 @@ both branches of the new `rm -rf` guard exercised, `dotnet publish -c Release` r
 (regenerated `publish/`, clean), and `dotnet build Wombat.sln -c Release` — **0 warnings,
 0 errors**. Test suites not re-run; no code changed.
 
-**▶ NEXT.** Nothing outstanding to ship, and the doc set has no dangling pointers — the only
-unresolved `.md` citations left are historical ones inside records, and two prose ellipses.
-The highest-value follow-up is still not documentation: **verify the off-host backup leg on the
-live box** (`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`) and rehearse a
-restore. That needs SSH to production, so it was not done here. — **Sonnet** (read-only check,
-then configure if absent). A second, smaller one: `deploy/.remote/` holds 18 untracked ad-hoc
-shell scripts from the June deployment session, none of them in git. Decide whether any deserve
-tracking before the box is ever rebuilt. Everything on the Wave 1 list below stands unchanged.
+### Part 5 — `deploy/.remote/`: not in use, and two of them held live credentials
+
+Asked whether the 18 untracked scratch scripts were still in use. **None were** — nothing
+referenced them, and every one had a tracked successor (`deploy/README.md`'s first-boot
+checklist, `wombat.service`, `Caddyfile.wombat`, `wombat-backup.sh`, `wombat-health.sh`,
+`deploy.ps1`). They were one-shot scripts piped over SSH during the 17–19 June first-boot
+session, exactly as `current_state.md:1394` describes them.
+
+**But two hardcoded live production secrets in plaintext:** `stage2.sh` carried the
+PostgreSQL role password, the seed admin password and **`Wombat__PseudonymSalt`**;
+`set-smtp.sh` carried the SMTP password for `wombat@rcl.co.za`. The salt is the one that
+cannot be undone — `INFRASTRUCTURE.md` says it must never be rotated, so exposure is
+permanent in a way a password's is not.
+
+**Checked before acting, not after:**
+
+- The DB password, the salt and the SMTP password appear in **0 commits**. Only the seed
+  admin password reached history, in `a01f41b` (2026-06-19) and `3211e12` (2026-09-16) —
+  the leak already on record, not in HEAD, and that value was rotated under T097 on
+  2026-09-16. The `deploy/.remote/` ignore rule is the only reason the other three never
+  landed in git.
+- All three are present in `pwd_DO_NOT_COMMIT.txt`, so deleting the scripts loses nothing.
+  **That check mattered:** the salt is unrecoverable, and deleting its only local copy
+  would have been the expensive kind of tidying.
+
+**Five promoted to `deploy/verify/`, thirteen deleted.** The survivors are all secret-free
+or read `wombat.env` at runtime, and each gained a header saying what it answers and what
+"good" looks like:
+
+| | |
+|---|---|
+| `restore-rehearsal.sh` | restores the newest dump into a throwaway DB, counts rows, drops it — **HANDOVER.md's #1 TODO now has a script instead of prose** |
+| `audit-trigger.sh` | asserts T096: UPDATE always rejected, DELETE rejected by default, DELETE permitted only under `wombat.allow_audit_delete` |
+| `dataprotection-keys.sh` | diagnoses the key-ring failure that silently logs everyone out on restart |
+| `smoke-test.sh` | logs in as the seeded admin and crawls eleven pages |
+| `login-cookie.sh` | the one thing the smoke test does not assert — that the auth cookie is `Secure` behind Caddy |
+
+They are piped to the server rather than installed, so the `core.fileMode=false` execute-bit
+problem noted earlier does not apply to them. `smoke-test.sh` and `login-cookie.sh` now take
+an optional base URL instead of hardcoding the production host.
+
+**Verified:** `bash -n` on all five, and a scan of `deploy/verify/` against each of the four
+live secret values — **none appears**. Documented in `deploy/README.md` § Verification
+scripts. The `.gitignore` rule stays, with a comment recording why: ad-hoc server scripts
+are still useful, but a credential must never be pasted into one.
+
+**▶ NEXT.** Unchanged, and now cheaper: **verify the off-host backup leg on the live box**
+(`cat /etc/default/wombat-backup`; `tail /var/log/wombat-backup.log`), then run
+`deploy/verify/restore-rehearsal.sh`. Needs SSH to production, so not done here. —
+**Sonnet** (read-only check, then configure if absent). Everything on the Wave 1 list below
+stands unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 

@@ -405,7 +405,13 @@ pwd_DO_NOT_COMMIT.txt
 # DB snapshot dumps written by tools/db-snapshot.ps1
 recovery/
 
-# Scratch scripts piped to the deploy server over SSH (not part of the repo)
+# Scratch scripts piped to the deploy server over SSH. The folder was emptied on
+# 2026-09-20: the five worth keeping are tracked under deploy/verify/, the rest were
+# superseded by deploy/README.md's first-boot checklist. The rule stays because ad-hoc
+# server scripts are still useful — but NEVER hardcode a credential in one. Two of the
+# eighteen did (the DB password, the seed admin password, the unrotatable
+# Wombat__PseudonymSalt, the SMTP password), and only this rule kept them out of git.
+# Secrets belong in pwd_DO_NOT_COMMIT.txt, or read at runtime from wombat.env.
 deploy/.remote/
 
 # Local .NET SDK / workload cache created by tooling in the repo root — never source.

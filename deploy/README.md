@@ -228,6 +228,40 @@ server (`/opt/wombat/app` -> `app.prev`), ship the new binaries, restart the ser
 it after a successful upload. It used to write 44 MB to `deploy/.remote/` — a folder of
 otherwise-tracked scripts is the wrong home for build output, even gitignored.
 
+## Verification scripts
+
+`deploy/verify/` holds five read-only checks for the live box. None hardcodes a
+credential — the two that need one read it from `/opt/wombat/config/wombat.env` at
+runtime. None of them writes to the production database; the two that need a database
+restore into a throwaway and drop it afterwards.
+
+| Script | Answers |
+|---|---|
+| `restore-rehearsal.sh` | **Is the nightly dump actually restorable?** Restores the newest dump into a throwaway DB, counts roles/users/migrations, drops it. This is the rehearsal §10 describes — run it rather than assume it. |
+| `audit-trigger.sh` | **Does the T096 append-only guarantee still hold?** Asserts UPDATE always rejected, DELETE rejected by default, DELETE permitted only under `wombat.allow_audit_delete`. |
+| `dataprotection-keys.sh` | **Will a restart log everyone out?** Checks the key ring lives under `/opt/wombat/data/keys` and that the service user can write there. |
+| `smoke-test.sh` | **Does the authenticated surface work?** Logs in as the seeded admin and crawls eleven pages, reporting HTTP status, authenticated-or-not, and title. |
+| `login-cookie.sh` | **Is the auth cookie `Secure` behind Caddy?** The forwarded-headers property `smoke-test.sh` does not assert. |
+
+They are piped to the server rather than installed, so they need no execute bit:
+
+```powershell
+Get-Content -Raw deploy/verify/restore-rehearsal.sh | ssh root@172.236.8.144 "tr -d '\r' | bash -s"
+```
+
+```bash
+ssh root@172.236.8.144 'bash -s' < deploy/verify/restore-rehearsal.sh
+```
+
+`smoke-test.sh` and `login-cookie.sh` take an optional base URL as the first argument,
+defaulting to `https://wombat.rcl.co.za`.
+
+These were promoted on 2026-09-20 out of an untracked scratch folder from the June
+first-boot session. Thirteen sibling scripts were deleted as superseded by the checklist
+above — **two of them had the database password, the seed admin password, the SMTP
+password and the unrotatable `Wombat__PseudonymSalt` hardcoded in plaintext.** If you
+write another ad-hoc server script, read secrets from `wombat.env`; do not paste them in.
+
 ## Rollback
 
 ```bash

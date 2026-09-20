@@ -156,8 +156,13 @@ ship `wombat.env` unencrypted.
 > total disclosure of named doctors' competence records. **Check this first:**
 > `cat /etc/default/wombat-backup` and `tail /var/log/wombat-backup.log`.
 
-**Rehearse a restore.** A backup nobody has restored is a hypothesis. `deploy/README.md`
-§10 has the `pg_restore` line.
+**Rehearse a restore.** A backup nobody has restored is a hypothesis. There is a script
+for it — `deploy/verify/restore-rehearsal.sh` restores the newest dump into a throwaway
+database, counts roles/users/migrations, and drops it, without touching production:
+
+```bash
+ssh root@172.236.8.144 'bash -s' < deploy/verify/restore-rehearsal.sh
+```
 
 ### Two things you cannot recover
 
@@ -199,6 +204,7 @@ This file goes stale. These do not:
 |---|---|
 | `Rewrite/current_state.md` | **Read this first, every session.** The live handoff: active task, last verified commit, blockers. Newest session at the top. |
 | `deploy/README.md` | The operational manual — first-boot checklist, deploys, rollback, useful commands. |
+| `deploy/verify/*.sh` | Five read-only checks for the live box: restore rehearsal, audit append-only trigger, DataProtection keys, authenticated smoke test, auth-cookie `Secure` flag. None hardcodes a credential. |
 | `Rewrite/INFRASTRUCTURE.md` | The server contract: layout, systemd unit, Caddy, env file, backups, SSO, audit retention. |
 | `CLAUDE.md` | Architecture, conventions, footguns, and the "nothing is live" section to delete when that changes. |
 | `Rewrite/Tasks/T0xx-*.md` | One file per unit of work, including every filed-but-unfixed defect. |
@@ -230,8 +236,8 @@ Structural, and true as of 2026-09-20:
 ## First month of real use — do these in order
 
 1. **Verify the off-host encrypted backup leg, then rehearse a restore.** Nothing else on
-   this list matters if the box dies. Check `/etc/default/wombat-backup`, then run the
-   `pg_restore` rehearsal in `deploy/README.md` §10.
+   this list matters if the box dies. Check `/etc/default/wombat-backup`, then run
+   `deploy/verify/restore-rehearsal.sh`.
 2. **Resize the Linode** before the first real cohort. RAM is the constraint.
 3. **Delete the "Nothing is live" section from `CLAUDE.md`** the day a real trainee is
    admitted, and re-read every decision it licensed — destructive migrations and re-seeding
