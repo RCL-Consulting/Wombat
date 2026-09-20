@@ -12,7 +12,6 @@
 | queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
 | queued | [T130](tasks/queued/T130-the-annual-quota.md) | P1 | The annual quota: a trainee cannot see what is expected of them this y |  |
-| queued | [T133](tasks/queued/T133-the-visual-builder-erases-every-root-schema-pointer-it-does-not-know-about.md) | P1 | The visual builder erases every root schema pointer it does not know a |  |
 | queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
 | queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
@@ -34,7 +33,7 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 
-Done: 93 task(s).
+Done: 94 task(s).
 
 ## From STATE.md
 
@@ -50,9 +49,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+50aa464 fix(committee): a v11.1 trainee's sampling report said there was no rated evidence (T134)
 a1097bd docs(epa): record the College's answers to all fourteen decisions (T129)
 8f23143 feat(activities): declare the rated field on the schema, so a rating knows its ladder (T126)
 087dd5f fix(msf): the expiry reminder mailed the token hash, as a relative URL (T132)
 842a6ca docs(execution): re-rate the queue EPA-first, and file the three tasks nobody filed
-2da4d41 docs(execution): record the upstream lint fix, and use the phrasing it permits
 ```

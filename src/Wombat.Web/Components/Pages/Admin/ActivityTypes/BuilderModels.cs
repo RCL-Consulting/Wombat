@@ -8,10 +8,31 @@ internal sealed class BuilderSchemaModel
 {
     public List<BuilderSectionModel> Sections { get; } = [];
 
+    /// <summary>
+    /// The root pointer at the field recording when the encounter happened (T119), and the one at the
+    /// field carrying the entrustment rating (T126).
+    /// </summary>
+    /// <remarks>
+    /// Carried through the builder round-trip, for the same reason <see cref="BuilderSectionModel.EditableBy" />
+    /// is. T119 and T126 both added a root property and neither extended this model, so
+    /// <c>ToJson</c> called the two-argument <c>FormSchema</c> constructor and every draft an operator
+    /// saved from the Form tab silently erased both (T133). The loss was invisible: the JSON parsed,
+    /// the builder rendered, the publish succeeded, and the type quietly stopped dating its activities
+    /// by the encounter and stopped saying which ladder it rated on.
+    /// </remarks>
+    public string? ObservationDateField { get; set; }
+
+    /// <inheritdoc cref="ObservationDateField" />
+    public string? RatedLevelField { get; set; }
+
     public static BuilderSchemaModel Parse(string schemaJson)
     {
         var schema = FormSchemaParser.Parse(schemaJson);
-        var model = new BuilderSchemaModel();
+        var model = new BuilderSchemaModel
+        {
+            ObservationDateField = schema.ObservationDateField,
+            RatedLevelField = schema.RatedLevelField
+        };
 
         foreach (var section in schema.Sections)
         {
@@ -51,9 +72,46 @@ internal sealed class BuilderSchemaModel
 
     public string ToJson()
     {
+        var sections = BuildSections();
+
+        // A pointer whose target no longer exists is DROPPED rather than emitted, and only then.
+        // FormSchemaParser refuses an orphaned pointer, ActivityType.SaveDraft runs it, and the Form
+        // tab is the only schema-authoring path there is -- so emitting one after the admin deleted
+        // its field would make the type permanently unsaveable through the only door. Dropping it is
+        // not the silent loss this task fixes: that dropped EVERY pointer on EVERY save. This drops
+        // one whose field is gone, and GetPublishWarnings says so. (T133)
         var schema = new FormSchema(
             1,
-            Sections.Select(section => new FormSection(
+            sections,
+            PointerIfStillValid(sections, ObservationDateField, FieldType.Date),
+            PointerIfStillValid(sections, RatedLevelField, FieldType.Scale));
+
+        return FormSchemaParser.Serialize(schema);
+    }
+
+    /// <summary>
+    /// The pointer when it still names a field of the right type in this draft, otherwise null.
+    /// </summary>
+    private static string? PointerIfStillValid(
+        IReadOnlyList<FormSection> sections,
+        string? pointer,
+        FieldType requiredType)
+    {
+        if (string.IsNullOrWhiteSpace(pointer))
+        {
+            return null;
+        }
+
+        var target = sections
+            .SelectMany(section => section.Fields)
+            .FirstOrDefault(field => string.Equals(field.Key, pointer, StringComparison.Ordinal));
+
+        return target?.Type == requiredType ? pointer : null;
+    }
+
+    private List<FormSection> BuildSections()
+    {
+        return Sections.Select(section => new FormSection(
                 NormalizeKey(section.Key, "section"),
                 section.Title.Trim(),
                 BuildVisibility(section.ShowIfField, section.ShowIfOperator, section.ShowIfValue),
@@ -71,9 +129,7 @@ internal sealed class BuilderSchemaModel
                     field.EditableBy))
                 .ToList(),
                 section.EditableBy))
-            .ToList());
-
-        return FormSchemaParser.Serialize(schema);
+            .ToList();
     }
 
     public static IReadOnlyList<string> GetPublishWarnings(string? publishedSchemaJson, string draftSchemaJson)
@@ -116,6 +172,13 @@ internal sealed class BuilderSchemaModel
                 }
             }
         }
+
+        // The root pointers, which this diff never mentioned. They are the two settings whose loss is
+        // silent by construction -- nothing on the form changes, nothing refuses, and the feature just
+        // stops. An operator who deletes a pointed-at field sees the field removal warned above and
+        // had no way to know the pointer went with it. (T133)
+        AddPointerWarning(warnings, "encounter date", published.ObservationDateField, draft.ObservationDateField);
+        AddPointerWarning(warnings, "entrustment rating", published.RatedLevelField, draft.RatedLevelField);
 
         return warnings;
     }
@@ -176,6 +239,28 @@ internal sealed class BuilderSchemaModel
             .ToArray();
 
         return JsonSerializer.Serialize(keys);
+    }
+
+    private static void AddPointerWarning(List<string> warnings, string what, string? published, string? draft)
+    {
+        if (string.Equals(published, draft, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (published is not null && draft is null)
+        {
+            warnings.Add($"This form will stop recording which field carries the {what}.");
+            return;
+        }
+
+        if (published is null)
+        {
+            warnings.Add($"Field '{draft}' will become the {what} for this form.");
+            return;
+        }
+
+        warnings.Add($"The {what} moves from field '{published}' to '{draft}'.");
     }
 
     private static string NormalizeKey(string? value, string subject)

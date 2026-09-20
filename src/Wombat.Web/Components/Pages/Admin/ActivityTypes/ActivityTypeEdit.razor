@@ -99,6 +99,42 @@
       }
       else if (_activeTab == "form")
       {
+        @* T133. The two root pointers. Before this they were unsettable by any route -- the Form tab
+           is a structured builder with no raw schema editor, so an operator could neither declare
+           them nor clear one whose field they had deleted. *@
+        <div class="detail-card">
+          <div class="header-container">
+            <div>
+              <h3>Form settings</h3>
+              <p class="page-subtitle">Which field carries the encounter date, and which carries the entrustment rating.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <FormField Label="Encounter date field" InputId="observation-date-field">
+              <select id="observation-date-field" class="form-select"
+                      value="@(_builderSchema.ObservationDateField ?? string.Empty)"
+                      @onchange="OnObservationDateFieldChanged">
+                <option value="">None — this form has no single encounter date</option>
+                @foreach (var key in EligibleFieldKeys(FieldType.Date))
+                {
+                  <option value="@key" selected="@(key == _builderSchema.ObservationDateField)">@key</option>
+                }
+              </select>
+            </FormField>
+            <FormField Label="Entrustment rating field" InputId="rated-level-field">
+              <select id="rated-level-field" class="form-select"
+                      value="@(_builderSchema.RatedLevelField ?? string.Empty)"
+                      @onchange="OnRatedLevelFieldChanged">
+                <option value="">None — this form asserts no entrustment level</option>
+                @foreach (var key in EligibleFieldKeys(FieldType.Scale))
+                {
+                  <option value="@key" selected="@(key == _builderSchema.RatedLevelField)">@key</option>
+                }
+              </select>
+            </FormField>
+          </div>
+        </div>
+
         <div class="builder-two-col">
           <div class="detail-card">
             <div class="header-container">
@@ -343,6 +379,51 @@
     _scope = Enum.TryParse<ActivityScope>(args.Value?.ToString(), out var parsed) ? parsed : ActivityScope.Global;
     _scopeIdText = string.Empty;
   }
+
+  /// <summary>
+  /// The field keys eligible to be a root pointer: those of the type the parser demands. (T133)
+  /// </summary>
+  /// <remarks>
+  /// The current pointer is included even when its field has been deleted, so the select shows what
+  /// is set rather than silently reading as "None" — the operator has to be able to SEE an orphaned
+  /// pointer in order to clear it. `ToJson` drops it on save either way, and `GetPublishWarnings`
+  /// says so.
+  /// </remarks>
+  private IReadOnlyList<string> EligibleFieldKeys(FieldType fieldType)
+  {
+    var keys = _builderSchema.Sections
+      .SelectMany(section => section.Fields)
+      .Where(field => field.Type == fieldType && !string.IsNullOrWhiteSpace(field.Key))
+      .Select(field => field.Key.Trim())
+      .Distinct(StringComparer.Ordinal)
+      .ToList();
+
+    var current = fieldType == FieldType.Date
+      ? _builderSchema.ObservationDateField
+      : _builderSchema.RatedLevelField;
+
+    if (!string.IsNullOrWhiteSpace(current) && !keys.Contains(current, StringComparer.Ordinal))
+    {
+      keys.Insert(0, current);
+    }
+
+    return keys;
+  }
+
+  private void OnObservationDateFieldChanged(ChangeEventArgs args)
+  {
+    _builderSchema.ObservationDateField = NullIfEmpty(args.Value?.ToString());
+    RefreshWarnings();
+  }
+
+  private void OnRatedLevelFieldChanged(ChangeEventArgs args)
+  {
+    _builderSchema.RatedLevelField = NullIfEmpty(args.Value?.ToString());
+    RefreshWarnings();
+  }
+
+  private static string? NullIfEmpty(string? value) =>
+    string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
   protected override async Task OnParametersSetAsync()
   {

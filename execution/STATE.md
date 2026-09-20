@@ -50,11 +50,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
+- 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
+  operator draft save. Carried through, plus a Form-tab control and publish warnings. Booting the
+  app republished exactly the 8 seeds declaring `rated_level_field`. **Form tab still unseen.**
 - 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
-  rated evidence: the gate matched exact keys over four legacy tools. One shared classifier now
-  answers it — declared rating (T126) OR known family. Two maps retired. Suites 955.
+  rated evidence. One shared classifier now answers it: declared rating (T126) OR known family.
 - 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against
-  (`rated_level_field`). No migration; the repo forbids an FK on Activity's snapshot columns.
-  Found and filed **T133** (the builder erases root schema pointers) and T134.
+  (`rated_level_field`); no migration needed. Found and filed T133 and T134.
 - 2026-09-20: **T132 shipped** — MSF expiry reminders mailed the token *hash*; they now re-issue.
-- 2026-09-20: queue re-rated EPA-first; T129–T131 filed; four stale paragraphs corrected.
