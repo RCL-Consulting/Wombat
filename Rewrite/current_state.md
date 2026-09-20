@@ -2,11 +2,11 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation, part 1: the two reference trees are gone**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation: the two reference trees, then three stale plan documents**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
-### Deleted — 44 MB, both untracked and gitignored, so no tracked file moved
+### Part 1 — deleted, 44 MB, both untracked and gitignored, so no tracked file moved
 
 | | |
 |---|---|
@@ -23,14 +23,38 @@ This reverses the deferral recorded in the 2026-06-19/20 block below (*"user cho
 folder. `.gitignore` keeps both rules, now commented as a guard — so a future session cannot re-vendor
 44 MB and commit it.
 
-**Left alone on purpose:** the completed task files (`T001`, `T010`, `T016`) and `Rewrite/PROMPT-T010.md`.
-They are records of work already done, and the plan is append-only.
+**Left alone on purpose:** the completed task files (`T001`, `T010`, and T016's spec steps).
+They record work already done, and the plan is append-only.
 
-**▶ NEXT — the cleanup continues (user's stated intent).** The clearest next candidate is the **tracked**
-root `SOURCE_MAP.md` (17.7 KB, generated 2026-04-11): it maps the **old MVC Wombat**, code that has not
-been in the worktree since `c843421`, and `T016` step 9 already called for its removal. — **Sonnet**
-(mechanical: confirm nothing live cites it, delete, fix the one reference in `Rewrite/README.md`).
-Everything on the Wave 1 list below still stands unchanged.
+### Part 2 — three stale plan documents
+
+**Deleted** (both tracked, so both stay in git history):
+
+| | |
+|---|---|
+| `SOURCE_MAP.md` (repo root) | A machine-generated map of the **old MVC Wombat**: 12 references to `Wombat.Common`/`Wombat.Data`, **zero** to any project that exists today. It documented MVC controllers, repositories and AutoMapper — an architecture `DOMAIN.md:127` records as deliberately abandoned. `T016` step 9 had called for its removal since April. |
+| `Rewrite/PROMPT-T010.md` | A session-bootstrap prompt for a task finished months ago, and wholly derivative: its ten steps are T010's own §1–10, its four `grep` checks are `T010-web-layout-auth.md:279-282`, and its "Critical rules" are CLAUDE.md's design non-negotiables. It also still pointed at both deleted reference folders. |
+
+**Merged, not deleted — the two T016 files were never a duplicate.** I had guessed one was
+a stray; it was not. `T016-smoke-test-and-handover.md` is the **spec** (11 steps,
+dependencies, gotchas). `T016-smoke-test-handover.md` was the **execution record** — the
+2026-06-19 build/test numbers, the live smoke-test crawl of wombat.rcl.co.za, the
+success-criteria trace. Two live documents under near-identical names, so a session
+grepping `T016` could not tell which was authoritative.
+
+The record is now an `## Implementation record` section inside the spec file — the house
+convention `T103`, `T109` and `T111` already use — and the second file is gone. Verified
+line by line: **0 lines lost from the spec**, and the only 6 dropped from the record are
+its old title and the stale `[~]` deferral block, replaced by an `[x]` recording what
+actually happened today.
+
+**▶ NEXT — the cleanup can continue.** Nothing is outstanding to ship. Two candidates noticed
+in passing and **not investigated**: `Rewrite/book-fidelity-plan.md` (PLAN.md:122 says it was
+superseded, and is kept only because `EPA Book/critique.md` cites it), and whether
+`Rewrite/practical-plan.md`'s T028–T036 are still the live post-rewrite plan given that
+T098–T127 all landed outside it. — **Sonnet** for a mechanical pass; **Opus** if the question
+turns into *which plan document is authoritative*. Everything on the Wave 1 list below stands
+unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 

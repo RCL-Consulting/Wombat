@@ -28,7 +28,6 @@ Neither reference tree is vendored into this repo any more — both were deleted
 
 - **ClinicAssist.NET** — the reference architecture to copy from. Live working copy at `C:\Users\Renier\ClinicAssist.NET`. Treat as read-only. When in doubt about "how should X be structured", look there first.
 - **The old Wombat source** — in this repo's own history at commit `55a92c6`, the parent of the scaffold commit `c843421`. Use `git show 55a92c6:<path>` for one file, or `git worktree add ../wombat-old 55a92c6` for the whole tree.
-- `../SOURCE_MAP.md` — a machine-generated map of the **old** MVC Wombat (2026-04-11). Stale: the code it describes has not been in the worktree since `c843421`.
 
 ## Scope discipline
 
