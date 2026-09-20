@@ -25,7 +25,7 @@ namespace Wombat.Infrastructure.Persistence;
 /// this runs on every boot alongside the other seeders.
 /// </para>
 /// <para>
-/// See <c>Rewrite/Tasks/T098-epa-v11-adoption.md</c> for the gap analysis behind this, including
+/// See <c>Programme/Tasks/T098-epa-v11-adoption.md</c> for the gap analysis behind this, including
 /// what v11.1 asks for that Wombat cannot yet enforce.
 /// </para>
 /// </remarks>

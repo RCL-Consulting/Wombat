@@ -1,0 +1,43 @@
+# Wombat Programme — Index
+
+This folder is where the project keeps its head: the plan, the task register, the domain/architecture/design contracts, the scenario runbooks, and the live session handoff. It is written to survive multi-session agentic coding — any session can bootstrap by reading `current_state.md`, then the task file it names, and resume without losing continuity.
+
+It began life as `Rewrite/`, the plan for rebuilding Wombat on the ClinicAssist.NET architecture. **That rewrite finished in June 2026** (T001–T027; see `PLAN.md` § Status) and the application has been deployed since 2026-06-19. Everything since — the activity platform, the EPA v11.1 catalogue, security hardening, the operational work — is ordinary product work tracked the same way. The folder was renamed on 2026-09-20 because the old name had outlived what it described.
+
+## How to use this folder
+
+1. Start every session by reading `current_state.md`. It names the active task, blockers, and the last verified commit.
+2. Open the task file it points to under `Tasks/`. Each task file has its own Definition of Done, file list, and verification steps.
+3. Work only on that task. When done, update `current_state.md` and check the box in `PLAN.md`.
+4. If the task has to branch (unexpected work), add a new task file rather than mutating the old one — the plan is append-only so git history stays useful.
+
+## Document map
+
+| File | Purpose |
+|---|---|
+| `PLAN.md` | Master plan. Phases, task list, progress checkboxes. |
+| `DOMAIN.md` | What EPAs, WBAs, STAR and the role hierarchy actually mean. Corrects misunderstandings in the current Wombat model. |
+| `ARCHITECTURE.md` | Clean Architecture / CQRS layout, conventions, non-negotiables. |
+| `DESIGN.md` | The canonical UI/design-system contract: tokens, layout grid, buttons, tables, forms, cards, dashboards, alerts, skeletons, icons, and the `app.css` section order. **Any task that writes Razor must read this first.** |
+| `WORKFLOW.md` | Git branching, session handoff, verification protocol, agent prompts. |
+| `INFRASTRUCTURE.md` | Linode server layout, deployment, secrets, backups. |
+| `HANDOVER.md` | Running the live service: what is deployed, config, deploys, backups, logs, known limitations. The T016 deliverable. |
+| `current_state.md` | Live state. Updated at the end of every session. |
+| `Tasks/T0xx-*.md` | Individual task files. One file per unit of work. |
+
+## Reference material
+
+Neither reference tree is vendored into this repo any more — both were deleted on 2026-09-20.
+
+- **ClinicAssist.NET** — the reference architecture to copy from. Live working copy at `C:\Users\Renier\ClinicAssist.NET`. Treat as read-only. When in doubt about "how should X be structured", look there first.
+- **The old Wombat source** — in this repo's own history at commit `55a92c6`, the parent of the scaffold commit `c843421`. Use `git show 55a92c6:<path>` for one file, or `git worktree add ../wombat-old 55a92c6` for the whole tree.
+
+## Scope discipline
+
+This plan deliberately excludes:
+
+- Any attempt to migrate data from the old Wombat. There are no real users, so there is no data to migrate.
+- Any attempt to keep the old Wombat running alongside the new one. The old code is reference only.
+- Any feature not present in the current Wombat, unless `DOMAIN.md` flags it as a correctness fix. New features are added *after* parity is reached.
+
+If an agent session is tempted to do any of the above, it should stop and add a task file instead of silently expanding scope.

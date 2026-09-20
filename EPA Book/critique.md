@@ -165,7 +165,7 @@ The following points were raised in discussion but dropped from this document be
 
 Drawn from the implications sections, in priority order:
 
-1. **Re-sequence Phase 4 ahead of Phase 3** in `Rewrite/book-fidelity-plan.md`. Rationale: §3 (supervisor-assessor conflict) and §2 (rater leniency) mean analytics built on uncalibrated assessor data will mislead. Faculty development is a data-quality prerequisite, not a polish item.
+1. **Re-sequence Phase 4 ahead of Phase 3** in `Programme/book-fidelity-plan.md`. Rationale: §3 (supervisor-assessor conflict) and §2 (rater leniency) mean analytics built on uncalibrated assessor data will mislead. Faculty development is a data-quality prerequisite, not a polish item.
 2. **Add T046 — R2C2-aligned feedback workflow** (§4). Schema-level extension of seeded observation workflows to include trainee response and coaching conversation states. Estimated effort: M.
 3. **Add T047 — Patient-outcome data source** (§7). Phase 5 item. Generic connector + seeded `outcome_metric` activity type. Estimated effort: L.
 4. **Soften T028 and T029 ambitions** (§5, §8). Prospective/retrospective pair and A RICH rubric stay in scope but are opt-in, not default-on. Adjust acceptance criteria in the task files when written.
@@ -175,6 +175,6 @@ Drawn from the implications sections, in priority order:
 
 ## Status
 
-This document is **reference material**, not a roadmap. The forward plan lives at `Rewrite/practical-plan.md` and is pragmatism-driven. The citations here serve one purpose: when an external reviewer asks "why doesn't Wombat do X?", the plan's "Known compromises" section points back to the relevant row above.
+This document is **reference material**, not a roadmap. The forward plan lives at `Programme/practical-plan.md` and is pragmatism-driven. The citations here serve one purpose: when an external reviewer asks "why doesn't Wombat do X?", the plan's "Known compromises" section points back to the relevant row above.
 
 User will verify citations against PubMed / DOI before any are quoted externally. Flag any that do not resolve; they will be corrected or withdrawn.

@@ -2,7 +2,7 @@
 
 Scored against 92 requirements extracted from chapters 1–24 of *Entrustable Professional Activities in Medical Education* (the canonical reference in `EPA Book/chapters/`). Produced 2026-04-20 against the post-T016 codebase.
 
-> **Context:** this evaluation captures the gap against the textbook's *complete* prescription. It is not a todo list. The forward plan is `Rewrite/practical-plan.md`, which selectively addresses the gaps that matter for a working hospital training programme. Several low scores below (§6 trust & validity, §7 faculty development) reflect areas where the book's prescription is contested in the literature (see `EPA Book/critique.md`) and the practical plan deliberately does not chase them.
+> **Context:** this evaluation captures the gap against the textbook's *complete* prescription. It is not a todo list. The forward plan is `Programme/practical-plan.md`, which selectively addresses the gaps that matter for a working hospital training programme. Several low scores below (§6 trust & validity, §7 faculty development) reflect areas where the book's prescription is contested in the literature (see `EPA Book/critique.md`) and the practical plan deliberately does not chase them.
 
 **Legend:** ✅ full · 🟡 partial · ❌ gap.
 
@@ -148,4 +148,4 @@ These would most change the platform's fidelity to the book:
 
 ### Scope note
 
-Findings are scoped to what the book prescribes; many of the gaps are design choices a programme director might legitimately defer. The T019-b…g follow-ups listed in `Rewrite/current_state.md` do not cover any of the top-five gaps above — they are builder-UX, not book-fidelity.
+Findings are scoped to what the book prescribes; many of the gaps are design choices a programme director might legitimately defer. The T019-b…g follow-ups listed in `Programme/current_state.md` do not cover any of the top-five gaps above — they are builder-UX, not book-fidelity.

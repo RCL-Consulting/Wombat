@@ -5,9 +5,16 @@ Work-Based Assessment Tool for medical specialists. Built around the EPA
 education. The application tracks trainee portfolios, workplace-based assessments,
 curriculum progress, and committee decisions across institutions.
 
-**This is a rewrite in progress.** The canonical plan lives in `Rewrite/`. Start
-every session by reading `Rewrite/current_state.md` — it names the active task,
-the last verified commit, and any blockers.
+**The rewrite is complete.** T001–T027 landed in June 2026 (`Programme/PLAN.md` § Status)
+and the application has been deployed since 2026-06-19. Work since has been ordinary
+product work — the activity platform, the EPA v11.1 catalogue, security hardening — tracked
+as task files, not as a migration.
+
+`Programme/` is where the project keeps its head: the plan, the task register, the
+domain/architecture/design contracts, the runbooks, and the live session handoff. It was
+called `Rewrite/` until 2026-09-20; the name outlived the thing it described. **Start every
+session by reading `Programme/current_state.md`** — it names the active task, the last
+verified commit, and any blockers.
 
 ## Project overview
 
@@ -29,7 +36,7 @@ evaluators, and renderers.
 |---------|----------|
 | Architecture | Clean Architecture with CQRS via MediatR; dependency direction enforced by architecture tests |
 | UI | Blazor Interactive Server; use `IScopedSender` (not `ISender`) in interactive components |
-| Design system | Custom CSS in `app.css` per `Rewrite/DESIGN.md`; no Bootstrap, no MudBlazor, no Radzen, no jQuery |
+| Design system | Custom CSS in `app.css` per `Programme/DESIGN.md`; no Bootstrap, no MudBlazor, no Radzen, no jQuery |
 | ORM | EF Core 10 with PostgreSQL (`Npgsql`); migrations applied at startup |
 | Database | PostgreSQL; `jsonb` columns for activity schema/workflow/credit/data. **Never compare a stored `jsonb` value against serializer output as a raw string** — Postgres discards the submitted bytes and re-renders its own text (keys reordered, separators inserted), so nothing stored is ever byte-equal to what was written. Compare canonical-to-canonical: parse both sides and re-serialise. |
 | MediatR | v12.x maximum — **do not upgrade to paid v13** |
@@ -68,7 +75,7 @@ Wombat/
 │   ├── Wombat.Architecture.Tests/ ← enforces layer boundaries
 │   ├── Wombat.Integration.Tests/
 │   └── Wombat.Web.Tests/          ← bUnit smoke tests (added in T010)
-├── Rewrite/                       ← the rewrite plan (READ THIS FIRST)
+├── Programme/                     ← plan, tasks, contracts, handoff (READ THIS FIRST)
 │   ├── current_state.md           ← live handoff — read before every session
 │   ├── PLAN.md                    ← master task list with progress checkboxes
 │   ├── DOMAIN.md                  ← what EPAs, WBAs, STAR, roles mean
@@ -136,7 +143,7 @@ request record. Lists use `principal.GetInstitutionId()` to filter; get-by-id ca
 `ClaimsPrincipalExtensions` (`IsAdministrator()`, `IsInstitutionalAdmin()`,
 `CanAccessInstitution(int)`).
 
-T056 is landing cluster-incrementally — see `Rewrite/Tasks/T056-institutional-admin-role-power.md`
+T056 is landing cluster-incrementally — see `Programme/Tasks/T056-institutional-admin-role-power.md`
 for which page groups have been migrated and which still require `Administrator`.
 
 ## Activity platform (the schema-driven pivot)
@@ -179,7 +186,7 @@ Three things follow:
 - **In-flight activities stay pinned to their old version** and are not unblocked by a republish.
 - `Wombat__RefreshSeededActivityTypes=false` disables the republish while still logging what differs.
 
-Read `Rewrite/CUSTOMIZATION.md` for the full model.
+Read `Programme/CUSTOMIZATION.md` for the full model.
 
 ## EF Core migrations
 
@@ -210,7 +217,7 @@ Also update `ApplicationDbContextModelSnapshot.cs` to match the final model stat
 
 ## Design system non-negotiables
 
-The canonical design contract is `Rewrite/DESIGN.md`. Key rules:
+The canonical design contract is `Programme/DESIGN.md`. Key rules:
 
 - **No Bootstrap classes.** No `class="table"`, no `btn-outline-primary`, no `col-md-*`.
   Wombat ships its own token-driven `app.css`.
@@ -288,12 +295,12 @@ development. Production startup fails fast if it is missing.
 - Reverse proxy: Caddy (TLS + port forwarding)
 - Database: PostgreSQL (local for Phase 1; managed later if justified)
 - Process manager: systemd
-- See `Rewrite/INFRASTRUCTURE.md` for the full server layout.
+- See `Programme/INFRASTRUCTURE.md` for the full server layout.
 
 ### 🚨 Nothing is live — compatibility is not a constraint
 
 `wombat.rcl.co.za` is **deployed and reachable, not in service**. It and the local dev database hold
-**scenario-execution data only** — rows produced by replaying the `Rewrite/scenario-*.md` runbooks. There
+**scenario-execution data only** — rows produced by replaying the `Programme/scenario-*.md` runbooks. There
 are no real trainees, no real assessors, and no real clinical records anywhere.
 
 **Therefore backward compatibility is not a design constraint.** Prefer the correct end state over the
@@ -312,11 +319,11 @@ Delete this section the day Wombat takes on real users — every decision above 
 
 ## Task management
 
-All task state lives in the `Rewrite/` folder. Before starting any work, read:
+All task state lives in the `Programme/` folder. Before starting any work, read:
 
-1. `Rewrite/current_state.md` — names the active task, blockers, last commit.
-2. The task file it points to under `Rewrite/Tasks/`.
-3. `Rewrite/DESIGN.md` — if the task touches any Razor file.
+1. `Programme/current_state.md` — names the active task, blockers, last commit.
+2. The task file it points to under `Programme/Tasks/`.
+3. `Programme/DESIGN.md` — if the task touches any Razor file.
 
 Work only on the active task. When done, update `current_state.md` and check the
 box in `PLAN.md`. If unexpected work surfaces, add a new task file rather than
