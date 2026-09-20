@@ -2,7 +2,7 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
-## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation, and the production backup that had been lying for 94 days**
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo + disk rationalisation, and the production backup that had been lying for 94 days**
 
 No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
 
@@ -228,12 +228,43 @@ city, and it relays all Wombat mail.
 Corrected in `HANDOVER.md`, `INFRASTRUCTURE.md`, `T097` and `deploy/README.md`, all four of
 which asserted the hardened behaviour as live.
 
-**▶ NEXT.** **[T128]** is the only open operational item and it is blocked on one decision —
-where the off-host copy goes. Everything else this session is done. A smaller follow-on:
-`wombat.service`, `Caddyfile.wombat` and `appsettings.Production.json` are still
-install-once-by-hand, so the same drift can still happen to them; extending the deploy sync
-or adding a drift check to `deploy/verify/` would close that class for good. — **Sonnet**.
-Everything on the Wave 1 list below stands unchanged.
+### Part 7 — `recovery/`: 39 dev-DB snapshots retired, and the cost was not the files
+
+Asked what was in `recovery/`, then told to clean it out on the *nothing is live* rule.
+
+**The 7.3 MB of `.dump` files were the small half.** `tools/db-snapshot.ps1 take` also clones
+each snapshot to a PostgreSQL **template database** `wombat_snapshot_<name>`, and those had
+accumulated to **451 MB — 84% of a 535 MB local cluster.** Deleting only the files would have
+left every one of them behind, still consuming the disk and still listed by the tool.
+
+Dropped all **39** template DBs and removed all 39 dumps plus `molefe-portfolio.pdf` (a T023
+export kept from the T091 Act 5 run). Cluster **535 MB → 84 MB**; `recovery/` 7.3 MB → empty.
+`db-snapshot.ps1 list` confirms both halves clean.
+
+**Guarded, because a `DROP DATABASE` loop deserves it:** the dev DB is `wombat_t002_verify` —
+it does not match `wombat_snapshot\_%`, the script asserted that before dropping anything, and
+it is intact at 13 MB afterwards.
+
+**What was actually lost.** Nothing irreplaceable, but be clear about it: 38 of the 39 dated
+from 28 May – 16 Jun and predate the entire T098–T127 stream — EPA v11.1, T070, T103, T108,
+T109, T100. Restoring one would have given a DB the current code migrates forward but whose
+*catalogue data* is the old world. Only `pre-t103-refresh` (17 Sep) was recent, and T103
+shipped and was verified three days later. The scenario runbooks plus `db-snapshot.ps1 take`
+regenerate the capability from scratch.
+
+**Snapshot names in older entries no longer resolve.** `T075`, `T076`, `T092`, `T093`, `T094`,
+`T103`, `act3-rebuild-scratch.md` and the June/September session blocks below all cite
+snapshots by name (`act3R-final-t065`, `t091-act{1..5}-complete`, `t091-act3-schemas`,
+`pre-t103-refresh`, …). Those are **records of what was done**, and remain true as history —
+but `db-snapshot.ps1 restore <name>` will not find them. One is phrased as an instruction and
+is now stale: the June NEXT at the `t091` block, *"Restore any per-act snapshot"*. Take a
+fresh snapshot before any replay rather than hunting for an old one.
+
+**▶ NEXT.** Unchanged: **[T128]** (off-host backup destination) is the only open operational
+item and is blocked on one decision. Noticed in passing, not acted on: the dev database is
+called **`wombat_t002_verify`** — a name left over from T002 verification that has been the
+working dev DB ever since. Harmless, but it reads like a throwaway and one day someone will
+treat it as one. Everything on the Wave 1 list below stands unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 
