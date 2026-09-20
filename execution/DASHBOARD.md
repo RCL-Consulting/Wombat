@@ -21,6 +21,7 @@
 | queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T135](tasks/queued/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
+| queued | [T136](tasks/queued/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -49,9 +50,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+7c94f53 docs(execution): browser-verify T134, and record that T126 cannot fire on current data
 8971dd7 chore(execution): bring STATE back under its 60-line cap
 4d8646e docs(execution): browser-verify T133 against the dev database
 88e5398 fix(admin): the visual builder erased every root schema pointer it did not know about (T133)
 50aa464 fix(committee): a v11.1 trainee's sampling report said there was no rated evidence (T134)
-a1097bd docs(epa): record the College's answers to all fourteen decisions (T129)
 ```

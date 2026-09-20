@@ -196,8 +196,40 @@ should file a fresh activity first.
 The shared classifier that [T134] extracted from this query was verified on the same page: the
 "Direct observation" source label is byte-identical to what charted before the map moved.
 
-### Still not verified
+### The off-ladder rule, demonstrated end to end — 2026-09-20
 
-- **A genuinely off-ladder point has never been rendered.** It needs an activity filed against a
-  v4+ schema whose ladder differs from the trainee's pinned curriculum scale. Unit-tested
-  (`ARatingFromAnotherLadderIsMarkedOffLadderEvenWhenItsOrdinalIsValidHere`), never seen.
+The gap above is closed. Because no activity on dev was pinned to a pointer-carrying version, one
+was created: as `ndlovu@kgk.wombat.local` filed a Mini-CEX (Paediatrics) on PAED-001 dated
+2026-08-15, and as `zulu@kgk.wombat.local` completed it at CPSA rung **4** (ordinal 5). It pinned
+to **version 4** — activity 15, still on dev, and the only v4-pinned activity there is.
+
+With the curriculum still pinned to the CPSA ladder, the new point plotted and was correctly **not**
+marked: same ladder as the axis.
+
+Then PAED-001's curriculum item was temporarily re-pinned to the **O-R Scale** (five rungs, minimum
+4, per-stage minima adjusted to fit). The trajectory then read:
+
+| Date | Pinned schema | Rung on the O-R axis | Marked? |
+|---|---|---|---|
+| 2026-02-14 | v3 | Supervises others | no |
+| **2026-08-15** | **v4** | **Supervises others** | **"not a rung on this scale"** |
+| 2026-09-19 | v3 | Indirect supervision | no |
+
+**That is the case this task exists for.** The v4 point's ordinal is 5, which *is* a perfectly
+valid rung on the O-R Scale — it renders as "Supervises others" — so the ordinal-range test could
+never have caught it. Only the ladder its pinned schema declares distinguishes it. And the two v3
+points, with the *same* ordinal against the *same* axis, are deliberately left unmarked, because
+their schemas declare nothing and no disagreement is established.
+
+The chart drew it as D30 requires: the polyline connects the two v3 points and the v4 point sits
+off the line, unconnected. The curriculum item was then restored to CPSA / minimum 6 / its original
+per-stage minima, verified by re-reading the row.
+
+**Activity 15 is left in place deliberately.** It is the only v4-pinned activity on dev, and
+without it this rule cannot be demonstrated again.
+
+### Found while doing this
+
+Re-pinning the curriculum item **failed silently three times** before succeeding — no message, no
+validation error, the row simply unchanged. The refusal is correct (T109: a minimum of 6 is not a
+rung on a five-rung ladder) but nothing says so. Filed as [T136].

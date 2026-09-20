@@ -49,7 +49,8 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
    - **Is June semester 1 or semester 2?** D13 gave "boundary in June"; recorded Jan–Jun / Jul–Nov.
 2. **[T121] (MSF)** — all four blocking decisions answered; the highest-value released task.
    **[T130]** (the quota) is unblocked too.
-3. **[T135]** — the sampling denominator/numerator disagreement, found in T134's design pass.
+3. **[T135]** (sampling denominator/numerator) and **[T136]** (a curriculum scale change fails
+   silently — no message, correct refusal, found browser-verifying T126).
 4. **[T128]** — still blocked on you: destination + `age` key holder.
 
 ### Traps
@@ -57,13 +58,11 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 - **`counts_for` is permanent per pinned version.** `Activity.SchemaVersion` is assigned once, there
   is no re-pin path, and a rebuild replays against the pinned version. "Ship `[]` now and switch
   later" was never available — which is why D8 had to be right first time. It is: MSF gets `[]`.
-- **T126's off-ladder rule is INERT on every activity now on dev.** Browser-checked: the chart
-  renders the CPSA axis correctly and marks nothing, because every filed activity is pinned to a
-  **pre-T126 schema version** and the resolver reads the pinned one by design. Correct, and it
-  means **looking at the product today shows no difference** — file a fresh activity first.
+- **Activity 15 on dev is the only v4-pinned activity, and it is there on purpose.** Without it,
+  T126's off-ladder rule cannot be demonstrated — every other activity predates the pointer, so
+  nothing resolves and nothing marks. Do not tidy it away.
   In-flight activities stay pinned; `OffLadder = false` means "not knowable", never "on the ladder".
-- **`lint` tells you to run `trim` when STATE/HANDOFF overflow, and `trim` reports "moved 0".** The
-  advice is unactionable; both files were cut by hand. Worth fixing upstream next time you are there.
+- **`lint` says run `trim` on overflow; `trim` reports "moved 0".** Unactionable — cut by hand.
 - **The family arm in `RatedActivityTypes` is INTERIM**, retiring with [T122]'s `WbaToolKey`.
   Tests pin it, so removing it is a decision rather than a discovery.
 - Hooks hard-code `C:\dev\rcl_execution\bin\harness.py` (`main`). Never pass `--no-build`.
@@ -74,7 +73,8 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 - Suites green, no `--no-build`: Domain **78**, Application **544**, Infrastructure **207**,
   Architecture **23**, Web **111** — **963 total**, up from 875 at session start. Integration is
   Docker-gated and was not run.
-- T126, T132, T133 and T134 each **verified to fail against the unfixed code** before being called
-  done. **T133 and T134 also browser-verified** on dev; T126's chart renders but cannot yet fire.
+- T126, T132, T133 and T134 each **verified to fail against the unfixed code**, and T126, T133 and
+  T134 **browser-verified on dev** — T126's off-ladder rule demonstrated end to end by filing a
+  v4-pinned activity and temporarily re-pinning the curriculum ladder.
 - `harness.py lint --strict` clean; harness 2.4.3 pushed upstream, suite 127. Not re-verified:
   `drift-check.sh`, `restore-rehearsal.sh` — unchanged since 2026-09-20a.

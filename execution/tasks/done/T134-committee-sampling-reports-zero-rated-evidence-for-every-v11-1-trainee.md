@@ -197,7 +197,13 @@ at all**. The committee was shown nothing where it should have been shown a conc
 
 ### Still not verified
 
-- **The withheld-evidence path** (`EvidenceComplete: false`) was not exercised in the browser; it
-  needs a caller who may read only part of the window. Covered by two handler tests.
+- **The withheld-evidence path** (`EvidenceComplete: false`) could **not** be reproduced on dev.
+  Attempted 2026-09-20 as `vanrensburg@sun.ac.za`, who is external to the trainee's institution
+  (sun.ac.za vs kgk) and sits on the panel: they see the identical report to a global
+  Administrator, with no incomplete banner. Panel membership evidently admits the rows through
+  `WhereReadableBy`, so the case needs activity scope stamps engineered for it and there is no UI
+  to do that. It stays covered by `ExternalPanelMember_IsToldTheSampleIsIncompleteRatherThanClean`
+  and `PartiallyWithheldEvidence_FlagsTheWarningItInventedAsIncomplete`, both of which this task
+  verified fail when the rated filter is moved behind the readability filter.
 - No review on dev exercises an unfamiliar rated tool, so the `SourceBucket` fallback is
   test-covered only.
