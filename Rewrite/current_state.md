@@ -260,11 +260,52 @@ but `db-snapshot.ps1 restore <name>` will not find them. One is phrased as an in
 is now stale: the June NEXT at the `t091` block, *"Restore any per-act snapshot"*. Take a
 fresh snapshot before any replay rather than hunting for an old one.
 
+### Part 8 — `deploy/verify/drift-check.sh`, and the two things it found on its first run
+
+Added the drift check the backup finding argued for. It is the **exception** among its
+siblings: the other five are piped to the server and run there, this one runs **locally** and
+reaches out over SSH, because a comparison needs both sides. Comparison is CRLF-insensitive —
+a Windows checkout is CRLF and the deploy strips it, so a naive hash compares nothing useful.
+
+It checks four things: every deployed artifact against its repo original (showing the **diff**
+on a mismatch, not just a hash — a hash tells you there is a problem, not what it is), paths
+that must **not** exist, file modes on the app directory and the secrets, and the cron entries.
+
+**It found two real things immediately, which is the argument for having written it.**
+
+**1. `/opt/wombat/app` was 100% world-writable — 230 files at `666`, one at `777`.** Every
+DLL including `Wombat.Web.dll`. Any local user could swap one and get code execution as the
+service user on the next restart. Cause: `deploy.ps1` tars from a **Windows** checkout, which
+carries no Unix modes, and the remote `tar -xzf` applies the permissive defaults; `chown` was
+run afterwards, `chmod` never. `deploy.sh` had the same exposure through `rsync -az`.
+
+The sharpest detail: **`ProtectSystem=strict` with `ReadWritePaths=/opt/wombat/data` already
+denies the service write access to `/opt/wombat/app`.** Those bits bought nothing and cost
+everything. Fixed on the box (`chmod -R go-w`, now 644/755, 0 world-writable) and in both
+deploy scripts so it cannot return. Secrets were never affected — `wombat.env` 600,
+`data/keys` 700.
+
+**2. `deploy/README.md` step 4 told you to create a file nothing reads.** It instructed
+`cp appsettings.Production.json /opt/wombat/config/`. The app's ContentRoot is its
+`WorkingDirectory`, `/opt/wombat/app`, where the file already arrives in the publish output —
+so a copy under `config/` is never loaded, and editing it to change production behaviour
+silently does nothing. The live box never had one; the instruction was simply never executed,
+which is the only reason it was harmless. Step 4 now says not to, and the check **asserts its
+absence** rather than its presence.
+
+Also cleared en route: `wombat.service` differed from the repo by one comment line. Re-installed
+and `daemon-reload`ed — service stayed active, `/health` 200 throughout. A drift check that
+always reports known-benign drift is a drift check people learn to ignore.
+
+**Second run is clean: `NO DRIFT — the server runs what the repo says`, exit 0.** Verified
+`bash -n` on both changed scripts, the PowerShell AST parser on `deploy.ps1`, and the new
+script scanned against every credential-shaped token in `pwd_DO_NOT_COMMIT.txt` — 12
+candidates, 0 hits.
+
 **▶ NEXT.** Unchanged: **[T128]** (off-host backup destination) is the only open operational
-item and is blocked on one decision. Noticed in passing, not acted on: the dev database is
-called **`wombat_t002_verify`** — a name left over from T002 verification that has been the
-working dev DB ever since. Harmless, but it reads like a throwaway and one day someone will
-treat it as one. Everything on the Wave 1 list below stands unchanged.
+item, blocked on one decision. `./deploy/verify/drift-check.sh` is now the cheapest way to
+open a session that is going to touch the server — it is read-only, takes seconds, and exits
+non-zero if anything has moved. Everything on the Wave 1 list below stands unchanged.
 
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 

@@ -219,7 +219,7 @@ This file goes stale. These do not:
 |---|---|
 | `Rewrite/current_state.md` | **Read this first, every session.** The live handoff: active task, last verified commit, blockers. Newest session at the top. |
 | `deploy/README.md` | The operational manual — first-boot checklist, deploys, rollback, useful commands. |
-| `deploy/verify/*.sh` | Five read-only checks for the live box: restore rehearsal, audit append-only trigger, DataProtection keys, authenticated smoke test, auth-cookie `Secure` flag. None hardcodes a credential. |
+| `deploy/verify/*.sh` | Six read-only checks for the live box: restore rehearsal, audit append-only trigger, DataProtection keys, authenticated smoke test, auth-cookie `Secure` flag, and **`drift-check.sh`** — does the server run what the repo says? None hardcodes a credential. |
 | `Rewrite/INFRASTRUCTURE.md` | The server contract: layout, systemd unit, Caddy, env file, backups, SSO, audit retention. |
 | `CLAUDE.md` | Architecture, conventions, footguns, and the "nothing is live" section to delete when that changes. |
 | `Rewrite/Tasks/T0xx-*.md` | One file per unit of work, including every filed-but-unfixed defect. |
@@ -237,9 +237,11 @@ Structural, and true as of 2026-09-20:
   **[T128]**, and expect a cron mail every night until it is closed.
 - **Server-side files can drift from the repo.** The cron scripts used to have no deployment
   path at all, which is how T097's backup rewrite sat undeployed for three months. Both
-  deploy scripts now sync `/usr/local/bin/wombat-*.sh`, but `wombat.service`, the Caddyfile
-  and `appsettings.Production.json` are **still** install-once-by-hand. Before trusting any
-  claim about server behaviour, compare: `sha256sum` the deployed file against the repo.
+  deploy scripts now sync `/usr/local/bin/wombat-*.sh`, but `wombat.service` and the
+  Caddyfile are **still** install-once-by-hand. **Run `./deploy/verify/drift-check.sh`
+  before trusting any claim in this document about server behaviour** — it hashes every
+  deployed artifact against its repo original and exits non-zero on any difference. Last
+  run clean on 2026-09-20.
 - **1 vCPU / 1 GB**, half the documented minimum. Fine for scenario replay; resize before a
   real cohort.
 - **SSO is built but not activated.** T027 shipped the OIDC wiring, the group-to-role

@@ -64,12 +64,14 @@ mkdir -p /opt/wombat/config /opt/wombat/data/logs /opt/wombat/data/uploads
 chown -R wombat:wombat /opt/wombat
 ```
 
-Copy `appsettings.Production.json` from the repo:
+**Do not copy `appsettings.Production.json` here.** This step used to say to, and it was
+wrong: the app's ContentRoot is its `WorkingDirectory`, `/opt/wombat/app`, and
+`appsettings.Production.json` already ships in the publish output. A copy under `config/` is
+**read by nothing** — so editing it to change production behaviour silently does nothing,
+which is worse than its absence. `deploy/verify/drift-check.sh` asserts it is not there.
+(The live box never had one; the instruction was simply never executed.)
 
-```bash
-cp appsettings.Production.json /opt/wombat/config/
-chown wombat:wombat /opt/wombat/config/appsettings.Production.json
-```
+`/opt/wombat/config/` holds exactly one file: `wombat.env`.
 
 Create `/opt/wombat/config/wombat.env` (mode 600):
 
@@ -255,8 +257,15 @@ restore into a throwaway and drop it afterwards.
 | `dataprotection-keys.sh` | **Will a restart log everyone out?** Checks the key ring lives under `/opt/wombat/data/keys` and that the service user can write there. |
 | `smoke-test.sh` | **Does the authenticated surface work?** Logs in as the seeded admin and crawls eleven pages, reporting HTTP status, authenticated-or-not, and title. |
 | `login-cookie.sh` | **Is the auth cookie `Secure` behind Caddy?** The forwarded-headers property `smoke-test.sh` does not assert. |
+| `drift-check.sh` | **Does the server run what this repo says it does?** Hashes every deployed artifact against its repo original, asserts the paths that must *not* exist, and checks file modes. **Runs locally, not piped** — a comparison needs both sides. |
 
-They are piped to the server rather than installed, so they need no execute bit:
+`drift-check.sh` is the exception — run it **locally**, and it exits non-zero on any drift:
+
+```bash
+./deploy/verify/drift-check.sh [user@host]      # default root@172.236.8.144
+```
+
+The other four are piped to the server rather than installed, so they need no execute bit:
 
 ```powershell
 Get-Content -Raw deploy/verify/restore-rehearsal.sh | ssh root@172.236.8.144 "tr -d '\r' | bash -s"

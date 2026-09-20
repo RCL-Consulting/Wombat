@@ -46,6 +46,12 @@ ssh "$REMOTE" "rm -rf $REMOTE_PREV && ([ -d $REMOTE_APP ] && mv $REMOTE_APP $REM
 echo "==> Syncing binaries to $REMOTE:$REMOTE_APP ..."
 rsync -az --delete "$PUBLISH_DIR/" "$REMOTE:$REMOTE_APP/"
 
+# rsync carries the source modes, and a Windows/WSL checkout has none worth carrying.
+# ProtectSystem=strict already denies the service write access to this directory, so any
+# group/other write bit is pure exposure — it lets a local user swap a DLL and get code
+# execution as the service user on the next restart.
+ssh "$REMOTE" "sudo chmod -R go-w $REMOTE_APP"
+
 echo "==> Restarting wombat service (auto-applies EF migrations on startup)..."
 # The service applies pending EF migrations on boot using systemd's EnvironmentFile,
 # which parses wombat.env correctly (the connection string contains ';'). A one-shot

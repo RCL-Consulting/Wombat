@@ -66,6 +66,10 @@ rm -rf /opt/wombat/app.prev
 [ -d /opt/wombat/app ] && mv /opt/wombat/app /opt/wombat/app.prev || true
 mv /opt/wombat/app.new /opt/wombat/app
 chown -R wombat:wombat /opt/wombat/app
+# A tarball built on Windows carries no Unix modes, so the extract lands 666 on every DLL.
+# ProtectSystem=strict already denies the service write access here, so those bits buy
+# nothing and let any local user swap a DLL for code execution on the next restart.
+chmod -R go-w /opt/wombat/app
 rm -f /tmp/publish.tgz
 # The service auto-applies EF migrations on startup using systemd's EnvironmentFile,
 # which parses wombat.env correctly (the connection string contains ';', which a bash
