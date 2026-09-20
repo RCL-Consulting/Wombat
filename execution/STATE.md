@@ -51,8 +51,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent
 
 - 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
-  operator draft save. Carried through, plus a Form-tab control and publish warnings. Booting the
-  app republished exactly the 8 seeds declaring `rated_level_field`. **Form tab still unseen.**
+  operator draft save. Carried through, plus a Form-tab control and publish warnings.
+  **Browser-verified**: a draft save now preserves both pointers, and the stored v4 row really
+  carries T126's rating pointer — which also closes T126's own open question.
 - 2026-09-20: **T134 shipped** — a v11.1 trainee's committee sampling report said there was NO
   rated evidence. One shared classifier now answers it: declared rating (T126) OR known family.
 - 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against

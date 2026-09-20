@@ -49,8 +49,8 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
    - **Is June semester 1 or semester 2?** D13 gave "boundary in June"; recorded Jan–Jun / Jul–Nov.
 2. **[T121] (MSF)** — all four blocking decisions answered; the highest-value released task.
    **[T130]** (the quota) is unblocked too.
-3. **Open the Form tab in a browser.** T133's two new selects have never been looked at — no
-   admin credentials this session. The model beneath them is tested; the UI is not.
+3. **Browser-check T126 and T134** — a v11.1 trainee's trajectory (off-ladder dots) and a
+   committee review's sampling report. Neither has been seen; T133's path now has.
 4. **[T128]** — still blocked on you: destination + `age` key holder.
 
 ### Traps
@@ -58,9 +58,9 @@ Four application tasks shipped, fourteen product decisions closed, one upstream 
 - **`counts_for` is permanent per pinned version.** `Activity.SchemaVersion` is assigned once, there
   is no re-pin path, and a rebuild replays against the pinned version. "Ship `[]` now and switch
   later" was never available — which is why D8 had to be right first time. It is: MSF gets `[]`.
-- **The app WAS booted against the dev database** (T133). The refresher republished exactly the 8
-  seeds declaring `rated_level_field`, v3→v4, closing T126's open question. But **no page was ever
-  opened** — no admin credentials. T126's chart and T134's report still reason from code only.
+- **T133 was browser-verified**; T126's chart and T134's report were **not**. Both still reason
+  from code alone. The app boots fine and the admin credentials are in `pwd_DO_NOT_COMMIT.txt`,
+  so checking the trajectory chart and a committee review is now cheap — do it.
   In-flight activities stay pinned; `OffLadder = false` means "not knowable", never "on the ladder".
 - **`lint` tells you to run `trim` when STATE/HANDOFF overflow, and `trim` reports "moved 0".** The
   advice is unactionable; both files were cut by hand. Worth fixing upstream next time you are there.

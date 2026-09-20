@@ -165,13 +165,27 @@ republish *is* the evidence the new canonical form differs — i.e. the pointer 
 Parse+Serialize into the stored version, against a real Postgres, not only in tests. Each log line
 also states that activities already created against the old version stay pinned to it.
 
-### Not verified
+### Browser-verified 2026-09-20, against the dev database
 
-- **The Form tab itself was never opened in a browser.** Reaching `/admin/activity-types/{id}`
-  needs admin credentials this session did not have — `dotnet user-secrets` holds a connection
-  string and a pseudonym salt, no seed admin password. The two selects, their None option and the
-  orphaned-pointer case are covered by unit tests on the model beneath them and by `DESIGN.md`
-  conformance, but nobody has looked at them. **Do that before trusting the UI half.**
-- Whether any activity type in dev or production had *already* lost `observation_date_field` to a
-  builder save before this fix. The republish above would have restored it for the eight seeded
-  types; an operator-built type would still be carrying the loss.
+The gap this section previously recorded is closed. Signed in as Administrator and opened
+`/admin/activity-types/17` (`mini_cex_cpsa`), which the list page shows at **v4** — the version the
+seed refresher had just published.
+
+- **The Form settings card renders correctly.** Two `.form-select` controls under `FormField`
+  labels, each with its None option, matching `DESIGN.md`. No Bootstrap, no inline styles.
+- **Both pointers were read from the STORED schema and shown selected** — `observed_on` and
+  `overall_level`. That is independent confirmation that T126's `rated_level_field` is really in
+  the published v4 row in Postgres, not merely in the seed file and the tests.
+- **The round trip was exercised for real.** Clicked *Save draft*, reloaded the page, and both
+  pointers were still selected. **Before this change that save is exactly what erased them.**
+- The draft was then discarded, returning the type to its published state. The dev database is as
+  it was found, apart from the eight seed republishes that boot performs by design.
+
+### Still not verified
+
+- **The orphaned-pointer path was not exercised in the browser** — deleting a pointed-at field and
+  confirming the select still shows it, that the draft saves, and that the publish warning appears.
+  It is covered by four unit tests on the model beneath the UI, but not seen.
+- Whether any operator-built type had **already** lost `observation_date_field` to a builder save
+  before this fix. The republish restored it for the eight seeded types; an operator-built type
+  would still be carrying the loss, and nothing has looked.
