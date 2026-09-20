@@ -362,6 +362,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Wombat.Web/appsettings.Local.json
+
+# Reference trees, deleted from the worktree 2026-09-20. The rules stay as a guard:
+# ClinicAssist lives at C:\Users\Renier\ClinicAssist.NET and the old Wombat is in this
+# repo's history at 55a92c6 — neither should ever be vendored back in and committed.
 ClinicAssist.NET_ref_DO_NOT_COMMIT/
 Wombat_ref_old_DO_NOT_COMMIT/
 Rewrite/.dotnet/

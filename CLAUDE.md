@@ -78,8 +78,6 @@ Wombat/
 │   ├── WORKFLOW.md                ← git branching, session handoff protocol
 │   ├── INFRASTRUCTURE.md          ← Linode deployment target
 │   └── Tasks/T0xx-*.md            ← individual task files
-├── ClinicAssist.NET_ref_DO_NOT_COMMIT/   ← reference architecture (read-only, not committed)
-├── Wombat_ref_old_DO_NOT_COMMIT/         ← old Wombat source (read-only, not committed)
 ├── Directory.Build.props
 ├── Directory.Packages.props
 ├── .editorconfig
@@ -316,8 +314,20 @@ uncommitted working tree.
 
 ## Reference folders
 
-- `ClinicAssist.NET_ref_DO_NOT_COMMIT/` — the reference architecture. Treat as
-  read-only. When unsure about structure, look there first. **Do not commit this
-  folder** — it is in `.gitignore`.
-- `Wombat_ref_old_DO_NOT_COMMIT/` — the old Wombat source. Read-only reference for
-  porting domain logic. Also in `.gitignore`.
+Both reference trees were deleted from the worktree on 2026-09-20. Nothing was lost —
+each has a live source elsewhere, verified before the delete:
+
+- **ClinicAssist.NET** — the reference architecture. The live working copy is at
+  `C:\Users\Renier\ClinicAssist.NET` (remote
+  `ssh://renier@rcl.co.za:10648/home/renier/ClinicAssist.NET`), and it is newer than the
+  vendored snapshot ever was. Open it there when unsure about structure.
+- **The old Wombat source** — it is in *this* repo's own history. Commit `55a92c6`, the
+  parent of `c843421 "Scaffold new Wombat solution"`, holds the full old tree; all 556
+  files were hash-compared against the deleted copy and matched.
+
+  ```bash
+  git show 55a92c6:Wombat.Web/Views/EPA/Index.cshtml   # one file
+  git worktree add ../wombat-old 55a92c6               # the whole tree
+  ```
+
+  It is also at `github.com/reniercloete/Wombat`.

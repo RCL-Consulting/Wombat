@@ -607,12 +607,12 @@ When a new section is needed (say `/* ── Badges ── */`), add its heading
 
 ## Reference material
 
-Two read-only reference trees inform the design system:
+Two read-only reference trees informed this design system. Both were deleted from the worktree on 2026-09-20, long after T010 landed and `app.css` outgrew them. Where they went:
 
-- **`ClinicAssist.NET_ref_DO_NOT_COMMIT/`** — the gold standard. Its `src/ClinicAssist.Web/wwwroot/app.css` (~570 lines) is what we are porting structurally. Its `MainLayout.razor.css`, `NavMenu.razor.css`, and page-level Razor files show the target rendering quality. Copy structure, not palette.
-- **`Wombat_ref_old_DO_NOT_COMMIT/`** — the old Wombat. The GUI is not a gold standard — it has Bootstrap-coupled tables, ad-hoc inline styles, and no design-token discipline — but it **did ship and work**. Consult it when deciding page layout for Wombat-specific workflows that ClinicAssist doesn't have (e.g. EPA management, curriculum items, activity builder, committee views). The old Wombat's `Views/` folder shows which pages users actually navigate and what data they expect to see. When porting these, apply the *ClinicAssist design system* to the *old Wombat page structure*.
+- **ClinicAssist.NET** — the gold standard the token names, class names, spacing scale and layout grid were ported from. Live working copy at `C:\Users\Renier\ClinicAssist.NET`; the files that mattered were `src/ClinicAssist.Web/wwwroot/app.css`, `Components/Layout/MainLayout.razor.css` and `Components/Layout/NavMenu.razor.css`. Copy structure, not palette.
+- **The old Wombat** — its GUI was never a gold standard (Bootstrap-coupled tables, ad-hoc inline styles, no design-token discipline) but it **did ship and work**, and its `Views/` folder is the record of which pages users actually navigated for the Wombat-specific workflows ClinicAssist has no equivalent of (EPA management, curriculum items, activity builder, committee views). Recover it from this repo's history: `git worktree add ../wombat-old 55a92c6`.
 
-Neither folder is committed — both are in `.gitignore`.
+Neither is needed to work on the design system now — `app.css` is the contract, and this file describes it in full.
 
 ## Historical context
 

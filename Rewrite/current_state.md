@@ -2,6 +2,36 @@
 
 This file is the live handoff between sessions. Every session ends by editing this file. Keep it short and accurate.
 
+## ⭐ SESSION — 2026-09-20 (Opus) — **repo rationalisation, part 1: the two reference trees are gone**
+
+No code changed. Nothing under `src/` or `tests/` was touched, so the suites were not re-run.
+
+### Deleted — 44 MB, both untracked and gitignored, so no tracked file moved
+
+| | |
+|---|---|
+| `Wombat_ref_old_DO_NOT_COMMIT/` | 556 files. **Verified redundant before deleting:** every one is byte-identical (modulo CRLF) to commit `55a92c6` — the parent of `c843421 "Scaffold new Wombat solution"`, *in this repo*. `git worktree add ../wombat-old 55a92c6` restores the whole tree; `git show 55a92c6:<path>` gets one file. Also at `github.com/reniercloete/Wombat`. |
+| `ClinicAssist.NET_ref_DO_NOT_COMMIT/` | 1005 files, a snapshot frozen at 2026-04-11. The live working copy at `C:\Users\Renier\ClinicAssist.NET` is 2½ months newer (HEAD 2026-06-30) and has a remote. Only 11 files were snapshot-only, and 10 of those are in that repo's git history. The 11th — its generated `SOURCE_MAP.md` — was dropped, on the user's call. |
+
+This reverses the deferral recorded in the 2026-06-19/20 block below (*"user chose to keep"*).
+`T016` step 9 had scheduled the deletion all along.
+
+### Pointers rewritten, so nothing sends a future session to a path that no longer exists
+
+`CLAUDE.md` (repo tree + "Reference folders"), `Rewrite/README.md`, `Rewrite/DESIGN.md`,
+`Rewrite/WORKFLOW.md`, `Rewrite/ARCHITECTURE.md`. Each now names the live source instead of the deleted
+folder. `.gitignore` keeps both rules, now commented as a guard — so a future session cannot re-vendor
+44 MB and commit it.
+
+**Left alone on purpose:** the completed task files (`T001`, `T010`, `T016`) and `Rewrite/PROMPT-T010.md`.
+They are records of work already done, and the plan is append-only.
+
+**▶ NEXT — the cleanup continues (user's stated intent).** The clearest next candidate is the **tracked**
+root `SOURCE_MAP.md` (17.7 KB, generated 2026-04-11): it maps the **old MVC Wombat**, code that has not
+been in the worktree since `c843421`, and `T016` step 9 already called for its removal. — **Sonnet**
+(mechanical: confirm nothing live cites it, delete, fix the one reference in `Rewrite/README.md`).
+Everything on the Wave 1 list below still stands unchanged.
+
 ## ⭐ SESSION — 2026-09-19 later (Opus) — **Wave 1 is done: every number a clinician reads now says what it means**
 
 **Build clean, 0 warnings. 875 tests green** — Domain 69, Application 503, Infrastructure 177,

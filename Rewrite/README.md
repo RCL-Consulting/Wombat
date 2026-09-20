@@ -22,11 +22,13 @@ This folder is the canonical plan for rewriting Wombat on top of the same archit
 | `current_state.md` | Live state. Updated at the end of every session. |
 | `Tasks/T0xx-*.md` | Individual task files. One file per unit of work. |
 
-## Reference material (read-only)
+## Reference material
 
-- `../ClinicAssist.NET_ref_DO_NOT_COMMIT/` — the reference architecture to copy from. Treat as read-only. When in doubt about "how should X be structured", look there first.
-- `../ClinicAssist.NET_ref_DO_NOT_COMMIT/SOURCE_MAP.md` — quick orientation for the reference project.
-- `../SOURCE_MAP.md` — source map of the current Wombat code. Useful when porting domain logic; will be deleted once the rewrite lands.
+Neither reference tree is vendored into this repo any more — both were deleted on 2026-09-20.
+
+- **ClinicAssist.NET** — the reference architecture to copy from. Live working copy at `C:\Users\Renier\ClinicAssist.NET`. Treat as read-only. When in doubt about "how should X be structured", look there first.
+- **The old Wombat source** — in this repo's own history at commit `55a92c6`, the parent of the scaffold commit `c843421`. Use `git show 55a92c6:<path>` for one file, or `git worktree add ../wombat-old 55a92c6` for the whole tree.
+- `../SOURCE_MAP.md` — a machine-generated map of the **old** MVC Wombat (2026-04-11). Stale: the code it describes has not been in the worktree since `c843421`.
 
 ## Scope discipline
 

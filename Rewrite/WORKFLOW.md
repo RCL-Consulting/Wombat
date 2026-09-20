@@ -15,7 +15,7 @@ A session is one continuous block of work by a single agent (or human). Sessions
    - Any blockers or open questions.
 2. Open the task file named in `current_state.md`.
 3. Skim `PLAN.md` just enough to see where this task sits in the larger dependency graph.
-4. If the task references code in `../ClinicAssist.NET_ref_DO_NOT_COMMIT/`, open those files and **read them before writing anything**.
+4. If the task references ClinicAssist code, it is no longer vendored into this repo — open the live working copy at `C:\Users\Renier\ClinicAssist.NET` and **read those files before writing anything**.
 5. Check out the task's working branch (naming below). If it doesn't exist, create it from `main`.
 6. Run `dotnet build` to confirm the baseline is green.
 7. Announce your plan for the session in a single paragraph. Stick to it.

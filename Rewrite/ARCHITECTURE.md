@@ -2,7 +2,7 @@
 
 > **⚠ Amended by `CUSTOMIZATION.md`.** The ClinicAssist layout is still the baseline, but Wombat adds a schema-driven Activity platform that ClinicAssist does not have. Do not copy ClinicAssist on anything that touches the activity model — that is the deliberate departure. See `CUSTOMIZATION.md` and the "Activity platform" section at the end of this document.
 
-The rewrite follows the ClinicAssist.NET layout almost exactly. When in doubt, open the reference project and copy the shape. This document captures the non-negotiables and the decisions that don't fall out naturally from "do what ClinicAssist does".
+The rewrite follows the ClinicAssist.NET layout almost exactly. When in doubt, open the reference project and copy the shape — it is no longer vendored into this repo, so open the live working copy at `C:\Users\Renier\ClinicAssist.NET`. This document captures the non-negotiables and the decisions that don't fall out naturally from "do what ClinicAssist does".
 
 ## Solution layout
 
