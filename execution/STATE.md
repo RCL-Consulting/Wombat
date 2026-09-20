@@ -45,10 +45,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
-- 2026-09-20: harness bootstrapped; 115 task files moved into lanes with v2 frontmatter.
-- 2026-09-20: `Rewrite/` → `Programme/`; CLAUDE.md stopped calling the rewrite "in progress".
+- 2026-09-20: all project docs now live under `execution/`; `Rewrite/` and `Programme/` gone.
+  Session-start load 301,455 → ~10,000 bytes. See W-001..W-005 in `DECISIONS.md`.
 - 2026-09-20: T097's backup script had never been deployed — 94 nights of a dump-only backup
-  reporting success. Fixed, and the cron scripts now have a deploy path. **T128** filed.
-- 2026-09-20: `deploy/verify/` added — restore rehearsal, audit trigger, DataProtection keys,
-  smoke test, auth-cookie, drift check. First drift run found `/opt/wombat/app` 100% world-writable.
+  reporting success, because the cron scripts had no deploy path. Fixed; **T128** filed.
+- 2026-09-20: `deploy/verify/` added — six read-only checks. The drift check found
+  `/opt/wombat/app` 100% world-writable; fixed on the box and in both deploy scripts.
+- 2026-09-20: 1.1 GB of dead weight retired — reference trees, DB snapshots, an SDK cache.
 - 2026-09-19: Wave 1 shipped — T100, T111, T123, T124; every rung a clinician reads is labelled.
