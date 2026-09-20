@@ -58,4 +58,3 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
   rated evidence. One shared classifier now answers it: declared rating (T126) OR known family.
 - 2026-09-20: **T126 shipped** — an activity can say which ladder it was rated against
   (`rated_level_field`); no migration needed. Found and filed T133 and T134.
-- 2026-09-20: **T132 shipped** — MSF expiry reminders mailed the token *hash*; they now re-issue.
