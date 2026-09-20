@@ -1,18 +1,28 @@
 ---
 id: T102
-title: "A trainee can name themselves as their own assessor and self-award entrustment credit"
+title: "A `user`-typed field accepts any user id, unchecked for role or scope"
 status: queued
 priority: P1
 created: 2026-09-17
 ---
-# T102 — A trainee can name themselves as their own assessor and self-award entrustment credit
+# T102 — A `user`-typed field accepts any user id, unchecked for role or scope
 
-**Status:** open
+**Status:** open — **fix 1 shipped 2026-09-17 with T070**; fixes 2 and 3 remain. See Progress at the foot.
+**Retitled:** 2026-09-20. The original title — *"A trainee can name themselves as their own assessor
+and self-award entrustment credit"* — described the path `ThrowIfActorFieldNamesSubject` now closes.
+The filename keeps the old slug on purpose: `T102` is the durable handle, and `EPA-PROGRAMME.md:571`
+cites the path.
 **Surfaced:** 2026-09-17, adversarial review of the T070 plan.
 **Severity:** High (integrity of the assessment record) — defeats the formative/summative separation T031
 established and the "never from a single form" principle v11.1 states explicitly.
 
 ## Symptom
+
+> **The self-naming half of this is closed.** `ActivityService.ThrowIfActorFieldNamesSubject` (T070,
+> `c33c14b`) rejects, at create and on the patch merge, any data in which a `field:` actor rule resolves
+> to the activity's own `SubjectUserId`. What remains is the *other* user id: a trainee can still name
+> an arbitrary person the picker never offered, who holds no `Assessor` role and may sit in another
+> institution. The account below is the original framing, kept because gaps 2 and 3 are unchanged.
 
 On a CPSA WBA the trainee fills in `assessor_user_id` at creation. Nothing validates that value. A trainee
 who submits **their own** user id becomes the activity's bound assessor, satisfies

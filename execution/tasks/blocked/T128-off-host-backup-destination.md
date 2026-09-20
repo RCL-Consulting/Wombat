@@ -1,9 +1,10 @@
 ---
 id: T128
 title: "The nightly backup is encrypted-capable but has nowhere to go, so it stays on one disk"
-status: queued
+status: blocked
 priority: P1
 created: 2026-09-20
+blocked_on: operator decision: off-host destination + who holds the age private key
 ---
 # T128 — The nightly backup is encrypted-capable but has nowhere to go, so it stays on one disk
 

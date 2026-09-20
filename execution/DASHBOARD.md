@@ -4,11 +4,11 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
-| queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A trainee can name themselves as their own assessor and self-award ent |  |
+| queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A `user`-typed field accepts any user id, unchecked for role or scope |  |
 | queued | [T121](tasks/queued/T121-msf-cannot-credit-an-epa.md) | P1 | Multi-source feedback is required by all 15 EPAs and cannot credit a s |  |
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
-| queued | [T128](tasks/queued/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
 | queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
@@ -42,14 +42,14 @@ This is a reset point, not a diary.
 Wombat is **deployed but not in service** — scenario data only, no real trainees. The live
 workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operational hardening.
 ## Now
-- Nothing in `in_progress/`. 26 queued. **P1: T102, T121, T122, T128** — plus **T099**, which
+- Nothing in `in_progress/`. 25 queued, 1 blocked. **Ready P1: T099, T102, T121, T122.**
 
 ## Recent commits
 
 ```
+7fba9d0 docs(execution): finalise the 2026-09-20 session
 a5230dd chore(execution): move the doctrine into the standard layout, retiring Programme/
 c1c1ad4 chore(execution): separate the two decision registers, and match the completion convention
 98e367b chore(execution): priority-ordered queue, after fixing the harness upstream
 f14ebf8 chore(execution): walk the queue -- two id/priority corrections and three re-ratings
-637d127 chore: bootstrap the rcl-harness execution workspace
 ```

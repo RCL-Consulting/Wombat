@@ -10,15 +10,17 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 26 queued. **P1: T102, T121, T122, T128** — plus **T099**, which
-  says "dev done 2026-09-17" but was never deployed or verified, so it stays open.
-- **T102 is the sharpest of them:** a trainee can name themselves as their own assessor and
-  self-award entrustment credit. T128 is blocked on you; the other three are ready to pick up.
+- Nothing in `in_progress/`. 25 queued, 1 blocked. **Ready P1: T099, T102, T121, T122.**
+  T099 says "dev done 2026-09-17" but was never deployed or verified, so it stays open.
+- **T102 is the sharpest of them,** but read its new title: the self-naming path closed with
+  T070. What is open is that a `user`-typed field accepts *any* user id — no role check, no
+  scope check — so a trainee can still name someone the picker never offered.
 - The last session was a rationalisation pass: reference trees, stale plan docs, deploy
   artifacts and 39 dev-DB snapshots retired; a production backup found broken and fixed.
 - This execution workspace was bootstrapped then too. Task lanes were derived from
   `PLAN.md`, `practical-plan.md` and git — **spot-check them**; 7 tasks said "open" while
   having shipped, and the 6 `T019-b…g` follow-ups were sitting in the wrong place.
+  Four spot-checked 2026-09-20 (T099, T102, T110, T113) — none misfiled.
 
 ## Blockers
 
