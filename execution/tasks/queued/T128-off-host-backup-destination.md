@@ -9,7 +9,7 @@ created: 2026-09-20
 
 **Filed:** 2026-09-20
 **Depends on:** an operator decision (destination + who holds the age private key)
-**Blocks:** nothing in code — but it is the top operational risk in `Programme/HANDOVER.md`
+**Blocks:** nothing in code — but it is the top operational risk in `execution/knowledge/HANDOVER.md`
 
 ## Symptom
 
@@ -92,6 +92,6 @@ This must be closed before the first real trainee is admitted, alongside deletin
 ## Related
 
 - `execution/tasks/done/T097-security-posture-hardening.md` §4 and its 2026-09-20 correction
-- `Programme/INFRASTRUCTURE.md` § Backups
-- `Programme/HANDOVER.md` § Backups — first-month item 1
+- `execution/architecture/INFRASTRUCTURE.md` § Backups
+- `execution/knowledge/HANDOVER.md` § Backups — first-month item 1
 - `deploy/verify/restore-rehearsal.sh`

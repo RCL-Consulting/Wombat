@@ -1,6 +1,6 @@
 # Practical plan — post-rewrite enhancements
 
-The authoritative forward plan for Wombat. Supersedes `Programme/book-fidelity-plan.md`, which remains for reference only.
+The authoritative forward plan for Wombat. Supersedes `execution/knowledge/book-fidelity-plan.md`, which remains for reference only.
 
 **Audience:** a hospital running a specialist training programme. They need a working WBA system that produces defensible evidence and regulator-ready paperwork. They are not doing training research.
 
@@ -21,7 +21,7 @@ The authoritative forward plan for Wombat. Supersedes `Programme/book-fidelity-p
 Companion docs:
 - `EPA Book/evaluation.md` — original 92-point fidelity scorecard (reference)
 - `EPA Book/critique.md` — literature-backed reasons we are *not* building some book items (use when a programme director asks "why not X?")
-- `Programme/PLAN.md` — the master T001–T027 plan (complete)
+- `execution/knowledge/PLAN.md` — the master T001–T027 plan (complete)
 - `execution/STATE.md` — live session handoff
 
 ---
@@ -117,7 +117,7 @@ What trainees, supervisors, and committees actually want to see on-screen.
 
 ### T033 — Per-trainee per-EPA trajectory chart
 
-- Server-side SVG (no new JS dependency; matches the `Programme/DESIGN.md` contract)
+- Server-side SVG (no new JS dependency; matches the `execution/architecture/DESIGN.md` contract)
 - Single line, dot per observation, rating on Y axis, date on X axis
 - Rendered on the trainee's EPA detail view and on `ReviewDetail.razor`
 - No cohort comparison, no percentile bands, no "stuck on EPA" algorithm. Committees read the chart themselves.
@@ -228,6 +228,6 @@ When an accreditor or an external reviewer asks "why does your system not do X?"
 
 ## Active task
 
-Practical plan closed (T035 shipped; T036 deferred). Follow-up work now lives in `Programme/gui-review-plan.md`. Live state in `execution/STATE.md`.
+Practical plan closed (T035 shipped; T036 deferred). Follow-up work now lives in `execution/knowledge/gui-review-plan.md`. Live state in `execution/STATE.md`.
 
-Commit after every completed task, per `Programme/WORKFLOW.md`.
+Commit after every completed task, per `execution/knowledge/WORKFLOW.md`.

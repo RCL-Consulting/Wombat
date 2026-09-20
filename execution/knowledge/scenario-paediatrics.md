@@ -814,7 +814,7 @@ Re-ran Acts 1 + 2 end-to-end against a freshly dropped DB after the recovery-poi
 ### Suggested code-side task list (model: **Opus** for migration/policy work, **Sonnet** for the UX picker work)
 
 - **T059** (✅ shipped 2026-05-27 in commit `9114244`) — fix Task.WhenAll concurrency in ListAssessors + ListTrainees handlers.
-- **T060** (✅ shipped 2026-05-27, commit pending in this session) — widened `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. Task file `Programme/Tasks/T060-invitation-validator-scope-relaxation.md`.
+- **T060** (✅ shipped 2026-05-27, commit pending in this session) — widened `InvitationRules.ValidateScope` so Coordinator + external CommitteeMember can be institution-only. Task file `execution/tasks/done/T060-invitation-validator-scope-relaxation.md`.
 - **T061** (✅ shipped 2026-05-27 in commit `7610ac5`) — admin Users surface at `/admin/users` + `/admin/users/{userId}`. List users (scope-filtered), add/remove roles, reset password, lock-out/reactivate, revoke pending same-email invitations. AcceptInvitation auto-revokes stale same-email invitations on registration. Replaced both `--dev-reset-password` and `--dev-add-role` CLI flags. 15 new Application tests + 1 new bUnit smoke test; 339/339 pass.
 - **T062** (✅ shipped 2026-05-27 in commit `852f410`) — Decision Panel form pickers: scope-aware Institution + Speciality `<select>`, native `<select multiple>` for Chair/Members/External backed by `ListPanelMemberCandidatesQuery`. Round-trip verified.
 - **T063** (✅ shipped 2026-05-27 in commit `852f410`) — `DemandPanelAdministration` widened to InstitutionalAdmin; handlers scope-check resolved institution (via `Speciality.InstitutionId` for Speciality-scoped panels). PanelEdit page authorize tightened to drop Coordinator (Coordinator's actual privilege is `DemandReviewScheduling`). 7 new scope-guard tests.
@@ -1064,7 +1064,7 @@ After Act 3 completes cleanly, the database adds:
 
 **Partial first play — 2026-05-29 (Opus).** Phases 3.A–3.C + 3.H played end-to-end against the
 `after-act-2-replay` snapshot via Playwright; 3.D–3.G + 3.I deferred. Full detail in
-`Programme/act3-findings-scratch.md`.
+`execution/log/act3-findings-scratch.md`.
 
 Two HIGH blockers found + fixed inline (branch `fix/T067-activity-builder-addfield-crash`):
 - **T067** (`2b732cf`) — builder crashed the circuit on the first **Add field** click

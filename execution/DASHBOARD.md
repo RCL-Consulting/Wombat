@@ -47,9 +47,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+c1c1ad4 chore(execution): separate the two decision registers, and match the completion convention
 98e367b chore(execution): priority-ordered queue, after fixing the harness upstream
 f14ebf8 chore(execution): walk the queue -- two id/priority corrections and three re-ratings
 637d127 chore: bootstrap the rcl-harness execution workspace
 8ae9357 chore: rename Rewrite/ to Programme/, and stop claiming the rewrite is in progress
-3f8369a deploy: add a drift check, and fix the two things it found on its first run
 ```

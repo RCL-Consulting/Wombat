@@ -47,7 +47,7 @@ T109 repairs. Giving the O-R Scale the key `or_scale` (or renaming the seeds to 
 generic tools to scale 1. Meanwhile the operator-built five-rung `"Paed General Entrustment Scale"` is
 **the same ten-Cate ladder, duplicated** — `DataSeeder.cs:123-127` seeds O-R as Observe only / Direct
 supervision / Indirect supervision / Independent / Supervises others, and the browser-made scale in
-`Programme/scenario-paediatrics.md:160-166` is the same five rungs. Two ids, one ladder. Binding the tools to
+`execution/knowledge/scenario-paediatrics.md:160-166` is the same five rungs. Two ids, one ladder. Binding the tools to
 one copy while a curriculum is pinned to the other mass-refuses legitimate historic credit.
 
 **So the duplicate ladder has to be reconciled first, or at the same time.** That is a data decision about

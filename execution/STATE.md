@@ -31,16 +31,15 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Open questions
 
-- Do `Programme/`'s doctrine files (DOMAIN, ARCHITECTURE, DESIGN, CUSTOMIZATION, INFRASTRUCTURE,
-  HANDOVER, scenario runbooks) move under `execution/knowledge/` + `architecture/`, or stay?
-  Stage 1 left them where they are to avoid re-churning 180 cross-references in one day.
 - `.github/workflows/WombatWeb20240504122946.yml` is a 2024 Azure workflow from the *old*
   Wombat. Never examined. Probably dead.
+- Task lanes were derived, not read (W-002). Worth a spot-check against what you know shipped.
 
 ## Files to open first
 
-- `CLAUDE.md` — architecture, conventions, footguns, and the "nothing is live" section.
-- `Programme/HANDOVER.md` — running the live service; its first-month list is the ops backlog.
+- `CLAUDE.md` — conventions, footguns, and the "nothing is live" section.
+- `execution/knowledge/HANDOVER.md` — running the live service; its first-month list is the ops backlog.
+- `execution/architecture/DESIGN.md` — mandatory before any Razor work.
 - `execution/DASHBOARD.md` — generated; the queue at a glance.
 - `deploy/verify/drift-check.sh` — run before trusting any claim about the server.
 

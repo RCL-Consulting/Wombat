@@ -62,7 +62,7 @@ A session is one continuous block of work by a single agent (or human). Sessions
 - One branch per task: `task/T00X-short-slug` (e.g. `task/T007-assessment-aggregate`).
 - Merge via fast-forward or squash; no merge commits on `main`.
 - Branches are short-lived. If a branch is open for more than three sessions, something is wrong — split the task or escalate.
-- The `Programme/` plan files are edited on `main` directly when updating `current_state.md` or ticking `PLAN.md`. Otherwise plan edits go on a `plan/*` branch.
+- The `execution/knowledge/` plan files are edited on `main` directly when updating `current_state.md` or ticking `PLAN.md`. Otherwise plan edits go on a `plan/*` branch.
 
 ## Commit messages
 
@@ -96,7 +96,7 @@ A task is not done until the highest applicable level passes. If a manual check 
 
 When launching a subagent to execute a task, use this template:
 
-> You are resuming work on Wombat. Before doing anything else, read `C:\Users\Renier\Wombat\Programme\current_state.md`, then read the task file it names, then read `C:\Users\Renier\Wombat\Programme\ARCHITECTURE.md` and `C:\Users\Renier\Wombat\Programme\DOMAIN.md` to refresh conventions. Then, and only then, begin work on the active task. When you finish or get blocked, update `current_state.md` per `WORKFLOW.md` and stop. Do not exceed the scope of the active task.
+> You are resuming work on Wombat. `execution/STATE.md` and `execution/HANDOFF.md` are already in your context and the SessionStart hook has named the active task — do not go looking for state. Read that task file, then `C:\Users\Renier\Wombat\execution\architecture\ARCHITECTURE.md` and `C:\Users\Renier\Wombat\execution\knowledge\DOMAIN.md` to refresh conventions, plus `execution/architecture/DESIGN.md` if the task touches Razor. Then, and only then, begin work. When you finish or get blocked, update `execution/HANDOFF.md` and run `harness.py lint` — the Stop hook blocks a session that changed task state without a handoff. Do not exceed the scope of the active task.
 
 That prompt is deliberately terse. The task file itself carries the detail.
 

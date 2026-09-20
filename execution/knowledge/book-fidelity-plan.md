@@ -1,13 +1,13 @@
 # Book-fidelity plan
 
-> **Superseded by `Programme/practical-plan.md`.** This document prioritised academic fidelity to the EPA textbook. The hospital is running a training programme, not doing training research — the forward plan is pragmatic and defensibility-oriented. Kept here for reference and because `EPA Book/critique.md` cites its reasoning. Do not execute tasks from this document.
+> **Superseded by `execution/knowledge/practical-plan.md`.** This document prioritised academic fidelity to the EPA textbook. The hospital is running a training programme, not doing training research — the forward plan is pragmatic and defensibility-oriented. Kept here for reference and because `EPA Book/critique.md` cites its reasoning. Do not execute tasks from this document.
 
-Roadmap for closing the gaps identified in `EPA Book/evaluation.md`. Each phase lists candidate tasks; individual task files under `Programme/Tasks/T0xx-*.md` will be written once a phase is agreed. This document is the shared view; it is append-only — if scope changes, add a new phase rather than mutating an agreed one.
+Roadmap for closing the gaps identified in `EPA Book/evaluation.md`. Each phase lists candidate tasks; individual task files under `execution/tasks/<lane>/T0xx-*.md` will be written once a phase is agreed. This document is the shared view; it is append-only — if scope changes, add a new phase rather than mutating an agreed one.
 
 Companion docs:
 - `EPA Book/evaluation.md` — the 92-requirement scorecard this plan responds to
 - `EPA Book/critique.md` — peer-reviewed challenges to book prescriptions; drives several sequencing and scope decisions below
-- `Programme/PLAN.md` — the master T001–T027 plan (complete)
+- `execution/knowledge/PLAN.md` — the master T001–T027 plan (complete)
 - `execution/STATE.md` — live session handoff
 
 ## Goal
@@ -302,4 +302,4 @@ Each becomes a task file only when a programme requests it.
 
 ## Active task
 
-None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `Programme/Tasks/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `execution/STATE.md` to point at the first active one.
+None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `execution/tasks/done/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `execution/STATE.md` to point at the first active one.

@@ -14,7 +14,7 @@ wrong, and what to do first.
 
 **Wombat is deployed but not in service.** `wombat.rcl.co.za` is reachable and the local
 dev database is populated, but both hold **scenario-execution data only** — rows produced
-by replaying the `Programme/scenario-*.md` runbooks. There are no real trainees, no real
+by replaying the `execution/knowledge/scenario-*.md` runbooks. There are no real trainees, no real
 assessors and no real clinical records anywhere.
 
 Two consequences:
@@ -69,7 +69,7 @@ user in memory. Resize before onboarding a real cohort, not after.
 
 Everything secret lives in **`/opt/wombat/config/wombat.env`**, mode 600, owner `wombat`.
 Nothing secret is in the repo, and nothing secret belongs in
-`appsettings.Production.json`. The full key list is in `Programme/INFRASTRUCTURE.md`
+`appsettings.Production.json`. The full key list is in `execution/architecture/INFRASTRUCTURE.md`
 § Environment file.
 
 Rotation, for Phase 1, is the whole story: edit the env file, `systemctl restart wombat`.
@@ -220,9 +220,9 @@ This file goes stale. These do not:
 | `execution/STATE.md` | **Read this first, every session.** The live handoff: active task, last verified commit, blockers. Newest session at the top. |
 | `deploy/README.md` | The operational manual — first-boot checklist, deploys, rollback, useful commands. |
 | `deploy/verify/*.sh` | Six read-only checks for the live box: restore rehearsal, audit append-only trigger, DataProtection keys, authenticated smoke test, auth-cookie `Secure` flag, and **`drift-check.sh`** — does the server run what the repo says? None hardcodes a credential. |
-| `Programme/INFRASTRUCTURE.md` | The server contract: layout, systemd unit, Caddy, env file, backups, SSO, audit retention. |
+| `execution/architecture/INFRASTRUCTURE.md` | The server contract: layout, systemd unit, Caddy, env file, backups, SSO, audit retention. |
 | `CLAUDE.md` | Architecture, conventions, footguns, and the "nothing is live" section to delete when that changes. |
-| `Programme/Tasks/T0xx-*.md` | One file per unit of work, including every filed-but-unfixed defect. |
+| `execution/tasks/<lane>/T0xx-*.md` | One file per unit of work, including every filed-but-unfixed defect. |
 
 ---
 
@@ -251,7 +251,7 @@ Structural, and true as of 2026-09-20:
 - **Integration tests are Docker-gated** and are not run on the deploy box, so the
   Testcontainers suite has never gated a production deploy.
 - **Migrations apply at startup**, so a bad one fails the service rather than the deploy.
-- **Filed, unfixed defects live in `Programme/Tasks/`.** That folder, not this file, is the
+- **Filed, unfixed defects live in `execution/tasks/`.** That folder, not this file, is the
   register — `execution/STATE.md` names which are in flight.
 
 ---

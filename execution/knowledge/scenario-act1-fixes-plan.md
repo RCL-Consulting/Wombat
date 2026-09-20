@@ -14,7 +14,7 @@ The Playwright route-and-surface audit on 2026-05-24 (captured inline in `scenar
 ## Task list
 
 ### T050 — Scenario-doc corrections (docs-only)
-Single pass through `Programme/scenario-paediatrics.md` to absorb the audit's findings so the runbook plays as-written:
+Single pass through `execution/knowledge/scenario-paediatrics.md` to absorb the audit's findings so the runbook plays as-written:
 - Step 1.1: drop "Viewing as Administrator" subtitle from expected wording.
 - Step 1.2: full rewrite. Route → `/admin/invitations` (form embedded). Role → `InstitutionalAdmin`. Move *after* Phase 1.B (institution must exist before invitation).
 - Step 1.5: link label is `Specialities`, not `Manage specialities`.

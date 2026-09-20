@@ -1,11 +1,11 @@
 # GUI review plan — design-system audit
 
-Polish pass over the Blazor UI now that the practical plan is closed (T035 shipped; T036 deferred — see `practical-plan.md`). Not new features — consistency, shared-component usage, and `Programme/DESIGN.md` compliance across ~65 pages and 15 shared components.
+Polish pass over the Blazor UI now that the practical plan is closed (T035 shipped; T036 deferred — see `practical-plan.md`). Not new features — consistency, shared-component usage, and `execution/architecture/DESIGN.md` compliance across ~65 pages and 15 shared components.
 
 **Audience:** same hospital programme. The code works; this round makes it look and feel coherent and removes drift that would distract a user or embarrass a demo.
 
 Companion docs:
-- `Programme/DESIGN.md` — canonical design-system contract (rubric defers to it on conflicts)
+- `execution/architecture/DESIGN.md` — canonical design-system contract (rubric defers to it on conflicts)
 - `src/Wombat.Web/wwwroot/app.css` — 885-line token/component anchor
 - `execution/STATE.md` — live session handoff
 
@@ -35,7 +35,7 @@ Each cluster checks every page against:
 5. **Visual hierarchy** — consistent spacing tokens, page header + subtitle, action placement.
 6. **Responsive** — `dashboard-grid` and `details-grid` behave at narrow widths.
 
-Each cluster is **verified in a browser**, not just read. `Programme/DESIGN.md` is the canonical reference when the rubric and a page disagree.
+Each cluster is **verified in a browser**, not just read. `execution/architecture/DESIGN.md` is the canonical reference when the rubric and a page disagree.
 
 ---
 

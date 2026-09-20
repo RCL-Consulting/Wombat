@@ -119,10 +119,10 @@ This plan replaces an earlier draft in which T007–T009 built concrete typed ag
 
 ## Status: complete
 
-T001–T027 landed (last verified at T016 commit `864ad3b`). T016's handover document is `Programme/HANDOVER.md`.
+T001–T027 landed (last verified at T016 commit `864ad3b`). T016's handover document is `execution/knowledge/HANDOVER.md`.
 
-Two post-rewrite plans have since opened **and closed**: `Programme/practical-plan.md` (T028–T036, four blocks of pragmatic enhancements oriented around a hospital's training-programme operations rather than academic fidelity — T035 shipped, T036 deferred indefinitely) and `Programme/gui-review-plan.md` (all six clusters complete). **Neither is the live plan any more.**
+Two post-rewrite plans have since opened **and closed**: `execution/knowledge/practical-plan.md` (T028–T036, four blocks of pragmatic enhancements oriented around a hospital's training-programme operations rather than academic fidelity — T035 shipped, T036 deferred indefinitely) and `execution/knowledge/gui-review-plan.md` (all six clusters complete). **Neither is the live plan any more.**
 
-**Live work is tracked in `execution/STATE.md` and the task files under `Programme/Tasks/`, not in a plan document.** Read `execution/STATE.md` first; it names the active task and the last verified commit.
+**Live work is tracked in `execution/STATE.md` and the task files under `execution/tasks/`, not in a plan document.** Read `execution/STATE.md` first; it names the active task and the last verified commit.
 
-The academic alternative that was drafted and then superseded is `Programme/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it. Its own banner says not to execute tasks from it.
+The academic alternative that was drafted and then superseded is `execution/knowledge/book-fidelity-plan.md`, kept only because `EPA Book/critique.md` cites it. Its own banner says not to execute tasks from it.

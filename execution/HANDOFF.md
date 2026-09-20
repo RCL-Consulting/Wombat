@@ -8,10 +8,13 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 - **Retired what had outlived its name.** The two vendored reference trees (44 MB — verified
   every file had a live source first), three stale plan documents, 39 dev-DB snapshots plus
-  their 451 MB of PostgreSQL template databases, and a 648 MB SDK cache. `Rewrite/` became
-  `Programme/`, and `CLAUDE.md` stopped claiming the rewrite was "in progress" — it finished
-  in June.
-- **Wrote `Programme/HANDOVER.md`**, the T016 deliverable that had been missing for three
+  their 451 MB of PostgreSQL template databases, and a 648 MB SDK cache. `CLAUDE.md` stopped
+  claiming the rewrite was "in progress" — it finished in June.
+- **All project docs now live under `execution/`** in the harness's standard layout:
+  `architecture/` for how the system is built, `knowledge/` for what it knows. They passed
+  through `Rewrite/` → `Programme/` → here in one day (W-004, superseded by W-005), so paths
+  in `log/` and in completed task files are **not** rewritten — they were right when written.
+- **Wrote `execution/knowledge/HANDOVER.md`**, the T016 deliverable that had been missing for three
   months while production ran.
 - **Fixed a production backup that had been lying for 94 days.** `/usr/local/bin/wombat-backup.sh`
   was the 2026-06-17 version: database dump only, no `wombat.env`, no DataProtection keys, no
@@ -60,8 +63,8 @@ out of, and every command reads all of it.
 - **`sha256sum` the deployed file against the repo before believing any doc about the server.**
   `wombat.service`, `Caddyfile.wombat` and `appsettings.Production.json` are still
   install-once-by-hand and can drift the same way `wombat-backup.sh` did.
-- Two path styles live in this repo — `Programme/` and `C:\...\Programme\`. A forward-slash
-  sweep misses the backslash ones.
+- **Two path styles live in this repo**, forward-slash and Windows backslash. A sweep for one
+  misses the other — that bit twice today during the folder moves.
 - The solution build and the per-project tools resolve **different** Release output trees —
   Any CPU versus x64. Never pass `--no-build`; see CLAUDE.md for the measured table.
 

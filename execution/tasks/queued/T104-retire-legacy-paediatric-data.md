@@ -39,7 +39,7 @@ Any retirement plan sized off those documents is 2.5x too big.
 
 `DataSeeder.cs:14-27` seeds ten *unsuffixed* keys; `PaediatricCatalogueSeeder.cs:92-100` seeds the four
 `_cpsa` keys. A repo-wide grep finds `_paed` only in comments, tests and the scenario documents. The legacy
-rows are **operator-built**, from the manual scenario replay (`Programme/scenario-paediatrics.md:300`,
+rows are **operator-built**, from the manual scenario replay (`execution/knowledge/scenario-paediatrics.md:300`,
 `:399`). Two consequences: there is no code to delete, and **the same manual migration has to be repeated
 by hand on production.**
 
