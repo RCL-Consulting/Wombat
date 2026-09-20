@@ -456,7 +456,7 @@
 
   private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
     => trajectory.Points
-      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source))
+      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source, point.OffLadder))
       .ToArray();
 
   // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.

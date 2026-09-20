@@ -254,6 +254,170 @@ public sealed class SeedRoundTripTests
         losses.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// T126 added a root <c>rated_level_field</c> pointer at the scale field carrying THE entrustment
+    /// rating. Named explicitly for the same reason <c>observation_date_field</c> is: a Serialize that
+    /// forgets it fails here by name rather than as an opaque corpus-wide diff.
+    /// </summary>
+    /// <remarks>
+    /// This loss is silent in exactly the way T126 exists to stop. An activity whose pinned schema
+    /// carries no pointer cannot say which ladder its ordinal sits on, so a five-rung "4" plotted
+    /// against the six-rung CPSA axis draws as rung "3b" and looks entirely normal.
+    /// </remarks>
+    [Fact]
+    public void RatedLevelField_SurvivesParseSerializeParse()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "rated_level_field": "overall_level",
+              "sections": [
+                {
+                  "key": "assessment",
+                  "title": "Assessment",
+                  "fields": [
+                    { "key": "overall_level", "type": "scale", "label": "Overall", "options": ["1", "2", "3"], "scale_key": "O-R Scale" }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().Contain("\"rated_level_field\":\"overall_level\"");
+        FormSchemaParser.Parse(canonical).RatedLevelField.Should().Be("overall_level");
+        AssertNothingLost(schemaJson, canonical, "rated_level_field fixture");
+    }
+
+    /// <summary>
+    /// The mirror. Six seeds rate nothing — a reflection, a procedure log, a journal club — so
+    /// canonicalisation must not invent a rating they do not assert.
+    /// </summary>
+    [Fact]
+    public void RatedLevelField_StaysAbsentWhenTheSchemaDeclaresNone()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "reflection",
+                  "title": "Reflection",
+                  "fields": [
+                    { "key": "what_i_learned", "type": "longtext", "label": "What I learned" }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().NotContain("rated_level_field");
+        FormSchemaParser.Parse(canonical).RatedLevelField.Should().BeNull();
+    }
+
+    /// <summary>
+    /// The corpus-wide invariant, and the one that will catch the next seed rather than this one:
+    /// a schema that carries a scale field declares which of them is the rating, and a schema that
+    /// carries none declares nothing.
+    /// </summary>
+    /// <remarks>
+    /// The parser already refuses a pointer naming a missing or non-scale field, so what is left to
+    /// assert is the omission — which the parser cannot catch, because "declares no rating" is a
+    /// legitimate state. Ten more v11.1 tools are queued in T120; each carries a scale field, and each
+    /// will fail here if it forgets the pointer. Before T126 the only thing that knew was the credit
+    /// rules' <c>minimum_level_field</c>, so a tool that credited nothing had no stated rated field.
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale(string seedKey)
+    {
+        var schema = FormSchemaParser.Parse(ReadSeedFile(seedKey, "schema.json"));
+
+        var scaleFields = schema.Sections
+            .SelectMany(section => section.Fields)
+            .Where(field => field.Type == FieldType.Scale)
+            .Select(field => field.Key)
+            .ToArray();
+
+        if (scaleFields.Length == 0)
+        {
+            schema.RatedLevelField.Should().BeNull(
+                "'{0}' declares no scale field, so it rates nothing and must not claim to", seedKey);
+            return;
+        }
+
+        schema.RatedLevelField.Should().NotBeNull(
+            "'{0}' declares {1} scale field(s) ({2}) and nothing else can say which is the entrustment " +
+            "rating — that is the gap T126 closed",
+            seedKey, scaleFields.Length, string.Join(", ", scaleFields));
+
+        scaleFields.Should().Contain(schema.RatedLevelField!);
+    }
+
+    /// <summary>
+    /// The pointer and the credit directive answer different questions, and today they agree across the
+    /// whole corpus. Pinned so that the day they diverge is a deliberate decision with a failing test
+    /// behind it, rather than a discovery.
+    /// </summary>
+    /// <remarks>
+    /// They are NOT the same question. <c>minimum_level_field</c> names the field a particular directive
+    /// gates on, which could legitimately be one of the five or six component scales that <c>dops</c>,
+    /// <c>acat</c>, <c>mini_cex</c> and <c>cbd</c> each declare. That they coincide everywhere today is
+    /// why the credit rules could stand in for a rated field at all — and why the substitution looked
+    /// safe enough to survive until T126.
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void Schema_RatedFieldAgreesWithTheCreditDirective(string seedKey)
+    {
+        var schema = FormSchemaParser.Parse(ReadSeedFile(seedKey, "schema.json"));
+        var creditJson = ReadSeedFile(seedKey, "credit.json");
+
+        using var document = JsonDocument.Parse(creditJson);
+        var minimumLevelFields = new List<string>();
+        CollectMinimumLevelFields(document.RootElement, minimumLevelFields);
+
+        foreach (var field in minimumLevelFields.Distinct(StringComparer.Ordinal))
+        {
+            schema.RatedLevelField.Should().Be(field,
+                "'{0}' credits on '{1}', and while the two questions differ the corpus has never disagreed",
+                seedKey, field);
+        }
+    }
+
+    private static void CollectMinimumLevelFields(JsonElement element, List<string> into)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                foreach (var property in element.EnumerateObject())
+                {
+                    if (property.NameEquals("minimum_level_field") && property.Value.ValueKind == JsonValueKind.String)
+                    {
+                        var value = property.Value.GetString();
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            into.Add(value);
+                        }
+                    }
+
+                    CollectMinimumLevelFields(property.Value, into);
+                }
+
+                break;
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                {
+                    CollectMinimumLevelFields(item, into);
+                }
+
+                break;
+        }
+    }
+
     private static void AssertNothingLost(string rawJson, string canonicalJson, string context)
     {
         var losses = FindLosses(rawJson, canonicalJson);

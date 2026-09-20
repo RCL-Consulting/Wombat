@@ -487,6 +487,156 @@ public sealed class GetEpaTrajectoryForTraineeTests
         trajectory.Points.Single().RatingLabel.Should().Be("3");
     }
 
+    // ---- T126: which ladder was this rating actually recorded against? ---------------------------
+
+    /// <summary>
+    /// The case T126 exists for, and the one the ordinal test cannot see. A five-rung "4"
+    /// ("Independent" on the O-R Scale) plotted against the six-rung CPSA axis is inside 1-6, so it
+    /// draws as rung "3b" and looks entirely normal. Only the activity's own declared ladder
+    /// distinguishes them.
+    /// </summary>
+    [Fact]
+    public async Task ARatingFromAnotherLadderIsMarkedOffLadderEvenWhenItsOrdinalIsValidHere()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        SeedOrScale(dbContext);
+        var legacy = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        await SeedPinnedVersionAsync(dbContext, legacy, ratedField: "overall", scaleKey: "O-R Scale");
+
+        AddRatedActivity(dbContext, legacy, "trainee-1", "assessor-a", 7, 4, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var point = result.Single().Points.Single();
+        point.Rating.Should().Be(4, "the ordinal is a perfectly valid rung on the CPSA ladder -- that is the trap");
+        point.RatingLabel.Should().Be("3b", "it still renders against the axis; the chart draws it hollow rather than hiding it");
+        point.OffLadder.Should().BeTrue("it was rated on the O-R Scale, not the CPSA ladder this axis is drawn from");
+    }
+
+    [Fact]
+    public async Task ARatingFromTheAxisLadderIsNotMarkedOffLadder()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        SeedOrScale(dbContext);
+        var cpsa = await SeedActivityTypeAsync(dbContext, "mini_cex_cpsa");
+        await SeedPinnedVersionAsync(dbContext, cpsa, ratedField: "overall", scaleKey: "42");
+
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 4, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Single().Points.Single().OffLadder.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// False means "no disagreement established", never "on the ladder". A type published before T126
+    /// declares no rated field, and four generic seeds still declare the unresolvable or_scale (T110).
+    /// Marking those would assert a conflict nothing has shown.
+    /// </summary>
+    [Theory]
+    [InlineData(null, "O-R Scale")]
+    [InlineData("overall", "or_scale")]
+    public async Task AnUnknownLadderIsLeftAloneRatherThanMarked(string? ratedField, string scaleKey)
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        SeedOrScale(dbContext);
+        var legacy = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        await SeedPinnedVersionAsync(dbContext, legacy, ratedField, scaleKey);
+
+        AddRatedActivity(dbContext, legacy, "trainee-1", "assessor-a", 7, 4, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Single().Points.Single().OffLadder.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// The version an activity is PINNED to decides its ladder, not the newest one. Republishing a type
+    /// onto a different scale must not retroactively re-interpret ratings already filed against it.
+    /// </summary>
+    [Fact]
+    public async Task TheLadderComesFromThePinnedVersionNotTheNewestOne()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: true);
+        SeedOrScale(dbContext);
+        var type = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+
+        // v1 rated on the O-R Scale; the activity below is pinned to it.
+        await SeedPinnedVersionAsync(dbContext, type, ratedField: "overall", scaleKey: "O-R Scale", version: 1);
+        // v2 moved to the CPSA ladder. It must not change what v1's ratings meant.
+        await SeedPinnedVersionAsync(dbContext, type, ratedField: "overall", scaleKey: "42", version: 2);
+
+        AddRatedActivity(dbContext, type, "trainee-1", "assessor-a", 7, 4, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Single().Points.Single().OffLadder.Should().BeTrue(
+            "the activity is pinned to v1, which rated on the O-R Scale");
+    }
+
+    private static void SeedOrScale(ApplicationDbContext dbContext)
+    {
+        dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale { Id = 43, Name = "O-R Scale" });
+        var labels = new[] { "Observe only", "Direct supervision", "Indirect supervision", "Independent", "Supervises others" };
+        for (var order = 1; order <= labels.Length; order++)
+        {
+            dbContext.Set<EntrustmentLevel>().Add(new EntrustmentLevel
+            {
+                Id = 4300 + order, ScaleId = 43, Order = order, Label = labels[order - 1]
+            });
+        }
+    }
+
+    private static async Task SeedPinnedVersionAsync(
+        ApplicationDbContext dbContext,
+        ActivityType activityType,
+        string? ratedField,
+        string scaleKey,
+        int version = 1)
+    {
+        var pointer = ratedField is null
+            ? string.Empty
+            : "\"rated_level_field\": \"" + ratedField + "\",";
+
+        var schemaJson =
+            "{ \"version\": 1, " + pointer +
+            "  \"sections\": [ { \"key\": \"assessment\", \"title\": \"Assessment\", \"fields\": [" +
+            "    { \"key\": \"overall\", \"type\": \"scale\", \"label\": \"Overall\"," +
+            "      \"options\": [\"1\", \"2\", \"3\", \"4\", \"5\"], \"scale_key\": \"" + scaleKey + "\" }" +
+            "  ] } ] }";
+
+        dbContext.Set<ActivityTypeVersion>().Add(new ActivityTypeVersion
+        {
+            ActivityTypeId = activityType.Id,
+            Version = version,
+            SchemaJson = schemaJson,
+            WorkflowJson = "{}",
+            CreditRulesJson = "{}",
+            PublishedByUserId = "seed-system",
+            PublishedOn = DateTime.UtcNow
+        });
+        await dbContext.SaveChangesAsync();
+    }
+
     private static async Task SeedCpsaCurriculumAsync(
         ApplicationDbContext dbContext,
         string traineeUserId,

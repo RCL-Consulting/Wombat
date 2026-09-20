@@ -31,6 +31,14 @@ Caveats:
   that carries a date field but forgets the pointer is not refused — it silently falls back to the row's
   audit timestamp, which is the defect T119 exists to remove. `reflective_note` and `qi_project` declare no
   pointer on purpose: a reflection and a months-long QI project have no single encounter date.
+- Every seed that produces an entrustment rating names the field carrying it at the root of `schema.json`:
+  `"rated_level_field": "overall_level"` (T126). It cannot be inferred — `mini_cex`, `dops` and `acat`
+  each declare six `scale` fields and `cbd` five, of which exactly one is the overall judgement. Before
+  T126 the only thing that knew was the credit rules' `minimum_level_field`, so a tool crediting nothing
+  had no stated rated field at all, and a reader holding an ordinal could not say which ladder it sat on.
+  **Eight seeds declare it; the six that rate nothing must not.** `SeedRoundTripTests` asserts exactly
+  that correspondence, so a new rated tool that forgets the pointer fails by name. The parser refuses a
+  pointer naming a missing field or a field that is not `scale`-typed.
 
 ## Editing a seed after it has been seeded (T103)
 

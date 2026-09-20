@@ -205,8 +205,15 @@ else
   /// the trainee did not create that situation and erasing the point would hide evidence they legitimately
   /// collected — so it is kept, drawn hollow, and left out of the line that implies a trend. (T123 D30)
   /// </summary>
+  /// <remarks>
+  /// Two independent reasons, and the first is the one that matters. <c>point.OffLadder</c> is resolved
+  /// server-side from the ladder the activity's PINNED schema declares (T126): it catches the dangerous
+  /// case the ordinal test cannot see — a five-rung "4" plotted against the six-rung CPSA axis is inside
+  /// 1–6, so it draws as rung "3b" and looks entirely normal. The ordinal test stays because it catches
+  /// a different thing: an ordinal that is no rung on the axis at all, whatever ladder it came from.
+  /// </remarks>
   private bool IsOffLadder(ChartPoint point) =>
-    HasRungs && !Rungs.Any(rung => rung.Order == point.Rating);
+    point.OffLadder || (HasRungs && !Rungs.Any(rung => rung.Order == point.Rating));
 
   private IReadOnlyList<ChartPoint> OnLadderPoints =>
     Points.Where(point => !IsOffLadder(point)).ToArray();
@@ -295,7 +302,7 @@ else
   /// One plotted observation. <c>Label</c> is the EVIDENCE SOURCE ("Direct observation"), which is what
   /// the screen-reader table's third column is headed — it is not, and never was, a rung label.
   /// </summary>
-  public sealed record ChartPoint(DateOnly Date, int Rating, int Sequence = 0, string? Label = null);
+  public sealed record ChartPoint(DateOnly Date, int Rating, int Sequence = 0, string? Label = null, bool OffLadder = false);
 
   /// <summary>One rung of the ladder the axis is drawn from. Order is the position; Label is the name.</summary>
   public sealed record Rung(int Order, string Label);

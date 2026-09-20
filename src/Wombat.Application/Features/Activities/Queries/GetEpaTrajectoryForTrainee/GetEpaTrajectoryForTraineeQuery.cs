@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -76,7 +77,19 @@ public sealed record TrajectoryPointDto(
     /// </summary>
     string RatingLabel,
     string Source,
-    string AssessorUserId);
+    string AssessorUserId,
+    /// <summary>
+    /// The rating was recorded against a DIFFERENT ladder from the one this EPA's axis is drawn from,
+    /// so its ordinal does not mean on this chart what it meant on the form. Drawn hollow and left out
+    /// of the polyline. (T123 D30, made computable by T126)
+    /// </summary>
+    /// <remarks>
+    /// False is not "on the ladder" — it is "no disagreement established". It covers a point whose own
+    /// ladder is unknown, which is the common case while four generic seeds still declare the
+    /// unresolvable <c>or_scale</c> (T110) and while types published before T126 carry no
+    /// <c>rated_level_field</c>. Marking those would assert a conflict nothing has shown.
+    /// </remarks>
+    bool OffLadder = false);
 
 public sealed class GetEpaTrajectoryForTraineeQueryHandler
     : IRequestHandler<GetEpaTrajectoryForTraineeQuery, IReadOnlyList<EpaTrajectoryDto>>
@@ -214,6 +227,7 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             .ToDictionaryAsync(epa => epa.Id, cancellationToken);
 
         var ladders = await ResolvePinnedLaddersAsync(traineeUserId, epaIds, cancellationToken);
+        var ratedScaleIdByActivity = await ResolveRatedScaleIdsAsync(activities, cancellationToken);
 
         return rawPoints
             .GroupBy(entry => entry.EpaId)
@@ -223,9 +237,21 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                 var epa = epas[group.Key];
                 ladders.ScaleIdByEpa.TryGetValue(epa.Id, out var scaleId);
                 var points = group
-                    .Select(entry => entry.Point with
+                    .Select(entry =>
                     {
-                        RatingLabel = ladders.Rungs.Format(scaleId, entry.Point.Rating)
+                        // Off-ladder is asserted only when BOTH sides are known and they disagree. An
+                        // unresolvable point key (or_scale, T110) or a type predating T126 leaves it
+                        // alone: a hollow dot says "this was measured on something else", and saying so
+                        // without evidence is worse than the numeric axis this chart already drew.
+                        var offLadder = scaleId is not null
+                            && ratedScaleIdByActivity.TryGetValue(entry.Point.ActivityId, out var ownScaleId)
+                            && ownScaleId != scaleId.Value;
+
+                        return entry.Point with
+                        {
+                            RatingLabel = ladders.Rungs.Format(scaleId, entry.Point.Rating),
+                            OffLadder = offLadder
+                        };
                     })
                     .OrderBy(point => point.ObservedOn)
                     .ThenBy(point => point.ActivityId)
@@ -349,6 +375,97 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                 .ToDictionaryAsync(scale => scale.Id, scale => scale.Name, cancellationToken);
 
         return new PinnedLadders(scaleIdByEpa, scaleNameById, rungs);
+    }
+
+    /// <summary>
+    /// The entrustment ladder each activity's rating was actually recorded against, by activity id.
+    /// Absent means "not knowable", never "the same as the axis". (T126)
+    /// </summary>
+    /// <remarks>
+    /// Resolved from the activity's PINNED <c>ActivityTypeVersion</c>, not the live one: an activity
+    /// rated on version 1 keeps version 1's meaning even after the type is republished, which is the
+    /// whole point of pinning. There is deliberately no foreign key to navigate —
+    /// <c>ActivityConfiguration</c> records that Activity's snapshot columns carry none, so a later
+    /// restructure cannot cascade into historical assessments — so the pair is matched in memory over a
+    /// set already bounded by this trainee's activities.
+    /// <para>
+    /// The pinned schema, and only the pinned schema, is the source. The credit rules'
+    /// <c>minimum_level_field</c> names the field a PARTICULAR directive gates on, which is a different
+    /// question that merely had the same answer in the seed corpus; treating it as a fallback here would
+    /// resolve confidently to a component scale for any type crediting on one of the five or six that
+    /// <c>dops</c>, <c>acat</c>, <c>mini_cex</c> and <c>cbd</c> each declare.
+    /// </para>
+    /// </remarks>
+    private async Task<IReadOnlyDictionary<int, int>> ResolveRatedScaleIdsAsync(
+        IReadOnlyCollection<Activity> activities,
+        CancellationToken cancellationToken)
+    {
+        var empty = (IReadOnlyDictionary<int, int>)new Dictionary<int, int>();
+
+        var typeIds = activities.Select(activity => activity.ActivityTypeId).Distinct().ToArray();
+        if (typeIds.Length == 0)
+        {
+            return empty;
+        }
+
+        var versions = await _dbContext.Set<ActivityTypeVersion>()
+            .AsNoTracking()
+            .Where(version => typeIds.Contains(version.ActivityTypeId))
+            .Select(version => new { version.ActivityTypeId, version.Version, version.SchemaJson })
+            .ToListAsync(cancellationToken);
+
+        var scaleKeyByPin = new Dictionary<(int TypeId, int Version), string?>(versions.Count);
+        foreach (var version in versions)
+        {
+            scaleKeyByPin[(version.ActivityTypeId, version.Version)] = TryReadRatedScaleKey(version.SchemaJson);
+        }
+
+        var lookup = await EntrustmentRungLabels.LoadForScaleKeysAsync(
+            _dbContext, scaleKeyByPin.Values, cancellationToken);
+
+        var resolved = new Dictionary<int, int>();
+        foreach (var activity in activities)
+        {
+            if (!scaleKeyByPin.TryGetValue((activity.ActivityTypeId, activity.SchemaVersion), out var scaleKey))
+            {
+                continue;
+            }
+
+            if (lookup.ResolveScaleKey(scaleKey) is { } scaleId)
+            {
+                resolved[activity.Id] = scaleId;
+            }
+        }
+
+        return resolved;
+    }
+
+    /// <summary>
+    /// The <c>scale_key</c> of the field a schema declares as its entrustment rating, or null when it
+    /// declares none, names a field that carries no ladder, or does not parse. (T126)
+    /// </summary>
+    private static string? TryReadRatedScaleKey(string schemaJson)
+    {
+        try
+        {
+            var schema = FormSchemaParser.Parse(schemaJson);
+            if (schema.RatedLevelField is null)
+            {
+                return null;
+            }
+
+            return schema.Sections
+                .SelectMany(section => section.Fields)
+                .FirstOrDefault(field => string.Equals(field.Key, schema.RatedLevelField, StringComparison.Ordinal))
+                ?.ScaleKey;
+        }
+        catch (SchemaParseException)
+        {
+            // A stored version that no longer parses is a defect, but it is not this chart's to raise:
+            // the trajectory degrades to the numeric axis it drew before T126 rather than failing a
+            // trainee's progress page over one bad row.
+            return null;
+        }
     }
 
     private static bool TryParseObservation(string dataJson, out int epaId, out int rating, out string assessorUserId)

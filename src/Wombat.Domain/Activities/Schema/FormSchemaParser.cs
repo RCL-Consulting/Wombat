@@ -37,6 +37,13 @@ public static class FormSchemaParser
             writer.WriteString("observation_date_field", schema.ObservationDateField);
         }
 
+        // Same rule, same trap. Position is load-bearing: Schema_CanonicalisationIsAFixedPoint compares
+        // byte for byte, so this must stay between `observation_date_field` and `sections`. (T126)
+        if (schema.RatedLevelField is not null)
+        {
+            writer.WriteString("rated_level_field", schema.RatedLevelField);
+        }
+
         writer.WritePropertyName("sections");
         writer.WriteStartArray();
 
@@ -154,7 +161,7 @@ public static class FormSchemaParser
     private static FormSchema ParseSchema(JsonElement root)
     {
         EnsureObject(root, "Schema root must be an object.");
-        EnsureAllowedProperties(root, ["version", "sections", "observation_date_field"], "schema");
+        EnsureAllowedProperties(root, ["version", "sections", "observation_date_field", "rated_level_field"], "schema");
 
         var version = GetRequiredInt(root, "version");
         var sectionsElement = GetRequiredProperty(root, "sections");
@@ -190,7 +197,26 @@ public static class FormSchemaParser
             }
         }
 
-        return new FormSchema(version, sections, observationDateField);
+        var ratedLevelField = GetOptionalTrimmedString(root, "rated_level_field");
+        if (ratedLevelField is not null)
+        {
+            // Validated here for the same reason as the date pointer: a pointer at a field that does not
+            // exist, or at a field carrying no ladder, is a defect that would otherwise surface as a
+            // trajectory point that quietly never plots. (T126)
+            var target = sections
+                .SelectMany(section => section.Fields)
+                .FirstOrDefault(field => string.Equals(field.Key, ratedLevelField, StringComparison.Ordinal))
+                ?? throw new SchemaParseException(
+                    $"rated_level_field '{ratedLevelField}' does not match any field in the schema.");
+
+            if (target.Type != FieldType.Scale)
+            {
+                throw new SchemaParseException(
+                    $"rated_level_field '{ratedLevelField}' must point at a 'scale' field, but it is '{target.Type}'.");
+            }
+        }
+
+        return new FormSchema(version, sections, observationDateField, ratedLevelField);
     }
 
     private static FormSection ParseSection(JsonElement element)

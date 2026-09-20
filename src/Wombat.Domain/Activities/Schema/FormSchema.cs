@@ -5,13 +5,28 @@ namespace Wombat.Domain.Activities.Schema;
 /// distinct from when the paperwork was filed. Null when the form has no single encounter date — a
 /// reflection, or a QI project spanning months. (T119)
 /// </param>
+/// <param name="RatedLevelField">
+/// The key of the <see cref="FieldType.Scale" /> field carrying THE entrustment rating for this form,
+/// as distinct from the component scales rated alongside it. Null when the form asserts no entrustment
+/// level — a reflection, a procedure log, a journal club. (T126)
+/// </param>
 /// <remarks>
 /// A root pointer rather than a per-field flag, because it is single by construction: a flag would let
 /// two fields claim the role and force the parser to police it. On the schema rather than the credit
 /// rules, because a date drives the portfolio export, the committee review window and the sampling
 /// warnings even for types that credit nothing.
+/// <para>
+/// <see cref="RatedLevelField" /> follows the same shape for the same reason, and cannot be inferred:
+/// the generic <c>mini_cex</c>, <c>dops</c> and <c>acat</c> seeds each declare six scale fields and
+/// <c>cbd</c> five, of which exactly one is the overall entrustment judgement. Before T126 the only
+/// thing that knew which was the credit rules' <c>minimum_level_field</c> — so a type that credits
+/// nothing had no stated rated field at all, and a reader holding an ordinal could not say which
+/// ladder it sat on. Declaring it here makes the answer a property of the form rather than of the
+/// rules that happen to score it.
+/// </para>
 /// </remarks>
 public sealed record FormSchema(
     int Version,
     IReadOnlyList<FormSection> Sections,
-    string? ObservationDateField = null);
+    string? ObservationDateField = null,
+    string? RatedLevelField = null);

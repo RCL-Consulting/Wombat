@@ -1,6 +1,7 @@
 {
   "version": 1,
   "observation_date_field": "observed_on",
+  "rated_level_field": "overall",
   "sections": [
     {
       "key": "request",

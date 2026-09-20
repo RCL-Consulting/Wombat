@@ -13,13 +13,14 @@
 | queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
 | queued | [T129](tasks/queued/T129-send-the-college-the-v11-1-decision-list.md) | P1 | Send the College the v11.1 decision list |  |
 | queued | [T130](tasks/queued/T130-the-annual-quota.md) | P1 | The annual quota: a trainee cannot see what is expected of them this y |  |
+| queued | [T133](tasks/queued/T133-the-visual-builder-erases-every-root-schema-pointer-it-does-not-know-about.md) | P1 | The visual builder erases every root schema pointer it does not know a |  |
+| queued | [T134](tasks/queued/T134-committee-sampling-reports-zero-rated-evidence-for-every-v11-1-trainee.md) | P1 | Committee sampling reports zero rated evidence for every v11.1 trainee |  |
 | queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
 | queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
-| queued | [T126](tasks/queued/T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md) | P2 | Nothing can say which entrustment ladder a given activity was rated ag |  |
 | queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
@@ -34,7 +35,7 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 
-Done: 90 task(s).
+Done: 91 task(s).
 
 ## From STATE.md
 
@@ -50,9 +51,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+087dd5f fix(msf): the expiry reminder mailed the token hash, as a relative URL (T132)
 842a6ca docs(execution): re-rate the queue EPA-first, and file the three tasks nobody filed
 2da4d41 docs(execution): record the upstream lint fix, and use the phrasing it permits
 0c1622f docs(execution): block T128, retitle T102 to the defect that is still open
 7fba9d0 docs(execution): finalise the 2026-09-20 session
-a5230dd chore(execution): move the doctrine into the standard layout, retiring Programme/
 ```

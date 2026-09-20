@@ -19,9 +19,7 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 - **T130 (the annual quota) and T131 (governance) were filed 2026-09-20.** They are T098
   phases 3 and 4 — planned since 2026-09-19, never filed, therefore invisible to the queue.
   T130 is the most visible gap in the product: the progress page reads "1 / 24".
-- **T102 is the sharpest defect,** but read its new title: the self-naming path closed with
-  T070. What is open is that a `user`-typed field accepts *any* user id — no role check, no
-  scope check — so a trainee can still name someone the picker never offered.
+- **T102**: the self-naming path closed with T070; a `user`-typed field still accepts any user id.
 
 ## Blockers
 
@@ -52,9 +50,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
-- 2026-09-20: **T132 shipped** — every MSF expiry reminder mailed the token *hash*, as a relative
-  URL. Unusable and unclickable, and the job logged success. It now re-issues. Suites 880.
-- 2026-09-20: queue re-rated EPA-first; T129/T130/T131 filed; four stale paragraphs corrected
-  (T119 shipped but was still listed READY, and D12's tool count disagreed with the source).
+- 2026-09-20: **T126 shipped** — an activity can now say which entrustment ladder it was rated
+  against (`rated_level_field`). No migration: the repo forbids an FK on Activity's snapshot columns,
+  and nothing filters on a rating. Found and filed **T133** (the builder erases root schema pointers)
+  and **T134** (committee sampling reports zero rated evidence for every v11.1 trainee). Suites 924.
+- 2026-09-20: **T132 shipped** — every MSF expiry reminder mailed the token *hash* in a relative URL; it now re-issues.
+- 2026-09-20: queue re-rated EPA-first; T129/T130/T131 filed; four stale paragraphs corrected.
 - 2026-09-20: all project docs now live under `execution/`; `Rewrite/` and `Programme/` gone.
   See W-001..W-005 in `DECISIONS.md`. T097's backup had never been deployed; **T128** filed.
