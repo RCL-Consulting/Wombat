@@ -4,6 +4,7 @@ title: The committee evidence snapshot includes draft, open and withdrawn MSF ca
 status: queued
 priority: P3
 owner: agent
+model: sonnet
 depends_on: []
 created: 2026-09-21
 ---

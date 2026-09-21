@@ -39,9 +39,9 @@ One application task shipped, one pre-existing defect fixed on the way, two file
 
 ### Next
 
-1. **[T130] (the annual quota)** is the most visible gap left and is unblocked. [T121] writes
-   `ObservedOn` from the real close date precisely so phase 3 can bucket it.
-2. **[T120]** (the ten remaining v11.1 tools) and **[T122]** (enforce the EPA→tool mapping).
+1. **[T130] (the annual quota) — Model: Opus.** The most visible gap left, and unblocked. [T121]
+   writes `ObservedOn` from the real close date precisely so phase 3 can bucket it.
+2. **[T120]** + **[T122]** (the EPA→tool mapping). [T137] **Opus**; [T138] **Sonnet**.
 3. **Ask the two residual College questions** — the "clinical observed interaction" merge scope, and
    whether June is semester 1 or 2. Neither blocks starting; both block finishing.
 4. **[T128]** — still blocked on you: off-host destination + `age` key holder.

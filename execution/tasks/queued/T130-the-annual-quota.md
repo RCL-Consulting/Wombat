@@ -4,6 +4,7 @@ title: "The annual quota: a trainee cannot see what is expected of them this yea
 status: queued
 priority: P1
 owner: agent
+model: opus
 depends_on: []
 created: 2026-09-20
 ---

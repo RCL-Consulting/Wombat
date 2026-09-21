@@ -4,6 +4,7 @@ title: A campaign's per-EPA evidence rows are indistinguishable on the trainee's
 status: queued
 priority: P2
 owner: agent
+model: opus
 depends_on: []
 created: 2026-09-21
 ---

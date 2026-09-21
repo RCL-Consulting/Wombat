@@ -26,8 +26,8 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T130** (the quota), then **T120** (the ten remaining v11.1 tools) and **T122** (the EPA→tool
-  allow-list, which retires `RatedActivityTypes`' family map).
+- **T130** (the quota) — **Model: Opus**: a period concept threaded through a migration, the credit
+  engine, the rebuild command, eight readers and two UI sites. Then **T120** and **T122**.
 - Ask the two residual College questions before T120 merges any instrument.
 - Decide T128's destination, then `apply` it and rehearse a restore **from the retrieved copy**.
 
