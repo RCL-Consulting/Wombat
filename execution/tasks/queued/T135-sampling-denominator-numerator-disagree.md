@@ -43,9 +43,22 @@ inside `activities.Count` and therefore **outside** `withheldRatedActivities` �
 outside `ratings.Count`, which is what `TotalRatedActivities` reports. It is silently in neither
 column, and `EvidenceComplete` still reads true.
 
-All four CPSA seeds use the literal `epa_id` / `assessor_user_id` keys, so the corpus is safe today.
-A builder-made type need not: nothing declares where an activity's EPA or assessor live, which is the
-same class of gap [T126] closed for the rating and that [T122] is queued to close for the tool.
+All four CPSA WBA seeds use the literal `epa_id` / `assessor_user_id` keys, so the corpus was safe when
+this was filed. A builder-made type need not: nothing declares where an activity's EPA or assessor live,
+which is the same class of gap [T126] closed for the rating and that [T122] is queued to close for the
+tool.
+
+**Updated 2026-09-21 by [T121]: the corpus is no longer safe, and the answer is not obvious.** `msf_cpsa`
+declares `rated_level_field`, so it is rated, and it deliberately carries **no** `assessor_user_id` — an
+MSF asserts a level but names no observing assessor, and calling the releasing reviewer one would be a
+lie on a clinician-facing chart. Every released MSF evidence row therefore takes defect 2's path, every
+time, on real data.
+
+What that means for the fix matters: for MSF the *outcome* is right and only the mechanism is accidental.
+An MSF has no assessor to concentrate, so leaving it out of an assessor-concentration numerator is
+correct — folding it into `WithheldRatedActivities` would be wrong, because nothing was withheld. So the
+third column this task proposes has to distinguish "unreadable" from "rated but not assessor-attributed",
+rather than lumping them. The same distinction will be needed for [T120]'s three unrated instruments.
 
 ## What to build
 
@@ -78,3 +91,6 @@ defect 2 be closed properly by declaring where an EPA lives rather than reading 
   reads two literal keys and no rating value. Both read directly from the source.
 - **Not verified:** whether any draft or unparseable row exists in the dev or production data today.
   The defect is structural either way, and T134 widened who it can reach.
+- **Observed 2026-09-21:** dev now holds three released `msf_cpsa` activities, each of which is a live
+  instance of defect 2's path. They are readable by the committee, so `EvidenceComplete` still reads
+  true; the visible consequence today is only that they are absent from `TotalRatedActivities`.

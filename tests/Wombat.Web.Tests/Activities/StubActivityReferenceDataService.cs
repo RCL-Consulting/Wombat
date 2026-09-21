@@ -17,6 +17,14 @@ internal class StubActivityReferenceDataService : IActivityReferenceDataService
         ClaimsPrincipal principal, EpaOptionScope? scope = null, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
 
+    public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
+        string subjectUserId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
+
+    public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetRatedLevelOptionsForActivityTypeAsync(
+        string activityTypeKey, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
+
     public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(
         ClaimsPrincipal principal, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "observation_date_field": "observed_on",
+  "rated_level_field": "overall_level",
+  "sections": [
+    {
+      "key": "evidence",
+      "title": "Multi-source feedback",
+      "editable_by": "role:Coordinator|role:Administrator",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true,
+          "help_text": "The EPA the campaign was declared as evidence for. One record per covered EPA."
+        },
+        {
+          "key": "campaign_id",
+          "type": "number",
+          "label": "MSF campaign",
+          "required": true,
+          "validation": {
+            "min": 1
+          },
+          "help_text": "The campaign this record is one face of. Sibling records share it and differ only by EPA."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Feedback window closed",
+          "required": true,
+          "help_text": "The date the campaign closed to responses - when the evidence was complete."
+        },
+        {
+          "key": "respondent_count",
+          "type": "number",
+          "label": "Questionnaires returned",
+          "required": true,
+          "validation": {
+            "min": 0
+          }
+        }
+      ]
+    },
+    {
+      "key": "review",
+      "title": "Reviewer's judgement",
+      "editable_by": "role:Coordinator|role:Administrator",
+      "fields": [
+        {
+          "key": "overall_level",
+          "type": "scale",
+          "label": "Supervision the reviewer judged this trainee to need",
+          "scale_key": "CPSA Paediatric Entrustment Scale v11.1",
+          "validation": {
+            "min": 1,
+            "max": 6
+          },
+          "help_text": "Optional. Stated by the clinician who released the report, informed by the aggregate - never a mean of respondent scores, because a mean is not a rung."
+        },
+        {
+          "key": "summary",
+          "type": "longtext",
+          "label": "Reviewer's summary",
+          "help_text": "The narrative already released to the trainee. No respondent is named and no individual comment is reproduced here."
+        }
+      ]
+    }
+  ]
+}

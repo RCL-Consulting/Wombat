@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    {
+      "key": "draft",
+      "label": "Draft"
+    },
+    {
+      "key": "recorded",
+      "label": "Recorded",
+      "terminal": true
+    }
+  ],
+  "transitions": [
+    {
+      "key": "record",
+      "from": "draft",
+      "to": "recorded",
+      "actor": "role:Coordinator|role:Administrator"
+    }
+  ]
+}

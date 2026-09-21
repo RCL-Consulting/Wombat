@@ -5,6 +5,7 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
@@ -40,6 +41,48 @@ public sealed class CommitteeDecisionHandlersTests
 
         refreshed.EvidenceItems.Single(item => item.ActivityId == 100).Summary.Should().Contain("draft");
         refreshed.EvidenceItems.Single(item => item.ActivityId == 100).Summary.Should().NotContain("completed");
+    }
+
+    /// <summary>
+    /// A released campaign's evidence row says which EPAs it stands behind, and that its per-EPA records
+    /// exist. (T121)
+    /// </summary>
+    /// <remarks>
+    /// The snapshot now contains BOTH the campaign and one ordinary <c>msf_cpsa</c> activity per covered
+    /// EPA. That is deliberate — a panel wants the report and the per-EPA claims — but it is only readable
+    /// if the parent names the children; otherwise it reads as one campaign and N unexplained siblings
+    /// dated the same minute.
+    /// </remarks>
+    [Fact]
+    public async Task StartReview_MsfEvidenceNamesTheEpasItStandsBehind()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        dbContext.Epas.Add(new Epa { Id = 70, SubSpecialityId = 1, Code = "PAED-010", Title = "Leading a clinical team" });
+        dbContext.Epas.Add(new Epa { Id = 71, SubSpecialityId = 1, Code = "PAED-011", Title = "Managing population health" });
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa
+        {
+            CampaignId = 50,
+            EpaId = 70,
+            RecordedOn = new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc)
+        });
+
+        // Declared but never recorded: this EPA had left the trainee's curriculum by release day, so
+        // the release dropped it. The snapshot must not claim an activity that was never written.
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 71 });
+        (await dbContext.MsfCampaigns.SingleAsync(campaign => campaign.Id == 50)).EvidenceRecordedOn =
+            new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc);
+        await dbContext.SaveChangesAsync();
+
+        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        var msfEvidence = started.EvidenceItems.Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
+        msfEvidence.Summary.Should().Contain("Evidence recorded for PAED-010, one activity each.");
+        msfEvidence.Summary.Should().Contain("Also declared PAED-011");
+        msfEvidence.Summary.Should().NotContain("Evidence recorded for PAED-010, PAED-011");
     }
 
     [Fact]

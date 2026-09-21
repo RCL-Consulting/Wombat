@@ -61,6 +61,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<MsfTemplate> MsfTemplates => Set<MsfTemplate>();
     public DbSet<MsfQuestion> MsfQuestions => Set<MsfQuestion>();
     public DbSet<MsfCampaign> MsfCampaigns => Set<MsfCampaign>();
+    public DbSet<MsfCampaignEpa> MsfCampaignEpas => Set<MsfCampaignEpa>();
     public DbSet<MsfInvitation> MsfInvitations => Set<MsfInvitation>();
     public DbSet<MsfResponse> MsfResponses => Set<MsfResponse>();
     public DbSet<MsfResponseAnswer> MsfResponseAnswers => Set<MsfResponseAnswer>();

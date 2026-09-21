@@ -15,6 +15,30 @@ public sealed record UpdateActivityDraftInput(
     string NewDataJson,
     ClaimsPrincipal Principal);
 
+/// <summary>
+/// A batch of activities to create and drive straight to a terminal state in one unit of work. (T121)
+/// </summary>
+/// <param name="ActivityTypeKey">
+/// The seeded type's key, not its id. The caller is a feature that knows which instrument it is writing
+/// evidence for ("msf_cpsa"), never which row that became in this database.
+/// </param>
+/// <param name="CreatedByUserId">
+/// The person whose act produced these records — the releasing reviewer, not the subject. They must
+/// satisfy the transition's actor rule, which is what stops a trainee reaching this path.
+/// </param>
+/// <param name="DataJsonPerActivity">
+/// One complete form payload per activity. The batch exists because one campaign covers many EPAs and
+/// <c>curriculum_item_match</c> reads a single integer out of <c>DataJson</c>, so the coverage has to be
+/// one row per EPA rather than one row naming many.
+/// </param>
+public sealed record RecordCompletedActivitiesInput(
+    string ActivityTypeKey,
+    string SubjectUserId,
+    string CreatedByUserId,
+    string TransitionKey,
+    IReadOnlyList<string> DataJsonPerActivity,
+    ClaimsPrincipal Principal);
+
 public sealed record TransitionActivityInput(
     int ActivityId,
     string TransitionKey,

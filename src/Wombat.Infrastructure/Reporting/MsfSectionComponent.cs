@@ -28,6 +28,13 @@ internal static class MsfSectionComponent
         });
     }
 
+    /// <summary>
+    /// An EPA code, saying so when the campaign covered it but recorded nothing for it - the EPA had
+    /// left the trainee's curriculum by release day.
+    /// </summary>
+    private static string DescribeCoveredEpa(MsfCoveredEpaDto epa)
+        => epa.Recorded ? epa.Code : $"{epa.Code} (not recorded)";
+
     private static void ComposeReport(IContainer container, MsfCampaignAggregateReportDto report)
     {
         container.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(column =>
@@ -45,6 +52,18 @@ internal static class MsfSectionComponent
                 text.Span("Total responses: ").FontSize(9);
                 text.Span(report.TotalResponses.ToString()).FontSize(9).Bold();
             });
+
+            // T121: what the campaign was declared evidence for. Printed here as well as on the
+            // per-EPA activity records in the activities section, because those are separate entries
+            // several pages away and nothing else says they came from this campaign.
+            if (report.CoveredEpas.Count > 0)
+            {
+                column.Item().Text(text =>
+                {
+                    text.Span("Evidence for: ").FontSize(9);
+                    text.Span(string.Join(", ", report.CoveredEpas.Select(DescribeCoveredEpa))).FontSize(9).Bold();
+                });
+            }
 
             if (!string.IsNullOrWhiteSpace(report.CoordinatorNarrative))
             {

@@ -16,6 +16,14 @@ public sealed class MsfCampaignConfiguration : IEntityTypeConfiguration<MsfCampa
         builder.Property(entity => entity.CoordinatorNarrative).HasMaxLength(4000);
         builder.Property(entity => entity.ReviewedByUserId).HasMaxLength(450);
 
+        // Optimistic concurrency on the aggregate, and it is load-bearing rather than defensive since
+        // T121. The once-only guarantee on the evidence fan-out rests on MsfCampaign.Release refusing
+        // anything but UnderReview, and that refusal is an in-memory check on a row both of two
+        // simultaneous releases would have read as UnderReview. Without a token both would pass, both
+        // would save, and the trainee would get two full sets of permanent evidence activities.
+        // Postgres's own xmin costs no column and no write path.
+        builder.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
+
         builder.HasIndex(entity => new { entity.SubjectUserId, entity.State });
         builder.HasIndex(entity => new { entity.TemplateId, entity.ClosesOn });
 

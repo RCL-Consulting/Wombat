@@ -13,7 +13,7 @@ public enum ActivityTypeSeedSource
     /// <summary>The ten generic starter types seeded by <see cref="DataSeeder"/>.</summary>
     Generic,
 
-    /// <summary>The four CPSA paediatric WBA tools seeded by <see cref="PaediatricCatalogueSeeder"/>.</summary>
+    /// <summary>The CPSA paediatric instruments seeded by <see cref="PaediatricCatalogueSeeder"/>.</summary>
     PaediatricCollege
 }
 
@@ -108,6 +108,17 @@ public static class ActivityTypeSeedCatalogue
             ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
         new("direct_observation_cpsa", "Direct Observation (Paediatrics)",
             "Observation of the trainee in routine practice - ward rounds, handover and family meetings.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
+
+        // System-written, never hand-filed. One row is created per EPA a released MSF campaign covers
+        // (T121). A trainee CAN still create a stray draft from /activities/new — nothing in the product
+        // expresses "system-managed" — but both its sections declare
+        // `editable_by: role:Coordinator|role:Administrator`, so every field they submit is dropped at
+        // creation, and the `record` transition carries the same rule, so the empty draft can never
+        // become evidence. Hiding it from the picker needs a SystemManaged flag on ActivityType, which
+        // belongs with [T118] findings 6 and 7.
+        new("msf_cpsa", "Multi-Source Feedback (Paediatrics)",
+            "The per-EPA evidence record a released multi-source feedback campaign leaves behind.",
             ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None)
     ];
 

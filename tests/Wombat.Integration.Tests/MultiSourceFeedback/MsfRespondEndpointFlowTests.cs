@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FluentAssertions;
@@ -12,7 +14,11 @@ using Npgsql;
 using Wombat.Api.Endpoints;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
 
@@ -26,6 +32,14 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
     private ApiFactory _factory = null!;
     private HttpClient _client = null!;
     private string _baseConnectionString = null!;
+
+    /// <summary>
+    /// T121: the campaign now has to name EPAs from the subject's own curriculum, so the subject has to
+    /// be a real admitted trainee rather than a bare user id.
+    /// </summary>
+    private int _institutionId;
+    private int _coveredEpaId;
+    private ClaimsPrincipal _coordinator = null!;
 
     private string SchemaConnectionString
     {
@@ -54,6 +68,62 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         _factory = new ApiFactory(SchemaConnectionString, "http://localhost/msf/respond");
         _client = _factory.CreateClient();
+
+        await AdmitSubjectAsync();
+    }
+
+    /// <summary>
+    /// Admits "trainee-1" onto a seeded curriculum and builds the coordinator who runs their campaign.
+    /// </summary>
+    /// <remarks>
+    /// Before T121 the subject was a bare string and nothing resolved it. The campaign now narrows its
+    /// EPA coverage to the subject's curriculum, the create is refused outside the caller's institution,
+    /// and the release fans out activities scope-stamped from the subject's profile - so all three need a
+    /// real profile to exercise.
+    /// </remarks>
+    private async Task AdmitSubjectAsync()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var curriculum = await dbContext.Curricula
+            .Include(entity => entity.Items)
+            .Where(entity => entity.Items.Any(item => item.OwningInstitutionId == null))
+            .OrderBy(entity => entity.Id)
+            .FirstAsync();
+
+        _institutionId = await dbContext.Institutions.OrderBy(entity => entity.Id).Select(entity => entity.Id).FirstAsync();
+        _coveredEpaId = curriculum.Items
+            .Where(item => item.OwningInstitutionId == null)
+            .OrderBy(item => item.Id)
+            .Select(item => item.EpaId)
+            .First();
+
+        dbContext.TraineeProfiles.Add(new TraineeProfile
+        {
+            UserId = "trainee-1",
+            InstitutionId = _institutionId,
+            CurriculumId = curriculum.Id,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-1)),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(3)),
+            IsActive = true
+        });
+
+        await dbContext.SaveChangesAsync();
+
+        // Built with the role and institution claim types the app issues, and with ClaimsIdentity told
+        // which claim carries a role - ClaimsPrincipal.IsInRole is the BCL instance method and reads
+        // RoleClaimType, so an identity built without it matches no role: and `role:Coordinator` is what
+        // lets the release record evidence at all.
+        _coordinator = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "coordinator-1"),
+                new Claim(ClaimTypes.Role, WombatRoles.Coordinator),
+                new Claim(WombatClaimTypes.InstitutionId, _institutionId.ToString(CultureInfo.InvariantCulture))
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
     }
 
     public async Task DisposeAsync()
@@ -93,7 +163,10 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
             4,
             2,
-            "coordinator-1"));
+            2,
+            [_coveredEpaId],
+            "coordinator-1",
+            _coordinator));
 
         foreach (var invitee in CreateInvitees(campaign.Id))
         {
@@ -152,7 +225,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             invitations.Should().OnlyContain(invitation => !string.IsNullOrWhiteSpace(invitation.RespondentEmailHash));
         }
 
-        await SendAsync(new ReleaseMsfCampaignCommand(campaign.Id, "coordinator-1", "Released after coordinator review."));
+        await SendAsync(new ReleaseMsfCampaignCommand(
+            campaign.Id, "coordinator-1", "Released after coordinator review.", 4, _coordinator));
 
         var traineeReports = await SendAsync(new ListMsfCampaignsForTraineeQuery("trainee-1"));
         traineeReports.Should().ContainSingle(report => report.Id == campaign.Id && report.ResponseCount == 4);
@@ -164,6 +238,34 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         releasedReport.Categories.Should().OnlyContain(category =>
             category.Questions.All(question =>
                 question.Comments.All(comment => !comment.Contains('@', StringComparison.Ordinal))));
+
+        // T121: the release leaves one terminal msf_cpsa activity per covered EPA behind, and that is the
+        // only thing that ever connected a campaign to a curriculum.
+        releasedReport.CoveredEpas.Should().ContainSingle(epa => epa.EpaId == _coveredEpaId);
+        releasedReport.EvidenceRecordedOn.Should().NotBeNull();
+
+        var activities = await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator));
+        var evidence = activities.Should().ContainSingle(activity => activity.ActivityTypeKey == "msf_cpsa").Subject;
+        evidence.CurrentState.Should().Be("recorded");
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var activity = await dbContext.Activities
+                .Include(entity => entity.Transitions)
+                .SingleAsync(entity => entity.Id == evidence.Id);
+
+            activity.DataJson.Should().Contain($"\"epa_id\":{_coveredEpaId}");
+            activity.DataJson.Should().Contain("\"overall_level\":4");
+            activity.DataJson.Should().NotContain("@example.test");
+            activity.ObservedOn.Should().Be(campaign.ClosesOn);
+
+            // D8: MSF consumes none of Annexure A's 55 encounters, so `counts_for` is empty, the applier
+            // is never reached and the stamp stays null - T108's "credit was never evaluated".
+            var record = activity.Transitions.Single(entity => entity.TransitionKey == "record");
+            record.CreditedItemCount.Should().BeNull();
+            (await dbContext.CurriculumItemProgresses.CountAsync()).Should().Be(0);
+        }
     }
 
     private static IReadOnlyList<(string Email, MsfRespondentCategory Category)> CreateInvitees(int campaignId)

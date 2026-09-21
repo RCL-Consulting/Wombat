@@ -164,6 +164,18 @@ never a mean of respondent scores — *"a mean of 3.4 is not a rung on a ladder 
 was not chosen. **Consequence: the field is optional and authored at release, so `MsfQuestion.ScaleId`
 stays nullable and no aggregation changes.**
 
+> **A second consequence, found building [T121] on 2026-09-21 and worth stating because it was not
+> foreseen here.** Keeping the optional ordinal means `msf_cpsa` carries a `scale` field, and
+> `SeedRoundTripTests.Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale` makes that a biconditional:
+> a schema with a `scale` field MUST declare `rated_level_field`. So MSF is now in the **rated** set
+> alongside the nine of D6 — nine seeded tools, not eight. It is nonetheless invisible on both surfaces
+> that read that set, because neither can find an `assessor_user_id` on it: the committee sampling
+> report skips it in the numerator and the trajectory chart does not plot it. That is the right answer —
+> an MSF asserts a level but names no observing assessor — reached by an accidental mechanism, which is
+> why it is pinned by name in `SeedScaleKeyTests.ExactlyNineSeededToolsAreRated` and recorded on [T135].
+> **The only thing the College may want to rule on is whether an MSF ordinal should appear on a
+> trainee's entrustment trajectory at all.** Today it does not, deliberately.
+
 **D11 — Must more than one respondent group respond? — CLOSED 2026-09-20. Yes, at least two
 categories must survive suppression.** Proposed default confirmed. A campaign answered entirely by
 eight peer doctors currently passes the release threshold and would credit, showing one category and

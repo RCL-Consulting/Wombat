@@ -2,79 +2,79 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-20b (Opus) — the College's answers, and T110/T126/T132/T133/T134
+## Session 2026-09-21 (Opus) — T121: MSF leaves evidence behind
 
-Five application tasks shipped, fourteen product decisions closed, one upstream harness fix.
+One application task shipped, one pre-existing defect fixed on the way, two filed.
 
 ### Done
 
-- **[T133]** — the visual builder erased every root schema pointer on every operator draft save.
-  Carry-through, an orphaned-pointer guard, and a Form-tab control. Browser-verified.
-- **[T110]** — four generic seeds declared `scale_key: "or_scale"` and bound to nothing. 23 fields
-  rebound, plus the corpus guard whose absence was the root cause.
-- **[T134]** — every v11.1 trainee's committee report read zero rated evidence, because the gate
-  matched exact keys over four legacy tools. One shared classifier answers it now. Browser-verified.
-- **The College answered all fourteen decisions — [T129] closed**, transcribed into
-  `EPA-PROGRAMME.md` § 3A-ii. **[T120]/[T121]/[T122]/[T130] released.** Six needed a second pass;
-  D6's "all rated" would have had trainees rating themselves. Two residual questions below.
-- **Renumbered [T121]'s local `D1`–`D4`** to the College's **D9, D8, D10, D11**; they collided.
-- **[T126]** — an activity can say which ladder it was rated against (`rated_level_field`); D30's
-  off-ladder rule works. No migration and no FK.
-- **[T132]** — MSF expiry reminders mailed the token *hash*; now re-issued. Filed [T130]/[T131];
-  re-rated the queue EPA-first; [T128] to `blocked/`; retitled [T102].
-- **Emptied the dev database and removed three compatibility hedges (W-006).** The operator
-  restated that nothing is live. An audit found three places today's work preserved existing rows:
-  T134's disjunctive gate, T126's off-ladder rule being inert, and D25's unmerged ladder. Dropping
-  and rebuilding dev removed what all three were protecting, in one act.
-  **18 types → 14, 52 versions → 14 (all v1 with pointers), 15 activities → 0, 3 scales → 2,
-  the four `*_paed` types gone, 16/16 curriculum items pinned.** Then: the gate became the declared
-  pointer alone, the trajectory's **KNOWN LIMITATION closed**, and the sampling fixture — which
-  seeded types with a null `SchemaJson`, a shape unpublishable since T126 — now models a real type.
-  Suites **1009**. **Production deliberately untouched.**
+- **[T121]** — a released MSF campaign now writes one terminal `msf_cpsa` activity per covered EPA into
+  the trainee's ordinary activity, portfolio and committee path. **Browser-verified end to end on dev**,
+  three times over: scope stamped from the subject, no respondent data in `DataJson`, `ObservedOn` from
+  the real close date, a dropped EPA reported as dropped.
+- **Per D8, nothing is credited.** `"counts_for": []`, so no `CurriculumItemProgress` row moves and
+  `CreditedItemCount` stays null — T108's "never evaluated". The task file's Verification section assumed
+  the opposite; it is rewritten, with an **As built** section listing every divergence from the design.
+- **D11 lives in `MsfAggregationService.BuildReport`**, so the disabled button and the server refusal
+  cannot disagree. Browser-verified blocked and unblocked.
+- **Found and fixed on the way: the portfolio export threw for any trainee with a released MSF
+  campaign.** `PortfolioPdfService` never included `Responses.Invitation`, which
+  `MsfAggregationService` dereferences on its first line. Invisible because the only two portfolio tests
+  inject a `ThrowingMsfAggregationService`. Guard **verified to fail against the unfixed code**.
+- **An adversarial review of the diff (6 reviewers, 3 refuters each) found six real defects, all
+  fixed** and all written up on the task file. The three that mattered: the scope check was on create,
+  not on **release**, which is the half that writes; a failed fan-out would have **committed the release
+  anyway** via the audit catch; and the reviewer's ordinal was a bare number box, so rung "4" stored
+  rung "3b" (the T100 trap).
 
 ### Filed, not fixed
 
-- **[T135] P2** — drafts count as rated evidence (no `CurrentState` predicate), and a readable row
-  that fails `TryParseRating` is in neither the numerator nor the withheld count while
-  `EvidenceComplete` reads true. T134 widened who that can reach.
+- **[T137] P2** — N EPAs give N rows on `/activities/mine` reading `Type / State / Updated` and nothing
+  else. Not MSF-specific: `ActivitySummaryDto` has no EPA and no date, and `Activity.EpaId` is written by
+  nothing.
+- **[T138] P3** — the committee evidence snapshot has no state filter on MSF campaigns, so a draft, open
+  or **withdrawn** campaign is shown to a panel as evidence.
+- **[T135] updated** — `msf_cpsa` is a live instance of its defect 2, and folding it into
+  `WithheldRatedActivities` would be the wrong fix.
 
 ### Next
 
-1. **Ask the two residual College questions.** Neither blocks starting; both block finishing.
-   - **How far does the "clinical observed interaction" merge go?** Mini-CEX + *Directly observed
-     clinical examination* changes no EPA's permitted set (EPA 7 already names both). Mini-CEX +
-     **Direct observation** changes eight, and makes **EPA 10, "Leading and operating within a
-     clinical team" (published list: "MSF, Direct observation (2)"), creditable by a Mini-CEX** —
-     the defect [T122] exists to prevent. The reply's own example named *handover*, which is page
-     8's definition of Direct observation, not of Mini-CEX.
-   - **Is June semester 1 or semester 2?** D13 gave "boundary in June"; recorded Jan–Jun / Jul–Nov.
-2. **[T121] (MSF)** — all four blocking decisions answered; the highest-value released task.
-   **[T130]** (the quota) is unblocked too.
-3. **[T135]** (sampling denominator/numerator) and **[T136]** (a curriculum scale change fails
-   silently — no message, correct refusal, found browser-verifying T126).
-4. **[T128]** — still blocked on you: destination + `age` key holder.
+1. **[T130] (the annual quota)** is the most visible gap left and is unblocked. [T121] writes
+   `ObservedOn` from the real close date precisely so phase 3 can bucket it.
+2. **[T120]** (the ten remaining v11.1 tools) and **[T122]** (enforce the EPA→tool mapping).
+3. **Ask the two residual College questions** — the "clinical observed interaction" merge scope, and
+   whether June is semester 1 or 2. Neither blocks starting; both block finishing.
+4. **[T128]** — still blocked on you: off-host destination + `age` key holder.
 
 ### Traps
 
-- **`counts_for` is permanent per pinned version** — no re-pin path, and a rebuild replays against
-  the pinned one. That is why D8 had to be right first time. MSF gets `[]`.
-- **The dev database is empty of activities and users beyond the three seeded ones.** Anything you
-  remember about dev data is stale, including activity 15 and the scenario logins. Re-run the
-  runbooks if you need a populated corpus; the seeded admin/trainee/committee accounts work.
-- **`OffLadder = false` means "no disagreement established"**, never "on the ladder".
-- **`RatedActivityTypes`' family map now only LABELS** — it no longer decides what is rated.
-  It retires with [T122]'s `WbaToolKey`.
+- **`AuditWriter` shares the request's scoped `IApplicationDbContext` and calls `SaveChangesAsync`, and
+  `AuditPipelineBehavior` writes an audit row from its `catch`.** Any exception thrown while the context
+  holds a half-finished mutation therefore COMMITS that mutation on the way out. This is not MSF-specific
+  and it is not written down anywhere else: **any handler that mutates then validates is committing on
+  failure.** Worth a sweep.
+- **`msf_cpsa` is in the rated set (nine seeds, not eight)**, unavoidably while D10's optional ordinal
+  exists: `Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale` is a biconditional. It is invisible on
+  both surfaces that read that set, because neither finds an `assessor_user_id`. Recorded against D10.
+- **Do not add `msf_cpsa` to `CpsaWbaSeedTests.SeedKeys`** — its theories assume the
+  request → assess → feedback shape. `MsfSeedTests` is its guard; a comment says so there.
+- **`ClaimsPrincipalExtensions.CanAccessInstitution` returns false for a Coordinator**, whatever their
+  institution: it admits only Administrator and InstitutionalAdmin.
+- **`ClaimsPrincipal.IsInRole` is the BCL instance method**, not the extension, so it reads the
+  identity's `RoleClaimType`. A test principal built without it matches `role:Coordinator` for nobody.
+- **The dev trainee is now on the paediatric curriculum** (`TraineeProfiles.CurriculumId` 1 → 2). Dev
+  holds MSF campaigns 1–3 and activities 1–6. Campaign 1 was released through the pre-fix number box, so
+  its level 4 means rung "3b"; 2 and 3 went through the rung picker and are right.
 - Hooks hard-code `C:\dev\rcl_execution\bin\harness.py` (`main`). Never pass `--no-build`.
 
 ### Verification status
 
 - `dotnet build Wombat.sln -c Release` — **0 warnings, 0 errors**.
-- Suites green, no `--no-build`: Domain **78**, Application **546**, Infrastructure **251**,
-  Architecture **23**, Web **111** — **1009 total**, up from 875 at session start. Integration is
-  Docker-gated and was not run.
-- T126, T132, T133 and T134 each **verified to fail against the unfixed code**, and T126, T133 and
-  T134 **browser-verified on dev** before the rebuild. T126's off-ladder rule was shown firing end
-  to end; that took a hand-filed activity and a temporary curriculum re-pin then, and takes neither
-  now that every type is at v1 with its pointer.
-- `harness.py lint --strict` clean; harness 2.4.3 pushed upstream, suite 127. Not re-verified:
-  `drift-check.sh`, `restore-rehearsal.sh` — unchanged since 2026-09-20a.
+- Suites green, no `--no-build`: Domain **78**, Application **559**, Infrastructure **269**,
+  Architecture **23**, Web **111** — **1040 total**, up from 1009. Integration is Docker-gated and was
+  not run; its MSF flow test was rewritten for the new command shapes and compiles.
+- Two migrations, both `dotnet ef`-generated and **applied to the dev database**. Each carries one
+  commented hand-edit: `MinimumRespondentCategories` back-fills as 2 not 0, and EF's
+  `AddColumn("xmin")` was **removed** — `xmin` is a Postgres system column, so adding it fails.
+- The portfolio-export guard was verified to fail against the unfixed code.
+- `harness.py lint` clean. Not re-verified: `drift-check.sh`, `restore-rehearsal.sh`.

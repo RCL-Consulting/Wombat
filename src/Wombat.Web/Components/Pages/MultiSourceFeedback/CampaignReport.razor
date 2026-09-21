@@ -1,6 +1,9 @@
 @page "/msf/reports/{CampaignId:int}"
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Services
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
 @inject IScopedSender Sender
+@inject IActivityReferenceDataService ReferenceData
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>MSF Report</PageTitle>
@@ -28,16 +31,65 @@
         <p><strong>Total responses:</strong> @_report.TotalResponses</p>
         <p><strong>Minimum responses:</strong> @_report.MinimumResponses</p>
         <p><strong>Minimum category responses:</strong> @_report.MinimumCategoryResponses</p>
+        <p><strong>Reporting categories:</strong> @_report.SurvivingCategoryCount of @_report.MinimumRespondentCategories required</p>
+      </section>
+
+      <section class="detail-card">
+        <h3>Evidence for</h3>
+        @if (_report.CoveredEpas.Count == 0)
+        {
+          <Alert Kind="warning">This campaign names no EPA, so releasing it will record no evidence on the trainee's portfolio.</Alert>
+        }
+        else
+        {
+          <ul>
+            @foreach (var epa in _report.CoveredEpas)
+            {
+              <li>
+                @epa.Code — @epa.Title
+                @if (_report.State == MsfCampaignState.Released && !epa.Recorded)
+                {
+                  <text> — not recorded: this EPA is no longer on the trainee's curriculum</text>
+                }
+              </li>
+            }
+          </ul>
+          @if (_report.EvidenceRecordedOn is DateTime recordedOn)
+          {
+            <p><strong>Recorded on the portfolio:</strong> @recordedOn.ToString("yyyy-MM-dd HH:mm") UTC</p>
+          }
+          else
+          {
+            <p class="page-subtitle">One evidence record per EPA is written to the trainee's portfolio when the report is released.</p>
+          }
+        }
       </section>
 
       <section class="detail-card">
         <h3>Coordinator actions</h3>
+        @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
+        {
+          <Alert Kind="warning">@BlockedReason(_report)</Alert>
+        }
         <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
           <DataAnnotationsValidator />
           <ValidationSummary class="validation-summary-errors" />
           <FormField Label="Narrative" InputId="msf-narrative">
             <InputTextArea id="msf-narrative" class="form-control" @bind-Value="_review.Narrative" />
           </FormField>
+          @if (_levelOptions.Count > 0)
+          {
+            <FormField Label="Supervision level this feedback supports" InputId="msf-level"
+                       HelpText="Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate below - never an average of respondent scores.">
+              <InputSelect id="msf-level" class="form-select" @bind-Value="_review.EntrustmentLevel">
+                <option value="">Not stated</option>
+                @foreach (var rung in _levelOptions)
+                {
+                  <option value="@rung.Value">@rung.Label</option>
+                }
+              </InputSelect>
+            </FormField>
+          }
           <FormActions>
             @if (_report.State == MsfCampaignState.Open)
             {
@@ -90,6 +142,13 @@
 @code {
   [Parameter] public int CampaignId { get; set; }
 
+  /// <summary>
+  /// The rungs of the ladder <c>msf_cpsa</c> rates on, as the College prints them. Never a free number
+  /// box: on the CPSA ladder order 5 is rung "4" (T100), so a reviewer who means "4" and types 4 would
+  /// have stored rung "3b" and the portfolio would have printed that back at them. (T121)
+  /// </summary>
+  private readonly List<ActivityCatalogueOption> _levelOptions = [];
+
   private MsfCampaignAggregateReportDto? _report;
   private ReviewFormModel _review = new();
   private bool _loading = true;
@@ -98,8 +157,40 @@
 
   protected override async Task OnParametersSetAsync()
   {
+    await LoadLevelOptionsAsync();
     await LoadAsync();
   }
+
+  private async Task LoadLevelOptionsAsync()
+  {
+    if (_levelOptions.Count > 0)
+    {
+      return;
+    }
+
+    try
+    {
+      _levelOptions.AddRange(await ReferenceData.GetRatedLevelOptionsForActivityTypeAsync(MsfEvidenceActivityTypeKey));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  /// <summary>The seeded type the release writes its per-EPA evidence as.</summary>
+  private const string MsfEvidenceActivityTypeKey = "msf_cpsa";
+
+  /// <summary>
+  /// Which of the two release gates is closed. Both are computed in one place — the aggregation
+  /// service — so this only has to phrase what that already decided.
+  /// </summary>
+  private static string BlockedReason(MsfCampaignAggregateReportDto report)
+    => report.TotalResponses < report.MinimumResponses
+      ? $"Release needs {report.MinimumResponses} responses; {report.TotalResponses} have come back."
+      : $"Release needs {report.MinimumRespondentCategories} respondent groups to report; " +
+        $"{report.SurvivingCategoryCount} cleared the {report.MinimumCategoryResponses}-response threshold. " +
+        "Feedback that survives from too few groups is not multi-source feedback.";
 
   private async Task LoadAsync()
   {
@@ -110,6 +201,7 @@
     {
       _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId));
       _review.Narrative = _report.CoordinatorNarrative;
+      _review.EntrustmentLevel = _report.ReviewerEntrustmentLevel;
     }
     catch (Exception exception)
     {
@@ -139,8 +231,15 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "coordinator";
-      await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _review.Narrative));
+      var principal = authState.User;
+
+      // No "coordinator" fallback. Since T121 this id becomes CreatedByUserId on the evidence
+      // activities the release writes, and `creator` is an actor rule — a literal placeholder would
+      // become a user id on a clinical record and a rule that matches nobody.
+      var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _review.Narrative, _review.EntrustmentLevel, principal));
       await LoadAsync();
       _status = "Report released to the trainee.";
     }
@@ -154,5 +253,8 @@
   {
     [MaxLength(4000)]
     public string? Narrative { get; set; }
+
+    [Range(1, 20)]
+    public int? EntrustmentLevel { get; set; }
   }
 }

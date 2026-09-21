@@ -1,7 +1,11 @@
 @page "/msf/campaigns/new"
 @page "/msf/campaigns/{CampaignId:int}"
+@using System.Globalization
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Services
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
 @inject IScopedSender Sender
+@inject IActivityReferenceDataService ReferenceData
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -50,8 +54,14 @@
         <DataAnnotationsValidator />
         <ValidationSummary class="validation-summary-errors" />
         <div class="form-grid">
-          <FormField Label="Subject user id" InputId="msf-subject" Required="true">
-            <InputText id="msf-subject" class="form-control" @bind-Value="_campaign.SubjectUserId" />
+          <FormField Label="Trainee" InputId="msf-subject" Required="true">
+            <InputSelect id="msf-subject" class="form-select" @bind-Value="_campaign.SubjectUserId" @bind-Value:after="LoadEpaOptionsAsync">
+              <option value="">Select trainee</option>
+              @foreach (var trainee in _trainees)
+              {
+                <option value="@trainee.UserId">@TraineeLabel(trainee)</option>
+              }
+            </InputSelect>
           </FormField>
           <FormField Label="Template" InputId="msf-template-id" Required="true">
             <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId">
@@ -73,6 +83,36 @@
           </FormField>
           <FormField Label="Minimum category responses" InputId="msf-min-category" Required="true">
             <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
+          </FormField>
+          <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
+                     HelpText="How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.">
+            <InputNumber id="msf-min-category-count" class="form-control" @bind-Value="_campaign.MinimumRespondentCategories" />
+          </FormField>
+          <FormField Label="Evidence for these EPAs" InputId="msf-epas" Required="true" FullWidth="true"
+                     HelpText="One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.">
+            @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
+            {
+              <p class="page-subtitle">Select a trainee first.</p>
+            }
+            else if (_epaOptions.Count == 0)
+            {
+              <p class="page-subtitle">This trainee's curriculum lists no EPAs, so a campaign cannot be recorded as evidence for anything.</p>
+            }
+            else
+            {
+              @foreach (var epa in _epaOptions)
+              {
+                <div class="form-check">
+                  <input
+                    id="@($"msf-epa-{epa.Value}")"
+                    class="form-check-input"
+                    type="checkbox"
+                    checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
+                    @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
+                  <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
+                </div>
+              }
+            }
           </FormField>
         </div>
         <FormActions>
@@ -112,6 +152,8 @@
   [Parameter] public int? CampaignId { get; set; }
 
   private readonly List<MsfTemplateDto> _templates = [];
+  private readonly List<TraineeProfileDto> _trainees = [];
+  private readonly List<ActivityCatalogueOption> _epaOptions = [];
   private string? _status;
   private string? _error;
   private TemplateFormModel _template = new();
@@ -121,6 +163,7 @@
   protected override async Task OnInitializedAsync()
   {
     await LoadTemplatesAsync();
+    await LoadTraineesAsync();
   }
 
   protected override async Task OnParametersSetAsync()
@@ -132,6 +175,67 @@
   {
     _templates.Clear();
     _templates.AddRange(await Sender.Send(new ListMsfTemplatesQuery()));
+  }
+
+  private async Task LoadTraineesAsync()
+  {
+    _trainees.Clear();
+    _trainees.AddRange(await Sender.Send(new ListTraineesForSpecialityQuery(await GetPrincipalAsync())));
+  }
+
+  /// <summary>
+  /// The EPAs this trainee's own curriculum lists. Deliberately the strict list, with no fallback to the
+  /// coordinator's own scope: release re-applies exactly this predicate, so an EPA offered here that
+  /// release would silently drop would be a picker that lies.
+  /// </summary>
+  private async Task LoadEpaOptionsAsync()
+  {
+    _epaOptions.Clear();
+    _campaign.EpaIds.Clear();
+
+    if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
+    {
+      return;
+    }
+
+    try
+    {
+      _epaOptions.AddRange(await ReferenceData.GetSubjectCurriculumEpaOptionsAsync(_campaign.SubjectUserId));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private void ToggleEpa(string value, bool isChecked)
+  {
+    var epaId = ParseEpaId(value);
+    if (epaId <= 0)
+    {
+      return;
+    }
+
+    if (isChecked)
+    {
+      if (!_campaign.EpaIds.Contains(epaId))
+      {
+        _campaign.EpaIds.Add(epaId);
+      }
+    }
+    else
+    {
+      _campaign.EpaIds.Remove(epaId);
+    }
+  }
+
+  private static int ParseEpaId(string value)
+    => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var epaId) ? epaId : 0;
+
+  private static string TraineeLabel(TraineeProfileDto trainee)
+  {
+    var name = string.Join(" ", new[] { trainee.FirstName, trainee.LastName }.Where(part => !string.IsNullOrWhiteSpace(part)));
+    return string.IsNullOrWhiteSpace(name) ? trainee.Email : $"{name} ({trainee.Email})";
   }
 
   private async Task CreateTemplateAsync()
@@ -167,6 +271,7 @@
 
     try
     {
+      var principal = await GetPrincipalAsync();
       var result = await Sender.Send(new CreateMsfCampaignCommand(
         _campaign.SubjectUserId,
         _campaign.TemplateId ?? 0,
@@ -174,7 +279,10 @@
         _campaign.ClosesOn,
         _campaign.MinimumResponses,
         _campaign.MinimumCategoryResponses,
-        await GetCurrentUserIdAsync()));
+        _campaign.MinimumRespondentCategories,
+        _campaign.EpaIds.ToArray(),
+        GetUserId(principal),
+        principal));
 
       NavigationManager.NavigateTo($"/msf/campaigns/{result.Id}");
     }
@@ -263,6 +371,12 @@
 
     [Range(1, 100)]
     public int MinimumCategoryResponses { get; set; } = 3;
+
+    [Range(1, 6)]
+    public int MinimumRespondentCategories { get; set; } = 2;
+
+    [MinLength(1, ErrorMessage = "Select at least one EPA this campaign is evidence for.")]
+    public List<int> EpaIds { get; } = [];
   }
 
   private sealed class InviteeFormModel
@@ -275,10 +389,13 @@
     public MsfRespondentCategory Category { get; set; } = MsfRespondentCategory.PeerDoctor;
   }
 
-  private async Task<string> GetCurrentUserIdAsync()
+  private async Task<ClaimsPrincipal> GetPrincipalAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-      ?? throw new InvalidOperationException("The current user identifier is missing.");
+    return authState.User;
   }
+
+  private static string GetUserId(ClaimsPrincipal principal)
+    => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
 }

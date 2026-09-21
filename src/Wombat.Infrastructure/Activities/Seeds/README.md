@@ -19,6 +19,18 @@ Seeded types:
 - `qi_project`: Quality-improvement project using three fixed PDSA sections in v1 instead of repeatable arrays.
 - `journal_club`: Simple logged journal-club attendance record.
 
+The CPSA paediatric instruments, seeded by `PaediatricCatalogueSeeder` against the Paediatrics
+speciality rather than the demo one. The `_cpsa` suffix is not decoration — see that class for why:
+
+- `mini_cex_cpsa`, `dops_cpsa`, `cbd_cpsa`, `direct_observation_cpsa`: the v11.1 workplace-based
+  assessment tools. Assessor-completed, rated on the CPSA six-rung ladder, crediting one encounter
+  against the EPA named in `epa_id`.
+- `msf_cpsa`: **system-written, not hand-filed.** One row per EPA a released multi-source feedback
+  campaign declared itself evidence for (T121). Its `record` transition and both its sections carry
+  `role:Coordinator|role:Administrator`, so a trainee who creates a stray draft from `/activities/new`
+  can neither fill it nor complete it. It ships `"counts_for": []` because College decision D8 says
+  MSF consumes none of Annexure A's 55 encounters; its value is the evidence link, not a count.
+
 Caveats:
 
 - The workflow grammar currently supports `field:<field_key>` actor rules, so the WBA seeds target the named assessor in `assessor_user_id`.
@@ -36,7 +48,7 @@ Caveats:
   each declare six `scale` fields and `cbd` five, of which exactly one is the overall judgement. Before
   T126 the only thing that knew was the credit rules' `minimum_level_field`, so a tool crediting nothing
   had no stated rated field at all, and a reader holding an ordinal could not say which ladder it sat on.
-  **Eight seeds declare it; the six that rate nothing must not.** `SeedRoundTripTests` asserts exactly
+  **Nine seeds declare it; the six that rate nothing must not.** `SeedRoundTripTests` asserts exactly
   that correspondence, so a new rated tool that forgets the pointer fails by name. The parser refuses a
   pointer naming a missing field or a field that is not `scale`-typed.
 

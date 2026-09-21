@@ -48,26 +48,73 @@ public sealed class ActivityService : IActivityService
             .SingleOrDefaultAsync(entity => entity.Id == input.ActivityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
-        if (activityType.Version <= 0 || string.IsNullOrWhiteSpace(activityType.SchemaJson) || string.IsNullOrWhiteSpace(activityType.WorkflowJson))
-        {
-            throw new InvalidOperationException("The selected activity type has not been published yet.");
-        }
-
-        var schema = FormSchemaParser.Parse(activityType.SchemaJson);
-        var workflow = WorkflowParser.Parse(activityType.WorkflowJson);
-        var submittedDataJson = NormalizeObjectJson(input.InitialDataJson);
+        var (schema, workflow) = ParsePublished(activityType);
 
         var subjectUserId = input.SubjectUserId.Trim();
         var subjectScope = await ResolveSubjectScopeAsync(subjectUserId, cancellationToken);
 
-        var utcNow = DateTime.UtcNow;
+        var activity = BuildDraftActivity(
+            activityType,
+            schema,
+            workflow,
+            subjectUserId,
+            subjectScope,
+            input.CreatedByUserId,
+            input.InitialDataJson,
+            input.Principal,
+            DateTime.UtcNow);
+
+        _dbContext.Set<Activity>().Add(activity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return Map(activity);
+    }
+
+    /// <summary>
+    /// The published schema and workflow of a type that is actually offerable, or a refusal.
+    /// </summary>
+    private static (FormSchema Schema, Workflow Workflow) ParsePublished(ActivityType activityType)
+    {
+        if (activityType.Version <= 0 ||
+            string.IsNullOrWhiteSpace(activityType.SchemaJson) ||
+            string.IsNullOrWhiteSpace(activityType.WorkflowJson))
+        {
+            throw new InvalidOperationException("The selected activity type has not been published yet.");
+        }
+
+        return (FormSchemaParser.Parse(activityType.SchemaJson), WorkflowParser.Parse(activityType.WorkflowJson));
+    }
+
+    /// <summary>
+    /// A new activity in its type's initial state, pinned, scope-stamped, filtered to what this creator
+    /// may write, validated and date-stamped — everything but <c>Add</c> and <c>SaveChanges</c>.
+    /// </summary>
+    /// <remarks>
+    /// Extracted so <see cref="RecordCompletedAsync" /> creates activities by exactly the same rules as
+    /// <see cref="CreateDraftAsync" /> rather than by a second, drifting copy of them (T121). The
+    /// per-create work that is NOT here is the work that must not be repeated per row in a batch: the
+    /// type lookup and the subject-scope resolution, both of which are the same for every row.
+    /// </remarks>
+    private Activity BuildDraftActivity(
+        ActivityType activityType,
+        FormSchema schema,
+        Workflow workflow,
+        string subjectUserId,
+        (int? InstitutionId, int? SpecialityId, int? SubSpecialityId) subjectScope,
+        string createdByUserId,
+        string initialDataJson,
+        ClaimsPrincipal principal,
+        DateTime utcNow)
+    {
+        var submittedDataJson = NormalizeObjectJson(initialDataJson);
+
         var activity = new Activity
         {
             ActivityTypeId = activityType.Id,
             ActivityType = activityType,
             SchemaVersion = activityType.Version,
             SubjectUserId = subjectUserId,
-            CreatedByUserId = input.CreatedByUserId.Trim(),
+            CreatedByUserId = createdByUserId.Trim(),
             CurrentState = workflow.InitialState,
             // Deliberately EMPTY while the writable set is computed below. See the note there.
             DataJson = EmptyObjectJson,
@@ -100,7 +147,7 @@ public sealed class ActivityService : IActivityService
             schema,
             workflow,
             activity,
-            input.Principal,
+            principal,
             ignoreStateGate: true);
 
         var normalizedDataJson = FilterToWritableKeys(submittedDataJson, writableFieldKeys);
@@ -117,15 +164,12 @@ public sealed class ActivityService : IActivityService
             FromState = workflow.InitialState,
             ToState = workflow.InitialState,
             TransitionKey = "create",
-            ActorUserId = input.CreatedByUserId.Trim(),
+            ActorUserId = createdByUserId.Trim(),
             OccurredOn = utcNow,
             SnapshotJson = normalizedDataJson
         });
 
-        _dbContext.Set<Activity>().Add(activity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return Map(activity);
+        return activity;
     }
 
     public async Task<ActivityDto> UpdateDraftAsync(UpdateActivityDraftInput input, CancellationToken cancellationToken = default)
@@ -221,6 +265,30 @@ public sealed class ActivityService : IActivityService
 
         var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
+        await ApplyCreditIfTerminalAsync(activity, version, workflow, transition, record, cancellationToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return Map(activity);
+    }
+
+    /// <summary>
+    /// Applies curriculum credit for a move into a terminal state and stamps the outcome onto the
+    /// transition that caused it, or does neither.
+    /// </summary>
+    /// <remarks>
+    /// The one credit entry point, called from <see cref="TransitionAsync" /> and
+    /// <see cref="RecordCompletedAsync" />. Forking it was the option T121 rejected: each fork would
+    /// then need its own copy of the scale resolution, the stage resolution, the dedupe key namespace
+    /// and the T108 stamp, and the second copy is the one that gets forgotten.
+    /// </remarks>
+    private async Task ApplyCreditIfTerminalAsync(
+        Activity activity,
+        ActivityTypeVersion version,
+        Workflow workflow,
+        WorkflowTransition transition,
+        ActivityTransition record,
+        CancellationToken cancellationToken)
+    {
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
         if (targetState.Terminal && DeclaresCredit(version.CreditRulesJson))
         {
@@ -257,9 +325,149 @@ public sealed class ActivityService : IActivityService
             record.CreditedItemCount = credited.UpdatedRows.Count;
             record.CreditScaleMismatchCount = credited.ScaleMismatchCount;
         }
+    }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return Map(activity);
+    /// <inheritdoc />
+    public async Task<int> StageCompletedAsync(
+        RecordCompletedActivitiesInput input,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (input.DataJsonPerActivity.Count == 0)
+        {
+            return 0;
+        }
+
+        var activityTypeKey = input.ActivityTypeKey.Trim();
+        var activityType = await _dbContext.Set<ActivityType>()
+            .Include(entity => entity.Versions)
+            .SingleOrDefaultAsync(entity => entity.Key == activityTypeKey, cancellationToken)
+            ?? throw new InvalidOperationException($"The activity type '{activityTypeKey}' could not be found.");
+
+        var (schema, workflow) = ParsePublished(activityType);
+
+        if (DeclaresCredit(activityType.CreditRulesJson ?? string.Empty))
+        {
+            // See the interface remarks: credit is keyed on the activity id, which does not exist until
+            // a save, and this method deliberately does not save. Refusing loudly beats crediting once
+            // for a whole batch under the key "0:...".
+            throw new InvalidOperationException(
+                $"Activity type '{activityTypeKey}' declares curriculum credit, so it cannot be recorded " +
+                "through the staged path. Credit is keyed on the persisted activity id.");
+        }
+
+        // Resolved from the INITIAL state, because that is where every row in the batch starts. A type
+        // whose initial state is already terminal has nothing to transition and does not belong here.
+        var transition = workflow.Transitions.SingleOrDefault(candidate =>
+            string.Equals(candidate.Key, input.TransitionKey, StringComparison.Ordinal) &&
+            candidate.From.Contains(workflow.InitialState, StringComparer.Ordinal))
+            ?? throw new InvalidOperationException(
+                $"Transition '{input.TransitionKey}' is not available from state '{workflow.InitialState}'.");
+
+        var subjectUserId = input.SubjectUserId.Trim();
+        var subjectScope = await ResolveSubjectScopeAsync(subjectUserId, cancellationToken);
+
+        EnsureSubjectIsInTypeScope(activityType, subjectScope, subjectUserId);
+
+        var utcNow = DateTime.UtcNow;
+
+        // Built and validated in full BEFORE anything is added to the context. Nothing below this loop
+        // may throw, because by then the caller's own mutation is pending and an exception would be
+        // flushed to the database by the audit pipeline's catch. (See the interface remarks.)
+        var built = new List<Activity>(input.DataJsonPerActivity.Count);
+        foreach (var dataJson in input.DataJsonPerActivity)
+        {
+            var activity = BuildDraftActivity(
+                activityType,
+                schema,
+                workflow,
+                subjectUserId,
+                subjectScope,
+                input.CreatedByUserId,
+                dataJson,
+                input.Principal,
+                utcNow);
+
+            // The same evaluator the interactive path uses, against the same rule the seed declares.
+            // This is the gate: `msf_cpsa` says `role:Coordinator|role:Administrator`, so a trainee who
+            // has hand-created a stray draft from /activities/new can never complete it, and therefore
+            // never record MSF evidence about themselves.
+            var decision = _workflowEvaluator.Evaluate(workflow, activity, transition.Key, input.Principal);
+            if (!decision.Allowed)
+            {
+                throw new InvalidOperationException(
+                    decision.Reason ?? "The current actor is not allowed to perform this transition.");
+            }
+
+            ThrowIfInvalid(_schemaValidator.Validate(
+                schema,
+                activity.DataJson,
+                SchemaValidationMode.Submit,
+                transition.RequiresFields));
+
+            // T119, and the ordering note from TransitionAsync applies unchanged: stamping before
+            // ApplyTransition keeps the column and the transition's SnapshotJson in agreement.
+            StampObservedOn(activity, schema, activity.DataJson);
+
+            activity.ApplyTransition(
+                workflow,
+                transition.Key,
+                input.CreatedByUserId,
+                activity.DataJson,
+                note: null);
+
+            built.Add(activity);
+        }
+
+        _dbContext.Set<Activity>().AddRange(built);
+
+        return built.Count;
+    }
+
+    /// <summary>
+    /// Refuses to write a scoped type's record about a subject outside that scope. (T121)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The interactive path never needs this: <c>ListActivityTypesQuery</c> only offers a
+    /// Speciality-scoped type to someone whose claims carry that speciality, so the picker is the
+    /// narrowing. A system-written record has no picker, and the caller's own subject list may be
+    /// scoped differently — the MSF trainee picker is scoped by institution, not by speciality — so the
+    /// narrowing has to be applied here or not at all.
+    /// </para>
+    /// <para>
+    /// Without it, an institution running Paediatrics alongside another discipline could run an MSF
+    /// campaign for a non-paediatric registrar and stamp <c>msf_cpsa</c> records, carrying an ordinal
+    /// pinned to the CPSA ladder, onto a trainee whose curriculum measures on a different one. D8's
+    /// empty <c>counts_for</c> removes the only thing that would otherwise have caught it, because
+    /// <c>CreditApplier</c>'s <c>ScaleMismatch</c> refusal is never reached.
+    /// </para>
+    /// <para>
+    /// A subject whose scope did not resolve is refused rather than admitted: an unstamped record
+    /// satisfies no <c>scope:</c> rule and would be readable only by the people named on it.
+    /// </para>
+    /// </remarks>
+    private static void EnsureSubjectIsInTypeScope(
+        ActivityType activityType,
+        (int? InstitutionId, int? SpecialityId, int? SubSpecialityId) subjectScope,
+        string subjectUserId)
+    {
+        var matches = activityType.Scope switch
+        {
+            ActivityScope.Global => true,
+            ActivityScope.Institution => subjectScope.InstitutionId == activityType.ScopeId,
+            ActivityScope.Speciality => subjectScope.SpecialityId == activityType.ScopeId,
+            ActivityScope.SubSpeciality => subjectScope.SubSpecialityId == activityType.ScopeId,
+            _ => false
+        };
+
+        if (!matches)
+        {
+            throw new InvalidOperationException(
+                $"'{activityType.Key}' is scoped to {activityType.Scope} {activityType.ScopeId}, and " +
+                $"'{subjectUserId}' does not train there, so no record of it can be written about them.");
+        }
     }
 
     public async Task<ActivityDetailDto?> GetDetailAsync(

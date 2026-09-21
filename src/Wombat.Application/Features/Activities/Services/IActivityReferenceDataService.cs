@@ -23,6 +23,44 @@ public interface IActivityReferenceDataService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The EPAs on the SUBJECT's own curriculum, with no permissive fallback. (T121)
+    /// </summary>
+    /// <param name="subjectUserId">The trainee the evidence will be about.</param>
+    /// <remarks>
+    /// <para>
+    /// Same predicate as <see cref="GetEpaOptionsAsync" />'s narrowing arm — a curriculum item on the
+    /// subject's curriculum whose <c>OwningInstitutionId</c> is null or theirs — and deliberately
+    /// <b>without</b> its three fallbacks to the viewer's claims. Those fallbacks exist to stop a
+    /// required form field becoming unsubmittable; this list is not a form field. It answers "which EPAs
+    /// may this campaign declare itself evidence for", and the release re-applies exactly the same
+    /// predicate before creating anything. Offering an EPA here that release would then drop would be a
+    /// picker that lies.
+    /// </para>
+    /// <para>
+    /// Empty means empty, and the caller must say so rather than substitute something else.
+    /// </para>
+    /// </remarks>
+    Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
+        string subjectUserId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The rungs of the ladder a named activity type rates on. Value is the rung's ORDER, Label is the
+    /// rung as the College prints it. Empty when the type declares no rating or the ladder is
+    /// unresolvable. (T121)
+    /// </summary>
+    /// <param name="activityTypeKey">The seeded key, e.g. <c>msf_cpsa</c>.</param>
+    /// <remarks>
+    /// For a surface that has to collect an entrustment level OUTSIDE the activity form - the MSF
+    /// release page is the first - and must therefore resolve the same ladder the form would have.
+    /// Value and Label are different numbers on the CPSA ladder: order 5 is rung "4" (T100). A bare
+    /// number box here would have stored the order a reviewer typed as a rung they did not mean.
+    /// </remarks>
+    Task<IReadOnlyList<ActivityCatalogueOption>> GetRatedLevelOptionsForActivityTypeAsync(
+        string activityTypeKey,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Assessor users the caller may reference (e.g. the named assessor on a Mini-CEX), scoped to
     /// their institution. A global Administrator sees all assessors. Value is the user id.
     /// </summary>

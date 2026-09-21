@@ -6,6 +6,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -174,6 +175,42 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return null;
         }
 
+        var epaIds = await ResolveSubjectCurriculumEpaIdsAsync(subjectUserId.Trim(), cancellationToken);
+
+        return epaIds.Count == 0 ? null : epaIds.ToHashSet();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
+        string subjectUserId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subjectUserId);
+
+        var epaIds = await ResolveSubjectCurriculumEpaIdsAsync(subjectUserId.Trim(), cancellationToken);
+        if (epaIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _dbContext.Set<Epa>()
+            .AsNoTracking()
+            .Where(epa => epaIds.Contains(epa.Id))
+            .OrderBy(epa => epa.Code)
+            .Select(epa => new ActivityCatalogueOption(
+                epa.Id.ToString(),
+                epa.Code + " — " + epa.Title))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// The raw predicate both readings share: EPAs with an item on the subject's curriculum that is
+    /// either national core or their own institution's local extra, and whose EPA is active.
+    /// </summary>
+    private async Task<IReadOnlyList<int>> ResolveSubjectCurriculumEpaIdsAsync(
+        string subjectUserId,
+        CancellationToken cancellationToken)
+    {
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(entity => entity.UserId == subjectUserId)
@@ -184,7 +221,7 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
 
         if (profile is null)
         {
-            return null;
+            return [];
         }
 
         // The IsActive join is the difference between "no curriculum items" and "no OFFERABLE curriculum
@@ -208,7 +245,7 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             .Distinct()
             .ToListAsync(cancellationToken);
 
-        return epaIds.Count == 0 ? null : epaIds.ToHashSet();
+        return epaIds;
     }
 
     /// <summary>
@@ -248,6 +285,46 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
 
         options.Add(stored);
         return options.OrderBy(option => option.Label, StringComparer.Ordinal).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ActivityCatalogueOption>> GetRatedLevelOptionsForActivityTypeAsync(
+        string activityTypeKey,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(activityTypeKey);
+
+        var key = activityTypeKey.Trim();
+        var schemaJson = await _dbContext.Set<ActivityType>()
+            .AsNoTracking()
+            .Where(entity => entity.Key == key && entity.Version > 0)
+            .Select(entity => entity.SchemaJson)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(schemaJson))
+        {
+            return [];
+        }
+
+        string? scaleKey;
+        try
+        {
+            var schema = FormSchemaParser.Parse(schemaJson);
+            scaleKey = schema.RatedLevelField is null
+                ? null
+                : schema.Sections
+                    .SelectMany(section => section.Fields)
+                    .FirstOrDefault(field => string.Equals(field.Key, schema.RatedLevelField, StringComparison.Ordinal))
+                    ?.ScaleKey;
+        }
+        catch (SchemaParseException)
+        {
+            // A stored version that no longer parses is a defect, but not this picker's to raise: an
+            // empty option list renders as "not stated", which is a legitimate answer here anyway.
+            return [];
+        }
+
+        return await GetEntrustmentScaleLevelOptionsAsync(scaleKey, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(

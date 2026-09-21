@@ -17,6 +17,16 @@ public sealed class CpsaWbaSeedTests
 {
     private const string ScaleName = "CPSA Paediatric Entrustment Scale v11.1";
 
+    /// <summary>
+    /// The four assessor-completed v11.1 WBA tools. <b>Do not add <c>msf_cpsa</c> here.</b>
+    /// </summary>
+    /// <remarks>
+    /// It is a CPSA seed and the name of this class invites the mistake, but the theories below assume
+    /// the request → assess → feedback shape: a <c>submit</c> transition, a <c>requested</c> state,
+    /// exactly one terminal state called <c>completed</c>, and strengths/improvements/plan fields.
+    /// <c>msf_cpsa</c> is written by the system on release and has none of them; it is guarded by
+    /// <see cref="MsfSeedTests" /> instead. (T121)
+    /// </remarks>
     public static TheoryData<string> SeedKeys =>
     [
         "mini_cex_cpsa",

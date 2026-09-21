@@ -10,37 +10,35 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 28 queued, 1 blocked. **All eight P1s are EPA work or gate it:**
-  T099, T102, T110, T120, T121, T122, T129, T130. Re-rated 2026-09-20 on the operator's call
-  that the EPA work finishes first.
-- **The College has answered all fourteen (T129 done).** Recorded in `EPA-PROGRAMME.md` § 3A-ii.
-  **T120, T121, T122 and T130 are all released.** Two things the reply did not settle, both one
-  line: the scope of the "clinical observed interaction" merge, and whether June is semester 1 or 2.
-- **T130 (the annual quota) and T131 (governance) were filed 2026-09-20.** They are T098
-  phases 3 and 4 — planned since 2026-09-19, never filed, therefore invisible to the queue.
-  T130 is the most visible gap in the product: the progress page reads "1 / 24".
+- Nothing in `in_progress/`. 28 queued, 1 blocked. **Five P1s remain, all EPA work or gating it:**
+  T099, T102, T120, T122, T130.
+- **T121 shipped 2026-09-21.** MSF now leaves per-EPA evidence on the trainee's record. It credits
+  nothing, by College decision D8 — the value is the evidence link, not a count.
+- **T130 (the annual quota) is the most visible gap left** and is unblocked. The progress page still
+  reads "1 / 24" against a lifetime total the College never published.
+- Two College questions are still open and both are one line: the scope of the "clinical observed
+  interaction" merge, and whether June is semester 1 or 2.
 
 ## Blockers
 
-- **T128** — off-host backup destination. Needs one operator decision (where the encrypted
-  copy goes, and who holds the `age` private key). Nothing in code is waiting on it.
+- **T128** — off-host backup destination. Needs one operator decision (where the encrypted copy goes,
+  and who holds the `age` private key). Nothing in code is waiting on it.
 
 ## Next
 
-- **T121 (MSF)** is the highest-value released task; **T130** (the quota) is now unblocked.
+- **T130** (the quota), then **T120** (the ten remaining v11.1 tools) and **T122** (the EPA→tool
+  allow-list, which retires `RatedActivityTypes`' family map).
 - Ask the two residual College questions before T120 merges any instrument.
 - Decide T128's destination, then `apply` it and rehearse a restore **from the retrieved copy**.
 
 ## Open questions
 
-- **The dev database was emptied and rebuilt 2026-09-20** (W-006). 14 seeded types all at v1, no
-  activities, no `*_paed` types, no duplicate ladder, 16/16 curriculum items pinned. Anything you
-  remember about dev data is stale. **Production was deliberately not touched.**
-- **T126's off-ladder rule cannot fire on any activity now on dev** — all are pinned to pre-T126
-  schema versions, and the resolver reads the pinned one by design. File a fresh activity to see it.
-
-- Who the RFI actually goes to. The programme says "the College / CPSA content owner"
-  throughout and never names a person.
+- **The dev database was emptied and rebuilt 2026-09-20** (W-006), then T121 changed it again on
+  2026-09-21: the dev trainee moved to the **paediatric** curriculum, and dev now holds MSF campaign 1
+  and `msf_cpsa` activities 1–3. 15 seeded types, all v1. **Production was deliberately not touched.**
+- **T126's off-ladder rule still cannot fire on dev's activities** — the three MSF rows credit nothing,
+  so the path it is measured on is never entered. File a WBA to see it.
+- Who the RFI actually goes to: the programme never names a person.
 - Task lanes were derived, not read (W-002). Five spot-checked; none misfiled. 22 unchecked.
 
 ## Files to open first
@@ -53,8 +51,10 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
-- 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every
-  operator draft save. **Browser-verified.**
-- 2026-09-20: **dev DB emptied and three compatibility hedges removed** (W-006). T134's gate is
-  now the declared pointer alone; the trajectory's KNOWN LIMITATION is closed; T126 is no longer
-  inert; D25 closed by deletion. Suites 1009.
+- 2026-09-21: **T121 shipped** — a released MSF campaign writes one terminal `msf_cpsa` activity per
+  covered EPA. **Browser-verified three times.** An adversarial diff review found six real defects,
+  all fixed; a pre-existing portfolio-export crash was fixed too. Filed T137, T138. Suites 1040.
+- 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every operator
+  draft save. **Browser-verified.**
+- 2026-09-20: **dev DB emptied and three compatibility hedges removed** (W-006). T134's gate is now the
+  declared pointer alone; the trajectory's KNOWN LIMITATION is closed; T126 is no longer inert.

@@ -34,6 +34,27 @@ public sealed record MsfCategoryAggregateDto(
     bool IsSuppressed,
     IReadOnlyList<MsfQuestionAggregateDto> Questions);
 
+/// <summary>One EPA a campaign is declared to be evidence for. (T121)</summary>
+/// <param name="Recorded">
+/// Whether this EPA's evidence activity was actually written. False on a released campaign means the
+/// EPA had left the subject's curriculum by release day and was dropped - a terminal state, not a
+/// pending one.
+/// </param>
+public sealed record MsfCoveredEpaDto(int EpaId, string Code, string Title, bool Recorded);
+
+/// <param name="ReadyForRelease">
+/// Both release gates at once: enough responses in total, AND enough respondent categories surviving
+/// suppression (College decision D11). The two numbers beside it exist so a blocked release can say
+/// which gate it is blocked on rather than leaving a disabled button unexplained.
+/// </param>
+/// <param name="SurvivingCategoryCount">
+/// How many categories cleared <see cref="MinimumCategoryResponses" /> and therefore actually report
+/// anything. A campaign answered entirely by eight peer doctors scores 1 here.
+/// </param>
+/// <param name="CoveredEpas">
+/// What the released report will become evidence for. Empty is legal and means the release will record
+/// no evidence at all.
+/// </param>
 public sealed record MsfCampaignAggregateReportDto(
     int CampaignId,
     string SubjectUserId,
@@ -44,7 +65,12 @@ public sealed record MsfCampaignAggregateReportDto(
     int TotalResponses,
     string? CoordinatorNarrative,
     bool ReadyForRelease,
-    IReadOnlyList<MsfCategoryAggregateDto> Categories);
+    IReadOnlyList<MsfCategoryAggregateDto> Categories,
+    int MinimumRespondentCategories,
+    int SurvivingCategoryCount,
+    IReadOnlyList<MsfCoveredEpaDto> CoveredEpas,
+    int? ReviewerEntrustmentLevel,
+    DateTime? EvidenceRecordedOn);
 
 public sealed record MsfResponsePromptDto(int QuestionId, string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
 

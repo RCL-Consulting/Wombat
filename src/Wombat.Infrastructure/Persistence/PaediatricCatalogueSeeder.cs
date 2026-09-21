@@ -68,7 +68,7 @@ public sealed class PaediatricCatalogueSeeder
     }
 
     /// <summary>
-    /// Creates the paediatric WBA tools, Speciality-scoped to Paediatrics. The four keys themselves
+    /// Creates the paediatric instruments, Speciality-scoped to Paediatrics. The keys themselves
     /// live in <see cref="ActivityTypeSeedCatalogue"/>, which the seed refresher reads too.
     /// </summary>
     /// <remarks>
@@ -84,7 +84,7 @@ public sealed class PaediatricCatalogueSeeder
     /// <item><c>_cpsa</c>, not <c>_paed</c>: ActivityType.Key is globally unique and this method
     /// skips keys that already exist, so a collision is a SILENT no-op, not an error. Earlier
     /// scenario play-throughs left institution-scoped "mini_cex_paed" and "dops_paed" types behind,
-    /// which swallowed two of these four seeds. Naming them for the owning College keeps them
+    /// which swallowed two of these seeds. Naming them for the owning College keeps them
     /// unambiguous. T103 did not fix that hazard — a seed key that collides with an operator-built
     /// type is still a silent no-op here, and the refresher will not touch it either.</item>
     /// </list>

@@ -153,10 +153,21 @@ public sealed class SeedScaleKeyTests
     }
 
     /// <summary>
-    /// Eight rated, six not — the split stated as a number, so a new seed cannot quietly change it.
+    /// Nine rated, six not — the split stated as a number, so a new seed cannot quietly change it.
     /// </summary>
+    /// <remarks>
+    /// <c>msf_cpsa</c> joined the rated set under [T121], and that is a decision rather than a
+    /// consequence of adding a folder. It carries an <c>overall_level</c> scale field bound to the CPSA
+    /// ladder, which <c>Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale</c> requires it to name as
+    /// its rated field — there is no way to keep the field and stay out of this list. What follows from
+    /// being in it is that MSF counts as rated evidence on the committee sampling report, where it then
+    /// contributes nothing to the numerator because it names no assessor. That asymmetry is deliberate:
+    /// an MSF asserts a level but has no observing assessor, so the assessor-concentration arithmetic
+    /// correctly has nothing to weigh. The same is true of the trajectory chart, which drops it at
+    /// <c>TryParseObservation</c> for the same reason.
+    /// </remarks>
     [Fact]
-    public void ExactlyEightSeededToolsAreRated()
+    public void ExactlyNineSeededToolsAreRated()
     {
         var rated = Directory
             .EnumerateDirectories(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds"))
@@ -169,7 +180,7 @@ public sealed class SeedScaleKeyTests
 
         rated.Should().Equal(
             "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa",
-            "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa");
+            "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa");
     }
 
     /// <summary>

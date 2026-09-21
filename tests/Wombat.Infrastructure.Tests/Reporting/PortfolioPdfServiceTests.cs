@@ -59,6 +59,87 @@ public sealed class PortfolioPdfServiceTests
         withoutStar.ContentHash.Should().NotBe(withStar.ContentHash);
     }
 
+    /// <summary>
+    /// A trainee with a released multi-source feedback campaign can still export their portfolio.
+    /// </summary>
+    /// <remarks>
+    /// The export threw <c>NullReferenceException</c> for exactly this trainee. <c>MsfAggregationService</c>
+    /// opens by grouping responses on <c>response.Invitation.RespondentCategory</c>, and the portfolio
+    /// query included <c>Responses</c> and <c>Invitations</c> but never <c>Responses.Invitation</c>, so
+    /// the navigation was null. It stayed invisible because the two tests above deliberately seed no
+    /// campaign and inject a <c>ThrowingMsfAggregationService</c> — the MSF path was never entered at
+    /// all. Found browser-verifying [T121], whose release now writes the first released campaign most
+    /// portfolios will ever hold.
+    /// </remarks>
+    [Fact]
+    public async Task Generate_SucceedsForATraineeWithAReleasedMsfCampaign()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(db);
+
+        var service = new PortfolioPdfService(db, new MsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var export = await service.GenerateAsync(request, CancellationToken.None);
+
+        export.PdfBytes.Should().NotBeEmpty();
+    }
+
+    private static void SeedReleasedCampaign(ApplicationDbContext db)
+    {
+        var template = new MsfTemplate
+        {
+            Name = "Annual MSF",
+            Questions = [new MsfQuestion { Id = 1, Order = 1, Prompt = "Professional performance", Type = MsfQuestionType.Scale, Required = true }]
+        };
+
+        var campaign = new MsfCampaign
+        {
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "coord-1",
+            CreatedOn = DateTime.UtcNow,
+            OpensOn = new DateOnly(2029, 1, 1),
+            ClosesOn = new DateOnly(2029, 6, 30),
+            MinimumResponses = 2,
+            MinimumCategoryResponses = 2,
+            MinimumRespondentCategories = 2,
+            State = MsfCampaignState.Released,
+            ReleasedOn = new DateTime(2029, 7, 1, 0, 0, 0, DateTimeKind.Utc),
+            ReviewedByUserId = "coord-1",
+            Template = template,
+            CoveredEpas = [new MsfCampaignEpa { EpaId = 1 }]
+        };
+
+        foreach (var category in new[] { MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse })
+        {
+            var invitation = new MsfInvitation
+            {
+                RespondentCategory = category,
+                RespondentEmailHash = "hash",
+                TokenHash = Guid.NewGuid().ToString("N"),
+                IssuedOn = new DateTime(2029, 1, 2, 0, 0, 0, DateTimeKind.Utc),
+                ExpiresOn = new DateOnly(2029, 6, 30),
+                RespondedOn = new DateTime(2029, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+                AnonymizedOn = new DateTime(2029, 6, 30, 0, 0, 0, DateTimeKind.Utc)
+            };
+
+            var response = new MsfResponse
+            {
+                SubmittedOn = new DateTime(2029, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+                Campaign = campaign,
+                Invitation = invitation,
+                Answers = [new MsfResponseAnswer { QuestionId = 1, ScaleValue = 4 }]
+            };
+
+            invitation.Responses.Add(response);
+            campaign.Invitations.Add(invitation);
+            campaign.Responses.Add(response);
+        }
+
+        db.Set<MsfCampaign>().Add(campaign);
+        db.SaveChanges();
+    }
+
     private static ApplicationDbContext SeededDb()
     {
         var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()

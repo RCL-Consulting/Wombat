@@ -76,6 +76,13 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .AsNoTracking()
             .Include(campaign => campaign.Template)
             .Include(campaign => campaign.Responses)
+            // T121: so the campaign row can say what its evidence activities are FOR. A released
+            // campaign now contributes both this row and one Activity row per covered EPA, and without
+            // the coverage on the parent a panel sees one campaign and N unexplained siblings dated the
+            // same minute. They are not duplicates; they are a report and its per-EPA claims, and the
+            // summary below is where that is said.
+            .Include(campaign => campaign.CoveredEpas)
+                .ThenInclude(covered => covered.Epa)
             .Where(campaign =>
                 campaign.SubjectUserId == review.TraineeUserId &&
                 campaign.ClosesOn >= review.ReviewPeriodFrom &&
@@ -97,10 +104,58 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             SourceType = CommitteeEvidenceSourceType.MsfCampaign,
             MsfCampaignId = campaign.Id,
             SourceLabel = $"{campaign.Template.Name} #{campaign.Id}",
-            Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; closes {campaign.ClosesOn:yyyy-MM-dd}.",
+            Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; " +
+                      $"closes {campaign.ClosesOn:yyyy-MM-dd}.{DescribeCoverage(campaign)}",
             SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn
         });
 
         return activityEvidence.Concat(msfEvidence).ToArray();
+    }
+
+    /// <summary>
+    /// What a campaign declared itself evidence for, and whether that reached the portfolio. (T121)
+    /// </summary>
+    /// <remarks>
+    /// A released campaign appears in this snapshot twice over: once here, and once per covered EPA as
+    /// an ordinary <c>msf_cpsa</c> activity. That is deliberate — the panel wants both the report and
+    /// the per-EPA claims — but it is only readable if the parent names the children, which is what this
+    /// sentence does. An empty coverage set is worth printing too: it is the one case where a released
+    /// campaign left no evidence at all.
+    /// </remarks>
+    private static string DescribeCoverage(MsfCampaign campaign)
+    {
+        var covered = campaign.CoveredEpas
+            .Where(entry => entry.Epa is not null)
+            .OrderBy(entry => entry.Epa.Code, StringComparer.Ordinal)
+            .ToArray();
+
+        if (covered.Length == 0)
+        {
+            return campaign.State == MsfCampaignState.Released
+                ? " Names no EPA, so it recorded no evidence."
+                : string.Empty;
+        }
+
+        if (campaign.State != MsfCampaignState.Released)
+        {
+            return $" Evidence for {string.Join(", ", covered.Select(entry => entry.Epa.Code))}, to be recorded on release.";
+        }
+
+        // Per EPA, never per campaign. A release records evidence for the EPAs still on the trainee's
+        // curriculum and drops the rest, so a campaign can be half recorded - and a panel told
+        // "recorded as one activity each" about an EPA whose activity was never written would go
+        // looking for a record that does not exist. Released with nothing recorded is terminal, not
+        // pending: Release refuses a second attempt.
+        var recorded = covered.Where(entry => entry.RecordedOn is not null).Select(entry => entry.Epa.Code).ToArray();
+        var missing = covered.Where(entry => entry.RecordedOn is null).Select(entry => entry.Epa.Code).ToArray();
+
+        var sentence = recorded.Length > 0
+            ? $" Evidence recorded for {string.Join(", ", recorded)}, one activity each."
+            : string.Empty;
+
+        return missing.Length > 0
+            ? sentence + $" Also declared {string.Join(", ", missing)}, no longer on the trainee's " +
+              "curriculum, so nothing was recorded for those."
+            : sentence;
     }
 }

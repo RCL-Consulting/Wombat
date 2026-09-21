@@ -68,6 +68,14 @@ public sealed class MsfAggregationService : IMsfAggregationService
             })
             .ToList();
 
+        // College decision D11, 2026-09-20: multi-source feedback must actually be multi-source.
+        // MinimumCategoryResponses only ever suppressed a thin category's data from the report; nothing
+        // required that any category survived. A campaign answered by eight peer doctors therefore
+        // cleared MinimumResponses, showed one category and five suppressed ones, and released as
+        // "multi-source feedback" on one source. Both gates now, in the one place that computes either,
+        // so the release handler and the disabled button cannot disagree about which applies. (T121)
+        var survivingCategoryCount = categoryReports.Count(category => !category.IsSuppressed);
+
         return new MsfCampaignAggregateReportDto(
             campaign.Id,
             campaign.SubjectUserId,
@@ -77,7 +85,21 @@ public sealed class MsfAggregationService : IMsfAggregationService
             campaign.MinimumCategoryResponses,
             campaign.Responses.Count,
             campaign.CoordinatorNarrative,
-            campaign.Responses.Count >= campaign.MinimumResponses,
-            categoryReports);
+            campaign.Responses.Count >= campaign.MinimumResponses &&
+                survivingCategoryCount >= campaign.MinimumRespondentCategories,
+            categoryReports,
+            campaign.MinimumRespondentCategories,
+            survivingCategoryCount,
+            campaign.CoveredEpas
+                .Where(covered => covered.Epa is not null)
+                .Select(covered => new MsfCoveredEpaDto(
+                    covered.EpaId,
+                    covered.Epa.Code,
+                    covered.Epa.Title,
+                    covered.RecordedOn is not null))
+                .OrderBy(covered => covered.Code, StringComparer.Ordinal)
+                .ToList(),
+            campaign.ReviewerEntrustmentLevel,
+            campaign.EvidenceRecordedOn);
     }
 }

@@ -1,9 +1,11 @@
 ---
 id: T121
 title: "Multi-source feedback is required by all 15 EPAs and cannot credit a single one"
-status: queued
+status: done
 priority: P1
 created: 2026-09-19
+started: 2026-09-21
+completed: 2026-09-21
 ---
 # T121 — Multi-source feedback is required by all 15 EPAs and cannot credit a single one
 
@@ -192,7 +194,11 @@ complete it, so it can never credit. The clutter is cosmetic, and it is the same
 findings 6 and 7 already make about the picker; a `SystemManaged` flag on `ActivityType` is the
 durable answer and belongs with that work, not here.
 
-`credit.json`: exactly the four seeded CPSA tools' rule —
+`credit.json`: **superseded by D8, which was answered after this paragraph was written.** The rule below
+is what the four seeded CPSA tools carry and is what this design proposed; the College's answer to D8 is
+that MSF consumes none of Annexure A's 55 encounters, so the seed ships `{ "counts_for": [] }` — the
+`procedure_log` shape — and nothing in `CreditApplier` is ever reached. Left here because everything
+below about `minimum_level_field` and `ValueMissing` is the reasoning D8 was decided against.
 
 ```json
 { "counts_for": [ { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1, "minimum_level_field": "overall_level" } ] }
@@ -249,7 +255,10 @@ cannot open a transaction, and `CreateDraftAsync` / `TransitionAsync` each save 
 (`ActivityService.cs:122`, `:248`). Calling them in a loop would commit the release on the first save
 and then risk a half-finished fan-out.
 
-Add one method to `IActivityService`, implemented in Infrastructure where the real `DbContext` lives:
+Add one method to `IActivityService`, implemented in Infrastructure. (The reason given here originally —
+"where the real `DbContext` lives" — was wrong: `ActivityService` holds only `IApplicationDbContext` and
+cannot open a transaction either. The real reasons are the credit-key argument below and access to the
+internal `ActorRuleMatcher`/`ObservationDateResolver`.)
 
 ```csharp
 Task<IReadOnlyList<ActivityDto>> RecordCompletedAsync(RecordCompletedActivitiesInput input, CancellationToken ct = default);
@@ -309,7 +318,10 @@ record the trainee as having met the supervision minimum on every EPA it touched
 a questionnaire that never asked about supervision. That is T109's defect in a new costume: silently
 *wrong* credit, not silently absent.
 
-**Settled:** the seed declares `minimum_level_field: "overall_level"` and the field is **optional**.
+**Settled, then superseded in one half by D8:** the field is **optional**, and that half stands. The seed
+does **not** declare `minimum_level_field`, because it declares no credit directive at all. What survives
+is `rated_level_field: "overall_level"` at the schema root (T126), which binds the ordinal to the CPSA
+ladder without asserting any credit.
 
 - When the releasing reviewer records an ordinal, it gates exactly like a Mini-CEX rating — same
   comparer, same scale pinning, same refusal across ladders.
@@ -428,33 +440,135 @@ released, so it is the maintainer's call.
 ## Implementation order
 
 1. `MsfCampaignEpa` join entity, its configuration, and a migration (plus `.Designer.cs` and snapshot
-   update). `MsfCampaign.CreditedOn` in the same migration.
+   update). `MsfCampaign.EvidenceRecordedOn` in the same migration.
 2. EPA selection on `CampaignEdit.razor`, sourced from the subject's curriculum. Replace the
-   free-text subject user id while you are in there (`CampaignEdit.razor:53-55`).
-3. The `msf_cpsa` seed folder, its `ActivityTypeSeedCatalogue` registration, and a
-   `SeedRoundTripTests` entry.
+   free-text subject user id while you are in there.
+3. The `msf_cpsa` seed folder and its `ActivityTypeSeedCatalogue` registration. No `SeedRoundTripTests`
+   entry is needed — its theories enumerate seed folders from disk. `SeedScaleKeyTests`'s
+   `ExactlyEightSeededToolsAreRated` is the one that has to change, and changing it is the decision
+   that `msf_cpsa` counts as rated evidence.
 4. `IActivityService.RecordCompletedAsync` and its Infrastructure implementation.
 5. `ReleaseMsfCampaignCommand` gains `ClaimsPrincipal Principal`; the handler re-validates EPA
-   coverage, sets `CreditedOn`, and calls `RecordCompletedAsync`.
-6. Surface it: the released campaign report names the EPAs it credited, and the activity view says
-   which campaign it came from.
+   coverage, sets `EvidenceRecordedOn`, and calls `RecordCompletedAsync`.
+6. Surface it: the released campaign report names the EPAs it is evidence for, and the committee
+   snapshot's campaign row names its per-EPA children.
+
+## As built — where the shipped code differs from the design above
+
+The design was written 2026-09-19, before the College answered D8/D9/D10/D11 and before T126, T133 and
+T134 landed. Five deliberate divergences:
+
+1. **`counts_for: []` (D8).** Nothing is credited, so no `CurriculumItemProgress` row moves and
+   `ActivityTransition.CreditedItemCount` stays null — T108's "credit was never evaluated". The value of
+   the task is the evidence link, not a count. The Verification list below is rewritten accordingly.
+2. **`EvidenceRecordedOn`, not `CreditedOn`.** Naming a column "Credited" when D8 says MSF credits
+   nothing would mislead every future reader. It is also not a duplicate of `ReleasedOn`: a release whose
+   fan-out produced nothing leaves it null while `ReleasedOn` is set, which is the queryable repairable
+   state.
+3. **`rated_level_field` is declared, and that puts `msf_cpsa` in the rated set.**
+   `SeedRoundTripTests.Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale` makes it a biconditional: a
+   schema carrying a `scale` field MUST name its rated field. Keeping D10's optional ordinal therefore
+   means joining the rated set; the only escape would be deleting the field, which deletes D10. The
+   consequences are that the committee sampling report and the trajectory chart both consider the row and
+   both then skip it for want of an `assessor_user_id` — which is the right answer (an MSF asserts a level
+   but has no observing assessor to concentrate or to plot), reached by an accidental mechanism. Pinned by
+   `SeedScaleKeyTests.ExactlyNineSeededToolsAreRated` so it is a decision rather than a drift.
+4. **Both schema sections declare `editable_by: role:Coordinator|role:Administrator`.** The design left
+   the sections default (`subject|creator`), which would have let a trainee fill in the reviewer's
+   entrustment level and narrative on their own stray draft. They can still create the draft — nothing in
+   the product expresses "system-managed" — but every field they submit is now dropped at creation and the
+   draft is permanently inert.
+5. **`CreateMsfCampaignCommand` also gained a `ClaimsPrincipal` and an institution check**, which the
+   design listed as adjacent defect 3 and left alone. Made necessary here: a cross-institution campaign
+   used to be an inert row, and now fans out activities scope-stamped from the subject's profile.
+
+Two smaller ones: the D11 gate lives in `MsfAggregationService.BuildReport` rather than in the release
+handler, so the disabled button and the server refusal cannot disagree; and `MinimumRespondentCategories`
+is a campaign column beside the other two thresholds rather than a constant.
+
+### And six things an adversarial review of the diff found, all fixed
+
+Six independent reviewers read the working tree; three verifiers tried to refute each finding. What
+survived, and what it changed:
+
+1. **The release, not the create, is where the scope check belongs.** The first pass gated
+   `CreateMsfCampaignCommand` and left `ReleaseMsfCampaignCommand` open — and release is the half that
+   writes. Neither `ListMsfCampaignsForCoordinatorQuery` nor `GetCampaignAggregateReportQuery` filters
+   by principal, so any Coordinator could reach any campaign's report page by id and release it, planting
+   permanent evidence in another institution's trainee's portfolio. The rule now lives once, in
+   `MsfCampaignRules.EnsureSubjectIsInScopeAsync`, and both handlers call it.
+2. **A failed fan-out would have committed the release.** `AuditWriter` shares the request's scoped
+   `IApplicationDbContext` and calls `SaveChangesAsync`, and `AuditPipelineBehavior` writes an audit row
+   from its `catch` — so any exception raised while `State = Released` was pending flushed it on the way
+   out, and `Release` refuses a second attempt. The handler now does every throwable thing first;
+   `StageCompletedAsync` validates the whole batch before adding anything and **does not save at all**,
+   so the release and its evidence commit together or not at all. Asserted by
+   `AFailedReleaseLeavesTheCampaignUnreleasedAndRetryable`.
+3. **The reviewer's ordinal was a bare number box** — the T100 trap exactly. On the CPSA ladder order 5
+   is rung "4", so a reviewer who meant "4" and typed 4 stored rung "3b", and rungs "3a"/"3b" could not
+   be entered at all. It is now a `<select>` of the College's rungs, resolved from the type's own
+   `rated_level_field` scale. **Browser-verified: choosing "4" stores 5 and renders back as "4".**
+4. **The type's speciality scope was not checked.** The MSF trainee picker is scoped by institution, not
+   speciality, so an institution running Paediatrics alongside another discipline could stamp `msf_cpsa`
+   records — carrying an ordinal pinned to the CPSA ladder — onto a non-paediatric registrar. D8's empty
+   `counts_for` removes `CreditApplier`'s `ScaleMismatch` refusal, which would otherwise have caught it.
+   `StageCompletedAsync` now refuses a scoped type's record about an out-of-scope subject.
+5. **The evidence was dated from the SCHEDULED close.** A campaign closed early was dated in the future,
+   which would put it outside its own committee review window and into the wrong period for [T130].
+   It now uses `ClosedOn`. **Browser-verified**: a campaign scheduled to close 2026-10-21 and closed on
+   2026-09-21 produced evidence dated 2026-09-21.
+6. **A dropped EPA was still reported as recorded.** `MsfCampaignEpa.RecordedOn` now marks the ones that
+   actually produced an activity, so the committee snapshot, the report page and the portfolio PDF say
+   which EPAs were recorded and which were declared and dropped, rather than claiming all of them.
+
+One more, taken because the fix is a line and the claim is otherwise false: **two concurrent releases
+would have written two full sets of evidence.** The once-only guarantee rested on `Release` refusing
+anything but `UnderReview`, which is an in-memory check on a row both requests read as `UnderReview`.
+`MsfCampaigns` now carries Postgres's `xmin` as a concurrency token — no column, no write path.
 
 ## Verification
 
-- A released campaign covering 3 EPAs creates 3 terminal `msf_cpsa` activities, and exactly 3
-  `CurriculumItemProgress` rows move: `CountsSoFar` +1 each; `MinimumLevelReachedCount` unchanged
-  when no ordinal was recorded, and +1 each when one was and it meets the stage minimum (T073).
-- `ActivityTransition.CreditedItemCount` is stamped 1 on each, not null (T108's contract).
-- A trainee on a five-rung curriculum, with an ordinal recorded on the six-rung ladder, gets
-  `ScaleMismatchCount` and **not** `MinimumLevelReachedCount` (T109).
-- Releasing twice is impossible (`MsfCampaign.Release` throws), and a forced replay with `CreditedOn`
-  set creates no second set of activities.
-- `RebuildCurriculumProgress` reproduces the same rows with no code change.
-- A trainee cannot complete a hand-created `msf_cpsa`: the `record` transition is not offered to them.
-- The subject's data-rights export contains no respondent email, no per-respondent comment and no
-  per-category breakdown.
-- Nothing that credits today changes: re-run the T118 scenario (Ndlovu, `mini_cex_cpsa`, PAED-001)
-  and confirm the same single progress row.
+- [x] A released campaign covering 3 EPAs creates 3 terminal `msf_cpsa` activities, one per EPA, each
+      carrying `epa_id`, `campaign_id`, `observed_on` = the campaign's `ClosesOn`, `respondent_count`, and
+      the reviewer's optional `overall_level` and `summary` — **browser-verified on dev 2026-09-21**,
+      campaign 1 covering PAED-001/010/012, activities 1–3 in `recorded`.
+- [x] **No** `CurriculumItemProgress` row moves and `CreditedItemCount` stays null on every transition
+      (D8) — browser-verified (0 progress rows, 6/6 null stamps) and pinned by
+      `MsfEvidenceFanOutTests.Release_CreditsNothing_BecauseMsfConsumesNoneOfTheFiftyFiveEncounters`.
+- [x] `Activity.ObservedOn` is the day the window ACTUALLY shut, not the release date and not the
+      scheduled close (T119) — browser-verified on a campaign scheduled to close 2026-10-21 and closed
+      on 2026-09-21: the evidence is dated 2026-09-21.
+- [x] The reviewer's ordinal is chosen as a College rung, not typed as an order — browser-verified:
+      selecting "4" stores 5 and the activity renders it back as "4" (T100).
+- [x] A release that throws leaves the campaign releasable, despite the audit pipeline's
+      `SaveChangesAsync` on the same scoped context — `AFailedReleaseLeavesTheCampaignUnreleasedAndRetryable`.
+- [x] Release is refused for a trainee outside the caller's institution, and for a trainee outside the
+      type's speciality — `Release_RefusesACampaignAboutAnotherInstitutionsTrainee` and
+      `Release_RefusesToWriteAPaediatricRecordAboutATraineeOfAnotherSpeciality`.
+- [x] A dropped EPA is reported as declared-but-not-recorded everywhere it appears — browser-verified on
+      the report page, and pinned by `StartReview_MsfEvidenceNamesTheEpasItStandsBehind`.
+- [x] The activity is scope-stamped from the SUBJECT's profile, not the releasing coordinator's (T101) —
+      verified institution 1 / speciality 2 / sub-speciality 2 on all three rows.
+- [x] An EPA that has left the subject's curriculum is dropped with a log line and the release still
+      succeeds — `Release_DropsAnEpaThatHasLeftTheSubjectsCurriculum_WithoutFailingTheRelease`.
+- [x] Release is refused until at least `MinimumRespondentCategories` categories survive suppression
+      (D11), and the button says which gate is closed — browser-verified (button disabled, reason shown)
+      and pinned by `Release_IsRefused_WhenOnlyOneRespondentCategoryReports`.
+- [x] Releasing twice is impossible (`MsfCampaign.Release` throws) and a replay with `EvidenceRecordedOn`
+      set creates no second set of activities — `Release_DoesNotRepeatTheFanOut_WhenEvidenceIsAlreadyRecorded`.
+- [x] A trainee cannot complete a hand-created `msf_cpsa`, and every field they submit is dropped at
+      creation — `ATraineeCannotRecordAHandCreatedMsfActivity`.
+- [x] The stored `DataJson` contains no respondent email, no per-respondent comment and no per-category
+      breakdown — `TheEvidencePayloadCarriesNothingThatIdentifiesARespondent` and
+      `MsfSeedTests.ItCarriesNoFieldThatCouldIdentifyARespondent`, which pins the whole field list.
+- [x] The EPA picker offers exactly the subject's curriculum EPAs (T108's predicate) — browser-verified:
+      15 PAED EPAs for a paediatric registrar.
+- [x] The migration has its `.Designer.cs` and the snapshot is updated, and `database update` applies it —
+      applied to the dev database 2026-09-21.
+- [x] Nothing that credits today changes — all five suites green, 1040 tests.
+- [ ] `RebuildCurriculumProgress` reproduces the same rows with no code change. **Vacuous under D8**: the
+      rebuild skips `msf_cpsa` at its own `DeclaresCredit` gate, because there is nothing to re-credit.
+      Left unticked rather than deleted, because it becomes real the day MSF gains a `counts_for`.
 
 ## Adjacent defects found while mapping this — recorded here, not fixed here
 

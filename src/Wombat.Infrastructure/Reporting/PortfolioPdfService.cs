@@ -247,6 +247,19 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .Include(campaign => campaign.Invitations)
             .Include(campaign => campaign.Responses)
                 .ThenInclude(response => response.Answers)
+            // MsfAggregationService's very first act is to group responses by
+            // `response.Invitation.RespondentCategory`, and this second Responses chain is what makes
+            // that navigation non-null. It was missing, and the export threw a NullReferenceException
+            // for any trainee with a released campaign — invisible until now only because no released
+            // campaign existed on a database anyone exported from. Found browser-verifying T121; the
+            // campaign a release creates is the first one most portfolios will ever hold.
+            .Include(campaign => campaign.Responses)
+                .ThenInclude(response => response.Invitation)
+            // T121: MsfAggregationService reads the coverage to report what the campaign was evidence
+            // for. Without this Include the navigation comes back empty and the printed portfolio
+            // silently drops the EPA list while the activities section prints the per-EPA records.
+            .Include(campaign => campaign.CoveredEpas)
+                .ThenInclude(covered => covered.Epa)
             .Where(campaign => campaign.SubjectUserId == request.TraineeUserId)
             .Where(campaign => campaign.State == MsfCampaignState.Released)
             .OrderByDescending(campaign => campaign.ReleasedOn)
