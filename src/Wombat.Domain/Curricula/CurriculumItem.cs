@@ -67,6 +67,31 @@ public sealed class CurriculumItem
     /// </remarks>
     public int? ScaleId { get; set; }
 
+    /// <summary>
+    /// The workplace-based assessment instruments that may credit this item's EPA, as a sorted JSON array of
+    /// <see cref="Wombat.Domain.Epas.WbaTool" /> keys, or null for no restriction (T122).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The fourth cell of Annexure A's row, beside the three this item already carries (the target, the per-stage
+    /// minima and the ladder they are on). It lives on the item, not on the EPA, for the reason
+    /// <see cref="ScaleId" /> does: an EPA row is shared by every curriculum version that uses it, so a list on the
+    /// EPA would rewrite what an older version permitted.
+    /// </para>
+    /// <para>
+    /// Null is a permanent, meaningful state: an item without a list is credited by any instrument, exactly as
+    /// before T122 (D21). An empty list is never stored, because it would read as "no instrument may credit this"
+    /// and make the EPA unfileable; <see cref="NormalizePermittedToolsJson" /> turns it into null. It is read when an
+    /// activity is filed and submitted, never when it is credited (D20), so editing it never removes credit
+    /// already earned.
+    /// </para>
+    /// <para>
+    /// A <c>jsonb</c> column, so Postgres re-renders what is written. Compare it only through
+    /// <see cref="ParsePermittedTools" />, never as a string.
+    /// </para>
+    /// </remarks>
+    public string? PermittedToolsJson { get; set; }
+
     public Curriculum Curriculum { get; set; } = null!;
     public Wombat.Domain.Epas.Epa Epa { get; set; } = null!;
     public Wombat.Domain.Epas.EntrustmentScale? Scale { get; set; }
@@ -153,6 +178,58 @@ public sealed class CurriculumItem
                 entry => entry.Value);
         return JsonSerializer.Serialize(ordered);
     }
+
+    /// <summary>
+    /// The allow-list as a normalised, distinct, ordinally sorted list of tool keys. Empty means unrestricted.
+    /// </summary>
+    /// <remarks>
+    /// Fails open, like <see cref="ParseStageOverrides" />: null, malformed JSON, a value that is not an array and
+    /// an array with no usable string all give the empty list, which is "no restriction" (D21). A restriction that
+    /// fires where the answer is unknown produces an empty picker or a refusal nobody can explain, and either is a
+    /// worse failure than the one the list exists to prevent. Only direct SQL can store such a value: both writers
+    /// normalise, and the seeder warns at startup when a seeded item's list stops matching the catalogue.
+    /// </remarks>
+    public static IReadOnlyList<string> ParsePermittedTools(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            return Canonicalise(document.RootElement.EnumerateArray()
+                .Where(element => element.ValueKind == JsonValueKind.String)
+                .Select(element => element.GetString()));
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// The stored form of an allow-list: a sorted JSON array of normalised keys, or null when nothing is left.
+    /// </summary>
+    public static string? NormalizePermittedToolsJson(IEnumerable<string?>? toolKeys)
+    {
+        var canonical = toolKeys is null ? [] : Canonicalise(toolKeys);
+        return canonical.Count == 0 ? null : JsonSerializer.Serialize(canonical);
+    }
+
+    private static IReadOnlyList<string> Canonicalise(IEnumerable<string?> toolKeys)
+        => toolKeys
+            .Select(Wombat.Domain.Epas.WbaTool.NormalizeKey)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToList();
 
     private static readonly IReadOnlyDictionary<int, int> EmptyOverrides = new Dictionary<int, int>();
 }

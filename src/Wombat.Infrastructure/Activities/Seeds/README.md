@@ -31,6 +31,21 @@ speciality rather than the demo one. The `_cpsa` suffix is not decoration — se
   can neither fill it nor complete it. It ships `"counts_for": []` because College decision D8 says
   MSF consumes none of Annexure A's 55 encounters; its value is the evidence link, not a count.
 
+## Which instrument a seed is (T122)
+
+A type's instrument identity, `ActivityType.WbaToolKey`, is **not in any file here**. It is the `WbaToolKey` on the
+type's `ActivityTypeSeedCatalogue` entry, a key into the College vocabulary that the paediatric catalogue
+(`Persistence/Seeds/paediatric-epa-v11.1.json`, `wbaToolVocabulary`) seeds into `WbaTools`. Each EPA's tool list
+decides which instruments may be filed against it. The entry's key is required, so a new seed must say which
+instrument it is, or say `null`.
+
+- `mini_cex_cpsa` → `mini_cex`, `dops_cpsa` → `dops`, `cbd_cpsa` → `cbd`, `direct_observation_cpsa` →
+  `direct_observation`, `msf_cpsa` → `msf`; the generic `mini_cex`, `dops` and `cbd` carry the same keys, because
+  they are the same instruments. Everything else is `null`: unrestricted (D21).
+- The seeders write the key when they **create** a type, and the refresher never touches it: it evolves the four
+  versioned payloads and nothing else. Existing databases got their keys from the T122 migration. Changing a key
+  here reaches an existing database only through a new migration, and until then the seeders log a warning.
+
 Caveats:
 
 - The workflow grammar currently supports `field:<field_key>` actor rules, so the WBA seeds target the named assessor in `assessor_user_id`.

@@ -12,6 +12,11 @@ namespace Wombat.Application.Features.Curricula;
 /// Which window the target is for. Positional and required, deliberately not defaulted: a defaulted argument is one
 /// a future call site can silently drop, and dropping this one would turn a per-semester target into a per-year one.
 /// </param>
+/// <param name="PermittedToolKeys">
+/// The instruments that may credit this EPA, as tool keys; null or empty means any instrument (T122, D21). Required,
+/// not defaulted, for <paramref name="QuotaPeriod" />'s reason: an edit that dropped it would clear the list, and a
+/// cleared list is permissive, so nothing would ever say it had happened.
+/// </param>
 public sealed record AddCurriculumItemCommand(
     int CurriculumId,
     int EpaId,
@@ -21,10 +26,12 @@ public sealed record AddCurriculumItemCommand(
     int WindowMonths,
     double? Weight,
     string? MinimumLevelByStageJson,
+    IReadOnlyList<string>? PermittedToolKeys,
     ClaimsPrincipal Principal,
     int? ScaleId = null) : IRequest<CurriculumDto>;
 
 /// <param name="QuotaPeriod">Required, not defaulted: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would reset a semester item to a yearly one.</param>
+/// <param name="PermittedToolKeys">Required, not defaulted: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would let every instrument credit this EPA.</param>
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
     int ItemId,
@@ -35,6 +42,7 @@ public sealed record UpdateCurriculumItemCommand(
     int WindowMonths,
     double? Weight,
     string? MinimumLevelByStageJson,
+    IReadOnlyList<string>? PermittedToolKeys,
     ClaimsPrincipal Principal,
     int? ScaleId = null) : IRequest<CurriculumDto>;
 
@@ -53,6 +61,7 @@ public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCur
         RuleFor(command => command.MinimumLevelByStageJson)
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
+        RuleForEach(command => command.PermittedToolKeys).NotEmpty().MaximumLength(64);
     }
 }
 
@@ -70,6 +79,7 @@ public sealed class UpdateCurriculumItemCommandValidator : AbstractValidator<Upd
         RuleFor(command => command.MinimumLevelByStageJson)
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
+        RuleForEach(command => command.PermittedToolKeys).NotEmpty().MaximumLength(64);
     }
 }
 
@@ -151,6 +161,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+        await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
 
         curriculum.Items.Add(new CurriculumItem
         {
@@ -162,7 +173,8 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             WindowMonths = request.WindowMonths,
             Weight = request.Weight,
             MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson),
-            ScaleId = request.ScaleId
+            ScaleId = request.ScaleId,
+            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(request.PermittedToolKeys)
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -216,6 +228,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+        await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
 
         item.EpaId = request.EpaId;
         item.RequiredCount = request.RequiredCount;
@@ -225,6 +238,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         item.Weight = request.Weight;
         item.MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson);
         item.ScaleId = request.ScaleId;
+        item.PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(request.PermittedToolKeys);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

@@ -1,4 +1,5 @@
 using Wombat.Domain.Activities;
+using Wombat.Domain.Epas;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
@@ -32,13 +33,21 @@ public enum DisplayFieldsRule
 }
 
 /// <summary>One seeded activity type, as the seeders and the refresher both see it.</summary>
+/// <param name="WbaToolKey">
+/// Which College-named instrument the type is (T122), or null when it is not one. Positional and required, so
+/// every entry states it: a new seed that forgot it would compile, seed null, and under D21 credit every EPA on
+/// every curriculum with nobody told. The seeders write it on CREATE only. On an existing database the T122
+/// migration stamped it once, and a later change here reaches existing rows only through a new migration; the
+/// seeders log a warning where a seeded type's key differs from this entry.
+/// </param>
 public sealed record ActivityTypeSeedEntry(
     string Key,
     string Name,
     string Description,
     ActivityScope Scope,
     ActivityTypeSeedSource Source,
-    DisplayFieldsRule DisplayFields);
+    DisplayFieldsRule DisplayFields,
+    string? WbaToolKey);
 
 /// <summary>The four JSON payloads that <see cref="ActivityType.SaveDraft"/> takes.</summary>
 public sealed record ActivityTypeSeedPayload(
@@ -62,7 +71,8 @@ public sealed record ActivityTypeSeedPayload(
 /// <para>
 /// Note what is deliberately NOT here: <c>ScopeId</c>. Each seeder resolves its own scope (the demo
 /// speciality vs the CPSA Paediatrics speciality) at creation time, and the refresher never touches
-/// scope, name or description — it evolves the four versioned JSON payloads and nothing else.
+/// scope, name, description or <c>WbaToolKey</c> — it evolves the four versioned JSON payloads and
+/// nothing else.
 /// </para>
 /// </remarks>
 public static class ActivityTypeSeedCatalogue
@@ -73,42 +83,48 @@ public static class ActivityTypeSeedCatalogue
     /// </summary>
     public const string SeedActorUserId = "seed-system";
 
+    /// <remarks>
+    /// The generic Mini-CEX, DOPS and CBD carry their instrument keys although no generic curriculum has a tool list
+    /// (T122). They ARE those instruments, and unkeyed they would be unrestricted on every EPA of every curriculum
+    /// that does have one, for anyone who can file them. ACAT is not a College-named instrument, so under D21 it
+    /// stays unkeyed and unrestricted.
+    /// </remarks>
     public static IReadOnlyList<ActivityTypeSeedEntry> Entries { get; } =
     [
         new("mini_cex", "Mini-CEX", "Mini clinical evaluation exercise.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: "mini_cex"),
         new("dops", "DOPS", "Direct observation of procedural skills.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: "dops"),
         new("cbd", "Case-based Discussion", "Structured case-based discussion.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: "cbd"),
         new("acat", "ACAT", "Acute care assessment tool.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("reflective_note", "Reflective Note", "Structured reflective note using the situation-task-action-result frame.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("procedure_log", "Procedure Log", "Self-logged procedural experience.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("research_output", "Research Output", "Publication, poster, or presentation evidence.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("teaching_session", "Teaching Session", "Teaching activity delivered by the trainee.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("qi_project", "QI Project", "Quality-improvement project with fixed PDSA sections.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
         new("journal_club", "Journal Club", "Journal club attendance or presentation log.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields),
+            ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
 
         // The keys are <family>_cpsa, and both halves matter — see PaediatricCatalogueSeeder for why.
         new("mini_cex_cpsa", "Mini-CEX (Paediatrics)",
             "Mini clinical evaluation exercise - direct observation of a focused clinical encounter, followed by immediate feedback.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "mini_cex"),
         new("dops_cpsa", "DOPS (Paediatrics)",
             "Direct observation of procedural skills - technique, patient interaction and safety.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "dops"),
         new("cbd_cpsa", "Case-Based Discussion (Paediatrics)",
             "Structured discussion of a case the trainee has managed, exploring clinical reasoning and decision-making.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "cbd"),
         new("direct_observation_cpsa", "Direct Observation (Paediatrics)",
             "Observation of the trainee in routine practice - ward rounds, handover and family meetings.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None),
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "direct_observation"),
 
         // System-written, never hand-filed. One row is created per EPA a released MSF campaign covers
         // (T121). A trainee CAN still create a stray draft from /activities/new — nothing in the product
@@ -119,8 +135,33 @@ public static class ActivityTypeSeedCatalogue
         // belongs with [T118] findings 6 and 7.
         new("msf_cpsa", "Multi-Source Feedback (Paediatrics)",
             "The per-EPA evidence record a released multi-source feedback campaign leaves behind.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None)
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "msf")
     ];
+
+    /// <summary>
+    /// The seed-owned types of <paramref name="source" /> whose stored <c>WbaToolKey</c> is not the one their entry
+    /// declares (T122). For a startup warning only; nothing here writes.
+    /// </summary>
+    /// <remarks>
+    /// The seeders stamp the key when they create a type and never again. That is deliberate: an administrator
+    /// may withdraw or change a seeded type's instrument in the builder, and a reconcile on every boot would silently
+    /// undo them. So a difference is announced at every startup instead, until someone decides which is right. A
+    /// type an operator has taken over (another owner) is theirs, and is not reported.
+    /// </remarks>
+    public static IReadOnlyList<(ActivityTypeSeedEntry Entry, string? StoredWbaToolKey)> FindWbaToolKeyDrift(
+        IEnumerable<ActivityType> storedTypes,
+        ActivityTypeSeedSource source)
+    {
+        var entries = For(source).ToDictionary(entry => entry.Key, StringComparer.Ordinal);
+
+        return storedTypes
+            .Where(activityType => string.Equals(activityType.OwnerUserId, SeedActorUserId, StringComparison.Ordinal))
+            .Where(activityType => entries.ContainsKey(activityType.Key))
+            .Select(activityType => (Entry: entries[activityType.Key], Stored: WbaTool.NormalizeKey(activityType.WbaToolKey)))
+            .Where(pair => !string.Equals(pair.Stored, WbaTool.NormalizeKey(pair.Entry.WbaToolKey), StringComparison.Ordinal))
+            .Select(pair => (pair.Entry, pair.Stored))
+            .ToList();
+    }
 
     public static IEnumerable<ActivityTypeSeedEntry> For(ActivityTypeSeedSource source)
         => Entries.Where(entry => entry.Source == source);

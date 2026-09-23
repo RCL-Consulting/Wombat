@@ -88,6 +88,19 @@
               </select>
             </FormField>
           }
+          @* T122. Which College-named instrument this form is. Each curriculum item's tool list then decides which
+             EPAs it may be filed against; "Not a WBA instrument" leaves it unrestricted (D21). A stored key the
+             vocabulary no longer holds is still listed, so it can be seen and withdrawn. *@
+          <FormField Label="This tool is" InputId="type-wba-tool"
+                     HelpText="Choosing an instrument lets each curriculum item's tool list decide which EPAs this form can be filed against. 'Not a WBA instrument' leaves it unrestricted. Takes effect when you save the draft, not when you publish, and discarding the draft does not undo it. On a seeded type, publish or discard that draft afterwards, or seed updates stop reaching the type.">
+            <select id="type-wba-tool" class="form-select" @bind="_wbaToolKey">
+              <option value="">Not a WBA instrument</option>
+              @foreach (var tool in WbaToolOptions)
+              {
+                <option value="@tool.Key">@tool.Name</option>
+              }
+            </select>
+          </FormField>
           <FormField Label="Description" InputId="type-description" FullWidth="true">
             <textarea id="type-description" class="form-control" rows="4" @bind="_description"></textarea>
           </FormField>
@@ -329,6 +342,8 @@
   private ActivityScope _scope;
   private string _scopeIdText = string.Empty;
   private bool _isActive = true;
+  private string _wbaToolKey = string.Empty;
+  private IReadOnlyList<WbaToolDto> _wbaTools = [];
   private string _workflowJson = string.Empty;
   private string _creditRulesJson = string.Empty;
   private string _previewDataJson = "{}";
@@ -422,6 +437,12 @@
     RefreshWarnings();
   }
 
+  /// <summary>The vocabulary, plus the stored key when the vocabulary no longer holds it (T122).</summary>
+  private IEnumerable<WbaToolDto> WbaToolOptions =>
+    string.IsNullOrEmpty(_wbaToolKey) || _wbaTools.Any(tool => tool.Key == _wbaToolKey)
+      ? _wbaTools
+      : _wbaTools.Append(new WbaToolDto(_wbaToolKey, $"{_wbaToolKey} (not a known instrument)", null));
+
   private static string? NullIfEmpty(string? value) =>
     string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
@@ -440,6 +461,7 @@
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _entrustmentScales = await ReferenceData.GetEntrustmentScaleOptionsAsync();
+      _wbaTools = await Sender.Send(new GetWbaToolsQuery());
       LoadEditorState(_editor);
       RefreshWarnings();
     }
@@ -461,6 +483,7 @@
     _scope = editor.Scope;
     _scopeIdText = editor.ScopeId?.ToString() ?? string.Empty;
     _isActive = editor.IsActive;
+    _wbaToolKey = editor.WbaToolKey ?? string.Empty;
     _builderSchema = BuilderSchemaModel.Parse(editor.DraftSchemaJson);
     _workflowJson = editor.DraftWorkflowJson;
     _creditRulesJson = editor.DraftCreditRulesJson;
@@ -488,6 +511,7 @@
         _scope,
         ParseNullableInt(_scopeIdText),
         _isActive,
+        NullIfEmpty(_wbaToolKey),
         CurrentDraftSchemaJson,
         _workflowJson,
         _creditRulesJson,

@@ -91,8 +91,8 @@ public sealed class RatedActivityTypesTests
     }
 
     /// <summary>
-    /// Filed under Conversation, arguably Case analysis. Pinned rather than corrected: re-filing it is
-    /// [T122]'s DECISION 2 and belongs to the College, not to this refactor.
+    /// Filed under Conversation, arguably Case analysis. Pinned rather than corrected: re-filing it belongs
+    /// to the College, not to this refactor, and would land with [T144].
     /// </summary>
     [Fact]
     public void ChartStimulatedRecallStaysUnderConversation()
@@ -115,7 +115,7 @@ public sealed class RatedActivityTypesTests
     /// The declaration is the gate, whatever the type is called. This is what closed the trajectory's
     /// KNOWN LIMITATION: an institution's own rated tool charts because it says it is rated, not
     /// because a hard-coded list has heard of its name. Its evidence reads as its own key until
-    /// [T122] gives it a tool key to classify by.
+    /// [T144] classifies by the WbaToolKey [T122] introduced.
     /// </summary>
     [Fact]
     public void AnUnfamiliarKeyThatDeclaresARatingIsRated()

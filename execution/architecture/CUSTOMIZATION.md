@@ -34,6 +34,12 @@ Admin-defined catalogue entry.
 - `Version` — integer, bumped on every schema change. Old activities keep their original schema version so historical data stays readable.
 - `IsActive`
 - `OwnerUserId` — who created this type, for audit.
+- `WbaToolKey` — which College-named instrument the type *is* (`mini_cex`, `dops`, `cbd`, `msf`, …), a key into the
+  `WbaTools` vocabulary, or null for "not a recognised instrument" (T122). **Live and unversioned**, like `Name` and
+  `Scope`: not part of the four versioned payloads, not bumped by `Version`, never touched by the seed refresher. The
+  builder writes it on save, not on publish, and discarding a draft does not undo it. On a seeded type, that save
+  parks a draft, and the seed refresher skips a type with a draft in flight until it is published or discarded. See
+  "Which instruments may credit an EPA" below.
 
 ### `Activity`
 
@@ -229,6 +235,33 @@ How a completed activity contributes toward curriculum progress is also data:
 ```
 
 That reads as: "when this activity is completed, it counts once toward the CurriculumItem matching the EPA chosen in the `epa_id` field, provided the `reasoning` field is at or above the CurriculumItem's minimum level." Different activity types have different credit rules; research outputs might not count toward EPAs at all but toward a separate "research portfolio" requirement.
+
+### Which instruments may credit an EPA (T122)
+
+A credit rule says *how* an activity credits; the curriculum item says *which instruments may*. Each
+`CurriculumItem.PermittedToolsJson` is a sorted JSON array of `WbaTools` keys (Annexure A's tools column for the CPSA
+catalogue), or null for "any instrument". It is checked against the activity type's `WbaToolKey`:
+
+- **Where:** on the write path, never at credit (D20), and per credit directive. Every target is checked at create. A
+  changed target (a draft update or a transition patch that alters it) is checked wherever credit can still follow. An
+  unchanged target is re-checked only when the author hands it on while still able to correct it: the mover is the
+  subject or the creator, nobody else has acted yet, the mover can write that directive's field in the current state,
+  and the move hands it on (credit can follow without coming back through where it started, `Workflow.CanReachTerminal`,
+  or the mover loses write access to the field). A move from which credit cannot be reached (`cancel`, `decline` into
+  a state nothing leaves) is never checked. So an assessor's completion (even one allowed to correct the EPA), a sign-off
+  after assessment and a resubmission after a decline are never refused for an unchanged target. `CreditApplier` and
+  the rebuild never read the list, so editing one never takes back credit already earned.
+- **The picker agrees:** the EPA picker drops EPAs whose item forbids this type's instrument, using the same
+  predicate (`ToolPermission.Evaluate`). If a keyed instrument may credit none of the subject's EPAs, the picker falls
+  back to the unrestricted creditable set rather than emptying, and the write path's refusal names the instruments
+  the curriculum accepts.
+- **Permissive by default (D21):** a type with no key, an item with no list (or an unparseable one), a subject with no
+  trainee profile and an EPA with no item are all unrestricted. An institution's own types are therefore unrestricted
+  until someone picks an instrument for them in the builder ("This tool is").
+- **One resolver:** the gate asks `CreditTargetResolver`, the credit engine's own item resolution, so it can never
+  refuse or pass a different item from the one credit lands on.
+- **Seeds:** the catalogue stamps lists and seeded types' keys on CREATE only. An existing database got them from the
+  T122 migration; afterwards, a difference from the catalogue is logged as a startup warning, never written.
 
 ## Rendering
 

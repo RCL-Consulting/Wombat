@@ -36,6 +36,9 @@ public sealed record ActivityTypeEditorDto(
     ActivityScope Scope,
     int? ScopeId,
     bool IsActive,
+    // Which College-named instrument this type is, or null (T122). Live metadata like Name, not a staged
+    // payload. /activities/new reads it from here to narrow the EPA picker the way the write path will check.
+    string? WbaToolKey,
     int PublishedVersion,
     bool HasDraft,
     string DraftSchemaJson,
@@ -76,6 +79,9 @@ public sealed record ActivityDto(
     int ActivityTypeId,
     string ActivityTypeKey,
     string ActivityTypeName,
+    // The type row's CURRENT instrument key (T122), not a pinned one: it is unversioned, and it is the key the
+    // write path checks at submit, so the EPA picker narrows by the same value.
+    string? WbaToolKey,
     int SchemaVersion,
     string SchemaJson,
     string WorkflowJson,

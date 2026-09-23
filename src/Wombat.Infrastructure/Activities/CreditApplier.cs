@@ -68,7 +68,7 @@ public sealed class CreditApplier : ICreditApplier
         // ObservationDateResolver from the field the PINNED schema's observation_date_field names. The live
         // transition path passes the date it is about to stamp; a replay passes the stamped column. There
         // must be exactly one implementation of "what date did this happen", and it is not this one.
-        var trainee = await ResolveTraineeAsync(subject.SubjectUserId, subject.ObservedOn, cancellationToken);
+        var trainee = await CreditTargetResolver.ResolveTraineeAsync(_dbContext, subject.SubjectUserId, subject.ObservedOn, cancellationToken);
         if (trainee is null)
         {
             return CreditPlan.Nothing;
@@ -82,7 +82,7 @@ public sealed class CreditApplier : ICreditApplier
         var credits = new List<PlannedCredit>();
         foreach (var directive in rules.CountsFor)
         {
-            var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
+            var curriculumItems = await CreditTargetResolver.ResolveCurriculumItemsAsync(_dbContext, directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
             int? achievedScaleId = null;
             if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
                 achievedScaleIds.TryGetValue(directive.MinimumLevelField, out var resolvedScaleId))
@@ -334,45 +334,6 @@ public sealed class CreditApplier : ICreditApplier
     private static readonly IReadOnlyDictionary<string, int> EmptyScaleIds =
         new Dictionary<string, int>(StringComparer.Ordinal);
 
-    private async Task<IReadOnlyList<CurriculumItem>> ResolveCurriculumItemsAsync(
-        CurriculumItemMatchRule matchRule,
-        JsonElement data,
-        TraineeContext trainee,
-        CancellationToken cancellationToken)
-    {
-        // Every match is confined to the trainee's adopted curriculum version (national core) plus their
-        // own institution's local extras. This prevents credit leaking across curriculum versions or
-        // onto another institution's local items that happen to share an EPA. (T091 phase 4.)
-        var scoped = _dbContext.Set<CurriculumItem>()
-            .Where(entity => entity.CurriculumId == trainee.CurriculumId
-                && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == trainee.InstitutionId));
-
-        if (matchRule.CurriculumItemId.HasValue)
-        {
-            return await scoped
-                .Where(entity => entity.Id == matchRule.CurriculumItemId.Value)
-                .ToListAsync(cancellationToken);
-        }
-
-        if (!string.IsNullOrWhiteSpace(matchRule.CurriculumItemField) &&
-            TryGetInt32(data, matchRule.CurriculumItemField, out var curriculumItemId))
-        {
-            return await scoped
-                .Where(entity => entity.Id == curriculumItemId)
-                .ToListAsync(cancellationToken);
-        }
-
-        if (!string.IsNullOrWhiteSpace(matchRule.EpaField) &&
-            TryGetInt32(data, matchRule.EpaField, out var epaId))
-        {
-            return await scoped
-                .Where(entity => entity.EpaId == epaId)
-                .ToListAsync(cancellationToken);
-        }
-
-        return [];
-    }
-
     private static LevelComparison CompareMinimumLevel(
         CurriculumItem curriculumItem,
         CreditDirective directive,
@@ -391,7 +352,7 @@ public sealed class CreditApplier : ICreditApplier
         var requiredLevel = curriculumItem.GetMinimumLevelForStage(traineeStage);
 
         if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
-            TryGetInt32(data, directive.MinimumLevelField, out var providedLevel))
+            CreditTargetResolver.TryGetInt32(data, directive.MinimumLevelField, out var providedLevel))
         {
             return EntrustmentLevelComparer.Compare(
                 providedLevel, achievedScaleId, requiredLevel, curriculumItem.ScaleId);
@@ -408,37 +369,6 @@ public sealed class CreditApplier : ICreditApplier
 
         return new LevelComparison(false, LevelComparisonBasis.ValueMissing);
     }
-
-    private async Task<TraineeContext?> ResolveTraineeAsync(
-        string traineeUserId,
-        DateOnly observedOn,
-        CancellationToken cancellationToken)
-    {
-        // Deliberately NOT filtered on IsActive. TraineeProfile.Complete() clears IsActive on
-        // graduation, so filtering here meant a graduated trainee earned no credit — harmless for
-        // live submissions (they no longer submit), but destructive under
-        // RebuildCurriculumProgress, which zeroes every progress row before replaying: alumni
-        // would come back with nothing.
-        // Prefer an active profile when a user somehow has more than one, then the most recent.
-        var profile = await _dbContext.Set<TraineeProfile>()
-            .AsNoTracking()
-            .Where(p => p.UserId == traineeUserId)
-            .OrderByDescending(p => p.IsActive)
-            .ThenByDescending(p => p.ProgrammeStartDate)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (profile is null)
-        {
-            return null;
-        }
-
-        return new TraineeContext(
-            profile.CurriculumId,
-            profile.InstitutionId,
-            profile.GetStage(observedOn));
-    }
-
-    private sealed record TraineeContext(int CurriculumId, int InstitutionId, int? Stage);
 
     private static HashSet<string> DeserializeCreditedKeys(string json)
     {
@@ -462,25 +392,5 @@ public sealed class CreditApplier : ICreditApplier
         return transition is null
             ? activity.Id.ToString(CultureInfo.InvariantCulture)
             : $"{activity.Id}:{transition.TransitionKey}";
-    }
-
-    private static bool TryGetInt32(JsonElement root, string fieldKey, out int value)
-    {
-        if (root.TryGetProperty(fieldKey, out var property))
-        {
-            if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out value))
-            {
-                return true;
-            }
-
-            if (property.ValueKind == JsonValueKind.String &&
-                int.TryParse(property.GetString(), CultureInfo.InvariantCulture, out value))
-            {
-                return true;
-            }
-        }
-
-        value = default;
-        return false;
     }
 }

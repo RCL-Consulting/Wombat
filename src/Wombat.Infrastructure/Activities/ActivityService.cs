@@ -64,6 +64,21 @@ public sealed class ActivityService : IActivityService
             input.Principal,
             DateTime.UtcNow);
 
+        // T122. A create always writes the credit target, and for a type whose initial state is already `requested`
+        // (the legacy WBA shape) the create IS the author's submission: the next move is the assessor's. Gating here
+        // also means a refused Submit on /activities/new fails before the draft exists, so it leaves no orphan behind.
+        // After BuildDraftActivity, which never touches the context, and before Add: see ToolPermissionGate.
+        await ToolPermissionGate.EnsurePermittedAsync(
+            _dbContext,
+            activityType.WbaToolKey,
+            // The live published rules ARE the pinned version's: BuildDraftActivity pins to activityType.Version.
+            activityType.CreditRulesJson,
+            schema,
+            activity.SubjectUserId,
+            activity.ObservedOn,
+            activity.DataJson,
+            cancellationToken);
+
         _dbContext.Set<Activity>().Add(activity);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -193,6 +208,28 @@ public sealed class ActivityService : IActivityService
         var normalizedDataJson = NormalizeObjectJson(input.NewDataJson);
         ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
 
+        // T122. This path replaces the whole payload and is not limited to the initial state (T106 item 1), so
+        // without this a trainee could submit against a permitted EPA, switch to a forbidden one while the request
+        // sits with the assessor, and have the assessor's unchanged completion credit it. Checked only when the
+        // credit target actually changes and credit can still follow from where the activity is; before the first
+        // mutation below.
+        var changedDirectives = workflow.CanReachTerminal(activity.CurrentState)
+            ? ChangedDirectives(version.CreditRulesJson, activity.DataJson, normalizedDataJson)
+            : EmptyDirectives;
+        if (changedDirectives.Count > 0)
+        {
+            await ToolPermissionGate.EnsurePermittedAsync(
+                _dbContext,
+                activity.ActivityType.WbaToolKey,
+                version.CreditRulesJson,
+                schema,
+                activity.SubjectUserId,
+                ObservationDateResolver.Resolve(activity, schema, normalizedDataJson).ObservedOn,
+                normalizedDataJson,
+                cancellationToken,
+                changedDirectives.Contains);
+        }
+
         activity.DataJson = normalizedDataJson;
         activity.UpdatedOn = DateTime.UtcNow;
 
@@ -257,6 +294,28 @@ public sealed class ActivityService : IActivityService
             SchemaValidationMode.Submit,
             transition.RequiresFields));
 
+        // T122, D20: a changed credit target is checked on any move that can still lead to credit; an unchanged one is
+        // re-checked only when the author, before anyone else has acted, hands it on while still able to correct it
+        // (see DirectivesToJudge). So an assessor's `complete` or `decline`, a sign-off after assessment, or a
+        // resubmission after a decline never strands an encounter the trainee filed legitimately. The check runs after Submit-mode validation, so a
+        // missing EPA fails with the schema's own message first, and before the first mutation below. It reads the
+        // MERGED data, because a trainee repairing an in-flight draft sends the new EPA in the same patch as the submit.
+        var directivesToJudge = DirectivesToJudge(
+            workflow, schema, activity, transition, input.Principal, input.ActorUserId, mergedDataJson, version.CreditRulesJson);
+        if (directivesToJudge.Count > 0)
+        {
+            await ToolPermissionGate.EnsurePermittedAsync(
+                _dbContext,
+                activity.ActivityType.WbaToolKey,
+                version.CreditRulesJson,
+                schema,
+                activity.SubjectUserId,
+                ObservationDateResolver.Resolve(activity, schema, mergedDataJson).ObservedOn,
+                mergedDataJson,
+                cancellationToken,
+                directivesToJudge.Contains);
+        }
+
         // Every read credit needs happens HERE, before the first mutation of this request (T130). The audit
         // pipeline's catch saves this request's DbContext, so anything thrown after ApplyTransition commits
         // the half-finished move: a terminal activity with no credit and a CreditedItemCount of null, which
@@ -319,6 +378,8 @@ public sealed class ActivityService : IActivityService
 
         return await _creditApplier.PlanAsync(
             new CreditSubject(activity.SubjectUserId, observedOn, mergedDataJson),
+            // Deliberately carries no WbaToolKey (T122). Credit does not re-check the EPA→tool allow-list (D20): the
+            // write path already did, and an allow-list edited since must not take back credit a trainee earned.
             new ActivityType
             {
                 CreditRulesJson = version.CreditRulesJson,
@@ -393,6 +454,11 @@ public sealed class ActivityService : IActivityService
         EnsureSubjectIsInTypeScope(activityType, subjectScope, subjectUserId);
 
         var utcNow = DateTime.UtcNow;
+
+        // No EPA→tool gate here (T122), and the omission is deliberate: a type that declares credit was refused above,
+        // and the gate only ever refuses an item credit could land on, so for every type that reaches this line it
+        // would pass. If a crediting system-written type is ever allowed through, the gate must be awaited inside this
+        // loop, before AddRange, while the caller has still not mutated anything.
 
         // Built and validated in full BEFORE anything is added to the context. Nothing below this loop
         // may throw, because by then the caller's own mutation is pending and an exception would be
@@ -912,6 +978,188 @@ public sealed class ActivityService : IActivityService
                 $"The published activity type version '{activity.SchemaVersion}' could not be found.");
     }
 
+    /// <summary>
+    /// Which of the pinned rules' credit directives a transition must put to the EPA→tool gate (T122, D20). Empty means
+    /// the gate does not run.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// D20 gates the write path so that a refusal lands on someone who can still act on it, never at "the one moment
+    /// nobody can act". Four review rounds showed that recognising "the author's submission" from the shape of an actor
+    /// rule cannot be made right (<c>role:Trainee</c> submits, sign-offs, fallback approvers, holding states,
+    /// <c>requested</c>-born types, assessor-writable EPA fields and multi-directive rules each broke a syntactic test).
+    /// So the rule states D20's reason directly, per directive:
+    /// <list type="bullet">
+    ///   <item><b>A changed target is judged</b>, on any move from which credit can still be reached, whoever makes it.
+    ///   "Changed" is what the credit engine would resolve (<see cref="CreditTargetResolver.DescribeTarget" />), so
+    ///   <c>5</c> and <c>"5"</c> are the same target.</item>
+    ///   <item><b>An unchanged target is judged only when the author hands it on while still able to correct it:</b>
+    ///   the mover IS the subject or the creator; nobody else has acted yet; the mover can write that directive's
+    ///   source field now; and the move hands it on, meaning credit can follow without coming back through the state
+    ///   the move left, or the mover loses write access to that field. So a pre-T122 draft is refused at the trainee's
+    ///   submit, while an assessor's completion (even an assessor allowed to correct the EPA), a sign-off after
+    ///   assessment, a resubmission after a decline and a withdrawal are never refused for an unchanged target.</item>
+    /// </list>
+    /// A literal <c>curriculum_item_id</c> directive has no field anyone can correct, so after the create it is never
+    /// judged. A move from which no terminal state can be reached at all (the CPSA workflows' <c>cancel</c> and
+    /// <c>decline</c>) is never judged.
+    /// </para>
+    /// <para>
+    /// The boundary this leaves, recorded with D20: a list or instrument changed after the create is applied to an
+    /// unchanged target only if the author hands the activity on before anyone else acts. If an assessor picks a draft up
+    /// first, or the type is born with the assessor (the legacy <c>requested</c>-initial shape), the create was the last
+    /// check for that target.
+    /// </para>
+    /// <para>
+    /// One conservative residual is kept deliberately (the fifth review round): a withdrawal out of the draft into a
+    /// holding state the author cannot edit counts as a hand-on, because losing write access is how a hand-on is
+    /// recognised, even when only the author can reopen it. The refusal still lands on the author, who can act on it.
+    /// Telling "only the author can leave" from "someone else can" would mean reading actor-rule syntax, which every
+    /// earlier round showed breaks.
+    /// </para>
+    /// </remarks>
+    private IReadOnlySet<int> DirectivesToJudge(
+        Workflow workflow,
+        FormSchema schema,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        string actorUserId,
+        string mergedDataJson,
+        string creditRulesJson)
+    {
+        if (!workflow.CanReachTerminal(transition.To) || !TryParseRules(creditRulesJson, out var rules))
+        {
+            return EmptyDirectives;
+        }
+
+        using var stored = JsonDocument.Parse(activity.DataJson);
+        using var merged = JsonDocument.Parse(mergedDataJson);
+
+        var judge = new HashSet<int>();
+        var unchangedFieldTargets = new List<(int Index, string SourceField)>();
+        for (var index = 0; index < rules.CountsFor.Count; index++)
+        {
+            var matchRule = rules.CountsFor[index].CurriculumItemMatchRule;
+            var before = CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement);
+            var after = CreditTargetResolver.DescribeTarget(matchRule, merged.RootElement);
+
+            if (before != after)
+            {
+                judge.Add(index);
+            }
+            else if (after.SourceField is not null)
+            {
+                unchangedFieldTargets.Add((index, after.SourceField));
+            }
+        }
+
+        if (unchangedFieldTargets.Count == 0 ||
+            !IsTheAuthor(actorUserId, activity) ||
+            !OnlyTheAuthorHasActed(activity))
+        {
+            return judge;
+        }
+
+        var writableNow = _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, principal);
+        var correctable = unchangedFieldTargets.Where(target => writableNow.Contains(target.SourceField)).ToList();
+        if (correctable.Count == 0)
+        {
+            return judge;
+        }
+
+        var creditCanFollowOnwards = workflow.CanReachTerminal(transition.To, avoidingState: activity.CurrentState);
+        var writableAfter = creditCanFollowOnwards
+            ? null
+            : _fieldPermissionEvaluator.GetWritableFieldKeys(
+                schema, workflow, ProbeInState(activity, transition.To, mergedDataJson), principal);
+
+        foreach (var (index, sourceField) in correctable)
+        {
+            if (creditCanFollowOnwards || !writableAfter!.Contains(sourceField))
+            {
+                judge.Add(index);
+            }
+        }
+
+        return judge;
+    }
+
+    /// <summary>
+    /// The indices of the directives whose target differs between two payloads, as the credit engine would resolve it.
+    /// </summary>
+    private static IReadOnlySet<int> ChangedDirectives(string? creditRulesJson, string storedDataJson, string newDataJson)
+    {
+        if (!TryParseRules(creditRulesJson, out var rules))
+        {
+            return EmptyDirectives;
+        }
+
+        using var stored = JsonDocument.Parse(storedDataJson);
+        using var updated = JsonDocument.Parse(newDataJson);
+
+        var changed = new HashSet<int>();
+        for (var index = 0; index < rules.CountsFor.Count; index++)
+        {
+            var matchRule = rules.CountsFor[index].CurriculumItemMatchRule;
+            if (CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement) !=
+                CreditTargetResolver.DescribeTarget(matchRule, updated.RootElement))
+            {
+                changed.Add(index);
+            }
+        }
+
+        return changed;
+    }
+
+    private static bool IsTheAuthor(string actorUserId, Activity activity)
+        => string.Equals(actorUserId, activity.SubjectUserId, StringComparison.Ordinal) ||
+           string.Equals(actorUserId, activity.CreatedByUserId, StringComparison.Ordinal);
+
+    private static bool OnlyTheAuthorHasActed(Activity activity)
+        => activity.Transitions.All(transition => IsTheAuthor(transition.ActorUserId, activity));
+
+    /// <summary>
+    /// A detached copy of the activity as it would be in <paramref name="stateKey" />, for asking what the mover could
+    /// write there. Never added to the context: it references the tracked type only one way, so change detection can
+    /// never reach it (the same reasoning <see cref="BuildDraftActivity" /> relies on).
+    /// </summary>
+    private static Activity ProbeInState(Activity activity, string stateKey, string dataJson)
+        => new()
+        {
+            ActivityTypeId = activity.ActivityTypeId,
+            ActivityType = activity.ActivityType,
+            SchemaVersion = activity.SchemaVersion,
+            SubjectUserId = activity.SubjectUserId,
+            CreatedByUserId = activity.CreatedByUserId,
+            CurrentState = stateKey,
+            DataJson = dataJson,
+            InstitutionId = activity.InstitutionId,
+            SpecialityId = activity.SpecialityId,
+            SubSpecialityId = activity.SubSpecialityId
+        };
+
+    private static bool TryParseRules(string? creditRulesJson, out CreditRules rules)
+    {
+        rules = null!;
+        if (string.IsNullOrWhiteSpace(creditRulesJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            rules = CreditRulesParser.Parse(creditRulesJson);
+            return rules.CountsFor.Count > 0;
+        }
+        catch (CreditRulesParseException)
+        {
+            return false;
+        }
+    }
+
+    private static readonly IReadOnlySet<int> EmptyDirectives = new HashSet<int>();
+
     private static bool CanEditDraft(Activity activity, string actorUserId)
         => string.Equals(activity.SubjectUserId, actorUserId, StringComparison.Ordinal) ||
            string.Equals(activity.CreatedByUserId, actorUserId, StringComparison.Ordinal);
@@ -1080,6 +1328,7 @@ public sealed class ActivityService : IActivityService
             activity.ActivityTypeId,
             activity.ActivityType.Key,
             activity.ActivityType.Name,
+            activity.ActivityType.WbaToolKey,
             activity.SchemaVersion,
             pinnedVersion.SchemaJson,
             pinnedVersion.WorkflowJson,

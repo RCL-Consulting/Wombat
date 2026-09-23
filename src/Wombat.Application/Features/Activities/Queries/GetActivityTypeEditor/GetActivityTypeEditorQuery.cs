@@ -72,6 +72,8 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
                 ActivityScope.Global,
                 null,
                 true,
+                // A new type is "Not a WBA instrument" until an administrator says otherwise (D21).
+                null,
                 0,
                 false,
                 DefaultSchemaJson,
@@ -164,6 +166,7 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
             activityType.Scope,
             activityType.ScopeId,
             activityType.IsActive,
+            activityType.WbaToolKey,
             activityType.Version,
             activityType.HasDraft,
             activityType.StagingSchemaJson ?? activityType.SchemaJson ?? DefaultSchemaJson,

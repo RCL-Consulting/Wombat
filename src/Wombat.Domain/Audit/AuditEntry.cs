@@ -41,6 +41,10 @@ public sealed class AuditEntry
     public string SummaryJson { get; set; } = "{}";
 
     public bool Success { get; set; }
+
+    /// <summary>The <see cref="ErrorMessage" /> column's width. <see cref="Create" /> truncates to it.</summary>
+    public const int MaxErrorMessageLength = 2000;
+
     public string? ErrorMessage { get; set; }
 
     public static AuditEntry Create(
@@ -59,6 +63,14 @@ public sealed class AuditEntry
         string summaryJson = "{}",
         string? errorMessage = null)
     {
+        // Bounded here, not by the caller (T122). The column is varchar(MaxErrorMessageLength), and the audit pipeline
+        // writes this row from a failed command's catch: an overlong exception message made THAT save fail too, so the
+        // caller saw a DbUpdateException in place of the real refusal, and no audit row was written at all.
+        if (errorMessage is { Length: > MaxErrorMessageLength })
+        {
+            errorMessage = string.Concat(errorMessage.AsSpan(0, MaxErrorMessageLength - 1), "…");
+        }
+
         return new AuditEntry
         {
             Id = Guid.CreateVersion7(occurredAt),

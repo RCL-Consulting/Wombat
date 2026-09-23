@@ -10,13 +10,16 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 32 queued, 1 blocked. **Four P1s remain:** T099, T102, T120, T122.
-- **T130 shipped 2026-09-23 — the annual quota.** Progress is stored per semester, targets are per period,
-  and the College's D14 exemption is applied when reading. One read model sits behind the progress page,
-  the trainee dashboard and the three staff dashboards. "1 / 24" is gone; PAED-001 reads "2 of 3 this semester".
-- **Four one-line College questions** are listed in `EPA-PROGRAMME.md` § 3F: June's side, December,
-  whether Annexure B's per-semester figures are hard targets, and late starters. **None blocks anything:**
-  storage is per semester, so each answer is a read-model change, one constant, or a rebuild.
+- Nothing in `in_progress/`. 36 queued, 1 blocked. **Three P1s remain:** T099, T102, T120.
+- **T122 shipped 2026-09-23 — the EPA→tool allow-list.** Each curriculum item carries Annexure A's tool list as
+  vocabulary keys (`WbaTools`, 12 instruments; D4 and D12 applied), and each activity type says which instrument it
+  is (`WbaToolKey`). One predicate narrows the EPA picker and refuses at the write path, per credit directive: at
+  create, on any change of target, and for an unchanged target only when the author hands it on while able to fix it. Credit
+  never re-checks (D20), and a missing key or list is unrestricted (D21). A Mini-CEX can no longer be filed against
+  PAED-005.
+- **Five one-line College questions** are listed in `EPA-PROGRAMME.md` § 3F: June's side, December, whether the
+  per-semester figures are hard targets, late starters, and the new one: **does "clinical observed interaction"
+  merge Mini-CEX with Direct observation?** None blocks anything; the last is a catalogue edit plus a migration.
 
 ## Blockers
 
@@ -25,21 +28,19 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T122** (the EPA→tool allow-list) — **Model: Opus**: one predicate, two callers (picker and submit,
-  D20), a seed change to `wbaTools` keys, and the permissive fallback of D21. `EpaSeed` is `internal` now.
-- **T102** fix 2, then **T120** (the ten tools, after T105 per Wave 2).
-- **Before deploying T130 to production:** take a `pg_dump`. The migration empties
-  `CurriculumItemProgresses`; `CurriculumProgressBootstrapper` refills it at the first boot. `Down()` does
-  not restore lifetime tallies, so a rollback means restoring the dump.
+- **T102** fix 2, then **T120** (the ten tools, after T105 per Wave 2). T120's new seeds must declare their
+  `WbaToolKey` (the catalogue entry requires it); see the T122 note at the top of T120.
+- **Before deploying T130 + T122 to production:** take a `pg_dump`. T130's migration empties the progress table
+  (the bootstrapper refills it); T122's stamps the v11.1 lists and the seeded keys once. Rollback = restore.
 - Send the College the § 3F questions; decide T128's destination.
 
 ## Open questions
 
-- **Dev database (2026-09-23):** T130 is applied. The dev trainee is on the paediatric curriculum with
-  start 2026-01-01 and has activities 7–12 (Mini-CEX, PAED-001/006/011) completed by committee@ and
-  assessor@. `assessor@wombat.local` exists now; DevUserSeeder seeds it with Paediatrics scopes.
-  Snapshots `pre-t130-staging` and `pre-t130-migration` are in `recovery/`. **Production was not touched.**
-- D42's month tolerance is invented and named as such; the College may overrule it.
+- **Dev database (2026-09-23):** T122 is applied: 15 lists on curriculum 2, 8 tool keys, 12 instruments.
+  Activities 13 (Mini-CEX, PAED-001, completed after a list edit — D20 live) and 14 (cancelled) are T122 staging
+  leftovers. Snapshot `recovery/pre-t122-migration.dump`. **Production was not touched.**
+- D21's trust boundary: an institution's own types are unrestricted until someone picks an instrument in the
+  builder. Revisit after a release (T146 covers cross-discipline crediting).
 - Task lanes were derived, not read (W-002). Five were spot-checked, none misfiled; 22 remain unchecked.
 
 ## Files to open first
@@ -52,9 +53,7 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
-- 2026-09-23: **T130 shipped.** Browser-verified on dev: the migration ran against real old-grain rows,
-  the startup rebuild refilled them, a live completion credited, and a manual rebuild reproduced the
-  tallies byte for byte. A design critique and a 90-agent adversarial review ran first. Filed T139–T143.
-  Suites: 1195, up from 1040.
-- 2026-09-21: **T121 shipped** — a released MSF campaign writes one terminal `msf_cpsa` activity per
-  covered EPA. It credits nothing (D8).
+- 2026-09-23: **T122 shipped.** Browser-verified on dev (refusal, repair, cancel, D20 credit after a list edit,
+  admin tool lists, builder picker, three clean boots). Design critique, five adversarial review rounds (rounds 2–4
+  reshaped the gate rule), 8 test agents, mutation checks. Filed T144–T148. Suites: 1555, up from 1195.
+- 2026-09-23: **T130 shipped** — the annual quota: per-semester progress read against per-period targets.

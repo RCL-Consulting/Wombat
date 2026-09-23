@@ -157,6 +157,136 @@ public sealed class EpaPickerScopeTests : TestContext
         recorder.Scopes[2]!.SubjectUserId.Should().Be("registrar-2");
     }
 
+    // ---- T122: the instrument the activity type is, handed to the picker ----
+
+    [Fact]
+    public void TheToolKey_IsHandedToTheService_OnTheCreditedField()
+    {
+        // The write path refuses an EPA the curriculum item's tool list does not name for this instrument.
+        // The picker can only offer the same set if the renderer tells the service which instrument it is;
+        // without the key the picker offers EPAs that submitting will then refuse, and the trainee learns
+        // that only after filling in the whole form.
+        var recorder = Recorder();
+
+        RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, CreditsEpaId)
+            .Add(component => component.WbaToolKey, "mini_cex"));
+
+        recorder.Scopes.Should().HaveCount(2);
+        recorder.Scopes[0]!.NarrowToCreditable.Should().BeTrue();
+        recorder.Scopes[0]!.WbaToolKey.Should().Be("mini_cex");
+
+        // The contextual field carries the key too (the form passes it on every epa field), but it is not
+        // narrowed, and the service reads the key only inside the narrowing arm — so it restricts nothing there.
+        recorder.Scopes[1]!.NarrowToCreditable.Should().BeFalse();
+    }
+
+    [Fact]
+    public void NoToolKey_ReachesTheServiceAsNull_WhichIsUnrestricted()
+    {
+        // D21: a type that is not a recognised instrument (a generic mini_cex, a reflective note) narrows
+        // nothing by tool. An empty string here would be a key the vocabulary does not hold, which is a
+        // different question with a different answer on the service side.
+        var recorder = Recorder();
+
+        RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, CreditsEpaId));
+
+        recorder.Scopes.Should().HaveCount(2);
+        recorder.Scopes.Should().OnlyContain(scope => scope!.WbaToolKey == null);
+    }
+
+    [Fact]
+    public void ChangingOnlyTheToolKey_ReloadsTheOptions()
+    {
+        // The reload key is the schema, the subject, the credit rules AND the tool. Two activity types can
+        // share their credit rules exactly (the seeded mini_cex_cpsa and dops_cpsa do) and a form, and differ
+        // only in which instrument they are. Leaving the tool out of the key would serve one instrument's
+        // permitted EPAs to the other when the page swaps types under the same component.
+        var recorder = Recorder();
+
+        var cut = RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, CreditsEpaId)
+            .Add(component => component.WbaToolKey, "mini_cex"));
+
+        recorder.Scopes.Should().HaveCount(2);
+
+        cut.SetParametersAndRender(parameters => parameters
+            .Add(component => component.WbaToolKey, "dops"));
+
+        recorder.Scopes.Should().HaveCount(4, "a different instrument is a different option list");
+        recorder.Scopes[2]!.WbaToolKey.Should().Be("dops");
+        recorder.Scopes[2]!.NarrowToCreditable.Should().BeTrue();
+        recorder.Scopes[2]!.SubjectUserId.Should().Be("registrar-1");
+    }
+
+    [Fact]
+    public void ClearingTheToolKey_ReloadsTheOptions()
+    {
+        // From an instrument to "not a WBA instrument": the narrowed list must widen again, not stay
+        // stuck at the previous instrument's allow-list.
+        var recorder = Recorder();
+
+        var cut = RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, CreditsEpaId)
+            .Add(component => component.WbaToolKey, "mini_cex"));
+
+        cut.SetParametersAndRender(parameters => parameters
+            .Add(component => component.WbaToolKey, (string?)null));
+
+        recorder.Scopes.Should().HaveCount(4);
+        recorder.Scopes[2]!.WbaToolKey.Should().BeNull();
+    }
+
+    [Fact]
+    public void AnEditWithTheSameToolKey_DoesNotReloadTheOptions()
+    {
+        // The other half of the reload key's contract: data changes on every keystroke, and re-querying on
+        // each one is the concurrent-DbContext hazard the key exists to avoid. Adding the tool must not have
+        // made the key unstable.
+        var recorder = Recorder();
+
+        var cut = RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, CreditsEpaId)
+            .Add(component => component.WbaToolKey, "mini_cex"));
+
+        cut.SetParametersAndRender(parameters => parameters
+            .Add(component => component.DataJson, """{"epa_id":"17"}""")
+            .Add(component => component.WbaToolKey, "mini_cex"));
+
+        recorder.Scopes.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void TheBuilderPreview_PassesNoToolKey()
+    {
+        // ActivityTypeEdit's preview binds neither subject nor credit rules nor tool. Even if the draft's
+        // instrument were threaded in by mistake it would change nothing (nothing is narrowed), but the
+        // preview has no business depending on a key that takes effect at save, not at render.
+        var recorder = Recorder();
+
+        RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, TwoEpaFieldsSchema)
+            .Add(component => component.DataJson, "{}"));
+
+        recorder.Scopes.Should().OnlyContain(scope => scope!.WbaToolKey == null && scope.NarrowToCreditable == false);
+    }
+
     private RecordingReferenceDataService Recorder()
     {
         var recorder = new RecordingReferenceDataService();

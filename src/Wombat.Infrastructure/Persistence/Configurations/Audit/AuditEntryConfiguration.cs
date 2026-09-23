@@ -62,7 +62,7 @@ public sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntr
             .IsRequired();
 
         builder.Property(e => e.ErrorMessage)
-            .HasMaxLength(2000);
+            .HasMaxLength(AuditEntry.MaxErrorMessageLength);
 
         // Time-range queries (most common access pattern)
         builder.HasIndex(e => e.OccurredAt);

@@ -70,8 +70,14 @@ public sealed class PaediatricCatalogueQuotaSeedTests
         // observes three, two and one per semester. Phase 4 (T131) is where the decision cadence is used.
         "currency",
 
-        // The WBA instruments Annexure A lists per EPA. Mapping an EPA to the tools that may credit it is T122.
-        "wbaTools",
+        // Annexure A's tools cell, verbatim (T122). The seeder reads `wbaTools`, the same list as vocabulary keys with
+        // the College's aliases applied; this is the audit trail a reader of the annexure checks it against, and
+        // PaediatricCatalogueToolSeedTests resolves one into the other.
+        "annexureTools",
+
+        // Why PAED-007's `wbaTools` has an instrument its Annexure A cell does not: the College added Direct
+        // observation to EPA 7 (D12). Prose for a reader, carried by that one EPA.
+        "wbaToolsNote",
 
         // The EPA's ordinal in Annexure A (1..15). `code` (PAED-001..015) already carries it.
         "number",

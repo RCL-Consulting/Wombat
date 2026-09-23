@@ -60,10 +60,14 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     /// <para>
     /// When <paramref name="scope" /> says this field is the one the credit engine reads, and the
     /// subject resolves to a trainee whose curriculum has items, the claims filter is REPLACED by the
-    /// credit predicate — a mirror of <c>CreditApplier.ResolveCurriculumItemsAsync</c>: there exists a
-    /// curriculum item whose <c>EpaId</c> is this EPA, whose <c>CurriculumId</c> is the subject's, and
-    /// whose <c>OwningInstitutionId</c> is either null (national core) or the subject's institution
-    /// (a T091 local extra — those credit, so they are offered).
+    /// credit predicate: there exists a curriculum item whose <c>EpaId</c> is this EPA, whose
+    /// <c>CurriculumId</c> is the subject's, and whose <c>OwningInstitutionId</c> is either null
+    /// (national core) or the subject's institution (a T091 local extra — those credit, so they are
+    /// offered). That is the item predicate of <c>CreditTargetResolver</c>, INTERSECTED with the
+    /// write path's EPA→tool gate (T122): an item whose tool list refuses this activity type's
+    /// instrument is not offered, because the write path would refuse it. <c>CreditApplier</c> itself
+    /// never checks tools (D20), so this is no longer a plain mirror of the engine, and must not be
+    /// "fixed" into one.
     /// </para>
     /// <para>
     /// Replaced, not added: the two filters are kept apart deliberately. The curriculum-item join
@@ -84,8 +88,10 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         EpaOptionScope? scope = null,
         CancellationToken cancellationToken = default)
     {
+        // The tool key reaches the narrowing arm only. The claims arm serves the builder preview (no subject) and
+        // fields credit never reads, where narrowing by instrument would hide choices that change nothing.
         var creditableEpaIds = scope is { NarrowToCreditable: true }
-            ? await ResolveCreditableEpaIdsAsync(scope.SubjectUserId, cancellationToken)
+            ? await ResolveCreditableEpaIdsAsync(scope.SubjectUserId, scope.WbaToolKey, cancellationToken)
             : null;
 
         var query = _dbContext.Set<Epa>().AsNoTracking().Where(epa => epa.IsActive);
@@ -162,12 +168,26 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     ///   <item>A profile whose curriculum has no items: narrowing to the empty set would make a required
     ///   EPA field unsubmittable. The completion-time signal reports the consequence honestly instead.</item>
     /// </list>
-    /// The profile is picked exactly as <c>CreditApplier.ResolveTraineeAsync</c> picks it: active first,
-    /// then the most recent programme start, and deliberately NOT filtered on <c>IsActive</c> — a
-    /// graduated trainee still credits, so they must still be offered what credits.
+    /// The profile is picked by <c>CreditTargetResolver.PickProfileAsync</c>, the same pick credit and
+    /// the write-path gate make: active first, then the most recent programme start, and deliberately NOT
+    /// filtered on <c>IsActive</c> — a graduated trainee still credits, so they must still be offered what
+    /// credits.
+    /// <para>
+    /// Then the EPA→tool intersection (T122), which never empties the set either:
+    /// <list type="bullet">
+    ///   <item>No <paramref name="wbaToolKey" />: the creditable set unchanged (D21).</item>
+    ///   <item>An item with no tool list, or one that does not parse, stays in: it is unrestricted.</item>
+    ///   <item>A tool no item permits: the creditable set, NOT the empty set and NOT the claims filter. An empty
+    ///   required select cannot be submitted and explains nothing; the claims filter would re-offer EPAs that
+    ///   credit nothing, which is T108's defect. Every choice is then refused at submit with a message naming the
+    ///   instruments the curriculum accepts, which is the one answer the trainee can act on. No seeded tool reaches
+    ///   this case on the v11.1 catalogue.</item>
+    /// </list>
+    /// </para>
     /// </remarks>
     private async Task<HashSet<int>?> ResolveCreditableEpaIdsAsync(
         string? subjectUserId,
+        string? wbaToolKey,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(subjectUserId))
@@ -175,9 +195,25 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return null;
         }
 
-        var epaIds = await ResolveSubjectCurriculumEpaIdsAsync(subjectUserId.Trim(), cancellationToken);
+        var items = await ResolveSubjectCurriculumItemsAsync(subjectUserId.Trim(), cancellationToken);
+        if (items.Count == 0)
+        {
+            return null;
+        }
 
-        return epaIds.Count == 0 ? null : epaIds.ToHashSet();
+        var creditable = items.Select(item => item.EpaId).ToHashSet();
+        if (WbaTool.NormalizeKey(wbaToolKey) is null)
+        {
+            return creditable;
+        }
+
+        var permitted = items
+            .Where(item => ToolPermission.Evaluate(CurriculumItem.ParsePermittedTools(item.PermittedToolsJson), wbaToolKey)
+                != ToolPermissionVerdict.NotPermitted)
+            .Select(item => item.EpaId)
+            .ToHashSet();
+
+        return permitted.Count == 0 ? creditable : permitted;
     }
 
     /// <inheritdoc />
@@ -187,7 +223,9 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subjectUserId);
 
-        var epaIds = await ResolveSubjectCurriculumEpaIdsAsync(subjectUserId.Trim(), cancellationToken);
+        var epaIds = (await ResolveSubjectCurriculumItemsAsync(subjectUserId.Trim(), cancellationToken))
+            .Select(item => item.EpaId)
+            .ToList();
         if (epaIds.Count == 0)
         {
             return [];
@@ -204,21 +242,19 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     }
 
     /// <summary>
-    /// The raw predicate both readings share: EPAs with an item on the subject's curriculum that is
-    /// either national core or their own institution's local extra, and whose EPA is active.
+    /// The raw predicate both readings share: the items on the subject's curriculum that are either
+    /// national core or their own institution's local extra, and whose EPA is active, with each item's
+    /// tool list. At most one per EPA: <c>CurriculumItems</c> is unique on (CurriculumId, EpaId).
     /// </summary>
-    private async Task<IReadOnlyList<int>> ResolveSubjectCurriculumEpaIdsAsync(
+    /// <remarks>
+    /// One query for both readings, so the tool list is judged on exactly the rows the caller renders. The MSF
+    /// reading ignores the lists; the narrowing arm applies them.
+    /// </remarks>
+    private async Task<IReadOnlyList<SubjectCurriculumItem>> ResolveSubjectCurriculumItemsAsync(
         string subjectUserId,
         CancellationToken cancellationToken)
     {
-        var profile = await _dbContext.Set<TraineeProfile>()
-            .AsNoTracking()
-            .Where(entity => entity.UserId == subjectUserId)
-            .OrderByDescending(entity => entity.IsActive)
-            .ThenByDescending(entity => entity.ProgrammeStartDate)
-            .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
-            .FirstOrDefaultAsync(cancellationToken);
-
+        var profile = await CreditTargetResolver.PickProfileAsync(_dbContext, subjectUserId, cancellationToken);
         if (profile is null)
         {
             return [];
@@ -233,7 +269,7 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         // CreditApplier itself does not check Epa.IsActive, so a deactivated EPA would still credit. That
         // divergence is deliberate and one-directional: it can only make the picker offer less than the
         // engine would credit, never more, and an admin who deactivates an EPA means it not to be chosen.
-        var epaIds = await _dbContext.Set<CurriculumItem>()
+        return await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
             .Where(entity => entity.CurriculumId == profile.CurriculumId
                 && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == profile.InstitutionId))
@@ -241,12 +277,11 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
                 _dbContext.Set<Epa>().AsNoTracking().Where(epa => epa.IsActive),
                 item => item.EpaId,
                 epa => epa.Id,
-                (item, epa) => epa.Id)
-            .Distinct()
+                (item, epa) => new SubjectCurriculumItem(epa.Id, item.PermittedToolsJson))
             .ToListAsync(cancellationToken);
-
-        return epaIds;
     }
+
+    private sealed record SubjectCurriculumItem(int EpaId, string? PermittedToolsJson);
 
     /// <summary>
     /// Guarantees that whatever is already stored in the field stays in the option list.

@@ -37,6 +37,111 @@
       }
     ]
   },
+  "wbaToolVocabulary": [
+    {
+      "key": "cbd",
+      "name": "CBD",
+      "description": "Case-Based Discussion — a structured discussion of a case the trainee has managed, exploring clinical reasoning and decision-making.",
+      "annexureNames": [
+        "CBD"
+      ]
+    },
+    {
+      "key": "cca",
+      "name": "CCA",
+      "description": "Clinical Case Analysis — review of clinical documentation and discussion of the reasoning and management plan recorded.",
+      "annexureNames": [
+        "CCA",
+        "Case note review"
+      ],
+      "note": "Annexure A calls this instrument \"Case note review\" on PAED-006 only. The College confirmed on 2026-09-20 that it is CCA, not a separate instrument (D4)."
+    },
+    {
+      "key": "chart_stimulated_recall",
+      "name": "Chart-stimulated recall",
+      "description": null,
+      "annexureNames": [
+        "Chart-stimulated recall"
+      ],
+      "note": "Named by Annexure A (PAED-002, PAED-012) but not defined on page 8."
+    },
+    {
+      "key": "clinical_audit",
+      "name": "Clinical audit",
+      "description": "A cycle of measurement against an agreed standard, followed by change and re-measurement.",
+      "annexureNames": [
+        "Clinical audit"
+      ]
+    },
+    {
+      "key": "direct_observation",
+      "name": "Direct observation",
+      "description": "Observation of the trainee in routine clinical practice, including ward rounds, handover and family meetings.",
+      "annexureNames": [
+        "Direct observation"
+      ]
+    },
+    {
+      "key": "dops",
+      "name": "DOPS",
+      "description": "Direct Observation of Procedural Skills — observation of a trainee performing a procedure, assessing technique, patient interaction and safety.",
+      "annexureNames": [
+        "DOPS"
+      ]
+    },
+    {
+      "key": "learner_feedback",
+      "name": "Learner feedback",
+      "description": null,
+      "annexureNames": [
+        "Learner feedback"
+      ],
+      "note": "Named by Annexure A (PAED-015 only) but not defined on page 8. Kept distinct from MSF: the College has not declared it an alias, and EPA 15 names MSF as well, so merging would change no EPA's list."
+    },
+    {
+      "key": "mini_cex",
+      "name": "Mini-CEX",
+      "description": "Mini-Clinical Evaluation Exercise — direct observation of a focused clinical encounter, followed by immediate feedback.",
+      "annexureNames": [
+        "Mini-CEX",
+        "Directly observed clinical examination"
+      ],
+      "note": "Annexure A calls this instrument \"Directly observed clinical examination\" on PAED-007 only. The College confirmed on 2026-09-20 that a clinical examination is a Mini-CEX (D12). Whether Mini-CEX should also merge with Direct observation (the \"clinical observed interaction\") is still open and is NOT applied: it would make PAED-010 creditable by a Mini-CEX."
+    },
+    {
+      "key": "msf",
+      "name": "MSF",
+      "description": "Multi-Source Feedback — structured feedback from colleagues across the multidisciplinary team and, where appropriate, from patients' families.",
+      "annexureNames": [
+        "MSF"
+      ]
+    },
+    {
+      "key": "portfolio_review",
+      "name": "Portfolio and logbook review",
+      "description": null,
+      "annexureNames": [
+        "Portfolio and logbook review"
+      ],
+      "note": "Named by Annexure A (PAED-015 only) but not defined on page 8."
+    },
+    {
+      "key": "rca",
+      "name": "RCA",
+      "description": "Random Case Analysis — review of cases selected at random from the trainee's records to identify knowledge gaps.",
+      "annexureNames": [
+        "RCA"
+      ]
+    },
+    {
+      "key": "reflective_exercise",
+      "name": "Reflective exercise",
+      "description": "A written or verbal reflection on a challenging case or critical incident, discussed with a supervisor or mentor.",
+      "annexureNames": [
+        "Reflective exercise"
+      ]
+    }
+  ],
   "epas": [
     {
       "code": "PAED-001",
@@ -62,7 +167,7 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "DOPS",
         "Mini-CEX",
         "CCA",
@@ -71,6 +176,16 @@
         "RCA",
         "Clinical audit",
         "Reflective exercise"
+      ],
+      "wbaTools": [
+        "cbd",
+        "cca",
+        "clinical_audit",
+        "dops",
+        "mini_cex",
+        "msf",
+        "rca",
+        "reflective_exercise"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -101,7 +216,7 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "CBD",
         "DOPS",
@@ -111,6 +226,17 @@
         "MSF",
         "RCA",
         "Clinical audit"
+      ],
+      "wbaTools": [
+        "cbd",
+        "cca",
+        "chart_stimulated_recall",
+        "clinical_audit",
+        "direct_observation",
+        "dops",
+        "mini_cex",
+        "msf",
+        "rca"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -139,7 +265,7 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "CCA",
         "CBD",
@@ -148,6 +274,16 @@
         "DOPS",
         "Clinical audit",
         "Reflective exercise"
+      ],
+      "wbaTools": [
+        "cbd",
+        "cca",
+        "clinical_audit",
+        "dops",
+        "mini_cex",
+        "msf",
+        "rca",
+        "reflective_exercise"
       ],
       "currency": "Essential — annually (12 months)"
     },
@@ -178,13 +314,21 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "CBD",
         "DOPS",
         "CCA",
         "Direct observation",
         "MSF"
+      ],
+      "wbaTools": [
+        "cbd",
+        "cca",
+        "direct_observation",
+        "dops",
+        "mini_cex",
+        "msf"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -214,10 +358,15 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "CBD",
         "DOPS",
         "MSF"
+      ],
+      "wbaTools": [
+        "cbd",
+        "dops",
+        "msf"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -244,12 +393,19 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Direct observation",
         "Mini-CEX",
         "DOPS",
         "Case note review",
         "MSF"
+      ],
+      "wbaTools": [
+        "cca",
+        "direct_observation",
+        "dops",
+        "mini_cex",
+        "msf"
       ],
       "currency": "Essential — annually (12 months)"
     },
@@ -276,12 +432,19 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "DOPS",
         "Directly observed clinical examination",
         "MSF"
       ],
+      "wbaTools": [
+        "direct_observation",
+        "dops",
+        "mini_cex",
+        "msf"
+      ],
+      "wbaToolsNote": "direct_observation is not in Annexure A's cell for this EPA. The College added it on 2026-09-20: EPA 7 does not exclude general Direct observation (D12).",
       "currency": "Essential — annually (each year for progression)"
     },
     {
@@ -306,12 +469,19 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "DOPS",
         "CBD",
         "MSF",
         "Reflective exercise"
+      ],
+      "wbaTools": [
+        "cbd",
+        "dops",
+        "mini_cex",
+        "msf",
+        "reflective_exercise"
       ],
       "currency": "Essential — annually (as rotation allows)"
     },
@@ -337,10 +507,15 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "Direct observation",
         "CBD",
         "MSF"
+      ],
+      "wbaTools": [
+        "cbd",
+        "direct_observation",
+        "msf"
       ],
       "currency": "Required — opportunity with adolescents with LTHCs"
     },
@@ -370,9 +545,13 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "MSF",
         "Direct observation"
+      ],
+      "wbaTools": [
+        "direct_observation",
+        "msf"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -398,10 +577,15 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "MSF",
         "CBD",
         "Direct observation"
+      ],
+      "wbaTools": [
+        "cbd",
+        "direct_observation",
+        "msf"
       ],
       "currency": "Essential — annually (12 months)"
     },
@@ -431,11 +615,17 @@
         "4": 6
       },
       "minimumLevelOrder": 6,
-      "wbaTools": [
+      "annexureTools": [
         "Mini-CEX",
         "MSF",
         "CBD",
         "Chart-stimulated recall"
+      ],
+      "wbaTools": [
+        "cbd",
+        "chart_stimulated_recall",
+        "mini_cex",
+        "msf"
       ],
       "currency": "Essential — each semester (six months)"
     },
@@ -461,11 +651,17 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "MSF",
         "Direct observation",
         "CBD",
         "Mini-CEX"
+      ],
+      "wbaTools": [
+        "cbd",
+        "direct_observation",
+        "mini_cex",
+        "msf"
       ],
       "currency": "Essential — annually (as opportunity allows)"
     },
@@ -492,10 +688,15 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "MSF",
         "Reflective exercise",
         "CBD"
+      ],
+      "wbaTools": [
+        "cbd",
+        "msf",
+        "reflective_exercise"
       ],
       "currency": "Required — annually (12 months)"
     },
@@ -524,12 +725,19 @@
         "4": 5
       },
       "minimumLevelOrder": 5,
-      "wbaTools": [
+      "annexureTools": [
         "Direct observation",
         "CBD",
         "Learner feedback",
         "MSF",
         "Portfolio and logbook review"
+      ],
+      "wbaTools": [
+        "cbd",
+        "direct_observation",
+        "learner_feedback",
+        "msf",
+        "portfolio_review"
       ],
       "currency": "Essential — observed each semester; annual entrustment decision"
     }

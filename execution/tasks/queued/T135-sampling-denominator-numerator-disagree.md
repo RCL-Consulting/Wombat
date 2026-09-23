@@ -85,6 +85,12 @@ rather than lumping them. The same distinction will be needed for [T120]'s three
 Found in [T134]'s design pass. [T127] (orphan drafts) supplies defect 1's volume. [T122] would let
 defect 2 be closed properly by declaring where an EPA lives rather than reading a literal key.
 
+> **Update 2026-09-23 from [T122].** T122 declared which INSTRUMENT a type is (`ActivityType.WbaToolKey`), not where
+> an activity's EPA lives. It needed no such declaration: its gate reads the EPA through the pinned credit rules'
+> `epa_field` (`CreditTargetResolver`), and the picker through `CreditRuleFields.ResolveCreditedEpaFieldKeys`. That is
+> the declaration defect 2 can read instead of the literal `epa_id`, for any type that credits. A type that credits
+> nothing still has no declared EPA field.
+
 ## Notes
 
 - **Observed 2026-09-20:** the window query carries no `CurrentState` predicate and `TryParseRating`

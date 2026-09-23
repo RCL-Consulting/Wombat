@@ -110,7 +110,7 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     // under an unfamiliar key will not chart" — is CLOSED. The gate is now the type's own declared
     // rated field (T126), so any rated tool charts whatever it is called. What is left is cosmetic:
     // an unfamiliar tool's evidence SOURCE reads as its raw key rather than a category, until
-    // T122's WbaToolKey gives it one. That retires this map entirely.
+    // it is classified by its WbaToolKey, which T122 introduced and [T144] will read. That retires this map entirely.
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -162,7 +162,7 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
             // That retires the hard-coded family list as a gate: an institution's own rated tool
             // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
-            // Its source reads as its own key until [T122] gives it a tool key to classify by.
+            // Its source reads as its own key until [T144] classifies by the WbaToolKey [T122] introduced.
             var verdict = RatedActivityTypes.Classify(activity.ActivityType.Key, activity.ActivityType.SchemaJson);
             if (!verdict.IsRated)
             {

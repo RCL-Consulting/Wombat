@@ -355,6 +355,13 @@ h1[tabindex="-1"]:focus {
   width: 1rem;
 }
 
+/* Many short checkboxes in one fieldset, laid out in columns rather than one tall list (T122's curriculum tool list). */
+.check-grid {
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
 .form-actions {
   border-top: 1px solid var(--border-color);
   display: flex;

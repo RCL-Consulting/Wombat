@@ -147,6 +147,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
             2,
             "mini_cex_cpsa",
             "Mini-CEX (CPSA)",
+            "mini_cex",
             1,
             SchemaJson,
             WorkflowJson,

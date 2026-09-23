@@ -15,7 +15,13 @@ Each EPA has:
 - A **title** and **description**.
 - A **context** (setting, limitations — e.g. "in a teaching hospital, non-complex presentations").
 - **Required knowledge, skills and attitudes** (prose).
-- **Assessment methods** — which work-based assessment instruments are valid evidence for this EPA.
+- **Assessment methods** — which work-based assessment instruments are valid evidence for this EPA. In Wombat this
+  is the curriculum item's tool list (`CurriculumItem.PermittedToolsJson`), a set of keys into the College's
+  instrument vocabulary (`WbaTools`: Mini-CEX, DOPS, CBD, CCA, RCA, MSF, Direct observation, Clinical audit,
+  Reflective exercise, Chart-stimulated recall, Learner feedback, Portfolio and logbook review). An activity type says
+  which instrument it is (`ActivityType.WbaToolKey`). Filing an activity against an EPA whose list does not name its
+  instrument is refused when it is created, when its EPA is changed, and when the trainee submits a draft filed before
+  the list changed; a type that names no instrument is unrestricted (T122, D20, D21).
 - An **entrustment scale** (usually 1–5, occasionally 1–4 or 1–6). The numbers mean, roughly:
   1. Observe only. Not ready to do it.
   2. Does with direct supervision at the elbow.

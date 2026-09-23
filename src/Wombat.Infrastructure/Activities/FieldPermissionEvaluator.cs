@@ -72,15 +72,11 @@ public sealed class FieldPermissionEvaluator : IFieldPermissionEvaluator
         // would fire CreditApplier on a refused or withdrawn request — but an activity that cannot
         // leave the state it is in is not editable by anyone either. Without this, the subject is
         // handed a live form on a dead activity with no action able to consume it.
-        if (!HasOutgoingTransition(workflow, currentState.Key))
+        if (!workflow.HasOutgoingTransition(currentState.Key))
         {
             return false;
         }
 
         return ActorRuleMatcher.Matches(currentState.EditableBy ?? DefaultEditableBy, activity, principal);
     }
-
-    private static bool HasOutgoingTransition(Workflow workflow, string stateKey)
-        => workflow.Transitions.Any(transition =>
-            transition.From.Contains(stateKey, StringComparer.Ordinal));
 }

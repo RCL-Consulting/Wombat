@@ -205,6 +205,79 @@ public sealed class ListActivityTypesNarrowingTests
         offered.Should().NotContain("mini_cex_paed");
     }
 
+    /// <summary>
+    /// T122 added no tool conjunct to the type menu. Tool keys on the types and allow-lists on the items must leave
+    /// the offered set exactly as it is without them — including a keyed type that no item permits.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The design rejected dropping a keyed tool that no item permits. The EPA picker already falls back to T108's
+    /// creditable set for that tool, and the write path refuses it with a message naming the instruments the
+    /// curriculum accepts. Dropping it here instead would take a working instrument off the menu with no
+    /// explanation, and would add a third copy of the profile-and-owner predicate to guard a configuration the
+    /// seeded catalogue cannot produce. So this filter only ever decides WHICH tool is picked, by ladder, and the
+    /// allow-list only ever narrows WHICH EPA it is filed against.
+    /// </para>
+    /// <para>
+    /// Mini-CEX is forbidden on every item here, and three types carry the <c>mini_cex</c> key. Both ladder branches
+    /// run: pinned, where T123 d3 narrows, and unpinned, where it narrows nothing. Each is compared with the same
+    /// seed minus the T122 data, so the fact cannot pass just because the ladder filter happened to hide a keyed type.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [InlineData(null)]
+    [InlineData(CpsaScaleId)]
+    public async Task ToolKeysAndAllowLists_DoNotChangeTheTypeMenu(int? pinnedTo)
+    {
+        var withoutToolData = await OfferWithOrWithoutToolData(pinnedTo, withToolData: false);
+        var withToolData = await OfferWithOrWithoutToolData(pinnedTo, withToolData: true);
+
+        withToolData.Should().BeEquivalentTo(withoutToolData,
+            "T122 narrows the EPA picker and gates the write path; it adds nothing to the type menu");
+        withToolData.Should().Contain("mini_cex_cpsa",
+            "no item permits Mini-CEX, and the menu still offers it: the EPA picker falls back and submit explains");
+    }
+
+    private static async Task<IReadOnlyList<string>> OfferWithOrWithoutToolData(int? pinnedTo, bool withToolData)
+    {
+        await using var db = CreateDb();
+        SeedLadders(db);
+        SeedTypes(db);
+        SeedTrainee(db, "ndlovu", pinnedTo);
+
+        // A second item on the same ladder, so there is an item a keyed tool IS permitted on as well as one it is not.
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 905, CurriculumId = 90, EpaId = 2, RequiredCount = 1,
+            MinimumLevelOrder = 3, WindowMonths = 12, ScaleId = pinnedTo
+        });
+
+        if (withToolData)
+        {
+            var toolKeys = new Dictionary<string, string?>
+            {
+                ["mini_cex_cpsa"] = "mini_cex",
+                ["mini_cex_paed"] = "mini_cex",
+                ["mini_cex_generic"] = "mini_cex",
+                ["msf_paed"] = "msf",
+                ["unrated_extra_scale"] = "dops",
+                ["reflective_note"] = null
+            };
+
+            foreach (var type in db.ActivityTypes.Local)
+            {
+                type.WbaToolKey = toolKeys[type.Key];
+            }
+
+            // Mini-CEX is on neither list: forbidden on every item of the subject's curriculum.
+            db.CurriculumItems.Local.Single(item => item.Id == 901).PermittedToolsJson = """["cbd","msf"]""";
+            db.CurriculumItems.Local.Single(item => item.Id == 905).PermittedToolsJson = """["dops"]""";
+        }
+
+        await db.SaveChangesAsync();
+        return await Offer(db, "ndlovu");
+    }
+
     private static async Task<IReadOnlyList<string>> Offer(ApplicationDbContext db, string subjectUserId)
     {
         var handler = new ListActivityTypesQueryHandler(db);

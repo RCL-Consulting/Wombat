@@ -36,5 +36,11 @@ public sealed class CurriculumItemConfiguration : IEntityTypeConfiguration<Curri
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(entity => entity.ScaleId);
+
+        // jsonb, like every other stored document here and like CreditedActivityKeysJson, the house precedent for a
+        // JSON array (T122). The cost is Postgres's re-rendering: what is read back is never byte-equal to what was
+        // written, so compare it only through CurriculumItem.ParsePermittedTools. No foreign key can reach inside
+        // it; both writers validate the keys against WbaTools instead.
+        builder.Property(entity => entity.PermittedToolsJson).HasColumnType("jsonb");
     }
 }

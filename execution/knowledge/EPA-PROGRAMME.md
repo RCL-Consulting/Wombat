@@ -72,7 +72,7 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T120] group 1 | Five plain seeds — `cca_cpsa`, `rca_cpsa`, `chart_stimulated_recall_cpsa`, `case_note_review_cpsa`, `observed_clinical_exam_cpsa` — plus fixing `GetSamplingConcentrationWarnings.cs:92-99`. **[T124] argues this is really three**: page 8 defines CCA as documentation review + reasoning discussion, which is what "case note review" and "chart-stimulated recall" describe | NEEDS A DECISION | M | **D1, D4, D6** (D2/D3/D5 closed). Prefers T105 and T102 fix 2 |
 | [T120] reflective | `reflective_exercise_cpsa` | NEEDS A DECISION | S | **D6, D7** |
 | [T120] group 2 | `clinical_audit_cpsa`, `portfolio_review_cpsa` — both want an attachment and `FieldType.File` is a reserved word, not a feature | NEEDS A DECISION | L | **D34**. Attachments are their own task |
-| [T122] | The EPA→tool allow-list is parsed by nothing: every CPSA tool can credit every CPSA EPA | NEEDS A DECISION | M | **D12, D20, D21**. Composes with T123 d3 |
+| [T122] | The EPA→tool allow-list is parsed by nothing: every CPSA tool can credit every CPSA EPA | **DONE 2026-09-23** | M | shipped. D20 and D21 closed as recommended; D4 and D12 applied. 12-instrument `WbaTools` vocabulary, `ActivityType.WbaToolKey`, `CurriculumItem.PermittedToolsJson`, one predicate for the picker and the write path. Follow-ups [T144]–[T147] |
 | [T130] (was [T098] phase 3) | **The annual quota.** Semester buckets on `CurriculumItemProgress`, `AcademicPeriod` + `QuotaWindow`, per-period targets, one shared read model behind the progress page and all five progress readers | **DONE 2026-09-23** | L | shipped. D17–D19 closed, D39–D42 decided (§ 3E). Four College questions ride on it (§ 3F); each is a read-model or one-constant change, because storage is per semester |
 | [T098] phase 4 | Governance: neonatal CCC routing for EPAs 4–5, semester cadence, an EPA agenda on reviews | NEEDS A DECISION | L | phase 3 |
 | [T104] | Retire the legacy FCPaed world — 4 activity types, 15 EPAs, curriculum 2, 5 trainee profiles | NEEDS A DECISION | M, hand-run | **D24**. If D24 says re-pin, also curriculum 2 pinned + a documented ordinal remap |
@@ -149,7 +149,10 @@ Clinical Case Analysis, *"review of clinical documentation and discussion of the
 management plan recorded"*. **Consequence: `case_note_review_cpsa` is not a seed.** `cca_cpsa` is named
 on EPAs 1, 2, 3, 4 **and 6**, which drops the instrument count from fourteen to thirteen and gives
 [T122]'s allow-list one fewer row to enforce. The alias must be recorded where a reader of Annexure A
-will look for it, or the mapping stops matching the published table line by line.
+will look for it, or the mapping stops matching the published table line by line. **Recorded by [T122]:** the
+catalogue keeps each EPA's Annexure A cell verbatim as `annexureTools`, its vocabulary lists "Case note review"
+under `cca` in `annexureNames` with a note citing D4, and `PaediatricCatalogueToolSeedTests` resolves every cell
+into the seeded keys, failing on a name nothing claims.
 
 **D9 — MSF per period or per EPA? — CLOSED 2026-09-20. Per period, covering many EPAs.** Proposed
 default confirmed. Per EPA would have been 15 × 8 = **120 returned questionnaires per registrar per
@@ -231,7 +234,9 @@ switch when it settles" was never available. `msf_cpsa` ships `counts_for: []` f
 **D12 — Does EPA 7 exclude general Direct observation? — CLOSED 2026-09-20. No, it does not.**
 **Consequence: EPA 7's allow-list gains Direct observation**, and `observed_clinical_exam_cpsa` is not
 written — the College's first reply said a Mini-CEX and a clinical examination are the same thing, and
-EPA 7 already permits Mini-CEX, so a second seed would be a duplicate in the picker.
+EPA 7 already permits Mini-CEX, so a second seed would be a duplicate in the picker. **Applied by [T122]:**
+"Directly observed clinical examination" is an alias of `mini_cex` in the vocabulary, and PAED-007's `wbaTools`
+carries `direct_observation`, with a `wbaToolsNote` saying the College added it.
 
 > **One piece is still open and must not be assumed.** The first reply also proposed merging Mini-CEX
 > into a new instrument, *"clinical observed interaction ... a mini cex, handover, communication etc."*
@@ -467,7 +472,30 @@ find a period-shaped column already there and assume currency is enforced.
 **Recommendation: leave it, and say so in the phase-3 task.** It is per-item currency, a different question
 from the quota period, and quietly repurposing it would give one column two meanings.
 
-**D20 — Where is the EPA→tool allow-list enforced?**
+**D20 — Where is the EPA→tool allow-list enforced? — CLOSED 2026-09-23 ([T122]), as recommended: (d).**
+One predicate, `ToolPermission.Evaluate`, behind the EPA picker and the write path, applied **per credit directive**.
+**Every target is checked at create. A changed target is checked on any move from which credit can still be reached,
+whoever makes it. An unchanged target is re-checked only when the author hands it on while still able to correct it**:
+the mover is the subject or the creator, nobody else has acted yet, the mover can write that directive's field now,
+and the move hands it on (credit can follow without coming back through the state it left, or the mover loses write
+access to the field). A move from which credit cannot be reached (a CPSA `cancel` or `decline` into a dead end) is
+never checked, and a literal `curriculum_item_id` directive is judged only at create. So a pre-T122 draft is refused
+when the trainee submits it. An assessor's completion, including an assessor allowed to correct the EPA, is never
+refused for an unchanged target, and neither is a trainee's sign-off after assessment or a resubmission after a
+decline; an assessor who CREATED the activity is its author. Four review rounds showed why the rule is stated this way:
+every test keyed on the shape of an actor rule (`subject` arms, `role:Trainee` submits, fallback approvers, legacy
+`requested`-born types, multi-directive rules) broke on some builder workflow. `CreditApplier` and the rebuild never
+consult it: dev activity 11, a Mini-CEX
+against PAED-011 that its list forbids, is still credited after a rebuild. The refusal is one page-level sentence per
+refused item, up to three and then a count of the rest, led by the field's label and naming the instruments the
+curriculum accepts, not a message beside the picker, because no per-field error plumbing exists. **Boundaries, recorded:** the gate evaluates the curriculum the subject is on
+at the gated write. A subject with no trainee profile passes, and a profile created or re-pointed after the author's
+last gated move (normally the submit) is not re-checked when the assessor completes. A list or instrument changed
+after the create is applied to an UNCHANGED target only if the author hands the activity on before anyone else acts.
+If an assessor picks a draft up first, or the type is born with the assessor (the legacy `requested`-initial shape),
+the create was the last check for that target. A changed target is always checked against the current list and key.
+One conservative residual is kept on purpose: a withdrawal out of the draft into a holding state the author cannot
+edit counts as a hand-on, even if only the author can reopen it; the refusal lands on the author, who can act on it.
 *Options:* (a) filter the EPA picker only — cheapest, and unenforced for anything arriving through
 `Wombat.Api` or an in-flight draft · (b) reject at credit time — refuses at the one moment nobody can act,
 and drops into T108's zero-credit banner whose copy points the reader at their curriculum, which is not
@@ -477,7 +505,13 @@ at submit, with the picker agreeing.
 after an encounter was filed; refusing credit retroactively deletes evidence a trainee legitimately
 collected under the rule in force at the time. One predicate, two callers — the [T108] shape.
 
-**D21 — What may a tool with no recognised `WbaToolKey` credit?**
+**D21 — What may a tool with no recognised `WbaToolKey` credit? — CLOSED 2026-09-23 ([T122]), as recommended: permissive.**
+A null key, a null or empty or unparseable list, and an EPA with no item on the subject's curriculum are all
+unrestricted. **The trust boundary this draws:** allow-lists bind the College-seeded instruments, and trust whatever
+key an institution declares on its own types. An administrator who leaves a rated type unkeyed, or keys it as another
+instrument, escapes the lists, and that is the permissiveness this decision chose, not a defect. The generic
+Mini-CEX, DOPS and CBD seeds carry their keys because they are those instruments; ACAT is not a College name and stays
+unrestricted. Revisit once institutions have had a release with the builder's "This tool is" picker.
 Null means "not a recognised WBA instrument", which is true of every builder-made type.
 *Options:* unrestricted (fall through permissively) · refused where the EPA has an allow-list.
 **Recommendation: permissive.** [T108] and [T109] both landed on the same rule: a restriction that fires
@@ -579,6 +613,10 @@ rebuild. They are listed so they go in one message.
    split of the annual frequency? EPAs 3, 6 and 7's own pages say "performed annually".
 4. **Late starters** (D42): is a registrar who starts in the first days of a period (e.g. the first working day of
    January) exempt for it? And is a registrar who finishes part-way through a period held to its target?
+5. **"Clinical observed interaction"** (D12, [T122]): does the proposed merge join Mini-CEX with **Direct
+   observation**? If so, eight EPAs' tool lists change, including PAED-010 ("Leading and operating within a clinical
+   team"), which would become creditable by a Mini-CEX. [T122] seeded the two as separate instruments. The answer is a
+   catalogue edit plus a new migration for existing databases.
 
 ### 3D. Decisions inside one task
 
@@ -673,8 +711,11 @@ Three independent tracks. Start each as its decisions land.
   change: it matches keys exactly against `mini_cex`/`dops`/`cbd`/`acat`, so the committee's sampling report
   has been silently blind to the entire paediatric catalogue since the day it was seeded, and five more
   `*_cpsa` keys make it worse.
-- **[T122] — the EPA→tool allow-list.** After D20–D21. Composes with [T123] d3; both keep the permissive
-  fallback.
+- **[T122] — the EPA→tool allow-list. DONE 2026-09-23.** D20 and D21 closed as recommended. Composes with [T123] d3;
+  both keep the permissive fallback, and the EPA picker falls back to T108's creditable set rather than emptying.
+  **Consequence for [T120]:** each new `*_cpsa` seed must declare its vocabulary key in `ActivityTypeSeedCatalogue`
+  (the entry's `WbaToolKey` is required), and a seed added after T122 reaches an existing database's key only on
+  create.
 
 **State the priority honestly:** none of the ten tools unlocks an EPA. Every one of the 15 already permits
 at least one seeded tool. The value here is tool-mix fidelity and the College's own allow-list — not
@@ -742,7 +783,8 @@ Honest list. Each of these is known, none has a task file, and several are large
 8. **The two tool taxonomies are still two.** [T120] fixes `SourceByActivityKey`'s blindness to the
    paediatric catalogue and [T123] renames the trajectory's "Source" column to "Evidence type", but
    `SourceByActivityKey` and `SourceByActivityFamily` remain two hard-coded lists with different value
-   types. [T122]'s `WbaToolKey` is the thing that could retire both; nothing says it will.
+   types. [T122] shipped `WbaToolKey`, the identity that could retire both; moving the classification onto it is
+   [T144], and nothing forces it.
 9. **The 78 descriptors** (D16). Carried as narrative text in `Epa.RequiredKnowledgeSkills`. If the College
    says they must be individually assessable, that is a new entity, a new credit path and the largest
    unplanned item here.
@@ -766,11 +808,15 @@ Honest list. Each of these is known, none has a task file, and several are large
 [T110] `…T110-or-scale-key-mismatch.md` · [T111] `…T111-new-activity-type-query-parameter-ignored.md` ·
 [T118] `…T118-v11-1-evidence-run-findings.md` · [T119] `…T119-wire-observed-on-as-the-encounter-date.md` ·
 [T120] `…T120-remaining-v11-1-wba-tools.md` · [T121] `…T121-msf-cannot-credit-an-epa.md` ·
-[T122] `…T122-enforce-epa-tool-mapping.md` · [T123] `…T123-evidence-run-ui-defects.md` ·
+[T122] `execution/tasks/done/T122-enforce-epa-tool-mapping.md` · [T123] `…T123-evidence-run-ui-defects.md` ·
 [T124] `…T124-page-8-extraction-findings.md` ·
 [T125] `…T125-curriculum-item-minima-are-unguided-integer-writes.md` ·
 [T126] `…T126-an-activity-does-not-know-which-ladder-it-was-rated-on.md` ·
-[T127] `…T127-a-failed-submit-leaves-an-orphan-draft-behind.md`
+[T127] `…T127-a-failed-submit-leaves-an-orphan-draft-behind.md` ·
+[T144] `…T144-classify-rated-evidence-sources-by-wbatoolkey-and-retire-the-hard-coded-activity-family-list.md` ·
+[T145] `…T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md` ·
+[T146] `…T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md` ·
+[T147] `…T147-campaignedit-s-epa-checkbox-group-has-a-label-pointing-at-no-element.md`
 
 Source data extracted from `EPA version 11.1.docx`: `execution/tasks/done/T098-data/annexure-a.json` ·
 `execution/tasks/done/T098-data/annexure-b.json` (new, [T124]) · `execution/tasks/done/T098-data/page-8-wba-tools.json` (new, [T124]) ·

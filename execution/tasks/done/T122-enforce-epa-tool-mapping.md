@@ -1,13 +1,15 @@
 ---
 id: T122
 title: "Every CPSA tool can credit every CPSA EPA, because the EPA→tool mapping is parsed by nothing"
-status: queued
+status: done
 priority: P1
 created: 2026-09-19
+started: 2026-09-23
+completed: 2026-09-23
 ---
 # T122 — Every CPSA tool can credit every CPSA EPA, because the EPA→tool mapping is parsed by nothing
 
-**Status:** open
+**Status:** done 2026-09-23 — see **As built** below.
 **Surfaced:** 2026-09-19, auditing v11.1 completeness after the first evidence run (T118).
 **Severity:** Medium-High — not wrong *data*, but unenforced *rules*. A trainee can satisfy PAED-005
 ("Providing neonatal care in intensive and high-care settings", which v11.1 permits **CBD, DOPS and MSF**
@@ -276,16 +278,197 @@ rule T109 adopted for unpinning a scale.
 
 ## Verification
 
-- A `cbd_cpsa` filed against PAED-001 (which permits CBD) submits and credits exactly as it does today.
-- A `mini_cex_cpsa` filed against PAED-005 (CBD, DOPS, MSF) is refused at submit with a message naming
-  those three, and PAED-005 was never offered in that tool's EPA picker in the first place.
-- A curriculum-2 trainee is unaffected in every respect: no allow-lists, no tool keys on the legacy types,
-  no narrowing, no refusals.
-- An activity type with no `WbaToolKey` credits every EPA in the subject's curriculum, as today.
-- Booting against the existing dev database backfills fifteen allow-lists and four tool keys, and leaves a
-  CollegeAdmin's locally added item untouched.
-- Cloning curriculum 3 to a new version carries all fifteen allow-lists.
-- A second boot changes nothing — the canonical form round-trips and the backfill is `is null`-gated.
+Rewritten 2026-09-23. The original list assumed a boot-time backfill, "four tool keys" and "curriculum 3", all of which
+changed; see **As built**. Each item names its evidence.
+
+- [x] **A tool the list permits submits and credits as before.** A `cbd`-keyed type against an item listing `cbd` goes
+      create → submit → complete and credits one row — `ToolPermissionGateTests`. In the browser, the CBD picker on
+      dev offers PAED-005.
+- [x] **A Mini-CEX against PAED-005 is refused, and PAED-005 was never offered.** The dev Mini-CEX picker offers exactly
+      PAED-001–004, 006–008, 012 and 013. Submitting a pre-T122 Mini-CEX draft on PAED-005 (activity 13, staged with the
+      old build) was refused in the browser with "EPA: Mini-CEX cannot be used as evidence for PAED-005 — Providing
+      neonatal care in intensive and high-care settings. The curriculum accepts CBD, DOPS or MSF for this EPA." The
+      activity kept its state and its one transition, and the audit row recorded the refusal. Repairing the EPA in the
+      same submit passed (the gate reads the merged data).
+- [x] **A curriculum without lists is unaffected.** Dev curriculum 1 (IM Core) has a null list. A keyed type on a
+      curriculum with no lists narrows nothing and is refused nothing — `EpaOptionCreditScopeTests` (d),
+      `ToolPermissionGateTests` (D21 cases).
+- [x] **A type with no `WbaToolKey` credits every EPA, as before** (D21) — `ToolPermissionGateTests`,
+      `ToolPermissionTests`. Also unrestricted: a null, empty or malformed list; a subject with no profile; an EPA with no
+      item.
+- [x] **An existing database is stamped once, by the migration.** On dev: 15 allow-lists on curriculum 2, 8 tool keys
+      (the five CPSA seeds plus the generic Mini-CEX, DOPS and CBD), 12 vocabulary rows, and zero startup warnings.
+      Decoys stay null: a local item, another version, a code outside the catalogue, an operator type on a seed key —
+      `WbaToolAllowListPostgresTests`. A CollegeAdmin's own national item keeps a null list —
+      `PaediatricCatalogueToolSeedTests`.
+- [x] **Cloning a curriculum carries the lists** — `CurriculumCloneTests`.
+- [x] **A second boot changes nothing.** On dev: zero warnings, and fingerprints of every item's list, every type's key
+      and every vocabulary row are identical before and after. On Postgres: zero `PaediatricCatalogueSeeder` warnings
+      after migrate-then-boot, including on a populated pre-T122 database — `WbaToolAllowListPostgresTests`.
+- [x] **Credit never re-checks the list (D20).** In the browser: activity 13 was submitted while PAED-001 permitted
+      Mini-CEX, then Mini-CEX was unticked on PAED-001 in the admin editor. The assessor's complete still credited "1 item".
+      `/admin/curriculum-progress` then rebuilt the tallies byte for byte, keeping activity 11 (Mini-CEX, PAED-011, whose
+      list excludes it) and every PAED-001 Mini-CEX — `ToolPermissionGateRuleShapeTests` (rebuild).
+- [x] **A forbidden draft can still be withdrawn.** Activity 14 (Mini-CEX, PAED-010) was cancelled in the browser; the
+      move into a dead end is exempt — `ToolPermissionGateTests`.
+- [x] **The final build, re-verified in the browser after the gate rule was reshaped.** Activity 15 (a Mini-CEX draft on
+      PAED-001, with Mini-CEX then removed from PAED-001's list) was refused at submit: "…The curriculum accepts CBD,
+      CCA, Clinical audit, DOPS, MSF, RCA or Reflective exercise for this EPA". It was then cancelled. A third boot logged
+      zero warnings.
+- [x] **The admin surfaces.**
+  - The curriculum item editor shows a Tools column and a Tools fieldset per item. In the browser, unticking and then
+    restoring Mini-CEX on PAED-001 worked, and an unchanged save of PAED-005 kept its list, window, target, pin and minima.
+  - The builder shows "This tool is: Mini-CEX" for `mini_cex_cpsa`. A save kept the key, and discarding the draft left it
+    — `CurriculumItemsToolListTests`, `ActivityTypeToolPickerTests`, `CurriculumItemPermittedToolsTests`,
+    `SaveActivityTypeDraftWbaToolKeyTests`.
+- [x] **Every refusal leaves the DbContext clean (the audit trap)** — every refusal test in the classes above asserts no
+      Added/Modified/Deleted entries and a zero-row audit save.
+
+## As built (2026-09-23)
+
+**Decisions.** D20 and D21 are closed as recommended (EPA-PROGRAMME § 3C). D4 and D12 are applied. The one open College
+question, whether "clinical observed interaction" merges Mini-CEX with Direct observation, is § 3F question 5; the two
+are seeded as separate instruments.
+
+**Model.**
+- `WbaTools` holds 12 keys, in `Wombat.Domain.Epas.WbaTool`. `ActivityType.WbaToolKey` is live and unversioned: the
+  builder writes it on save, not publish, and Discard does not undo it.
+- `CurriculumItem.PermittedToolsJson` is jsonb holding a sorted key array; null means any instrument and `[]` is never
+  stored. `Curriculum.CloneAsNewVersion` carries it.
+- `Workflow.HasOutgoingTransition` is the one dead-end test for field writes. `Workflow.CanReachTerminal` is the
+  gate's reachability test.
+
+**Where it is enforced.**
+- `ToolPermission.Evaluate` is the one predicate. `ToolPermissionGate` uses `CreditTargetResolver`, which was extracted
+  verbatim from `CreditApplier`, so the gate and the engine resolve the same items.
+- The gate runs in these places:
+  - **create:** always, whoever files;
+  - **`UpdateDraftAsync`:** when the credit target changes and credit can still follow from the current state;
+  - **`TransitionAsync`:** when credit can still follow the move AND either the target changes, or the target is
+    unchanged but a refusal is something the mover can act on;
+  - **`StageCompletedAsync`:** never, since it refuses crediting types already.
+- **Judged per credit directive, on D20's own reason.** A changed target is judged wherever credit can still follow.
+  An unchanged target is re-checked only when the author hands it on while still able to correct it. That needs four
+  things:
+  - the mover is the subject or the creator;
+  - nobody else has acted yet;
+  - the mover can write that directive's field now (`IFieldPermissionEvaluator`);
+  - the move hands the target on: credit can follow without coming back through the state it left
+    (`Workflow.CanReachTerminal`), or the mover loses write access to the field, which is checked on a detached probe
+    activity.
+  A literal `curriculum_item_id` directive is judged only at create.
+  `CreditTargetResolver.DescribeTarget` is the one statement of the engine's precedence, and both the engine and the
+  gate use it.
+- Consequences: a pre-T122 draft is refused when the trainee submits it. An assessor's completion, a trainee's
+  sign-off after assessment, a resubmission after a decline, a withdrawal into a holding state and a reassign are
+  never refused for an unchanged target. "Changed" means the engine would resolve the target differently, so `"6"`
+  and `6` count as unchanged.
+- The picker intersects T108's creditable set with the gate and never empties.
+
+**Divergences from the design in this file, and why.**
+1. **A one-off guarded migration UPDATE, not an `is null` boot pass, and not "backfills nothing."** This is the T130 note
+   at the top of this file. Null means both "never set" and "an admin cleared it", so a boot reconcile would undo a
+   deliberate clear. Afterwards the seeders warn and never write. The migration's frozen arrays are pinned to a
+   hand-typed snapshot, never to the live catalogue.
+2. **The generic `mini_cex`, `dops` and `cbd` are keyed** (the design said "no tool keys on the legacy types"). They are
+   those instruments, and unkeyed they would be unrestricted on every EPA with a list. No generic curriculum has a list,
+   so a curriculum-2-style trainee is unaffected. `acat` is not a College name and stays null.
+3. **The catalogue keeps Annexure A verbatim.** Per EPA, `annexureTools` holds the cell and `wbaTools` holds the keys.
+   A root `wbaToolVocabulary` records `annexureNames` and the alias notes, so the D4 alias lives where a reader of the
+   annexure looks. `PaediatricCatalogueToolSeedTests` resolves one into the other and fails on an unclaimed name.
+4. **The refusal is one page-level sentence per refused item, led by the field's label**, not an error beside the
+   picker. No per-field error plumbing exists. The `ThrowIfActorFieldNamesSubject` precedent names the label, not
+   `epa_id`.
+5. **Adjacent fix required by this task's own write.** `SaveActivityTypeDraftCommandHandler` added a new type before
+   its scope guard, and wrote metadata before the DSL parse. Through the audit pipeline's catch, a refused create
+   committed a blank Global type that squatted the key, and a malformed draft committed a rename. The handler now
+   checks everything first, and `ActivityType.SaveDraft` parses all four payloads before assigning any —
+   `SaveActivityTypeDraftWbaToolKeyTests`, `ActivityTypeSaveDraftAtomicityTests`.
+6. **`CurriculumItemsEdit` has separate edit and add models.** They used to share one, so opening a row silently
+   filled the Add form.
+7. **Not done, filed instead.**
+   - Classifying rated sources by `WbaToolKey` ([T144]).
+   - The inert legacy `FormEpaLink` screen ([T145]).
+   - A crediting type from another discipline can credit a trainee's curriculum ([T146]). The design critique proposed
+     fixing this here, but on dev [T123] d3 already hides the rated generics from a CPSA-pinned trainee, and the rule
+     needs its own decision.
+   - CampaignEdit's dangling `label for` ([T147]).
+8. **The known boundary (D20).** The gate evaluates the curriculum the subject is on at the gated write. A subject with
+   no profile passes, and a profile created or re-pointed before completion is not re-checked. Pinned by
+   `ToolPermissionGateTests`.
+9. **No changes needed:**
+   - `UpdateDraftAsync` still has no production caller (T106 item 1); it is gated on a target change regardless.
+   - The scenario runbooks: `scenario-paediatrics.md` files a DOPS against PAED-010 with the operator-built `dops_paed`,
+     which is unkeyed and so unrestricted.
+   - DESIGN.md gained the checkbox-group pattern (`.check-grid`).
+
+**Found by the test agents and fixed.** `ToolPermission.Evaluate` judged an all-blank list non-empty and refused
+every instrument. It was latent, because every caller passes parsed lists. The menu's profile pick also lacked the
+resolver's `Id` tie-break.
+
+**Found by the adversarial review and fixed.** The review ran six finders, deduplicated the findings, then gave each
+three refuters.
+- **An author's recall into the draft phase was gated like a submission** (builder shapes only). The trainee could not
+  pull back a request whose EPA had been closed, while the assessor's unchanged completion credited it. Fixed with
+  reachability: a move counts as a submission only if credit can follow it without passing back through the initial
+  state.
+- **A refusal naming many items could overflow the audit row's 2,000-character error text.** The audit save then
+  failed and masked the refusal. The gate now names at most three items, and `AuditEntry.Create` truncates to the
+  column for every command.
+- **One builder shape stays refused on purpose:** an author's `cancel` OUT OF THE DRAFT into a state the assessor can
+  reopen straight into assessment. There, credit can follow with no further author move. Pinned by a test.
+
+**A second review round reshaped the rule.** It ran three finders with three refuters each, and confirmed 7 findings.
+Five showed that recognising "the author's submission" from actor-rule shapes cannot be made right:
+- a trainee's sign-off after assessment was re-gated, which could strand the assessed encounter (major);
+- withdrawals into holding states, and author moves that stay with the assessor, were refused;
+- a `role:Trainee` submit, the scenario runbooks' shape, was never gated;
+- a legacy-shaped resubmission and a draft-initial one were treated differently.
+The rule became "an unchanged target is checked at create and at the handover, and never again". Each shape has a
+test, and the rule was mutation-checked.
+The other two findings were documentation gaps, both fixed:
+- the three-item cap was misdescribed;
+- nothing said that a builder key change on a seeded type parks a draft, which the refresher then skips.
+The save command also now runs both scope guards before any key check.
+
+**A third review round finished the job.** It ran two finders with three refuters each, and confirmed 8 findings:
+- **Still syntax-bound (major, builder-only):** the handover's named-person exemption still read the actor rule's
+  syntax. A legacy `accept` with a fallback approver (`field:…|role:Coordinator`) was re-checked after create and
+  stranded, and an assessor could pick a draft up unchecked.
+- The final rule stops reading syntax and states D20's reason directly: refuse only a mover who can act on the
+  refusal, and only before anyone else has acted. Its three conditions are each mutation-pinned (5, 5 and 1 tests fail
+  when one is removed).
+- **Pre-existing bug, filed as [T148] (P2):** Submit on `/activities/new` for a requested-born type sends the only
+  author transition left, `cancel`, so the encounter is withdrawn as it is filed.
+- The rest were test and comment wording that described superseded rules; all fixed.
+
+**A fourth review round (two finders, three refuters each) confirmed 11 findings.** Three changed the rule, and the
+rest were doc wording:
+- **The mover's identity was never checked (major).** The rule never asked who was making the move, so an assessor
+  allowed to correct the EPA was refused at an unchanged completion.
+- **Every directive was judged (major).** A multi-directive rule was judged on every directive, so a refusal could
+  name a field the mover cannot write.
+- **Loop-back handovers slipped through.** A handover whose credit path comes back through the draft went unchecked.
+The gate is now judged per directive with the mover-is-the-author condition, and each fix is mutation-pinned.
+**A fifth round came back nearly dry.** It had two finders, one on the rule's principle and one on engine parity
+after `CreditTargetResolver` moved onto `DescribeTarget`, each with three refuters. Engine parity found nothing, and
+one minor builder-only finding survived on a 2–1 vote: a withdrawal out of the draft into a holding state the author
+cannot edit counts as a hand-on. It is kept as a documented, pinned residual. The refusal lands on the author, who
+can act on it, so the principle holds, and any narrower test would read actor-rule syntax again. Across the five
+rounds the confirmed findings went 2 → 7 → 8 → 11 → 1, with severity falling; the loop was stopped there.
+
+**Tests.** 1,555 unit tests, up from 1,195, plus 6 new Postgres tests. New classes:
+- Domain: `WbaToolTests`, `CurriculumItemPermittedToolsTests`, `WorkflowDeadEndTests`, `WorkflowReachabilityTests`,
+  `ActivityTypeSaveDraftAtomicityTests`, `AuditEntryErrorMessageTests`.
+- Application: `ToolPermissionTests`, `ToolPermissionGateTests` (44), `ToolPermissionGateRuleShapeTests` (21),
+  `SaveActivityTypeDraftWbaToolKeyTests`, `CurriculumItemPermittedToolsTests`, `GetWbaToolsQueryTests`. Additions to
+  `CurriculumCloneTests` and `ListActivityTypesNarrowingTests`.
+- Infrastructure: `PaediatricCatalogueToolSeedTests` (37); 30 additions to `EpaOptionCreditScopeTests`.
+- Web (38 new): `WbaToolKeyThreadingTests`, `CurriculumItemsToolListTests`, `ActivityTypeToolPickerTests`; additions to
+  `EpaPickerScopeTests`.
+- Integration: `WbaToolAllowListPostgresTests`.
+
+Several agents mutation-checked their classes by breaking src temporarily and restoring it; every mutant was caught.
 
 ## Related
 

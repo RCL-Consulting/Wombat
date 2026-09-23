@@ -71,7 +71,8 @@
           <ActivityDetail SchemaJson="@_activity.SchemaJson"
                           DataJson="@_activity.DataJson"
                           SubjectUserId="@_activity.SubjectUserId"
-                          CreditRulesJson="@_activity.CreditRulesJson" />
+                          CreditRulesJson="@_activity.CreditRulesJson"
+                          WbaToolKey="@_activity.WbaToolKey" />
         }
         else
         {
@@ -86,6 +87,7 @@
                         DataJson="@_workingDataJson"
                         SubjectUserId="@_activity.SubjectUserId"
                         CreditRulesJson="@_activity.CreditRulesJson"
+                        WbaToolKey="@_activity.WbaToolKey"
                         EditableFieldKeys="_editable"
                         DataJsonChanged="OnDataChanged" />
 

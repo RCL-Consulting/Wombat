@@ -25,6 +25,12 @@ public sealed class ActivityTypeConfiguration : IEntityTypeConfiguration<Activit
         builder.Property(entity => entity.StagingUpdatedOn).HasColumnType("timestamp with time zone");
         builder.Property(entity => entity.CreatedOn).HasColumnType("timestamp with time zone");
 
+        // A WbaTools key, not a foreign key (T122). The vocabulary rows are inserted by PaediatricCatalogueSeeder,
+        // which runs AFTER MigrateAsync, while the T122 migration stamps the seeded types' keys itself — so an FK
+        // would need the vocabulary moved into a migration first. Integrity is enforced where the value is written:
+        // SaveActivityTypeDraftCommand refuses a key the vocabulary does not hold.
+        builder.Property(entity => entity.WbaToolKey).HasMaxLength(64);
+
         builder.HasIndex(entity => entity.Key).IsUnique();
         builder.HasIndex(entity => new { entity.Scope, entity.ScopeId });
 

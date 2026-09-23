@@ -200,6 +200,7 @@ public sealed class NewActivityCreationLockTests : TestContext
                         ActivityScope.Speciality,
                         3,
                         true,
+                        "mini_cex",
                         1,
                         false,
                         _schemaJson,

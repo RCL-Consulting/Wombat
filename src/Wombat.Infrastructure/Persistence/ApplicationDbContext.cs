@@ -36,6 +36,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<Epa> Epas => Set<Epa>();
     public DbSet<EntrustmentScale> EntrustmentScales => Set<EntrustmentScale>();
     public DbSet<EntrustmentLevel> EntrustmentLevels => Set<EntrustmentLevel>();
+    public DbSet<WbaTool> WbaTools => Set<WbaTool>();
     public DbSet<Curriculum> Curricula => Set<Curriculum>();
     public DbSet<CurriculumItem> CurriculumItems => Set<CurriculumItem>();
     public DbSet<CurriculumItemProgress> CurriculumItemProgresses => Set<CurriculumItemProgress>();

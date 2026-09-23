@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -45,10 +47,12 @@ public sealed class DataSeeder
     ];
 
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<DataSeeder> _logger;
 
-    public DataSeeder(ApplicationDbContext dbContext)
+    public DataSeeder(ApplicationDbContext dbContext, ILogger<DataSeeder>? logger = null)
     {
         _dbContext = dbContext;
+        _logger = logger ?? NullLogger<DataSeeder>.Instance;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -277,7 +281,10 @@ public sealed class DataSeeder
                 ScopeId = specialityId,
                 OwnerUserId = ActivityTypeSeedCatalogue.SeedActorUserId,
                 CreatedOn = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                // On create only (T122). An existing database got its keys from the T122 migration; see
+                // ActivityTypeSeedEntry.WbaToolKey.
+                WbaToolKey = seed.WbaToolKey
             };
 
             activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
@@ -285,6 +292,30 @@ public sealed class DataSeeder
 
             _dbContext.ActivityTypes.Add(activityType);
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await WarnWhereToolKeysDifferAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Logs, and never writes, every seed-owned generic type whose instrument key differs from its catalogue entry
+    /// (T122). See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" />.
+    /// </summary>
+    private async Task WarnWhereToolKeysDifferAsync(CancellationToken cancellationToken)
+    {
+        var keys = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.Generic).Select(entry => entry.Key).ToArray();
+        var stored = await _dbContext.ActivityTypes
+            .AsNoTracking()
+            .Where(entity => keys.Contains(entity.Key))
+            .ToListAsync(cancellationToken);
+
+        foreach (var (entry, storedKey) in ActivityTypeSeedCatalogue.FindWbaToolKeyDrift(stored, ActivityTypeSeedSource.Generic))
+        {
+            _logger.LogWarning(
+                "Activity type '{Key}' is recorded as instrument {StoredWbaToolKey}, but its seed entry says {ExpectedWbaToolKey}. Not changed: seeders stamp the instrument on create only.",
+                entry.Key,
+                storedKey ?? "(none)",
+                entry.WbaToolKey ?? "(none)");
         }
     }
 

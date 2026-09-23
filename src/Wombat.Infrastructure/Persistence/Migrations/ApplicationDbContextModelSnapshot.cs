@@ -393,6 +393,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
+                    b.Property<string>("WbaToolKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("WorkflowJson")
                         .HasColumnType("jsonb");
 
@@ -929,6 +933,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int?>("OwningInstitutionId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PermittedToolsJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<int>("QuotaPeriod")
                         .HasColumnType("integer");
 
@@ -1445,6 +1452,36 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasFilter("\"OwningInstitutionId\" IS NOT NULL");
 
                     b.ToTable("Epas", (string)null);
+                });
+
+            modelBuilder.Entity("Wombat.Domain.Epas.WbaTool", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("WbaTools", (string)null);
                 });
 
             modelBuilder.Entity("Wombat.Domain.Forms.AssessmentForm", b =>

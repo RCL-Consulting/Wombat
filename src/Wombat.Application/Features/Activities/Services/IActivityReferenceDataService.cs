@@ -28,9 +28,11 @@ public interface IActivityReferenceDataService
     /// <param name="subjectUserId">The trainee the evidence will be about.</param>
     /// <remarks>
     /// <para>
-    /// Same predicate as <see cref="GetEpaOptionsAsync" />'s narrowing arm — a curriculum item on the
-    /// subject's curriculum whose <c>OwningInstitutionId</c> is null or theirs — and deliberately
-    /// <b>without</b> its three fallbacks to the viewer's claims. Those fallbacks exist to stop a
+    /// The curriculum predicate of <see cref="GetEpaOptionsAsync" />'s narrowing arm — a curriculum item on
+    /// the subject's curriculum whose <c>OwningInstitutionId</c> is null or theirs — deliberately
+    /// <b>without</b> its three fallbacks to the viewer's claims, and <b>without</b> the T122 tool
+    /// intersection that arm applies (an MSF release covers EPAs whatever their tool lists say, and release
+    /// must not start dropping declared EPAs because of one). The fallbacks exist to stop a
     /// required form field becoming unsubmittable; this list is not a form field. It answers "which EPAs
     /// may this campaign declare itself evidence for", and the release re-applies exactly the same
     /// predicate before creating anything. Offering an EPA here that release would then drop would be a
@@ -90,8 +92,8 @@ public sealed record ActivityCatalogueOption(
     string Label);
 
 /// <summary>
-/// What an EPA picker knows about the field it is rendering, so the option list can mirror what
-/// <c>CreditApplier</c> would actually do rather than guess (T108).
+/// What an EPA picker knows about the field it is rendering, so the option list offers what the write path
+/// will accept and the credit engine will credit, rather than guessing (T108, T122).
 /// </summary>
 /// <param name="SubjectUserId">
 /// The trainee the activity is ABOUT, not the person looking at it. On the detail page these differ:
@@ -107,8 +109,17 @@ public sealed record ActivityCatalogueOption(
 /// The EPA id already stored in this field, if any. It is always offered back, whatever the
 /// narrowing decides — an <c>epa</c> field renders as a <c>select</c>, so dropping a stored value
 /// from the options would erase recorded evidence from the page rather than merely hide a choice.
+/// A stored EPA the tool may no longer credit is therefore still shown, and refused at submit.
+/// </param>
+/// <param name="WbaToolKey">
+/// The <c>WbaToolKey</c> of the activity type being filed or rendered — the type ROW's current key, which is
+/// what the write path checks (T122). Read only when <paramref name="NarrowToCreditable" /> produces a
+/// narrowing; the claims filter ignores it. Null means "not a recognised instrument", which is unrestricted
+/// (D21). Defaulted only so the existing named constructions compile: a host that forgets it narrows less
+/// than the write path accepts, which is the safe direction, because the write path still refuses.
 /// </param>
 public sealed record EpaOptionScope(
     string? SubjectUserId,
     bool NarrowToCreditable,
-    string? CurrentValue = null);
+    string? CurrentValue = null,
+    string? WbaToolKey = null);

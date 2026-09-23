@@ -75,6 +75,7 @@ public sealed class EpaCategoryHandlerTests
                 WindowMonths: 36,
                 Weight: null,
                 MinimumLevelByStageJson: "{\"1\":2,\"2\":3,\"3\":4}",
+                PermittedToolKeys: null,
                 Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
@@ -86,7 +87,7 @@ public sealed class EpaCategoryHandlerTests
     public async Task AddCurriculumItem_RejectsInvalidStageOverridesJson()
     {
         var validator = new AddCurriculumItemCommandValidator();
-        var command = new AddCurriculumItemCommand(1, 7, 6, QuotaPeriod.AcademicYear, 5, 36, null, "not json", TestPrincipals.Administrator());
+        var command = new AddCurriculumItemCommand(1, 7, 6, QuotaPeriod.AcademicYear, 5, 36, null, "not json", null, TestPrincipals.Administrator());
 
         var result = await validator.ValidateAsync(command);
 

@@ -45,7 +45,11 @@ public sealed class Curriculum
                     // Carried deliberately: the cloned minima are the same numbers on the same ladder, so
                     // dropping the pin here would silently unpin every item of every new curriculum version
                     // and regenerate the T109 defect one version at a time.
-                    ScaleId = item.ScaleId
+                    ScaleId = item.ScaleId,
+                    // Carried deliberately (T122): the tool list is the fourth cell of the same published row. A
+                    // clone that dropped it would silently let every instrument credit every EPA again, one
+                    // curriculum version at a time.
+                    PermittedToolsJson = item.PermittedToolsJson
                 })
                 .ToList()
         };

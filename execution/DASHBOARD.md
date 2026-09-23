@@ -8,7 +8,6 @@
 | queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
 | queued | [T102](tasks/queued/T102-assessor-self-assignment-escalation.md) | P1 | A `user`-typed field accepts any user id, unchecked for role or scope |  |
 | queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P1 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
-| queued | [T122](tasks/queued/T122-enforce-epa-tool-mapping.md) | P1 | Every CPSA tool can credit every CPSA EPA, because the EPA→tool mappin |  |
 | queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
 | queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
@@ -21,6 +20,7 @@
 | queued | [T136](tasks/queued/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | queued | [T137](tasks/queued/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | queued | [T140](tasks/queued/T140-the-integration-suite-s-msf-flow-test-cannot-set-itself-up-on-a-fresh-schema-and-leaks-a-schema-every-time-it-fails.md) | P2 | The integration suite's MSF flow test cannot set itself up on a fresh  | sonnet |
+| queued | [T148](tasks/queued/T148-submit-on-activities-new-cancels-a-requested-born-activity-the-moment-it-is-created.md) | P2 | Submit on /activities/new cancels a requested-born activity the moment | sonnet |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -37,8 +37,12 @@
 | queued | [T141](tasks/queued/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
 | queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
 | queued | [T143](tasks/queued/T143-after-a-successful-submit-the-new-activity-form-keeps-every-value-inviting-a-duplicate.md) | P3 | After a successful submit the new-activity form keeps every value, inv | sonnet |
+| queued | [T144](tasks/queued/T144-classify-rated-evidence-sources-by-wbatoolkey-and-retire-the-hard-coded-activity-family-list.md) | P3 | Classify rated evidence sources by WbaToolKey and retire the hard-code | sonnet |
+| queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
+| queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
+| queued | [T147](tasks/queued/T147-campaignedit-s-epa-checkbox-group-has-a-label-pointing-at-no-element.md) | P3 | CampaignEdit's EPA checkbox group has a label pointing at no element | sonnet |
 
-Done: 97 task(s).
+Done: 98 task(s).
 
 ## From STATE.md
 
@@ -49,14 +53,14 @@ This is a reset point, not a diary.
 Wombat is **deployed but not in service** — scenario data only, no real trainees. The live
 workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operational hardening.
 ## Now
-- Nothing in `in_progress/`. 28 queued, 1 blocked. **Five P1s remain, all EPA work or gating it:**
+- Nothing in `in_progress/`. 36 queued, 1 blocked. **Three P1s remain:** T099, T102, T120.
 
 ## Recent commits
 
 ```
-1bec365 wip(T130): review fixes — institution scope on staff dashboards, per-kind D14 notice, coverage by target, audited startup rebuild, rebuild race guard, one SA calendar
-4196afb wip(T130): untrack agent worktrees, ignore .claude/worktrees
-1f4cd81 test(T130): real-Postgres integration tests for the semester quota
-4cd0517 test(T130): bUnit rendering of the quota on MyProgress, the trainee dashboard, coverage and the rebuild page
-ba332c2 test(T130): seeder quotas against a hard-coded Annexure B, the migration's frozen table, the EpaSeed no-loss guard, and the progress bootstrapper
+6d06e92 fix(t122): judge the gate per credit directive, and re-check an unchanged target only when the author hands it on
+b42db43 fix(t122): re-check an unchanged target only when the mover can act on the refusal
+092af02 fix(t122): check an unchanged target at the handover only — leaving the initial state — whoever acts
+db35ee6 fix(t122): a withdrawal is not a submission (reachability), and a refusal stays short enough to audit
+756a2fd fix(t122): an all-blank tool list is no list; stale ActivityForm remark; menu profile tie-break
 ```

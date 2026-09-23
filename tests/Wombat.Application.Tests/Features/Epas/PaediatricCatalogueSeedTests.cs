@@ -252,11 +252,16 @@ public sealed class PaediatricCatalogueSeedTests
     [Fact]
     public void EveryEpaSpecifiesMultiSourceFeedback()
     {
-        // v11.1 names MSF as a tool on all fifteen EPAs — the one tool with no exceptions.
+        // v11.1 names MSF as a tool on all fifteen EPAs — the one tool with no exceptions (D37). Both halves are
+        // checked since T122: the verbatim Annexure A cell, and the instrument keys the seeder actually reads.
         foreach (var epa in Epas())
         {
+            var code = epa.GetProperty("code").GetString();
+
+            epa.GetProperty("annexureTools").EnumerateArray().Select(tool => tool.GetString())
+                .Should().Contain("MSF", code);
             epa.GetProperty("wbaTools").EnumerateArray().Select(tool => tool.GetString())
-                .Should().Contain("MSF", epa.GetProperty("code").GetString());
+                .Should().Contain("msf", code);
         }
     }
 }

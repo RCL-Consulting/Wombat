@@ -27,6 +27,16 @@ public sealed record CurriculumItemDto(
     int WindowMonths,
     double? Weight,
     string? MinimumLevelByStageJson,
+    /// <summary>
+    /// The instruments that may credit this EPA, as the stored canonical JSON array of tool keys, or null for any
+    /// instrument (T122). Positional and not defaulted, so a projection that forgot it fails to compile rather than
+    /// hand the editor an item that reads as unrestricted. Read <see cref="PermittedToolKeys" /> for the parsed list.
+    /// </summary>
+    string? PermittedToolsJson,
     /// <summary>The entrustment scale the minima above are expressed on, or null when unpinned (T109).</summary>
     int? ScaleId = null,
-    string? ScaleName = null);
+    string? ScaleName = null)
+{
+    /// <summary>The tool keys in <see cref="PermittedToolsJson" />, normalised and sorted. Empty means any instrument.</summary>
+    public IReadOnlyList<string> PermittedToolKeys => Wombat.Domain.Curricula.CurriculumItem.ParsePermittedTools(PermittedToolsJson);
+}

@@ -14,7 +14,7 @@ namespace Wombat.Application.Features.Activities.Services;
 /// — both declared in June and referenced by nothing, in <c>src/</c> or <c>tests/</c>, ever. They
 /// belonged to a different taxonomy from the one the trajectory chart prints, and keeping them would
 /// have made a shared type carry two vocabularies, which is the drift this file exists to stop. When
-/// MSF ([T121]) or the fourteen annexure names ([T122]) need a longitudinal or product category, it
+/// MSF ([T121]) or the College's instrument vocabulary ([T122]'s <c>WbaTools</c>) need a longitudinal or product category, it
 /// gets added against the College's vocabulary rather than guessed ahead of it.
 /// </remarks>
 public enum WbaEvidenceSource
@@ -72,8 +72,8 @@ public readonly record struct RatedTypeVerdict(bool IsRated, WbaEvidenceSource? 
 /// <para>
 /// The family map survives for <b>labelling only</b>. It answers "what kind of evidence is this",
 /// which feeds <c>DistinctSourceCount</c> on the committee sampling report and the trajectory's source
-/// label. It no longer decides what is rated, and it retires entirely with [T122]'s
-/// <c>WbaToolKey</c>.
+/// label. It no longer decides what is rated. [T122] shipped <c>ActivityType.WbaToolKey</c>, which is the
+/// identity this map should be keyed on; moving the classification onto it, and retiring this map, is [T144].
 /// </para>
 /// </remarks>
 public static class RatedActivityTypes
@@ -96,7 +96,8 @@ public static class RatedActivityTypes
     /// <c>cca</c>, <c>rca</c> and <c>chart_stimulated_recall</c> stay: they are real instruments
     /// [T120] is queued to author, and this map now only decides what their evidence is CALLED, not
     /// whether it counts. <c>chart_stimulated_recall</c> is filed under Conversation and is arguably
-    /// case analysis; re-filing it is [T122]'s DECISION 2 and belongs to the College.
+    /// case analysis; re-filing it belongs to the College. [T122] seeded it as its own instrument
+    /// (<c>chart_stimulated_recall</c>) without filing it anywhere, and [T144] is where a category would be attached.
     /// </para>
     /// </remarks>
     private static readonly IReadOnlyDictionary<string, WbaEvidenceSource> SourceByActivityFamily =

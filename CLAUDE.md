@@ -185,7 +185,14 @@ Runtime services in Infrastructure:
 - `FieldPermissionEvaluator` — resolves which fields an actor may write, as the conjunction of the
   workflow state's `editable_by` and the field's (falling back to its section's). Default is
   `subject|creator`, which reproduces pre-T070 behaviour, so a type declaring nothing is unchanged.
-- `CreditApplier` — matches completed activities to curriculum items and applies credit.
+- `CreditApplier` — matches completed activities to curriculum items and applies credit. Which items an activity
+  would credit is `CreditTargetResolver`, the one implementation shared with the tool gate below.
+- `ToolPermissionGate` — the write-path half of the EPA→tool allow-list (T122, D20): refuses an activity whose
+  instrument (`ActivityType.WbaToolKey`) the matched curriculum item's `PermittedToolsJson` does not name, judged per
+  credit directive: at create; on a change of target wherever credit can still follow; and for an unchanged target only
+  when the author, before anyone else has acted, hands it on while still able to write its field. Never at credit, so a
+  refusal never lands on someone who cannot act on it. The EPA picker narrows with the
+  same predicate (`ToolPermission.Evaluate`). Null key or null list is unrestricted (D21).
 
 ### Editing a seed folder
 
@@ -204,6 +211,11 @@ Three things follow:
   this; add to it when you add a property.
 - **In-flight activities stay pinned to their old version** and are not unblocked by a republish.
 - `Wombat__RefreshSeededActivityTypes=false` disables the republish while still logging what differs.
+- **`WbaToolKey` is not in a seed folder and is never refreshed.** It is declared on the type's
+  `ActivityTypeSeedCatalogue` entry (required, so a new seed must say which instrument it is), written on create, and
+  stamped on existing databases once by the T122 migration. The same holds for the catalogue's per-EPA tool lists.
+  A later change to either reaches an existing database only through a new migration; the seeders log a warning
+  where the stored value differs.
 
 Read `execution/architecture/CUSTOMIZATION.md` for the full model.
 

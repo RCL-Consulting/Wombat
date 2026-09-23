@@ -40,11 +40,13 @@
 @if (_selectedEditor is not null)
 {
   @* The creator IS the subject here — this page files an activity about the current user — so the
-     EPA picker narrows to what would actually credit for them (T108). *@
+     EPA picker narrows to what would actually credit for them (T108), and to what this instrument may be
+     filed against (T122): the write path refuses anything else. *@
   <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
                 DataJson="@_dataJson"
                 SubjectUserId="@_currentUserId"
                 CreditRulesJson="@(_selectedEditor.PublishedCreditRulesJson ?? _selectedEditor.DraftCreditRulesJson)"
+                WbaToolKey="@_selectedEditor.WbaToolKey"
                 EditableFieldKeys="_editableFieldKeys"
                 DataJsonChanged="OnDataChanged" />
 

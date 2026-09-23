@@ -35,8 +35,40 @@ internal static class CurriculumMappings
             canEditInPlace,
             curriculum.Items
                 .OrderBy(entity => entity.Epa.Code)
-                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
+                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
                 .ToList());
+
+    /// <summary>
+    /// Refuses a tool list naming an instrument the vocabulary does not hold (T122). A no-op for none.
+    /// </summary>
+    /// <remarks>
+    /// Runs before either handler mutates anything, because the audit pipeline commits a half-finished mutation
+    /// when a handler throws. An unknown key is refused rather than stored: it could never match any activity type's
+    /// key, so an item listing only unknown instruments would refuse every recognised tool and credit nothing.
+    /// </remarks>
+    public static async Task EnsurePermittedToolsExistAsync(
+        IApplicationDbContext dbContext,
+        IReadOnlyList<string>? permittedToolKeys,
+        CancellationToken cancellationToken)
+    {
+        var keys = CurriculumItem.ParsePermittedTools(CurriculumItem.NormalizePermittedToolsJson(permittedToolKeys)).ToArray();
+        if (keys.Length == 0)
+        {
+            return;
+        }
+
+        var known = await dbContext.Set<WbaTool>()
+            .Where(tool => keys.Contains(tool.Key))
+            .Select(tool => tool.Key)
+            .ToListAsync(cancellationToken);
+
+        var unknown = keys.Except(known, StringComparer.Ordinal).ToList();
+        if (unknown.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"{string.Join(", ", unknown.Select(key => $"'{key}'"))} {(unknown.Count == 1 ? "is not a workplace-based assessment instrument" : "are not workplace-based assessment instruments")} Wombat knows.");
+        }
+    }
 
     public static void EnsureCurriculumCanBeEditedInPlace()
     {

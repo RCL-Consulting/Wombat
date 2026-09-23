@@ -30,7 +30,8 @@
   {
     <Alert Kind="warning">
       A target and its period are read live. Changing one changes what every trainee on this curriculum is measured
-      against, in every institution that has adopted it, including periods that have already closed.
+      against, in every institution that has adopted it, including periods that have already closed. A tool list is
+      checked when an activity is filed and submitted, and never takes back credit already earned.
     </Alert>
 
     <div class="detail-card">
@@ -46,6 +47,7 @@
               <th>Per-stage minima</th>
               <th>Completion window (months)</th>
               <th>Weight</th>
+              <th>Tools</th>
               <th></th>
             </tr>
           </thead>
@@ -56,7 +58,7 @@
                 @if (_editingItemId == item.Id)
                 {
                   <td>
-                    <InputSelect class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
+                    <InputSelect class="form-select" TValue="int" @bind-Value="_editModel.EpaId">
                       @foreach (var epa in AvailableEpas)
                       {
                         <option value="@epa.Id">@epa.Code - @epa.Title</option>
@@ -64,15 +66,15 @@
                     </InputSelect>
                   </td>
                   <td>
-                    <InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" aria-label="Target" />
-                    <InputSelect class="form-select" TValue="QuotaPeriod" @bind-Value="_itemModel.QuotaPeriod" aria-label="Per">
+                    <InputNumber class="form-control" @bind-Value="_editModel.RequiredCount" aria-label="Target" />
+                    <InputSelect class="form-select" TValue="QuotaPeriod" @bind-Value="_editModel.QuotaPeriod" aria-label="Per">
                       <option value="@QuotaPeriod.Semester">per semester</option>
                       <option value="@QuotaPeriod.AcademicYear">per academic year</option>
                     </InputSelect>
                   </td>
-                  <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_editModel.MinimumLevelOrder" /></td>
                   <td>
-                    <InputSelect class="form-select" TValue="int?" @bind-Value="_itemModel.ScaleId">
+                    <InputSelect class="form-select" TValue="int?" @bind-Value="_editModel.ScaleId">
                       <option value="">Not pinned</option>
                       @foreach (var scale in _scales)
                       {
@@ -80,9 +82,10 @@
                       }
                     </InputSelect>
                   </td>
-                  <td><InputText class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3}' /></td>
-                  <td><InputNumber class="form-control" @bind-Value="_itemModel.WindowMonths" /></td>
-                  <td><InputNumber class="form-control" @bind-Value="_itemModel.Weight" /></td>
+                  <td><InputText class="form-control" @bind-Value="_editModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3}' /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_editModel.WindowMonths" /></td>
+                  <td><InputNumber class="form-control" @bind-Value="_editModel.Weight" /></td>
+                  <td>@ToolsText(_editModel.PermittedToolKeys)</td>
                   <td>
                     <div class="actions-cell">
                       <button class="btn btn-sm btn-primary" @onclick="SaveItemAsync">Save</button>
@@ -99,6 +102,7 @@
                   <td>@(item.MinimumLevelByStageJson ?? "—")</td>
                   <td>@item.WindowMonths</td>
                   <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
+                  <td>@ToolsText(item.PermittedToolKeys)</td>
                   <td>
                     <div class="actions-cell">
                       <button class="btn btn-sm btn-outline" @onclick="() => BeginEdit(item)">Edit</button>
@@ -107,6 +111,29 @@
                   </td>
                 }
               </tr>
+              @if (_editingItemId == item.Id)
+              {
+                @* T122. The tool list gets its own row: a dozen checkboxes do not fit a table cell. *@
+                <tr>
+                  <td colspan="9">
+                    <fieldset>
+                      <legend>Tools</legend>
+                      <p class="muted">Tick the instruments that may be used as evidence for this EPA. None ticked means any instrument.</p>
+                      <div class="check-grid">
+                        @foreach (var tool in ToolOptions(_editModel))
+                        {
+                          <div class="form-check">
+                            <input id="@($"edit-tool-{tool.Key}")" class="form-check-input" type="checkbox"
+                                   checked="@_editModel.PermittedToolKeys.Contains(tool.Key)"
+                                   @onchange="args => ToggleTool(_editModel, tool.Key, args)" />
+                            <label for="@($"edit-tool-{tool.Key}")">@tool.Name</label>
+                          </div>
+                        }
+                      </div>
+                    </fieldset>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -115,13 +142,13 @@
 
     <div class="form-container mt-3">
       <h3>Add item</h3>
-      <EditForm Model="_itemModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
+      <EditForm Model="_addModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
         <DataAnnotationsValidator />
         <ValidationSummary class="validation-summary-errors" />
 
         <div class="form-grid form-grid--wide">
           <FormField Label="EPA" InputId="curriculum-item-epa" Required="true">
-            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_itemModel.EpaId">
+            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
               @foreach (var epa in AvailableEpas)
               {
                 <option value="@epa.Id">@epa.Code - @epa.Title</option>
@@ -130,12 +157,12 @@
           </FormField>
 
           <FormField Label="Target" InputId="curriculum-item-count">
-            <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_itemModel.RequiredCount" />
+            <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_addModel.RequiredCount" />
             <small class="muted">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small>
           </FormField>
 
           <FormField Label="Per" InputId="curriculum-item-period">
-            <InputSelect id="curriculum-item-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_itemModel.QuotaPeriod">
+            <InputSelect id="curriculum-item-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_addModel.QuotaPeriod">
               <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
               <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
             </InputSelect>
@@ -143,11 +170,11 @@
           </FormField>
 
           <FormField Label="Minimum level" InputId="curriculum-item-level">
-            <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" />
+            <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_addModel.MinimumLevelOrder" />
           </FormField>
 
           <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
-            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?" @bind-Value="_itemModel.ScaleId">
+            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?" @bind-Value="_addModel.ScaleId">
               <option value="">Not pinned</option>
               @foreach (var scale in _scales)
               {
@@ -158,18 +185,35 @@
           </FormField>
 
           <FormField Label="Per-stage minima (JSON)" InputId="curriculum-item-stage-levels" FullWidth="true">
-            <InputText id="curriculum-item-stage-levels" class="form-control" @bind-Value="_itemModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3,"3":4}' />
+            <InputText id="curriculum-item-stage-levels" class="form-control" @bind-Value="_addModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3,"3":4}' />
             <small class="muted">Optional JSON object keyed by training year. Overrides the flat minimum level when the trainee is at that year.</small>
           </FormField>
 
           <FormField Label="Completion window (months)" InputId="curriculum-item-window">
-            <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_itemModel.WindowMonths" />
+            <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_addModel.WindowMonths" />
             <small class="muted">Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.</small>
           </FormField>
 
           <FormField Label="Weight" InputId="curriculum-item-weight">
-            <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_itemModel.Weight" />
+            <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_addModel.Weight" />
           </FormField>
+
+          @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
+          <fieldset class="full-width">
+            <legend>Tools</legend>
+            <p class="muted">The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.</p>
+            <div class="check-grid">
+              @foreach (var tool in ToolOptions(_addModel))
+              {
+                <div class="form-check">
+                  <input id="@($"add-tool-{tool.Key}")" class="form-check-input" type="checkbox"
+                         checked="@_addModel.PermittedToolKeys.Contains(tool.Key)"
+                         @onchange="args => ToggleTool(_addModel, tool.Key, args)" />
+                  <label for="@($"add-tool-{tool.Key}")">@tool.Name</label>
+                </div>
+              }
+            </div>
+          </fieldset>
         </div>
 
         <FormActions>
@@ -187,7 +231,12 @@
   private CurriculumDto? _curriculum;
   private IReadOnlyList<EpaDto> _epas = [];
   private IReadOnlyList<EntrustmentScaleDto> _scales = [];
-  private readonly CurriculumItemFormModel _itemModel = new();
+  private IReadOnlyList<WbaToolDto> _tools = [];
+  // Two models, not one (T122). The inline edit row and the Add form used to bind the same instance, so opening a row
+  // for editing silently filled the Add form with that row's values; with a tool list in both, the two checkbox
+  // groups would also have toggled each other.
+  private readonly CurriculumItemFormModel _addModel = new();
+  private readonly CurriculumItemFormModel _editModel = new();
   private int? _editingItemId;
   private string? _loadError;
   private string? _actionError;
@@ -216,6 +265,7 @@
 
       _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId, authState.User));
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+      _tools = await Sender.Send(new GetWbaToolsQuery());
       ResetItemModel();
     }
     catch (Exception exception)
@@ -231,7 +281,7 @@
   private async Task AddItemAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.QuotaPeriod, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item added."))
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder, _addModel.WindowMonths, _addModel.Weight, EmptyToNull(_addModel.MinimumLevelByStageJson), _addModel.PermittedToolKeys.ToList(), authState.User, _addModel.ScaleId)), "Curriculum item added."))
     {
       return;
     }
@@ -242,20 +292,22 @@
   private void BeginEdit(CurriculumItemDto item)
   {
     _editingItemId = item.Id;
-    _itemModel.EpaId = item.EpaId;
-    _itemModel.RequiredCount = item.RequiredCount;
-    _itemModel.QuotaPeriod = item.QuotaPeriod;
-    _itemModel.MinimumLevelOrder = item.MinimumLevelOrder;
-    _itemModel.WindowMonths = item.WindowMonths;
-    _itemModel.Weight = item.Weight;
-    _itemModel.MinimumLevelByStageJson = item.MinimumLevelByStageJson;
-    _itemModel.ScaleId = item.ScaleId;
+    _editModel.EpaId = item.EpaId;
+    _editModel.RequiredCount = item.RequiredCount;
+    _editModel.QuotaPeriod = item.QuotaPeriod;
+    _editModel.MinimumLevelOrder = item.MinimumLevelOrder;
+    _editModel.WindowMonths = item.WindowMonths;
+    _editModel.Weight = item.Weight;
+    _editModel.MinimumLevelByStageJson = item.MinimumLevelByStageJson;
+    _editModel.ScaleId = item.ScaleId;
+    // Copied, so saving an item unchanged keeps its list (T122). A key the vocabulary no longer holds is kept too,
+    // and shown as its own checkbox by ToolOptions, so it can be seen and unticked.
+    _editModel.PermittedToolKeys = item.PermittedToolKeys.ToHashSet(StringComparer.Ordinal);
   }
 
   private void CancelEdit()
   {
     _editingItemId = null;
-    ResetItemModel();
   }
 
   private async Task SaveItemAsync()
@@ -269,13 +321,12 @@
     // Only leave edit mode when the command actually succeeded. A rejected scale pin (T109) is the common
     // case now, and closing the row on rejection throws away everything the operator typed while showing
     // them an error about it.
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.QuotaPeriod, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item saved."))
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder, _editModel.WindowMonths, _editModel.Weight, EmptyToNull(_editModel.MinimumLevelByStageJson), _editModel.PermittedToolKeys.ToList(), authState.User, _editModel.ScaleId)), "Curriculum item saved."))
     {
       return;
     }
 
     _editingItemId = null;
-    ResetItemModel();
   }
 
   private async Task RemoveItemAsync(int itemId)
@@ -310,14 +361,43 @@
 
   private void ResetItemModel()
   {
-    _itemModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
-    _itemModel.RequiredCount = 1;
-    _itemModel.QuotaPeriod = QuotaPeriod.AcademicYear;
-    _itemModel.MinimumLevelOrder = 4;
-    _itemModel.WindowMonths = 12;
-    _itemModel.Weight = null;
-    _itemModel.MinimumLevelByStageJson = null;
-    _itemModel.ScaleId = null;
+    _addModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
+    _addModel.RequiredCount = 1;
+    _addModel.QuotaPeriod = QuotaPeriod.AcademicYear;
+    _addModel.MinimumLevelOrder = 4;
+    _addModel.WindowMonths = 12;
+    _addModel.Weight = null;
+    _addModel.MinimumLevelByStageJson = null;
+    _addModel.ScaleId = null;
+    _addModel.PermittedToolKeys = new HashSet<string>(StringComparer.Ordinal);
+  }
+
+  /// <summary>The vocabulary, plus any stored key it no longer holds, shown by its raw key (T122).</summary>
+  private IEnumerable<WbaToolDto> ToolOptions(CurriculumItemFormModel model)
+    => _tools.Concat(model.PermittedToolKeys
+      .Where(key => _tools.All(tool => tool.Key != key))
+      .Order(StringComparer.Ordinal)
+      .Select(key => new WbaToolDto(key, key, null)));
+
+  private static void ToggleTool(CurriculumItemFormModel model, string toolKey, ChangeEventArgs args)
+  {
+    if (args.Value is true)
+    {
+      model.PermittedToolKeys.Add(toolKey);
+    }
+    else
+    {
+      model.PermittedToolKeys.Remove(toolKey);
+    }
+  }
+
+  private string ToolsText(IEnumerable<string> toolKeys)
+  {
+    var names = toolKeys
+      .Select(key => _tools.FirstOrDefault(tool => tool.Key == key)?.Name ?? key)
+      .Order(StringComparer.OrdinalIgnoreCase)
+      .ToList();
+    return names.Count == 0 ? "Any instrument" : string.Join(", ", names);
   }
 
   private static string TargetText(CurriculumItemDto item)
@@ -352,5 +432,8 @@
 
     /// <summary>Null means unpinned, which compares ordinals exactly as Wombat did before T109.</summary>
     public int? ScaleId { get; set; }
+
+    /// <summary>The instruments ticked. Empty means any instrument (T122, D21), and is sent as such.</summary>
+    public HashSet<string> PermittedToolKeys { get; set; } = new(StringComparer.Ordinal);
   }
 }

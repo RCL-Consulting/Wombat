@@ -141,6 +141,17 @@ else if (_schema is not null)
   [Parameter] public string? CreditRulesJson { get; set; }
 
   /// <summary>
+  /// Which College-named instrument the activity type is, as its <c>WbaToolKey</c> (T122). Null means "not a
+  /// recognised instrument", which narrows nothing (D21).
+  /// </summary>
+  /// <remarks>
+  /// The type row's CURRENT key, which is the one the write path checks at submit, so the EPA picker offers only
+  /// what submitting will accept. Passed on every EPA field; the service reads it only on the field the credit engine
+  /// reads, and only when that field is being narrowed at all.
+  /// </remarks>
+  [Parameter] public string? WbaToolKey { get; set; }
+
+  /// <summary>
   /// The field keys this actor may write, as resolved server-side by the field-permission
   /// evaluator (T070). <c>null</c> means "no per-field restriction" and keeps the pre-T070
   /// behaviour exactly: every field follows <see cref="ReadOnly" /> alone. An empty set locks
@@ -172,8 +183,9 @@ else if (_schema is not null)
       // concurrent DbContext use when edits arrive in quick succession. Claim the schema before the
       // await so a re-entrant OnParametersSetAsync (fired by a rapid edit) skips the reload.
       // The reload key is the schema PLUS everything else the option lists now depend on. Keying it
-      // on the schema alone would serve one subject's creditable EPAs to the next (T108).
-      var optionsKey = string.Join('\u001f', SchemaJson, SubjectUserId ?? string.Empty, CreditRulesJson ?? string.Empty);
+      // on the schema alone would serve one subject's creditable EPAs to the next (T108), and leaving
+      // the tool out would serve one instrument's permitted EPAs to another with the same form (T122).
+      var optionsKey = string.Join('\u001f', SchemaJson, SubjectUserId ?? string.Empty, CreditRulesJson ?? string.Empty, WbaToolKey ?? string.Empty);
       if (!string.Equals(_loadedOptionsKey, optionsKey, StringComparison.Ordinal))
       {
         _schema = FormSchemaParser.Parse(SchemaJson);
@@ -329,7 +341,8 @@ else if (_schema is not null)
           new EpaOptionScope(
             SubjectUserId,
             _creditedEpaFieldKeys.Contains(field.Key),
-            GetString(field.Key))),
+            GetString(field.Key),
+            WbaToolKey)),
         FieldType.User => await ReferenceDataService.GetAssessorOptionsAsync(principal),
         FieldType.Scale => await ReferenceDataService.GetEntrustmentScaleLevelOptionsAsync(field.ScaleKey),
         _ when !string.IsNullOrWhiteSpace(field.CatalogueKey)
@@ -349,9 +362,11 @@ else if (_schema is not null)
   /// </summary>
   /// <remarks>
   /// Only <c>curriculum_item_match.epa_field</c> counts. A directive matching a fixed
-  /// <c>curriculum_item_id</c> or a <c>curriculum_item_field</c> never reads an EPA, so an epa field
-  /// alongside it is contextual metadata and narrowing it would hide choices that change nothing.
-  /// Unparseable rules are not this method's error to surface — fall back to no narrowing.
+  /// <c>curriculum_item_id</c> never reads an EPA, and one matching a <c>curriculum_item_field</c> reads
+  /// its epa field only as a fallback when the item field holds no id, so an epa field alongside either is
+  /// left un-narrowed: narrowing it would usually hide choices that change nothing. The write path's tool
+  /// gate follows the engine exactly and is the authority in that fallback case (T122). Unparseable rules
+  /// are not this method's error to surface — fall back to no narrowing.
   /// </remarks>
   private IReadOnlySet<string> ResolveCreditedEpaFieldKeys()
     => CreditRuleFields.ResolveCreditedEpaFieldKeys(CreditRulesJson);

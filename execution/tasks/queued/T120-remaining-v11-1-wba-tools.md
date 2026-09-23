@@ -15,6 +15,15 @@ instruments cannot be filed at all, so a registrar's 55 annual encounters are fu
 the College never intended to carry the whole load, and the per-EPA tool allow-list the College actually
 published is inert data in the repo.
 
+> **Note from [T122], 2026-09-23.** The allow-list is enforced now. Each EPA's tools are stored as keys on its
+> curriculum item and checked against `ActivityType.WbaToolKey`, so **every new `*_cpsa` seed must declare its
+> instrument** on its `ActivityTypeSeedCatalogue` entry (the `WbaToolKey` argument is required). The vocabulary keys are
+> `cca`, `rca`, `chart_stimulated_recall`, `clinical_audit`, `reflective_exercise` and `portfolio_review` (plus
+> `learner_feedback`, which D35 routes through MSF). **"Case note review" is not a seed** (D4: an alias of `cca`), and
+> **"Directly observed clinical examination" is not a seed** (D12: an alias of `mini_cex`). A seed left unkeyed would be
+> unrestricted on every EPA (D21). The seeders write the key on create only, so a seed added after T122 is keyed on
+> every database where it is new, without a migration.
+
 ## The definitive list
 
 From `execution/tasks/done/T098-data/annexure-a.json`, whose `tools` field is **free text** — an allow-list per

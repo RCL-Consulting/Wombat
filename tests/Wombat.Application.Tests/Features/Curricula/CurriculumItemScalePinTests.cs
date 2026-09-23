@@ -30,7 +30,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var result = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         var item = result.Items.Single();
@@ -45,7 +45,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var result = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator()),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
             CancellationToken.None);
 
         result.Items.Single().ScaleId.Should().BeNull("unpinned is the safe default, not an error state");
@@ -58,17 +58,17 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var added = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator()),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
             CancellationToken.None);
         var itemId = added.Items.Single().Id;
 
         var pinned = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator(), SixRungScaleId),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), SixRungScaleId),
             CancellationToken.None);
         pinned.Items.Single().ScaleId.Should().Be(SixRungScaleId);
 
         var unpinned = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator()),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
             CancellationToken.None);
         unpinned.Items.Single().ScaleId.Should().BeNull("an administrator must be able to withdraw a pin they are unsure of");
     }
@@ -81,7 +81,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, null, Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, null, null, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         (await act.Should().ThrowAsync<InvalidOperationException>())
@@ -97,7 +97,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"4":6}""", Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"4":6}""", null, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         (await act.Should().ThrowAsync<InvalidOperationException>())
@@ -111,7 +111,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, Administrator(), 4242),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), 4242),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();

@@ -26,6 +26,31 @@ public sealed class ActivityType
     public bool IsActive { get; set; } = true;
     public string OwnerUserId { get; set; } = string.Empty;
     public DateTime CreatedOn { get; set; }
+
+    /// <summary>
+    /// Which College-named workplace-based assessment instrument this type is, as a
+    /// <see cref="Wombat.Domain.Epas.WbaTool" /> key, or null when it is not a recognised instrument (T122).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A curriculum item's <c>PermittedToolsJson</c> is checked against this key when an activity of this type is
+    /// filed and submitted. Null is unrestricted (D21): a type nobody has declared an instrument credits any EPA
+    /// on the subject's curriculum, exactly as before T122. That is true of every builder-made type until an
+    /// administrator chooses an instrument for it, and of the seeds that are not instruments at all.
+    /// </para>
+    /// <para>
+    /// <b>Live and unversioned, like <see cref="Name" /> and <see cref="Scope" />.</b> It is not staged, not copied
+    /// into <see cref="ActivityTypeVersion" />, and never touched by the seed refresher. The builder writes it on
+    /// SAVE, not on publish, and discarding the draft does not undo it. Because the builder's only save path saves a
+    /// draft, changing it on a SEEDED type parks a draft, and the seed refresher skips a type with a draft in flight
+    /// until it is published or discarded. For an UNCHANGED credit target, changing it changes what the author of a draft
+    /// may still hand on while nobody else has acted; it changes nothing once someone else has acted, and nothing for a
+    /// completed activity, because credit never re-checks (D20). A CHANGED target is always checked against the current
+    /// key.
+    /// </para>
+    /// </remarks>
+    public string? WbaToolKey { get; set; }
+
     public ICollection<ActivityPermissionRule> PermissionRules { get; set; } = [];
     public ICollection<Activity> Activities { get; set; } = [];
     public ICollection<ActivityTypeVersion> Versions { get; set; } = [];
@@ -48,10 +73,18 @@ public sealed class ActivityType
         ArgumentException.ThrowIfNullOrWhiteSpace(displayFieldsJson);
         ArgumentException.ThrowIfNullOrWhiteSpace(actorUserId);
 
-        StagingSchemaJson = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
-        StagingWorkflowJson = WorkflowParser.Serialize(WorkflowParser.Parse(workflowJson));
-        StagingCreditRulesJson = CreditRulesParser.Serialize(CreditRulesParser.Parse(creditRulesJson));
-        StagingDisplayFieldsJson = NormalizeDisplayFieldsJson(displayFieldsJson);
+        // Every payload is parsed before any of them is assigned (T122). A save that assigned the schema and then
+        // threw on the workflow left a tracked entity half-written, and the audit pipeline's catch saves the
+        // request's DbContext, so the half-written draft was COMMITTED under a failed command.
+        var stagingSchemaJson = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+        var stagingWorkflowJson = WorkflowParser.Serialize(WorkflowParser.Parse(workflowJson));
+        var stagingCreditRulesJson = CreditRulesParser.Serialize(CreditRulesParser.Parse(creditRulesJson));
+        var stagingDisplayFieldsJson = NormalizeDisplayFieldsJson(displayFieldsJson);
+
+        StagingSchemaJson = stagingSchemaJson;
+        StagingWorkflowJson = stagingWorkflowJson;
+        StagingCreditRulesJson = stagingCreditRulesJson;
+        StagingDisplayFieldsJson = stagingDisplayFieldsJson;
         StagingUpdatedByUserId = actorUserId.Trim();
         StagingUpdatedOn = DateTime.UtcNow;
     }

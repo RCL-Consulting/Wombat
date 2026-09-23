@@ -114,9 +114,16 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
     /// </para>
     /// <para>
     /// Every unresolved answer falls through permissively, which is T108's principle 4 and the thing that
-    /// stops this emptying a required picker. ⚠ [T122] narrows the same menu from the other direction
-    /// (which EPAs a tool may credit); <b>both must keep this fallback or between them they will empty
-    /// one</b>.
+    /// stops this emptying a required picker. [T122] narrows the other picker from the other direction:
+    /// the EPA picker, by which EPAs this tool may credit. It honours the same rule. A type with no
+    /// <c>WbaToolKey</c> and an item with no tool list are both unrestricted (D21), and when a keyed tool
+    /// may credit none of the subject's EPAs, the EPA picker falls back to T108's creditable set rather
+    /// than emptying, leaving the write path to refuse with a message that names the permitted tools. So
+    /// this filter only ever changes WHICH tool is picked, and the tool filter never empties an EPA picker.
+    /// Note that the two compose at set level, not item level: this keeps a tool whose ladder matches ANY
+    /// of the subject's items, which may not be an item that tool is permitted on. No seeded combination
+    /// reaches that case. T122 added no tool conjunct here, deliberately: it would be a third copy of the
+    /// profile and owner predicate, guarding a configuration the seeded catalogue cannot produce.
     /// </para>
     /// <para>
     /// Resolved against <c>ActivityType.SchemaJson</c> — the current PUBLISHED schema, not a pinned
@@ -248,6 +255,9 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
             .Where(entity => entity.UserId == subjectUserId)
             .OrderByDescending(entity => entity.IsActive)
             .ThenByDescending(entity => entity.ProgrammeStartDate)
+            // The same final tie-break as CreditTargetResolver.PickProfileAsync (T122), so a user with two tied
+            // profiles gets the same curriculum here as in the EPA picker, the write path and credit.
+            .ThenByDescending(entity => entity.Id)
             .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 

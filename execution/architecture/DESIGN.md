@@ -251,6 +251,10 @@ PagerControls
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
 - Checkbox: `<div class="form-check">` wrapping a `.form-check-input` + `<label>`.
+- A group of checkboxes is a `<fieldset>` with a `<legend>`, the checkboxes inside a `.check-grid` (columns of
+  `.form-check`), every checkbox with its own unique id. **Not** a `<FormField>`: its `<label for>` would point at
+  no single input. When two groups share a page (an inline edit row and an Add form), prefix their ids differently
+  (`edit-tool-{key}` / `add-tool-{key}`, T122's curriculum tool list).
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
 
 ## Card system
@@ -566,7 +570,7 @@ body, h1..h5, .page-subtitle
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline
 
 /* ── Forms ─────────────────────────────────────────── */
-.form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-select-sm, .form-check, .form-actions
+.form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .form-actions
 
 /* ── Alerts ────────────────────────────────────────── */
 .alert, .alert-{kind}

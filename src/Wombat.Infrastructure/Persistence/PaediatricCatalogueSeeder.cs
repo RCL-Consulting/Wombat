@@ -56,6 +56,9 @@ public sealed class PaediatricCatalogueSeeder
     {
         var catalogue = await ReadCatalogueAsync(cancellationToken);
 
+        // First, so the vocabulary exists before anything that names it: an allow-list or a type's instrument.
+        await EnsureWbaToolsAsync(catalogue.WbaToolVocabulary, cancellationToken);
+
         var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(cancellationToken);
         var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
         await EnsureDefaultScaleAsync(subSpecialityId, scale.Id, cancellationToken);
@@ -117,7 +120,10 @@ public sealed class PaediatricCatalogueSeeder
                 ScopeId = specialityId,
                 OwnerUserId = ActivityTypeSeedCatalogue.SeedActorUserId,
                 CreatedOn = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                // Which instrument this is, so each EPA's tool list binds it (T122). On create only: an existing
+                // database got these from the T122 migration, and a later difference is warned about below.
+                WbaToolKey = seed.WbaToolKey
             };
 
             activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
@@ -126,6 +132,64 @@ public sealed class PaediatricCatalogueSeeder
             _dbContext.ActivityTypes.Add(activityType);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        await WarnWhereToolKeysDifferAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Logs, and never writes, every seed-owned CPSA type whose instrument key differs from its catalogue entry
+    /// (T122). See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" />.
+    /// </summary>
+    private async Task WarnWhereToolKeysDifferAsync(CancellationToken cancellationToken)
+    {
+        var keys = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege).Select(entry => entry.Key).ToArray();
+        var stored = await _dbContext.ActivityTypes
+            .AsNoTracking()
+            .Where(entity => keys.Contains(entity.Key))
+            .ToListAsync(cancellationToken);
+
+        foreach (var (entry, storedKey) in ActivityTypeSeedCatalogue.FindWbaToolKeyDrift(stored, ActivityTypeSeedSource.PaediatricCollege))
+        {
+            _logger.LogWarning(
+                "Activity type '{Key}' is recorded as instrument {StoredWbaToolKey}, but its seed entry says {ExpectedWbaToolKey}. Not changed: seeders stamp the instrument on create only, and a seeded type with the wrong instrument is refused or unrestricted on every EPA with a tool list.",
+                entry.Key,
+                storedKey ?? "(none)",
+                entry.WbaToolKey ?? "(none)");
+        }
+    }
+
+    /// <summary>
+    /// Inserts the College's instrument vocabulary and keeps each row's name and definition equal to the catalogue
+    /// (T122).
+    /// </summary>
+    /// <remarks>
+    /// A reconcile, unlike every other pass in this seeder, and safe only while nothing else writes this table:
+    /// there is no admin command for WbaTools, so the catalogue is the only author a row can have, and without the
+    /// reconcile a corrected display name would never reach an existing database. The day an admin surface can edit
+    /// a tool, this must become warn-only, as the allow-list and target passes are. A key the catalogue no longer
+    /// lists is left in place: an activity type or an allow-list may still name it.
+    /// </remarks>
+    private async Task EnsureWbaToolsAsync(IReadOnlyList<WbaToolSeed> vocabulary, CancellationToken cancellationToken)
+    {
+        var existing = await _dbContext.WbaTools.ToDictionaryAsync(tool => tool.Key, StringComparer.Ordinal, cancellationToken);
+
+        foreach (var seed in vocabulary)
+        {
+            var key = WbaTool.NormalizeKey(seed.Key)
+                ?? throw new InvalidOperationException("The paediatric EPA catalogue names a WBA tool with a blank key.");
+
+            if (!existing.TryGetValue(key, out var tool))
+            {
+                tool = new WbaTool { Key = key };
+                _dbContext.WbaTools.Add(tool);
+                existing[key] = tool;
+            }
+
+            tool.Name = seed.Name;
+            tool.Description = seed.Description;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(CancellationToken cancellationToken)
@@ -344,6 +408,54 @@ public sealed class PaediatricCatalogueSeeder
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         WarnWhereTargetsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
+        WarnWhereToolListsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
+    }
+
+    /// <summary>
+    /// Logs, and never writes, every seeded item whose tool list no longer matches the catalogue (T122).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The same contract as <see cref="WarnWhereTargetsDifferFromTheCatalogue" />, and for the same reason. The list
+    /// is null for "any instrument", and null is also what an administrator saves when they clear it on purpose. An
+    /// <c>is null</c> backfill on every boot cannot tell those apart, and would silently re-impose a restriction
+    /// someone withdrew. The one-off stamping of existing databases is the T122 migration's job.
+    /// </para>
+    /// <para>
+    /// Compared canonical to canonical: the column is <c>jsonb</c>, so Postgres hands back its own rendering and the
+    /// stored string is never byte-equal to what was written.
+    /// </para>
+    /// </remarks>
+    private void WarnWhereToolListsDifferFromTheCatalogue(
+        Curriculum curriculum,
+        CatalogueSeed catalogue,
+        IReadOnlyDictionary<string, int> epaIdsByCode)
+    {
+        foreach (var seed in catalogue.Epas)
+        {
+            if (!epaIdsByCode.TryGetValue(seed.Code, out var epaId))
+            {
+                continue;
+            }
+
+            var item = curriculum.Items.FirstOrDefault(entity => entity.EpaId == epaId && entity.OwningInstitutionId is null);
+            if (item is null)
+            {
+                continue;
+            }
+
+            var stored = CurriculumItem.ParsePermittedTools(item.PermittedToolsJson);
+            var expected = CurriculumItem.ParsePermittedTools(CurriculumItem.NormalizePermittedToolsJson(seed.WbaTools));
+            if (!stored.SequenceEqual(expected, StringComparer.Ordinal))
+            {
+                _logger.LogWarning(
+                    "Curriculum item {CurriculumItemId} ({EpaCode}) permits {StoredTools}, but EPA v11.1 permits {ExpectedTools}. Not changed: this seeder never overwrites an existing item.",
+                    item.Id,
+                    seed.Code,
+                    stored.Count == 0 ? "any instrument" : string.Join(", ", stored),
+                    expected.Count == 0 ? "any instrument" : string.Join(", ", expected));
+            }
+        }
     }
 
     /// <summary>
@@ -432,7 +544,10 @@ public sealed class PaediatricCatalogueSeeder
             // The Y1-Y4 curve from Annexure A, as scale ORDERS (so 3a is 3, 3b is 4, 4 is 5, 5 is 6).
             MinimumLevelByStageJson = JsonSerializer.Serialize(seed.StageLevels),
             // Not the quota window and not enforced by credit (D19); see CurriculumItem.WindowMonths.
-            WindowMonths = 12
+            WindowMonths = 12,
+            // Annexure A's tools cell, as instrument keys with the College's aliases applied (T122, D4, D12). Checked
+            // when an activity is filed and submitted, never at credit (D20).
+            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(seed.WbaTools)
         };
     }
 
@@ -452,11 +567,23 @@ public sealed class PaediatricCatalogueSeeder
     // Internal rather than private so Wombat.Infrastructure.Tests can check that every key the catalogue
     // carries is either deserialized here or deliberately left out (T130). Before T130, per-EPA data sat in
     // the JSON that nothing read: `currency` and `wbaTools` were both unread, and that is how the quota's
-    // window came to have no source.
+    // window came to have no source, and how every CPSA tool came to credit every CPSA EPA (T122).
     internal sealed record CatalogueSeed(
         [property: JsonPropertyName("catalogueVersion")] string CatalogueVersion,
         [property: JsonPropertyName("scale")] ScaleSeed Scale,
+        [property: JsonPropertyName("wbaToolVocabulary")] IReadOnlyList<WbaToolSeed> WbaToolVocabulary,
         [property: JsonPropertyName("epas")] IReadOnlyList<EpaSeed> Epas);
+
+    /// <summary>
+    /// One instrument of the College's vocabulary (T122). The catalogue also carries <c>annexureNames</c>, the
+    /// verbatim Annexure A names the key stands for, and a <c>note</c> recording the decision behind an alias. Both
+    /// are deliberately not read: they are the audit trail a reader of the annexure needs, not data the product
+    /// uses, and a test resolves every EPA's verbatim cell through them.
+    /// </summary>
+    internal sealed record WbaToolSeed(
+        [property: JsonPropertyName("key")] string Key,
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("description")] string? Description);
 
     internal sealed record ScaleSeed(
         [property: JsonPropertyName("name")] string Name,
@@ -473,6 +600,11 @@ public sealed class PaediatricCatalogueSeeder
     /// explicit key rather than something parsed out of prose, and it, not <c>currency</c>, decides the
     /// quota window; see <see cref="QuotaFor" />.
     /// </param>
+    /// <param name="WbaTools">
+    /// The instruments that may credit this EPA, as vocabulary keys (T122). Annexure A's verbatim cell sits beside it
+    /// as <c>annexureTools</c>, deliberately unread, with the College's two aliases (D4, D12) resolved in the
+    /// vocabulary and EPA 7's addition of Direct observation (D12) noted as <c>wbaToolsNote</c>.
+    /// </param>
     internal sealed record EpaSeed(
         [property: JsonPropertyName("code")] string Code,
         [property: JsonPropertyName("title")] string Title,
@@ -482,7 +614,8 @@ public sealed class PaediatricCatalogueSeeder
         [property: JsonPropertyName("observationsPerYear")] int ObservationsPerYear,
         [property: JsonPropertyName("observationsPerSemester")] int? ObservationsPerSemester,
         [property: JsonPropertyName("stageLevels")] IReadOnlyDictionary<string, int> StageLevels,
-        [property: JsonPropertyName("minimumLevelOrder")] int MinimumLevelOrder);
+        [property: JsonPropertyName("minimumLevelOrder")] int MinimumLevelOrder,
+        [property: JsonPropertyName("wbaTools")] IReadOnlyList<string> WbaTools);
 
     /// <summary>Reads the catalogue file exactly as <see cref="SeedAsync" /> does. For tests.</summary>
     internal static Task<CatalogueSeed> ReadCatalogueForTestsAsync(CancellationToken cancellationToken = default)

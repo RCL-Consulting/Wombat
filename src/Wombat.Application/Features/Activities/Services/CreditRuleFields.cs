@@ -18,11 +18,15 @@ public static class CreditRuleFields
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Mirrors the precedence in <c>CreditApplier.ResolveCurriculumItemsAsync</c>, which tests
-    /// <c>curriculum_item_id</c> first, then <c>curriculum_item_field</c>, and only reads
-    /// <c>epa_field</c> when neither is set. Nothing in <c>CreditRulesParser</c> makes the three
-    /// mutually exclusive, so a rule block can name an <c>epa_field</c> the engine provably never
-    /// reads. Narrowing a picker on that field would hide choices that cannot affect credit.
+    /// Follows the precedence in <c>CreditTargetResolver.ResolveCurriculumItemsAsync</c>, which tests
+    /// <c>curriculum_item_id</c> first, then <c>curriculum_item_field</c>, and otherwise reads
+    /// <c>epa_field</c>. Nothing in <c>CreditRulesParser</c> makes the three mutually exclusive. A
+    /// directive naming <c>curriculum_item_field</c> is skipped here, although the engine FALLS THROUGH to
+    /// its <c>epa_field</c> when the item field holds no parseable id. That case is left un-narrowed on
+    /// purpose: narrowing on a field the engine reads only as a fallback would hide choices that usually
+    /// cannot affect credit. The write path's tool gate (T122) resolves through the engine's own resolver
+    /// and is authoritative there, so a builder-made rule mixing both keys can be refused at submit for an
+    /// EPA this picker offered.
     /// </para>
     /// <para>
     /// An unparseable or absent rule set yields an empty set — no narrowing. Surfacing a malformed
