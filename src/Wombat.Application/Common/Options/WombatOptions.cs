@@ -24,4 +24,16 @@ public sealed class WombatOptions
     /// diff again and publish a third version.
     /// </remarks>
     public bool RefreshSeededActivityTypes { get; set; } = true;
+
+    /// <summary>
+    /// Whether startup rebuilds curriculum progress when the progress table is empty but completions have
+    /// credited (T130). On by default. The T130 migration empties the table on every existing database, and
+    /// without this every trainee would read zero until someone ran the rebuild by hand.
+    /// </summary>
+    /// <remarks>
+    /// The kill switch is <c>Wombat__RebuildEmptyCurriculumProgress=false</c>. When it is off, startup logs
+    /// that a rebuild is due and does nothing. The manual rebuild at <c>/admin/curriculum-progress</c>
+    /// works either way.
+    /// </remarks>
+    public bool RebuildEmptyCurriculumProgress { get; set; } = true;
 }

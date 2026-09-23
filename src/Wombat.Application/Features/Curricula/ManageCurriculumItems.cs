@@ -7,10 +7,16 @@ using Wombat.Domain.Curricula;
 
 namespace Wombat.Application.Features.Curricula;
 
+/// <param name="RequiredCount">The target per <paramref name="QuotaPeriod" /> window, not a programme total (T130, D18).</param>
+/// <param name="QuotaPeriod">
+/// Which window the target is for. Positional and required, deliberately not defaulted: a defaulted argument is one
+/// a future call site can silently drop, and dropping this one would turn a per-semester target into a per-year one.
+/// </param>
 public sealed record AddCurriculumItemCommand(
     int CurriculumId,
     int EpaId,
     int RequiredCount,
+    QuotaPeriod QuotaPeriod,
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,
@@ -18,11 +24,13 @@ public sealed record AddCurriculumItemCommand(
     ClaimsPrincipal Principal,
     int? ScaleId = null) : IRequest<CurriculumDto>;
 
+/// <param name="QuotaPeriod">Required, not defaulted: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would reset a semester item to a yearly one.</param>
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
     int ItemId,
     int EpaId,
     int RequiredCount,
+    QuotaPeriod QuotaPeriod,
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,
@@ -39,6 +47,7 @@ public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCur
         RuleFor(command => command.CurriculumId).GreaterThan(0);
         RuleFor(command => command.EpaId).GreaterThan(0);
         RuleFor(command => command.RequiredCount).GreaterThan(0);
+        RuleFor(command => command.QuotaPeriod).IsInEnum();
         RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
         RuleFor(command => command.WindowMonths).GreaterThan(0);
         RuleFor(command => command.MinimumLevelByStageJson)
@@ -55,6 +64,7 @@ public sealed class UpdateCurriculumItemCommandValidator : AbstractValidator<Upd
         RuleFor(command => command.ItemId).GreaterThan(0);
         RuleFor(command => command.EpaId).GreaterThan(0);
         RuleFor(command => command.RequiredCount).GreaterThan(0);
+        RuleFor(command => command.QuotaPeriod).IsInEnum();
         RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
         RuleFor(command => command.WindowMonths).GreaterThan(0);
         RuleFor(command => command.MinimumLevelByStageJson)
@@ -147,6 +157,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             EpaId = request.EpaId,
             OwningInstitutionId = owningInstitutionId,
             RequiredCount = request.RequiredCount,
+            QuotaPeriod = request.QuotaPeriod,
             MinimumLevelOrder = request.MinimumLevelOrder,
             WindowMonths = request.WindowMonths,
             Weight = request.Weight,
@@ -208,6 +219,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
 
         item.EpaId = request.EpaId;
         item.RequiredCount = request.RequiredCount;
+        item.QuotaPeriod = request.QuotaPeriod;
         item.MinimumLevelOrder = request.MinimumLevelOrder;
         item.WindowMonths = request.WindowMonths;
         item.Weight = request.Weight;

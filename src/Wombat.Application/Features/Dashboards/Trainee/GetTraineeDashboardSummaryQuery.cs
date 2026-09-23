@@ -4,14 +4,14 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Dashboards.Trainee;
 
-public sealed record GetTraineeDashboardSummaryQuery(ClaimsPrincipal Principal) : IRequest<TraineeDashboardSummaryDto>;
+/// <param name="AsOf">The day to read curriculum progress for. Defaults to today in South Africa; tests pin it.</param>
+public sealed record GetTraineeDashboardSummaryQuery(ClaimsPrincipal Principal, DateOnly? AsOf = null) : IRequest<TraineeDashboardSummaryDto>;
 
 public sealed class GetTraineeDashboardSummaryQueryHandler
     : IRequestHandler<GetTraineeDashboardSummaryQuery, TraineeDashboardSummaryDto>
@@ -32,58 +32,13 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         if (isPending)
         {
-            return new TraineeDashboardSummaryDto([], [], [], [], IsPendingTrainee: true);
+            return new TraineeDashboardSummaryDto(null, [], [], [], IsPendingTrainee: true);
         }
 
-        var profile = await _dbContext.Set<TraineeProfile>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.IsActive, cancellationToken);
-
-        var curriculumProgress = new List<CurriculumProgressItem>();
-        int? traineeStage = null;
-        if (profile is not null)
-        {
-            traineeStage = ComputeTraineeStage(profile.ProgrammeStartDate, DateOnly.FromDateTime(DateTime.UtcNow));
-
-            var progressRows = await _dbContext.Set<CurriculumItemProgress>()
-                .AsNoTracking()
-                .Where(p => p.TraineeUserId == userId &&
-                            p.CurriculumItem.CurriculumId == profile.CurriculumId)
-                .Select(p => new
-                {
-                    p.CurriculumItem.Epa.Title,
-                    p.CountsSoFar,
-                    p.MinimumLevelReachedCount,
-                    p.CurriculumItem.RequiredCount,
-                    p.CurriculumItem.MinimumLevelOrder,
-                    p.CurriculumItem.MinimumLevelByStageJson,
-                    p.CurriculumItem.ScaleId
-                })
-                .ToListAsync(cancellationToken);
-
-            var rungs = await EntrustmentRungLabels.LoadAsync(
-                _dbContext, progressRows.Select(row => row.ScaleId), cancellationToken);
-
-            foreach (var row in progressRows)
-            {
-                var item = new CurriculumItem
-                {
-                    MinimumLevelOrder = row.MinimumLevelOrder,
-                    MinimumLevelByStageJson = row.MinimumLevelByStageJson
-                };
-                var effectiveMinimum = item.GetMinimumLevelForStage(traineeStage);
-
-                curriculumProgress.Add(new CurriculumProgressItem(
-                    row.Title,
-                    row.CountsSoFar,
-                    row.RequiredCount,
-                    row.CountsSoFar >= row.RequiredCount,
-                    effectiveMinimum,
-                    rungs.Format(row.ScaleId, effectiveMinimum),
-                    row.MinimumLevelReachedCount,
-                    traineeStage));
-            }
-        }
+        // The same read model as the progress page (T130), so the card and the page cannot disagree. It is
+        // item-driven: a period that has only just begun reads "0 of 3" rather than showing nothing.
+        var curriculumTargets = await TraineeQuotaProgressReader.ReadAsync(
+            _dbContext, userId, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
         var inbox = await _dbContext.Set<Activity>()
             .AsNoTracking()
@@ -145,7 +100,7 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
         }
 
         return new TraineeDashboardSummaryDto(
-            curriculumProgress,
+            curriculumTargets,
             inbox,
             recentActivities,
             upcomingDeadlines.OrderBy(d => d.DueDate).Take(5).ToList(),

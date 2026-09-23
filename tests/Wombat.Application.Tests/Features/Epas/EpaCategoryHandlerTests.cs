@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Tests.TestHelpers;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -69,6 +70,7 @@ public sealed class EpaCategoryHandlerTests
                 CurriculumId: 1,
                 EpaId: 7,
                 RequiredCount: 6,
+                QuotaPeriod: QuotaPeriod.AcademicYear,
                 MinimumLevelOrder: 5,
                 WindowMonths: 36,
                 Weight: null,
@@ -84,7 +86,7 @@ public sealed class EpaCategoryHandlerTests
     public async Task AddCurriculumItem_RejectsInvalidStageOverridesJson()
     {
         var validator = new AddCurriculumItemCommandValidator();
-        var command = new AddCurriculumItemCommand(1, 7, 6, 5, 36, null, "not json", TestPrincipals.Administrator());
+        var command = new AddCurriculumItemCommand(1, 7, 6, QuotaPeriod.AcademicYear, 5, 36, null, "not json", TestPrincipals.Administrator());
 
         var result = await validator.ValidateAsync(command);
 

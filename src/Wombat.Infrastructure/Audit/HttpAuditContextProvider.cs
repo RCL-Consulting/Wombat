@@ -15,6 +15,7 @@ public sealed class HttpAuditContextProvider : IAuditContextProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private int? _declaredInstitutionId;
+    private (string UserId, string Display)? _declaredActor;
 
     public HttpAuditContextProvider(IHttpContextAccessor httpContextAccessor)
     {
@@ -22,10 +23,10 @@ public sealed class HttpAuditContextProvider : IAuditContextProvider
     }
 
     public string? UserId =>
-        _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        _declaredActor?.UserId ?? _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     public string? UserDisplay =>
-        _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+        _declaredActor?.Display ?? _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
     public string? IpAddress =>
         TruncateIp(_httpContextAccessor.HttpContext?.Connection.RemoteIpAddress);
@@ -51,6 +52,12 @@ public sealed class HttpAuditContextProvider : IAuditContextProvider
     /// so this lives for one dispatch and cannot bleed into the next command. (T101)
     /// </summary>
     public void DeclareInstitution(int institutionId) => _declaredInstitutionId = institutionId;
+
+    /// <summary>
+    /// For a dispatch with no HTTP request, such as the startup rebuild (T130), which would otherwise be audited
+    /// with no actor. Scoped like <see cref="DeclareInstitution"/>, so it lives for one dispatch.
+    /// </summary>
+    public void DeclareActor(string userId, string display) => _declaredActor = (userId, display);
 
     private static string? TruncateIp(IPAddress? address)
     {

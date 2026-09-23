@@ -185,6 +185,7 @@ public sealed class AuditPipelineBehaviorTests
         public string? UserAgent => "Test/1.0";
         public int? InstitutionId => _declared ?? principalInstitutionId;
         public void DeclareInstitution(int institutionId) => _declared = institutionId;
+        public void DeclareActor(string userId, string display) { }
     }
 
     private static RequestHandlerDelegate<T> FailingNext<T>()

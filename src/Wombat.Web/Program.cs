@@ -493,6 +493,11 @@ await using (var scope = app.Services.CreateAsyncScope())
         var devUserSeeder = scope.ServiceProvider.GetRequiredService<DevUserSeeder>();
         await devUserSeeder.SeedAsync();
     }
+
+    // The T130 migration empties the progress table, because a lifetime tally cannot be split into
+    // semesters. This refills it from the completed activities, once, whenever the table is empty but
+    // completions record credit. It never throws; see CurriculumProgressBootstrapper.
+    await scope.ServiceProvider.GetRequiredService<CurriculumProgressBootstrapper>().RunAsync();
 }
 
 if (args.Contains("--seed", StringComparer.Ordinal))

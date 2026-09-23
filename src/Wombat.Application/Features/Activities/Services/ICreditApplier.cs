@@ -1,5 +1,6 @@
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Activities.Services;
 
@@ -7,7 +8,11 @@ namespace Wombat.Application.Features.Activities.Services;
 /// What one application of the credit rules did. The counters are per-call, not cumulative: they describe
 /// this completion, so the caller can stamp the outcome onto the transition that caused it (T109).
 /// </summary>
-/// <param name="UpdatedRows">The progress rows this call created or incremented.</param>
+/// <param name="UpdatedRows">
+/// The progress rows this call created or incremented: one per curriculum item credited, each the row for the
+/// semester that contains the encounter date (T130). Its count is therefore the number of ITEMS credited, which
+/// is what <c>ActivityTransition.CreditedItemCount</c> records.
+/// </param>
 /// <param name="ScaleMismatchCount">
 /// Curriculum items that counted toward volume but were refused the minimum, because the assessment's
 /// entrustment ladder and the item's were both known and different.
@@ -23,14 +28,73 @@ public sealed record CreditApplicationResult(
     public static CreditApplicationResult Empty { get; } = new([], 0, 0);
 }
 
+/// <summary>
+/// The three facts about an activity that credit depends on. They are passed explicitly rather than read off
+/// the entity, so that <see cref="ICreditApplier.PlanAsync" /> can run BEFORE the transition mutates the
+/// activity, using the data and the date the transition is about to write.
+/// </summary>
+public sealed record CreditSubject(string SubjectUserId, DateOnly ObservedOn, string DataJson)
+{
+    /// <summary>The subject, date and data an activity already carries: for a replay, or for a caller that has already transitioned it.</summary>
+    public static CreditSubject Of(Activity activity)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        return new CreditSubject(activity.SubjectUserId, activity.ObservedOn, activity.DataJson);
+    }
+}
+
+/// <summary>One curriculum item a completion will credit, decided with every read already done.</summary>
+public sealed record PlannedCredit(int CurriculumItemId, int Amount, LevelComparison Comparison, int? ItemScaleId);
+
+/// <summary>
+/// Everything credit needs to know, gathered by <see cref="ICreditApplier.PlanAsync" /> without mutating
+/// anything, so that <see cref="ICreditApplier.Apply" /> can finish without a single await.
+/// </summary>
+/// <remarks>
+/// <see cref="ExistingRows" /> are TRACKED entities. They are every progress row the trainee has on every
+/// candidate item, in every semester, gathered from <c>Local</c> and from the database. All periods are
+/// included so the dedupe can look across buckets: an activity credits an item at most once, whichever
+/// semester it lands in.
+/// </remarks>
+public sealed record CreditPlan(
+    string TraineeUserId,
+    DateOnly ObservedOn,
+    IReadOnlyList<PlannedCredit> Credits,
+    IReadOnlyList<CurriculumItemProgress> ExistingRows)
+{
+    public static CreditPlan Nothing { get; } = new(string.Empty, default, [], []);
+}
+
 public interface ICreditApplier
 {
+    /// <summary>
+    /// Every read credit needs: the trainee, their curriculum, the matched items, the level comparisons, the
+    /// scale bindings and the progress rows. Mutates nothing, so a failure here (a dropped connection, a
+    /// cancellation) leaves nothing half-written for the audit pipeline's catch to commit.
+    /// </summary>
     /// <param name="activityType">
     /// Carries the <em>pinned</em> version's <c>CreditRulesJson</c> and <c>SchemaJson</c>. The schema is
     /// required as well as the rules because the scale an achieved ordinal sits on is declared by the
     /// <c>scale_key</c> of the field the directive names, and pinning means that answer cannot drift for
     /// the life of the activity (T109).
     /// </param>
+    Task<CreditPlan> PlanAsync(
+        CreditSubject subject,
+        ActivityType activityType,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Writes the plan onto the progress rows: synchronous, no I/O, so nothing can fail between the first
+    /// increment and the caller's save. The activity must already carry the transition credit is recorded
+    /// against, because the dedupe key is <c>{activityId}:{transitionKey}</c>.
+    /// </summary>
+    CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity);
+
+    /// <summary>
+    /// <see cref="PlanAsync" /> then <see cref="Apply" />, for an activity that has already been transitioned
+    /// and stamped: the rebuild's replay, and tests. The live transition path calls the two halves separately,
+    /// with the transition in between.
+    /// </summary>
     Task<CreditApplicationResult> ApplyAsync(
         Activity completedActivity,
         ActivityType activityType,

@@ -19,7 +19,7 @@ workspace:
 | `tasks/{queued,in_progress,blocked,done}/` | The register, one file per task. |
 | `architecture/` | How the system is built: `ARCHITECTURE.md`, `DESIGN.md`, `CUSTOMIZATION.md`, `INFRASTRUCTURE.md`. |
 | `knowledge/` | What the project knows: `DOMAIN.md`, `EPA-PROGRAMME.md`, `HANDOVER.md`, `WORKFLOW.md`, `PLAN.md`, the scenario runbooks, the closed plans. |
-| `DECISIONS.md` | Process decisions (`W-nnn`). Product decisions are `D1`–`D38` in `knowledge/EPA-PROGRAMME.md`. |
+| `DECISIONS.md` | Process decisions (`W-nnn`). Product decisions are `D1`–`D42` in `knowledge/EPA-PROGRAMME.md`. |
 | `log/` | Trimmed overflow, and the 3,574-line pre-harness handoff archive. History; do not read it for state. |
 
 These docs were in `Rewrite/` until 2026-09-20, then briefly `Programme/`, before landing in
@@ -98,7 +98,7 @@ Wombat/
 │   │   └── INFRASTRUCTURE.md      ← Linode deployment target
 │   ├── knowledge/
 │   │   ├── DOMAIN.md              ← what EPAs, WBAs, STAR, roles mean
-│   │   ├── EPA-PROGRAMME.md       ← the CPSA v11.1 programme; product decisions D1–D38
+│   │   ├── EPA-PROGRAMME.md       ← the CPSA v11.1 programme; product decisions D1–D42
 │   │   ├── HANDOVER.md            ← running the live service (T016 deliverable)
 │   │   ├── WORKFLOW.md            ← git branching; session protocol superseded by the harness
 │   │   ├── PLAN.md                ← the original rewrite plan; T001–T027, complete

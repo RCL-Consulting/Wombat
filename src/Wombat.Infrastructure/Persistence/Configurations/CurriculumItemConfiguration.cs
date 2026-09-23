@@ -9,7 +9,10 @@ public sealed class CurriculumItemConfiguration : IEntityTypeConfiguration<Curri
 {
     public void Configure(EntityTypeBuilder<CurriculumItem> builder)
     {
-        builder.ToTable("CurriculumItems");
+        // QuotaPeriod is stored as its integer value (T130). A value outside the enum would read as an academic
+        // year (QuotaWindow treats anything but Semester that way), but a write must never produce one.
+        builder.ToTable("CurriculumItems", table =>
+            table.HasCheckConstraint("CK_CurriculumItems_QuotaPeriod", "\"QuotaPeriod\" IN (0, 1)"));
         // One item per EPA per curriculum, whether it is a national core item or an institution-local
         // addition (T091 phase 3) — an institution can't re-add an EPA already in the national core.
         builder.HasIndex(entity => new { entity.CurriculumId, entity.EpaId }).IsUnique();

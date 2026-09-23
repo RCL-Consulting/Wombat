@@ -35,6 +35,9 @@ public sealed class Curriculum
                 {
                     EpaId = item.EpaId,
                     RequiredCount = item.RequiredCount,
+                    // Carried deliberately (T130): RequiredCount is a target PER this window, so cloning the
+                    // number without its window would silently turn a per-semester target into a per-year one.
+                    QuotaPeriod = item.QuotaPeriod,
                     MinimumLevelOrder = item.MinimumLevelOrder,
                     WindowMonths = item.WindowMonths,
                     Weight = item.Weight,

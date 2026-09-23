@@ -8,7 +8,7 @@ Record the rejected option and why: that reasoning is what rots first.
 > | Register | Prefix | Holds |
 > |---|---|---|
 > | **this file** | `W-nnn` | **How the project is run** — tooling, workspace layout, process. |
-> | `execution/knowledge/EPA-PROGRAMME.md` § 3 | `D1`–`D38` | **What the product does** — the CPSA v11.1 catalogue's domain decisions, cited by task files as `[T123] D1a`. |
+> | `execution/knowledge/EPA-PROGRAMME.md` § 3 | `D1`–`D42` | **What the product does** — the CPSA v11.1 catalogue's domain decisions, cited by task files as `[T123] D1a`. |
 >
 > The prefixes differ because `D-001` beside `D38` is a trap: the same letter, two
 > unrelated sequences, no way to tell from a citation which register you are in. A product

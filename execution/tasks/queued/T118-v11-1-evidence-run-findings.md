@@ -65,6 +65,9 @@ exist. Second surface for T100, and worse than the picker because there is no li
 
 ### 3. The quota is visibly wrong: "1 / 24"
 
+> **Closed by [T130], 2026-09-23.** The page now reads each EPA against its published target for the current
+> period — "1 of 3 this semester" for PAED-001 — with the College's D14 exemption and the previous period's result.
+
 PAED-001 requires **six per annum**. The page says `1 / 24`, because `PaediatricCatalogueSeeder.cs:356-361`
 multiplies the annual quota by four programme years. The other EPAs read `0 / 4`, `0 / 8`, `0 / 16`,
 `0 / 24`. A registrar cannot tell from this page what is expected of them **this year**, which is the only

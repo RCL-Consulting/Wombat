@@ -24,6 +24,7 @@ public sealed class CurriculumCloneTests
                     EpaId = 100,
                     Epa = new Epa { Id = 100, Code = "EPA-001", Title = "Admit a patient" },
                     RequiredCount = 3,
+                    QuotaPeriod = QuotaPeriod.Semester,
                     MinimumLevelOrder = 4,
                     WindowMonths = 12,
                     Weight = 1.5,
@@ -43,6 +44,10 @@ public sealed class CurriculumCloneTests
         clone.Items.Single().Should().NotBeSameAs(curriculum.Items.Single());
         clone.Items.Single().EpaId.Should().Be(100);
         clone.Items.Single().RequiredCount.Should().Be(3);
+        // T130: RequiredCount is a target per this window. The source is Semester, not the zero value, because
+        // a clone that dropped the field would land on AcademicYear and turn "3 per semester" into "3 per year"
+        // for every trainee on the new version — and an AcademicYear source could not tell the two apart.
+        clone.Items.Single().QuotaPeriod.Should().Be(QuotaPeriod.Semester);
         clone.Items.Single().MinimumLevelOrder.Should().Be(4);
         clone.Items.Single().WindowMonths.Should().Be(12);
         clone.Items.Single().Weight.Should().Be(1.5);

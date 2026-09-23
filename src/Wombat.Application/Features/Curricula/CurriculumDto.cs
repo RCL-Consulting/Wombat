@@ -20,7 +20,9 @@ public sealed record CurriculumItemDto(
     int EpaId,
     string EpaCode,
     string EpaTitle,
+    /// <summary>The target per <see cref="QuotaPeriod" /> window (T130, D18).</summary>
     int RequiredCount,
+    Wombat.Domain.Curricula.QuotaPeriod QuotaPeriod,
     int MinimumLevelOrder,
     int WindowMonths,
     double? Weight,

@@ -36,7 +36,9 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
 
     public async Task<AccessExportResult> BuildAsync(string userId, CancellationToken cancellationToken)
     {
-        var report = new AccessReport { SchemaVersion = 1, GeneratedOn = DateTime.UtcNow };
+        // Version 2 (T130): a curriculum-progress entry became one semester's tally rather than a lifetime one,
+        // so the same item now appears once per semester and each entry says which semester it is.
+        var report = new AccessReport { SchemaVersion = 2, GeneratedOn = DateTime.UtcNow };
 
         // Profile
         var user = await _dbContext.Users
@@ -111,8 +113,11 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
             .Select(p => new CurriculumProgressSection
             {
                 CurriculumItemId = p.CurriculumItemId,
+                AcademicYear = p.AcademicYear,
+                Semester = p.Semester,
                 CountsSoFar = p.CountsSoFar,
                 MinimumLevelReachedCount = p.MinimumLevelReachedCount,
+                LastObservedOn = p.LastObservedOn,
                 LastUpdated = p.LastUpdated
             })
             .ToListAsync(cancellationToken);
@@ -260,8 +265,11 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
     private sealed class CurriculumProgressSection
     {
         public int CurriculumItemId { get; set; }
+        public int AcademicYear { get; set; }
+        public int Semester { get; set; }
         public int CountsSoFar { get; set; }
         public int MinimumLevelReachedCount { get; set; }
+        public DateOnly? LastObservedOn { get; set; }
         public DateTime LastUpdated { get; set; }
     }
 

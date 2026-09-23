@@ -110,6 +110,7 @@ public sealed class AcceptInvitationAutoRevokeTests
         public string? UserAgent => null;
         public int? InstitutionId => null;
         public void DeclareInstitution(int institutionId) { }
+        public void DeclareActor(string userId, string display) { }
     }
 
     private sealed class StubProvisioner : IInvitedUserProvisioner

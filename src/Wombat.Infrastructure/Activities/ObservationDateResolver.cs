@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Curricula;
 
 namespace Wombat.Infrastructure.Activities;
 
@@ -37,7 +38,10 @@ internal static class ObservationDateResolver
         FormSchema schema,
         string dataJson)
     {
-        var fallback = (DateOnly.FromDateTime(activity.CreatedOn), ObservationDateSource.CreatedOn);
+        // The South African date it was filed on, not the UTC one (T130). Credit buckets on this date and the
+        // progress page reads "today" in South Africa. With a UTC fallback, an undated activity filed between
+        // midnight and 02:00 on 1 July would land in semester 1 while the page was already showing semester 2.
+        var fallback = (ProgrammeCalendar.DateOf(activity.CreatedOn), ObservationDateSource.CreatedOn);
 
         if (string.IsNullOrWhiteSpace(schema.ObservationDateField) || string.IsNullOrWhiteSpace(dataJson))
         {

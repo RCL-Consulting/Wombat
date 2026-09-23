@@ -14,6 +14,14 @@ created: 2026-09-19
 only) entirely with Mini-CEXs, and the product will call the curriculum item complete. The College
 published a tool allow-list per EPA and Wombat ignores it.
 
+
+> **Note from [T130], 2026-09-23.** `PaediatricCatalogueSeeder.EpaSeed` is now `internal` and carries
+> `ObservationsPerSemester`; `Wombat.Infrastructure.Tests/Persistence/PaediatricCatalogueQuotaSeedTests.cs` holds a guard
+> that fails on any catalogue key neither deserialized nor allow-listed, and `wbaTools` is on its allow-list until
+> this task moves it. For correcting existing rows, T130 chose a **one-off, guarded migration UPDATE plus a startup
+> warning**, not an update pass in `EnsureCurriculumAsync`: a reconcile on every boot silently reverts an
+> administrator who set a value on purpose. The same argument applies to `PermittedToolsJson`.
+
 ## Symptom
 
 `src/Wombat.Infrastructure/Persistence/Seeds/paediatric-epa-v11.1.json` carries `wbaTools` on all fifteen

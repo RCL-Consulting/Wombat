@@ -2,79 +2,69 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-21 (Opus) — T121: MSF leaves evidence behind
+## Session 2026-09-23 (Opus) — T130: the annual quota
 
-One application task shipped, one pre-existing defect fixed on the way, two filed.
+One P1 shipped; five follow-ups filed. The previous handoff (T121) is in `execution/log/2026-09-23.md`.
 
 ### Done
 
-- **[T121]** — a released MSF campaign now writes one terminal `msf_cpsa` activity per covered EPA into
-  the trainee's ordinary activity, portfolio and committee path. **Browser-verified end to end on dev**,
-  three times over: scope stamped from the subject, no respondent data in `DataJson`, `ObservedOn` from
-  the real close date, a dropped EPA reported as dropped.
-- **Per D8, nothing is credited.** `"counts_for": []`, so no `CurriculumItemProgress` row moves and
-  `CreditedItemCount` stays null — T108's "never evaluated". The task file's Verification section assumed
-  the opposite; it is rewritten, with an **As built** section listing every divergence from the design.
-- **D11 lives in `MsfAggregationService.BuildReport`**, so the disabled button and the server refusal
-  cannot disagree. Browser-verified blocked and unblocked.
-- **Found and fixed on the way: the portfolio export threw for any trainee with a released MSF
-  campaign.** `PortfolioPdfService` never included `Responses.Invitation`, which
-  `MsfAggregationService` dereferences on its first line. Invisible because the only two portfolio tests
-  inject a `ThrowingMsfAggregationService`. Guard **verified to fail against the unfixed code**.
-- **An adversarial review of the diff (6 reviewers, 3 refuters each) found six real defects, all
-  fixed** and all written up on the task file. The three that mattered: the scope check was on create,
-  not on **release**, which is the half that writes; a failed fan-out would have **committed the release
-  anyway** via the audit catch; and the reviewer's ordinal was a bare number box, so rung "4" stored
-  rung "3b" (the T100 trap).
+- **[T130]** — curriculum progress is stored **per semester** (`AcademicYear` + `Semester` on
+  `CurriculumItemProgress`). `RequiredCount` is a target **per window**, a semester or an academic year
+  (`CurriculumItem.QuotaPeriod`). The College's D14 is applied when progress is read, by `QuotaWindow`. One read
+  model serves the progress page, the trainee dashboard and the committee, speciality and sub-speciality dashboards.
+  **Browser-verified on dev**, in this order:
+  1. The old build staged 5 WBAs. The migration then ran against real lifetime rows, and the startup rebuild refilled
+     4 semester rows.
+  2. A live completion credited "2 of 3 this semester".
+  3. The manual rebuild at `/admin/curriculum-progress` reproduced the tallies byte for byte.
+  4. The D14 cases showed correctly: a 15 August start, a 5 July start, and a start not yet reached.
+  5. The committee card named the trainee. An unchanged save in the item editor kept `QuotaPeriod`.
+- **The task's premise was wrong, and the fix is recorded as D39.** `currency` is the source's expiry period, which
+  Annexure B relabels as the decision cadence. The per-semester figure comes from Annexure B, and the catalogue now
+  carries it as `observationsPerSemester`. D17–D19 are closed; D39–D42 are recorded in `EPA-PROGRAMME.md` § 3E.
+  The task file has a rewritten Verification section and an **As built** section.
+- **Audit trap closed on the credit path.** `CreditApplier` is split into `PlanAsync` (reads) and `Apply` (sync), and
+  `ActivityService` plans before `ApplyTransition`. The rebuild rolls back by reference, guards its save, and refuses
+  when a completion lands mid-rebuild.
+- **Found and fixed.** The staff dashboards had no institution filter; a sub-speciality id is national, and the new
+  committee card named trainees. All three now keep to the caller's institution.
 
 ### Filed, not fixed
 
-- **[T137] P2** — N EPAs give N rows on `/activities/mine` reading `Type / State / Updated` and nothing
-  else. Not MSF-specific: `ActivitySummaryDto` has no EPA and no date, and `Activity.EpaId` is written by
-  nothing.
-- **[T138] P3** — the committee evidence snapshot has no state filter on MSF campaigns, so a draft, open
-  or **withdrawn** campaign is shown to a panel as evidence.
-- **[T135] updated** — `msf_cpsa` is a live instance of its defect 2, and folding it into
-  `WithheldRatedActivities` would be the wrong fix.
+[T139] P3 WindowMonths seeded 12 and the one-year completion default · [T140] **P2** the MSF integration fixture
+cannot set up on a fresh schema and leaks a schema · [T141] P3 no nav route to My progress · [T142] P3 raw user ids on
+activity pages · [T143] P3 the new-activity form keeps its values after submit.
 
 ### Next
 
-1. **[T130] (the annual quota) — Model: Opus.** The most visible gap left, and unblocked. [T121]
-   writes `ObservedOn` from the real close date precisely so phase 3 can bucket it.
-2. **[T120]** + **[T122]** (the EPA→tool mapping). [T137] **Opus**; [T138] **Sonnet**.
-3. **Ask the two residual College questions** — the "clinical observed interaction" merge scope, and
-   whether June is semester 1 or 2. Neither blocks starting; both block finishing.
-4. **[T128]** — still blocked on you: off-host destination + `age` key holder.
+1. **[T122] (EPA→tool allow-list) — Model: Opus.** D20 recommends one predicate for the picker and submit, with no
+   credit-time re-litigation. D21 recommends a permissive fallback. The T130 note in the file covers the seed approach.
+2. **[T102] fix 2**, then **[T120]**. **[T140] — Sonnet** (small, and it unblocks trusting the Integration suite).
+3. Send the four § 3F College questions. Decide [T128]'s destination.
+4. **Production deploy of T130:** take a `pg_dump` first. The migration empties the progress table; the bootstrapper
+   refills it at boot and logs the counts. Rolling back means restoring the dump, not `Down()`.
 
 ### Traps
 
-- **`AuditWriter` shares the request's scoped `IApplicationDbContext` and calls `SaveChangesAsync`, and
-  `AuditPipelineBehavior` writes an audit row from its `catch`.** Any exception thrown while the context
-  holds a half-finished mutation therefore COMMITS that mutation on the way out. This is not MSF-specific
-  and it is not written down anywhere else: **any handler that mutates then validates is committing on
-  failure.** Worth a sweep.
-- **`msf_cpsa` is in the rated set (nine seeds, not eight)**, unavoidably while D10's optional ordinal
-  exists: `Schema_DeclaresARatedFieldExactlyWhenItCarriesAScale` is a biconditional. It is invisible on
-  both surfaces that read that set, because neither finds an `assessor_user_id`. Recorded against D10.
-- **Do not add `msf_cpsa` to `CpsaWbaSeedTests.SeedKeys`** — its theories assume the
-  request → assess → feedback shape. `MsfSeedTests` is its guard; a comment says so there.
-- **`ClaimsPrincipalExtensions.CanAccessInstitution` returns false for a Coordinator**, whatever their
-  institution: it admits only Administrator and InstitutionalAdmin.
-- **`ClaimsPrincipal.IsInRole` is the BCL instance method**, not the extension, so it reads the
-  identity's `RoleClaimType`. A test principal built without it matches `role:Coordinator` for nobody.
-- **The dev trainee is now on the paediatric curriculum** (`TraineeProfiles.CurriculumId` 1 → 2). Dev
-  holds MSF campaigns 1–3 and activities 1–6. Campaign 1 was released through the pre-fix number box, so
-  its level 4 means rung "3b"; 2 and 3 went through the rung picker and are right.
-- Hooks hard-code `C:\dev\rcl_execution\bin\harness.py` (`main`). Never pass `--no-build`.
+- **`AuditWriter` shares the request's DbContext and saves from `AuditPipelineBehavior`'s catch.** Mutate-then-throw
+  commits the mutation. The credit path is now plan-then-apply; do the same in any new handler.
+- **A progress row needs `AcademicYear` and `Semester`** (required members). InMemory enforces neither the unique key
+  nor the CHECKs, so count rows per key in tests. `AcademicPeriodQuotaPostgresTests` is the real check.
+- **June is semester 1 and December folds into semester 2** (D40). The boundary is one month-and-day constant on
+  `AcademicPeriod`. Change it and run a rebuild.
+- **The staff dashboards now require an institution claim** (a non-Administrator without one sees nothing).
+- **bUnit + AngleSharp 1.8.1**: indexing `cut.FindAll(...)[i]` throws `MissingMethodException`. Enumerate instead.
+- **Dev passwords** live in `DevUserSeeder.cs` (dev-only); the admin password is in `pwd_DO_NOT_COMMIT.txt`.
+- `msf_cpsa` is the 9th rated seed; don't add it to `CpsaWbaSeedTests.SeedKeys`. The hooks call
+  `C:\dev\rcl_execution\bin\harness.py`. Never pass `--no-build`.
 
 ### Verification status
 
-- `dotnet build Wombat.sln -c Release` — **0 warnings, 0 errors**.
-- Suites green, no `--no-build`: Domain **78**, Application **559**, Infrastructure **269**,
-  Architecture **23**, Web **111** — **1040 total**, up from 1009. Integration is Docker-gated and was
-  not run; its MSF flow test was rewritten for the new command shapes and compiles.
-- Two migrations, both `dotnet ef`-generated and **applied to the dev database**. Each carries one
-  commented hand-edit: `MinimumRespondentCategories` back-fills as 2 not 0, and EF's
-  `AddColumn("xmin")` was **removed** — `xmin` is a Postgres system column, so adding it fails.
-- The portfolio-export guard was verified to fail against the unfixed code.
-- `harness.py lint` clean. Not re-verified: `drift-check.sh`, `restore-rehearsal.sh`.
+- `dotnet build Wombat.sln -c Release`: **0 warnings, 0 errors**.
+- Suites, no `--no-build`: Domain **126**, Application **613**, Infrastructure **293**, Architecture **23**,
+  Web **140** — **1195**, up from 1040. Integration: the 9 new Postgres tests pass; the pre-existing MSF test fails at
+  setup ([T140]), and its leaked schema was dropped.
+- Migration `20260923082939_T130_AcademicPeriodQuota`: generated by `dotnet ef`, with five marked hand-edits.
+  `has-pending-model-changes` reports clean. It is applied to dev, and it applies to a fresh Postgres schema (test).
+- Work was developed on branch `t130-annual-quota` and squash-merged into master. `harness.py lint` is clean.
+  Not re-verified: `drift-check.sh`, `restore-rehearsal.sh`.

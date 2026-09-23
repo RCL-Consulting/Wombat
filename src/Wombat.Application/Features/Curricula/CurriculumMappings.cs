@@ -35,7 +35,7 @@ internal static class CurriculumMappings
             canEditInPlace,
             curriculum.Items
                 .OrderBy(entity => entity.Epa.Code)
-                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
+                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
                 .ToList());
 
     public static void EnsureCurriculumCanBeEditedInPlace()

@@ -5,6 +5,20 @@ public interface IUserAdministrationService
     Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// "First Last" for exactly the users asked about, whatever roles they hold. A user who does not exist is
+    /// left out. The default implementation reads every user; the real service overrides it with one query by id.
+    /// </summary>
+    async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        return (await ListAllUsersAsync(cancellationToken))
+            .Where(user => wanted.Contains(user.UserId))
+            .ToDictionary(user => user.UserId, user => $"{user.FirstName} {user.LastName}".Trim(), StringComparer.Ordinal);
+    }
     Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default);
     Task UpdateScopeAsync(
         string userId,

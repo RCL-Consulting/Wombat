@@ -12,6 +12,9 @@ namespace Wombat.Application.Tests.Features.Dashboards;
 
 public sealed class TraineeStageOverrideTests
 {
+    /// <summary>A fixed "today". Every date below is relative to it, so the stage and the semester are both stable.</summary>
+    private static readonly DateOnly AsOf = new(2026, 9, 23);
+
     [Fact]
     public async Task CurriculumProgress_UsesStageOverride_WhenTraineeIsInYearThree()
     {
@@ -22,12 +25,12 @@ public sealed class TraineeStageOverrideTests
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(
-            new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
+            new GetTraineeDashboardSummaryQuery(principal, AsOf), CancellationToken.None);
 
-        var progress = result.CurriculumProgress.Should().ContainSingle().Subject;
-        progress.TraineeStage.Should().Be(3);
+        result.CurriculumTargets!.TraineeStage.Should().Be(3);
+        var progress = result.CurriculumTargets.Items.Should().ContainSingle().Subject;
         progress.EffectiveMinimumLevelOrder.Should().Be(4);  // year 3 override
-        progress.MinimumLevelReachedCount.Should().Be(1);
+        progress.Current.MinimumLevelReachedCount.Should().Be(1);
     }
 
     [Fact]
@@ -40,10 +43,10 @@ public sealed class TraineeStageOverrideTests
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(
-            new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
+            new GetTraineeDashboardSummaryQuery(principal, AsOf), CancellationToken.None);
 
-        var progress = result.CurriculumProgress.Should().ContainSingle().Subject;
-        progress.TraineeStage.Should().Be(6);
+        result.CurriculumTargets!.TraineeStage.Should().Be(6);
+        var progress = result.CurriculumTargets.Items.Should().ContainSingle().Subject;
         progress.EffectiveMinimumLevelOrder.Should().Be(5);  // flat MinimumLevelOrder
     }
 
@@ -107,8 +110,8 @@ public sealed class TraineeStageOverrideTests
             Id = 1,
             UserId = "trainee-1",
             CurriculumId = 1,
-            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-programmeStartDaysAgo),
-            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(365),
+            ProgrammeStartDate = AsOf.AddDays(-programmeStartDaysAgo),
+            ExpectedCompletionDate = AsOf.AddDays(365),
             IsActive = true
         });
         db.CurriculumItemProgresses.Add(new CurriculumItemProgress
@@ -116,6 +119,8 @@ public sealed class TraineeStageOverrideTests
             Id = 1,
             CurriculumItemId = 1,
             TraineeUserId = "trainee-1",
+            AcademicYear = 2026,
+            Semester = 2,
             CountsSoFar = 2,
             MinimumLevelReachedCount = 1,
             LastUpdated = DateTime.UtcNow

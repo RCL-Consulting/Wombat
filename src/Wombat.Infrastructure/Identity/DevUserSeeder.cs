@@ -9,17 +9,32 @@ namespace Wombat.Infrastructure.Identity;
 
 /// <summary>
 /// Seeds dev-only users so the GUI review (and other local browser verification)
-/// can sign in as a Trainee or CommitteeMember without walking the full
+/// can sign in as a Trainee, CommitteeMember or Assessor without walking the full
 /// invitation flow each time. Only invoked from Program.cs when
 /// <c>IHostEnvironment.IsDevelopment()</c> is true. Production deployments
 /// must never run this — the seed credentials are hardcoded by design.
 /// </summary>
+/// <remarks>
+/// <para>
+/// When the national Paediatric EPA catalogue is present, the dev trainee is admitted to it and every
+/// dev user is also scoped to Paediatrics, so the CPSA instruments are offered and there is an
+/// assessor who can complete them. Before T130 both were hand steps repeated after every rebuild of
+/// the dev database, and nothing wrote them down.
+/// </para>
+/// <para>
+/// The trainee's programme starts on 1 January of the year they are seeded, which is a semester boundary.
+/// A start of "today" made the dev trainee exempt from every target under the College's D14 rule, so no
+/// target could be seen on dev at all.
+/// </para>
+/// </remarks>
 public sealed class DevUserSeeder
 {
     private const string TraineeEmail = "trainee@wombat.local";
     private const string TraineePassword = "ChangeThisTrainee123!";
     private const string CommitteeMemberEmail = "committee@wombat.local";
     private const string CommitteeMemberPassword = "ChangeThisCommittee123!";
+    private const string AssessorEmail = "assessor@wombat.local";
+    private const string AssessorPassword = "ChangeThisAssessor123!";
 
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
@@ -52,19 +67,40 @@ public sealed class DevUserSeeder
             return;
         }
 
-        var subSpecialityId = demoCurriculum.SubSpecialityId;
-        var specialityId = demoCurriculum.SubSpeciality.SpecialityId;
         // The curriculum is national now (T091); the dev trainee trains at the seeded DEMO institution.
         var institutionId = await _dbContext.Institutions
             .Where(institution => institution.ShortCode == "DEMO")
             .Select(institution => institution.Id)
             .SingleAsync(cancellationToken);
 
-        await EnsureTraineeAsync(demoCurriculum.Id, institutionId, specialityId, subSpecialityId, cancellationToken);
-        await EnsureCommitteeMemberAsync(institutionId, specialityId, subSpecialityId, cancellationToken);
+        var paediatricCurriculum = await _dbContext.Curricula
+            .Include(curriculum => curriculum.SubSpeciality)
+            .Where(curriculum => curriculum.Name == "Paediatric EPA Curriculum" && curriculum.IsActive)
+            .OrderByDescending(curriculum => curriculum.EffectiveFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var scopes = new List<(int SpecialityId, int SubSpecialityId)>
+        {
+            (demoCurriculum.SubSpeciality.SpecialityId, demoCurriculum.SubSpecialityId)
+        };
+
+        if (paediatricCurriculum is not null)
+        {
+            scopes.Add((paediatricCurriculum.SubSpeciality.SpecialityId, paediatricCurriculum.SubSpecialityId));
+        }
+
+        var traineeCurriculumId = paediatricCurriculum?.Id ?? demoCurriculum.Id;
+
+        await EnsureTraineeAsync(traineeCurriculumId, institutionId, scopes, cancellationToken);
+        await EnsureStaffUserAsync(CommitteeMemberEmail, CommitteeMemberPassword, "Committee", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
+        await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
     }
 
-    private async Task EnsureTraineeAsync(int curriculumId, int institutionId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)
+    private async Task EnsureTraineeAsync(
+        int curriculumId,
+        int institutionId,
+        IReadOnlyList<(int SpecialityId, int SubSpecialityId)> scopes,
+        CancellationToken cancellationToken)
     {
         var existingUser = await _userManager.FindByEmailAsync(TraineeEmail);
         if (existingUser is null)
@@ -83,21 +119,26 @@ public sealed class DevUserSeeder
             _logger.LogInformation("Seeded dev trainee user {Email}.", TraineeEmail);
         }
 
-        await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
+        foreach (var (specialityId, subSpecialityId) in scopes)
+        {
+            await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
+        }
 
         var hasProfile = await _dbContext.TraineeProfiles
             .AnyAsync(profile => profile.UserId == existingUser.Id, cancellationToken);
 
         if (!hasProfile)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            // A semester boundary, so the College's D14 exemption for a mid-period start does not apply
+            // and the dev trainee has targets to look at (T130).
+            var programmeStart = new DateOnly(DateTime.UtcNow.Year, 1, 1);
             _dbContext.TraineeProfiles.Add(new TraineeProfile
             {
                 UserId = existingUser.Id,
                 InstitutionId = institutionId,
                 CurriculumId = curriculumId,
-                ProgrammeStartDate = today,
-                ExpectedCompletionDate = today.AddYears(4),
+                ProgrammeStartDate = programmeStart,
+                ExpectedCompletionDate = programmeStart.AddYears(4),
                 IsActive = true
                 // AdoptionId left null: this dev seed bypasses the AdmitTrainee adoption gate (T091); the
                 // CreditApplier scopes by CurriculumId + InstitutionId, so credit still resolves correctly.
@@ -107,26 +148,36 @@ public sealed class DevUserSeeder
         }
     }
 
-    private async Task EnsureCommitteeMemberAsync(int institutionId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)
+    private async Task EnsureStaffUserAsync(
+        string email,
+        string password,
+        string lastName,
+        string role,
+        int institutionId,
+        IReadOnlyList<(int SpecialityId, int SubSpecialityId)> scopes,
+        CancellationToken cancellationToken)
     {
-        var existingUser = await _userManager.FindByEmailAsync(CommitteeMemberEmail);
+        var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser is null)
         {
             existingUser = new WombatIdentityUser
             {
-                UserName = CommitteeMemberEmail,
-                Email = CommitteeMemberEmail,
+                UserName = email,
+                Email = email,
                 EmailConfirmed = true,
                 FirstName = "Demo",
-                LastName = "Committee",
+                LastName = lastName,
                 InstitutionId = institutionId
             };
 
-            await CreateUserAsync(existingUser, CommitteeMemberPassword, WombatRoles.CommitteeMember);
-            _logger.LogInformation("Seeded dev committee member user {Email}.", CommitteeMemberEmail);
+            await CreateUserAsync(existingUser, password, role);
+            _logger.LogInformation("Seeded dev {Role} user {Email}.", role, email);
         }
 
-        await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
+        foreach (var (specialityId, subSpecialityId) in scopes)
+        {
+            await EnsureScopesAsync(existingUser.Id, specialityId, subSpecialityId, cancellationToken);
+        }
     }
 
     private async Task EnsureScopesAsync(string userId, int specialityId, int subSpecialityId, CancellationToken cancellationToken)

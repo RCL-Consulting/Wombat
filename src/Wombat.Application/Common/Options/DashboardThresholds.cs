@@ -6,5 +6,4 @@ public sealed class DashboardThresholds
 
     public int AssessorDueDays { get; set; } = 7;
     public int CoordinatorStallDays { get; set; } = 7;
-    public int CommitteeCompletionPercent { get; set; } = 80;
 }

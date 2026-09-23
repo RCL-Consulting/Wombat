@@ -5,6 +5,16 @@ A time-phased runbook that walks a realistic ZA paediatric training programme th
 1. **Primary — test scenario.** Catch integration gaps that unit tests miss. Every step has an expected outcome and a gap slot; findings are the document's output.
 2. **Secondary — training-material seed.** With a second pass (concept boxes, role-sliced entry points, troubleshooting blocks) it promotes to end-user documentation. The runbook is structured to convert well but does not try to be both at once.
 
+> ## ⚠️ T130 (2026-09-23): curriculum targets are per period now — re-author Act 3's expected figures before the next replay
+> A curriculum item's **Required count is a target per semester or per academic year**, not a programme total, and
+> the progress page reads it against the **current period only** ("1 of 3 this semester"), with the previous period
+> shown beneath. The curriculum table in Act 1 below still gives lifetime totals (30, 8, 15, …) and Act 3's expected
+> lines ("1 of 30", "0 of 10") assume them; both need restating as per-period targets. Also: every registrar below is
+> admitted on **15 January**, which counts as starting on the boundary under D42 (a start within a semester's first
+> month counts), so no D14 exemption should show. A start in February or later would show "no target this semester".
+> The staff dashboards now say "n of m trainees met this period's target", never a mean percentage. Not re-authored
+> in T130: the runbook is the test corpus, and restating it wants a replay, not an edit.
+
 > ## ⚠️ Rebuilt for T091 (national catalogue + adoption) — 2026-06-14
 > This runbook was rewritten for the **T091** redesign: EPAs and curricula are now **nationally owned by a CMSA College** (College → Speciality → SubSpeciality → EPAs + versioned Curriculum), and **institutions adopt** a curriculum *version* rather than authoring their own. The forward-looking **prescription** (steps / expected outcomes) below reflects T091 across all acts.
 >

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Curricula;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -9,67 +10,243 @@ using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Curricula;
 
+/// <summary>
+/// The progress page's read model (T130): every item read against its target for the window containing "today",
+/// with the College's D14 exemption and the previous window. "Today" is pinned by <c>AsOf</c>, so no figure here
+/// depends on the date the suite runs.
+/// </summary>
 public sealed class GetCurriculumProgressForTraineeTests
 {
+    /// <summary>Semester 2 of 2026.</summary>
+    private static readonly DateOnly AsOf = new(2026, 9, 23);
+
+    private const int SemesterItemId = 1;   // PAED-001, three per semester
+    private const int YearItemId = 2;       // PAED-002, one per academic year
+
+    [Fact]
+    public async Task ASemesterItemReadsTheCurrentSemesterOnly_AndKeepsLastSemestersResult()
+    {
+        // Rows in three semesters for one item. Before T130 there was one row per item, and the handler built a
+        // dictionary keyed on the item, which would throw here on the duplicate key.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2025, 2, counts: 1);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2, reached: 2, lastObservedOn: new DateOnly(2026, 6, 30));
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1, reached: 0, lastObservedOn: new DateOnly(2026, 8, 12));
+        db.SaveChanges();
+
+        var summary = await Read(db);
+        var item = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+
+        item.IsPerSemester.Should().BeTrue();
+        item.Target.Should().Be(3);
+        item.Current.Name.Should().Be("Semester 2, 2026");
+        item.Current.Months.Should().Be("July to November");
+        item.Current.NominalEnd.Should().Be(new DateOnly(2026, 11, 30));
+        item.Current.Status.Should().Be(QuotaWindowStatus.Counting);
+        item.Current.Count.Should().Be(1);
+        item.Current.IsMet.Should().BeFalse();
+        item.Current.Shortfall.Should().Be(2);
+        item.Current.PercentOfTarget.Should().Be(33);
+        item.Current.MinimumLevelReachedCount.Should().Be(0);
+        item.Current.LastObservedOn.Should().Be(new DateOnly(2026, 8, 12));
+
+        var previous = item.Previous.Should().NotBeNull().And.Subject.As<QuotaWindowDto>();
+        previous.Name.Should().Be("Semester 1, 2026");
+        previous.Count.Should().Be(2);
+        previous.Shortfall.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task AnAcademicYearItemAddsBothSemestersOfTheYear_AndIgnoresOtherYears()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, YearItemId, 2025, 2, counts: 4);
+        AddRow(db, YearItemId, 2026, 1, counts: 1, lastObservedOn: new DateOnly(2026, 3, 10));
+        AddRow(db, YearItemId, 2026, 2, counts: 1, lastObservedOn: new DateOnly(2026, 7, 2));
+        AddRow(db, YearItemId, 2027, 1, counts: 9);   // future-dated: nothing bounds ObservedOn
+        db.SaveChanges();
+
+        var item = (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-002");
+
+        item.IsPerSemester.Should().BeFalse();
+        item.Current.Name.Should().Be("2026 academic year");
+        item.Current.Months.Should().Be("January to November");
+        item.Current.Count.Should().Be(2);
+        item.Current.IsMet.Should().BeTrue("the target is one per academic year");
+        item.Current.LastObservedOn.Should().Be(new DateOnly(2026, 7, 2));
+        item.Previous!.Name.Should().Be("2025 academic year");
+        item.Previous.Count.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task ChangingAnItemsWindowRereadsTheSameRows_WithNoRebuild()
+    {
+        // D41: storage is per semester whatever the item says, so an administrator switching an item from
+        // semester to academic year changes the reading and needs nothing re-bucketed.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);
+        db.SaveChanges();
+
+        (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-001").Current.Count.Should().Be(1);
+
+        db.CurriculumItems.Single(entry => entry.Id == SemesterItemId).QuotaPeriod = QuotaPeriod.AcademicYear;
+        db.SaveChanges();
+
+        (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-001").Current.Count.Should().Be(3);
+    }
+
     [Fact]
     public async Task ListsEveryCurriculumItem_IncludingThoseWithoutCredit()
     {
+        // Item-driven, not row-driven: a period that has just begun has no rows, and it must read "0 of 3".
         await using var db = CreateDb();
         SeedCurriculum(db);
-        // Only PAED-001 has accrued credit; PAED-002 has none.
-        db.CurriculumItemProgresses.Add(new CurriculumItemProgress
-        {
-            Id = 1, CurriculumItemId = 1, TraineeUserId = "trainee-1",
-            CountsSoFar = 1, MinimumLevelReachedCount = 0, LastActivityId = 2,
-            LastUpdated = new DateTime(2026, 2, 9, 8, 0, 0, DateTimeKind.Utc)
-        });
         db.SaveChanges();
 
-        var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
-        var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
+        var summary = await Read(db);
 
-        result.Select(r => r.EpaCode).Should().Equal("PAED-001", "PAED-002");
-
-        var paed002 = result.Single(r => r.EpaCode == "PAED-002");
-        paed002.CompletedCount.Should().Be(0);
-        paed002.MinimumLevelReachedCount.Should().Be(0);
-        paed002.LastUpdated.Should().BeNull();
-        paed002.IsComplete.Should().BeFalse();
+        summary.Items.Select(entry => entry.EpaCode).Should().Equal("PAED-001", "PAED-002");
+        summary.Items.Should().OnlyContain(entry => entry.Current.Count == 0 && !entry.Current.IsMet && entry.Current.LastObservedOn == null);
     }
 
     [Fact]
-    public async Task SurfacesCreditedRow_WithVolumeAndLevelReachedSeparately()
+    public async Task AnotherInstitutionsLocalItemIsNotATargetForThisTrainee()
     {
+        // A curriculum row is shared by every adopting institution. Institution 2's local extra must not appear
+        // on an institution-1 trainee's page as "0 of 1", a target they could never meet.
         await using var db = CreateDb();
         SeedCurriculum(db);
-        // T071 semantics: a below-min completion counts volume but not the level-reached counter.
-        db.CurriculumItemProgresses.Add(new CurriculumItemProgress
-        {
-            Id = 1, CurriculumItemId = 1, TraineeUserId = "trainee-1",
-            CountsSoFar = 1, MinimumLevelReachedCount = 0, LastActivityId = 2,
-            LastUpdated = new DateTime(2026, 2, 9, 8, 0, 0, DateTimeKind.Utc)
-        });
+        db.Epas.Add(new Epa { Id = 3, SubSpecialityId = 1, OwningInstitutionId = 2, Code = "LOCAL-2", Title = "Someone else's extra" });
+        db.CurriculumItems.Add(new CurriculumItem { Id = 3, CurriculumId = 1, EpaId = 3, OwningInstitutionId = 2, RequiredCount = 1, MinimumLevelOrder = 3, WindowMonths = 12 });
+        db.Epas.Add(new Epa { Id = 4, SubSpecialityId = 1, OwningInstitutionId = 1, Code = "LOCAL-1", Title = "Our own extra" });
+        db.CurriculumItems.Add(new CurriculumItem { Id = 4, CurriculumId = 1, EpaId = 4, OwningInstitutionId = 1, RequiredCount = 1, MinimumLevelOrder = 3, WindowMonths = 12 });
         db.SaveChanges();
 
-        var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
-        var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
-
-        var paed001 = result.Single(r => r.EpaCode == "PAED-001");
-        paed001.EpaTitle.Should().Be("Clerk an acute admission");
-        paed001.CompletedCount.Should().Be(1);
-        paed001.RequiredCount.Should().Be(30);
-        paed001.MinimumLevelReachedCount.Should().Be(0);
-        paed001.EffectiveMinimumLevelOrder.Should().Be(4);
-        // Unpinned item: the label degrades to the ordinal, which is the pre-T100 rendering.
-        paed001.EffectiveMinimumLevelLabel.Should().Be("4");
-        paed001.IsComplete.Should().BeFalse();
-        paed001.LastUpdated.Should().Be(new DateTime(2026, 2, 9, 8, 0, 0, DateTimeKind.Utc));
+        (await Read(db)).Items.Select(entry => entry.EpaCode).Should().Equal("LOCAL-1", "PAED-001", "PAED-002");
     }
 
     [Fact]
-    public async Task NoActiveProfile_ReturnsEmpty()
+    public async Task SummaryCountsTargetsMetByKind()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 3);
+        db.SaveChanges();
+
+        var summary = await Read(db);
+
+        summary.CurrentSemesterName.Should().Be("Semester 2, 2026");
+        summary.CurrentSemesterMonths.Should().Be("July to November");
+        summary.SemesterTargetsMet.Should().Be(1);
+        summary.SemesterTargetsApplying.Should().Be(1);
+        summary.YearTargetsMet.Should().Be(0);
+        summary.YearTargetsApplying.Should().Be(1);
+        summary.SemesterTargetsStart.Should().BeNull();
+        summary.YearTargetsStart.Should().BeNull();
+        summary.IsAfterTeachingYear.Should().BeFalse();
+        summary.TraineeStage.Should().Be(3, "the programme started 2024-01-01");
+    }
+
+    [Fact]
+    public async Task AMidPeriodStartIsExempt_CountsStillShow_AndTheDateTargetsStartIsGiven()
+    {
+        // D14 with D42's reading. A start on 15 August is after semester 2's first month, and in the second half of
+        // the year, so neither target applies until 1 January. The encounter already recorded still shows: D14
+        // waives the target, not the evidence.
+        await using var db = CreateDb();
+        SeedCurriculum(db, programmeStart: new DateOnly(2026, 8, 15));
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);
+        db.SaveChanges();
+
+        var summary = await Read(db);
+        var semesterItem = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+
+        semesterItem.Current.Status.Should().Be(QuotaWindowStatus.ExemptPartialPeriod);
+        semesterItem.Current.Count.Should().Be(1);
+        semesterItem.Current.IsMet.Should().BeFalse();
+        semesterItem.Current.Shortfall.Should().Be(0, "nothing is owed while exempt");
+        semesterItem.Current.PercentOfTarget.Should().Be(0);
+        semesterItem.Current.FirstCountedName.Should().Be("semester 1, 2027");
+        semesterItem.Current.FirstCountedOn.Should().Be(new DateOnly(2027, 1, 1));
+        semesterItem.Previous.Should().BeNull("the trainee had not started in semester 1");
+
+        summary.SemesterTargetsApplying.Should().Be(0);
+        summary.YearTargetsApplying.Should().Be(0);
+        summary.SemesterTargetsStart.Should().Be(new QuotaStartDto("semester 1, 2027", new DateOnly(2027, 1, 1)));
+        summary.YearTargetsStart.Should().Be(new QuotaStartDto("the 2027 academic year", new DateOnly(2027, 1, 1)));
+    }
+
+    [Fact]
+    public async Task AStartInTheFirstMonthOfASemesterCounts()
+    {
+        // D42: 5 July is inside semester 2's first month, so the semester target applies at once. The academic
+        // year began in January, so the yearly target is waived until next year.
+        await using var db = CreateDb();
+        SeedCurriculum(db, programmeStart: new DateOnly(2026, 7, 5));
+        db.SaveChanges();
+
+        var summary = await Read(db);
+
+        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current.Applies.Should().BeTrue();
+        summary.Items.Single(entry => entry.EpaCode == "PAED-002").Current.IsExempt.Should().BeTrue();
+        summary.SemesterTargetsStart.Should().BeNull();
+        summary.YearTargetsStart!.StartsOn.Should().Be(new DateOnly(2027, 1, 1));
+    }
+
+    [Fact]
+    public async Task BeforeTheProgrammeStartsNothingIsOwed()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db, programmeStart: new DateOnly(2027, 1, 1));
+        db.SaveChanges();
+
+        var summary = await Read(db);
+
+        summary.ProgrammeNotStarted.Should().BeTrue();
+        summary.Items.Should().OnlyContain(entry => entry.Current.NotStarted);
+        summary.SemesterTargetsStart.Should().Be(new QuotaStartDto("semester 1, 2027", new DateOnly(2027, 1, 1)));
+        summary.TraineeStage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task InDecemberTheSecondSemesterIsStillOpen_AndThePageKnowsTheTeachingYearHasEnded()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 2);
+        db.SaveChanges();
+
+        var summary = await Read(db, new DateOnly(2026, 12, 15));
+
+        summary.IsAfterTeachingYear.Should().BeTrue();
+        summary.CurrentSemesterName.Should().Be("Semester 2, 2026");
+        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ReportsWhenTheTrainingYearChangedInsideTheWindow()
+    {
+        // D17: a start on 1 March 2025 moves to training year 2 on 1 March 2026, inside semester 1 of 2026.
+        // Encounters either side were judged against different minima, and the page says so.
+        await using var db = CreateDb();
+        SeedCurriculum(db, programmeStart: new DateOnly(2025, 3, 1));
+        db.SaveChanges();
+
+        var summary = await Read(db, new DateOnly(2026, 5, 1));
+        var item = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+
+        item.TrainingYearChangedOn.Should().Be(new DateOnly(2026, 3, 1));
+        summary.TraineeStage.Should().Be(2);
+        (await Read(db, new DateOnly(2026, 9, 1))).Items.Single(entry => entry.EpaCode == "PAED-001")
+            .TrainingYearChangedOn.Should().BeNull("no training year boundary falls in semester 2 of 2026 for this trainee");
+    }
+
+    [Fact]
+    public async Task NoActiveProfile_ReturnsNull()
     {
         await using var db = CreateDb();
         SeedCurriculum(db);
@@ -77,9 +254,9 @@ public sealed class GetCurriculumProgressForTraineeTests
 
         var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
         var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-without-profile"), CancellationToken.None);
+            new GetCurriculumProgressForTraineeQuery("trainee-without-profile", AsOf), CancellationToken.None);
 
-        result.Should().BeEmpty();
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -93,16 +270,14 @@ public sealed class GetCurriculumProgressForTraineeTests
         SeedCpsaLadderAndPinItem1(db);
         db.SaveChanges();
 
-        var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
-        var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
+        var summary = await Read(db);
 
-        var paed001 = result.Single(r => r.EpaCode == "PAED-001");
+        var paed001 = summary.Items.Single(r => r.EpaCode == "PAED-001");
         paed001.EffectiveMinimumLevelOrder.Should().Be(4, "the stored ordinal is the comparison key and does not move");
         paed001.EffectiveMinimumLevelLabel.Should().Be("3b");
 
         // PAED-002 is on the same curriculum but was left unpinned, so it still degrades to the ordinal.
-        result.Single(r => r.EpaCode == "PAED-002").EffectiveMinimumLevelLabel.Should().Be("3");
+        summary.Items.Single(r => r.EpaCode == "PAED-002").EffectiveMinimumLevelLabel.Should().Be("3");
     }
 
     [Fact]
@@ -116,12 +291,36 @@ public sealed class GetCurriculumProgressForTraineeTests
         db.Set<EntrustmentLevel>().Remove(db.Set<EntrustmentLevel>().Local.Single(l => l.Order == 4));
         db.SaveChanges();
 
+        (await Read(db)).Items.Single(r => r.EpaCode == "PAED-001").EffectiveMinimumLevelLabel.Should().Be("4");
+    }
+
+    private static async Task<TraineeCurriculumProgressSummaryDto> Read(ApplicationDbContext db, DateOnly? asOf = null)
+    {
         var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
         var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1"), CancellationToken.None);
-
-        result.Single(r => r.EpaCode == "PAED-001").EffectiveMinimumLevelLabel.Should().Be("4");
+            new GetCurriculumProgressForTraineeQuery("trainee-1", asOf ?? AsOf), CancellationToken.None);
+        return result.Should().NotBeNull().And.Subject.As<TraineeCurriculumProgressSummaryDto>();
     }
+
+    private static void AddRow(
+        ApplicationDbContext db,
+        int curriculumItemId,
+        int year,
+        int semester,
+        int counts,
+        int reached = 0,
+        DateOnly? lastObservedOn = null)
+        => db.CurriculumItemProgresses.Add(new CurriculumItemProgress
+        {
+            CurriculumItemId = curriculumItemId,
+            TraineeUserId = "trainee-1",
+            AcademicYear = year,
+            Semester = semester,
+            CountsSoFar = counts,
+            MinimumLevelReachedCount = reached,
+            LastObservedOn = lastObservedOn,
+            LastUpdated = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
+        });
 
     private static void SeedCpsaLadderAndPinItem1(ApplicationDbContext db)
     {
@@ -139,7 +338,7 @@ public sealed class GetCurriculumProgressForTraineeTests
         }
 
         // SeedCurriculum has added but not saved, so reach for the tracked entity.
-        db.CurriculumItems.Local.Single(i => i.Id == 1).ScaleId = 7;
+        db.CurriculumItems.Local.Single(i => i.Id == SemesterItemId).ScaleId = 7;
     }
 
     private static ApplicationDbContext CreateDb()
@@ -150,7 +349,7 @@ public sealed class GetCurriculumProgressForTraineeTests
         return new ApplicationDbContext(options);
     }
 
-    private static void SeedCurriculum(ApplicationDbContext db)
+    private static void SeedCurriculum(ApplicationDbContext db, DateOnly? programmeStart = null)
     {
         db.Institutions.Add(new Institution { Id = 1, Name = "KGK" });
         db.Specialities.Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics" });
@@ -167,20 +366,20 @@ public sealed class GetCurriculumProgressForTraineeTests
 
         db.CurriculumItems.Add(new CurriculumItem
         {
-            Id = 1, CurriculumId = 1, EpaId = 1, RequiredCount = 30,
+            Id = SemesterItemId, CurriculumId = 1, EpaId = 1, RequiredCount = 3, QuotaPeriod = QuotaPeriod.Semester,
             MinimumLevelOrder = 4, WindowMonths = 36
         });
         db.CurriculumItems.Add(new CurriculumItem
         {
-            Id = 2, CurriculumId = 1, EpaId = 2, RequiredCount = 10,
+            Id = YearItemId, CurriculumId = 1, EpaId = 2, RequiredCount = 1, QuotaPeriod = QuotaPeriod.AcademicYear,
             MinimumLevelOrder = 3, WindowMonths = 36
         });
 
         db.Set<TraineeProfile>().Add(new TraineeProfile
         {
-            Id = 1, UserId = "trainee-1", CurriculumId = 1,
-            ProgrammeStartDate = new DateOnly(2024, 1, 1),
-            ExpectedCompletionDate = new DateOnly(2027, 1, 1),
+            Id = 1, UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1,
+            ProgrammeStartDate = programmeStart ?? new DateOnly(2024, 1, 1),
+            ExpectedCompletionDate = new DateOnly(2028, 1, 1),
             IsActive = true
         });
     }

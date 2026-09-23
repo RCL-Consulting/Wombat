@@ -1,4 +1,5 @@
 @using Wombat.Application.Features.Dashboards.CommitteeMember
+@using Wombat.Application.Features.Curricula.Quota
 @attribute [Authorize(Roles = "CommitteeMember")]
 @rendermode InteractiveServer
 @inject IScopedSender Sender
@@ -8,46 +9,28 @@
   @if (_vm is not null)
   {
     <div class="dashboard-grid">
-      <DashboardCard Title="Trainees approaching completion" Icon="users" Emphasis="true">
-        @if (_vm.TraineesNearCompletion.Count == 0)
+      <DashboardCard Title="Targets this period" Icon="users" Emphasis="true">
+        <p class="progress-row-meta">@_vm.CurrentSemesterName · @_vm.CurrentSemesterMonths@(_vm.ExemptTraineeCount > 0 ? $" · {_vm.ExemptTraineeCount} exempt" : string.Empty)</p>
+        @if (_vm.TraineeTargets.Count == 0)
         {
-          <p class="muted">No trainees near the completion threshold.</p>
+          <p class="muted">No trainees have targets this period.</p>
         }
         else
         {
           <ul class="list-unstyled">
-            @foreach (var item in _vm.TraineesNearCompletion)
+            @foreach (var trainee in _vm.TraineeTargets)
             {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <span>@item.TraineeName</span>
-                <span class="badge badge-completed">@item.OverallCompletionPercent%</span>
+              <li class="progress-row-head">
+                <span>@trainee.TraineeName</span>
+                <span class="muted">@TargetsText(trainee)</span>
               </li>
             }
           </ul>
         }
       </DashboardCard>
 
-      <DashboardCard Title="Programme overview" Icon="book" Span="2">
-        @if (_vm.ProgrammeProgress.Count == 0)
-        {
-          <p class="muted">No programme data available.</p>
-        }
-        else
-        {
-          @foreach (var item in _vm.ProgrammeProgress)
-          {
-            <div style="margin-bottom:var(--space-sm)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
-                <span>@item.EpaTitle</span>
-                <span class="muted">@item.AverageCompletionPercent%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-bar-fill @(item.AverageCompletionPercent >= 100 ? "is-complete" : "")"
-                     style="width:@Math.Min(100, item.AverageCompletionPercent)%"></div>
-              </div>
-            </div>
-          }
-        }
+      <DashboardCard Title="Targets met by EPA" Icon="book" Span="2">
+        <EpaTargetCoverageList Coverage="@(new CurriculumCoverage(DateOnly.MinValue, _vm.CurrentSemesterName, _vm.CurrentSemesterMonths, [], _vm.EpaTargets, _vm.ExemptTraineeCount))" />
       </DashboardCard>
     </div>
   }
@@ -55,6 +38,24 @@
 
 @code {
   private CommitteeMemberDashboardSummaryDto? _vm;
+
+  // Fewest met first (the query orders them). Semester and yearly targets are shown apart, because the
+  // yearly ones are met "as opportunities arise" and would otherwise drag every trainee down all year.
+  private static string TargetsText(TraineeTargetsItem trainee)
+  {
+    var parts = new List<string>();
+    if (trainee.SemesterTargetsApplying > 0)
+    {
+      parts.Add($"semester {trainee.SemesterTargetsMet}/{trainee.SemesterTargetsApplying}");
+    }
+
+    if (trainee.YearTargetsApplying > 0)
+    {
+      parts.Add($"yearly {trainee.YearTargetsMet}/{trainee.YearTargetsApplying}");
+    }
+
+    return string.Join(" · ", parts);
+  }
   private bool _loading = true;
   private string? _error;
 

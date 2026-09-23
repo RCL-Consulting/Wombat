@@ -1,0 +1,43 @@
+@using Wombat.Application.Features.Curricula.Quota
+
+@* Each EPA's target for the current period, as "n of m trainees met it" (T130). Shared by the committee,
+   speciality-admin and sub-speciality-admin dashboards so the three cannot drift, as their lifetime-percentage
+   predecessors did. A count, never a mean: "4 of 9" says five have not, "41%" does not. *@
+
+@if (Coverage.Epas.Count == 0)
+{
+  <p class="muted">No curriculum targets for these trainees.</p>
+}
+else
+{
+  <p class="progress-row-meta">
+    @Coverage.CurrentSemesterName · @Coverage.CurrentSemesterMonths@(Coverage.ExemptTraineeCount > 0 ? $" · {Coverage.ExemptTraineeCount} trainee{(Coverage.ExemptTraineeCount == 1 ? string.Empty : "s")} exempt this period" : string.Empty)
+  </p>
+  @foreach (var epa in Coverage.Epas)
+  {
+    <div class="progress-row">
+      <div class="progress-row-head">
+        <span>@epa.EpaCode — @epa.EpaTitle <span class="muted">(@QuotaText.TargetPhrase(epa.QuotaPeriod, epa.Target))</span></span>
+        @if (epa.TraineesApplying == 0)
+        {
+          <span class="muted">all exempt</span>
+        }
+        else
+        {
+          <span class="muted">@epa.TraineesMet of @epa.TraineesApplying met</span>
+        }
+      </div>
+      @if (epa.TraineesApplying > 0)
+      {
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="@epa.TraineesApplying" aria-valuenow="@epa.TraineesMet"
+             aria-label="@($"{epa.EpaCode}: {epa.TraineesMet} of {epa.TraineesApplying} trainees met the target")">
+          <div class="progress-bar-fill @(epa.TraineesMet == epa.TraineesApplying ? "is-complete" : string.Empty)" style="width:@epa.PercentMet%"></div>
+        </div>
+      }
+    </div>
+  }
+}
+
+@code {
+  [Parameter, EditorRequired] public CurriculumCoverage Coverage { get; set; } = default!;
+}

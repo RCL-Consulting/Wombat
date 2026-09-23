@@ -1,25 +1,17 @@
+using Wombat.Application.Features.Curricula.Quota;
+
 namespace Wombat.Application.Features.Dashboards.Trainee;
 
+/// <param name="CurriculumTargets">
+/// The trainee's curriculum progress for the current period: the same read model the progress page uses (T130).
+/// Null for a pending trainee or one with no active profile.
+/// </param>
 public sealed record TraineeDashboardSummaryDto(
-    IReadOnlyList<CurriculumProgressItem> CurriculumProgress,
+    TraineeCurriculumProgressSummaryDto? CurriculumTargets,
     IReadOnlyList<ActivityInboxItem> Inbox,
     IReadOnlyList<RecentActivityItem> RecentActivities,
     IReadOnlyList<UpcomingDeadlineItem> UpcomingDeadlines,
     bool IsPendingTrainee);
-
-public sealed record CurriculumProgressItem(
-    string EpaTitle,
-    int CompletedCount,
-    int RequiredCount,
-    bool IsComplete,
-    int EffectiveMinimumLevelOrder,
-    /// <summary>
-    /// <see cref="EffectiveMinimumLevelOrder" /> rendered as the rung a clinician reads — "3a", not "3"
-    /// (T100). Falls back to the ordinal as text when the curriculum item is unpinned.
-    /// </summary>
-    string EffectiveMinimumLevelLabel,
-    int MinimumLevelReachedCount,
-    int? TraineeStage);
 
 public sealed record ActivityInboxItem(
     int ActivityId,

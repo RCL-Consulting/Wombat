@@ -32,7 +32,10 @@ A curriculum is the programme that a trainee is working through. It belongs to a
 **The current Wombat `EPACurriculum` entity is actually a curriculum *line item*, not a curriculum.** It has `EPAId`, `NumberOfMonths`, `EPAScaleId`, and nothing that groups lines into a programme. In the rewrite:
 
 - `Curriculum` — aggregate root. Belongs to `SubSpeciality`. Has metadata (name, version, effective date, owning SpecialityAdmin).
-- `CurriculumItem` — child of `Curriculum`. Contains `EpaId`, `RequiredCount`, `MinimumEntrustmentLevel`, `WindowMonths`, and `Weight` (optional). This is the thing currently called `EPACurriculum` in Wombat.
+- `CurriculumItem` — child of `Curriculum`. Contains `EpaId`, `RequiredCount`, `QuotaPeriod`, `MinimumEntrustmentLevel`, `WindowMonths`, and `Weight` (optional). This is the thing currently called `EPACurriculum` in Wombat.
+  - **`RequiredCount` is a target per `QuotaPeriod` window** — a semester or an academic year — never a programme total (T130, D18). The College publishes frequencies per period ("six per annum", three each semester); a registrar is asked "what is expected of me this period", not "this programme".
+  - **`WindowMonths` is not that window** (D19). It only suggests a trainee's expected completion date and nothing in credit reads it.
+  - Progress against an item is stored per trainee **per semester** of the national academic year (`AcademicPeriod`: January–June, July–December), keyed on the encounter date. A yearly figure is two semesters added together. A registrar who starts part-way through a period is exempt from its target (the College's D14), which is decided when progress is read, never by discarding credit.
 
 Rename with intent: `EPACurriculum` → `CurriculumItem`, and introduce the missing `Curriculum` aggregate.
 

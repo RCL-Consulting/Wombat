@@ -3,6 +3,8 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@using Wombat.Domain.Curricula
+@using Wombat.Application.Features.Curricula.Quota
 
 <PageTitle>Curriculum Items</PageTitle>
 
@@ -26,6 +28,11 @@
 <StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@_loadError">
   @if (_curriculum is not null)
   {
+    <Alert Kind="warning">
+      A target and its period are read live. Changing one changes what every trainee on this curriculum is measured
+      against, in every institution that has adopted it, including periods that have already closed.
+    </Alert>
+
     <div class="detail-card">
       <h3>Existing items</h3>
       <div class="table-container shadow">
@@ -33,11 +40,11 @@
           <thead>
             <tr>
               <th>EPA</th>
-              <th>Required count</th>
+              <th>Target</th>
               <th>Minimum level</th>
               <th>Scale</th>
               <th>Per-stage minima</th>
-              <th>Window months</th>
+              <th>Completion window (months)</th>
               <th>Weight</th>
               <th></th>
             </tr>
@@ -56,7 +63,13 @@
                       }
                     </InputSelect>
                   </td>
-                  <td><InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" /></td>
+                  <td>
+                    <InputNumber class="form-control" @bind-Value="_itemModel.RequiredCount" aria-label="Target" />
+                    <InputSelect class="form-select" TValue="QuotaPeriod" @bind-Value="_itemModel.QuotaPeriod" aria-label="Per">
+                      <option value="@QuotaPeriod.Semester">per semester</option>
+                      <option value="@QuotaPeriod.AcademicYear">per academic year</option>
+                    </InputSelect>
+                  </td>
                   <td><InputNumber class="form-control" @bind-Value="_itemModel.MinimumLevelOrder" /></td>
                   <td>
                     <InputSelect class="form-select" TValue="int?" @bind-Value="_itemModel.ScaleId">
@@ -80,7 +93,7 @@
                 else
                 {
                   <td>@item.EpaCode - @item.EpaTitle</td>
-                  <td>@item.RequiredCount</td>
+                  <td>@TargetText(item)</td>
                   <td>@item.MinimumLevelOrder</td>
                   <td>@(item.ScaleName ?? "Not pinned")</td>
                   <td>@(item.MinimumLevelByStageJson ?? "—")</td>
@@ -116,8 +129,17 @@
             </InputSelect>
           </FormField>
 
-          <FormField Label="Required count" InputId="curriculum-item-count">
+          <FormField Label="Target" InputId="curriculum-item-count">
             <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_itemModel.RequiredCount" />
+            <small class="muted">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small>
+          </FormField>
+
+          <FormField Label="Per" InputId="curriculum-item-period">
+            <InputSelect id="curriculum-item-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_itemModel.QuotaPeriod">
+              <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
+              <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
+            </InputSelect>
+            <small class="muted">A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.</small>
           </FormField>
 
           <FormField Label="Minimum level" InputId="curriculum-item-level">
@@ -140,8 +162,9 @@
             <small class="muted">Optional JSON object keyed by training year. Overrides the flat minimum level when the trainee is at that year.</small>
           </FormField>
 
-          <FormField Label="Window months" InputId="curriculum-item-window">
+          <FormField Label="Completion window (months)" InputId="curriculum-item-window">
             <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_itemModel.WindowMonths" />
+            <small class="muted">Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.</small>
           </FormField>
 
           <FormField Label="Weight" InputId="curriculum-item-weight">
@@ -208,7 +231,7 @@
   private async Task AddItemAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item added."))
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.QuotaPeriod, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item added."))
     {
       return;
     }
@@ -221,6 +244,7 @@
     _editingItemId = item.Id;
     _itemModel.EpaId = item.EpaId;
     _itemModel.RequiredCount = item.RequiredCount;
+    _itemModel.QuotaPeriod = item.QuotaPeriod;
     _itemModel.MinimumLevelOrder = item.MinimumLevelOrder;
     _itemModel.WindowMonths = item.WindowMonths;
     _itemModel.Weight = item.Weight;
@@ -245,7 +269,7 @@
     // Only leave edit mode when the command actually succeeded. A rejected scale pin (T109) is the common
     // case now, and closing the row on rejection throws away everything the operator typed while showing
     // them an error about it.
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item saved."))
+    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _itemModel.EpaId, _itemModel.RequiredCount, _itemModel.QuotaPeriod, _itemModel.MinimumLevelOrder, _itemModel.WindowMonths, _itemModel.Weight, EmptyToNull(_itemModel.MinimumLevelByStageJson), authState.User, _itemModel.ScaleId)), "Curriculum item saved."))
     {
       return;
     }
@@ -288,12 +312,18 @@
   {
     _itemModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
     _itemModel.RequiredCount = 1;
+    _itemModel.QuotaPeriod = QuotaPeriod.AcademicYear;
     _itemModel.MinimumLevelOrder = 4;
     _itemModel.WindowMonths = 12;
     _itemModel.Weight = null;
     _itemModel.MinimumLevelByStageJson = null;
     _itemModel.ScaleId = null;
   }
+
+  private static string TargetText(CurriculumItemDto item)
+    => item.QuotaPeriod == QuotaPeriod.Semester
+      ? $"{item.RequiredCount} per semester"
+      : $"{item.RequiredCount} per academic year";
 
   private static string? EmptyToNull(string? value)
     => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -305,6 +335,9 @@
 
     [Range(1, int.MaxValue)]
     public int RequiredCount { get; set; }
+
+    /// <summary>The window RequiredCount is a target for (T130). Copied from the item on edit, so saving unchanged keeps it.</summary>
+    public QuotaPeriod QuotaPeriod { get; set; }
 
     [Range(1, 20)]
     public int MinimumLevelOrder { get; set; }

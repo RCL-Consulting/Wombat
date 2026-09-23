@@ -15,8 +15,37 @@ public sealed class CurriculumItem
     /// adopted, but never edit the national core (T091, phase 3).
     /// </summary>
     public int? OwningInstitutionId { get; set; }
+
+    /// <summary>
+    /// The number of credited encounters the trainee must reach in each <see cref="QuotaPeriod" /> window
+    /// (T130, D18). It is a per-period target, not a programme total. For the CPSA paediatric catalogue it is
+    /// Annexure B's per-semester figure for a <see cref="Curricula.QuotaPeriod.Semester" /> item and its
+    /// per-annum figure for an <see cref="Curricula.QuotaPeriod.AcademicYear" /> item.
+    /// </summary>
+    /// <remarks>
+    /// Before T130 the catalogue seeder stored the annual quota multiplied by four programme years, which made
+    /// the progress page read "1 / 24" against a number the College never published. A lifetime figure, if one
+    /// is ever wanted, is a multiplication in a read model, not a stored column.
+    /// </remarks>
     public int RequiredCount { get; set; }
+
+    /// <summary>
+    /// Which window <see cref="RequiredCount" /> is a target for. Progress is stored per semester whatever this
+    /// says, so changing it re-reads the same stored buckets and never needs a rebuild.
+    /// </summary>
+    public QuotaPeriod QuotaPeriod { get; set; }
+
     public int MinimumLevelOrder { get; set; }
+
+    /// <summary>
+    /// Months, as authored. Its only reader is <c>AdmitTrainee</c>, which uses the largest value in the
+    /// curriculum to default a trainee's expected completion date.
+    /// </summary>
+    /// <remarks>
+    /// <b>This is not the quota period, and credit does not enforce it (D19).</b> It looks like a period, and
+    /// the College's "expiry period if not practised" is the concept it was probably meant to hold. But nothing
+    /// in the credit path reads it. <see cref="QuotaPeriod" /> is the window a target is counted over.
+    /// </remarks>
     public int WindowMonths { get; set; }
     public double? Weight { get; set; }
     public string? MinimumLevelByStageJson { get; set; }

@@ -48,4 +48,14 @@ public interface IAuditContextProvider
     /// shares the scope, so a handler declares for the command it is handling and no other.
     /// </summary>
     void DeclareInstitution(int institutionId);
+
+    /// <summary>
+    /// Declares, for the rest of this dispatch, who the command's audit row names as actor, overriding the
+    /// request's user. For dispatches that have no HTTP request at all and would otherwise be audited as
+    /// nobody: the startup rebuild of curriculum progress is the case that forced this (T130). It rewrites
+    /// every trainee's progress, and an audit row with a null actor cannot be told apart from an anonymous
+    /// command. Same rules as <see cref="DeclareInstitution"/>: server-side values only, and the last
+    /// declaration in the dispatch wins.
+    /// </summary>
+    void DeclareActor(string userId, string display);
 }

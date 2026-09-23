@@ -90,7 +90,7 @@ public sealed class ActivityService : IActivityService
     /// may write, validated and date-stamped — everything but <c>Add</c> and <c>SaveChanges</c>.
     /// </summary>
     /// <remarks>
-    /// Extracted so <see cref="RecordCompletedAsync" /> creates activities by exactly the same rules as
+    /// Extracted so <see cref="StageCompletedAsync" /> creates activities by exactly the same rules as
     /// <see cref="CreateDraftAsync" /> rather than by a second, drifting copy of them (T121). The
     /// per-create work that is NOT here is the work that must not be repeated per row in a batch: the
     /// type lookup and the subject-scope resolution, both of which are the same for every row.
@@ -257,74 +257,96 @@ public sealed class ActivityService : IActivityService
             SchemaValidationMode.Submit,
             transition.RequiresFields));
 
+        // Every read credit needs happens HERE, before the first mutation of this request (T130). The audit
+        // pipeline's catch saves this request's DbContext, so anything thrown after ApplyTransition commits
+        // the half-finished move: a terminal activity with no credit and a CreditedItemCount of null, which
+        // reads as "never evaluated". Planning first means that from ApplyTransition to SaveChanges nothing
+        // awaits and nothing can fail. The plan is built from the data and the encounter date the transition
+        // is about to write, because the entity does not carry them yet.
+        var creditPlan = await PlanCreditIfTerminalAsync(activity, version, schema, workflow, transition, mergedDataJson, cancellationToken);
+
         // T119. Ordering here is load-bearing twice: stamping BEFORE ApplyTransition keeps the column and
-        // the transition's SnapshotJson in agreement, and stamping before the credit call below is the
-        // whole point of the task — CreditApplier picks the curriculum item's effective minimum from the
-        // stage the trainee was in ON THE ENCOUNTER DATE.
+        // the transition's SnapshotJson in agreement, and the stamp is the same pure function of (pinned
+        // schema, data, CreatedOn) that the credit plan above was built from, so the two cannot disagree
+        // about the encounter date. CreditApplier picks the curriculum item's effective minimum from the
+        // stage the trainee was in ON THE ENCOUNTER DATE, and the bucket from the semester containing it.
         StampObservedOn(activity, schema, mergedDataJson);
 
         var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
-        await ApplyCreditIfTerminalAsync(activity, version, workflow, transition, record, cancellationToken);
+        if (creditPlan is not null)
+        {
+            ApplyCredit(creditPlan, activity, record);
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return Map(activity);
     }
 
     /// <summary>
-    /// Applies curriculum credit for a move into a terminal state and stamps the outcome onto the
-    /// transition that caused it, or does neither.
+    /// The credit a move into a terminal state will apply, gathered without mutating anything, or null when
+    /// the move is not into a terminal state or the pinned version credits nothing.
     /// </summary>
     /// <remarks>
-    /// The one credit entry point, called from <see cref="TransitionAsync" /> and
-    /// <see cref="RecordCompletedAsync" />. Forking it was the option T121 rejected: each fork would
-    /// then need its own copy of the scale resolution, the stage resolution, the dedupe key namespace
-    /// and the T108 stamp, and the second copy is the one that gets forgotten.
+    /// The one credit entry point on the live path. Forking it was the option T121 rejected: each fork would
+    /// then need its own copy of the scale resolution, the stage resolution, the dedupe key namespace and the
+    /// T108 stamp, and the second copy is the one that gets forgotten. <see cref="StageCompletedAsync" />
+    /// deliberately does not credit at all.
     /// </remarks>
-    private async Task ApplyCreditIfTerminalAsync(
+    private async Task<CreditPlan?> PlanCreditIfTerminalAsync(
         Activity activity,
         ActivityTypeVersion version,
+        FormSchema schema,
         Workflow workflow,
         WorkflowTransition transition,
-        ActivityTransition record,
+        string mergedDataJson,
         CancellationToken cancellationToken)
     {
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
-        if (targetState.Terminal && DeclaresCredit(version.CreditRulesJson))
-        {
-            // Stamp the outcome onto the transition that caused it. Until T108 this result was
-            // discarded, which made "credited nothing" indistinguishable from "credited" at every
-            // surface in the product: no return value read, no domain event, no log line.
-            //
-            // The `counts_for` gate is checked BEFORE the call, not after, and that is what stops the
-            // signal crying wolf: a reflective note, journal club, procedure log, QI project, research
-            // output or teaching session declares an empty `counts_for`, so it is never evaluated and
-            // its transition stays null for ever.
-            //
-            // Both writes land in the SaveChangesAsync below, so the stamp is atomic with the credit
-            // it describes.
-            //
-            // Stamped on the transition path only, and that is a GAP rather than a design.
-            // RebuildCurriculumProgress deletes every progress row before replaying
-            // (RebuildCurriculumProgressCommand.cs:30-32), so it re-credits properly — meaning a stale
-            // zero left by a since-corrected curriculum is never cleared, and the warning banner stays
-            // on for ever after the exact remediation it tells the reader to perform. Making the
-            // rebuild stamp is the fix; recorded as T106 item 12.
-            var credited = await _creditApplier.ApplyAsync(
-                activity,
-                new ActivityType
-                {
-                    CreditRulesJson = version.CreditRulesJson,
-                    // The pinned schema, not the live one: it declares the `scale_key` of the field the
-                    // credit directive gates on, and that is what binds the achieved ordinal to a ladder
-                    // (T109). Pinning means the binding cannot drift under the activity.
-                    SchemaJson = version.SchemaJson
-                },
-                cancellationToken);
 
-            record.CreditedItemCount = credited.UpdatedRows.Count;
-            record.CreditScaleMismatchCount = credited.ScaleMismatchCount;
+        // The `counts_for` gate is checked BEFORE planning, not after, and that is what stops the T108 signal
+        // crying wolf: a reflective note, journal club, procedure log, QI project, research output or teaching
+        // session declares an empty `counts_for`, so it is never evaluated and its transition stays null for
+        // ever.
+        if (!targetState.Terminal || !DeclaresCredit(version.CreditRulesJson))
+        {
+            return null;
         }
+
+        // The date the stamp below will write. ObservationDateResolver is the one implementation of "what date
+        // did this happen", and Stamp is nothing but Resolve assigned to the entity.
+        var (observedOn, _) = ObservationDateResolver.Resolve(activity, schema, mergedDataJson);
+
+        return await _creditApplier.PlanAsync(
+            new CreditSubject(activity.SubjectUserId, observedOn, mergedDataJson),
+            new ActivityType
+            {
+                CreditRulesJson = version.CreditRulesJson,
+                // The pinned schema, not the live one: it declares the `scale_key` of the field the
+                // credit directive gates on, and that is what binds the achieved ordinal to a ladder
+                // (T109). Pinning means the binding cannot drift under the activity.
+                SchemaJson = version.SchemaJson
+            },
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Applies a credit plan and stamps the outcome onto the transition that caused it. Synchronous: it runs
+    /// between <c>ApplyTransition</c> and <c>SaveChangesAsync</c>, where nothing may fail.
+    /// </summary>
+    /// <remarks>
+    /// Stamping the outcome onto the transition that caused it is T108. Until then the result was discarded,
+    /// which made "credited nothing" indistinguishable from "credited" at every surface in the product: no
+    /// return value read, no domain event, no log line. Both writes land in the caller's one SaveChangesAsync,
+    /// so the stamp is atomic with the credit it describes. The rebuild re-stamps too (T106 item 12), so a
+    /// stale zero left by a since-corrected curriculum is cleared by the remediation the banner asks for.
+    /// </remarks>
+    private void ApplyCredit(CreditPlan plan, Activity activity, ActivityTransition record)
+    {
+        var credited = _creditApplier.Apply(plan, activity);
+
+        record.CreditedItemCount = credited.UpdatedRows.Count;
+        record.CreditScaleMismatchCount = credited.ScaleMismatchCount;
     }
 
     /// <inheritdoc />

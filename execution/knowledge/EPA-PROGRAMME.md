@@ -73,7 +73,7 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T120] reflective | `reflective_exercise_cpsa` | NEEDS A DECISION | S | **D6, D7** |
 | [T120] group 2 | `clinical_audit_cpsa`, `portfolio_review_cpsa` — both want an attachment and `FieldType.File` is a reserved word, not a feature | NEEDS A DECISION | L | **D34**. Attachments are their own task |
 | [T122] | The EPA→tool allow-list is parsed by nothing: every CPSA tool can credit every CPSA EPA | NEEDS A DECISION | M | **D12, D20, D21**. Composes with T123 d3 |
-| [T098] phase 3 | **The annual quota.** Period key on `CurriculumItemProgress`, period resolver, period-aware readers. The most visible gap in the product | NEEDS A DECISION | L | **T119**, then D13, D14, D17, D18, D19 |
+| [T130] (was [T098] phase 3) | **The annual quota.** Semester buckets on `CurriculumItemProgress`, `AcademicPeriod` + `QuotaWindow`, per-period targets, one shared read model behind the progress page and all five progress readers | **DONE 2026-09-23** | L | shipped. D17–D19 closed, D39–D42 decided (§ 3E). Four College questions ride on it (§ 3F); each is a read-model or one-constant change, because storage is per semester |
 | [T098] phase 4 | Governance: neonatal CCC routing for EPAs 4–5, semester cadence, an EPA agenda on reviews | NEEDS A DECISION | L | phase 3 |
 | [T104] | Retire the legacy FCPaed world — 4 activity types, 15 EPAs, curriculum 2, 5 trainee profiles | NEEDS A DECISION | M, hand-run | **D24**. If D24 says re-pin, also curriculum 2 pinned + a documented ordinal remap |
 | Rebuild fixes | `RebuildCurriculumProgressCommand` has **no caller** (only `ActivityReadBoundaryTests.cs:60`), is **not atomic** (`:30-32` deletes and saves before the replay saves at `:71`), and does not stamp `CreditedItemCount` ([T106] item 12) | **READY** | S | rides T119, which is the change that makes a rebuild necessary |
@@ -92,7 +92,7 @@ decision **D19**.
 
 ## 3. THE DECISION LIST
 
-> **Scope: product decisions only, `D1`–`D38`.** Decisions about *how the project is run* —
+> **Scope: product decisions only, `D1`–`D42`.** Decisions about *how the project is run* —
 > tooling, workspace layout, process — live in `execution/DECISIONS.md` under a `W-nnn`
 > prefix, deliberately distinct so a bare `D30` can only ever mean this register.
 
@@ -397,8 +397,10 @@ Annexure A and B are silent as read. Nothing bounds backdating today: `SchemaVal
 *Options:* a hard refusal beyond N days · a soft warning · nothing.
 **Recommendation: ship [T119]'s soft 90-day warning, ask, and harden only if the College says so.** A hard
 limit invented here produces a registrar who types today's date to get past the validator — which is
-precisely the defect [T119] exists to repair, re-created by its own guard. The two rules [T119] *does*
-enforce (not in the future, not before `ProgrammeStartDate`) need no policy input.
+precisely the defect [T119] exists to repair, re-created by its own guard. [T119] specified two rules
+that need no policy input (not in the future, not before `ProgrammeStartDate`). **Neither is enforced in code**
+(verified 2026-09-23 during [T130]: `SchemaValidator.ValidateDateField` checks only that the string parses, and
+`ObservationDateResolver` bounds nothing). [T130]'s calendar is total over every date for exactly that reason.
 
 **D16 — Do the 78 descriptors need to be individually assessable, or are they narrative scope?**
 Today they are carried as narrative: `PaediatricCatalogueSeeder.cs:262-268` joins them into
@@ -429,7 +431,11 @@ is the maintainer's call on scope, not a content question, so it does not need t
 
 ### 3C. For the maintainer — these gate a wave
 
-**D17 — `GetStage` and the period resolver disagree by construction. Which one moves?**
+**D17 — `GetStage` and the period resolver disagree by construction. Which one moves? — CLOSED 2026-09-23 ([T130]), as recommended: two named concepts.**
+`TraineeProfile.GetStage` stays the 365-day "training year" and still selects the per-stage minimum; `AcademicPeriod`
+is the new, separately named calendar and selects the bucket. UI copy says "training year N" for one and
+"Semester S, YYYY" / "YYYY academic year" for the other, and the progress page says when a training year changed
+inside a period (the only place the two visibly interact).
 Stage is a 365-day block from `ProgrammeStartDate` (`TraineeProfile.cs:66-75`) and drives T073's per-stage
 minimum. The period is a fixed calendar window (C1).
 *Options:* re-anchor `GetStage` to the academic year, so "training year" and "period" are one concept ·
@@ -439,7 +445,9 @@ the quota.** They answer different questions: which target applies to this train
 this encounter falls in. But decide it *out loud*: silently having two notions of "year" is how the lossy
 `RequiredCount` happened in the first place.
 
-**D18 — Does `RequiredCount` become per-period, or gain a sibling?**
+**D18 — Does `RequiredCount` become per-period, or gain a sibling? — CLOSED 2026-09-23 ([T130]), as recommended: redefined per period, ×4 deleted.**
+It is the target per `CurriculumItem.QuotaPeriod` window. The T130 migration rewrote the fifteen seeded rows that still
+held the old lifetime multiple (and only those).
 Today `PaediatricCatalogueSeeder.cs:356-361` multiplies the annual quota by four programme years, which is
 why the page reads "1 / 24".
 *Options:* redefine `RequiredCount` as per-period and re-seed (nothing is live, so this is free) · add
@@ -448,7 +456,10 @@ why the page reads "1 / 24".
 made the number unreadable. If a lifetime figure is wanted later it is a multiplication in a read model,
 not a stored column.
 
-**D19 — Does phase 3 use `CurriculumItem.WindowMonths`, or leave it?**
+**D19 — Does phase 3 use `CurriculumItem.WindowMonths`, or leave it? — CLOSED 2026-09-23 ([T130]), as recommended: left alone.**
+Documented on the property and relabelled "Completion window (months)" in the admin editor, with help text saying it
+is not the target period and credit does not check it. Found on the way: the source's "expiry period if not
+practised" is six months for EPAs 1, 2, 4, 5, yet all fifteen are seeded at 12 — filed, not fixed.
 It exists, is validated (`ManageCurriculumItems.cs:41,57`), is admin-editable, is carried through clone —
 and is read by nothing in the credit path. Its sole consumer is `AdmitTrainee.cs:126`. An implementer will
 find a period-shaped column already there and assume currency is enforced.
@@ -518,6 +529,56 @@ one, so a `NOT NULL UNIQUE` slug column would throw a raw index violation on the
 — handle the create path first or take the rename.
 ⚠ Fixing T110 makes every legacy chart gain a five-rung labelled axis at that moment. **T110 and [T123] d1
 change the same pictures**; whichever lands second re-checks the other's charts in a browser.
+
+### 3E. Decided in [T130], 2026-09-23
+
+Recorded here because each would cost real work to reverse. The first is a correction of this register's own
+instruction; the other three are readings of College answers that were silent on the point.
+
+**D39 — The quota window comes from Annexure B's per-semester column, NOT from the `currency` string.**
+Wave 4 below said to seed the period from `currency`. That string is the source's "expiry period if not practised"
+(Annexure A's "Currency / status"), which Annexure B relabels as the entrustment-decision cadence: "each semester"
+for exactly EPAs 1, 2, 4, 5, 10, 12. Annexure B separately publishes a per-semester observation figure for ten EPAs
+(1–5, 10, 12 at 3; 6 at 2; 7 and 15 at 1) and none for the five at one per annum, and its own totals (25 per
+semester, 55 per year) only reconcile with that column. Seeding from `currency` would have made EPAs 3, 6 and 7
+annual. The catalogue now carries an explicit `observationsPerSemester` key; `currency` is deliberately
+undeserialized, left for [T131] with a named entry in a guard test. *Rejected:* `currency` (breaks Annexure B's
+arithmetic). **Contested, and with the College (§ 3F):** EPAs 3, 6 and 7's own pages say "performed annually", so
+Annexure B's split may be planning guidance rather than a hard per-semester target.
+
+**D40 — The calendar: semester 1 is January–June, semester 2 July–December; June is semester 1; December folds
+into semester 2.** The resolver must be total — it runs inside credit, and nothing bounds an encounter date — so a
+December encounter lands in semester 2 of its year and the page shows the College's nominal end (30 November) as
+the period's end, with a December notice. The boundary lives in one month-and-day constant on `AcademicPeriod`,
+so a mid-June answer is expressible; changing it is one line plus a rebuild. *Rejected:* December as next year's
+semester 1 (equally total, but it would hand the new year a head start the College never described).
+
+**D41 — Progress is stored per semester, whatever the item's window; D14 is applied when progress is read.**
+The row key is (item, trainee, academic year, semester), computed from the encounter date and nothing else, so an
+administrator changing an item's window or a trainee's start date needs no re-bucketing. A yearly figure is the sum
+of two rows. The College's D14 exemption waives the *target*; credit still lands, still shows, and the transition
+is still stamped with what it credited (a suppressed credit would stamp 0 and raise T108's banner, which blames the
+curriculum). *Rejected:* rows at each item's own grain (stranded by an edit), and a per-activity ledger (cleaner,
+but it replaces the table under every reader for a benefit the rebuild already gives).
+
+**D42 — What "part-way through" means for D14 (provisional).** D14 was asked about "a registrar who starts
+mid-year" and says nothing about how late is late. A literal reading exempts a registrar who starts on the first
+working day of January — 1 January is a public holiday — from a whole year's annual targets. So: a **semester**
+target applies if the programme started within the semester's first calendar month (an invented tolerance, named
+as such); an **academic-year** target is waived only for a start on or after 1 July, which is the College's own
+"mid-year" and invents nothing. Both rules live in `QuotaWindow.LatestOnTimeStart`; a change needs no rebuild.
+
+### 3F. The next message to the College — one line each
+
+None blocks anything: storage is per semester, so every answer below is a read-model change, one constant, or a
+rebuild. They are listed so they go in one message.
+
+1. **June** (D13): is June itself in semester 1 or semester 2 — and is the boundary a date in mid-June?
+2. **December** (D40): which period does an encounter observed in December count towards?
+3. **Per-semester figures** (D39): are Annexure B's per-semester figures a target *each* semester, or a planning
+   split of the annual frequency? EPAs 3, 6 and 7's own pages say "performed annually".
+4. **Late starters** (D42): is a registrar who starts in the first days of a period (e.g. the first working day of
+   January) exempt for it? And is a registrar who finishes part-way through a period held to its target?
 
 ### 3D. Decisions inside one task
 
@@ -622,24 +683,14 @@ reachability. If only one thing in this wave gets done, it is MSF.
 **Unblocks:** a portfolio that looks like the one v11.1 describes, and a CCC with case-analysis and
 reflective evidence to weigh.
 
-### Wave 4 — the quota ([T098] phase 3)
+### Wave 4 — the quota ([T098] phase 3) — **DONE (2026-09-23), as [T130]**
 
-**Depends on Wave 1's [T119]** — phase 3 buckets completions by date and there is no trustworthy date to
-bucket on until it lands. Then D13, D14, D17, D18, D19.
-
-This is the most visible gap in the product: "1 / 24" on a page whose only real question is *what is
-expected of me this year*. Blast radius is enumerated: a period column plus a new unique index on
-`CurriculumItemProgressConfiguration.cs:16` (hand-written migration **with** its `.Designer.cs` and a
-snapshot update), `CreditApplier.cs:74-107`, `RebuildCurriculumProgressCommand.cs:30-32`, eight progress
-readers and two UI sites.
-
-Seed `PeriodKind` explicitly rather than parsing it out of prose: `paediatric-epa-v11.1.json` carries a
-`currency` string on every EPA (`"Essential — each semester (six months)"` vs `"… annually (12 months)"`)
-and `EpaSeed` (`PaediatricCatalogueSeeder.cs:397-405`) declares no `currency` property, so it is
-deserialized by nothing — the same omission as `wbaTools`.
-
-**Phase 3 has no task file of its own.** Write one before starting; it is the largest item in the
-programme and it currently lives as three paragraphs inside T098.
+Shipped as its own task file. Progress is stored per semester and read against a per-window target through one
+shared read model; the College's D14 is applied when reading; the progress page, the trainee dashboard and the
+three staff dashboards all say "n of m" for a named period. The instruction that stood here — seed the period from
+the `currency` string — was wrong, and is corrected by D39 (§ 3E). The migration empties the progress table on
+every existing database, and `CurriculumProgressBootstrapper` rebuilds it at the next startup; the manual rebuild
+is `/admin/curriculum-progress`.
 
 ### Wave 5 — governance ([T098] phase 4)
 
@@ -664,7 +715,7 @@ design and Wave 6 is the only remedy. Check before assuming Wave 1 closed it.
 
 Honest list. Each of these is known, none has a task file, and several are larger than things that do.
 
-1. **[T098] phase 3 and phase 4 have no task files.** The biggest item in the programme (the annual quota)
+1. **[T098] phase 4 has no task file of its own beyond [T131].** Phase 3 shipped as [T130] on 2026-09-23. The biggest item in the programme (the annual quota)
    and the whole of governance exist as prose inside T098 and as decisions in §3. Writing the phase-3 task
    is the first action of Wave 4, not an optional tidy-up.
 2. **File attachments.** D34 parks it behind a URL field. `FieldType.File` is a reserved word, not a

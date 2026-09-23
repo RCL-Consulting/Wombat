@@ -213,6 +213,8 @@ public sealed class EntrustmentScaleAdminHandlerTests
             Id = 1,
             CurriculumItemId = 1,
             TraineeUserId = "trainee-1",
+            AcademicYear = 2026,
+            Semester = 1,
             MinimumLevelScaleId = seeded.Id
         });
         await db.SaveChangesAsync();

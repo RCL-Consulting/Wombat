@@ -296,7 +296,23 @@ Dashboard widget classes (added in T011):
 .progress-bar             /* 0.5rem tall, rounded, --hover-bg background */
 .progress-bar-fill        /* fills parent height, --secondary-color */
 .progress-bar-fill.is-complete  /* --success-color */
+
+.progress-row             /* one titled figure + bar + meta line; margin-bottom sm (T130) */
+.progress-row-head        /* flex, space-between, baseline: label left, "n of m" right */
+.progress-row-meta        /* muted, 0.85rem, margin-top xs: the explanatory line under a figure */
+.progress-group-title     /* heading that splits a page of progress cards into groups ("Each semester", "Once a year") */
 ```
+
+`.progress-row-*` was promoted in T130 from the inline `display:flex;justify-content:space-between` row that had spread
+across six progress surfaces, past the four-dashboard threshold below. Use it for any "label · n of m · bar" figure.
+Give every `.progress-bar` `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, `aria-valuenow` and an
+`aria-label` that states the figure in words. A bar is decoration without them.
+
+Curriculum progress figures (T130) are always **a count against a target for a named window**: "2 of 3 this semester",
+"1 of 1 in 2026", "4 of 9 trainees met". Never a lifetime total, and never a mean percentage across trainees. Say
+"training year N" for `TraineeProfile.GetStage` and "Semester S, YYYY" / "YYYY academic year" for a quota window:
+the two are different concepts (D17), and the bare word "year" beside both is ambiguous. When a target is waived
+under the College's D14 rule, show the count and the date targets start, never a fraction and bar.
 
 Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. Below `~900px` the `.dashboard-grid` auto-fit collapses everything to a single column.
 

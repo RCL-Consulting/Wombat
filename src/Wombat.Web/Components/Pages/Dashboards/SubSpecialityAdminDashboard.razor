@@ -25,27 +25,8 @@
         </div>
       </DashboardCard>
 
-      <DashboardCard Title="Curriculum coverage" Icon="book" Span="2">
-        @if (_vm.CurriculumCoverage.Count == 0)
-        {
-          <p class="muted">No curriculum data available.</p>
-        }
-        else
-        {
-          @foreach (var item in _vm.CurriculumCoverage)
-          {
-            <div style="margin-bottom:var(--space-sm)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
-                <span>@item.EpaTitle</span>
-                <span class="muted">@item.AverageCompletionPercent%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-bar-fill @(item.AverageCompletionPercent >= 100 ? "is-complete" : "")"
-                     style="width:@Math.Min(100, item.AverageCompletionPercent)%"></div>
-              </div>
-            </div>
-          }
-        }
+      <DashboardCard Title="@($"Curriculum coverage — {_vm.CurriculumCoverage.CurrentSemesterName}")" Icon="book" Span="2">
+        <EpaTargetCoverageList Coverage="@_vm.CurriculumCoverage" />
       </DashboardCard>
     </div>
   }

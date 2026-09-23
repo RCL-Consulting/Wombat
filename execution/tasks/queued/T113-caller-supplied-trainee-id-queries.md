@@ -20,7 +20,9 @@ T101 added a `ClaimsPrincipal` and scope filtering to `ListActivitiesBySubjectQu
 different aggregate and `ActivityReadScope.WhereReadableBy` does not apply to them:
 
 - `src/Wombat.Application/Features/Curricula/GetCurriculumProgressForTrainee.cs:17` —
-  `GetCurriculumProgressForTraineeQuery(string TraineeUserId)`, no principal. Called from
+  `GetCurriculumProgressForTraineeQuery(string TraineeUserId)`, no principal. *(Since [T130], 2026-09-23, it is
+  `GetCurriculumProgressForTraineeQuery(string TraineeUserId, DateOnly? AsOf = null)` and returns a
+  `TraineeCurriculumProgressSummaryDto?`. Still no principal: adding one is this task.)* Called from
   `MyProgress.razor:81`, directly beside the trajectory query that T101 *did* scope.
 - `src/Wombat.Application/Features/CommitteeDecisions/ListReviewsForTrainee.cs:8` —
   `ListReviewsForTraineeQuery(string TraineeUserId)`, no principal.

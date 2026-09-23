@@ -316,7 +316,7 @@ Query patterns:
 
 - "All activities for trainee X of type Y" — indexed.
 - "All activities of type Y with field `reasoning` at or above 4" — GIN-indexed.
-- "Curriculum progress for trainee X" — walks the trainee's CurriculumItems and queries Activities by type + EPA field + minimum level; fast because it's bounded by the trainee's curriculum.
+- "Curriculum progress for trainee X" — reads the trainee's `CurriculumItemProgress` rows, one per (item, semester), which `CreditApplier` writes at each terminal transition, and reads them against each item's per-window target through one shared read model (`QuotaProgressCalculator`, T130). It never re-queries Activities: the tally is the materialisation, and `RebuildCurriculumProgressCommand` is the one thing that recomputes it from the activities.
 
 Reports that aggregate across all activities in an institution will be the slow case. Acceptable for now; accelerate with materialised views if needed.
 

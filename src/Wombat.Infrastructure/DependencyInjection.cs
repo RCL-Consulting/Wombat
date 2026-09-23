@@ -116,6 +116,7 @@ public static class DependencyInjection
         services.AddScoped<DataSeeder>();
         services.AddScoped<PaediatricCatalogueSeeder>();
         services.AddScoped<ActivityTypeSeedRefresher>();
+        services.AddScoped<CurriculumProgressBootstrapper>();
         services.AddScoped<DevUserSeeder>();
 
         services.AddScheduledJob<ActivityDraftNudgeJob>();

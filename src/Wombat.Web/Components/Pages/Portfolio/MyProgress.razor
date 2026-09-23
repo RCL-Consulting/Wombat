@@ -1,52 +1,130 @@
 @page "/portfolio/progress"
 @attribute [Authorize(Roles = "Trainee")]
 @rendermode InteractiveServer
+@using Wombat.Application.Features.Curricula.Quota
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My progress</PageTitle>
 
-<PageHeader Title="My progress" Subtitle="Your curriculum credit and rating trajectory for each EPA you have evidence against." />
+<PageHeader Title="My progress" Subtitle="What your curriculum expects of you this period, and your rating trajectory for each EPA you have evidence against." />
 
-<StatePanel IsLoading="@(_progress is null && _error is null)"
+<StatePanel IsLoading="@(!_loaded && _error is null)"
             LoadError="@_error">
   <section>
-    <h2>Curriculum credit</h2>
-    @if (_progress is { Count: 0 })
+    <h2>Curriculum targets</h2>
+    @if (_summary is null || _summary.Items.Count == 0)
     {
       <p class="muted">No curriculum items assigned yet. Once you are admitted to a curriculum, your EPAs will appear here.</p>
     }
     else
     {
-      <div class="details-grid">
-        @foreach (var item in _progress!)
-        {
-          <section class="detail-card">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-sm)">
-              <h3>@item.EpaCode</h3>
-              <span class="muted">@item.CompletedCount / @item.RequiredCount</span>
+      @if (_summary.IsAfterTeachingYear)
+      {
+        <Alert Kind="info">
+          The @_summary.AsOf.Year academic year ended on 30 November. Encounters observed in December still count towards
+          semester 2, @_summary.AsOf.Year and your @_summary.AsOf.Year yearly targets. Semester 1, @(_summary.AsOf.Year + 1) starts on 1 January.
+        </Alert>
+      }
+
+      @* The College's D14, per kind. The reader sets a start only for a kind the curriculum holds and does not apply
+         today, and D42 usually waives only one of the two kinds, so each sentence speaks for its own kind. *@
+      @if (_summary.SemesterTargetsStart is not null || _summary.YearTargetsStart is not null)
+      {
+        <Alert Kind="info">
+          @if (_summary.ProgrammeNotStarted)
+          {
+            <text>Your programme starts on @QuotaText.LongDate(_summary.ProgrammeStartDate).</text>
+            @if (_summary.SemesterTargetsStart is { } firstSemester)
+            {
+              <text> Your first semester targets are for @firstSemester.Name.</text>
+            }
+            @if (_summary.YearTargetsStart is { } firstYear)
+            {
+              <text> Your first yearly targets are for @firstYear.Name.</text>
+            }
+          }
+          else
+          {
+            <text>You started the programme on @QuotaText.LongDate(_summary.ProgrammeStartDate).</text>
+            @if (_summary.SemesterTargetsStart is { } semesterStart)
+            {
+              <text> That was part-way through the semester, so under the College's rule no semester target applies until @semesterStart.Name, which starts on @QuotaText.LongDate(semesterStart.StartsOn). Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later semester's target.</text>
+            }
+            @if (_summary.YearTargetsStart is { } yearStart)
+            {
+              <text> That was in the second half of the academic year, so under the College's rule no yearly target applies until @yearStart.Name, which starts on @QuotaText.LongDate(yearStart.StartsOn). Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later year's target.</text>
+            }
+            @if (_summary.SemesterTargetsStart is null && HasSemesterItems)
+            {
+              <text> Your semester targets apply now.</text>
+            }
+            @if (_summary.YearTargetsStart is null && HasYearItems)
+            {
+              <text> Your yearly targets apply now.</text>
+            }
+          }
+        </Alert>
+      }
+
+      <section class="detail-card">
+        <h3>This period</h3>
+        <dl class="details-list">
+          <div>
+            <dt>Semester</dt>
+            <dd>@_summary.CurrentSemesterName · @_summary.CurrentSemesterMonths</dd>
+          </div>
+          @if (HasSemesterItems)
+          {
+            <div>
+              <dt>Semester targets</dt>
+              <dd>@TargetsLine(_summary.SemesterTargetsMet, _summary.SemesterTargetsApplying, "this semester")</dd>
             </div>
-            <p class="muted">@item.EpaTitle</p>
-            <div class="progress-bar">
-              <div class="progress-bar-fill @(item.IsComplete ? "is-complete" : "")"
-                   style="width:@(item.RequiredCount > 0 ? Math.Min(100, item.CompletedCount * 100 / item.RequiredCount) : 0)%"></div>
+          }
+          @if (HasYearItems)
+          {
+            <div>
+              <dt>Yearly targets</dt>
+              <dd>@TargetsLine(_summary.YearTargetsMet, _summary.YearTargetsApplying, $"in {_summary.AsOf.Year}")</dd>
             </div>
-            <p class="muted" style="font-size:0.85rem;margin-top:var(--space-xs)">
-              Minimum level @item.EffectiveMinimumLevelLabel@(item.TraineeStage.HasValue ? $" (year {item.TraineeStage})" : string.Empty) · reached @item.MinimumLevelReachedCount / @item.RequiredCount
-              @if (item.LastUpdated.HasValue)
-              {
-                <text> · last credited @item.LastUpdated.Value.ToString("d MMM yyyy")</text>
-              }
-            </p>
-          </section>
-        }
-      </div>
+          }
+          @if (_summary.TraineeStage is { } stage)
+          {
+            <div>
+              <dt>Training year</dt>
+              <dd>@stage — it sets the minimum level each encounter is judged against</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      @if (HasSemesterItems)
+      {
+        <h3 class="progress-group-title">Each semester</h3>
+        <div class="dashboard-grid">
+          @foreach (var item in _summary.Items.Where(entry => entry.IsPerSemester))
+          {
+            @ItemCard(item)
+          }
+        </div>
+      }
+
+      @if (HasYearItems)
+      {
+        <h3 class="progress-group-title">Once a year</h3>
+        <div class="dashboard-grid">
+          @foreach (var item in _summary.Items.Where(entry => !entry.IsPerSemester))
+          {
+            @ItemCard(item)
+          }
+        </div>
+      }
     }
   </section>
 
   @if (_trajectories is { Count: > 0 })
   {
-    <section style="margin-top:var(--space-xl)">
+    <section class="progress-group-title">
       <h2>Rating trajectory</h2>
       <div class="details-grid">
         @foreach (var trajectory in _trajectories)
@@ -68,9 +146,13 @@
 </StatePanel>
 
 @code {
-  private IReadOnlyList<TraineeCurriculumProgressDto>? _progress;
+  private TraineeCurriculumProgressSummaryDto? _summary;
   private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
+  private bool _loaded;
   private string? _error;
+
+  private bool HasSemesterItems => _summary?.HasSemesterItems == true;
+  private bool HasYearItems => _summary?.HasYearItems == true;
 
   protected override async Task OnInitializedAsync()
   {
@@ -79,14 +161,112 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
-      _progress = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId));
+      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId, authState.User));
+      _loaded = true;
     }
     catch (Exception exception)
     {
       _error = exception.Message;
     }
   }
+
+  private static string TargetsLine(int met, int applying, string when)
+    => applying == 0
+      ? "none apply yet"
+      : $"{met} of {applying} EPAs met {when}";
+
+  /// <summary>"this semester" or "in 2026": the words after a figure, by the item's window.</summary>
+  private static string WindowWords(TraineeCurriculumProgressDto item)
+    => item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}";
+
+  private static string PreviousLine(QuotaWindowDto previous)
+  {
+    if (!previous.Applies)
+    {
+      return $"{previous.Name}: no target (you started part-way through) · {previous.Count} recorded";
+    }
+
+    return previous.IsMet
+      ? $"{previous.Name}: {previous.Count} of {previous.Target}, met"
+      : $"{previous.Name}: {previous.Count} of {previous.Target}, {previous.Shortfall} short";
+  }
+
+  private RenderFragment ItemCard(TraineeCurriculumProgressDto item) => __builder =>
+  {
+    var current = item.Current;
+    <section class="detail-card">
+      <div class="progress-row-head">
+        <h3>@item.EpaCode</h3>
+        @if (current.Applies)
+        {
+          <span class="muted">@current.Count of @current.Target @WindowWords(item)</span>
+        }
+      </div>
+      <p class="muted">@item.EpaTitle</p>
+
+      @if (current.Applies)
+      {
+        <div class="progress-bar"
+             role="progressbar"
+             aria-valuemin="0"
+             aria-valuemax="@current.Target"
+             aria-valuenow="@Math.Min(current.Count, current.Target)"
+             aria-label="@($"{item.EpaCode}: {current.Count} of {current.Target} {WindowWords(item)}")">
+          <div class="progress-bar-fill @(current.IsMet ? "is-complete" : string.Empty)" style="width:@current.PercentOfTarget%"></div>
+        </div>
+        <p class="progress-row-meta">
+          @if (current.IsMet)
+          {
+            <text>Target met for @current.Name.</text>
+          }
+          else if (_summary is not null && _summary.AsOf > current.NominalEnd)
+          {
+            @* December: the College's year has ended, but December encounters still count (D40). *@
+            <text>@current.Shortfall more; encounters in December still count towards @current.Name.</text>
+          }
+          else
+          {
+            <text>@current.Shortfall more by @QuotaText.LongDate(current.NominalEnd).</text>
+          }
+          @if (current.Count > 0)
+          {
+            <text> At the minimum level when observed: @current.MinimumLevelReachedCount of @current.Count.</text>
+          }
+          @if (current.LastObservedOn is { } last)
+          {
+            <text> Last encounter @QuotaText.ShortDate(last).</text>
+          }
+        </p>
+      }
+      else if (current.IsExempt)
+      {
+        <p class="progress-row-meta">
+          No target @WindowWords(item) · @current.Count recorded@(current.FirstCountedName is { } first ? $" · targets start with {first}" : string.Empty)
+        </p>
+      }
+      else
+      {
+        <p class="progress-row-meta">
+          No target yet@(current.FirstCountedName is { } first ? $" · targets start with {first}" : string.Empty)
+        </p>
+      }
+
+      <p class="progress-row-meta">
+        Target: @QuotaText.TargetPhrase(item.QuotaPeriod, item.Target)@(item.IsPerSemester ? $" ({item.Target * 2} a year)" : string.Empty).
+        Minimum now @item.EffectiveMinimumLevelLabel.
+        @if (item.TrainingYearChangedOn is { } changed)
+        {
+          <text> Your training year changed on @QuotaText.ShortDate(changed), so encounters before then were judged against the previous year's minimum.</text>
+        }
+      </p>
+
+      @if (item.Previous is { } previous)
+      {
+        <p class="progress-row-meta">@PreviousLine(previous)</p>
+      }
+    </section>
+  };
 
   private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
     => trajectory.Points

@@ -1,0 +1,99 @@
+@page "/admin/curriculum-progress"
+@attribute [Authorize(Policy = "Administrator")]
+@using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Curriculum progress</PageTitle>
+
+<PageHeader Title="Curriculum progress" Subtitle="Recalculate every trainee's curriculum targets from their completed activities." />
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+  <Alert Kind="danger">The rebuild failed and nothing was changed: @_error</Alert>
+}
+
+<div class="form-container">
+  <p>
+    Each completed activity is credited to the curriculum items it matches, in the semester that contains its
+    encounter date. A rebuild throws the stored tallies away and credits every completed activity again, in the
+    order the activities were completed.
+  </p>
+  <p class="muted">
+    Run it after changing where the semester boundary falls, after correcting a trainee's encounter dates, or when a
+    trainee's figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing
+    changes. It also runs by itself at startup whenever the stored tallies are empty but completions have credited.
+  </p>
+
+  <FormActions>
+    <button type="button" class="btn btn-primary" disabled="@_running" @onclick="AskAsync">
+      @(_running ? "Rebuilding…" : "Rebuild progress")
+    </button>
+  </FormActions>
+
+  @if (_result is not null)
+  {
+    <Alert Kind="success">Curriculum progress was rebuilt.</Alert>
+    <dl class="details-list">
+      <div><dt>Activities re-read</dt><dd>@_result.ActivitiesReplayed</dd></div>
+      <div><dt>Curriculum items credited</dt><dd>@_result.CreditApplications</dd></div>
+      <div><dt>Semester tallies written</dt><dd>@_result.ProgressRowsWritten</dd></div>
+      <div><dt>Stale tallies removed</dt><dd>@_result.ProgressRowsRemoved</dd></div>
+      <div><dt>Completions re-stamped</dt><dd>@_result.TransitionsStamped</dd></div>
+    </dl>
+  }
+</div>
+
+<ConfirmDialog @ref="_confirm"
+               Title="Rebuild curriculum progress?"
+               Body="Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. It is safe to run more than once, and if it fails nothing changes."
+               ConfirmLabel="Rebuild progress"
+               OnConfirm="RebuildAsync" />
+
+@code {
+  private ConfirmDialog? _confirm;
+  private RebuildCurriculumProgressResult? _result;
+  private string? _error;
+  private bool _running;
+
+  private async Task AskAsync()
+  {
+    if (_confirm is not null)
+    {
+      await _confirm.ShowAsync();
+    }
+  }
+
+  private async Task RebuildAsync()
+  {
+    // One run at a time. The dialog closes before the work starts, so its button cannot be pressed again while the
+    // rebuild runs, and the page's own "Rebuilding…" state is visible rather than hidden behind the modal.
+    if (_running)
+    {
+      return;
+    }
+
+    _running = true;
+    if (_confirm is not null)
+    {
+      await _confirm.CloseAsync();
+    }
+
+    _error = null;
+    _result = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _result = await Sender.Send(new RebuildCurriculumProgressCommand(authState.User));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+    finally
+    {
+      _running = false;
+    }
+  }
+}

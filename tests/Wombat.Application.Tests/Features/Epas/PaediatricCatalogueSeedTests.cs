@@ -46,6 +46,113 @@ public sealed class PaediatricCatalogueSeedTests
         Epas().Sum(epa => epa.GetProperty("observationsPerYear").GetInt32()).Should().Be(55);
     }
 
+    // Annexure B's per-semester column, hard-coded from the published table (T098-data/annexure-b.json, which
+    // lives under execution/ and does not ship with the build). Reading the expectation out of the seed file it
+    // is checking would be a tautology. Null means the EPA is one per annum, "as opportunities arise".
+    private static readonly IReadOnlyDictionary<string, int?> AnnexureBPerSemester = new Dictionary<string, int?>
+    {
+        ["PAED-001"] = 3,
+        ["PAED-002"] = 3,
+        ["PAED-003"] = 3,
+        ["PAED-004"] = 3,
+        ["PAED-005"] = 3,
+        ["PAED-006"] = 2,
+        ["PAED-007"] = 1,
+        ["PAED-008"] = null,
+        ["PAED-009"] = null,
+        ["PAED-010"] = 3,
+        ["PAED-011"] = null,
+        ["PAED-012"] = 3,
+        ["PAED-013"] = null,
+        ["PAED-014"] = null,
+        ["PAED-015"] = 1
+    };
+
+    private static int? PerSemester(JsonElement epa)
+    {
+        var value = epa.GetProperty("observationsPerSemester");
+        return value.ValueKind == JsonValueKind.Null ? null : value.GetInt32();
+    }
+
+    [Fact]
+    public void EveryEpaDeclaresItsPerSemesterFigureExplicitly()
+    {
+        // T130: the seeder reads this key case-insensitively, so a missing or misspelled key deserialises to
+        // null and silently makes that EPA a once-a-year item. Requiring the key on every EPA — null or an
+        // integer, never absent — is what separates "one per annum" from "someone forgot".
+        foreach (var epa in Epas())
+        {
+            var code = epa.GetProperty("code").GetString();
+
+            epa.TryGetProperty("observationsPerSemester", out var value)
+                .Should().BeTrue($"{code} must state its per-semester figure, even when that figure is null");
+            value.ValueKind.Should().BeOneOf(
+                [JsonValueKind.Null, JsonValueKind.Number], $"{code}'s per-semester figure must be null or a number");
+            if (value.ValueKind == JsonValueKind.Number)
+            {
+                value.TryGetInt32(out _).Should().BeTrue($"{code}'s per-semester figure must be a whole number of encounters");
+            }
+        }
+    }
+
+    [Fact]
+    public void ExactlyTheTenAnnexureBSemesterEpasCarryAPerSemesterFigure()
+    {
+        // PAED-003, 006, 007 and 015 are on this list although their currency strings say "annually": Annexure B
+        // gives them a per-semester figure, and D39 takes the quota period from that column, not from currency.
+        // Deriving it from currency would drop them and break Annexure B's own 25-per-semester total.
+        Epas()
+            .Where(epa => PerSemester(epa) is not null)
+            .Select(epa => epa.GetProperty("code").GetString())
+            .Should().BeEquivalentTo(
+                "PAED-001", "PAED-002", "PAED-003", "PAED-004", "PAED-005",
+                "PAED-006", "PAED-007", "PAED-010", "PAED-012", "PAED-015");
+    }
+
+    [Fact]
+    public void EveryPerSemesterFigureMatchesAnnexureB()
+    {
+        var seeded = Epas().ToDictionary(epa => epa.GetProperty("code").GetString()!, PerSemester);
+
+        seeded.Should().Equal(AnnexureBPerSemester);
+    }
+
+    [Fact]
+    public void EveryPerSemesterFigureIsHalfThePerYearFigure()
+    {
+        // Annexure B splits each semester-cadence EPA's annual frequency evenly across the two semesters.
+        foreach (var epa in Epas().Where(epa => PerSemester(epa) is not null))
+        {
+            var code = epa.GetProperty("code").GetString();
+            var perYear = epa.GetProperty("observationsPerYear").GetInt32();
+
+            (PerSemester(epa)!.Value * 2).Should().Be(perYear, $"{code}'s two semesters must add up to its per-annum frequency");
+        }
+    }
+
+    [Fact]
+    public void PerSemesterFiguresTotalTwentyFive()
+    {
+        // Annexure B: "25 of the 55 fall in each semester, for the EPAs assessed on a semester cadence."
+        Epas().Sum(epa => PerSemester(epa) ?? 0).Should().Be(25);
+    }
+
+    [Fact]
+    public void TwoSemestersPlusTheFiveOncePerAnnumEpasMakeFiftyFive()
+    {
+        // The per-semester column must reconcile with the per-annum total the document states separately: two
+        // semesters of 25, plus the five EPAs that are one per annum and belong to neither semester.
+        var oncePerAnnum = Epas().Where(epa => PerSemester(epa) is null).ToArray();
+
+        oncePerAnnum.Should().HaveCount(5);
+        oncePerAnnum.Should().AllSatisfy(epa => epa.GetProperty("observationsPerYear").GetInt32().Should().Be(1));
+
+        var perSemesterTotal = Epas().Sum(epa => PerSemester(epa) ?? 0);
+        var oncePerAnnumTotal = oncePerAnnum.Sum(epa => epa.GetProperty("observationsPerYear").GetInt32());
+
+        (perSemesterTotal + perSemesterTotal + oncePerAnnumTotal).Should().Be(55);
+    }
+
     [Fact]
     public void UsesTheSixRungLadder()
     {

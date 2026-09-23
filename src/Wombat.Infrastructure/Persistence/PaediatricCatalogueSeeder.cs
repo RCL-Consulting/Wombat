@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -11,7 +13,7 @@ namespace Wombat.Infrastructure.Persistence;
 /// <summary>
 /// Seeds the national Paediatric EPA catalogue published by the College of Paediatricians of
 /// South Africa (EPA version 11.1, September 2026) — the College, its discipline, the six-rung
-/// entrustment ladder, the fifteen EPAs, and the curriculum that carries their per-year targets.
+/// entrustment ladder, the fifteen EPAs, and the curriculum that carries their per-period targets.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -36,23 +38,18 @@ public sealed class PaediatricCatalogueSeeder
     private const string SubSpecialityName = "Paediatrics";
     private const string CurriculumName = "Paediatric EPA Curriculum";
 
-    /// <summary>
-    /// Training programme length in years. v11.1 states its observation frequencies per annum;
-    /// <see cref="CurriculumItem.RequiredCount"/> is a whole-programme total, so the annual figure
-    /// is multiplied up. See <see cref="BuildCurriculumItem"/> for why that is lossy.
-    /// </summary>
-    private const int ProgrammeYears = 4;
-
     private static readonly JsonSerializerOptions SeedJsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<PaediatricCatalogueSeeder> _logger;
 
-    public PaediatricCatalogueSeeder(ApplicationDbContext dbContext)
+    public PaediatricCatalogueSeeder(ApplicationDbContext dbContext, ILogger<PaediatricCatalogueSeeder>? logger = null)
     {
         _dbContext = dbContext;
+        _logger = logger ?? NullLogger<PaediatricCatalogueSeeder>.Instance;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -345,26 +342,99 @@ public sealed class PaediatricCatalogueSeeder
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        WarnWhereTargetsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
     }
 
-    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed) => new()
+    /// <summary>
+    /// Logs, and never writes, every seeded item whose quota no longer matches the catalogue (T130).
+    /// </summary>
+    /// <remarks>
+    /// This seeder skips items that already exist, so a changed target in the catalogue never reaches a
+    /// database that already holds the curriculum. That is deliberate: an administrator may have set a
+    /// target on purpose, and a reconcile on every boot would silently revert them. The one-off correction
+    /// of the pre-T130 lifetime totals is the T130 migration's job. What this adds is that a difference is
+    /// never silent. An item still reading 24 against a published "three per semester" is announced at every
+    /// startup until someone decides which of the two is right.
+    /// </remarks>
+    private void WarnWhereTargetsDifferFromTheCatalogue(
+        Curriculum curriculum,
+        CatalogueSeed catalogue,
+        IReadOnlyDictionary<string, int> epaIdsByCode)
     {
-        EpaId = epaId,
-        OwningInstitutionId = null,
-        // The ladder v11.1's minima are expressed on (T109).
-        ScaleId = scaleId,
-        // LOSSY: v11.1 states an ANNUAL quota that resets each year ("Six per annum"), but
-        // RequiredCount is a whole-programme total and CurriculumItemProgress holds one lifetime
-        // row per (item, trainee). Multiplying up preserves the total volume while losing the
-        // "per year" semantics entirely — a trainee who does all 24 in year one reads as complete.
-        // Making the annual quota real is T098 phase 3.
-        RequiredCount = seed.ObservationsPerYear * ProgrammeYears,
-        // End-of-programme target, used when a trainee has no resolvable stage.
-        MinimumLevelOrder = seed.MinimumLevelOrder,
-        // The Y1-Y4 curve from Annexure A, as scale ORDERS (so 3a is 3, 3b is 4, 4 is 5, 5 is 6).
-        MinimumLevelByStageJson = JsonSerializer.Serialize(seed.StageLevels),
-        WindowMonths = 12
-    };
+        foreach (var seed in catalogue.Epas)
+        {
+            if (!epaIdsByCode.TryGetValue(seed.Code, out var epaId))
+            {
+                continue;
+            }
+
+            var item = curriculum.Items.FirstOrDefault(entity => entity.EpaId == epaId && entity.OwningInstitutionId is null);
+            if (item is null)
+            {
+                continue;
+            }
+
+            var (expectedPeriod, expectedCount) = QuotaFor(seed);
+            if (item.QuotaPeriod != expectedPeriod || item.RequiredCount != expectedCount)
+            {
+                _logger.LogWarning(
+                    "Curriculum item {CurriculumItemId} ({EpaCode}) targets {RequiredCount} per {QuotaPeriod}, but EPA v11.1 publishes {ExpectedCount} per {ExpectedPeriod}. Not changed: this seeder never overwrites an existing item.",
+                    item.Id,
+                    seed.Code,
+                    item.RequiredCount,
+                    item.QuotaPeriod,
+                    expectedCount,
+                    expectedPeriod);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The quota a catalogue EPA publishes, as (window, target per window) (T130, D39).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Annexure B publishes a per-semester figure for ten EPAs and none for the five at one per annum. Where
+    /// one exists the target is per semester; otherwise it is per academic year at the annual figure. The
+    /// window comes from that explicit number, never from the catalogue's <c>currency</c> string. That
+    /// string is the College's "expiry period if not practised", which Annexure B relabels as the
+    /// entrustment-decision cadence. It says "annually" for EPAs 3, 6 and 7, which Annexure B nonetheless
+    /// observes three, two and one per semester, and seeding from it would break Annexure B's own total of
+    /// 25 per semester. Whether those three are a hard target each semester or a planning split of the annual
+    /// figure is still with the College. Progress is stored per semester either way, so the answer changes a
+    /// reader, not the data.
+    /// </para>
+    /// </remarks>
+    internal static (QuotaPeriod Period, int RequiredCount) QuotaFor(EpaSeed seed)
+        => seed.ObservationsPerSemester is { } perSemester
+            ? (QuotaPeriod.Semester, perSemester)
+            : (QuotaPeriod.AcademicYear, seed.ObservationsPerYear);
+
+    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed)
+    {
+        var (quotaPeriod, requiredCount) = QuotaFor(seed);
+
+        return new CurriculumItem
+        {
+            EpaId = epaId,
+            OwningInstitutionId = null,
+            // The ladder v11.1's minima are expressed on (T109).
+            ScaleId = scaleId,
+            // The published target PER WINDOW (T130, D18): three per semester for PAED-001, one per academic
+            // year for PAED-008. Before T130 this was the annual figure multiplied by four programme years,
+            // stored as a lifetime total, and the progress page read "1 / 24" against a number the College
+            // never published.
+            RequiredCount = requiredCount,
+            QuotaPeriod = quotaPeriod,
+            // End-of-programme target, used when a trainee has no resolvable stage.
+            MinimumLevelOrder = seed.MinimumLevelOrder,
+            // The Y1-Y4 curve from Annexure A, as scale ORDERS (so 3a is 3, 3b is 4, 4 is 5, 5 is 6).
+            MinimumLevelByStageJson = JsonSerializer.Serialize(seed.StageLevels),
+            // Not the quota window and not enforced by credit (D19); see CurriculumItem.WindowMonths.
+            WindowMonths = 12
+        };
+    }
 
     private static async Task<CatalogueSeed> ReadCatalogueAsync(CancellationToken cancellationToken)
     {
@@ -379,28 +449,42 @@ public sealed class PaediatricCatalogueSeeder
             ?? throw new InvalidOperationException("The paediatric EPA catalogue seed file could not be parsed.");
     }
 
-    private sealed record CatalogueSeed(
+    // Internal rather than private so Wombat.Infrastructure.Tests can check that every key the catalogue
+    // carries is either deserialized here or deliberately left out (T130). Before T130, per-EPA data sat in
+    // the JSON that nothing read: `currency` and `wbaTools` were both unread, and that is how the quota's
+    // window came to have no source.
+    internal sealed record CatalogueSeed(
         [property: JsonPropertyName("catalogueVersion")] string CatalogueVersion,
         [property: JsonPropertyName("scale")] ScaleSeed Scale,
         [property: JsonPropertyName("epas")] IReadOnlyList<EpaSeed> Epas);
 
-    private sealed record ScaleSeed(
+    internal sealed record ScaleSeed(
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("description")] string Description,
         [property: JsonPropertyName("levels")] IReadOnlyList<LevelSeed> Levels);
 
-    private sealed record LevelSeed(
+    internal sealed record LevelSeed(
         [property: JsonPropertyName("order")] int Order,
         [property: JsonPropertyName("label")] string Label,
         [property: JsonPropertyName("description")] string Description);
 
-    private sealed record EpaSeed(
+    /// <param name="ObservationsPerSemester">
+    /// Annexure B's per-semester figure, or null for the five EPAs it lists at one per annum (T130). It is an
+    /// explicit key rather than something parsed out of prose, and it, not <c>currency</c>, decides the
+    /// quota window; see <see cref="QuotaFor" />.
+    /// </param>
+    internal sealed record EpaSeed(
         [property: JsonPropertyName("code")] string Code,
         [property: JsonPropertyName("title")] string Title,
         [property: JsonPropertyName("domain")] string Domain,
         [property: JsonPropertyName("description")] string Description,
         [property: JsonPropertyName("descriptors")] IReadOnlyList<string> Descriptors,
         [property: JsonPropertyName("observationsPerYear")] int ObservationsPerYear,
+        [property: JsonPropertyName("observationsPerSemester")] int? ObservationsPerSemester,
         [property: JsonPropertyName("stageLevels")] IReadOnlyDictionary<string, int> StageLevels,
         [property: JsonPropertyName("minimumLevelOrder")] int MinimumLevelOrder);
+
+    /// <summary>Reads the catalogue file exactly as <see cref="SeedAsync" /> does. For tests.</summary>
+    internal static Task<CatalogueSeed> ReadCatalogueForTestsAsync(CancellationToken cancellationToken = default)
+        => ReadCatalogueAsync(cancellationToken);
 }

@@ -1,22 +1,21 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Trainee;
-using Wombat.Application.Features.Epas;
-using Wombat.Domain.Curricula;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Curricula;
 
 /// <summary>
-/// Full curriculum-credit view for a trainee's own portfolio progress page. Lists every
-/// curriculum item in the trainee's curriculum — including items with no credit yet (0 of N) —
-/// so the trainee can see where credit has and has not accrued. The trainee dashboard shows a
-/// summarised version of the same data via <see cref="GetTraineeDashboardSummaryQuery"/>.
+/// Full curriculum-credit view for a trainee's own portfolio progress page (T130): every curriculum item in the
+/// trainee's curriculum, each read against its target for the window containing today (a semester or an
+/// academic year), with the College's D14 exemption applied, and the previous window's result. Items with no
+/// credit yet are included. The trainee dashboard shows a summary of the same read model via
+/// <see cref="GetTraineeDashboardSummaryQuery"/>.
 /// </summary>
-public sealed record GetCurriculumProgressForTraineeQuery(string TraineeUserId)
-    : IRequest<IReadOnlyList<TraineeCurriculumProgressDto>>;
+/// <param name="AsOf">The day to read progress for. Defaults to today in South Africa; tests pin it.</param>
+public sealed record GetCurriculumProgressForTraineeQuery(string TraineeUserId, DateOnly? AsOf = null)
+    : IRequest<TraineeCurriculumProgressSummaryDto?>;
 
 public sealed class GetCurriculumProgressForTraineeQueryValidator
     : AbstractValidator<GetCurriculumProgressForTraineeQuery>
@@ -27,25 +26,8 @@ public sealed class GetCurriculumProgressForTraineeQueryValidator
     }
 }
 
-public sealed record TraineeCurriculumProgressDto(
-    int CurriculumItemId,
-    string EpaCode,
-    string EpaTitle,
-    int CompletedCount,
-    int RequiredCount,
-    bool IsComplete,
-    int EffectiveMinimumLevelOrder,
-    /// <summary>
-    /// <see cref="EffectiveMinimumLevelOrder" /> rendered as the rung a clinician reads — "3a", not "3"
-    /// (T100). Falls back to the ordinal as text when the item is unpinned.
-    /// </summary>
-    string EffectiveMinimumLevelLabel,
-    int MinimumLevelReachedCount,
-    int? TraineeStage,
-    DateTime? LastUpdated);
-
 public sealed class GetCurriculumProgressForTraineeQueryHandler
-    : IRequestHandler<GetCurriculumProgressForTraineeQuery, IReadOnlyList<TraineeCurriculumProgressDto>>
+    : IRequestHandler<GetCurriculumProgressForTraineeQuery, TraineeCurriculumProgressSummaryDto?>
 {
     private readonly IApplicationDbContext _dbContext;
 
@@ -54,87 +36,11 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyList<TraineeCurriculumProgressDto>> Handle(
+    public Task<TraineeCurriculumProgressSummaryDto?> Handle(
         GetCurriculumProgressForTraineeQuery request, CancellationToken cancellationToken)
-    {
-        var userId = request.TraineeUserId.Trim();
-
-        var profile = await _dbContext.Set<TraineeProfile>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.IsActive, cancellationToken);
-
-        if (profile is null)
-        {
-            return Array.Empty<TraineeCurriculumProgressDto>();
-        }
-
-        var stage = GetTraineeDashboardSummaryQueryHandler.ComputeTraineeStage(
-            profile.ProgrammeStartDate, DateOnly.FromDateTime(DateTime.UtcNow));
-
-        var items = await _dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .Where(item => item.CurriculumId == profile.CurriculumId)
-            .OrderBy(item => item.Epa.Code)
-            .Select(item => new
-            {
-                item.Id,
-                EpaCode = item.Epa.Code,
-                EpaTitle = item.Epa.Title,
-                item.RequiredCount,
-                item.MinimumLevelOrder,
-                item.MinimumLevelByStageJson,
-                item.ScaleId
-            })
-            .ToListAsync(cancellationToken);
-
-        if (items.Count == 0)
-        {
-            return Array.Empty<TraineeCurriculumProgressDto>();
-        }
-
-        var rungs = await EntrustmentRungLabels.LoadAsync(
-            _dbContext, items.Select(item => item.ScaleId), cancellationToken);
-
-        var progressByItem = await _dbContext.Set<CurriculumItemProgress>()
-            .AsNoTracking()
-            .Where(p => p.TraineeUserId == userId &&
-                        p.CurriculumItem.CurriculumId == profile.CurriculumId)
-            .Select(p => new
-            {
-                p.CurriculumItemId,
-                p.CountsSoFar,
-                p.MinimumLevelReachedCount,
-                p.LastUpdated
-            })
-            .ToDictionaryAsync(p => p.CurriculumItemId, cancellationToken);
-
-        var result = new List<TraineeCurriculumProgressDto>(items.Count);
-        foreach (var item in items)
-        {
-            progressByItem.TryGetValue(item.Id, out var progress);
-
-            var levelTemplate = new CurriculumItem
-            {
-                MinimumLevelOrder = item.MinimumLevelOrder,
-                MinimumLevelByStageJson = item.MinimumLevelByStageJson
-            };
-
-            var completed = progress?.CountsSoFar ?? 0;
-            var effectiveMinimum = levelTemplate.GetMinimumLevelForStage(stage);
-            result.Add(new TraineeCurriculumProgressDto(
-                item.Id,
-                item.EpaCode,
-                item.EpaTitle,
-                completed,
-                item.RequiredCount,
-                completed >= item.RequiredCount,
-                effectiveMinimum,
-                rungs.Format(item.ScaleId, effectiveMinimum),
-                progress?.MinimumLevelReachedCount ?? 0,
-                stage,
-                progress?.LastUpdated));
-        }
-
-        return result;
-    }
+        => TraineeQuotaProgressReader.ReadAsync(
+            _dbContext,
+            request.TraineeUserId.Trim(),
+            request.AsOf ?? QuotaCalendar.Today(),
+            cancellationToken);
 }

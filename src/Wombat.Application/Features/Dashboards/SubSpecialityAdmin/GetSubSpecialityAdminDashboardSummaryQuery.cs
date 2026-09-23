@@ -3,13 +3,15 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Dashboards.SubSpecialityAdmin;
 
-public sealed record GetSubSpecialityAdminDashboardSummaryQuery(ClaimsPrincipal Principal)
+/// <param name="AsOf">The day to read targets for. Defaults to today in South Africa; tests pin it.</param>
+public sealed record GetSubSpecialityAdminDashboardSummaryQuery(ClaimsPrincipal Principal, DateOnly? AsOf = null)
     : IRequest<SubSpecialityAdminDashboardSummaryDto>;
 
 public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
@@ -37,75 +39,32 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
             .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
             .CountAsync(cancellationToken);
 
-        var traineeProfiles = await _dbContext.Set<TraineeProfile>()
-            .AsNoTracking()
-            .Where(p => subSpecialityIds.Contains(p.Curriculum.SubSpecialityId))
-            .ToListAsync(cancellationToken);
+        // Speciality and sub-speciality ids are national (College-owned, T091), so on their own they match every
+        // adopting institution's trainees. This admin is scoped to their own institution, as ExportPortfolio and
+        // ListTraineesForSpeciality already require (T130: the coverage card counts trainees, and counting other
+        // institutions' trainees made "4 of 40 met" of a programme that has 9). A global Administrator sees all.
+        var institutionId = request.Principal.GetInstitutionId();
+        var isAdministrator = request.Principal.IsAdministrator();
+
+        var traineeProfiles = !isAdministrator && institutionId is null
+            ? []
+            : await _dbContext.Set<TraineeProfile>()
+                .AsNoTracking()
+                .Where(p => subSpecialityIds.Contains(p.Curriculum.SubSpecialityId))
+                .Where(p => isAdministrator || p.InstitutionId == institutionId)
+                .ToListAsync(cancellationToken);
 
         var activeCount = traineeProfiles.Count(p => p.IsActive);
         var inactiveCount = traineeProfiles.Count(p => !p.IsActive);
 
-        var activeTraineeUserIds = traineeProfiles
-            .Where(p => p.IsActive)
-            .Select(p => p.UserId)
-            .ToList();
-
-        var curriculumIds = traineeProfiles
-            .Where(p => p.IsActive)
-            .Select(p => p.CurriculumId)
-            .Distinct()
-            .ToList();
-
-        var coverage = await BuildCurriculumCoverage(
-            curriculumIds, activeTraineeUserIds, cancellationToken);
+        // Each EPA's target for the current period, through the same calculator as the trainee's own page (T130).
+        var coverage = await CurriculumCoverageReader.ReadAsync(
+            _dbContext,
+            traineeProfiles.Where(p => p.IsActive).ToList(),
+            request.AsOf ?? QuotaCalendar.Today(),
+            cancellationToken);
 
         return new SubSpecialityAdminDashboardSummaryDto(
             pendingReviewCount, activeCount, inactiveCount, coverage);
-    }
-
-    private async Task<IReadOnlyList<EpaCoverageItem>> BuildCurriculumCoverage(
-        List<int> curriculumIds,
-        List<string> traineeUserIds,
-        CancellationToken cancellationToken)
-    {
-        if (curriculumIds.Count == 0 || traineeUserIds.Count == 0)
-            return [];
-
-        var items = await _dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .Include(ci => ci.Epa)
-            .Where(ci => curriculumIds.Contains(ci.CurriculumId))
-            .ToListAsync(cancellationToken);
-
-        var progress = await _dbContext.Set<CurriculumItemProgress>()
-            .AsNoTracking()
-            .Where(p => traineeUserIds.Contains(p.TraineeUserId))
-            .ToListAsync(cancellationToken);
-
-        var progressLookup = progress
-            .GroupBy(p => p.CurriculumItemId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        var totalTrainees = traineeUserIds.Count;
-        return items
-            .GroupBy(ci => ci.Epa.Title)
-            .Select(g =>
-            {
-                var totalPercent = 0.0;
-                foreach (var item in g)
-                {
-                    if (!progressLookup.TryGetValue(item.Id, out var progressList)) continue;
-                    foreach (var p in progressList)
-                    {
-                        totalPercent += item.RequiredCount > 0
-                            ? Math.Min(100.0, (double)p.CountsSoFar / item.RequiredCount * 100)
-                            : 100.0;
-                    }
-                }
-
-                return new EpaCoverageItem(g.Key, Math.Round(totalPercent / totalTrainees, 1));
-            })
-            .OrderBy(c => c.EpaTitle)
-            .ToList();
     }
 }

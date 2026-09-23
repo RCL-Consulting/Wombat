@@ -27,17 +27,31 @@ public sealed class CreditApplier : ICreditApplier
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(completedActivity);
+
+        var plan = await PlanAsync(CreditSubject.Of(completedActivity), activityType, cancellationToken);
+        return Apply(plan, completedActivity);
+    }
+
+    public async Task<CreditPlan> PlanAsync(
+        CreditSubject subject,
+        ActivityType activityType,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(subject);
         ArgumentNullException.ThrowIfNull(activityType);
         ArgumentException.ThrowIfNullOrWhiteSpace(activityType.CreditRulesJson);
 
+        // EVERY read happens in this method and nothing is mutated here. That split is load-bearing. The
+        // audit pipeline's catch saves the request's shared DbContext, so an exception thrown after a
+        // mutation COMMITS that mutation. Before T130 this method awaited the database between increments: a
+        // dropped connection on the third curriculum item would have committed credit for the first two.
         var rules = CreditRulesParser.Parse(activityType.CreditRulesJson);
         if (rules.CountsFor.Count == 0)
         {
-            return CreditApplicationResult.Empty;
+            return CreditPlan.Nothing;
         }
 
-        using var document = JsonDocument.Parse(completedActivity.DataJson);
-        var creditKey = GetCreditKey(completedActivity);
+        using var document = JsonDocument.Parse(subject.DataJson);
 
         // Credit only accrues against the trainee's own portfolio: the national curriculum version their
         // institution adopted, plus that institution's local extras. Without a trainee profile there is
@@ -51,27 +65,21 @@ public sealed class CreditApplier : ICreditApplier
         // MinimumLevelReachedCount meant.
         //
         // Since T119 that date is a real column: the clinician's own encounter date, resolved by
-        // ActivityService from the field the PINNED schema's observation_date_field names and stamped on
-        // every write. It used to be CreatedOn — the audit clock — behind a fallback chain that lived
-        // here. The chain is gone because ObservedOn is never null and the fallback now happens once, at
-        // the stamp, where ObservedOnSource records that it happened. There must be exactly one
-        // implementation of "what date did this happen", and it is not this one.
-        var observedOn = completedActivity.ObservedOn;
-        var trainee = await ResolveTraineeAsync(completedActivity.SubjectUserId, observedOn, cancellationToken);
+        // ObservationDateResolver from the field the PINNED schema's observation_date_field names. The live
+        // transition path passes the date it is about to stamp; a replay passes the stamped column. There
+        // must be exactly one implementation of "what date did this happen", and it is not this one.
+        var trainee = await ResolveTraineeAsync(subject.SubjectUserId, subject.ObservedOn, cancellationToken);
         if (trainee is null)
         {
-            return CreditApplicationResult.Empty;
+            return CreditPlan.Nothing;
         }
-
-        var updatedRows = new List<CurriculumItemProgress>();
-        var scaleMismatchCount = 0;
-        var unverifiedLevelCount = 0;
 
         // The ladder an achieved ordinal sits on is declared by the `scale_key` of the schema field the
         // directive names, and the schema here is the one the activity is PINNED to — so this answer is
         // fixed for the life of the activity and replays identically under RebuildCurriculumProgress (T109).
         var achievedScaleIds = await ResolveAchievedScaleIdsAsync(activityType.SchemaJson, rules, cancellationToken);
 
+        var credits = new List<PlannedCredit>();
         foreach (var directive in rules.CountsFor)
         {
             var curriculumItems = await ResolveCurriculumItemsAsync(directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
@@ -94,69 +102,146 @@ public sealed class CreditApplier : ICreditApplier
                 // them is worse than not counting. Volume still counts — the encounter did happen.
                 var comparison = CompareMinimumLevel(
                     curriculumItem, directive, document.RootElement, trainee.Stage, achievedScaleId);
-                var minimumLevelReached = comparison.MinimumMet;
 
-                var progressSet = _dbContext.Set<CurriculumItemProgress>();
-                var progress = progressSet.Local.SingleOrDefault(
-                    entity => entity.CurriculumItemId == curriculumItem.Id && entity.TraineeUserId == completedActivity.SubjectUserId)
-                    ?? await progressSet.SingleOrDefaultAsync(
-                        entity => entity.CurriculumItemId == curriculumItem.Id && entity.TraineeUserId == completedActivity.SubjectUserId,
-                        cancellationToken);
-
-                if (progress is null)
-                {
-                    progress = new CurriculumItemProgress
-                    {
-                        CurriculumItemId = curriculumItem.Id,
-                        TraineeUserId = completedActivity.SubjectUserId,
-                        LastUpdated = DateTime.UtcNow
-                    };
-
-                    progressSet.Add(progress);
-                }
-
-                var creditedKeys = DeserializeCreditedKeys(progress.CreditedActivityKeysJson);
-                if (!creditedKeys.Add(creditKey))
-                {
-                    continue;
-                }
-
-                progress.CountsSoFar += directive.Amount;
-                if (minimumLevelReached)
-                {
-                    progress.MinimumLevelReachedCount += directive.Amount;
-                }
-
-                // The progress counters are amount-weighted, so they stay comparable with CountsSoFar and
-                // MinimumLevelReachedCount beside them. The per-call counters count curriculum ITEMS, so
-                // they stay comparable with CreditedItemCount, which is a row count — the transition stamp
-                // must not be able to exceed the number of items the same transition credited.
-                switch (comparison.Basis)
-                {
-                    case LevelComparisonBasis.ScaleMismatch:
-                        progress.ScaleMismatchCount += directive.Amount;
-                        scaleMismatchCount++;
-                        break;
-
-                    case LevelComparisonBasis.Unpinned:
-                        progress.UnverifiedLevelCount += directive.Amount;
-                        unverifiedLevelCount++;
-                        break;
-
-                    case LevelComparisonBasis.SameScale:
-                        // The only case where the stored tally rests on a verified ladder. Record which one,
-                        // so a later re-pin of the curriculum item makes this row detectably stale rather
-                        // than quietly wrong.
-                        progress.MinimumLevelScaleId = curriculumItem.ScaleId;
-                        break;
-                }
-
-                progress.LastActivityId = completedActivity.Id;
-                progress.LastUpdated = DateTime.UtcNow;
-                progress.CreditedActivityKeysJson = JsonSerializer.Serialize(creditedKeys.OrderBy(value => value));
-
-                updatedRows.Add(progress);
+                credits.Add(new PlannedCredit(curriculumItem.Id, directive.Amount, comparison, curriculumItem.ScaleId));
             }
+        }
+
+        if (credits.Count == 0)
+        {
+            return new CreditPlan(subject.SubjectUserId, subject.ObservedOn, credits, []);
+        }
+
+        // Every row the trainee has on every candidate item, in EVERY semester, not only the one the
+        // encounter falls in, so Apply can dedupe across buckets. Two sources, merged by reference:
+        //  - a TRACKING query, not AsNoTracking. The rebuild zeroes rows in place without saving, and
+        //    identity resolution hands back those zeroed instances. An untracked read would return the stale
+        //    stored keys, the replay would dedupe against them and credit nothing, and the rebuild would then
+        //    remove every row as unreproduced;
+        //  - Local, for rows added and not yet saved (a replay's earlier activities, or an earlier directive).
+        // Rows already marked Deleted are left out: they are on their way out, and crediting one would throw
+        // the increment away at save.
+        var progressSet = _dbContext.Set<CurriculumItemProgress>();
+        var candidateItemIds = credits.Select(credit => credit.CurriculumItemId).Distinct().ToList();
+        var traineeUserId = subject.SubjectUserId;
+
+        var stored = await progressSet
+            .Where(row => row.TraineeUserId == traineeUserId && candidateItemIds.Contains(row.CurriculumItemId))
+            .ToListAsync(cancellationToken);
+
+        var existingRows = stored
+            .Concat(progressSet.Local.Where(row =>
+                row.TraineeUserId == traineeUserId && candidateItemIds.Contains(row.CurriculumItemId)))
+            .Distinct<CurriculumItemProgress>(ReferenceEqualityComparer.Instance)
+            .Where(row => progressSet.Entry(row).State != EntityState.Deleted)
+            .ToList();
+
+        return new CreditPlan(traineeUserId, subject.ObservedOn, credits, existingRows);
+    }
+
+    public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(completedActivity);
+
+        if (plan.Credits.Count == 0)
+        {
+            return CreditApplicationResult.Empty;
+        }
+
+        // No awaits from here to the end of the method: see PlanAsync.
+        var creditKey = GetCreditKey(completedActivity);
+
+        // The bucket is the semester containing the ENCOUNTER, never the filing date or the transition time,
+        // and never anything about the trainee or the item (T130, D41). AcademicPeriod.Containing is total over
+        // DateOnly, so this line cannot throw for any stored date: a December encounter, a future-dated one, or
+        // one from before the programme started all have a bucket.
+        var period = AcademicPeriod.Containing(plan.ObservedOn);
+        var progressSet = _dbContext.Set<CurriculumItemProgress>();
+        var rows = plan.ExistingRows.ToList();
+
+        var updatedRows = new List<CurriculumItemProgress>();
+        var scaleMismatchCount = 0;
+        var unverifiedLevelCount = 0;
+
+        foreach (var credit in plan.Credits)
+        {
+            var itemRows = rows
+                .Where(row => row.CurriculumItemId == credit.CurriculumItemId && row.TraineeUserId == plan.TraineeUserId)
+                .ToList();
+
+            // Dedupe FIRST, across every semester of the item, and only then pick or create the row. The order
+            // matters twice. A re-apply that finds its key in another semester's row must create nothing: an
+            // empty row added here would reach neither the rebuild's reproduced set nor its removal set, and
+            // would be inserted at save. And looking across semesters is what stops an activity whose
+            // encounter date moved after it was credited from being counted in two buckets. It stays counted
+            // in the old one until a rebuild moves it.
+            if (itemRows.Any(row => DeserializeCreditedKeys(row.CreditedActivityKeysJson).Contains(creditKey)))
+            {
+                continue;
+            }
+
+            var progress = itemRows.FirstOrDefault(row => row.IsIn(period));
+            if (progress is null)
+            {
+                progress = new CurriculumItemProgress
+                {
+                    CurriculumItemId = credit.CurriculumItemId,
+                    TraineeUserId = plan.TraineeUserId,
+                    AcademicYear = period.Year,
+                    Semester = period.Semester,
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                progressSet.Add(progress);
+                rows.Add(progress);
+            }
+
+            var creditedKeys = DeserializeCreditedKeys(progress.CreditedActivityKeysJson);
+            creditedKeys.Add(creditKey);
+
+            progress.CountsSoFar += credit.Amount;
+            if (credit.Comparison.MinimumMet)
+            {
+                progress.MinimumLevelReachedCount += credit.Amount;
+            }
+
+            // The progress counters are amount-weighted, so they stay comparable with CountsSoFar and
+            // MinimumLevelReachedCount beside them. The per-call counters count curriculum ITEMS, so
+            // they stay comparable with CreditedItemCount, which is a row count — the transition stamp
+            // must not be able to exceed the number of items the same transition credited.
+            switch (credit.Comparison.Basis)
+            {
+                case LevelComparisonBasis.ScaleMismatch:
+                    progress.ScaleMismatchCount += credit.Amount;
+                    scaleMismatchCount++;
+                    break;
+
+                case LevelComparisonBasis.Unpinned:
+                    progress.UnverifiedLevelCount += credit.Amount;
+                    unverifiedLevelCount++;
+                    break;
+
+                case LevelComparisonBasis.SameScale:
+                    // The only case where the stored tally rests on a verified ladder. Record which one,
+                    // so a later re-pin of the curriculum item makes this row detectably stale rather
+                    // than quietly wrong.
+                    progress.MinimumLevelScaleId = credit.ItemScaleId;
+                    break;
+            }
+
+            // The latest ENCOUNTER this bucket counts. It is what a reader shows as "last encounter", and unlike
+            // LastUpdated a rebuild reproduces it exactly.
+            if (progress.LastObservedOn is null || plan.ObservedOn > progress.LastObservedOn)
+            {
+                progress.LastObservedOn = plan.ObservedOn;
+            }
+
+            progress.LastActivityId = completedActivity.Id;
+            progress.LastUpdated = DateTime.UtcNow;
+            progress.CreditedActivityKeysJson = JsonSerializer.Serialize(creditedKeys.OrderBy(value => value));
+
+            updatedRows.Add(progress);
         }
 
         return new CreditApplicationResult(updatedRows, scaleMismatchCount, unverifiedLevelCount);
@@ -332,8 +417,8 @@ public sealed class CreditApplier : ICreditApplier
         // Deliberately NOT filtered on IsActive. TraineeProfile.Complete() clears IsActive on
         // graduation, so filtering here meant a graduated trainee earned no credit — harmless for
         // live submissions (they no longer submit), but destructive under
-        // RebuildCurriculumProgress, which deletes every progress row before replaying: alumni
-        // came back with nothing and could not be restored by re-running the rebuild.
+        // RebuildCurriculumProgress, which zeroes every progress row before replaying: alumni
+        // would come back with nothing.
         // Prefer an active profile when a user somehow has more than one, then the most recent.
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()

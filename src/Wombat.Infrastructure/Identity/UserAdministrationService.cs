@@ -57,6 +57,25 @@ public sealed class UserAdministrationService : IUserAdministrationService
             .ToArray();
     }
 
+    public async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        var ids = userIds.Distinct(StringComparer.Ordinal).ToArray();
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Where(entity => ids.Contains(entity.Id))
+            .Select(entity => new { entity.Id, entity.FirstName, entity.LastName })
+            .ToListAsync(cancellationToken);
+
+        return users.ToDictionary(user => user.Id, user => $"{user.FirstName} {user.LastName}".Trim(), StringComparer.Ordinal);
+    }
+
     public async Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
     {
         var users = await LoadUsersQuery()

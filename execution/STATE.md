@@ -10,14 +10,13 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 28 queued, 1 blocked. **Five P1s remain, all EPA work or gating it:**
-  T099, T102, T120, T122, T130.
-- **T121 shipped 2026-09-21.** MSF now leaves per-EPA evidence on the trainee's record. It credits
-  nothing, by College decision D8 — the value is the evidence link, not a count.
-- **T130 (the annual quota) is the most visible gap left** and is unblocked. The progress page still
-  reads "1 / 24" against a lifetime total the College never published.
-- Two College questions are still open and both are one line: the scope of the "clinical observed
-  interaction" merge, and whether June is semester 1 or 2.
+- Nothing in `in_progress/`. 32 queued, 1 blocked. **Four P1s remain:** T099, T102, T120, T122.
+- **T130 shipped 2026-09-23 — the annual quota.** Progress is stored per semester, targets are per period,
+  and the College's D14 exemption is applied when reading. One read model sits behind the progress page,
+  the trainee dashboard and the three staff dashboards. "1 / 24" is gone; PAED-001 reads "2 of 3 this semester".
+- **Four one-line College questions** are listed in `EPA-PROGRAMME.md` § 3F: June's side, December,
+  whether Annexure B's per-semester figures are hard targets, and late starters. **None blocks anything:**
+  storage is per semester, so each answer is a read-model change, one constant, or a rebuild.
 
 ## Blockers
 
@@ -26,35 +25,36 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T130** (the quota) — **Model: Opus**: a period concept threaded through a migration, the credit
-  engine, the rebuild command, eight readers and two UI sites. Then **T120** and **T122**.
-- Ask the two residual College questions before T120 merges any instrument.
-- Decide T128's destination, then `apply` it and rehearse a restore **from the retrieved copy**.
+- **T122** (the EPA→tool allow-list) — **Model: Opus**: one predicate, two callers (picker and submit,
+  D20), a seed change to `wbaTools` keys, and the permissive fallback of D21. `EpaSeed` is `internal` now.
+- **T102** fix 2, then **T120** (the ten tools, after T105 per Wave 2).
+- **Before deploying T130 to production:** take a `pg_dump`. The migration empties
+  `CurriculumItemProgresses`; `CurriculumProgressBootstrapper` refills it at the first boot. `Down()` does
+  not restore lifetime tallies, so a rollback means restoring the dump.
+- Send the College the § 3F questions; decide T128's destination.
 
 ## Open questions
 
-- **The dev database was emptied and rebuilt 2026-09-20** (W-006), then T121 changed it again on
-  2026-09-21: the dev trainee moved to the **paediatric** curriculum, and dev now holds MSF campaign 1
-  and `msf_cpsa` activities 1–3. 15 seeded types, all v1. **Production was deliberately not touched.**
-- **T126's off-ladder rule still cannot fire on dev's activities** — the three MSF rows credit nothing,
-  so the path it is measured on is never entered. File a WBA to see it.
-- Who the RFI actually goes to: the programme never names a person.
-- Task lanes were derived, not read (W-002). Five spot-checked; none misfiled. 22 unchecked.
+- **Dev database (2026-09-23):** T130 is applied. The dev trainee is on the paediatric curriculum with
+  start 2026-01-01 and has activities 7–12 (Mini-CEX, PAED-001/006/011) completed by committee@ and
+  assessor@. `assessor@wombat.local` exists now; DevUserSeeder seeds it with Paediatrics scopes.
+  Snapshots `pre-t130-staging` and `pre-t130-migration` are in `recovery/`. **Production was not touched.**
+- D42's month tolerance is invented and named as such; the College may overrule it.
+- Task lanes were derived, not read (W-002). Five were spot-checked, none misfiled; 22 remain unchecked.
 
 ## Files to open first
 
 - `CLAUDE.md` — conventions, footguns, and the "nothing is live" section.
-- `execution/knowledge/EPA-PROGRAMME.md` — § 2 the inventory, § 3 the decisions, § 4 the waves.
+- `execution/knowledge/EPA-PROGRAMME.md` — § 2 inventory, § 3 decisions (D1–D42), § 3F College asks.
 - `execution/architecture/DESIGN.md` — mandatory before any Razor work.
 - `execution/DASHBOARD.md` — generated; the queue at a glance.
 - `deploy/verify/drift-check.sh` — run before trusting any claim about the server.
 
 ## Recent
 
+- 2026-09-23: **T130 shipped.** Browser-verified on dev: the migration ran against real old-grain rows,
+  the startup rebuild refilled them, a live completion credited, and a manual rebuild reproduced the
+  tallies byte for byte. A design critique and a 90-agent adversarial review ran first. Filed T139–T143.
+  Suites: 1195, up from 1040.
 - 2026-09-21: **T121 shipped** — a released MSF campaign writes one terminal `msf_cpsa` activity per
-  covered EPA. **Browser-verified three times.** An adversarial diff review found six real defects,
-  all fixed; a pre-existing portfolio-export crash was fixed too. Filed T137, T138. Suites 1040.
-- 2026-09-20: **T133 shipped** — the visual builder erased every root schema pointer on every operator
-  draft save. **Browser-verified.**
-- 2026-09-20: **dev DB emptied and three compatibility hedges removed** (W-006). T134's gate is now the
-  declared pointer alone; the trajectory's KNOWN LIMITATION is closed; T126 is no longer inert.
+  covered EPA. It credits nothing (D8).

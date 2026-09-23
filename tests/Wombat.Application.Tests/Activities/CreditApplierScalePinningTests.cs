@@ -40,6 +40,7 @@ public sealed class CreditApplierScalePinningTests
         result.UnverifiedLevelCount.Should().Be(0);
 
         var progress = await dbContext.CurriculumItemProgresses.SingleAsync();
+        (progress.AcademicYear, progress.Semester).Should().Be((2026, 1), "guard: the fixture's encounter date is what chose the bucket");
         progress.CountsSoFar.Should().Be(1, "the encounter happened and is evidence of volume");
         progress.MinimumLevelReachedCount.Should().Be(0, "the two ordinals are not comparable");
         progress.ScaleMismatchCount.Should().Be(1);
@@ -303,6 +304,15 @@ public sealed class CreditApplierScalePinningTests
             }
             """;
 
+    /// <summary>
+    /// A completion observed on a FIXED date inside the trainee's programme.
+    /// </summary>
+    /// <remarks>
+    /// <c>ObservedOn</c> used to be left at <c>default(DateOnly)</c>, 0001-01-01. That precedes the programme start,
+    /// so <c>GetStage</c> returned null and the gate fell back to the flat minimum, and since T130 every one of these
+    /// tests also credited a year-1 semester bucket that no real completion can produce. The date is pinned, not
+    /// "today", so the bucket does not change with the day the suite runs.
+    /// </remarks>
     private static Activity CreateCompletedActivity(string dataJson)
         => new()
         {
@@ -310,12 +320,22 @@ public sealed class CreditApplierScalePinningTests
             SubjectUserId = "trainee-1",
             CurrentState = "completed",
             DataJson = dataJson,
-            CreatedOn = DateTime.UtcNow,
+            ObservedOn = ObservedOn,
+            CreatedOn = ObservedOn.ToDateTime(new TimeOnly(9, 0), DateTimeKind.Utc),
             Transitions =
             [
-                new ActivityTransition { TransitionKey = "complete", OccurredOn = DateTime.UtcNow }
+                new ActivityTransition
+                {
+                    TransitionKey = "complete",
+                    OccurredOn = ObservedOn.ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc)
+                }
             ]
         };
+
+    private static readonly DateOnly ProgrammeStart = new(2025, 1, 15);
+
+    /// <summary>Semester 1 of 2026, in the trainee's second training year.</summary>
+    private static readonly DateOnly ObservedOn = new(2026, 3, 10);
 
     private static ApplicationDbContext CreateDbContext()
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -351,8 +371,8 @@ public sealed class CreditApplierScalePinningTests
             UserId = "trainee-1",
             InstitutionId = 10,
             CurriculumId = 3000,
-            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
-            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            ProgrammeStartDate = ProgrammeStart,
+            ExpectedCompletionDate = ProgrammeStart.AddYears(4),
             IsActive = true
         });
 

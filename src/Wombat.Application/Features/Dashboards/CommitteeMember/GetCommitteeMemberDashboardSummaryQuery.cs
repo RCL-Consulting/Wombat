@@ -1,31 +1,29 @@
 using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Common.Options;
-using Wombat.Domain.Curricula;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Identity;
-using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Dashboards.CommitteeMember;
 
-public sealed record GetCommitteeMemberDashboardSummaryQuery(ClaimsPrincipal Principal)
+/// <param name="AsOf">The day to read targets for. Defaults to today in South Africa; tests pin it.</param>
+public sealed record GetCommitteeMemberDashboardSummaryQuery(ClaimsPrincipal Principal, DateOnly? AsOf = null)
     : IRequest<CommitteeMemberDashboardSummaryDto>;
 
 public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
     : IRequestHandler<GetCommitteeMemberDashboardSummaryQuery, CommitteeMemberDashboardSummaryDto>
 {
     private readonly IApplicationDbContext _dbContext;
-    private readonly DashboardThresholds _thresholds;
+    private readonly IUserAdministrationService _users;
 
     public GetCommitteeMemberDashboardSummaryQueryHandler(
         IApplicationDbContext dbContext,
-        IOptions<DashboardThresholds> thresholds)
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
-        _thresholds = thresholds.Value;
+        _users = users;
     }
 
     public async Task<CommitteeMemberDashboardSummaryDto> Handle(
@@ -33,84 +31,50 @@ public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
     {
         var subSpecialityIds = request.Principal.GetSubSpecialityIds();
 
+        // A sub-speciality id is national (College-owned, T091), so on its own it matches every adopting
+        // institution's trainees. A committee member oversees their own institution: the rule every other
+        // committee surface already applies (ActivityReadScope, ExportPortfolio.IsScopedOverseerOf). Before T130
+        // this card leaked only a few user ids above an 80% threshold; once it listed every trainee by name, the
+        // missing institution filter became a disclosure. A global Administrator sees every institution.
+        var institutionId = request.Principal.GetInstitutionId();
+        var isAdministrator = request.Principal.IsAdministrator();
+        if (!isAdministrator && institutionId is null)
+        {
+            var empty = await CurriculumCoverageReader.ReadAsync(_dbContext, [], request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
+            return new CommitteeMemberDashboardSummaryDto(empty.CurrentSemesterName, empty.CurrentSemesterMonths, [], [], 0);
+        }
+
         var traineeProfiles = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(p => p.IsActive && subSpecialityIds.Contains(p.Curriculum.SubSpecialityId))
+            .Where(p => isAdministrator || p.InstitutionId == institutionId)
             .ToListAsync(cancellationToken);
 
-        var traineeUserIds = traineeProfiles.Select(p => p.UserId).ToList();
-        var curriculumIds = traineeProfiles.Select(p => p.CurriculumId).Distinct().ToList();
+        var coverage = await CurriculumCoverageReader.ReadAsync(
+            _dbContext, traineeProfiles, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
-        var items = await _dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .Include(ci => ci.Epa)
-            .Where(ci => curriculumIds.Contains(ci.CurriculumId))
-            .ToListAsync(cancellationToken);
+        // Names, not user ids (the old card printed the id in the name column), and only for the trainees
+        // listed: whatever roles they hold now, since nothing ties an active profile to the Trainee role.
+        var names = coverage.Trainees.Count == 0
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : await _users.GetDisplayNamesAsync(
+                coverage.Trainees.Select(trainee => trainee.TraineeUserId).ToList(), cancellationToken);
 
-        var progress = await _dbContext.Set<CurriculumItemProgress>()
-            .AsNoTracking()
-            .Where(p => traineeUserIds.Contains(p.TraineeUserId))
-            .ToListAsync(cancellationToken);
-
-        // Calculate per-trainee overall completion percentage
-        var traineesNearCompletion = new List<TraineeNearCompletionItem>();
-        foreach (var profile in traineeProfiles)
-        {
-            var profileItems = items.Where(i => i.CurriculumId == profile.CurriculumId).ToList();
-            if (profileItems.Count == 0) continue;
-
-            var totalPercent = 0.0;
-            foreach (var item in profileItems)
-            {
-                var p = progress.FirstOrDefault(
-                    pr => pr.CurriculumItemId == item.Id && pr.TraineeUserId == profile.UserId);
-                if (p is not null && item.RequiredCount > 0)
-                {
-                    totalPercent += Math.Min(100.0, (double)p.CountsSoFar / item.RequiredCount * 100);
-                }
-            }
-
-            var overallPercent = Math.Round(totalPercent / profileItems.Count, 1);
-            if (overallPercent >= _thresholds.CommitteeCompletionPercent)
-            {
-                traineesNearCompletion.Add(new TraineeNearCompletionItem(
-                    profile.UserId, profile.UserId, overallPercent));
-            }
-        }
-
-        // Programme progress (per-EPA average across all active trainees)
-        var programmeProgress = new List<ProgrammeProgressItem>();
-        if (traineeUserIds.Count > 0)
-        {
-            var progressLookup = progress
-                .GroupBy(p => p.CurriculumItemId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            programmeProgress = items
-                .GroupBy(ci => ci.Epa.Title)
-                .Select(g =>
-                {
-                    var total = 0.0;
-                    foreach (var item in g)
-                    {
-                        if (!progressLookup.TryGetValue(item.Id, out var pList)) continue;
-                        foreach (var p in pList)
-                        {
-                            total += item.RequiredCount > 0
-                                ? Math.Min(100.0, (double)p.CountsSoFar / item.RequiredCount * 100)
-                                : 100.0;
-                        }
-                    }
-
-                    return new ProgrammeProgressItem(
-                        g.Key, Math.Round(total / traineeUserIds.Count, 1));
-                })
-                .OrderBy(p => p.EpaTitle)
-                .ToList();
-        }
+        var trainees = coverage.Trainees
+            .Select(trainee => new TraineeTargetsItem(
+                trainee.TraineeUserId,
+                names.TryGetValue(trainee.TraineeUserId, out var name) && name.Length > 0 ? name : trainee.TraineeUserId,
+                trainee.SemesterTargetsMet,
+                trainee.SemesterTargetsApplying,
+                trainee.YearTargetsMet,
+                trainee.YearTargetsApplying))
+            .ToList();
 
         return new CommitteeMemberDashboardSummaryDto(
-            traineesNearCompletion.OrderByDescending(t => t.OverallCompletionPercent).ToList(),
-            programmeProgress);
+            coverage.CurrentSemesterName,
+            coverage.CurrentSemesterMonths,
+            trainees,
+            coverage.Epas,
+            coverage.ExemptTraineeCount);
     }
 }

@@ -929,6 +929,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int?>("OwningInstitutionId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("QuotaPeriod")
+                        .HasColumnType("integer");
+
                     b.Property<int>("RequiredCount")
                         .HasColumnType("integer");
 
@@ -952,7 +955,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.HasIndex("CurriculumId", "EpaId")
                         .IsUnique();
 
-                    b.ToTable("CurriculumItems", (string)null);
+                    b.ToTable("CurriculumItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CurriculumItems_QuotaPeriod", "\"QuotaPeriod\" IN (0, 1)");
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Domain.Curricula.CurriculumItemProgress", b =>
@@ -962,6 +968,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AcademicYear")
+                        .HasColumnType("integer");
 
                     b.Property<int>("CountsSoFar")
                         .HasColumnType("integer");
@@ -976,6 +985,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int?>("LastActivityId")
                         .HasColumnType("integer");
 
+                    b.Property<DateOnly?>("LastObservedOn")
+                        .HasColumnType("date");
+
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("timestamp with time zone");
 
@@ -988,6 +1000,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int>("ScaleMismatchCount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Semester")
+                        .HasColumnType("integer");
+
                     b.Property<string>("TraineeUserId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -996,16 +1011,28 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int>("UnverifiedLevelCount")
                         .HasColumnType("integer");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MinimumLevelScaleId");
 
                     b.HasIndex("TraineeUserId");
 
-                    b.HasIndex("CurriculumItemId", "TraineeUserId")
-                        .IsUnique();
+                    b.HasIndex("CurriculumItemId", "TraineeUserId", "AcademicYear", "Semester")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CurriculumItemProgresses_Item_Trainee_Period");
 
-                    b.ToTable("CurriculumItemProgresses", (string)null);
+                    b.ToTable("CurriculumItemProgresses", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CurriculumItemProgresses_AcademicYear", "\"AcademicYear\" BETWEEN 1 AND 9999");
+
+                            t.HasCheckConstraint("CK_CurriculumItemProgresses_Semester", "\"Semester\" IN (1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Domain.DataRights.DataRightsErasureRecord", b =>

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -39,6 +40,13 @@ public sealed class RebuildCurriculumProgressTests
     private const int OrphanItemId = 4001;
     private const int CurriculumId = 3000;
 
+    /// <summary>
+    /// A fixed "now". The dates below used to be relative to DateTime.UtcNow, which T130 made a hazard: two
+    /// activities 100 and 50 days ago land in one semester on some run dates and in two on others, so the
+    /// same test asserted a single row on some days and threw on the rest.
+    /// </summary>
+    private static readonly DateTime Now = new(2026, 9, 23, 10, 0, 0, DateTimeKind.Utc);
+
     [Fact]
     public async Task Rebuild_ThatThrowsPartWay_LeavesThePriorRowsIntact()
     {
@@ -59,6 +67,9 @@ public sealed class RebuildCurriculumProgressTests
                 Id = 900,
                 CurriculumItemId = NationalItemId,
                 TraineeUserId = "trainee-2",
+                // Activity 201's semester: filed and observed 50 days before Now, 2026-08-04.
+                AcademicYear = 2026,
+                Semester = 2,
                 CountsSoFar = 7,
                 MinimumLevelReachedCount = 5,
                 LastActivityId = 201,
@@ -169,42 +180,274 @@ public sealed class RebuildCurriculumProgressTests
     }
 
     [Fact]
-    public async Task Rebuild_ReproducesTheTalliesTheIncrementalPathProduced()
+    public async Task Rebuild_ReproducesTheSemesterTalliesTheIncrementalPathProduced()
     {
-        // Same activities, same pinned version, same applier: a rebuild is a replay, so it must land on
-        // the same numbers the live completions did — including LastActivityId, which is why the replay
-        // runs in filing order rather than whatever order the rows come back in.
+        // T130's verification item: "a rebuild reproduces the same bucket counts as incremental crediting".
+        // Same activities, same pinned version, same applier. A rebuild is a replay, so it must land on the same
+        // numbers the live completions did, bucket by bucket.
+        //
+        // Three things make this more than the applier compared with itself:
+        //  - an ABSOLUTE oracle as well as the equality check, so a bucket written as (0, 0) on both sides fails;
+        //  - a fresh DbContext per live completion, as production has, so the applier's database half (not its
+        //    Local half) finds the row the previous completion wrote;
+        //  - two completions in one semester filed in the opposite order to their encounters, so LastActivityId
+        //    proves the replay runs in filing order.
         var options = NewDatabase();
-        Snapshot incremental;
+        IReadOnlyList<Snapshot> incremental;
 
-        await using (var db = new ApplicationDbContext(options))
+        await using (var seed = new ApplicationDbContext(options))
         {
-            Seed(db);
-            var first = AddCompletedActivity(db, activityId: 200, subjectUserId: "trainee-1", score: 2, daysAgo: 100);
-            var second = AddCompletedActivity(db, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 50);
-            await db.SaveChangesAsync();
+            Seed(seed);
+            // Filed 2026-07-20 about an encounter on 2026-03-10 (semester 1).
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 2, daysAgo: 65, observedOn: new DateOnly(2026, 3, 10));
+            // Filed 2026-06-15 about an encounter on 2026-04-01 (semester 1): filed first, observed later.
+            AddCompletedActivity(seed, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 100, observedOn: new DateOnly(2026, 4, 1));
+            // Filed and observed 2026-08-04 (semester 2).
+            AddCompletedActivity(seed, activityId: 202, subjectUserId: "trainee-1", score: 4, daysAgo: 50);
+            await seed.SaveChangesAsync();
+        }
 
-            // The live path: one credit application per completion, each committed on its own — which is
-            // exactly what ActivityService.TransitionAsync does at the end of a terminal move.
-            var applier = new CreditApplier(db);
-            await applier.ApplyAsync(first, PinnedType(CreditsTheEpa), CancellationToken.None);
+        // The live path, in filing order: 201, then 200, then 202. Each completion gets its own context and its
+        // own save, exactly as ActivityService.TransitionAsync does at the end of a terminal move.
+        foreach (var activityId in new[] { 201, 200, 202 })
+        {
+            await using var db = new ApplicationDbContext(options);
+            var activity = await db.Activities.Include(entity => entity.Transitions).SingleAsync(entity => entity.Id == activityId);
+            await new CreditApplier(db).ApplyAsync(activity, PinnedType(CreditsTheEpa), CancellationToken.None);
             await db.SaveChangesAsync();
-            await applier.ApplyAsync(second, PinnedType(CreditsTheEpa), CancellationToken.None);
-            await db.SaveChangesAsync();
-
-            incremental = Snapshot.Of(await db.CurriculumItemProgresses.SingleAsync());
-            incremental.CountsSoFar.Should().Be(2, "guard: the baseline itself must be the two-completion tally");
-            incremental.MinimumLevelReachedCount.Should().Be(1, "guard: only the level-4 completion meets the minimum");
         }
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await Rebuild(db);
+            incremental = await SnapshotsAsync(db);
+        }
+
+        incremental.Should().Equal(
+            [
+                new Snapshot(NationalItemId, "trainee-1", 2026, 1, CountsSoFar: 2, MinimumLevelReachedCount: 1,
+                    ScaleMismatchCount: 0, UnverifiedLevelCount: 2, LastActivityId: 200,
+                    LastObservedOn: new DateOnly(2026, 4, 1), CreditedActivityKeysJson: """["200:complete","201:complete"]"""),
+                new Snapshot(NationalItemId, "trainee-1", 2026, 2, CountsSoFar: 1, MinimumLevelReachedCount: 1,
+                    ScaleMismatchCount: 0, UnverifiedLevelCount: 1, LastActivityId: 202,
+                    LastObservedOn: new DateOnly(2026, 8, 4), CreditedActivityKeysJson: """["202:complete"]""")
+            ],
+            "guard: the baseline itself must be two semester buckets, each credited by the encounters observed in it");
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+            result.ProgressRowsWritten.Should().Be(2);
+            result.ProgressRowsRemoved.Should().Be(0);
         }
 
         await using (var verify = new ApplicationDbContext(options))
         {
-            Snapshot.Of(await verify.CurriculumItemProgresses.SingleAsync()).Should().Be(incremental);
+            (await SnapshotsAsync(verify)).Should().Equal(incremental);
+        }
+    }
+
+    [Fact]
+    public async Task Rebuild_MovesACreditIntoTheSemesterItsEncounterNowFallsIn()
+    {
+        // The re-bucketing tool (D40). Activity 200 was observed on 30 June, which is semester 1 today. Its credit
+        // is stored in semester 2, as it would be if the boundary had been read as "June is semester 2" when it
+        // was credited. A rebuild recomputes the bucket from ObservedOn, writes semester 1 and removes the
+        // semester-2 row it no longer reproduces.
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 20, observedOn: new DateOnly(2026, 6, 30));
+            seed.CurriculumItemProgresses.Add(new CurriculumItemProgress
+            {
+                Id = 902,
+                CurriculumItemId = NationalItemId,
+                TraineeUserId = "trainee-1",
+                AcademicYear = 2026,
+                Semester = 2,
+                CountsSoFar = 1,
+                MinimumLevelReachedCount = 1,
+                LastActivityId = 200,
+                LastUpdated = Now.AddDays(-20),
+                CreditedActivityKeysJson = """["200:complete"]"""
+            });
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+            result.ProgressRowsRemoved.Should().Be(1);
+            result.ProgressRowsWritten.Should().Be(1);
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            var row = await verify.CurriculumItemProgresses.SingleAsync();
+            (row.AcademicYear, row.Semester).Should().Be((2026, 1));
+            row.CountsSoFar.Should().Be(1);
+            row.LastObservedOn.Should().Be(new DateOnly(2026, 6, 30));
+        }
+    }
+
+    [Fact]
+    public async Task Rebuild_ThatThrowsAfterAddingASecondSemester_LeavesNothingBehind()
+    {
+        // The rollback's hardest case under T130. trainee-1 already holds a semester-1 row; the replay adds a
+        // semester-2 row for the SAME item and trainee, then fails. That added row must not survive, and the
+        // audit pipeline's catch, which saves this same DbContext, must find nothing to write. Before T130 the
+        // rollback matched rows on (item, trainee) alone, so it would have taken the new semester-2 row for the
+        // pre-existing one, left it Added, and let the audit save commit it.
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 100);
+            AddCompletedActivity(seed, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 50);
+            AddCompletedActivity(seed, activityId: 202, subjectUserId: "trainee-1", score: 4, daysAgo: 10);
+            seed.CurriculumItemProgresses.Add(new CurriculumItemProgress
+            {
+                Id = 903,
+                CurriculumItemId = NationalItemId,
+                TraineeUserId = "trainee-1",
+                AcademicYear = 2026,
+                Semester = 1,
+                CountsSoFar = 5,
+                MinimumLevelReachedCount = 5,
+                LastActivityId = 200,
+                LastObservedOn = new DateOnly(2026, 6, 15),
+                LastUpdated = Now.AddDays(-100),
+                CreditedActivityKeysJson = """["200:complete"]"""
+            });
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            // Calls 1 and 2 credit semester 1 and ADD semester 2; call 3 throws.
+            var handler = new RebuildCurriculumProgressCommandHandler(db, new ThrowsOnCall(new CreditApplier(db), failOnCall: 3));
+            var rebuild = async () => await handler.Handle(new RebuildCurriculumProgressCommand(Administrator()), CancellationToken.None);
+            await rebuild.Should().ThrowAsync<InvalidOperationException>();
+
+            db.ChangeTracker.Entries<CurriculumItemProgress>()
+                .Where(entry => entry.State != EntityState.Unchanged)
+                .Should().BeEmpty("the audit pipeline's catch saves this context, so nothing may be left dirty");
+
+            await db.SaveChangesAsync();
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            var row = (await verify.CurriculumItemProgresses.ToListAsync()).Should().ContainSingle().Subject;
+            row.Id.Should().Be(903);
+            row.CountsSoFar.Should().Be(5);
+            row.LastObservedOn.Should().Be(new DateOnly(2026, 6, 15));
+        }
+    }
+
+    [Fact]
+    public async Task Rebuild_ThatMeetsACompletionCreditedMidRebuild_RefusesRatherThanStampingItCreditedNothing()
+    {
+        // Found by the review of T130. A live completion that opens a new semester row after the rebuild has read
+        // the rows is invisible to its zeroing and its removal. The replay then finds that completion's key already
+        // in the new row, skips it, and would re-stamp the transition "credited nothing" over a credit that stands,
+        // raising T108's banner on a counted encounter. The rebuild refuses instead, and leaves nothing behind.
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            var activity = AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 50);
+            Completion(activity).CreditedItemCount = 1;
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            // The live completion lands in another context, between the rebuild's read of the rows and its replay.
+            var concurrently = new CreditsElsewhereFirst(new CreditApplier(db), options, new CurriculumItemProgress
+            {
+                CurriculumItemId = NationalItemId,
+                TraineeUserId = "trainee-1",
+                AcademicYear = 2026,
+                Semester = 2,
+                CountsSoFar = 1,
+                MinimumLevelReachedCount = 1,
+                LastActivityId = 200,
+                LastUpdated = Now,
+                CreditedActivityKeysJson = """["200:complete"]"""
+            });
+
+            var handler = new RebuildCurriculumProgressCommandHandler(db, concurrently);
+            var rebuild = async () => await handler.Handle(new RebuildCurriculumProgressCommand(Administrator()), CancellationToken.None);
+
+            await rebuild.Should().ThrowAsync<InvalidOperationException>().WithMessage("*changed while the rebuild was running*");
+            db.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged).Should().BeEmpty();
+            await db.SaveChangesAsync();
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
+                .CreditedItemCount.Should().Be(1, "the stamp describes a credit that stands, and must not be overwritten with 0");
+            (await verify.CurriculumItemProgresses.SingleAsync()).CountsSoFar.Should().Be(1);
+        }
+    }
+
+    [Fact]
+    public async Task Rebuild_WhoseSaveFails_LeavesNothingForTheAuditSaveToCommit()
+    {
+        // The save is guarded as well as the replay. If it fails (a deadlock, a dropped connection, the xmin token
+        // catching a live completion mid-rebuild), the audit pipeline saves this same DbContext again. Left dirty,
+        // that second save would commit the whole rebuild while the operator was told it failed.
+        var failFirstSave = new FailFirstSave();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .AddInterceptors(failFirstSave)
+            .Options;
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            var activity = AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 100);
+            Completion(activity).CreditedItemCount = 0;
+            seed.CurriculumItemProgresses.Add(new CurriculumItemProgress
+            {
+                Id = 904,
+                CurriculumItemId = OrphanItemId,
+                TraineeUserId = "trainee-1",
+                AcademicYear = 2026,
+                Semester = 1,
+                CountsSoFar = 3,
+                LastUpdated = Now.AddDays(-1),
+                CreditedActivityKeysJson = """["999:complete"]"""
+            });
+            await seed.SaveChangesAsync();
+        }
+
+        failFirstSave.Arm();
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var rebuild = async () => await Rebuild(db);
+            await rebuild.Should().ThrowAsync<DbUpdateException>();
+
+            db.ChangeTracker.Entries()
+                .Where(entry => entry.State != EntityState.Unchanged)
+                .Should().BeEmpty("the stamps, the new row, the zeroing and the removal must all be undone");
+
+            await db.SaveChangesAsync();
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            var row = (await verify.CurriculumItemProgresses.ToListAsync()).Should().ContainSingle().Subject;
+            row.Id.Should().Be(904, "the orphan the rebuild would have removed is still there");
+            row.CountsSoFar.Should().Be(3);
+            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
+                .CreditedItemCount.Should().Be(0, "the re-stamp was rolled back with everything else");
         }
     }
 
@@ -226,6 +469,10 @@ public sealed class RebuildCurriculumProgressTests
                 Id = 900,
                 CurriculumItemId = NationalItemId,
                 TraineeUserId = "trainee-2",
+                // Activity 201's semester, so the global rebuild fixes this row in place rather than
+                // removing it and writing another.
+                AcademicYear = 2026,
+                Semester = 2,
                 CountsSoFar = 99,
                 MinimumLevelReachedCount = 99,
                 LastUpdated = DateTime.UtcNow.AddDays(-1),
@@ -254,10 +501,17 @@ public sealed class RebuildCurriculumProgressTests
             await Rebuild(db);
         }
 
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+            result.ProgressRowsRemoved.Should().Be(0, "row 900 is in the right semester, so it is fixed in place, not replaced");
+        }
+
         await using (var verify = new ApplicationDbContext(options))
         {
-            (await verify.CurriculumItemProgresses.SingleAsync(row => row.TraineeUserId == "trainee-2"))
-                .CountsSoFar.Should().Be(1, "a global rebuild re-scores everybody from the activities");
+            var row = await verify.CurriculumItemProgresses.SingleAsync(entity => entity.TraineeUserId == "trainee-2");
+            row.CountsSoFar.Should().Be(1, "a global rebuild re-scores everybody from the activities");
+            row.Id.Should().Be(900);
         }
     }
 
@@ -279,6 +533,8 @@ public sealed class RebuildCurriculumProgressTests
                 Id = 901,
                 CurriculumItemId = OrphanItemId,
                 TraineeUserId = "trainee-1",
+                AcademicYear = 2026,
+                Semester = 1,
                 CountsSoFar = 3,
                 LastUpdated = DateTime.UtcNow.AddDays(-1),
                 CreditedActivityKeysJson = """["999:complete"]"""
@@ -332,27 +588,99 @@ public sealed class RebuildCurriculumProgressTests
             new RebuildCurriculumProgressCommand(Administrator(), traineeUserId), CancellationToken.None);
     }
 
-    /// <summary>Everything a replay is supposed to reproduce, compared as one value.</summary>
+    /// <summary>
+    /// Everything a replay is supposed to reproduce, compared as one value. LastUpdated is deliberately absent:
+    /// it is an audit clock and a replay rewrites it. LastObservedOn is present, because it is what a reader
+    /// shows and it must survive a rebuild exactly.
+    /// </summary>
     private sealed record Snapshot(
         int CurriculumItemId,
         string TraineeUserId,
+        int AcademicYear,
+        int Semester,
         int CountsSoFar,
         int MinimumLevelReachedCount,
         int ScaleMismatchCount,
         int UnverifiedLevelCount,
         int? LastActivityId,
+        DateOnly? LastObservedOn,
         string CreditedActivityKeysJson)
     {
         public static Snapshot Of(CurriculumItemProgress row)
             => new(
                 row.CurriculumItemId,
                 row.TraineeUserId,
+                row.AcademicYear,
+                row.Semester,
                 row.CountsSoFar,
                 row.MinimumLevelReachedCount,
                 row.ScaleMismatchCount,
                 row.UnverifiedLevelCount,
                 row.LastActivityId,
+                row.LastObservedOn,
                 row.CreditedActivityKeysJson);
+    }
+
+    /// <summary>Every row, one per key: the in-memory provider enforces no unique index, so the test checks it.</summary>
+    private static async Task<IReadOnlyList<Snapshot>> SnapshotsAsync(ApplicationDbContext db)
+    {
+        var rows = await db.CurriculumItemProgresses.AsNoTracking().ToListAsync();
+        rows.GroupBy(CurriculumItemProgressKey.Of).Should().OnlyContain(group => group.Count() == 1, "one row per (item, trainee, semester)");
+
+        return rows
+            .OrderBy(row => row.CurriculumItemId)
+            .ThenBy(row => row.TraineeUserId, StringComparer.Ordinal)
+            .ThenBy(row => row.AcademicYear)
+            .ThenBy(row => row.Semester)
+            .Select(Snapshot.Of)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Before the first plan, writes a progress row through a separate context: a live completion committing while the
+    /// rebuild runs.
+    /// </summary>
+    private sealed class CreditsElsewhereFirst(ICreditApplier inner, DbContextOptions<ApplicationDbContext> options, CurriculumItemProgress row) : ICreditApplier
+    {
+        private bool _done;
+
+        public async Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
+        {
+            if (!_done)
+            {
+                _done = true;
+                await using var elsewhere = new ApplicationDbContext(options);
+                elsewhere.CurriculumItemProgresses.Add(row);
+                await elsewhere.SaveChangesAsync(cancellationToken);
+            }
+
+            return await inner.PlanAsync(subject, activityType, cancellationToken);
+        }
+
+        public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity) => inner.Apply(plan, completedActivity);
+
+        public async Task<CreditApplicationResult> ApplyAsync(Activity completedActivity, ActivityType activityType, CancellationToken cancellationToken = default)
+            => Apply(await PlanAsync(CreditSubject.Of(completedActivity), activityType, cancellationToken), completedActivity);
+    }
+
+    /// <summary>Makes the next SaveChanges fail once it is armed, as a deadlock or a dropped connection would.</summary>
+    private sealed class FailFirstSave : SaveChangesInterceptor
+    {
+        private bool _armed;
+
+        public void Arm() => _armed = true;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (_armed)
+            {
+                _armed = false;
+                throw new DbUpdateException("induced failure at save");
+            }
+
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
     }
 
     /// <summary>Fails the Nth credit application, leaving the earlier ones already written in memory.</summary>
@@ -379,6 +707,12 @@ public sealed class RebuildCurriculumProgressTests
 
             return await _inner.ApplyAsync(completedActivity, activityType, cancellationToken);
         }
+
+        public Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
+            => _inner.PlanAsync(subject, activityType, cancellationToken);
+
+        public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity)
+            => _inner.Apply(plan, completedActivity);
     }
 
     private static ActivityTransition Completion(Activity activity)
@@ -403,9 +737,10 @@ public sealed class RebuildCurriculumProgressTests
         string subjectUserId,
         int score,
         int daysAgo,
-        int activityTypeId = CreditingTypeId)
+        int activityTypeId = CreditingTypeId,
+        DateOnly? observedOn = null)
     {
-        var filedOn = DateTime.UtcNow.AddDays(-daysAgo);
+        var filedOn = Now.AddDays(-daysAgo);
 
         var activity = new Activity
         {
@@ -421,7 +756,7 @@ public sealed class RebuildCurriculumProgressTests
             // T119: the encounter date, which is what the stage minimum is selected by. Set alongside
             // CreatedOn rather than left at default, because default(DateOnly) is 0001-01-01 and falls
             // before every programme start.
-            ObservedOn = DateOnly.FromDateTime(filedOn)
+            ObservedOn = observedOn ?? DateOnly.FromDateTime(filedOn)
         };
 
         activity.Transitions.Add(new ActivityTransition
@@ -482,8 +817,8 @@ public sealed class RebuildCurriculumProgressTests
                 UserId = userId,
                 InstitutionId = 10,
                 CurriculumId = CurriculumId,
-                ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-400),
-                ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+                ProgrammeStartDate = new DateOnly(2025, 1, 1),
+                ExpectedCompletionDate = new DateOnly(2029, 1, 1),
                 IsActive = true
             });
         }

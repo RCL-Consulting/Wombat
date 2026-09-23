@@ -587,6 +587,30 @@ h1[tabindex="-1"]:focus {
   background: var(--success-color);
 }
 
+/* progress-row: one titled figure with a bar and a meta line (T130). Promoted from the inline
+   flex/space-between pattern that had spread across six progress surfaces. */
+.progress-row {
+  margin-bottom: var(--space-sm);
+}
+
+.progress-row-head {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.progress-row-meta {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  margin: var(--space-xs) 0 0;
+}
+
+.progress-group-title {
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+
 .dashboard-card-body {
   margin-top: var(--space-sm);
 }

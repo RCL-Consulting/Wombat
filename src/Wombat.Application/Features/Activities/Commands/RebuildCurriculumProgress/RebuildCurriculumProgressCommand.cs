@@ -40,18 +40,26 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// </para>
 /// <para>
 /// Zeroing in place rather than deleting is also what makes the replay see a clean slate:
-/// <c>CreditApplier</c> looks a row up in <c>Local</c> first and only then in the database, so rows
-/// marked <c>Deleted</c> but not yet saved would have come back through identity resolution still
-/// marked for deletion, and every increment written onto them would have been thrown away at save.
+/// <c>CreditApplier</c> reads the trainee's rows with a TRACKING query merged with <c>Local</c>, so
+/// identity resolution hands it back the zeroed instances. Rows marked <c>Deleted</c> but not yet
+/// saved would have come back still marked for deletion, and every increment written onto them would
+/// have been thrown away at save.
 /// </para>
 /// <para>
-/// <b>Still no entry point, deliberately.</b> T119 asks for an Administrator-only button behind a
-/// confirmation; where that button lives, what the confirmation says and how the result is reported are
-/// UI questions with a DESIGN.md pass attached, and they are not this change. What is done here instead
-/// is to make the danger impossible rather than merely unlikely: the command is atomic, it refuses
-/// anyone who is not a global <c>Administrator</c>, it can be aimed at a single trainee instead of the
-/// whole corpus, and it hands back a count of everything it moved so whatever calls it can show the
-/// operator what happened. Wiring a page to it is now a presentation job with no remaining hazard.
+/// <b>Semester buckets (T130).</b> A row is the tally for one (item, trainee, semester), and the
+/// semester is recomputed from each activity's <c>ObservedOn</c> on every replay. So a rebuild is also
+/// the tool that re-buckets: when the semester boundary moves (D40), or an encounter date changed after
+/// the activity was credited, rows the replay no longer reproduces are removed and the right ones are
+/// written. The key is <see cref="CurriculumItemProgressKey" />, the same definition
+/// <c>CreditApplier</c> looks rows up by.
+/// </para>
+/// <para>
+/// <b>Callers (T130).</b> The Administrator page <c>/admin/curriculum-progress</c>, behind a
+/// confirmation; and <c>CurriculumProgressBootstrapper</c> at startup, which runs it once when the
+/// progress table is empty but completions have credited. The T130 migration empties the table on every
+/// existing database, so without that second caller every trainee would read zero until somebody found
+/// the button. The command is atomic, refuses anyone who is not a global <c>Administrator</c>, can be
+/// aimed at a single trainee, and hands back a count of everything it moved.
 /// </para>
 /// </remarks>
 /// <param name="Principal">
@@ -62,8 +70,8 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// </param>
 /// <param name="TraineeUserId">
 /// Optional. When set, only this trainee's progress rows are zeroed and only this trainee's activities
-/// are replayed; every other row in the table is untouched and unread. T119 wants a rebuild confined to
-/// the rows whose dates actually moved, and the restamper knows exactly whose those are.
+/// are replayed; every other row in the table is untouched and unread. Useful after one trainee's
+/// encounter dates, curriculum or programme start have been corrected.
 /// </param>
 [NoValidator]
 public sealed record RebuildCurriculumProgressCommand(
@@ -76,8 +84,8 @@ public sealed record RebuildCurriculumProgressCommand(
 /// </summary>
 /// <param name="ActivitiesReplayed">Terminal activities whose pinned version declares credit, i.e. the ones credit was actually evaluated for.</param>
 /// <param name="CreditApplications">Curriculum items credited across all of them, counting an item once per activity that credited it.</param>
-/// <param name="ProgressRowsWritten">Distinct progress rows the replay created or incremented.</param>
-/// <param name="ProgressRowsRemoved">Pre-existing progress rows the replay did not reproduce, and which were therefore deleted.</param>
+/// <param name="ProgressRowsWritten">Distinct progress rows (item, trainee, semester) the replay created or incremented.</param>
+/// <param name="ProgressRowsRemoved">Pre-existing progress rows the replay did not reproduce, and which were therefore deleted. A re-bucketing shows up here.</param>
 /// <param name="TransitionsStamped">Transitions whose <c>CreditedItemCount</c> was refreshed (T106 item 12).</param>
 public sealed record RebuildCurriculumProgressResult(
     int ActivitiesReplayed,
@@ -126,12 +134,16 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
         // very defect this handler is fixing, one seam further out: the context is scoped to the
         // request, and anything that called SaveChanges after us would commit the zeroes.
         var snapshots = existingRows.Select(row => (Row: row, Before: ProgressTally.Capture(row))).ToList();
-        var preExistingKeys = existingRows.Select(KeyOf).ToHashSet();
+        var preExisting = existingRows.ToHashSet<CurriculumItemProgress>(ReferenceEqualityComparer.Instance);
 
+        // Split, because two collection includes in one query multiply rows: every activity times every version
+        // of its type times every transition. T130 made this run at startup (CurriculumProgressBootstrapper),
+        // where the cost is paid before the host is ready.
         IQueryable<Activity> activityQuery = _dbContext.Set<Activity>()
             .Include(activity => activity.ActivityType)
                 .ThenInclude(activityType => activityType.Versions)
-            .Include(activity => activity.Transitions);
+            .Include(activity => activity.Transitions)
+            .AsSplitQuery();
 
         if (scope is not null)
         {
@@ -151,7 +163,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             .ThenBy(activity => activity.Id)
             .ToList();
 
-        var creditedKeys = new HashSet<(int CurriculumItemId, string TraineeUserId)>();
+        var creditedKeys = new HashSet<CurriculumItemProgressKey>();
         var stamps = new List<(ActivityTransition Transition, int CreditedItemCount, int ScaleMismatchCount)>();
         var activitiesReplayed = 0;
         var creditApplications = 0;
@@ -207,7 +219,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
 
                 foreach (var row in credited.UpdatedRows)
                 {
-                    creditedKeys.Add(KeyOf(row));
+                    creditedKeys.Add(CurriculumItemProgressKey.Of(row));
                 }
 
                 // T106 item 12. Until now the outcome was stamped on the transition path only, so an
@@ -233,32 +245,61 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
         }
         catch
         {
-            foreach (var (row, before) in snapshots)
-            {
-                before.RestoreTo(row);
-            }
-
-            DetachRowsAddedByTheReplay(progressSet, preExistingKeys, scope);
+            RollBack(progressSet, _dbContext.Set<ActivityTransition>(), snapshots, preExisting, scope, stampsApplied: []);
             throw;
         }
 
-        foreach (var (transition, creditedItemCount, scaleMismatchCount) in stamps)
-        {
-            transition.CreditedItemCount = creditedItemCount;
-            transition.CreditScaleMismatchCount = scaleMismatchCount;
-        }
-
-        // Only now, with the replacement already built in memory, does anything get deleted: a row the
-        // replay did not reproduce is one a rebuild from empty would never have created — the activity
-        // behind it was cancelled, re-dated out of the trainee's programme, or its curriculum item was
-        // withdrawn. Leaving it would make the rebuild additive rather than a rebuild.
-        var removedRows = existingRows
-            .Where(row => !creditedKeys.Contains(KeyOf(row)))
+        // A live completion that opened a new semester row after the rows above were read is invisible to the
+        // zeroing and the removal, and the xmin token guards only rows that were read. The replay would find that
+        // completion's key already in the new row, skip it, and then re-stamp its transition "credited nothing".
+        // Such a row is the one kind that is tracked, not pre-existing and not Added (CreditApplier's tracking
+        // query loaded it from the database). Refuse rather than write a false stamp; RollBack detaches it.
+        var arrivedMidRebuild = progressSet.Local
+            .Where(row => !preExisting.Contains(row) &&
+                          (scope is null || string.Equals(row.TraineeUserId, scope, StringComparison.Ordinal)) &&
+                          progressSet.Entry(row).State != EntityState.Added)
             .ToList();
 
-        progressSet.RemoveRange(removedRows);
+        if (arrivedMidRebuild.Count > 0)
+        {
+            RollBack(progressSet, _dbContext.Set<ActivityTransition>(), snapshots, preExisting, scope, stampsApplied: []);
+            throw new InvalidOperationException(
+                "Curriculum progress changed while the rebuild was running: a completion was credited mid-rebuild. Nothing was changed; run the rebuild again.");
+        }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        // The stamps, the removals and the save are guarded as well as the replay. If the save fails
+        // (a deadlock, a dropped connection, a concurrency conflict raised by the xmin token because a
+        // live completion moved a row mid-rebuild), the audit pipeline's catch saves this same
+        // DbContext again. Left dirty, that second save would either commit the whole rebuild while the
+        // operator is told it failed, or fail identically and lose the audit row as well.
+        var stampsApplied = new List<(ActivityTransition Transition, int? CreditedItemCount, int? ScaleMismatchCount)>();
+        List<CurriculumItemProgress> removedRows;
+        try
+        {
+            foreach (var (transition, creditedItemCount, scaleMismatchCount) in stamps)
+            {
+                stampsApplied.Add((transition, transition.CreditedItemCount, transition.CreditScaleMismatchCount));
+                transition.CreditedItemCount = creditedItemCount;
+                transition.CreditScaleMismatchCount = scaleMismatchCount;
+            }
+
+            // Only now, with the replacement already built in memory, does anything get deleted: a row the
+            // replay did not reproduce is one a rebuild from empty would never have created — the activity
+            // behind it was cancelled, re-dated into another semester, or its curriculum item was withdrawn.
+            // Leaving it would make the rebuild additive rather than a rebuild.
+            removedRows = existingRows
+                .Where(row => !creditedKeys.Contains(CurriculumItemProgressKey.Of(row)))
+                .ToList();
+
+            progressSet.RemoveRange(removedRows);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            RollBack(progressSet, _dbContext.Set<ActivityTransition>(), snapshots, preExisting, scope, stampsApplied);
+            throw;
+        }
 
         return new RebuildCurriculumProgressResult(
             ActivitiesReplayed: activitiesReplayed,
@@ -268,38 +309,47 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             TransitionsStamped: stamps.Count);
     }
 
-    /// <summary>
-    /// The natural key of a progress row, and the one <c>CreditApplier</c> looks rows up by. Unique in
-    /// the database (<c>CurriculumItemProgressConfiguration</c>), so it identifies a row the replay has
-    /// just created as readily as one that came out of a table.
-    /// </summary>
-    private static (int CurriculumItemId, string TraineeUserId) KeyOf(CurriculumItemProgress row)
-        => (row.CurriculumItemId, row.TraineeUserId);
-
     private static bool DeclaresCredit(string creditRulesJson)
         => !string.IsNullOrWhiteSpace(creditRulesJson) &&
            CreditRulesParser.Parse(creditRulesJson).CountsFor.Count > 0;
 
     /// <summary>
-    /// Undoes the rows the failed replay added, by detaching rather than deleting them: calling
-    /// <c>Remove</c> on an entity still in the <c>Added</c> state stops the context tracking it
-    /// altogether, so nothing is left behind to be written by a later save.
+    /// Puts the DbContext back so that nothing the rebuild did is written by a later save, which the audit
+    /// pipeline's catch will make.
     /// </summary>
     /// <remarks>
-    /// A row whose natural key is not among the pre-existing ones can only be one the replay added:
-    /// <c>CreditApplier</c> looks a row up by that key in <c>Local</c> before it creates one, so it
-    /// never adds a second row for a key already tracked — and everything in scope was tracked by the
-    /// query above. Identifying them that way rather than by <c>Id == 0</c> keeps this independent of
-    /// whether EF has assigned a temporary key value to the instance yet.
+    /// <para>
+    /// Every row that was loaded at the start gets its tally back and is marked Unchanged. That also cancels
+    /// a pending removal. Every other tracked progress row in scope is DETACHED, whatever its state, and rows
+    /// are matched by reference rather than by key. Two kinds of row fall into that set. One is a row the
+    /// replay added (state Added). The other is a row <c>CreditApplier</c> loaded from the database because a
+    /// live completion inserted it after the rebuild's initial read (state Unchanged or Modified). Calling
+    /// <c>Remove</c> on the second kind would mark it Deleted, and the audit save would then delete a real
+    /// credit. Detaching writes nothing at all.
+    /// </para>
+    /// <para>
+    /// Stamped transitions get their previous values back and are marked Unchanged. Restoring the value alone is
+    /// not enough. If the failure was the save itself, change detection has already run and flagged the stamp
+    /// Modified, and the flag outlives the value.
+    /// </para>
     /// </remarks>
-    private static void DetachRowsAddedByTheReplay(
+    private static void RollBack(
         DbSet<CurriculumItemProgress> progressSet,
-        HashSet<(int CurriculumItemId, string TraineeUserId)> preExistingKeys,
-        string? scope)
+        DbSet<ActivityTransition> transitionSet,
+        IReadOnlyList<(CurriculumItemProgress Row, ProgressTally Before)> snapshots,
+        HashSet<CurriculumItemProgress> preExisting,
+        string? scope,
+        IReadOnlyList<(ActivityTransition Transition, int? CreditedItemCount, int? ScaleMismatchCount)> stampsApplied)
     {
+        foreach (var (row, before) in snapshots)
+        {
+            before.RestoreTo(row);
+            progressSet.Entry(row).State = EntityState.Unchanged;
+        }
+
         foreach (var row in progressSet.Local.ToList())
         {
-            if (preExistingKeys.Contains(KeyOf(row)))
+            if (preExisting.Contains(row))
             {
                 continue;
             }
@@ -309,14 +359,22 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 continue;
             }
 
-            progressSet.Remove(row);
+            progressSet.Entry(row).State = EntityState.Detached;
+        }
+
+        foreach (var (transition, creditedItemCount, scaleMismatchCount) in stampsApplied)
+        {
+            transition.CreditedItemCount = creditedItemCount;
+            transition.CreditScaleMismatchCount = scaleMismatchCount;
+            transitionSet.Entry(transition).State = EntityState.Unchanged;
         }
     }
 
     /// <summary>
     /// Everything a replay writes to a progress row, so it can be zeroed before the replay and put back
-    /// if the replay never finishes. The identity columns are deliberately absent: they are not
-    /// rebuilt, and a restore must not be able to move a row to another trainee.
+    /// if the replay never finishes. The identity columns (the item, the trainee and the semester) are
+    /// deliberately absent: they are not rebuilt, and a restore must not be able to move a row to another
+    /// trainee or another semester.
     /// </summary>
     private readonly record struct ProgressTally(
         int CountsSoFar,
@@ -325,6 +383,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
         int ScaleMismatchCount,
         int UnverifiedLevelCount,
         int? LastActivityId,
+        DateOnly? LastObservedOn,
         DateTime LastUpdated,
         string CreditedActivityKeysJson)
     {
@@ -336,6 +395,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 row.ScaleMismatchCount,
                 row.UnverifiedLevelCount,
                 row.LastActivityId,
+                row.LastObservedOn,
                 row.LastUpdated,
                 row.CreditedActivityKeysJson);
 
@@ -352,6 +412,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             row.ScaleMismatchCount = 0;
             row.UnverifiedLevelCount = 0;
             row.LastActivityId = null;
+            row.LastObservedOn = null;
             row.CreditedActivityKeysJson = "[]";
         }
 
@@ -363,6 +424,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             row.ScaleMismatchCount = ScaleMismatchCount;
             row.UnverifiedLevelCount = UnverifiedLevelCount;
             row.LastActivityId = LastActivityId;
+            row.LastObservedOn = LastObservedOn;
             row.LastUpdated = LastUpdated;
             row.CreditedActivityKeysJson = CreditedActivityKeysJson;
         }

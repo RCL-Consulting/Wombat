@@ -25,7 +25,7 @@ public sealed class TraineeDashboardQueryTests
             new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
 
         result.IsPendingTrainee.Should().BeTrue();
-        result.CurriculumProgress.Should().BeEmpty();
+        result.CurriculumTargets.Should().BeNull();
         result.Inbox.Should().BeEmpty();
         result.RecentActivities.Should().BeEmpty();
         result.UpcomingDeadlines.Should().BeEmpty();
@@ -40,13 +40,15 @@ public sealed class TraineeDashboardQueryTests
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(
-            new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
+            new GetTraineeDashboardSummaryQuery(principal, AsOf: new DateOnly(2026, 9, 23)), CancellationToken.None);
 
         result.IsPendingTrainee.Should().BeFalse();
-        result.CurriculumProgress.Should().HaveCount(1);
-        result.CurriculumProgress[0].EpaTitle.Should().Be("EPA 1");
-        result.CurriculumProgress[0].CompletedCount.Should().Be(2);
-        result.CurriculumProgress[0].RequiredCount.Should().Be(5);
+        // The same read model as the progress page (T130): the item's 2026 academic-year window, the target per window.
+        var item = result.CurriculumTargets!.Items.Should().ContainSingle().Subject;
+        item.EpaTitle.Should().Be("EPA 1");
+        item.Current.Name.Should().Be("2026 academic year");
+        item.Current.Count.Should().Be(2);
+        item.Target.Should().Be(5);
         result.RecentActivities.Should().HaveCountGreaterThan(0);
     }
 
@@ -61,7 +63,7 @@ public sealed class TraineeDashboardQueryTests
             new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
 
         result.IsPendingTrainee.Should().BeFalse();
-        result.CurriculumProgress.Should().BeEmpty();
+        result.CurriculumTargets.Should().BeNull();
     }
 
     private static ApplicationDbContext CreateDb()
@@ -111,6 +113,7 @@ public sealed class TraineeDashboardQueryTests
         db.CurriculumItemProgresses.Add(new CurriculumItemProgress
         {
             Id = 1, CurriculumItemId = 1, TraineeUserId = "trainee-1",
+            AcademicYear = 2026, Semester = 2,
             CountsSoFar = 2, MinimumLevelReachedCount = 2, LastUpdated = DateTime.UtcNow
         });
 

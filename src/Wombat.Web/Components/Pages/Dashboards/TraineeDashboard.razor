@@ -1,4 +1,5 @@
 @using Wombat.Application.Features.Dashboards.Trainee
+@using Wombat.Application.Features.Curricula.Quota
 @attribute [Authorize(Roles = "Trainee,PendingTrainee")]
 @rendermode InteractiveServer
 @inject IScopedSender Sender
@@ -19,26 +20,54 @@
   else if (_vm is not null)
   {
     <div class="dashboard-grid">
-      <DashboardCard Title="Curriculum progress" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2">
-        @if (_vm.CurriculumProgress.Count == 0)
+      <DashboardCard Title="Curriculum targets" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2">
+        @if (_vm.CurriculumTargets is not { Items.Count: > 0 } targets)
         {
-          <p class="muted">No curriculum progress yet. Complete and submit activities to start tracking.</p>
+          <p class="muted">No curriculum assigned yet. Once you are admitted, your targets for each period appear here.</p>
         }
         else
         {
-          @foreach (var item in _vm.CurriculumProgress)
+          <p class="progress-row-meta">@targets.CurrentSemesterName · @targets.CurrentSemesterMonths</p>
+          <div style="display:flex;gap:var(--space-xl);margin:var(--space-sm) 0">
+            @if (targets.HasSemesterItems)
+            {
+              <div class="dashboard-metric">
+                <span class="dashboard-metric-value">@(targets.SemesterTargetsApplying > 0 ? $"{targets.SemesterTargetsMet} / {targets.SemesterTargetsApplying}" : "—")</span>
+                <span class="dashboard-metric-label">@(targets.SemesterTargetsApplying > 0 ? "semester targets met" : "no semester target applies yet")</span>
+              </div>
+            }
+            @if (targets.HasYearItems)
+            {
+              <div class="dashboard-metric">
+                <span class="dashboard-metric-value">@(targets.YearTargetsApplying > 0 ? $"{targets.YearTargetsMet} / {targets.YearTargetsApplying}" : "—")</span>
+                <span class="dashboard-metric-label">@(targets.YearTargetsApplying > 0 ? $"yearly targets met ({targets.AsOf.Year})" : "no yearly target applies yet")</span>
+              </div>
+            }
+          </div>
+          @if (targets.ProgrammeNotStarted)
           {
-            <div style="margin-bottom:var(--space-sm)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
-                <span>@item.EpaTitle</span>
-                <span class="muted">@item.CompletedCount / @item.RequiredCount</span>
+            <p class="progress-row-meta">Your programme starts on @QuotaText.LongDate(targets.ProgrammeStartDate).</p>
+          }
+          else if (targets.SemesterTargetsStart is not null || targets.YearTargetsStart is not null)
+          {
+            <p class="progress-row-meta">
+              You started part-way through a period.@(targets.SemesterTargetsStart is { } semesterStart ? $" Semester targets begin with {semesterStart.Name}." : string.Empty)@(targets.YearTargetsStart is { } yearStart ? $" Yearly targets begin with {yearStart.Name}." : string.Empty)
+            </p>
+          }
+          @foreach (var item in targets.Items
+                      .Where(entry => entry.Current.Applies && !entry.Current.IsMet)
+                      .OrderByDescending(entry => entry.Current.Shortfall)
+                      .ThenBy(entry => entry.EpaCode, StringComparer.Ordinal)
+                      .Take(5))
+          {
+            <div class="progress-row">
+              <div class="progress-row-head">
+                <span>@item.EpaCode — @item.EpaTitle</span>
+                <span class="muted">@item.Current.Count of @item.Current.Target @(item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}")</span>
               </div>
-              <div class="progress-bar">
-                <div class="progress-bar-fill @(item.IsComplete ? "is-complete" : "")"
-                     style="width:@(item.RequiredCount > 0 ? Math.Min(100, item.CompletedCount * 100 / item.RequiredCount) : 0)%"></div>
-              </div>
-              <div class="muted" style="font-size:0.85rem;margin-top:var(--space-xs)">
-                Minimum level @item.EffectiveMinimumLevelLabel@(item.TraineeStage.HasValue ? $" (year {item.TraineeStage})" : string.Empty) · reached @item.MinimumLevelReachedCount / @item.RequiredCount
+              <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="@item.Current.Target" aria-valuenow="@Math.Min(item.Current.Count, item.Current.Target)"
+                   aria-label="@($"{item.EpaCode}: {item.Current.Count} of {item.Current.Target} {(item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}")}")">
+                <div class="progress-bar-fill" style="width:@item.Current.PercentOfTarget%"></div>
               </div>
             </div>
           }
