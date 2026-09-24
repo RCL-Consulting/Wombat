@@ -14,12 +14,22 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#2c3e50" />
     <ResourcePreloader />
-    <link rel="stylesheet" href="/app.css" />
-    <link rel="stylesheet" href="/Wombat.Web.styles.css" />
+    @* First-party CSS and JS go through @Assets, which resolves each to its content-hashed URL
+       (app.<hash>.css) from the static-assets manifest. MapStaticAssets serves that URL with a
+       year-long immutable cache, and a changed file gets a new URL, so a deploy can never pair a
+       new page with a stylesheet or script the browser cached from the old one. A bare path
+       ("/app.css") is served by UseStaticFiles with no Cache-Control, and browsers cache it
+       heuristically for hours or days (T175). Icons and the manifest keep bare paths. *@
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["Wombat.Web.styles.css"]" />
     @* ImportMap renders an inline <script type="importmap">, so it needs the request's
        CSP nonce — see SecurityHeadersMiddleware. *@
     <ImportMap nonce="@CspNonce" />
-    <HeadOutlet />
+    @* Interactive, like Routes: every page after the first renders in the circuit, and only an
+       outlet in the same circuit can take its PageTitle. A static outlet is rendered once, so
+       the tab kept the first page's title (T180). It still prerenders, so a full load arrives
+       titled. *@
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
@@ -27,10 +37,10 @@
         <Routes @rendermode="InteractiveServer" />
     </CascadingAuthenticationState>
     <ReconnectModal />
-    <script src="/wombat.js"></script>
-    <script src="/js/dialog.js"></script>
-    <script src="/js/file-download.js"></script>
-    <script src="/_framework/blazor.web.js"></script>
+    <script src="@Assets["wombat.js"]"></script>
+    <script src="@Assets["js/dialog.js"]"></script>
+    <script src="@Assets["js/file-download.js"]"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 
 </html>

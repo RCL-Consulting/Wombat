@@ -35,6 +35,8 @@ src/Wombat.Web/
 
 `app.css` is the one global stylesheet. Component-scoped `.razor.css` files exist where a component has styles that do not belong in `app.css` (`MainLayout.razor.css`, `NavMenu.razor.css`). **No other CSS framework.** No MudBlazor, no Radzen, no Bootstrap components (the grid file is optional — `.form-grid` below is native CSS grid and does not need it).
 
+`Components/App.razor` links every first-party stylesheet and script through `@Assets["…"]` (`href="@Assets["app.css"]"`), which resolves to the content-hashed URL (`app.<hash>.css`) that `MapStaticAssets` serves with an immutable year-long cache. An edit changes the URL, so a deploy never pairs a new page with a cached old stylesheet. A new stylesheet or script is linked the same way, never by a bare path; `Hosting/AppAssetUrlTests` fails on a bare one (T175).
+
 ## Design tokens
 
 Defined at `:root` in `app.css`. These are the **only** colours and spacings allowed — no raw hex in component files except inside SVG data URIs.
