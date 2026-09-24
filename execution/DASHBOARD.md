@@ -5,6 +5,7 @@
 | lane | id | pri | title | model |
 |---|---|---|---|---|
 | in_progress | [T141](tasks/in_progress/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
+| in_progress | [T144](tasks/in_progress/T144-classify-rated-evidence-sources-by-wbatoolkey-and-retire-the-hard-coded-activity-family-list.md) | P3 | Classify rated evidence sources by WbaToolKey and retire the hard-code | sonnet |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
@@ -32,7 +33,6 @@
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
 | queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
-| queued | [T144](tasks/queued/T144-classify-rated-evidence-sources-by-wbatoolkey-and-retire-the-hard-coded-activity-family-list.md) | P3 | Classify rated evidence sources by WbaToolKey and retire the hard-code | sonnet |
 | queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
 | queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
 | queued | [T147](tasks/queued/T147-campaignedit-s-epa-checkbox-group-has-a-label-pointing-at-no-element.md) | P3 | CampaignEdit's EPA checkbox group has a label pointing at no element | sonnet |
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+e0a06a2 fix(nav): a trainee's My Progress goes to their progress page; a pending trainee is offered no trainee-only page (T141)
 87123be docs(execution): close T125 and T136 — browser-verified on dev (PAED-001 re-pinned to O-R and back, byte-identical); file T174, T175, T176
 02b2401 feat(curricula): a curriculum minimum is picked as a rung on the item's ladder; a scale change resets the minima; the refusal names the scale and field beside the row (T125, T136)
 4f3e256 docs(execution): handoff progress
 5f5e097 docs(execution): close T107 — the disabled action and its reason verified in the browser (activity 23); T162 gains the stuck msf_cpsa draft
-6934294 fix(activities): an action the actor may take but cannot complete is shown disabled with the fields it needs, not offered (T107, D33 part 1)
 ```

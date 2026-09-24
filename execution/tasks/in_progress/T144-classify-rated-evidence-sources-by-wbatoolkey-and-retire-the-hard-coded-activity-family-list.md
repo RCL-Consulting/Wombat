@@ -1,12 +1,13 @@
 ---
 id: T144
 title: Classify rated evidence sources by WbaToolKey and retire the hard-coded activity-family list
-status: queued
+status: in_progress
 priority: P3
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-23
+started: 2026-09-24
 ---
 
 # T144 — Rated evidence is still categorised by guessing from its key, although types now say which instrument they are

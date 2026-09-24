@@ -145,11 +145,94 @@ public sealed class SeedScaleKeyTests
         var schemaJson = File.ReadAllText(schemaPath);
         var declaresRating = FormSchemaParser.Parse(schemaJson).RatedLevelField is not null;
 
-        var verdict = RatedActivityTypes.Classify(seedKey, schemaJson);
+        var verdict = RatedActivityTypes.Classify(seedKey, DeclaredWbaToolKey(seedKey), schemaJson);
 
         verdict.IsRated.Should().Be(declaresRating,
             "'{0}' is rated exactly when its schema says so, never because of what it is called", seedKey);
         verdict.SourceBucket.Should().NotBeNullOrWhiteSpace();
+    }
+
+    /// <summary>
+    /// What each seed's evidence is called. The nineteen rows present at T144 are what each seed was called before
+    /// it, when the category was read from the type's key; a later seed adds its row here deliberately. Typed here
+    /// rather than derived, so the classifier under test cannot supply its own expectation.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> ExpectedSourceBucketBySeed =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["acat"] = "Conversation",
+            ["cbd"] = "Conversation",
+            ["cbd_cpsa"] = "Conversation",
+            ["cca_cpsa"] = "Case analysis",
+            ["chart_stimulated_recall_cpsa"] = "Conversation",
+            ["direct_observation_cpsa"] = "Direct observation",
+            ["dops"] = "Direct observation",
+            ["dops_cpsa"] = "Direct observation",
+            ["journal_club"] = "journal_club",
+            ["mini_cex"] = "Direct observation",
+            ["mini_cex_cpsa"] = "Direct observation",
+            ["msf_cpsa"] = "msf_cpsa",
+            ["procedure_log"] = "procedure_log",
+            ["qi_project"] = "qi_project",
+            ["rca_cpsa"] = "Case analysis",
+            ["reflective_exercise_cpsa"] = "reflective_exercise_cpsa",
+            ["reflective_note"] = "reflective_note",
+            ["research_output"] = "research_output",
+            ["teaching_session"] = "teaching_session"
+        };
+
+    /// <summary>
+    /// T144 moved the category onto the instrument each type declares. On the seed corpus that must change
+    /// nothing: every seed classified by its catalogue <c>WbaToolKey</c> reads exactly as it did by its key,
+    /// so no committee's source count and no trajectory label moves.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void EverySeedClassifiesByItsInstrumentExactlyAsItDidByItsKey(string seedKey)
+    {
+        var schemaJson = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", seedKey, "schema.json"));
+
+        ExpectedSourceBucketBySeed.Should().ContainKey(seedKey,
+            "a new seed must state here what its evidence is called");
+
+        RatedActivityTypes.Classify(seedKey, DeclaredWbaToolKey(seedKey), schemaJson).SourceBucket
+            .Should().Be(ExpectedSourceBucketBySeed[seedKey],
+                "'{0}' declares instrument '{1}'", seedKey, DeclaredWbaToolKey(seedKey));
+    }
+
+    /// <summary>
+    /// Every instrument in the College's vocabulary has a stated evidence category in the classifier, "none"
+    /// included, and the classifier states none the vocabulary lacks. A new instrument otherwise arrives with
+    /// no category and nobody having decided that. (T144)
+    /// </summary>
+    [Fact]
+    public void TheClassifierStatesACategoryForEveryInstrumentInTheVocabulary()
+    {
+        var cataloguePath = Path.Combine(
+            AppContext.BaseDirectory, "Persistence", "Seeds", "paediatric-epa-v11.1.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(cataloguePath));
+
+        var vocabulary = document.RootElement.GetProperty("wbaToolVocabulary")
+            .EnumerateArray()
+            .Select(tool => tool.GetProperty("key").GetString()!)
+            .ToArray();
+
+        vocabulary.Should().NotBeEmpty();
+        RatedActivityTypes.ClassifiedWbaToolKeys.Should().BeEquivalentTo(vocabulary);
+    }
+
+    /// <summary>
+    /// The instrument a seed declares, from the catalogue both seeders create it from. A folder with no
+    /// catalogue entry fails here by name rather than classifying as unkeyed.
+    /// </summary>
+    private static string? DeclaredWbaToolKey(string seedKey)
+    {
+        var entry = ActivityTypeSeedCatalogue.Entries
+            .SingleOrDefault(candidate => string.Equals(candidate.Key, seedKey, StringComparison.Ordinal));
+
+        entry.Should().NotBeNull("seed folder '{0}' must be registered in ActivityTypeSeedCatalogue", seedKey);
+        return entry!.WbaToolKey;
     }
 
     /// <summary>
@@ -174,6 +257,7 @@ public sealed class SeedScaleKeyTests
             .Select(directory => Path.GetFileName(directory)!)
             .Where(key => RatedActivityTypes.Classify(
                 key,
+                DeclaredWbaToolKey(key),
                 File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, "schema.json"))).IsRated)
             .OrderBy(key => key, StringComparer.Ordinal)
             .ToArray();

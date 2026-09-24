@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Activities.Services;
 
@@ -33,8 +34,9 @@ public enum WbaEvidenceSource
 /// their own private answer to before T134.
 /// </param>
 /// <param name="Category">
-/// The evidence category, or null when the type is rated but its key matches no known family — a tool
-/// an institution built under a name this list has never heard of.
+/// The evidence category, or null when there is none to give: the instrument the type declares is no
+/// category of rated evidence (MSF, a reflective exercise), or the type declares no instrument and its key
+/// matches no known family. See <see cref="RatedActivityTypes.Classify" />.
 /// </param>
 /// <param name="SourceBucket">
 /// What to count and print as "the source". The category's label when there is one, otherwise the
@@ -70,48 +72,73 @@ public readonly record struct RatedTypeVerdict(bool IsRated, WbaEvidenceSource? 
 /// constraint here.
 /// </para>
 /// <para>
-/// The family map survives for <b>labelling only</b>. It answers "what kind of evidence is this",
-/// which feeds <c>DistinctSourceCount</c> on the committee sampling report and the trajectory's source
-/// label. It no longer decides what is rated. [T122] shipped <c>ActivityType.WbaToolKey</c>, which is the
-/// identity this map should be keyed on; moving the classification onto it, and retiring this map, is [T144].
+/// The category answers "what kind of evidence is this", which feeds <c>DistinctSourceCount</c> on the
+/// committee sampling report and the trajectory's source label. It never decides what is rated. It is read
+/// from the instrument the type DECLARES, <c>ActivityType.WbaToolKey</c> ([T122]), and guessed from the
+/// type's key only when the type declares no instrument (T144).
 /// </para>
 /// </remarks>
 public static class RatedActivityTypes
 {
     /// <summary>
-    /// Known tool families and the evidence each produces. Matched exactly or as a <c>"&lt;family&gt;_"</c>
-    /// prefix, because schema-driven types carry institution-specific keys like <c>mini_cex_paed</c>.
+    /// The evidence each instrument of the College's vocabulary produces, keyed on <c>WbaTool.Key</c>. (T144)
     /// </summary>
     /// <remarks>
-    /// Moved here from <c>GetEpaTrajectoryForTraineeQuery</c> rather than copied — there was already a
-    /// second copy in the sampling handler, and a third would have been how the next defect got made.
-    /// It classifies; it does not gate.
     /// <para>
-    /// Two entries were removed on 2026-09-20 because the College's reply retired the instruments
-    /// themselves, not merely their names: <c>case_note_review</c> is an alias of CCA (D4) and
-    /// <c>observed_clinical_exam</c> is the same instrument as Mini-CEX (D12). Keeping either would
-    /// have been a category for a tool that will never be seeded.
+    /// A static map rather than a <c>Category</c> column on <c>WbaTools</c>. The category is a vocabulary
+    /// this file owns (three members, see <see cref="WbaEvidenceSource" />), not something the College's
+    /// catalogue states, and the seeder reconciles that table from the catalogue file on every boot. A column
+    /// would have needed a migration and a catalogue field the College never wrote.
     /// </para>
     /// <para>
-    /// <c>cca</c>, <c>rca</c> and <c>chart_stimulated_recall</c> stay: they are real instruments
-    /// [T120] is queued to author, and this map now only decides what their evidence is CALLED, not
-    /// whether it counts. <c>chart_stimulated_recall</c> is filed under Conversation and is arguably
-    /// case analysis; re-filing it belongs to the College. [T122] seeded it as its own instrument
-    /// (<c>chart_stimulated_recall</c>) without filing it anywhere, and [T144] is where a category would be attached.
+    /// Every key of the vocabulary is stated, including the five that are no category of rated evidence
+    /// (MSF, reflective exercise, clinical audit, portfolio review, learner feedback), so a missing key is a
+    /// decision nobody made rather than one made as "none". <c>SeedScaleKeyTests</c> holds this list against
+    /// the catalogue's vocabulary.
+    /// </para>
+    /// <para>
+    /// <c>chart_stimulated_recall</c> is filed under Conversation, which is what it has always charted as, and
+    /// is arguably case analysis; re-filing it belongs to the College. "Case note review" and "Directly
+    /// observed clinical examination" are not keys: the College made them CCA (D4) and Mini-CEX (D12).
     /// </para>
     /// </remarks>
-    private static readonly IReadOnlyDictionary<string, WbaEvidenceSource> SourceByActivityFamily =
-        new Dictionary<string, WbaEvidenceSource>(StringComparer.Ordinal)
+    private static readonly IReadOnlyDictionary<string, WbaEvidenceSource?> CategoryByWbaToolKey =
+        new Dictionary<string, WbaEvidenceSource?>(StringComparer.Ordinal)
         {
             ["mini_cex"] = WbaEvidenceSource.DirectObservation,
             ["dops"] = WbaEvidenceSource.DirectObservation,
             ["direct_observation"] = WbaEvidenceSource.DirectObservation,
             ["cbd"] = WbaEvidenceSource.Conversation,
-            ["acat"] = WbaEvidenceSource.Conversation,
             ["chart_stimulated_recall"] = WbaEvidenceSource.Conversation,
             ["cca"] = WbaEvidenceSource.CaseAnalysis,
-            ["rca"] = WbaEvidenceSource.CaseAnalysis
+            ["rca"] = WbaEvidenceSource.CaseAnalysis,
+            ["msf"] = null,
+            ["reflective_exercise"] = null,
+            ["clinical_audit"] = null,
+            ["portfolio_review"] = null,
+            ["learner_feedback"] = null
         };
+
+    /// <summary>
+    /// The fallback for a type that declares no instrument: its key matched exactly or as a
+    /// <c>"&lt;family&gt;_"</c> prefix, so an unkeyed <c>mini_cex_paed</c> still reads as Direct observation.
+    /// </summary>
+    /// <remarks>
+    /// Not a second hand-kept list. [T122] spelled the instrument keys like the families, so the families are
+    /// the categorised instruments above plus the one family that is no College instrument: <c>acat</c>,
+    /// seeded unkeyed (D21), which keeps its Conversation label this way.
+    /// </remarks>
+    private static readonly IReadOnlyDictionary<string, WbaEvidenceSource> CategoryByUnkeyedFamily =
+        CategoryByWbaToolKey
+            .Where(entry => entry.Value is not null)
+            .Select(entry => KeyValuePair.Create(entry.Key, entry.Value!.Value))
+            .Append(KeyValuePair.Create("acat", WbaEvidenceSource.Conversation))
+            .ToDictionary(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The instrument keys this classifier has a stated answer for, "no category" included.
+    /// </summary>
+    public static IReadOnlyCollection<string> ClassifiedWbaToolKeys { get; } = CategoryByWbaToolKey.Keys.ToArray();
 
     /// <summary>
     /// The category as a clinician reads it. These three strings are what the trajectory chart has
@@ -126,9 +153,25 @@ public static class RatedActivityTypes
     };
 
     /// <summary>
-    /// Classify one activity type from its key and its CURRENT published schema.
+    /// Classify one activity type from its key, the instrument it declares, and its CURRENT published schema.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// The category comes from <paramref name="wbaToolKey" /> whenever the type declares one, so a
+    /// builder-made Mini-CEX under a key nobody has heard of reads as Direct observation, and a type keyed
+    /// <c>msf</c> has no category whatever it is called. The type's own key is consulted only when the type
+    /// declares no instrument. (T144)
+    /// </para>
+    /// <para>
+    /// <b>The instrument is read live, so the category is too.</b> <c>WbaToolKey</c> is unversioned and the
+    /// builder writes it when a draft is SAVED, not when it is published, and discarding the draft does not undo
+    /// it ([T122]). Changing a type's instrument therefore relabels every activity of that type on the trajectory,
+    /// completed ones included, and can move a committee sampling report's <c>DistinctSourceCount</c> and
+    /// <c>SingleSource</c>, from the save onward. Before T144 the category came from the type's key, which cannot
+    /// change after publish. What is RATED still follows the published schema alone. Staging the instrument with
+    /// the draft would make the two move together; that is the tool gate's design as much as this one's.
+    /// </para>
+    /// <para>
     /// The current schema, not the activity's pinned version, and that is deliberate: "is this
     /// instrument an entrustment instrument" is a property of the TYPE, not a per-activity semantic.
     /// A pinned read would be strictly worse here, because the seed refresher republishes seeded types
@@ -136,11 +179,15 @@ public static class RatedActivityTypes
     /// which would reproduce the very defect this fixes for exactly those rows. Contrast
     /// <c>GetEpaTrajectoryForTraineeQuery.ResolveRatedScaleIdsAsync</c>, which MUST read the pinned
     /// version, because WHICH LADDER a rating sits on is a fact about that rating.
+    /// </para>
     /// </remarks>
-    public static RatedTypeVerdict Classify(string? activityTypeKey, string? schemaJson)
+    public static RatedTypeVerdict Classify(string? activityTypeKey, string? wbaToolKey, string? schemaJson)
     {
         var key = activityTypeKey?.Trim() ?? string.Empty;
-        var category = ResolveFamily(key);
+        var toolKey = WbaTool.NormalizeKey(wbaToolKey);
+        var category = toolKey is null
+            ? ResolveFamily(key)
+            : CategoryByWbaToolKey.GetValueOrDefault(toolKey);
         var declaresRating = DeclaresRating(schemaJson);
 
         return new RatedTypeVerdict(
@@ -173,12 +220,12 @@ public static class RatedActivityTypes
         var types = await dbContext.Set<ActivityType>()
             .AsNoTracking()
             .Where(type => ids.Contains(type.Id))
-            .Select(type => new { type.Id, type.Key, type.SchemaJson })
+            .Select(type => new { type.Id, type.Key, type.WbaToolKey, type.SchemaJson })
             .ToListAsync(cancellationToken);
 
         return types.ToDictionary(
             type => type.Id,
-            type => Classify(type.Key, type.SchemaJson));
+            type => Classify(type.Key, type.WbaToolKey, type.SchemaJson));
     }
 
     private static WbaEvidenceSource? ResolveFamily(string activityTypeKey)
@@ -188,7 +235,7 @@ public static class RatedActivityTypes
             return null;
         }
 
-        foreach (var (family, category) in SourceByActivityFamily)
+        foreach (var (family, category) in CategoryByUnkeyedFamily)
         {
             if (activityTypeKey == family ||
                 activityTypeKey.StartsWith(family + "_", StringComparison.Ordinal))
@@ -205,8 +252,7 @@ public static class RatedActivityTypes
     /// </summary>
     /// <remarks>
     /// A schema that does not parse is treated as declaring nothing rather than as an error. A stored
-    /// version that no longer parses is a real defect, but it is not a committee report's to raise —
-    /// and the family arm still covers every tool the product ships.
+    /// version that no longer parses is a real defect, but it is not a committee report's to raise.
     /// </remarks>
     private static bool DeclaresRating(string? schemaJson)
     {

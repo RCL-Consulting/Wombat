@@ -76,11 +76,11 @@ public sealed class PaediatricCatalogueSeeder
     /// scope for every type it seeds, and it runs before this seeder, so the Paediatrics discipline
     /// does not exist yet when it executes.
     /// <para>
-    /// The keys are <c>&lt;family&gt;_cpsa</c>, and both halves of that matter.
+    /// The keys are <c>&lt;family&gt;_cpsa</c>.
     /// <list type="bullet">
-    /// <item>A SUFFIX, not a prefix: the EPA trajectory query matches an assessment family by exact
-    /// key or by a "&lt;family&gt;_" prefix, so "mini_cex_cpsa" charts as Direct observation while
-    /// "cpsa_mini_cex" would silently never appear on any trajectory.</item>
+    /// <item>A SUFFIX, not a prefix, by convention. It once decided the evidence category, which was
+    /// matched by exact key or by a "&lt;family&gt;_" prefix; since T144 a type is classified by the
+    /// instrument it declares (<c>WbaToolKey</c>), and the key is consulted only for an unkeyed type.</item>
     /// <item><c>_cpsa</c>, not <c>_paed</c>: ActivityType.Key is globally unique and this method
     /// skips keys that already exist, so a collision is a SILENT no-op, not an error. Earlier
     /// scenario play-throughs left institution-scoped "mini_cex_paed" and "dops_paed" types behind,

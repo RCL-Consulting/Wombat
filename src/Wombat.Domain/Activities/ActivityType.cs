@@ -44,9 +44,15 @@ public sealed class ActivityType
     /// SAVE, not on publish, and discarding the draft does not undo it. Because the builder's only save path saves a
     /// draft, changing it on a SEEDED type parks a draft, and the seed refresher skips a type with a draft in flight
     /// until it is published or discarded. For an UNCHANGED credit target, changing it changes what the author of a draft
-    /// may still hand on while nobody else has acted; it changes nothing once someone else has acted, and nothing for a
-    /// completed activity, because credit never re-checks (D20). A CHANGED target is always checked against the current
-    /// key.
+    /// may still hand on while nobody else has acted; it changes nothing once someone else has acted, and nothing about a
+    /// completed activity's credit, because credit never re-checks (D20). A CHANGED target is always checked against the
+    /// current key.
+    /// </para>
+    /// <para>
+    /// <b>It also names the type's evidence category</b> (T144): the source label on the trajectory and what the
+    /// committee sampling report counts as one source. That reading is live too, so changing the key, from the save
+    /// onward and whether or not the draft is then discarded, relabels every activity of the type, completed ones
+    /// included, and can move a sampling report's source count. See <c>RatedActivityTypes.Classify</c>.
     /// </para>
     /// </remarks>
     public string? WbaToolKey { get; set; }

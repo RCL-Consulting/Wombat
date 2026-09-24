@@ -112,7 +112,7 @@ public static class ActivityTypeSeedCatalogue
         new("journal_club", "Journal Club", "Journal club attendance or presentation log.",
             ActivityScope.Speciality, ActivityTypeSeedSource.Generic, DisplayFieldsRule.FirstThreeSchemaFields, WbaToolKey: null),
 
-        // The keys are <family>_cpsa, and both halves matter — see PaediatricCatalogueSeeder for why.
+        // The keys are <family>_cpsa — see PaediatricCatalogueSeeder for why.
         new("mini_cex_cpsa", "Mini-CEX (Paediatrics)",
             "Mini clinical evaluation exercise - direct observation of a focused clinical encounter, followed by immediate feedback.",
             ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "mini_cex"),

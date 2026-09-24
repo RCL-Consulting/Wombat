@@ -183,6 +183,28 @@ public sealed class GetEpaTrajectoryForTraineeTests
         trajectory.Points[0].Source.Should().Be("Direct observation");
     }
 
+    /// <summary>
+    /// T144: a builder-made rated type under a key no family matches, whose author picked Mini-CEX as its
+    /// instrument, charts as Direct observation. Before T144 its source read as its raw key.
+    /// </summary>
+    [Fact]
+    public async Task MapsSourceByTheInstrumentTheTypeDeclares()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var builderMade = await SeedActivityTypeAsync(dbContext, "ward_round_review", wbaToolKey: "mini_cex");
+
+        AddRatedActivity(dbContext, builderMade, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
+        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.Points.Should().ContainSingle()
+            .Which.Source.Should().Be("Direct observation");
+    }
+
     [Fact]
     public async Task ReadsOverallLevelFieldWhenOverallAbsent()
     {
@@ -697,14 +719,21 @@ public sealed class GetEpaTrajectoryForTraineeTests
     /// the entrustment rating. Types with no schema at all used to be seeded here, which is a shape
     /// nothing can publish — and it is what let the trajectory gate stay on a hard-coded key list.
     /// </summary>
-    private static Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
-        => SeedTypeAsync(dbContext, key, RatedSchemaJson);
+    private static Task<ActivityType> SeedActivityTypeAsync(
+        ApplicationDbContext dbContext,
+        string key,
+        string? wbaToolKey = null)
+        => SeedTypeAsync(dbContext, key, RatedSchemaJson, wbaToolKey);
 
     /// <summary>A type that asserts no entrustment level, and must not chart.</summary>
     private static Task<ActivityType> SeedUnratedActivityTypeAsync(ApplicationDbContext dbContext, string key)
         => SeedTypeAsync(dbContext, key, UnratedSchemaJson);
 
-    private static async Task<ActivityType> SeedTypeAsync(ApplicationDbContext dbContext, string key, string schemaJson)
+    private static async Task<ActivityType> SeedTypeAsync(
+        ApplicationDbContext dbContext,
+        string key,
+        string schemaJson,
+        string? wbaToolKey = null)
     {
         var activityType = new ActivityType
         {
@@ -714,7 +743,8 @@ public sealed class GetEpaTrajectoryForTraineeTests
             IsActive = true,
             OwnerUserId = "admin-1",
             CreatedOn = DateTime.UtcNow,
-            SchemaJson = schemaJson
+            SchemaJson = schemaJson,
+            WbaToolKey = wbaToolKey
         };
         dbContext.ActivityTypes.Add(activityType);
         await dbContext.SaveChangesAsync();

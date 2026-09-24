@@ -24,8 +24,8 @@ public sealed class WbaTool
 
     /// <summary>
     /// Stable, lowercase, and spelled like the instrument's activity-type family where one exists (<c>mini_cex</c>,
-    /// <c>dops</c>, <c>cbd</c>, <c>direct_observation</c>, <c>cca</c>), so the family list in
-    /// <c>RatedActivityTypes</c> can later be retired by a lookup swap.
+    /// <c>dops</c>, <c>cbd</c>, <c>direct_observation</c>, <c>cca</c>). <c>RatedActivityTypes</c> classifies a
+    /// type's evidence by this key (T144), and matches an unkeyed type's own key against the same spellings.
     /// </summary>
     public string Key { get; set; } = string.Empty;
 

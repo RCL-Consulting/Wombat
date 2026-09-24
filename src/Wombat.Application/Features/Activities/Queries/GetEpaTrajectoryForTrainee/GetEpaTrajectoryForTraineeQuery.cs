@@ -108,9 +108,10 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     //
     // The KNOWN LIMITATION this carried for months — "an institution that builds its own rated tool
     // under an unfamiliar key will not chart" — is CLOSED. The gate is now the type's own declared
-    // rated field (T126), so any rated tool charts whatever it is called. What is left is cosmetic:
-    // an unfamiliar tool's evidence SOURCE reads as its raw key rather than a category, until
-    // it is classified by its WbaToolKey, which T122 introduced and [T144] will read. That retires this map entirely.
+    // rated field (T126), so any rated tool charts whatever it is called. Its evidence SOURCE is the
+    // category of the instrument it declares (WbaToolKey, T144), so a builder-made Mini-CEX under an
+    // unfamiliar key reads as Direct observation. A type reads as its raw key only when its instrument
+    // has no category, or when it declares none and its key matches no known family.
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -162,8 +163,11 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
             // That retires the hard-coded family list as a gate: an institution's own rated tool
             // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
-            // Its source reads as its own key until [T144] classifies by the WbaToolKey [T122] introduced.
-            var verdict = RatedActivityTypes.Classify(activity.ActivityType.Key, activity.ActivityType.SchemaJson);
+            // Its source is classified by the instrument it declares.
+            var verdict = RatedActivityTypes.Classify(
+                activity.ActivityType.Key,
+                activity.ActivityType.WbaToolKey,
+                activity.ActivityType.SchemaJson);
             if (!verdict.IsRated)
             {
                 continue;

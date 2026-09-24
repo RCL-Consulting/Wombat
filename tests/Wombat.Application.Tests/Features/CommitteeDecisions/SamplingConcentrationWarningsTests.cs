@@ -461,34 +461,59 @@ public sealed class SamplingConcentrationWarningsTests
     }
 
     /// <summary>
-    /// The interim family arm, pinned. The four *_paed types are operator-built, exist in no seeder,
-    /// and cannot be given a pointer while [T133] stands — so removing the family arm later has to be
-    /// a decision with a failing test behind it, not a discovery.
+    /// T144: a builder-made type under a key no family matches, declaring DOPS as its instrument, is the
+    /// same source as the seeded Mini-CEX, because both are direct observation. Read by its key, it was a
+    /// second source and hid the SingleSource warning.
     /// </summary>
     [Fact]
-    public async Task AnOperatorBuiltPaedToolIsStillCountedViaTheFamilyArm()
+    public async Task ABuilderTypeIsCountedAsTheCategoryOfTheInstrumentItDeclares()
     {
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
-        var paed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        var miniCexCpsa = await SeedActivityTypeAsync(dbContext, "mini_cex_cpsa", wbaToolKey: "mini_cex");
+        var builderMade = await SeedActivityTypeAsync(dbContext, "ward_round_review", wbaToolKey: "dops");
 
-        AddActivity(dbContext, paed, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, miniCexCpsa, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, builderMade, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
         var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
-        report.TotalRatedActivities.Should().Be(1, "it carries no schema and never will; the family arm is what counts it");
+        var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
+        warning.DistinctSourceCount.Should().Be(1, "Mini-CEX and DOPS are both direct observation");
+        warning.SingleSource.Should().BeTrue();
     }
 
     /// <summary>
-    /// An opt-in overload. The plain <see cref="SeedActivityTypeAsync" /> is deliberately left alone:
-    /// its types carry no SchemaJson, and that is what makes the existing suite evidence that legacy
-    /// behaviour is genuinely unchanged rather than re-made green.
+    /// A rated type that declares no instrument is counted because its schema declares a rating, and its
+    /// category is still read from its key, prefix included: an unkeyed <c>mini_cex_paed</c> is the same
+    /// source as a DOPS that declares its instrument. (T144)
     /// </summary>
+    [Fact]
+    public async Task AnUnkeyedTypeUnderAFamilyPrefixIsCountedAsThatFamilysCategory()
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var paed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        var dopsCpsa = await SeedActivityTypeAsync(dbContext, "dops_cpsa", wbaToolKey: "dops");
+
+        AddActivity(dbContext, paed, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, dopsCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.TotalRatedActivities.Should().Be(2, "both schemas declare a rating");
+        var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
+        warning.DistinctSourceCount.Should().Be(1,
+            "the unkeyed mini_cex_paed reads as Direct observation by its key, like the DOPS by its instrument");
+    }
+
     /// <summary>
-    /// A type that rates nothing — a reflection, a logbook entry. Six of the fourteen seeds are like
-    /// this, and they must stay out of a committee's evidence arithmetic entirely.
+    /// A type that rates nothing — a reflection, a logbook entry. Several seeds are like this, and they
+    /// must stay out of a committee's evidence arithmetic entirely.
     /// </summary>
     private static async Task<ActivityType> SeedUnratedActivityTypeAsync(ApplicationDbContext dbContext, string key)
     {
@@ -537,7 +562,10 @@ public sealed class SamplingConcentrationWarningsTests
           ]
         }
         """;
-    private static async Task<ActivityType> SeedActivityTypeAsync(ApplicationDbContext dbContext, string key)
+    private static async Task<ActivityType> SeedActivityTypeAsync(
+        ApplicationDbContext dbContext,
+        string key,
+        string? wbaToolKey = null)
     {
         var activityType = new ActivityType
         {
@@ -547,7 +575,8 @@ public sealed class SamplingConcentrationWarningsTests
             IsActive = true,
             OwnerUserId = "admin-1",
             CreatedOn = DateTime.UtcNow,
-            SchemaJson = RatedSchemaJson
+            SchemaJson = RatedSchemaJson,
+            WbaToolKey = wbaToolKey
         };
         dbContext.ActivityTypes.Add(activityType);
         await dbContext.SaveChangesAsync();
