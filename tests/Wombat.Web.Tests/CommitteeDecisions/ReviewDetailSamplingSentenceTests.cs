@@ -197,6 +197,7 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
                 GetCommitteeReviewByIdQuery => _review,
                 ListPendingEntrustmentDecisionsForReviewQuery => Array.Empty<PendingEntrustmentDecisionDto>(),
                 GetSamplingConcentrationWarningsQuery => _report,
+                CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
                 ListEpasForSubSpecialityQuery => Array.Empty<EpaDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),

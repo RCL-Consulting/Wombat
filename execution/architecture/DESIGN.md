@@ -274,6 +274,10 @@ PagerControls
 - A workflow action the actor may take but cannot complete (T107) is a **disabled** button, never a hidden one. Its
   reason is visible text in a `.workflow-action-reasons` list below the row, starting with the action's name, and the
   button points at it with `aria-describedby`. A tooltip alone is not enough.
+- An action that can be taken but has a consequence worth knowing first (Start review while MSF campaigns from the
+  window are unreleased, T173) says so in a `<span class="muted">` beside the button in its `.form-actions` row, and
+  the button points at it with `aria-describedby`. Say it at the button even when a notice elsewhere on the page says
+  it too: on a narrow screen the notice can be several cards away.
 
 ## Card system
 

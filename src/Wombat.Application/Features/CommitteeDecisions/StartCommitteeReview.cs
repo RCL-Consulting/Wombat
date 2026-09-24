@@ -85,17 +85,10 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .OrderByDescending(activity => activity.UpdatedOn)
             .ToListAsync(cancellationToken);
 
-        // A campaign falls in the window by the day it actually closed, not the day it was scheduled to
-        // (T138). That is the date a release stamps on its per-EPA evidence activities as ObservedOn
-        // (ReleaseMsfCampaign.EvidenceCompleteOn), so the report and its per-EPA claims land in the same
-        // review. Windowing by ClosesOn split them whenever the two dates fell either side of a boundary,
-        // and the auto-close job makes that routine: it closes a campaign on the day after ClosesOn at the
-        // earliest, so every auto-closed campaign scheduled for a window's last day was split. Every campaign
-        // here is released, and a released one always has ClosedOn: Release requires UnderReview, which
-        // only Close produces, and Close stamps it. ObservedOn is ClosedOn's UTC date, hence UTC bounds.
-        var closedFrom = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var closedBefore = toDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-
+        // A campaign falls in the window by the UTC day it actually closed (T138); MsfCampaignReviewWindow says
+        // why, and is shared with the live notice that counts the campaigns this leaves out for being unreleased
+        // at Start (T173). Every campaign here is released, and a released one always has ClosedOn: Release requires
+        // UnderReview, which only Close produces, and Close stamps it.
         var msfCampaigns = await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .Include(campaign => campaign.Template)
@@ -114,13 +107,11 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             // The cost: a campaign still under review when the chair starts is in no snapshot, ever. The
             // snapshot is frozen here and the release comes later, and the next review's window does not
             // cover the day it closed; the per-EPA activities the release creates miss both the same way,
-            // exactly as a WBA observed in the window but filed after Start does. A panel that should know one is pending needs a live notice on
-            // the review, not a frozen row that is not evidence.
-            .Where(campaign =>
-                campaign.SubjectUserId == review.TraineeUserId &&
-                campaign.State == MsfCampaignState.Released &&
-                campaign.ClosedOn >= closedFrom &&
-                campaign.ClosedOn < closedBefore)
+            // exactly as a WBA observed in the window but filed after Start does. The panel is told instead
+            // by a live count on the review (CountMsfCampaignsOutsideSnapshotQuery, T173), which is not
+            // evidence and is not frozen here, and which still counts the campaign once it is released.
+            .ClosedInWindowOf(review)
+            .Where(campaign => campaign.State == MsfCampaignState.Released)
             .OrderByDescending(campaign => campaign.ClosedOn)
             .ToListAsync(cancellationToken);
 

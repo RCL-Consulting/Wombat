@@ -123,6 +123,7 @@ public sealed class ReviewDetailEvidenceEmptyStateTests : TestContext
                 GetCommitteeReviewByIdQuery => _review,
                 ListPendingEntrustmentDecisionsForReviewQuery => Array.Empty<PendingEntrustmentDecisionDto>(),
                 GetSamplingConcentrationWarningsQuery => null,
+                CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
                 ListEpasForSubSpecialityQuery => Array.Empty<EpaDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),

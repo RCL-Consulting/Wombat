@@ -126,10 +126,11 @@ internal static class CommitteeDecisionAuthorization
     /// The one read ladder for a committee review and for everything computed from it.
     /// </summary>
     /// <remarks>
-    /// ReviewDetail.razor is fed by three sibling queries — the review itself, the sampling
+    /// ReviewDetail.razor is fed by sibling queries — the review itself, the sampling
     /// concentration report, and the entrustment decisions staged against it — and each used to
     /// carry its own idea of who may read a review, or none at all. One ladder, called by all
-    /// three, is the only arrangement in which they cannot drift apart again. The review's
+    /// of them, is the only arrangement in which they cannot drift apart again; the count of the
+    /// window's MSF campaigns missing from the snapshot climbs it too (T173). The review's
     /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. (T101 finding E)
     /// </remarks>
     public static void DemandReviewAccess(ClaimsPrincipal principal, CommitteeReview review)

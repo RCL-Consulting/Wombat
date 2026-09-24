@@ -103,6 +103,7 @@ public sealed class UndatedEncounterDateTests : TestContext
                 []),
             [typeof(ListPendingEntrustmentDecisionsForReviewQuery)] = (IReadOnlyList<PendingEntrustmentDecisionDto>)[],
             [typeof(GetSamplingConcentrationWarningsQuery)] = null,
+            [typeof(CountMsfCampaignsOutsideSnapshotQuery)] = MsfCampaignsOutsideSnapshotDto.None,
             [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
             [typeof(ListEpasForSubSpecialityQuery)] = (IReadOnlyList<EpaDto>)[],
             [typeof(GetEntrustmentScalesListQuery)] = (IReadOnlyList<EntrustmentScaleDto>)[],

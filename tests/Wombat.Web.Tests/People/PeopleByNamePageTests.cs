@@ -176,6 +176,7 @@ public sealed class PeopleByNamePageTests : TestContext
         _sender
             .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>())
             .On<GetSamplingConcentrationWarningsQuery>(_ => null)
+            .On<CountMsfCampaignsOutsideSnapshotQuery>(_ => MsfCampaignsOutsideSnapshotDto.None)
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<ListEpasForSubSpecialityQuery>(_ => Array.Empty<EpaDto>())
             .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())

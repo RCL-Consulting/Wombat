@@ -118,7 +118,18 @@
       <FormActions>
         @if (_review.State == CommitteeReviewState.Scheduled)
         {
-          <button type="button" class="btn btn-primary" @onclick="StartAsync">Start review</button>
+          @* Said at the button as well as beside the list: the Evidence snapshot card can be three cards below this
+             one on a narrow screen, and this is the click that decides it. (T173) *@
+          var awaitingAtStart = _msfOutsideSnapshot.AwaitingRelease;
+          if (awaitingAtStart > 0)
+          {
+            <span id="start-review-msf-note" class="muted">
+              Starting now leaves out @awaitingAtStart MSF campaign@(awaitingAtStart == 1 ? string.Empty : "s")
+              that closed in this window and @(awaitingAtStart == 1 ? "is" : "are") not yet released.
+            </span>
+          }
+          <button type="button" class="btn btn-primary" aria-describedby="@(awaitingAtStart > 0 ? "start-review-msf-note" : null)"
+                  @onclick="StartAsync">Start review</button>
         }
         @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative)
         {
@@ -258,6 +269,33 @@
 
     <section class="detail-card">
       <h3>Evidence snapshot</h3>
+      @* Live, and not evidence: counts read on every load, beside the frozen list rather than in it. A campaign
+         enters the snapshot only once released (T138), so one that closed in this window and is still under review
+         at Start reaches no review's evidence, and releasing it later does not put it back; the panel is told it
+         exists, and nothing else about it. Before Start that is a reason to wait; after, a gap to weigh. (T173) *@
+      @if (_msfOutsideSnapshot.Total > 0)
+      {
+        var awaiting = _msfOutsideSnapshot.AwaitingRelease;
+        var releasedLate = _msfOutsideSnapshot.ReleasedAfterStart;
+        <Alert Kind="info">
+          @if (awaiting > 0)
+          {
+            <p>@awaiting MSF @(awaiting == 1 ? "campaign that closed in this window is" : "campaigns that closed in this window are") not yet released.</p>
+          }
+          @if (releasedLate > 0)
+          {
+            <p>@releasedLate MSF @(releasedLate == 1 ? "campaign that closed in this window was" : "campaigns that closed in this window were") released after this review started.</p>
+          }
+          @if (_review.State == CommitteeReviewState.Scheduled)
+          {
+            <p>A campaign is evidence only once released. Starting the review now leaves @(awaiting == 1 ? "it" : "them") out of the snapshot.</p>
+          }
+          else
+          {
+            <p>The snapshot holds only the campaigns released before the review started, so @(_msfOutsideSnapshot.Total == 1 ? "it is" : "they are") not in it.</p>
+          }
+        </Alert>
+      }
       @* Empty means two different things. Before Start nothing has been frozen; after it the window
          genuinely held nothing, and telling a panel that starting would capture a bundle, on a review
          already started, sends it looking for a button that is gone. (T138) *@
@@ -369,6 +407,7 @@
   private IReadOnlyList<EpaDto> _epas = Array.Empty<EpaDto>();
   private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
   private SamplingConcentrationReportDto? _samplingReport;
+  private MsfCampaignsOutsideSnapshotDto _msfOutsideSnapshot = MsfCampaignsOutsideSnapshotDto.None;
   private IReadOnlyList<EpaTrajectoryDto> _trajectories = Array.Empty<EpaTrajectoryDto>();
 
   protected override async Task OnParametersSetAsync()
@@ -384,6 +423,7 @@
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
+      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId, authState.User));
       if (_epas.Count == 0)
       {
@@ -509,6 +549,10 @@
       // review back instead would be a second round trip that can fail after the action has already succeeded. (T142)
       _review = updated with { TraineeName = _review?.TraineeName };
       _status = status;
+
+      // The MSF notice is live, and an action can change what it must say. Start above all: it freezes the snapshot
+      // the counts are measured against, and a campaign released since the page loaded is now in it. (T173)
+      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
     }
     catch (Exception exception)
     {
