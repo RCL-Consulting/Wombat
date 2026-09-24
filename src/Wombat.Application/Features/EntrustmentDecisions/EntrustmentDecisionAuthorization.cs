@@ -14,19 +14,36 @@ internal static class EntrustmentDecisionAuthorization
     /// <remarks>
     /// The admin page prints a command's refusal. "Could not be found" for a missing id beside a scope refusal for a
     /// real one would let an administrator walk the ids and learn which decisions other institutions hold, so both are
-    /// this. An Administrator may revoke every decision, so for them "not found" says only that.
+    /// this. A caller who may revoke every decision (<see cref="MayRevokeEveryDecision" />) is told plainly, because for
+    /// them "not found" says only that.
     /// </remarks>
     internal const string DecisionNotRevocableByCaller =
         "The entrustment decision could not be found among the decisions you may revoke.";
+
+    /// <summary>
+    /// A global Administrator who is not also a trainee: the one caller for whom every decision is revocable, so the
+    /// one caller told plainly that an id names nothing. (T183, T185)
+    /// </summary>
+    /// <remarks>
+    /// An Administrator who also holds Trainee revokes nothing but what they issued
+    /// (<see cref="TraineeScopeResolver.ActsAsTrainee" />), so a plain "not found" beside the scope refusal would tell
+    /// them which ids exist.
+    /// </remarks>
+    public static bool MayRevokeEveryDecision(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        return principal.IsAdministrator() && !TraineeScopeResolver.ActsAsTrainee(principal);
+    }
 
     public static string GetRequiredUserId(ClaimsPrincipal principal)
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException("The current user identifier is missing.");
 
     /// <summary>
-    /// Refuses to revoke a decision unless the caller is a global Administrator, the chair who issued it, or an
+    /// Refuses to revoke a decision unless the caller is the chair who issued it, a global Administrator, or an
     /// InstitutionalAdmin, SpecialityAdmin or SubSpecialityAdmin who administers the decision's trainee
-    /// (<see cref="TraineeScopeResolver.IsAdministeredBy" />). (T183)
+    /// (<see cref="TraineeScopeResolver.IsAdministeredBy" />); and, but for the issuing chair, never a caller who holds
+    /// Trainee. (T183, T185)
     /// </summary>
     /// <remarks>
     /// <para>
@@ -44,6 +61,13 @@ internal static class EntrustmentDecisionAuthorization
     /// after the fact, so "the chair of the issuing panel" would admit whoever was made chair since.
     /// </para>
     /// <para>
+    /// The trainee rung (<see cref="TraineeScopeResolver.ActsAsTrainee" />) stands before every admin arm, the
+    /// Administrator's included, as it does on the certificate (<see cref="TraineeScopeResolver.MayReadAsync" />):
+    /// someone who holds Trainee beside an admin role administers no trainee's decisions, their own included. Without it
+    /// the admin list offered such a caller Revoke on decisions whose certificate it refused them (T185 review). It comes
+    /// after the issuing chair's arm, which the certificate also reads first, so the two stay one answer.
+    /// </para>
+    /// <para>
     /// Call it before anything is changed: the audit pipeline saves the request's DbContext from its catch, so a
     /// mutation staged before a refusal would be committed by the refusal itself.
     /// </para>
@@ -57,7 +81,17 @@ internal static class EntrustmentDecisionAuthorization
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(decision);
 
-        if (principal.IsAdministrator() || IsIssuer(principal, decision.IssuedByChairUserId))
+        if (IsIssuer(principal, decision.IssuedByChairUserId))
+        {
+            return;
+        }
+
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            throw new UnauthorizedAccessException(DecisionNotRevocableByCaller);
+        }
+
+        if (principal.IsAdministrator())
         {
             return;
         }

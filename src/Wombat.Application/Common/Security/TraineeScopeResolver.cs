@@ -29,9 +29,10 @@ public sealed record TraineeScope(int InstitutionId, int? SpecialityId, int? Sub
 /// a trainee by definition.
 /// </para>
 /// <para>
-/// This is the trainee's organisational home for AUTHORIZATION. Which programme their curriculum credit is read against
-/// is a different question with its own tie-break (<c>CreditTargetResolver.PickProfileAsync</c>, the quota reader);
-/// the two agree for a trainee with one profile, which is every trainee today.
+/// It is also the programme the trainee's curriculum is read against. Credit (<c>CreditTargetResolver.PickProfileAsync</c>),
+/// the EPA and tool pickers, the progress page and the trajectory's ladders all pick <see cref="PreferredProfiles" />
+/// (T185). Until then they broke ties by the latest programme start, so a trainee with two past profiles could be credited
+/// against one programme while the export and the committee read the other.
 /// </para>
 /// </remarks>
 public static class TraineeScopeResolver
@@ -100,9 +101,9 @@ public static class TraineeScopeResolver
     /// <see cref="ResolveAsync" /> gives for each one, which is one call of this. (T183)
     /// </summary>
     /// <remarks>
-    /// For a list that has to judge every row it shows by <see cref="IsAdministeredBy" />: the committee's entrustment
-    /// decisions, say, where one query per trainee would be three round trips a row. Three queries at most, however
-    /// many trainees are asked about.
+    /// For a caller that has to know the scope of several trainees at once, where one query per trainee would be three
+    /// round trips a trainee. Three queries at most, however many trainees are asked about. A list that only needs to
+    /// know which rows the caller administers narrows in SQL instead (<see cref="AdministeredProfiles" />, T185).
     /// </remarks>
     public static async Task<IReadOnlyDictionary<string, TraineeScope>> ResolveManyAsync(
         IApplicationDbContext dbContext,
@@ -215,6 +216,14 @@ public static class TraineeScopeResolver
     /// id that names nobody lands in the same place.
     /// </para>
     /// <para>
+    /// The trainee rung comes first (<see cref="ActsAsTrainee" />), as it does on the committee review
+    /// (<c>CommitteeDecisionAuthorization.DemandReviewAccess</c>): someone who holds Trainee beside an oversight role,
+    /// the Administrator role included, reads their own record here and nobody else's, whatever the other role would
+    /// reach. Decided in T185; until then a Trainee who was also a CommitteeMember read every trainee at the hospital
+    /// here while the review refused them. <see cref="ActsAsTrainee" /> names every surface that applies the rung, and
+    /// the one that does not yet.
+    /// </para>
+    /// <para>
     /// A query refused here returns what it returns for a trainee with nothing on record, an empty list or null, never
     /// a refusal. The id is one the caller typed; a refusal that differed from "nothing" would confirm that someone by
     /// that id trains somewhere.
@@ -228,14 +237,16 @@ public static class TraineeScopeResolver
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        if (principal.IsAdministrator())
+        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isSelf = !string.IsNullOrEmpty(callerUserId) &&
+                     string.Equals(callerUserId, traineeUserId, StringComparison.Ordinal);
+
+        if (ActsAsTrainee(principal))
         {
-            return true;
+            return isSelf;
         }
 
-        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(callerUserId) &&
-            string.Equals(callerUserId, traineeUserId, StringComparison.Ordinal))
+        if (principal.IsAdministrator() || isSelf)
         {
             return true;
         }
@@ -249,6 +260,41 @@ public static class TraineeScopeResolver
 
         var scope = await ResolveAsync(dbContext, traineeUserId, cancellationToken);
         return scope is not null && IsOverseenBy(scope, principal);
+    }
+
+    /// <summary>
+    /// Whether this caller is a trainee in the programme, and so reads and administers trainee records as one: their
+    /// own record and nobody else's, whatever other role they hold, the Administrator role included. (T185)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Users hold several roles, and a registrar can sit on the committee as the trainees' representative, coordinate a
+    /// rotation, or administer the system. The rule is that none of those seats reads, or acts on, a peer's record. It
+    /// is asked FIRST, before any role that would admit the caller, by every surface that answers about other trainees:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><see cref="MayReadAsync" />, and so every trainee read that climbs it: progress, committee reviews listed
+    /// for a trainee, entrustment decisions and standing, the certificate, MSF campaigns and coverage, the portfolio
+    /// export;</item>
+    /// <item>the committee review itself (<c>CommitteeDecisionAuthorization.DemandReviewAccess</c>), where the rung
+    /// started;</item>
+    /// <item>the entrustment admin list and revoking (<c>ListEntrustmentDecisionsForAdminQuery</c>,
+    /// <c>EntrustmentDecisionAuthorization.DemandRevocationAccessAsync</c>), so every row the list shows is one the
+    /// caller may revoke and download;</item>
+    /// <item>the committee member's dashboard, which names each trainee beside their targets.</item>
+    /// </list>
+    /// <para>
+    /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,
+    /// which ask <see cref="IsOverseenBy" /> of the activity's stamps): a Trainee who also holds an oversight role still
+    /// opens and lists a peer's activities one by one. Closing that is its own change, because every activity list and
+    /// the parity test move with it; until then the portfolio export, which climbs <see cref="MayReadAsync" />, refuses
+    /// what the per-activity gate admits.
+    /// </para>
+    /// </remarks>
+    public static bool ActsAsTrainee(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        return principal.IsInRole(WombatRoles.Trainee);
     }
 
     // ─── Who stands over a trainee ──────────────────────────────────────────
@@ -294,6 +340,59 @@ public static class TraineeScopeResolver
     }
 
     /// <summary>
+    /// The query form of <see cref="IsAdministeredBy" />: the preferred profiles (<see cref="PreferredProfiles" />) of
+    /// the trainees this caller administers, for a list that must be narrowed in SQL rather than loaded whole and judged
+    /// row by row. (T185)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A trainee's profile is here exactly when <see cref="IsAdministeredBy" /> holds for the scope
+    /// <see cref="ResolveAsync" /> gives them. Each arm is the same arm, read at the same level: the sub-speciality from
+    /// the profile's curriculum, the speciality from that sub-speciality's row, so a curriculum or sub-speciality that
+    /// cannot be reached admits nobody through the arm that needs it, as a null level does there. A parity test holds
+    /// the two to each other, caller by caller.
+    /// </para>
+    /// <para>
+    /// Like <see cref="IsAdministeredBy" />, it has no Administrator arm. A caller who sees everything is not narrowed
+    /// at all, and that is the list's decision, not this rule's.
+    /// </para>
+    /// </remarks>
+    public static IQueryable<TraineeProfile> AdministeredProfiles(IApplicationDbContext dbContext, ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(principal);
+
+        var preferred = PreferredProfiles(dbContext);
+        if (principal.GetInstitutionId() is not int institutionId)
+        {
+            return preferred.Where(_ => false);
+        }
+
+        preferred = preferred.Where(profile => profile.InstitutionId == institutionId);
+        if (principal.IsInstitutionalAdmin())
+        {
+            return preferred;
+        }
+
+        int[] specialityIds = principal.IsInRole(WombatRoles.SpecialityAdmin)
+            ? principal.GetSpecialityIds().ToArray()
+            : [];
+        int[] subSpecialityIds = principal.IsInRole(WombatRoles.SubSpecialityAdmin)
+            ? principal.GetSubSpecialityIds().ToArray()
+            : [];
+
+        var curricula = dbContext.Set<Curriculum>();
+        var subSpecialities = dbContext.Set<SubSpeciality>();
+
+        return preferred.Where(profile => curricula.Any(curriculum =>
+            curriculum.Id == profile.CurriculumId &&
+            (subSpecialityIds.Contains(curriculum.SubSpecialityId) ||
+             subSpecialities.Any(subSpeciality =>
+                 subSpeciality.Id == curriculum.SubSpecialityId &&
+                 specialityIds.Contains(subSpeciality.SpecialityId)))));
+    }
+
+    /// <summary>
     /// <see cref="IsAdministeredBy" /> plus a Coordinator at the trainee's institution: the reach of the roles that
     /// schedule committee reviews, which a CommitteeMember does not. (T182)
     /// </summary>
@@ -302,9 +401,14 @@ public static class TraineeScopeResolver
 
     /// <summary>
     /// Oversight, T101's read ladder: <see cref="IsAdministeredOrCoordinatedBy" /> plus a CommitteeMember at the
-    /// trainee's institution. Must agree with <c>ActivityService.IsScopedOverseerOf</c> and
-    /// <c>ActivityReadScope.WhereReadableBy</c>. (T113)
+    /// trainee's institution. (T113)
     /// </summary>
+    /// <remarks>
+    /// The single-activity read gate asks this of the scope stamped on the activity
+    /// (<c>ActivityService.IsScopedOverseerOf</c>, T185). The list-shaped gate,
+    /// <c>ActivityReadScope.WhereReadableBy</c>, is its SQL form over the same stamps, written apart because a list
+    /// cannot call this per row; a parity test holds the two to each other for every caller and stamp.
+    /// </remarks>
     public static bool IsOverseenBy(TraineeScope scope, ClaimsPrincipal principal)
         => IsAdministeredOrCoordinatedBy(scope, principal) ||
            HoldsAtInstitution(scope, principal, WombatRoles.CommitteeMember);

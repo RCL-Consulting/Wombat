@@ -79,7 +79,14 @@ public sealed class EntrustmentDecisionAdminScopeTests
         // Users hold several roles. A committee seat or a coordinator's desk at the trainee's institution oversees the
         // trainee, so it reads the certificate; it does not make an admin role for another speciality administer them.
         ("a SpecialityAdmin of another speciality at the trainee's institution who also sits on its committee", false, false, true),
-        ("a SubSpecialityAdmin of another sub-speciality at the trainee's institution who also coordinates there", false, false, true)
+        ("a SubSpecialityAdmin of another sub-speciality at the trainee's institution who also coordinates there", false, false, true),
+        // T185: someone who holds Trainee is a trainee first, whatever admin role they hold beside it, the Administrator's
+        // included. They administer nobody's decisions, their own included, and read only their own certificate.
+        ("a classmate who is also an InstitutionalAdmin of the trainee's institution", false, false, false),
+        ("a classmate who is also a SpecialityAdmin of the trainee's speciality there", false, false, false),
+        ("a classmate who is also a SubSpecialityAdmin of the trainee's sub-speciality there", false, false, false),
+        ("a trainee elsewhere who is also a global Administrator", false, false, false),
+        ("the trainee themselves, who is also an InstitutionalAdmin of their institution", false, false, true)
     ];
 
     /// <summary>Callers who hold no admin role: the list refuses them outright, as the page does.</summary>
@@ -93,7 +100,12 @@ public sealed class EntrustmentDecisionAdminScopeTests
         ("a Coordinator at the trainee's institution", false, true),
         ("a Coordinator at another institution", false, false),
         ("a classmate at the same institution", false, false),
-        ("an Assessor at the trainee's institution", false, false)
+        ("an Assessor at the trainee's institution", false, false),
+        // T185: the committee seat and the coordinator's desk read nothing about a peer for someone who holds Trainee.
+        ("a classmate who also sits on the trainee's committee", false, false),
+        ("a classmate who also coordinates at the trainee's institution", false, false),
+        // The issuing chair's claim is on this one decision, and is read before the trainee rung, on both.
+        ("the chair who issued it, who is also a trainee at another institution", true, true)
     ];
 
     public static TheoryData<string, bool> ListMatrix()
@@ -196,6 +208,43 @@ public sealed class EntrustmentDecisionAdminScopeTests
         }
     }
 
+    public static TheoryData<string> AdminCallers()
+    {
+        var data = new TheoryData<string>();
+        foreach (var row in Callers)
+        {
+            data.Add(row.Caller);
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(AdminCallers))]
+    public async Task EveryRowTheListShows_TheCallerMayDownload_AndRevoke(string caller)
+    {
+        // The page offers Download and Revoke on every row it lists. The T185 review found a Trainee who also held an
+        // admin role listed, and offered Revoke on, decisions whose certificate the trainee rung refused them: the list
+        // and revoke had no rung, the certificate did. Asked of every seeded decision, not only the matrix's subject.
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var principal = Principal(caller);
+        var listed = await ListAsync(db, principal);
+        var certificates = new DownloadEntrustmentCertificateCommandHandler(db, new FakePdfService());
+
+        foreach (var decisionId in listed)
+        {
+            (await certificates.Handle(new DownloadEntrustmentCertificateCommand(decisionId, principal), CancellationToken.None))
+                .Should().NotBeNull($"{caller} is shown decision {decisionId}, so may download its certificate");
+        }
+
+        foreach (var decisionId in listed)
+        {
+            var revoke = () => RevokeAsync(db, decisionId, principal);
+            await revoke.Should().NotThrowAsync($"{caller} is shown decision {decisionId}, so may revoke it");
+        }
+    }
+
     // ─── The list ────────────────────────────────────────────────────────────
 
     [Fact]
@@ -275,6 +324,22 @@ public sealed class EntrustmentDecisionAdminScopeTests
         outOfScope.Should().BeOfType<UnauthorizedAccessException>();
         missing.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(outOfScope.Message);
         ownMissing.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(outOfScope.Message);
+    }
+
+    [Fact]
+    public async Task Revoke_ByAnAdministratorWhoIsAlsoATrainee_OfADecisionIdThatNamesNothing_IsRefusedAsAnExistingOneIs()
+    {
+        // T185. The plain "not found" is for a caller who may revoke every decision. An Administrator who holds Trainee
+        // may revoke none they did not issue, so telling them plainly would say which ids exist.
+        await using var db = CreateDb();
+        var seeded = await SeedAsync(db);
+        var principal = Principal("a trainee elsewhere who is also a global Administrator");
+
+        var existing = await RefusalAsync(() => RevokeAsync(db, seeded[TraineeUserId], principal));
+        var missing = await RefusalAsync(() => RevokeAsync(db, 9999, principal));
+
+        existing.Should().BeOfType<UnauthorizedAccessException>();
+        missing.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(existing.Message);
     }
 
     [Fact]
@@ -423,6 +488,23 @@ public sealed class EntrustmentDecisionAdminScopeTests
         // Every user carries an institution claim; a matching one must not widen anything on its own.
         "a classmate at the same institution" => TestPrincipals.Trainee("trainee-2", HostInstitution),
         "an Assessor at the trainee's institution" => TestPrincipals.InRole(WombatRoles.Assessor, "assessor-1", HostInstitution),
+        "a classmate who is also an InstitutionalAdmin of the trainee's institution" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.InstitutionalAdmin], "trainee-2", HostInstitution),
+        "a classmate who is also a SpecialityAdmin of the trainee's speciality there" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.SpecialityAdmin], "trainee-2", HostInstitution, specialityId: Paediatrics),
+        "a classmate who is also a SubSpecialityAdmin of the trainee's sub-speciality there" =>
+            TestPrincipals.InRoles(
+                [WombatRoles.Trainee, WombatRoles.SubSpecialityAdmin], "trainee-2", HostInstitution, subSpecialityId: GeneralPaediatrics),
+        "a trainee elsewhere who is also a global Administrator" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.Administrator], "trainee-admin", OtherInstitution),
+        "the trainee themselves, who is also an InstitutionalAdmin of their institution" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.InstitutionalAdmin], TraineeUserId, HostInstitution),
+        "a classmate who also sits on the trainee's committee" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.CommitteeMember], "trainee-2", HostInstitution),
+        "a classmate who also coordinates at the trainee's institution" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.Coordinator], "trainee-2", HostInstitution),
+        "the chair who issued it, who is also a trainee at another institution" =>
+            TestPrincipals.InRoles([WombatRoles.CommitteeMember, WombatRoles.Trainee], "chair-1", OtherInstitution),
         _ => throw new ArgumentOutOfRangeException(nameof(caller), caller, null)
     };
 

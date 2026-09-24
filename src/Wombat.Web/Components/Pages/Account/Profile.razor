@@ -74,12 +74,10 @@
   {
     try
     {
-      var userId = await GetCurrentUserIdAsync();
-      var profile = await Sender.Send(new GetCurrentUserProfileQuery(userId));
+      var profile = await Sender.Send(new GetCurrentUserProfileQuery(await GetCurrentUserAsync()));
 
       _model = new ProfileFormModel
       {
-        UserId = profile.UserId,
         Email = profile.Email,
         FirstName = profile.FirstName,
         LastName = profile.LastName,
@@ -122,7 +120,7 @@
     try
     {
       var profile = await Sender.Send(new UpdateCurrentUserProfileCommand(
-        _model.UserId,
+        await GetCurrentUserAsync(),
         _model.FirstName,
         _model.LastName));
 
@@ -140,16 +138,12 @@
     }
   }
 
-  private async Task<string> GetCurrentUserIdAsync()
-  {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    return authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-      ?? throw new InvalidOperationException("The current user identifier is missing.");
-  }
+  // The signed-in user, whose own account this page shows and renames: the handlers read the id from it (T185).
+  private async Task<System.Security.Claims.ClaimsPrincipal> GetCurrentUserAsync()
+    => (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
   private sealed class ProfileFormModel
   {
-    public string UserId { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 
     [Required]

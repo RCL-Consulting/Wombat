@@ -12,6 +12,24 @@ public static class ClaimsPrincipalExtensions
     public static int? GetCollegeId(this ClaimsPrincipal principal)
         => principal.GetSingleIntClaim(WombatClaimTypes.CollegeId);
 
+    /// <summary>
+    /// The signed-in user's id, from the NameIdentifier claim; a caller without one is refused before anything is read
+    /// or written. For the requests that act on the caller's own account and nobody else's. (T185)
+    /// </summary>
+    /// <remarks>
+    /// <c>CommitteeDecisionAuthorization.GetRequiredUserId</c> and <c>EntrustmentDecisionAuthorization.GetRequiredUserId</c>
+    /// are older copies of this, which accept a blank id.
+    /// </remarks>
+    public static string GetRequiredUserId(this ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrWhiteSpace(userId)
+            ? throw new UnauthorizedAccessException("The current user identifier is missing.")
+            : userId;
+    }
+
     public static bool IsAdministrator(this ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.Administrator);
 

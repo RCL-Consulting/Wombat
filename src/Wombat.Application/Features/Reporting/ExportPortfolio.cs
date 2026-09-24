@@ -100,8 +100,10 @@ public sealed class ExportPortfolioCommandHandler : IRequestHandler<ExportPortfo
         // A trainee with no profile has no organisational home, so no scoped role can be held over them, and an
         // unknown user id lands in the same place. The ladder, and the tie-break that picks the trainee's profile, are
         // TraineeScopeResolver's (T113): the same answer as the scope ActivityService stamps on each activity this PDF
-        // is assembled from, so a caller who may read each of a trainee's assessments one by one is the caller who
-        // may export them as a bundle, in both directions.
+        // is assembled from, so a caller who may export the bundle may read each of its assessments one by one.
+        // Not the other way round for everyone: this ladder puts the trainee rung first (T185), and the per-activity
+        // gate does not yet, so a Trainee who also holds an oversight role opens a peer's activities singly but is
+        // refused their export. TraineeScopeResolver.ActsAsTrainee records that gap.
         if (!await TraineeScopeResolver.MayReadAsync(_dbContext, principal, traineeUserId, cancellationToken))
         {
             throw new UnauthorizedAccessException(RefusalMessage);

@@ -451,6 +451,39 @@ public sealed class GetCurriculumProgressForTraineeTests
             .Should().Match<QuotaWindowDto>(window => window.Name == "Semester 1, 2026" && window.Count == 2);
     }
 
+    [Fact]
+    public async Task TheProgressPage_ReadsThePreferredProfile_TheOneCreditLandsOn()
+    {
+        // T185. Two active profiles, which only a store without Postgres's one-active-profile index can hold, and the one
+        // place the progress page's pick could part from credit's. The page took the latest programme start (profile 1);
+        // credit, the activity scope stamp and the export take the preferred profile, the highest id (profile 2). The
+        // page now reads profile 2's programme, so the targets it shows are the ones credit counts against.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.Curricula.Add(new Curriculum
+        {
+            Id = 2, SubSpecialityId = 1, Name = "Earlier programme",
+            Version = "2020.1", EffectiveFrom = new DateOnly(2020, 1, 1), IsActive = true
+        });
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 20, CurriculumId = 2, EpaId = 2, RequiredCount = 2, QuotaPeriod = QuotaPeriod.Semester,
+            MinimumLevelOrder = 3, WindowMonths = 36
+        });
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 2, UserId = "trainee-1", InstitutionId = 1, CurriculumId = 2,
+            ProgrammeStartDate = new DateOnly(2020, 1, 1), ExpectedCompletionDate = new DateOnly(2027, 1, 1),
+            IsActive = true
+        });
+        db.SaveChanges();
+
+        var summary = await Read(db);
+
+        summary.ProgrammeStartDate.Should().Be(new DateOnly(2020, 1, 1));
+        summary.Items.Select(item => item.CurriculumItemId).Should().Equal(20);
+    }
+
     private static async Task<TraineeCurriculumProgressSummaryDto> ReadSpan(
         ApplicationDbContext db, DateOnly periodsFrom, DateOnly? asOf = null)
     {

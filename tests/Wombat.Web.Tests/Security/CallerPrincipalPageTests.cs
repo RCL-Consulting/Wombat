@@ -4,6 +4,7 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Features.Accounts;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
@@ -12,6 +13,7 @@ using Wombat.Application.Features.Trainees;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.Portfolio;
@@ -301,6 +303,31 @@ public sealed class CallerPrincipalPageTests : TestContext
         cut.Find("#msf-subject").Change(TraineeUserId);
         cut.WaitForState(() => cut.FindAll("input[type=checkbox]").Count > 0);
         _referenceData.CurriculumAskedFor.Should().Equal(TraineeUserId);
+    }
+
+    // ─── The account page ────────────────────────────────────────────────────
+
+    [Fact]
+    public void Profile_ReadsAndRenamesTheSignedInUser()
+    {
+        // T185: the profile query and the rename take the caller, not a user id, and read the id from it.
+        SignIn(TraineeUserId, WombatRoles.Trainee);
+        _sender
+            .On<GetCurrentUserProfileQuery>(_ => new UserProfileDto(TraineeUserId, "trainee@test", "Thandi", "Mokoena", [WombatRoles.Trainee]))
+            .On<UpdateCurrentUserProfileCommand>(command =>
+                new UserProfileDto(TraineeUserId, "trainee@test", command.FirstName, command.LastName, [WombatRoles.Trainee]));
+
+        var cut = RenderComponent<Profile>();
+        cut.WaitForState(() => cut.FindAll("#profile-first-name").Count == 1);
+
+        cut.Find("#profile-first-name").Change("Thandeka");
+        cut.FindAll("button").Single(button => button.TextContent.Contains("Save profile")).Click();
+        cut.WaitForState(() => cut.Markup.Contains("Profile saved."));
+
+        CallerOf(_sender.Single<GetCurrentUserProfileQuery>().Principal).Should().Be(TraineeUserId);
+        var rename = _sender.Single<UpdateCurrentUserProfileCommand>();
+        rename.FirstName.Should().Be("Thandeka");
+        CallerOf(rename.Principal).Should().Be(TraineeUserId);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

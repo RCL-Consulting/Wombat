@@ -58,8 +58,10 @@ public static class ActivityReadScope
 
         // The speciality arms need the caller's institution as well, because a Speciality is
         // College-owned and therefore a NATIONAL id: matching on it alone would let one hospital's
-        // SpecialityAdmin list every paediatric trainee in the country. Same conjunction as
-        // ActivityService.IsScopedOverseerOf — these two must agree.
+        // SpecialityAdmin list every paediatric trainee in the country. The oversight arms below are the
+        // SQL form of TraineeScopeResolver.IsOverseenBy over the activity's stamps, the rule the
+        // single-activity gate (ActivityService.IsScopedOverseerOf) calls since T185. They are written
+        // apart because a list cannot call it per row; OverseerRuleParityTests holds them to it.
         var callerInstitutionId = principal.GetInstitutionId();
         var hasCallerInstitution = callerInstitutionId.HasValue;
 

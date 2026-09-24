@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -159,13 +160,15 @@ public static class TraineeQuotaProgressReader
         DateOnly asOf,
         CancellationToken cancellationToken)
     {
-        // Active profiles only, as before: this is the trainee's own current programme. Among several active
-        // profiles, the most recent start, which is the tie-break the credit engine uses.
-        var profile = await dbContext.Set<TraineeProfile>()
+        // The trainee's preferred profile, the one pick credit, the activity scope stamp and the export all make
+        // (TraineeScopeResolver.PreferredProfiles, T185), and only while it is current: this page is the trainee's
+        // own current programme, read against today's windows, and a completed programme has no window today. The
+        // preferred profile is the active one whenever there is one, so "active only" chooses no differently; until
+        // T185 this broke ties among active profiles by the latest programme start, which only a store without the
+        // one-active-profile index could hold, and there it read a different curriculum from the one credit landed on.
+        var profile = await TraineeScopeResolver.PreferredProfiles(dbContext)
             .AsNoTracking()
             .Where(p => p.UserId == traineeUserId && p.IsActive)
-            .OrderByDescending(p => p.ProgrammeStartDate)
-            .ThenByDescending(p => p.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
         return profile is null

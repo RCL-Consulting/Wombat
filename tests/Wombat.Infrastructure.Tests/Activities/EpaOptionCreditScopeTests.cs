@@ -571,6 +571,43 @@ public sealed class EpaOptionCreditScopeTests
             "both readings pick the profile through the same resolver");
     }
 
+    /// <summary>
+    /// Two past profiles, the later-created one on the earlier programme: credit and the pickers follow the trainee's
+    /// preferred profile, the highest id, as the scope stamped on their activities and the portfolio export do. (T185)
+    /// </summary>
+    /// <remarks>
+    /// Until T185 <c>CreditTargetResolver.PickProfileAsync</c> took the latest programme start first, so this trainee's
+    /// credit and EPA picker read profile 5's curriculum while their activities were stamped, their export was
+    /// authorised and their committee's STAR curriculum was read from profile 7's. The database allows one active
+    /// profile per trainee, so past profiles are the only place the two rules part, and a trainee who completed one
+    /// programme and left another is exactly who RebuildCurriculumProgress replays credit for.
+    /// </remarks>
+    [Fact]
+    public async Task TwoPastProfiles_ResolveToThePreferredProfile_NotTheLaterProgrammeStart()
+    {
+        await using var db = CreateDb();
+        SeedCatalogue(db);
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 5, UserId = "moved-on", InstitutionId = SubjectInstitutionId, CurriculumId = SubjectCurriculumId,
+            ProgrammeStartDate = new DateOnly(2026, 1, 1), ExpectedCompletionDate = new DateOnly(2030, 1, 1), IsActive = false
+        });
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 7, UserId = "moved-on", InstitutionId = OtherInstitutionId, CurriculumId = OtherCurriculumId,
+            ProgrammeStartDate = new DateOnly(2020, 1, 1), ExpectedCompletionDate = new DateOnly(2024, 1, 1), IsActive = false
+        });
+        await db.SaveChangesAsync();
+
+        var picked = await CreditableFor(db, "moved-on", toolKey: null);
+        var trainee = await CreditTargetResolver.ResolveTraineeAsync(db, "moved-on", new DateOnly(2021, 6, 1), CancellationToken.None);
+        var scope = await TraineeScopeResolver.ResolveAsync(db, "moved-on", CancellationToken.None);
+
+        picked.Should().BeEquivalentTo([OtherCurriculumEpaId.ToString()], "profile 7 is on the other curriculum, whose only item is EPA 3");
+        trainee!.CurriculumId.Should().Be(OtherCurriculumId, "credit reads the same profile as the picker");
+        scope!.InstitutionId.Should().Be(trainee.InstitutionId, "and the same profile as the scope every activity is stamped with");
+    }
+
     private static async Task<IReadOnlyList<string>> CreditableFor(ApplicationDbContext db, string subjectUserId, string? toolKey)
     {
         var options = await Service(db).GetEpaOptionsAsync(

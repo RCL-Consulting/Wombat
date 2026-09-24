@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Identity;
@@ -34,12 +35,16 @@ public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
 
         // A sub-speciality id is national (College-owned, T091), so on its own it matches every adopting
         // institution's trainees. A committee member oversees their own institution: the rule every other
-        // committee surface already applies (ActivityReadScope, ExportPortfolio.IsScopedOverseerOf). Before T130
+        // committee surface already applies (ActivityReadScope, TraineeScopeResolver.IsOverseenBy). Before T130
         // this card leaked only a few user ids above an 80% threshold; once it listed every trainee by name, the
         // missing institution filter became a disclosure. A global Administrator sees every institution.
+        //
+        // The trainee rung first (TraineeScopeResolver.ActsAsTrainee, T185): a registrar who sits on the committee as
+        // the trainees' representative is a trainee in the programme, and this card names each of their peers beside
+        // the targets they have met, which is their progress. They see it empty, as a member with no institution does.
         var institutionId = request.Principal.GetInstitutionId();
         var isAdministrator = request.Principal.IsAdministrator();
-        if (!isAdministrator && institutionId is null)
+        if (TraineeScopeResolver.ActsAsTrainee(request.Principal) || (!isAdministrator && institutionId is null))
         {
             var empty = await CurriculumCoverageReader.ReadAsync(_dbContext, [], request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
             return new CommitteeMemberDashboardSummaryDto(empty.CurrentSemesterName, empty.CurrentSemesterMonths, [], [], 0);

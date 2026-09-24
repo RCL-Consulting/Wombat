@@ -666,6 +666,43 @@ public sealed class GetEpaTrajectoryForTraineeTests
     }
 
     [Fact]
+    public async Task TwoPastProfiles_TheLadderIsThePreferredProfiles_NotTheLaterProgrammeStarts()
+    {
+        // T185. The ladder comes from the trainee's preferred profile, the highest id when none is active: the profile
+        // credit lands on and the export reads. It took the latest programme start, with no final tie-break, so here it
+        // read profile 5555's unpinned curriculum and labelled the rating "5" while credit went to profile 6000's.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedCpsaCurriculumAsync(dbContext, "trainee-1", pin: false, profileIsActive: false);
+        dbContext.Set<Curriculum>().Add(new Curriculum
+        {
+            Id = 56, SubSpecialityId = 1, Name = "Earlier programme",
+            Version = "11.0", EffectiveFrom = new DateOnly(2020, 1, 1), IsActive = true
+        });
+        dbContext.Set<CurriculumItem>().Add(new CurriculumItem
+        {
+            Id = 556, CurriculumId = 56, EpaId = 7, RequiredCount = 6, MinimumLevelOrder = 6, WindowMonths = 12, ScaleId = 42
+        });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 6000, UserId = "trainee-1", CurriculumId = 56, InstitutionId = 2,
+            ProgrammeStartDate = new DateOnly(2020, 1, 1), ExpectedCompletionDate = new DateOnly(2024, 1, 1),
+            IsActive = false
+        });
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var trajectory = result.Should().ContainSingle().Subject;
+        trajectory.ScaleId.Should().Be(42, "profile 6000's curriculum pins the EPA to the CPSA ladder");
+        trajectory.Points.Single().RatingLabel.Should().Be("4");
+    }
+
+    [Fact]
     public async Task AnotherInstitutionsLocalCurriculumItemIsNotThisTraineesLadder()
     {
         // Same predicate as the picker and as CreditApplier. Without it, a trainee at institution 2

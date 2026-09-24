@@ -18,16 +18,17 @@ using Wombat.Tests.Shared;
 namespace Wombat.Integration.Tests.EntrustmentDecisions;
 
 /// <summary>
-/// T183 on a real PostgreSQL server: the entrustment-decision admin list, narrowed to the caller's institution through
-/// <see cref="TraineeScopeResolver.PreferredProfiles" /> in SQL and judged by <see cref="TraineeScopeResolver.IsAdministeredBy" />
-/// over <see cref="TraineeScopeResolver.ResolveManyAsync" />; and a refused revoke, saved as the audit pipeline would.
+/// T183 on a real PostgreSQL server: the entrustment-decision admin list, narrowed in SQL to the trainees the caller
+/// administers through <see cref="TraineeScopeResolver.AdministeredProfiles" /> (T185), the query form of
+/// <see cref="TraineeScopeResolver.IsAdministeredBy" />; the resolver's many-trainee lookup; and a refused revoke, saved
+/// as the audit pipeline would.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The unit suites run on EF InMemory, which evaluates the preferred-profile predicate and the resolver's id lists in
-/// memory. On Npgsql the first has to become a correlated NOT EXISTS inside the decision query's EXISTS, and the second
-/// an array parameter, or EF throws, or the list is filtered only after every decision in the country has been read.
-/// Both are asserted on what reached the server.
+/// The unit suites run on EF InMemory, which evaluates the preferred-profile predicate and the speciality arms in
+/// memory. On Npgsql the first has to become a correlated NOT EXISTS inside the decision query's EXISTS, and the
+/// speciality arms EXISTS over the curriculum and its sub-speciality with array parameters, or EF throws, or the list is
+/// filtered only after every decision at the institution has been read. Both are asserted on what reached the server.
 /// </para>
 /// <para>
 /// The schema helpers follow <c>MsfCampaignScopePostgresTests</c>: each test builds its context on a schema of its own,
@@ -67,7 +68,21 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
             listing.Should().ContainSingle("the decisions are read in one query, not one per trainee");
             listing[0].Should().Contain("\"TraineeProfiles\"", "the institution narrowing runs in SQL");
             listing[0].Should().Contain("NOT EXISTS", "the preferred-profile predicate runs in SQL");
-            commands.Texts.Should().HaveCount(4, "one query for the decisions, and three for the scopes of every trainee on it");
+            commands.Texts.Should().ContainSingle(
+                "T185: the scope is judged in the one query, not by reading every trainee's scope after it");
+
+            // A SpecialityAdmin's narrowing to their speciality runs in the same query, through the curriculum and its
+            // sub-speciality: until T185 every decision at the institution was read and then judged in memory.
+            var specialityCommands = new CommandLog();
+            await using (var db = NewContext(schema, specialityCommands))
+            {
+                (await ListAsync(db, Admin(WombatRoles.SpecialityAdmin, world.Host, specialityId: world.SpecialityId)))
+                    .Should().BeEquivalentTo([world.HostDecision]);
+            }
+
+            var specialityListing = specialityCommands.Texts.Should().ContainSingle().Subject;
+            specialityListing.Should().Contain("\"Curricula\"", "the speciality narrowing runs in SQL");
+            specialityListing.Should().Contain("\"SubSpecialities\"", "the speciality is read from the curriculum's sub-speciality");
 
             await using (var db = NewContext(schema))
             {

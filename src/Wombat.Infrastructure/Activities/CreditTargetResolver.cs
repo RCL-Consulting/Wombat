@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Curricula;
@@ -30,25 +31,31 @@ namespace Wombat.Infrastructure.Activities;
 internal static class CreditTargetResolver
 {
     /// <summary>
-    /// The trainee profile credit accrues against: an active one first, then the most recent programme start, then
-    /// the highest id, so a tie resolves the same way on every call.
+    /// The trainee profile credit accrues against: the trainee's preferred profile
+    /// (<see cref="TraineeScopeResolver.PreferredProfiles" />), the active one, else the highest id.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Deliberately NOT filtered on IsActive. TraineeProfile.Complete() clears IsActive on graduation, so filtering
     /// here meant a graduated trainee earned no credit — harmless for live submissions (they no longer submit), but
     /// destructive under RebuildCurriculumProgress, which zeroes every progress row before replaying: alumni would
     /// come back with nothing.
+    /// </para>
+    /// <para>
+    /// Until T185 this broke ties by the latest programme start, then the id, while the scope stamped on every
+    /// activity, the portfolio export and the STAR curriculum took the preferred profile. The database allows one
+    /// active profile per trainee, so the two disagreed only between past profiles: a trainee with no current profile
+    /// whose later-created one started earlier. Credit then landed on one programme's curriculum while the export
+    /// and the committee read the other's. There is one pick now, and this is it.
+    /// </para>
     /// </remarks>
     public static async Task<TraineeProfile?> PickProfileAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
         CancellationToken cancellationToken)
-        => await dbContext.Set<TraineeProfile>()
+        => await TraineeScopeResolver.PreferredProfiles(dbContext)
             .AsNoTracking()
             .Where(profile => profile.UserId == traineeUserId)
-            .OrderByDescending(profile => profile.IsActive)
-            .ThenByDescending(profile => profile.ProgrammeStartDate)
-            .ThenByDescending(profile => profile.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
     public static async Task<TraineeContext?> ResolveTraineeAsync(

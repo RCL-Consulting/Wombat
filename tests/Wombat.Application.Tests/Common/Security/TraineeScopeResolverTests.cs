@@ -183,7 +183,12 @@ public sealed class TraineeScopeResolverTests
         { "a SpecialityAdmin of another speciality at the trainee's institution", false },
         { "a classmate: another Trainee at the same institution", false },
         { "an Assessor at the same institution", false },
-        { "a principal with no claims at all", false }
+        { "a principal with no claims at all", false },
+        // T185: the trainee rung comes first, as on the committee review. A Trainee holding an oversight role beside it
+        // reads their own record and nobody else's.
+        { "a classmate who also sits on the committee at the trainee's institution", false },
+        { "a classmate who also administers the trainee's institution", false },
+        { "a classmate who is also a global Administrator", false }
     };
 
     [Theory]
@@ -197,6 +202,27 @@ public sealed class TraineeScopeResolverTests
 
         (await TraineeScopeResolver.MayReadAsync(db, Caller(caller), "trainee-1", CancellationToken.None))
             .Should().Be(expected, caller);
+    }
+
+    [Fact]
+    public async Task ATraineeWhoAlsoHoldsAnOversightRole_StillReadsTheirOwnRecord()
+    {
+        // The trainee rung that refuses them their classmates' records must not refuse them their own. (T185)
+        await using var db = CreateDb();
+        SeedTree(db);
+        AddProfile(db, id: 1, "trainee-2", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 100);
+        await db.SaveChangesAsync();
+
+        foreach (var caller in new[]
+                 {
+                     "a classmate who also sits on the committee at the trainee's institution",
+                     "a classmate who also administers the trainee's institution",
+                     "a classmate who is also a global Administrator"
+                 })
+        {
+            (await TraineeScopeResolver.MayReadAsync(db, Caller(caller), "trainee-2", CancellationToken.None))
+                .Should().BeTrue(caller);
+        }
     }
 
     [Fact]
@@ -286,6 +312,12 @@ public sealed class TraineeScopeResolverTests
             TestPrincipals.InRoles(
                 [WombatRoles.SubSpecialityAdmin, WombatRoles.Coordinator], "sub-2", HostInstitution, subSpecialityId: GeneralSurgery),
         "a classmate: another Trainee at the same institution" => TestPrincipals.Trainee("trainee-2", HostInstitution),
+        "a classmate who also sits on the committee at the trainee's institution" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.CommitteeMember], "trainee-2", HostInstitution),
+        "a classmate who also administers the trainee's institution" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.InstitutionalAdmin], "trainee-2", HostInstitution),
+        "a classmate who is also a global Administrator" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.Administrator], "trainee-2", HostInstitution),
         "an Assessor at the same institution" => TestPrincipals.InRole(WombatRoles.Assessor, "assessor-1", HostInstitution),
         "a principal with no claims at all" => TestPrincipals.Anonymous(),
         _ => throw new ArgumentOutOfRangeException(nameof(caller), caller, null)

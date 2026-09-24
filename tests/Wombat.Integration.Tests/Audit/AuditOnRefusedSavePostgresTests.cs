@@ -268,7 +268,10 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
 
             await using var request = root.CreateAsyncScope();
             var requestDb = request.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var command = new UpdateCurrentUserProfileCommand(userId, "Refused", "Edit");
+            var command = new UpdateCurrentUserProfileCommand(
+                new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test")),
+                "Refused",
+                "Edit");
             var handler = new UpdateCurrentUserProfileCommandHandler(new UserAdministrationService(
                 request.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>(),
                 requestDb));

@@ -78,7 +78,8 @@ internal static class ActorRuleMatcher
             // The speciality arms conjoin the institution for the same reason the read gate does: a
             // Speciality is College-owned and therefore NATIONAL, so the speciality claim alone would
             // make `role:SpecialityAdmin+scope:speciality` a country-wide grant. It must also stay in
-            // step with ActivityService.IsScopedOverseerOf — read has to remain a superset of act, and
+            // step with ActivityService.IsScopedOverseerOf (TraineeScopeResolver.IsOverseenBy over the
+            // activity's stamps, T185) — read has to remain a superset of act, and
             // narrowing one without the other produces a button that 404s.
             // NOTE the InstitutionId.HasValue guard on each arm: both sides are int?, and `null ==
             // null` is true, so without it an UNSTAMPED activity would match any principal who also

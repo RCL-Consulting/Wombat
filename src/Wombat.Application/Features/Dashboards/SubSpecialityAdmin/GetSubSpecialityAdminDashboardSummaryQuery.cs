@@ -29,22 +29,26 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
     {
         var subSpecialityIds = request.Principal.GetSubSpecialityIds();
 
-        var pendingReviewCount = await _dbContext.Set<Activity>()
-            .AsNoTracking()
-            .Where(a => a.CurrentState == "submitted" || a.CurrentState == "in_review")
-            // Counted across the whole database until T101: a sub-speciality admin's "pending
-            // review" tile reported every institution's backlog. Activities carry their own
-            // SubSpecialityId stamp now, so the count answers for the sub-specialities this admin is
-            // scoped to. A null stamp belongs to nobody's programme and is counted by nobody.
-            .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
-            .CountAsync(cancellationToken);
-
         // Speciality and sub-speciality ids are national (College-owned, T091), so on their own they match every
         // adopting institution's trainees. This admin is scoped to their own institution, as ExportPortfolio and
         // ListTraineesForSpeciality already require (T130: the coverage card counts trainees, and counting other
         // institutions' trainees made "4 of 40 met" of a programme that has 9). A global Administrator sees all.
         var institutionId = request.Principal.GetInstitutionId();
         var isAdministrator = request.Principal.IsAdministrator();
+
+        // Counted across the whole database until T101: a sub-speciality admin's "pending review" tile reported every
+        // institution's backlog. T101 counted by the activity's SubSpecialityId stamp, which is national too, so the
+        // tile still counted every adopting institution's backlog in this sub-speciality until T185 conjoined the
+        // institution stamp, as the trainee counts below do. A null stamp belongs to nobody's programme and is counted
+        // by nobody.
+        var pendingReviewCount = !isAdministrator && institutionId is null
+            ? 0
+            : await _dbContext.Set<Activity>()
+                .AsNoTracking()
+                .Where(a => a.CurrentState == "submitted" || a.CurrentState == "in_review")
+                .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
+                .Where(a => isAdministrator || a.InstitutionId == institutionId)
+                .CountAsync(cancellationToken);
 
         var traineeProfiles = !isAdministrator && institutionId is null
             ? []

@@ -167,7 +167,7 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     ///   EPA field unsubmittable. The completion-time signal reports the consequence honestly instead.</item>
     /// </list>
     /// The profile is picked by <c>CreditTargetResolver.PickProfileAsync</c>, the same pick credit and
-    /// the write-path gate make: active first, then the most recent programme start, and deliberately NOT
+    /// the write-path gate make: the trainee's preferred profile (T185), and deliberately NOT
     /// filtered on <c>IsActive</c> — a graduated trainee still credits, so they must still be offered what
     /// credits.
     /// <para>

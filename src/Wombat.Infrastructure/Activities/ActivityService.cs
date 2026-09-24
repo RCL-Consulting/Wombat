@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -950,41 +951,29 @@ public sealed class ActivityService : IActivityService
 
     /// <summary>
     /// Programme oversight: the roles that supervise a trainee may read that trainee's assessments,
-    /// each at the level of the tree they are scoped to. A null stamp never matches. (T101)
+    /// each at the level of the tree they are scoped to. A null institution stamp never matches. (T101)
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// This is <see cref="TraineeScopeResolver.IsOverseenBy" />, asked of the scope stamped on the
+    /// activity rather than of the trainee's current profile: oversight follows the programme the
+    /// assessment was filed under. Until T185 it was a copy of that rule, which had to be kept in step
+    /// by hand; now there is one rule, and the list-shaped read boundary
+    /// (<c>ActivityReadScope.WhereReadableBy</c>) is pinned to it by a parity test.
+    /// </para>
+    /// <para>
     /// EVERY arm carries the institution, including the speciality ones. A speciality is owned by a
     /// College and is therefore a NATIONAL id (<see cref="Wombat.Domain.Institutions.Speciality.CollegeId" />),
     /// so <c>IsInSpeciality</c> alone would let one hospital's SpecialityAdmin read every paediatric
     /// trainee in the country. CLAUDE.md is explicit that a SpecialityAdmin is scoped to one speciality
     /// *within an institution*; the claim pair expresses that, neither claim on its own does.
+    /// </para>
     /// </remarks>
     private static bool IsScopedOverseerOf(Activity activity, ClaimsPrincipal principal)
-    {
-        if (activity.InstitutionId is not int institutionId ||
-            principal.GetInstitutionId() != institutionId)
-        {
-            return false;
-        }
-
-        if (principal.IsInstitutionalAdmin() ||
-            principal.IsInRole(WombatRoles.Coordinator) ||
-            principal.IsInRole(WombatRoles.CommitteeMember))
-        {
-            return true;
-        }
-
-        if (activity.SpecialityId is int specialityId &&
-            principal.IsInRole(WombatRoles.SpecialityAdmin) &&
-            principal.IsInSpeciality(specialityId))
-        {
-            return true;
-        }
-
-        return activity.SubSpecialityId is int subSpecialityId &&
-               principal.IsInRole(WombatRoles.SubSpecialityAdmin) &&
-               principal.IsInSubSpeciality(subSpecialityId);
-    }
+        => activity.InstitutionId is int institutionId &&
+           TraineeScopeResolver.IsOverseenBy(
+               new TraineeScope(institutionId, activity.SpecialityId, activity.SubSpecialityId),
+               principal);
 
     /// <summary>
     /// Whether any actor rule the pinned version declares — on a transition, a state, a section or a

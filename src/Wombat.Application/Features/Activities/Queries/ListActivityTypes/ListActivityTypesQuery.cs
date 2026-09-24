@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
@@ -246,8 +247,8 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
     /// The entrustment scales the subject's curriculum items are pinned to.
     /// </summary>
     /// <remarks>
-    /// The profile is resolved active-first then by latest <c>ProgrammeStartDate</c> and is NOT filtered
-    /// on <c>IsActive</c>, the items are scoped by <c>OwningInstitutionId</c>, and only items in force count
+    /// The profile is the trainee's preferred one (<see cref="TraineeScopeResolver.PreferredProfiles" />,
+    /// T185) and is NOT filtered on <c>IsActive</c>, the items are scoped by <c>OwningInstitutionId</c>, and only items in force count
     /// (<see cref="CurriculumItemsInForce" />, T158) — all three the same rules as
     /// <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so this picker and the EPA
     /// picker beside it on the same page cannot disagree about which curriculum items are in force. A ladder only a
@@ -257,14 +258,11 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
         string subjectUserId,
         CancellationToken cancellationToken)
     {
-        var profile = await _dbContext.Set<TraineeProfile>()
+        // The same pick as CreditTargetResolver.PickProfileAsync (T122, T185), so a user with two profiles gets the
+        // same curriculum here as in the EPA picker, the write path and credit.
+        var profile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == subjectUserId)
-            .OrderByDescending(entity => entity.IsActive)
-            .ThenByDescending(entity => entity.ProgrammeStartDate)
-            // The same final tie-break as CreditTargetResolver.PickProfileAsync (T122), so a user with two tied
-            // profiles gets the same curriculum here as in the EPA picker, the write path and credit.
-            .ThenByDescending(entity => entity.Id)
             .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 

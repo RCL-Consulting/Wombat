@@ -312,6 +312,41 @@ public sealed class ListActivityTypesNarrowingTests
         return await Offer(db, "ndlovu");
     }
 
+    [Fact]
+    public async Task TwoPastProfiles_TheMenuFollowsThePreferredProfile_NotTheLaterProgrammeStart()
+    {
+        // T185. The tool menu reads the profile credit reads: the preferred one, the highest id when none is active.
+        // It took the latest programme start, so here it offered the legacy five-rung tools of profile 90's curriculum
+        // while credit and the EPA picker read profile 95's, pinned to the CPSA ladder.
+        await using var db = CreateDb();
+        SeedLadders(db);
+        SeedTypes(db);
+        SeedTrainee(db, "ndlovu", pinnedTo: LegacyScaleId);
+        db.Set<TraineeProfile>().Local.Single(profile => profile.Id == 90).IsActive = false;
+        db.Set<Curriculum>().Add(new Curriculum
+        {
+            Id = 95, SubSpecialityId = 1, Name = "Earlier programme",
+            Version = "11.0", EffectiveFrom = new DateOnly(2020, 1, 1), IsActive = true
+        });
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 951, CurriculumId = 95, EpaId = 1, RequiredCount = 6, MinimumLevelOrder = 6, WindowMonths = 12,
+            ScaleId = CpsaScaleId
+        });
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 95, UserId = "ndlovu", CurriculumId = 95, InstitutionId = 2,
+            ProgrammeStartDate = new DateOnly(2020, 1, 1), ExpectedCompletionDate = new DateOnly(2024, 1, 1),
+            IsActive = false
+        });
+        await db.SaveChangesAsync();
+
+        var offered = await Offer(db, "ndlovu");
+
+        offered.Should().Contain("mini_cex_cpsa", "profile 95's curriculum pins the CPSA ladder");
+        offered.Should().NotContain("mini_cex_paed", "profile 90's legacy ladder is not the trainee's programme");
+    }
+
     private static async Task<IReadOnlyList<string>> Offer(ApplicationDbContext db, string subjectUserId)
     {
         var handler = new ListActivityTypesQueryHandler(db);

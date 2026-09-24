@@ -142,23 +142,6 @@ public sealed class EntrustmentDecisionHandlersTests
         active[0].EvidenceLinks.Should().ContainSingle().Which.CommitteeEvidenceId.Should().Be(EvidenceOnEpa8);
     }
 
-    [Fact]
-    public async Task ListExpiringDecisions_RespectsWindow()
-    {
-        await using var dbContext = CreateDbContext();
-        var review = await SeedRatifiedReviewAsync(dbContext);
-
-        var asOf = new DateOnly(2026, 4, 1);
-        await SeedStarAsync(dbContext, review.Id, 7, 3, asOf.AddDays(-30), asOf.AddDays(10));
-        await SeedStarAsync(dbContext, review.Id, 8, 4, asOf.AddDays(-30), asOf.AddDays(100));
-
-        var handler = new ListExpiringDecisionsQueryHandler(dbContext);
-        var expiring = await handler.Handle(new ListExpiringDecisionsQuery(30, asOf), CancellationToken.None);
-
-        expiring.Should().HaveCount(1);
-        expiring[0].EpaId.Should().Be(7);
-    }
-
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

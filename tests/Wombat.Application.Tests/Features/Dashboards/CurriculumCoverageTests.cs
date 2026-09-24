@@ -377,6 +377,103 @@ public sealed class CurriculumCoverageTests
     }
 
     [Fact]
+    public async Task ThePendingReviewTile_CountsOnlyTheCallersInstitution_ThoughTheSpecialityIsNational()
+    {
+        // T185. T101 counted the tile by the activity's speciality or sub-speciality stamp, and both ids are national:
+        // an activity at the other hospital, stamped with the same speciality, was in this hospital's backlog. The
+        // trainee counts beside it have conjoined the institution since T130; the tile now does too.
+        await using var db = CreateDb();
+        SeedProgramme(db);
+        db.ActivityTypes.Add(new Wombat.Domain.Activities.ActivityType
+        {
+            Id = 1, Key = "reflective_note", Name = "Reflective note", Scope = Wombat.Domain.Activities.ActivityScope.Global
+        });
+        AddPending(db, 1, "submitted", OurInstitution, specialityId: 1, subSpecialityId: 1);    // counted
+        AddPending(db, 2, "in_review", OtherInstitution, specialityId: 1, subSpecialityId: 1);  // the national leak
+        AddPending(db, 3, "submitted", OurInstitution, specialityId: 2, subSpecialityId: 3);    // another speciality
+        AddPending(db, 4, "draft", OurInstitution, specialityId: 1, subSpecialityId: 1);        // not pending
+        AddPending(db, 5, "submitted", null, specialityId: null, subSpecialityId: null);        // unstamped: nobody's
+        // No institution, but a speciality: SubjectScopeResolver's identity fallback can stamp a subject with no profile
+        // this way. A caller with no institution claim must not match it by null equalling null.
+        AddPending(db, 6, "submitted", null, specialityId: 1, subSpecialityId: 1);
+        Commit(db);
+
+        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+            new GetSpecialityAdminDashboardSummaryQuery(SpecialityAdmin(1), AsOf), CancellationToken.None);
+        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+            new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
+
+        speciality.PendingReviewCount.Should().Be(1, "only activity 1 is pending, in speciality 1, at this institution");
+        subSpeciality.PendingReviewCount.Should().Be(1, "only activity 1 is pending, in sub-speciality 1, at this institution");
+
+        var noInstitution = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "nowhere"),
+                new Claim(ClaimTypes.Role, WombatRoles.SpecialityAdmin),
+                new Claim(WombatClaimTypes.SpecialityId, "1")
+            ],
+            "test"));
+        (await new GetSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+                new GetSpecialityAdminDashboardSummaryQuery(noInstitution, AsOf), CancellationToken.None))
+            .PendingReviewCount.Should().Be(0, "a staff member with no institution oversees none, activity 6 included");
+
+        var noInstitutionSubSpeciality = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "nowhere-sub"),
+                new Claim(ClaimTypes.Role, WombatRoles.SubSpecialityAdmin),
+                new Claim(WombatClaimTypes.SubSpecialityId, "1")
+            ],
+            "test"));
+        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+                new GetSubSpecialityAdminDashboardSummaryQuery(noInstitutionSubSpeciality, AsOf), CancellationToken.None))
+            .PendingReviewCount.Should().Be(0, "a staff member with no institution oversees none, activity 6 included");
+
+        var administrator = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "admin"),
+                new Claim(ClaimTypes.Role, WombatRoles.Administrator),
+                new Claim(WombatClaimTypes.SubSpecialityId, "1")
+            ],
+            "test"));
+        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+                new GetSubSpecialityAdminDashboardSummaryQuery(administrator, AsOf), CancellationToken.None))
+            .PendingReviewCount.Should().Be(3, "a global Administrator counts every institution's, and one stamped with none");
+    }
+
+    [Fact]
+    public async Task CommitteeMemberDashboard_ForACommitteeMemberWhoIsAlsoATrainee_NamesNoPeer()
+    {
+        // T185: someone who holds Trainee is a trainee first (TraineeScopeResolver.ActsAsTrainee). A registrar on the
+        // committee as the trainees' representative would otherwise see every peer named beside the targets they have
+        // met, which the trainee rung refuses them on every other progress read.
+        await using var db = CreateDb();
+        SeedProgramme(db);
+        var users = TraineeNames();
+
+        var registrar = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "amara"),
+                new Claim(ClaimTypes.Role, WombatRoles.Trainee),
+                new Claim(ClaimTypes.Role, WombatRoles.CommitteeMember),
+                new Claim(WombatClaimTypes.InstitutionId, OurInstitution.ToString()),
+                new Claim(WombatClaimTypes.SubSpecialityId, "1"),
+                new Claim(WombatClaimTypes.SubSpecialityId, "2")
+            ],
+            "test"));
+
+        var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, users.Object).Handle(
+            new GetCommitteeMemberDashboardSummaryQuery(registrar, AsOf), CancellationToken.None);
+
+        result.TraineeTargets.Should().BeEmpty();
+        result.EpaTargets.Should().BeEmpty();
+        result.ExemptTraineeCount.Should().Be(0);
+        result.CurrentSemesterName.Should().Be("Semester 2, 2026", "the card still names the semester it is empty for");
+        users.Verify(
+            service => service.GetDisplayNamesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task AStaffMemberWithNoInstitutionSeesNoTrainees_AndAnAdministratorSeesThemAll()
     {
         await using var db = CreateDb();
@@ -690,6 +787,18 @@ public sealed class CurriculumCoverageTests
             UserId = userId, InstitutionId = institutionId, CurriculumId = curriculumId,
             ProgrammeStartDate = programmeStart, ExpectedCompletionDate = programmeStart.AddYears(4),
             IsActive = isActive
+        });
+
+    /// <summary>An activity of type 1 in this state, stamped with this scope, as the pending-review tile reads it.</summary>
+    private static void AddPending(
+        ApplicationDbContext db, int id, string state, int? institutionId, int? specialityId, int? subSpecialityId)
+        => db.Activities.Add(new Wombat.Domain.Activities.Activity
+        {
+            Id = id, ActivityTypeId = 1, SchemaVersion = 1, SubjectUserId = $"trainee-{id}",
+            CreatedByUserId = $"trainee-{id}", CurrentState = state, DataJson = "{}",
+            InstitutionId = institutionId, SpecialityId = specialityId, SubSpecialityId = subSpecialityId,
+            CreatedOn = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc),
+            UpdatedOn = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
         });
 
     private static void AddRow(ApplicationDbContext db, int curriculumItemId, string traineeUserId, int year, int semester, int counts)

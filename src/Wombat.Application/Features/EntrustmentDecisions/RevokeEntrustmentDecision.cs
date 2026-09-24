@@ -57,7 +57,7 @@ public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<Re
             .Include(d => d.EvidenceLinks)
             .SingleOrDefaultAsync(d => d.Id == request.DecisionId, cancellationToken);
 
-        if (decision is null && request.Principal.IsAdministrator())
+        if (decision is null && EntrustmentDecisionAuthorization.MayRevokeEveryDecision(request.Principal))
         {
             throw new InvalidOperationException("The entrustment decision could not be found.");
         }

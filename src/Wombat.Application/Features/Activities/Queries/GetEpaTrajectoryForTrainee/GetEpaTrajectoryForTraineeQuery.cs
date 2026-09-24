@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
@@ -254,13 +255,13 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     /// <c>PaediatricCatalogueSeeder</c> force-overwrites it on every boot.
     /// </para>
     /// <para>
-    /// The profile is resolved active-first, then by latest <c>ProgrammeStartDate</c>, and is NOT
-    /// filtered on <c>IsActive</c> — the same rule as
-    /// <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so the chart and the credit
-    /// engine cannot disagree about which profile row is in force, and a graduated trainee still has a
-    /// trajectory worth reading. This differs from <c>GetCurriculumProgressForTrainee</c>, the other
-    /// query on the same page, which takes the active profile only; if those two are ever reconciled
-    /// they should be reconciled towards this one.
+    /// The profile is the trainee's preferred one (<see cref="TraineeScopeResolver.PreferredProfiles" />:
+    /// the active one, else the highest id), NOT filtered on <c>IsActive</c> — the one pick the credit
+    /// engine, the EPA picker and the export make (T185), so the chart and credit cannot disagree about
+    /// which profile row is in force, and a graduated trainee still has a trajectory worth reading. Until
+    /// T185 this broke ties by the latest <c>ProgrammeStartDate</c> with no final tie-break at all.
+    /// <c>GetCurriculumProgressForTrainee</c>, the other query on the same page, reads the same profile
+    /// but only while it is active: it reads today's targets, and a completed programme has none.
     /// </para>
     /// <para>
     /// Every step is permissive: no profile, no curriculum item for the EPA, or an unpinned item all
@@ -280,11 +281,9 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     {
         var none = new PinnedLadders([], [], EntrustmentRungLookup.Empty);
 
-        var profile = await _dbContext.Set<TraineeProfile>()
+        var profile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
-            .OrderByDescending(entity => entity.IsActive)
-            .ThenByDescending(entity => entity.ProgrammeStartDate)
             .Select(entity => new { entity.CurriculumId, entity.InstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 
