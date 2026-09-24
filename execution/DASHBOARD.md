@@ -75,9 +75,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+a0a8f11 docs(execution): close T162 (browser-verified, scripted Chrome) and T167 (pickers verified; the new snapshot's browser check moves to T204, which seeds a dev Coordinator)
 5ae1141 fix(activities): the system-written MSF evidence type is not offered to or creatable by a person; the dead permission-rule table is dropped (T162)
 fb5a3f4 feat(committee): the evidence snapshot names each line's EPA, instrument, rating and encounter date and groups by EPA; a STAR is staged, issued and ratified only on an in-force EPA of the trainee's curriculum (T167)
 1a89410 docs(execution): close T169 (browser-verified, activity 32, exports 3–8) and T184 (tests; its browser checks were blocked by the credential permission and are left for the operator)
 45e7ed7 docs(execution): file T200–T203 from the T169 and T184 reviews (PDF render race, audit on a failed save, MSF withdraw/respondent path, terminal-state dashboards)
-d640787 fix(msf): respondent emails are redacted from the audit log, a failed invitation send leaves the campaign unopened, and one routine anonymises (T184)
 ```

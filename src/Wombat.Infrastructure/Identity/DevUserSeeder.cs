@@ -9,7 +9,7 @@ namespace Wombat.Infrastructure.Identity;
 
 /// <summary>
 /// Seeds dev-only users so the GUI review (and other local browser verification)
-/// can sign in as a Trainee, CommitteeMember or Assessor without walking the full
+/// can sign in as a Trainee, CommitteeMember, Assessor or Coordinator without walking the full
 /// invitation flow each time. Only invoked from Program.cs when
 /// <c>IHostEnvironment.IsDevelopment()</c> is true. Production deployments
 /// must never run this — the seed credentials are hardcoded by design.
@@ -35,6 +35,11 @@ public sealed class DevUserSeeder
     private const string CommitteeMemberPassword = "ChangeThisCommittee123!";
     private const string AssessorEmail = "assessor@wombat.local";
     private const string AssessorPassword = "ChangeThisAssessor123!";
+
+    // A Coordinator schedules committee reviews and runs MSF campaigns. Since T182 no other dev account but the
+    // administrator can schedule a review, and verification must not depend on the administrator's credential (T204).
+    private const string CoordinatorEmail = "coordinator@wombat.local";
+    private const string CoordinatorPassword = "ChangeThisCoordinator123!";
 
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
@@ -94,6 +99,7 @@ public sealed class DevUserSeeder
         await EnsureTraineeAsync(traineeCurriculumId, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(CommitteeMemberEmail, CommitteeMemberPassword, "Committee", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
+        await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId, scopes, cancellationToken);
     }
 
     private async Task EnsureTraineeAsync(
