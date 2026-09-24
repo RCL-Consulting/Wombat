@@ -1,12 +1,13 @@
 ---
 id: T147
 title: CampaignEdit's EPA checkbox group has a label pointing at no element
-status: queued
+status: in_progress
 priority: P3
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-23
+started: 2026-09-24
 ---
 
 # T147 — The MSF campaign's "Evidence for these EPAs" label is for an id nothing has

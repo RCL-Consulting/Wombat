@@ -88,8 +88,15 @@
                      HelpText="How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.">
             <InputNumber id="msf-min-category-count" class="form-control" @bind-Value="_campaign.MinimumRespondentCategories" />
           </FormField>
-          <FormField Label="Evidence for these EPAs" InputId="msf-epas" Required="true" FullWidth="true"
-                     HelpText="One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.">
+          @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
+             names the group (DESIGN.md § Form system, T147). *@
+          <fieldset class="full-width" aria-describedby="msf-epas-help">
+            <legend>
+              Evidence for these EPAs
+              <span aria-hidden="true">*</span>
+              <span class="visually-hidden">required</span>
+            </legend>
+            <p id="msf-epas-help" class="muted">One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.</p>
             @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
             {
               <p class="page-subtitle">Select a trainee first.</p>
@@ -100,20 +107,22 @@
             }
             else
             {
-              @foreach (var epa in _epaOptions)
-              {
-                <div class="form-check">
-                  <input
-                    id="@($"msf-epa-{epa.Value}")"
-                    class="form-check-input"
-                    type="checkbox"
-                    checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
-                    @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
-                  <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
-                </div>
-              }
+              <div class="check-grid">
+                @foreach (var epa in _epaOptions)
+                {
+                  <div class="form-check">
+                    <input
+                      id="@($"msf-epa-{epa.Value}")"
+                      class="form-check-input"
+                      type="checkbox"
+                      checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
+                      @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
+                    <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
+                  </div>
+                }
+              </div>
             }
-          </FormField>
+          </fieldset>
         </div>
         <FormActions>
           <button type="submit" class="btn btn-primary">Create campaign</button>
