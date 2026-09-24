@@ -38,6 +38,18 @@ internal static class TestPrincipals
         int? subSpecialityId = null)
         => Build(userId, new[] { role }, institutionId, collegeId: null, specialityId, subSpecialityId);
 
+    /// <summary>
+    /// Several roles on one sign-in, with one institution and the scope claims: users hold several roles, and a rule
+    /// that asks for a role and a scope separately can be passed by one role's role and another's scope. (T183)
+    /// </summary>
+    public static ClaimsPrincipal InRoles(
+        IEnumerable<string> roles,
+        string userId,
+        int? institutionId,
+        int? specialityId = null,
+        int? subSpecialityId = null)
+        => Build(userId, roles, institutionId, collegeId: null, specialityId, subSpecialityId);
+
     public static ClaimsPrincipal Anonymous() => new();
 
     private static ClaimsPrincipal Build(

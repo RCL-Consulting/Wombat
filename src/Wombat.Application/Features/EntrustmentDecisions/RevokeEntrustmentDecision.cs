@@ -3,8 +3,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
@@ -41,22 +41,34 @@ public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<Re
         _dbContext = dbContext;
     }
 
+    /// <remarks>
+    /// Every check runs before <see cref="EntrustmentDecision.Revoke" />, the one mutation: the audit pipeline saves the
+    /// request's DbContext from its catch, so a refusal after it would commit the revocation it refused. A decision id
+    /// that names nothing is refused exactly as one out of the caller's scope is (T183); only an Administrator, who may
+    /// revoke every decision, is told plainly that it does not exist.
+    /// </remarks>
     public async Task<EntrustmentDecisionDto> Handle(RevokeEntrustmentDecisionCommand request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request.Principal);
+
         var decision = await _dbContext.Set<EntrustmentDecision>()
             .Include(d => d.Epa)
             .Include(d => d.AuthorisedLevel)
             .Include(d => d.EvidenceLinks)
-            .SingleOrDefaultAsync(d => d.Id == request.DecisionId, cancellationToken)
-            ?? throw new InvalidOperationException("The entrustment decision could not be found.");
+            .SingleOrDefaultAsync(d => d.Id == request.DecisionId, cancellationToken);
 
-        var review = await _dbContext.Set<CommitteeReview>()
-            .Include(entity => entity.Panel)
-                .ThenInclude(panel => panel.Members)
-            .SingleOrDefaultAsync(entity => entity.Id == decision.IssuedByCommitteeReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The issuing committee review could not be found.");
+        if (decision is null && request.Principal.IsAdministrator())
+        {
+            throw new InvalidOperationException("The entrustment decision could not be found.");
+        }
 
-        EntrustmentDecisionAuthorization.DemandRevocationAccess(request.Principal, review.Panel);
+        if (decision is null)
+        {
+            throw new UnauthorizedAccessException(EntrustmentDecisionAuthorization.DecisionNotRevocableByCaller);
+        }
+
+        await EntrustmentDecisionAuthorization.DemandRevocationAccessAsync(
+            _dbContext, request.Principal, decision, cancellationToken);
         var actorUserId = EntrustmentDecisionAuthorization.GetRequiredUserId(request.Principal);
 
         decision.Revoke(request.Reason, actorUserId, DateTime.UtcNow);

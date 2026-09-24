@@ -9,12 +9,14 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.Portfolio;
 using Wombat.Web.Services;
+using EntrustmentDecisionsAdmin = Wombat.Web.Components.Pages.Admin.EntrustmentDecisions.Index;
 using Wombat.Web.Tests.Activities;
 
 namespace Wombat.Web.Tests.Security;
@@ -37,6 +39,8 @@ public sealed class CallerPrincipalPageTests : TestContext
 {
     private const string TraineeUserId = "trainee-1";
     private const string CoordinatorUserId = "coordinator-1";
+    private const string AdminUserId = "admin-1";
+    private const int DecisionId = 41;
     private const int CampaignId = 5;
 
     private readonly TestAuthorizationContext _auth;
@@ -117,6 +121,83 @@ public sealed class CallerPrincipalPageTests : TestContext
 
         cut.Markup.Should().NotContain("Selected report");
         cut.Markup.Should().NotContain(SecretNarrative);
+    }
+
+    [Fact]
+    public void MyAuthorisations_SaysSo_WhenTheCertificateComesBackEmpty()
+    {
+        // The handler answers a certificate the caller may not have, and one that does not exist, with null. (T183)
+        SignIn(TraineeUserId, WombatRoles.Trainee);
+        _sender
+            .On<GetActiveDecisionsForTraineeQuery>(_ => new[] { Decision(TraineeUserId) })
+            .On<DownloadEntrustmentCertificateCommand>(_ => null);
+
+        var cut = RenderComponent<MyAuthorisations>();
+        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Contains("Download certificate")));
+
+        cut.FindAll("button").Single(button => button.TextContent.Contains("Download certificate")).Click();
+        cut.WaitForState(() => cut.Markup.Contains("The certificate could not be found."));
+
+        var download = _sender.Single<DownloadEntrustmentCertificateCommand>();
+        download.DecisionId.Should().Be(DecisionId);
+        CallerOf(download.Principal).Should().Be(TraineeUserId);
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "wombatFileDownload");
+    }
+
+    // ─── The entrustment-decision admin page ─────────────────────────────────
+
+    [Theory]
+    [InlineData(WombatRoles.Administrator)]
+    [InlineData(WombatRoles.InstitutionalAdmin)]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    public void EntrustmentDecisionsAdmin_ListsDownloadsAndRevokes_AsTheSignedInAdmin(string role)
+    {
+        // Each handler narrows to the trainees its caller oversees (T183), so each must be asked as that caller.
+        SignIn(AdminUserId, role);
+        _sender
+            .On<ListEntrustmentDecisionsForAdminQuery>(_ => new[] { Decision(TraineeUserId) })
+            .On<DownloadEntrustmentCertificateCommand>(_ => new EntrustmentCertificateResult([0x25, 0x50, 0x44, 0x46], "star.pdf", "hash"))
+            .On<RevokeEntrustmentDecisionCommand>(_ => Decision(TraineeUserId));
+
+        var cut = RenderComponent<EntrustmentDecisionsAdmin>();
+        cut.WaitForState(() => cut.Markup.Contains("PAED-001"));
+
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Download").Click();
+        cut.WaitForState(() => JSInterop.Invocations.Any(invocation => invocation.Identifier == "wombatFileDownload"));
+
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Revoke").Click();
+        cut.Find("#revoke-reason").Change("Concern raised at the site.");
+        cut.FindAll("button").Single(button => button.TextContent.Contains("Confirm revocation")).Click();
+        cut.WaitForState(() => cut.Markup.Contains("revoked"));
+
+        var lists = _sender.Received.OfType<ListEntrustmentDecisionsForAdminQuery>().ToList();
+        lists.Should().NotBeEmpty();
+        lists.Should().OnlyContain(query => CallerOf(query.Principal) == AdminUserId);
+
+        var download = _sender.Single<DownloadEntrustmentCertificateCommand>();
+        download.DecisionId.Should().Be(DecisionId);
+        CallerOf(download.Principal).Should().Be(AdminUserId);
+
+        var revoke = _sender.Single<RevokeEntrustmentDecisionCommand>();
+        revoke.DecisionId.Should().Be(DecisionId);
+        CallerOf(revoke.Principal).Should().Be(AdminUserId);
+    }
+
+    [Fact]
+    public void EntrustmentDecisionsAdmin_SaysSo_WhenTheCertificateIsOutOfScope()
+    {
+        SignIn(AdminUserId, WombatRoles.InstitutionalAdmin);
+        _sender
+            .On<ListEntrustmentDecisionsForAdminQuery>(_ => new[] { Decision(TraineeUserId) })
+            .On<DownloadEntrustmentCertificateCommand>(_ => null);
+
+        var cut = RenderComponent<EntrustmentDecisionsAdmin>();
+        cut.WaitForState(() => cut.Markup.Contains("PAED-001"));
+
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Download").Click();
+        cut.WaitForState(() => cut.Markup.Contains("could not be found among the decisions you oversee"));
+
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "wombatFileDownload");
     }
 
     // ─── The coordinator's pages ─────────────────────────────────────────────
@@ -241,6 +322,11 @@ public sealed class CallerPrincipalPageTests : TestContext
     private static TraineeProfileDto Trainee()
         => new(1, TraineeUserId, "trainee@test", "Thandi", "Mokoena", 2, "Paediatrics", "11.1", 3, "Paediatrics", 4,
             "General Paediatrics", new DateOnly(2026, 1, 1), new DateOnly(2029, 12, 31), true);
+
+    private static EntrustmentDecisionDto Decision(string traineeUserId)
+        => new(DecisionId, traineeUserId, 101, "PAED-001", "Resuscitate a critically ill child", 3, "3a", 3,
+            new DateOnly(2026, 7, 1), null, 30, "chair-1", "Consistent across the period.", EntrustmentDecisionStatus.Active,
+            null, null, null, null, []);
 
     private static MsfCampaignSummaryDto Summary(string subjectUserId)
         => new(CampaignId, subjectUserId, "Default MSF", new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 15), 8, 3,

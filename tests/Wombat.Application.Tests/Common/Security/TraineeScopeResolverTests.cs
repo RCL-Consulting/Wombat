@@ -22,6 +22,7 @@ public sealed class TraineeScopeResolverTests
     private const int PaediatricsSpeciality = 1;
     private const int GeneralPaediatrics = 11;
     private const int SurgerySpeciality = 2;
+    private const int GeneralSurgery = 21;
 
     // ─── The tie-break ───────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ public sealed class TraineeScopeResolverTests
         (await TraineeScopeResolver.ResolveAsync(db, "nobody", CancellationToken.None)).Should().BeNull();
     }
 
-    // ─── The set form ────────────────────────────────────────────────────────
+    // ─── The set forms ───────────────────────────────────────────────────────
 
     [Fact]
     public async Task ResolveAll_AgreesWithResolve_TraineeByTrainee_AndHoldsOnlyTheInstitutionAskedFor()
@@ -129,6 +130,40 @@ public sealed class TraineeScopeResolverTests
             "a trainee is at the institution of their preferred profile only, so the one who moved is not here");
         host["whole"].Should().Be(new TraineeScope(HostInstitution, PaediatricsSpeciality, GeneralPaediatrics));
         host["no-curriculum"].Should().Be(new TraineeScope(HostInstitution, null, null));
+    }
+
+    [Fact]
+    public async Task ResolveMany_GivesEachTraineeTheirOwnScope_AndDegradesEachLevelForThoseWhoNameIt()
+    {
+        // The list form (T183): one call over several trainees, each answered as ResolveAsync answers them alone. A
+        // missing curriculum or sub-speciality nulls that level for the trainee who names it, and nobody else.
+        await using var db = CreateDb();
+        SeedTree(db);
+        db.Curricula.Add(new Curriculum { Id = 101, SubSpecialityId = 999, Name = "Orphaned", Version = "1" });
+        AddProfile(db, id: 1, "trainee-1", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 100);
+        AddProfile(db, id: 2, "trainee-2", OtherInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 999);
+        AddProfile(db, id: 3, "trainee-3", OtherInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 101);
+        AddProfile(db, id: 4, "trainee-4", HostInstitution, isActive: false, start: new DateOnly(2025, 1, 1), curriculumId: 100);
+        AddProfile(db, id: 5, "trainee-4", OtherInstitution, isActive: false, start: new DateOnly(2020, 1, 1), curriculumId: 100);
+        await db.SaveChangesAsync();
+
+        var scopes = await TraineeScopeResolver.ResolveManyAsync(
+            db, ["trainee-1", "trainee-2", "trainee-3", "trainee-4", "nobody", "trainee-1", " "], CancellationToken.None);
+
+        scopes.Should().BeEquivalentTo(new Dictionary<string, TraineeScope>
+        {
+            ["trainee-1"] = new(HostInstitution, PaediatricsSpeciality, GeneralPaediatrics),
+            ["trainee-2"] = new(OtherInstitution, null, null),
+            ["trainee-3"] = new(OtherInstitution, null, 999),
+            ["trainee-4"] = new(OtherInstitution, PaediatricsSpeciality, GeneralPaediatrics)
+        });
+
+        foreach (var (userId, scope) in scopes)
+        {
+            (await TraineeScopeResolver.ResolveAsync(db, userId, CancellationToken.None)).Should().Be(scope, userId);
+        }
+
+        (await TraineeScopeResolver.ResolveManyAsync(db, [], CancellationToken.None)).Should().BeEmpty();
     }
 
     // ─── The read ladder ─────────────────────────────────────────────────────
@@ -193,6 +228,39 @@ public sealed class TraineeScopeResolverTests
             .Should().BeFalse();
     }
 
+    // ─── Administration, the admin half of oversight ─────────────────────────
+
+    public static TheoryData<string, bool, bool> OversightAndAdministration => new()
+    {
+        // caller, oversees, administers
+        { "an InstitutionalAdmin of the trainee's institution", true, true },
+        { "a SpecialityAdmin of the trainee's speciality at their institution", true, true },
+        { "a SubSpecialityAdmin of the trainee's sub-speciality at their institution", true, true },
+        { "a Coordinator at the trainee's institution", true, false },
+        { "a CommitteeMember at the trainee's institution", true, false },
+        // Users hold several roles: the oversight role reads, and does not lend its institution-wide reach to the
+        // admin role beside it.
+        { "a SpecialityAdmin of another speciality at the trainee's institution who also sits on its committee", true, false },
+        { "a SubSpecialityAdmin of another sub-speciality at the trainee's institution who also coordinates there", true, false },
+        { "a SpecialityAdmin of another speciality at the trainee's institution", false, false },
+        { "an InstitutionalAdmin of another institution", false, false },
+        { "a SpecialityAdmin of the trainee's speciality at another institution", false, false },
+        { "a classmate: another Trainee at the same institution", false, false }
+    };
+
+    [Theory]
+    [MemberData(nameof(OversightAndAdministration))]
+    public void IsAdministeredBy_IsTheAdminHalfOfIsOverseenBy_EachRoleAtItsOwnLevel(string caller, bool oversees, bool administers)
+    {
+        // What only an administrator may do about a trainee (revoke their entrustment, T183) asks for the admin role and
+        // its scope together; "holds an admin role" and IsOverseenBy asked separately let a committee seat stand in for
+        // the scope.
+        var scope = new TraineeScope(HostInstitution, PaediatricsSpeciality, GeneralPaediatrics);
+
+        TraineeScopeResolver.IsOverseenBy(scope, Caller(caller)).Should().Be(oversees, caller);
+        TraineeScopeResolver.IsAdministeredBy(scope, Caller(caller)).Should().Be(administers, caller);
+    }
+
     private static ClaimsPrincipal Caller(string caller) => caller switch
     {
         "the trainee themselves" => TestPrincipals.Trainee("trainee-1", HostInstitution),
@@ -211,6 +279,12 @@ public sealed class TraineeScopeResolverTests
             TestPrincipals.InRole(WombatRoles.SpecialityAdmin, "spec-2", OtherInstitution, specialityId: PaediatricsSpeciality),
         "a SpecialityAdmin of another speciality at the trainee's institution" =>
             TestPrincipals.InRole(WombatRoles.SpecialityAdmin, "spec-3", HostInstitution, specialityId: SurgerySpeciality),
+        "a SpecialityAdmin of another speciality at the trainee's institution who also sits on its committee" =>
+            TestPrincipals.InRoles(
+                [WombatRoles.SpecialityAdmin, WombatRoles.CommitteeMember], "spec-4", HostInstitution, specialityId: SurgerySpeciality),
+        "a SubSpecialityAdmin of another sub-speciality at the trainee's institution who also coordinates there" =>
+            TestPrincipals.InRoles(
+                [WombatRoles.SubSpecialityAdmin, WombatRoles.Coordinator], "sub-2", HostInstitution, subSpecialityId: GeneralSurgery),
         "a classmate: another Trainee at the same institution" => TestPrincipals.Trainee("trainee-2", HostInstitution),
         "an Assessor at the same institution" => TestPrincipals.InRole(WombatRoles.Assessor, "assessor-1", HostInstitution),
         "a principal with no claims at all" => TestPrincipals.Anonymous(),

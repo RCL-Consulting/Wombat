@@ -22,13 +22,12 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// To schedule (<see cref="DemandSchedulableAsync" />), the trainee's preferred profile must be at the panel's
 /// institution, whoever schedules, a global Administrator included: a panel's members may act only on reviews of its
 /// own institution's trainees, so a review of anyone else would be one only an Administrator could run. Anyone but an
-/// Administrator must also oversee that trainee through a role that schedules reviews, which is T113's rule
-/// (<see cref="TraineeScopeResolver.IsOverseenBy(TraineeScope, ClaimsPrincipal, bool)" />) without its
-/// CommitteeMember arm: same institution, and for a SpecialityAdmin or SubSpecialityAdmin the trainee's own speciality
-/// or sub-speciality. An unknown trainee, a trainee with no profile and a trainee at another institution are refused
-/// alike, and so is an unknown panel, so the refusal never confirms that an id names someone. The scheduling page's
-/// picker (<see cref="ListSchedulableTraineesQuery" />) offers exactly the trainees this accepts, through
-/// <see cref="MayScheduleFor" />.
+/// Administrator must also oversee that trainee through a role that schedules reviews, which is T113's rule without its
+/// CommitteeMember arm (<see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" />): same institution, and for a
+/// SpecialityAdmin or SubSpecialityAdmin the trainee's own speciality or sub-speciality. An unknown trainee, a trainee
+/// with no profile and a trainee at another institution are refused alike, and so is an unknown panel, so the refusal
+/// never confirms that an id names someone. The scheduling page's picker (<see cref="ListSchedulableTraineesQuery" />)
+/// offers exactly the trainees this accepts, through <see cref="MayScheduleFor" />.
 /// </item>
 /// <item>
 /// To act on a review already scheduled (<see cref="DemandTraineeAtPanelInstitutionAsync" />), its trainee must
@@ -82,12 +81,12 @@ internal static class CommitteeTraineeScope
             return false;
         }
 
-        // Without the CommitteeMember arm: someone who also sits on a committee must not borrow that role's reach for
-        // a right it does not grant. The role check stays as the statement of who schedules; the remaining arms of the
-        // overseer rule are those same roles.
+        // Not IsOverseenBy: its CommitteeMember arm would let someone who also sits on a committee borrow that role's
+        // reach for a right it does not grant. The role check stays as the statement of who schedules; the arms of
+        // IsAdministeredOrCoordinatedBy are those same roles.
         return principal.IsAdministrator() ||
                (CommitteeDecisionAuthorization.MayScheduleReviews(principal) &&
-                TraineeScopeResolver.IsOverseenBy(trainee, principal, throughCommitteeMembership: false));
+                TraineeScopeResolver.IsAdministeredOrCoordinatedBy(trainee, principal));
     }
 
     /// <summary>

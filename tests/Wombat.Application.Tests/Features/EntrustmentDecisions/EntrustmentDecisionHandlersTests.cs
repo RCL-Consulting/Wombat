@@ -5,6 +5,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -102,7 +103,7 @@ public sealed class EntrustmentDecisionHandlersTests
             CancellationToken.None));
 
         var revokedByAdmin = await revokeHandler.Handle(
-            new RevokeEntrustmentDecisionCommand(issued.Id, "Scope reduced by programme.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin])),
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Scope reduced by programme.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
             CancellationToken.None);
 
         revokedByAdmin.Status.Should().Be(EntrustmentDecisionStatus.Revoked);
@@ -180,7 +181,7 @@ public sealed class EntrustmentDecisionHandlersTests
 
         var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext);
         await revokeHandler.Handle(
-            new RevokeEntrustmentDecisionCommand(first.Id, "Revoked.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin])),
+            new RevokeEntrustmentDecisionCommand(first.Id, "Revoked.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
             CancellationToken.None);
 
         var queryHandler = new GetActiveDecisionsForTraineeQueryHandler(dbContext);
@@ -286,17 +287,21 @@ public sealed class EntrustmentDecisionHandlersTests
         dbContext.Institutions.Add(institution);
         dbContext.Specialities.Add(speciality);
         dbContext.SubSpecialities.Add(subSpec);
+
+        // The trainee trains at the test hospital, so its InstitutionalAdmin oversees them (T183), and it is the panel's
+        // institution: a panel acts only on its own institution's trainees (T182).
+        dbContext.Curricula.Add(new Curriculum { Id = 40, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 40,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1), IsActive = true
+        });
+
         dbContext.EntrustmentScales.Add(scale);
         dbContext.EntrustmentLevels.AddRange(levels);
         dbContext.Epas.AddRange(epa7, epa8);
         dbContext.DecisionPanels.Add(panel);
         dbContext.CommitteeReviews.Add(review);
-        // The trainee trains at the panel's institution: a panel acts only on its own institution's trainees. (T182)
-        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
-        {
-            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1, IsActive = true,
-            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1)
-        });
         await dbContext.SaveChangesAsync();
 
         if (startReview)
@@ -310,7 +315,7 @@ public sealed class EntrustmentDecisionHandlersTests
         return await dbContext.Set<CommitteeReview>().SingleAsync(r => r.Id == review.Id);
     }
 
-    private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles)
+    private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles, int? institutionId = null)
     {
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId) };
         foreach (var role in roles)
@@ -318,6 +323,11 @@ public sealed class EntrustmentDecisionHandlersTests
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
         claims.Add(new Claim(WombatClaimTypes.SpecialityId, "5"));
+        if (institutionId.HasValue)
+        {
+            claims.Add(new Claim(WombatClaimTypes.InstitutionId, institutionId.Value.ToString()));
+        }
+
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 }

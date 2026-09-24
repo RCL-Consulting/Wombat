@@ -5,6 +5,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -28,7 +29,7 @@ public sealed class DownloadEntrustmentCertificateTests
             new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
             CancellationToken.None);
 
-        result.FileName.Should().NotBeNullOrWhiteSpace();
+        result!.FileName.Should().NotBeNullOrWhiteSpace();
         pdf.Calls.Should().Be(1);
     }
 
@@ -41,15 +42,16 @@ public sealed class DownloadEntrustmentCertificateTests
         var pdf = new FakePdfService();
         var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
+        var result = await handler.Handle(
             new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("other-trainee", [WombatRoles.Trainee])),
-            CancellationToken.None));
+            CancellationToken.None);
 
+        result.Should().BeNull();
         pdf.Calls.Should().Be(0);
     }
 
     [Fact]
-    public async Task InstitutionalAdminCanDownloadAny()
+    public async Task InstitutionalAdminOfTheTraineesInstitutionCanDownload()
     {
         await using var dbContext = CreateDbContext();
         var decisionId = await SeedIssuedDecisionAsync(dbContext);
@@ -58,14 +60,32 @@ public sealed class DownloadEntrustmentCertificateTests
         var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
 
         var result = await handler.Handle(
-            new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin])),
+            new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
             CancellationToken.None);
 
-        result.FileName.Should().NotBeNullOrWhiteSpace();
+        result!.FileName.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
-    public async Task IssuingPanelChairCanDownload()
+    public async Task InstitutionalAdminOfAnotherInstitutionGetsNothing()
+    {
+        // Until T183 the role alone was enough, wherever the trainee trained.
+        await using var dbContext = CreateDbContext();
+        var decisionId = await SeedIssuedDecisionAsync(dbContext);
+
+        var pdf = new FakePdfService();
+        var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
+
+        var result = await handler.Handle(
+            new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("admin-2", [WombatRoles.InstitutionalAdmin], institutionId: 2)),
+            CancellationToken.None);
+
+        result.Should().BeNull();
+        pdf.Calls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task TheChairWhoIssuedItCanDownload()
     {
         await using var dbContext = CreateDbContext();
         var decisionId = await SeedIssuedDecisionAsync(dbContext);
@@ -77,7 +97,7 @@ public sealed class DownloadEntrustmentCertificateTests
             new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
-        result.FileName.Should().NotBeNullOrWhiteSpace();
+        result!.FileName.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -89,21 +109,26 @@ public sealed class DownloadEntrustmentCertificateTests
         var pdf = new FakePdfService();
         var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
-            new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("assessor-1", [WombatRoles.Assessor])),
-            CancellationToken.None));
+        var result = await handler.Handle(
+            new DownloadEntrustmentCertificateCommand(decisionId, CreatePrincipal("assessor-1", [WombatRoles.Assessor], institutionId: 1)),
+            CancellationToken.None);
+
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task MissingDecisionThrows()
+    public async Task MissingDecisionIsNull_AsAnOutOfScopeOneIs()
     {
         await using var dbContext = CreateDbContext();
         var pdf = new FakePdfService();
         var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
-            new DownloadEntrustmentCertificateCommand(999, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin])),
-            CancellationToken.None));
+        var result = await handler.Handle(
+            new DownloadEntrustmentCertificateCommand(999, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+
+        result.Should().BeNull();
+        pdf.Calls.Should().Be(0);
     }
 
     private static ApplicationDbContext CreateDbContext()
@@ -151,17 +176,20 @@ public sealed class DownloadEntrustmentCertificateTests
         dbContext.Institutions.Add(institution);
         dbContext.Specialities.Add(speciality);
         dbContext.SubSpecialities.Add(subSpec);
+
+        // The trainee trains at the test hospital (T183), which is the panel's institution: a panel acts only on its own
+        // institution's trainees (T182).
+        dbContext.Curricula.Add(new Curriculum { Id = 40, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 40,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1), IsActive = true
+        });
         dbContext.EntrustmentScales.Add(scale);
         dbContext.EntrustmentLevels.Add(level);
         dbContext.Epas.Add(epa);
         dbContext.DecisionPanels.Add(panel);
         dbContext.CommitteeReviews.Add(review);
-        // The trainee trains at the panel's institution: a panel acts only on its own institution's trainees. (T182)
-        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
-        {
-            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1, IsActive = true,
-            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1)
-        });
         await dbContext.SaveChangesAsync();
 
         var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
@@ -185,7 +213,7 @@ public sealed class DownloadEntrustmentCertificateTests
         return issued.Id;
     }
 
-    private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles)
+    private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles, int? institutionId = null)
     {
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId) };
         foreach (var role in roles)
@@ -193,6 +221,11 @@ public sealed class DownloadEntrustmentCertificateTests
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
         claims.Add(new Claim(WombatClaimTypes.SpecialityId, "5"));
+        if (institutionId.HasValue)
+        {
+            claims.Add(new Claim(WombatClaimTypes.InstitutionId, institutionId.Value.ToString()));
+        }
+
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 

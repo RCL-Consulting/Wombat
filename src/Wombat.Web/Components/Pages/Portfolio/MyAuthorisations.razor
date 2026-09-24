@@ -95,6 +95,12 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var result = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
+      if (result is null)
+      {
+        _downloadError = "The certificate could not be found.";
+        return;
+      }
+
       await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
     }
     catch (Exception exception)

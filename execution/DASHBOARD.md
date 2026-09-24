@@ -5,9 +5,9 @@
 | lane | id | pri | title | model |
 |---|---|---|---|---|
 | in_progress | [T182](tasks/in_progress/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
+| in_progress | [T183](tasks/in_progress/T183-the-entrustment-decision-admin-pages-are-national-any-admin-role-can-list-revoke-and-download-certificates-for-every-trainee.md) | P1 | The entrustment-decision admin pages are national: any admin role can  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
-| queued | [T183](tasks/queued/T183-the-entrustment-decision-admin-pages-are-national-any-admin-role-can-list-revoke-and-download-certificates-for-every-trainee.md) | P1 | The entrustment-decision admin pages are national: any admin role can  |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
@@ -75,9 +75,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+8347264 fix(security): a committee review can be scheduled, started and ratified only for a trainee at the panel's institution; every panel has an institution (T182)
 2fe9c5b docs(execution): close T160 — browser-verified on dev (activities 27–30; migration applied out of order cleanly); file T192, T193
 d2d1086 feat(activities): an encounter date may not be in the future, nor (for a type that can credit) before the programme; a crediting filing more than fourteen days late is warned about and recorded, never refused (T160, D15)
 cf7b246 docs(execution): close T175, T180, T172, T177 and T174 — browser-verified on dev (activities 25, 26); file T187–T191; T181's cause found
 f05bde8 fix(catalogue): the seeders pin a curriculum item's scale only when they create it, and warn rather than re-pin; a data migration pins the demo item where it is unpinned (T174)
-0c2c20b fix(activities): every label on an activity form names a real control; group fields are named fieldsets (T177)
 ```

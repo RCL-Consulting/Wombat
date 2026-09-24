@@ -1,11 +1,12 @@
 ---
 id: T183
 title: The entrustment-decision admin pages are national: any admin role can list, revoke and download certificates for every trainee
-status: queued
+status: in_progress
 priority: P1
 owner: agent
 depends_on: []
 created: 2026-09-24
+started: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
