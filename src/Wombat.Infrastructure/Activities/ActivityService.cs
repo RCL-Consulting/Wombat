@@ -612,10 +612,12 @@ public sealed class ActivityService : IActivityService
 
         var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
 
-        // No EPA→tool gate here (T122), and the omission is deliberate: a type that declares credit was refused above,
-        // and the gate only ever refuses an item credit could land on, so for every type that reaches this line it
-        // would pass. If a crediting system-written type is ever allowed through, the gate must be awaited inside this
-        // loop, before AddRange, while the caller has still not mutated anything.
+        // No EPA→tool gate here (T122), and the omission is deliberate. A type that declares credit was refused above.
+        // What is left is an unrated type, whose evidence EPA the gate judges on the interactive path (T154), and the one
+        // system-written type is msf_cpsa: an MSF release covers every EPA the campaign declared, whatever its list says
+        // (T121), and must not start dropping declared EPAs because of one. Every v11.1 list names MSF, so nothing is lost
+        // today. If a crediting system-written type is ever allowed through, the gate must be awaited inside this loop,
+        // before AddRange, while the caller has still not mutated anything.
 
         // Built and validated in full BEFORE anything is added to the context. Nothing below this loop
         // may throw, because by then the caller's own mutation is pending and an exception would be
@@ -1108,7 +1110,8 @@ public sealed class ActivityService : IActivityService
     }
 
     /// <summary>
-    /// Which of the pinned rules' credit directives a transition must put to the EPA→tool gate (T122, D20). Empty means
+    /// Which of the pinned version's gated targets (<see cref="ToolPermissionGate.GatedTargets" />: its credit directives,
+    /// or an unrated instrument's evidence EPA, T154) a transition must put to the EPA→tool gate (T122, D20). Empty means
     /// the gate does not run.
     /// </summary>
     /// <remarks>
@@ -1157,7 +1160,13 @@ public sealed class ActivityService : IActivityService
         string mergedDataJson,
         string creditRulesJson)
     {
-        if (!workflow.CanReachTerminal(transition.To) || !TryParseRules(creditRulesJson, out var rules))
+        if (!workflow.CanReachTerminal(transition.To))
+        {
+            return EmptyDirectives;
+        }
+
+        var targets = ToolPermissionGate.GatedTargets(creditRulesJson, schema);
+        if (targets.Count == 0)
         {
             return EmptyDirectives;
         }
@@ -1167,9 +1176,9 @@ public sealed class ActivityService : IActivityService
 
         var judge = new HashSet<int>();
         var unchangedFieldTargets = new List<(int Index, string SourceField)>();
-        for (var index = 0; index < rules.CountsFor.Count; index++)
+        for (var index = 0; index < targets.Count; index++)
         {
-            var matchRule = rules.CountsFor[index].CurriculumItemMatchRule;
+            var matchRule = targets[index];
             var before = CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement);
             var after = CreditTargetResolver.DescribeTarget(matchRule, merged.RootElement);
 
@@ -1346,33 +1355,6 @@ public sealed class ActivityService : IActivityService
             new HashSet<string>(StringComparer.Ordinal) { schema.ObservationDateField }).Count > 0;
     }
 
-    /// <summary>
-    /// The indices of the directives whose target differs between two payloads, as the credit engine would resolve it.
-    /// </summary>
-    private static IReadOnlySet<int> ChangedDirectives(string? creditRulesJson, string storedDataJson, string newDataJson)
-    {
-        if (!TryParseRules(creditRulesJson, out var rules))
-        {
-            return EmptyDirectives;
-        }
-
-        using var stored = JsonDocument.Parse(storedDataJson);
-        using var updated = JsonDocument.Parse(newDataJson);
-
-        var changed = new HashSet<int>();
-        for (var index = 0; index < rules.CountsFor.Count; index++)
-        {
-            var matchRule = rules.CountsFor[index].CurriculumItemMatchRule;
-            if (CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement) !=
-                CreditTargetResolver.DescribeTarget(matchRule, updated.RootElement))
-            {
-                changed.Add(index);
-            }
-        }
-
-        return changed;
-    }
-
     private static bool IsTheAuthor(string actorUserId, Activity activity)
         => string.Equals(actorUserId, activity.SubjectUserId, StringComparison.Ordinal) ||
            string.Equals(actorUserId, activity.CreatedByUserId, StringComparison.Ordinal);
@@ -1399,25 +1381,6 @@ public sealed class ActivityService : IActivityService
             SpecialityId = activity.SpecialityId,
             SubSpecialityId = activity.SubSpecialityId
         };
-
-    private static bool TryParseRules(string? creditRulesJson, out CreditRules rules)
-    {
-        rules = null!;
-        if (string.IsNullOrWhiteSpace(creditRulesJson))
-        {
-            return false;
-        }
-
-        try
-        {
-            rules = CreditRulesParser.Parse(creditRulesJson);
-            return rules.CountsFor.Count > 0;
-        }
-        catch (CreditRulesParseException)
-        {
-            return false;
-        }
-    }
 
     private static readonly IReadOnlySet<int> EmptyDirectives = new HashSet<int>();
 

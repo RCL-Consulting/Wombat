@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "observation_date_field": "period_to",
+  "evidence_epa_field": "epa_id",
+  "sections": [
+    {
+      "key": "request",
+      "title": "Review request",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Reviewer",
+          "required": true,
+          "role": "Assessor",
+          "help_text": "The supervisor who will review your portfolio and logbook for this period. They record the review and sign it off."
+        },
+        {
+          "key": "period_from",
+          "type": "date",
+          "label": "Review period from",
+          "required": true
+        },
+        {
+          "key": "period_to",
+          "type": "date",
+          "label": "Review period to",
+          "required": true,
+          "help_text": "The review is dated the last day of the period, so it cannot be after today. Export your portfolio for these dates (Export Portfolio, in the menu) and give the PDF to your reviewer, with your logbook and any record of teaching or journal club presentations, which Wombat does not hold."
+        },
+        {
+          "key": "export_file_name",
+          "type": "text",
+          "label": "Portfolio export (file name)",
+          "required": false,
+          "validation": {
+            "max_length": 200
+          },
+          "help_text": "The name of the PDF you gave your reviewer, such as portfolio-3f9a2c61b0de.pdf. It records which export was reviewed."
+        },
+        {
+          "key": "notes_for_reviewer",
+          "type": "longtext",
+          "label": "Notes for your reviewer",
+          "required": false,
+          "help_text": "Anything in the period you want your reviewer to look at, or that the export does not show."
+        }
+      ]
+    },
+    {
+      "key": "review",
+      "title": "Review",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "reviewed_on",
+          "type": "date",
+          "label": "Date of the review",
+          "required": true,
+          "help_text": "When you completed this review. The record itself is dated the last day of the period reviewed."
+        },
+        {
+          "key": "evidence_reviewed",
+          "type": "multichoice",
+          "label": "Evidence reviewed",
+          "required": true,
+          "help_text": "What you read. Feedback and reflective entries are in the portfolio export; the logbook, teaching sessions and journal club presentations come from the records the trainee brings.",
+          "options": [
+            "teaching_sessions",
+            "journal_club_presentations",
+            "feedback_received",
+            "reflective_entries",
+            "logbook"
+          ]
+        },
+        {
+          "key": "review_comments",
+          "type": "longtext",
+          "label": "Review comments",
+          "required": true,
+          "help_text": "What the portfolio export and the trainee's own records show for this period, and any gaps. A portfolio review is not rated."
+        },
+        {
+          "key": "agreed_actions",
+          "type": "longtext",
+          "label": "Agreed actions",
+          "required": false,
+          "help_text": "Leave blank if there are none."
+        }
+      ]
+    }
+  ]
+}

@@ -144,6 +144,12 @@ Trainee — the roles whose authority is not bounded by a speciality), and never
 matched, never the nominee's speciality: an assessor from another discipline at the same institution can be named (D23). It takes no `options` or `catalogue`: its people come from the directory. See
 rule 3 under field permissions.
 
+**`file` is not wired**: it renders a placeholder and nothing stores an upload. Until attachments are their own task, a
+document is a `text` field holding a link, held to `http(s)` by
+`"validation": { "regex": "^(?i:https?)://\\S+\\z" }` (D34; `clinical_audit_cpsa.report_link`, T154). The
+regex refuses a note in place of a link and a `javascript:` URL. It anchors with `\z`, not `$`: the validator is .NET's
+`Regex.IsMatch`, where `$` also matches before a final newline. The link is shown as text, not as a clickable link.
+
 **Root pointers** name, at the schema's top level, which field plays a role the platform reads without knowing the
 form:
 
@@ -318,6 +324,17 @@ catalogue), or null for "any instrument". It is checked against the activity typ
   predicate (`ToolPermission.Evaluate`). If a keyed instrument may credit none of the subject's EPAs, the picker falls
   back to the unrestricted creditable set rather than emptying, and the write path's refusal names the instruments
   the curriculum accepts.
+- **An unrated instrument is gated by its evidence EPA (T154):** a type that credits nothing (`"counts_for": []`) is
+  judged on the field its schema names as `evidence_epa_field`, as if that were an `epa_field` directive
+  (`ToolPermissionGate.GatedTargets`). The reflective exercise, the clinical audit and the portfolio review credit
+  nothing (D7), but each is stamped as evidence for its EPA (T137) and the committee reads that, and a list names the
+  instruments that are evidence for its EPA. So each is held to the lists by the same predicate, at the same moments
+  (create, a changed target, the author's hand-on) and with the same message as a rated tool, and its picker narrows
+  that field (`CreditRuleFields.ResolveNarrowedEpaFieldKeys`). A type that credits is judged on its directives alone:
+  one crediting by EPA must credit through the pointer (`EvidenceEpa.EnsureCreditAgrees`), so the two are one target.
+  Only an instrument is narrowed: a type with no key (a reflective note) keeps the claims filter (D21). The MSF
+  release writes `msf_cpsa` rows through the staged path, which is not gated: a release covers every EPA the
+  campaign declared (T121), and every v11.1 list names MSF anyway.
 - **Permissive by default (D21):** a type with no key, an item with no list (or an unparseable one), a subject with no
   trainee profile and an EPA with no item are all unrestricted. An institution's own types are therefore unrestricted
   until someone picks an instrument for them in the builder ("This tool is").

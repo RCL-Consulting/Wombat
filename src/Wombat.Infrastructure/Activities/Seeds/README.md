@@ -25,6 +25,18 @@ speciality rather than the demo one. The `_cpsa` suffix is not decoration — se
 - `mini_cex_cpsa`, `dops_cpsa`, `cbd_cpsa`, `direct_observation_cpsa`: the v11.1 workplace-based
   assessment tools. Assessor-completed, rated on the CPSA six-rung ladder, crediting one encounter
   against the EPA named in `epa_id`.
+- `cca_cpsa`, `rca_cpsa`, `chart_stimulated_recall_cpsa` (T120): the same rated shape, with a request
+  section drawn from page 8's definitions.
+- `reflective_exercise_cpsa` (T120), `clinical_audit_cpsa` and `portfolio_review_cpsa` (T154): **unrated
+  evidence that credits nothing** (D6, D7): no `rated_level_field`, `"counts_for": []`. The trainee writes
+  each and names a supervisor (`assessor_user_id`, role Assessor), who signs it off or returns it with a
+  note. The audit's report is a `text` field holding an `http(s)` link, held to that by a `regex`,
+  because Wombat stores no files (D34). The portfolio review is a signed review of a stated period, not a
+  re-typed portfolio: the trainee names the period, exports the portfolio for it (Export Portfolio, in the
+  menu) and records the export's file name, and the reviewer reads it with the records Wombat does not hold
+  (the logbook, teaching, journal club). Its encounter date is the period's last day (`period_to`), so it
+  falls in the committee window it is evidence for, as the audit (the day practice was measured) and the
+  reflective exercise (the day of the case) are dated by what they are about, not by their sign-off.
 - `msf_cpsa`: **system-written, not hand-filed.** One row per EPA a released multi-source feedback
   campaign declared itself evidence for (T121). Its `record` transition and both its sections carry
   `role:Coordinator|role:Administrator`, so a trainee who creates a stray draft from `/activities/new`
@@ -40,8 +52,12 @@ decides which instruments may be filed against it. The entry's key is required, 
 instrument it is, or say `null`.
 
 - `mini_cex_cpsa` → `mini_cex`, `dops_cpsa` → `dops`, `cbd_cpsa` → `cbd`, `direct_observation_cpsa` →
-  `direct_observation`, `msf_cpsa` → `msf`; the generic `mini_cex`, `dops` and `cbd` carry the same keys, because
-  they are the same instruments. Everything else is `null`: unrestricted (D21).
+  `direct_observation`, `msf_cpsa` → `msf`, and each later `<family>_cpsa` seed → `<family>` (`cca`, `rca`,
+  `chart_stimulated_recall`, `reflective_exercise`, `clinical_audit`, `portfolio_review`); the generic `mini_cex`,
+  `dops` and `cbd` carry the same keys, because they are the same instruments. Everything else is `null`:
+  unrestricted (D21).
+- The lists bind every instrument, crediting or not. An unrated one (`"counts_for": []`) is judged, and its EPA picker
+  narrowed, on its `evidence_epa_field` (T154), so a clinical audit is offered and accepted on PAED-001 to 003 only.
 - The seeders write the key when they **create** a type, and the refresher never touches it: it evolves the four
   versioned payloads and nothing else. Existing databases got their keys from the T122 migration. Changing a key
   here reaches an existing database only through a new migration, and until then the seeders log a warning.

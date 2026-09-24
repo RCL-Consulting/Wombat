@@ -202,7 +202,8 @@ Runtime services in Infrastructure:
   credit directive: at create; on a change of target wherever credit can still follow; and for an unchanged target only
   when the author, before anyone else has acted, hands it on while still able to write its field. Never at credit, so a
   refusal never lands on someone who cannot act on it. The EPA picker narrows with the
-  same predicate (`ToolPermission.Evaluate`). Null key or null list is unrestricted (D21).
+  same predicate (`ToolPermission.Evaluate`). Null key or null list is unrestricted (D21). A type that credits
+  nothing is judged by the EPA it is evidence for (`evidence_epa_field`), at the same moments (D45, T154).
 - `NomineeGate` — a nominee field (every `user` field, plus any field a `field:` rule names) may name only someone
   `NomineeDirectory` lists: an active holder of the field's `role` (default `Assessor`) at the activity's stamped
   institution, never the subject, with no Administrator bypass (T102). A changed value is judged on every write; an

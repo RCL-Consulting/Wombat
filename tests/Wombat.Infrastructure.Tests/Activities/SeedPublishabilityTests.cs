@@ -30,7 +30,10 @@ public sealed class SeedPublishabilityTests
     [
         "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa", "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa",
         // T120. The reflective exercise's "supervisor or mentor" is the same nominee field, requiring an Assessor.
-        "cca_cpsa", "rca_cpsa", "chart_stimulated_recall_cpsa", "reflective_exercise_cpsa"
+        "cca_cpsa", "rca_cpsa", "chart_stimulated_recall_cpsa", "reflective_exercise_cpsa",
+        // T154. The audit's supervisor and the portfolio's reviewer are the same field, and declare the Assessor role
+        // outright rather than by default: a supervisor, not a committee member, signs each off.
+        "clinical_audit_cpsa", "portfolio_review_cpsa"
     ];
 
     public static TheoryData<string> SeedDirectories

@@ -153,6 +153,19 @@ public static class ActivityTypeSeedCatalogue
             ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
             WbaToolKey: "reflective_exercise", SystemManaged: false),
 
+        // T154. The last two instruments, both unrated like the reflective exercise. The audit's report is a link, not
+        // an attachment (D34: Wombat stores no files). The portfolio review is a signed review of a stated period, read
+        // from the portfolio export, never a re-typed portfolio. Page 8 defines the audit; it does not define the
+        // portfolio review, whose description is EPA 15's own list of what it reviews.
+        new("clinical_audit_cpsa", "Clinical Audit (Paediatrics)",
+            "A cycle of measurement against an agreed standard, followed by change and re-measurement.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
+            WbaToolKey: "clinical_audit", SystemManaged: false),
+        new("portfolio_review_cpsa", "Portfolio and Logbook Review (Paediatrics)",
+            "A supervisor's signed review of the trainee's portfolio and logbook over a stated period: teaching sessions, journal club presentations, feedback received and reflective entries.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
+            WbaToolKey: "portfolio_review", SystemManaged: false),
+
         // System-written, never hand-filed. One row is created per EPA a released MSF campaign covers
         // (T121). SystemManaged (T162) keeps it off /activities/new and refuses a hand-made create. Behind
         // that, both its sections declare `editable_by: role:Coordinator|role:Administrator` and the

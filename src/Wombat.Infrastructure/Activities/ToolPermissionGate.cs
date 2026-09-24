@@ -31,11 +31,20 @@ namespace Wombat.Infrastructure.Activities;
 /// covering them.
 /// </para>
 /// <para>
+/// What it judges is <see cref="GatedTargets(string?, FormSchema)" />: each credit directive's target, or, for a type whose
+/// rules credit nothing, the EPA its schema says the activity is evidence for (T154). An unrated instrument (the
+/// reflective exercise, the clinical audit, the portfolio review; D6, D7) credits nothing, but since T137 it is stamped
+/// as evidence for the EPA it is filed against, and the committee reads that. The College's list for an EPA names the
+/// instruments that are evidence for it, so an unrated instrument is held to the list exactly as a rated one is: the
+/// same predicate, the same create / changed-target / author's-hand-on rule (<c>ActivityService.DirectivesToJudge</c>),
+/// the same message. The EPA picker narrows the same field (<c>CreditRuleFields.ResolveNarrowedEpaFieldKeys</c>).
+/// </para>
+/// <para>
 /// What it deliberately lets through:
 /// <list type="bullet">
 ///   <item>A type with no <c>WbaToolKey</c>, or an item with no tool list: unrestricted (D21).</item>
-///   <item>A type whose pinned rules credit nothing (<c>counts_for: []</c>, which includes MSF and every unrated
-///   instrument). It can credit no item, so there is nothing to protect.</item>
+///   <item>A type whose pinned rules credit nothing (<c>counts_for: []</c>) and whose schema names no evidence EPA
+///   (<c>evidence_epa_field</c>). It can credit no item and is filed against no EPA, so there is nothing to judge.</item>
 ///   <item>A subject with no trainee profile, or an EPA with no item on their curriculum. Nothing would be credited
 ///   today, and refusing would turn this gate into a curriculum-membership check that neither D20 nor D21 decided.
 ///   The boundary this leaves is recorded: a profile created or re-pointed after submission is not re-checked
@@ -57,9 +66,9 @@ internal static class ToolPermissionGate
     internal const int MaxItemsNamed = 3;
 
     /// <param name="judgeDirective">
-    /// Which of the pinned rules' directives to judge, by index; null judges every one (the create). A move judges only
-    /// the directives whose target it changed, or whose target the mover could still correct, so a refusal never names
-    /// a target that did not change or a field the mover cannot write.
+    /// Which of the pinned version's <see cref="GatedTargets(string?, FormSchema)" /> to judge, by index; null judges
+    /// every one (the create). A move judges only the targets it changed, or whose target the mover could still correct,
+    /// so a refusal never names a target that did not change or a field the mover cannot write.
     /// </param>
     public static async Task EnsurePermittedAsync(
         IApplicationDbContext dbContext,
@@ -73,7 +82,13 @@ internal static class ToolPermissionGate
         Func<int, bool>? judgeDirective = null)
     {
         var toolKey = WbaTool.NormalizeKey(wbaToolKey);
-        if (toolKey is null || !TryParseRules(creditRulesJson, out var rules) || rules.CountsFor.Count == 0)
+        if (toolKey is null)
+        {
+            return;
+        }
+
+        var targets = GatedTargets(creditRulesJson, schema);
+        if (targets.Count == 0)
         {
             return;
         }
@@ -88,19 +103,19 @@ internal static class ToolPermissionGate
 
         using var document = JsonDocument.Parse(dataJson);
 
-        // Refuse when ANY matched item is not permitted: the engine credits every item a rule matches.
+        // Refuse when ANY matched item is not permitted: the engine credits every item a rule matches, and an unrated
+        // instrument's one target is the EPA it is evidence for.
         var refusals = new List<(CurriculumItem Item, string? MatchedFieldKey)>();
         var seen = new HashSet<int>();
-        for (var index = 0; index < rules.CountsFor.Count; index++)
+        for (var index = 0; index < targets.Count; index++)
         {
             if (judgeDirective is not null && !judgeDirective(index))
             {
                 continue;
             }
 
-            var directive = rules.CountsFor[index];
             var (items, matchedFieldKey) = await CreditTargetResolver.ResolveCurriculumItemsWithSourceAsync(
-                dbContext, directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
+                dbContext, targets[index], document.RootElement, trainee, cancellationToken);
 
             foreach (var item in items.Where(item => seen.Add(item.Id)))
             {
@@ -118,6 +133,43 @@ internal static class ToolPermissionGate
         }
 
         throw new InvalidOperationException(await DescribeAsync(dbContext, toolKey, schema, refusals, cancellationToken));
+    }
+
+    /// <summary>
+    /// What the gate judges for one pinned version, in an order the callers index by: every credit directive's match rule,
+    /// or, when the rules credit nothing, the schema's <c>evidence_epa_field</c> as an <c>epa_field</c> target (T154).
+    /// Empty when there is neither, and when the rules do not parse (see <see cref="TryParseRules" />).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The evidence EPA is a target only when nothing is credited. A type that credits by EPA must credit through the
+    /// evidence field (<c>EvidenceEpa.EnsureCreditAgrees</c>), so for it the two are already the same target; one that
+    /// credits a fixed or picked item is judged on the item, as before. Adding the pointer beside its directives would
+    /// judge a pre-T137 pinned version on an EPA it never credited.
+    /// </para>
+    /// <para>
+    /// Not a default for <c>epa_field</c>: the credit engine never reads this target, so an unrated instrument still
+    /// credits nothing (D7). It is the list's other reading, "which instruments are evidence for this EPA", applied to
+    /// the one EPA an unrated activity names.
+    /// </para>
+    /// </remarks>
+    internal static IReadOnlyList<CurriculumItemMatchRule> GatedTargets(string? creditRulesJson, FormSchema schema)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+
+        if (!TryParseRules(creditRulesJson, out var rules))
+        {
+            return [];
+        }
+
+        if (rules.CountsFor.Count > 0)
+        {
+            return rules.CountsFor.Select(directive => directive.CurriculumItemMatchRule).ToList();
+        }
+
+        return string.IsNullOrWhiteSpace(schema.EvidenceEpaField)
+            ? []
+            : [new CurriculumItemMatchRule(schema.EvidenceEpaField, CurriculumItemId: null, CurriculumItemField: null)];
     }
 
     /// <summary>

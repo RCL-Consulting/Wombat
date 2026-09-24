@@ -86,6 +86,47 @@ public sealed class EpaPickerScopeTests : TestContext
         recorder.Scopes.Should().OnlyContain(scope => scope!.NarrowToCreditable == false);
     }
 
+    /// <summary>
+    /// T154: a College instrument that credits nothing (the clinical audit, the portfolio review, the reflective exercise)
+    /// is held to the lists by the EPA it is evidence for, so its evidence field is narrowed, with its tool key, to what
+    /// submitting accepts. The other epa field is not.
+    /// </summary>
+    [Fact]
+    public void AnInstrumentThatCreditsNothing_NarrowsItsEvidenceEpaField_WithItsToolKey()
+    {
+        var recorder = Recorder();
+
+        RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, WithEvidenceEpa(TwoEpaFieldsSchema, "epa_id"))
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, """{ "counts_for": [] }""")
+            .Add(component => component.WbaToolKey, "clinical_audit"));
+
+        recorder.Scopes.Should().HaveCount(2);
+        recorder.Scopes[0]!.NarrowToCreditable.Should().BeTrue();
+        recorder.Scopes[0]!.SubjectUserId.Should().Be("registrar-1");
+        recorder.Scopes[0]!.WbaToolKey.Should().Be("clinical_audit");
+        recorder.Scopes[1]!.NarrowToCreditable.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ATypeThatCreditsNothing_AndIsNoInstrument_IsNotNarrowed_EvenWithAnEvidenceEpa()
+    {
+        // D21: a reflective note names its EPA too, but no list binds a type that is no instrument, so narrowing it to
+        // the curriculum would only hide EPAs whose choice changes nothing (T108).
+        var recorder = Recorder();
+
+        RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, WithEvidenceEpa(TwoEpaFieldsSchema, "epa_id"))
+            .Add(component => component.DataJson, "{}")
+            .Add(component => component.SubjectUserId, "registrar-1")
+            .Add(component => component.CreditRulesJson, """{ "counts_for": [] }"""));
+
+        recorder.Scopes.Should().HaveCount(2);
+        recorder.Scopes.Should().OnlyContain(scope => scope!.NarrowToCreditable == false);
+    }
+
     [Fact]
     public void ATypeThatCreditsAFixedCurriculumItem_IsNeverNarrowed()
     {
@@ -286,6 +327,9 @@ public sealed class EpaPickerScopeTests : TestContext
 
         recorder.Scopes.Should().OnlyContain(scope => scope!.WbaToolKey == null && scope.NarrowToCreditable == false);
     }
+
+    private static string WithEvidenceEpa(string schemaJson, string fieldKey)
+        => schemaJson.Replace("\"version\": 1,", $"\"version\": 1, \"evidence_epa_field\": \"{fieldKey}\",", StringComparison.Ordinal);
 
     private RecordingReferenceDataService Recorder()
     {

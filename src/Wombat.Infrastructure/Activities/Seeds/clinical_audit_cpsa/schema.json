@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "observation_date_field": "observed_on",
+  "evidence_epa_field": "epa_id",
+  "sections": [
+    {
+      "key": "audit",
+      "title": "Audit",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Supervisor",
+          "required": true,
+          "role": "Assessor",
+          "help_text": "The supervisor who oversaw this audit. They review it and sign it off."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Date of the audit",
+          "required": true,
+          "help_text": "When you measured practice against the standard, not when this form is completed."
+        },
+        {
+          "key": "audit_title",
+          "type": "text",
+          "label": "Audit title",
+          "required": true
+        },
+        {
+          "key": "standard",
+          "type": "longtext",
+          "label": "Standard audited against",
+          "required": true,
+          "help_text": "The agreed standard or guideline, and where it comes from."
+        },
+        {
+          "key": "sample",
+          "type": "longtext",
+          "label": "Sample",
+          "required": true,
+          "help_text": "What was measured: which cases, records or episodes, how many, and over what period. No patient names or record numbers."
+        },
+        {
+          "key": "findings",
+          "type": "longtext",
+          "label": "Findings",
+          "required": true,
+          "help_text": "How practice compared with the standard."
+        },
+        {
+          "key": "change_made",
+          "type": "longtext",
+          "label": "Change made",
+          "required": true,
+          "help_text": "What was changed in response to the findings."
+        },
+        {
+          "key": "reaudit_on",
+          "type": "date",
+          "label": "Re-audit date",
+          "required": true,
+          "help_text": "When practice was, or will be, measured again after the change."
+        },
+        {
+          "key": "report_link",
+          "type": "text",
+          "label": "Audit report (link)",
+          "required": true,
+          "validation": {
+            "regex": "^(?i:https?)://\\S+\\z",
+            "max_length": 2000
+          },
+          "help_text": "A link to the full report where your department keeps it, starting https://. Wombat does not store attached files."
+        }
+      ]
+    },
+    {
+      "key": "supervisor_review",
+      "title": "Supervisor review",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "supervisor_comments",
+          "type": "longtext",
+          "label": "Supervisor comments",
+          "required": true,
+          "help_text": "Your review of the audit and its report. A clinical audit is not rated."
+        }
+      ]
+    }
+  ]
+}

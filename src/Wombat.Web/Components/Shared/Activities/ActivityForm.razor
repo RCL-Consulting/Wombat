@@ -34,7 +34,7 @@ else if (_schema is not null)
 
             if (!IsSingleControl(field.Type))
             {
-              // A multi-choice field is several controls, and a file field (not wired yet, T154) or an unsupported type
+              // A multi-choice field is several controls, and a file field (not wired: a seed holds a document as a link, D34) or an unsupported type
               // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
               // instead (DESIGN.md § Form system, T177), its help text announced with the group.
               var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : $"{field.Key}-help";
@@ -187,7 +187,9 @@ else if (_schema is not null)
   /// is not the contract — <c>epa_field</c> is a free-form string in the credit rules and nothing
   /// validates it against the schema — so "the EPA that will be credited" can only be answered by
   /// intersecting the two. A reflective note declares an epa field and an empty <c>counts_for</c>;
-  /// an MSF form credits a fixed curriculum item and never reads its epa field. Neither is narrowed.
+  /// an MSF form credits a fixed curriculum item and never reads its epa field. Neither is narrowed. A College
+  /// instrument that credits nothing (<see cref="WbaToolKey" /> set, an empty <c>counts_for</c>) narrows the field its
+  /// schema names as its evidence EPA instead, because the write path holds that EPA to the instrument's list (T154).
   /// </remarks>
   [Parameter] public string? CreditRulesJson { get; set; }
 
@@ -197,8 +199,9 @@ else if (_schema is not null)
   /// </summary>
   /// <remarks>
   /// The type row's CURRENT key, which is the one the write path checks at submit, so the EPA picker offers only
-  /// what submitting will accept. Passed on every EPA field; the service reads it only on the field the credit engine
-  /// reads, and only when that field is being narrowed at all.
+  /// what submitting will accept. Passed on every EPA field; the service reads it only on a narrowed field (the one the
+  /// credit engine reads, or an unrated instrument's evidence EPA). It also decides whether an unrated type's evidence
+  /// EPA is narrowed at all: only an instrument is held to a list (D21).
   /// </remarks>
   [Parameter] public string? WbaToolKey { get; set; }
 
@@ -253,9 +256,10 @@ else if (_schema is not null)
   private string? _loadError;
   private string? _loadedOptionsKey;
 
-  // Schema field keys the pinned credit rules actually read as the EPA to credit. Empty for every
-  // activity type that credits nothing, and for one that credits a fixed curriculum item.
-  private IReadOnlySet<string> _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+  // Schema field keys whose EPA picker is narrowed to what the write path accepts: the fields the pinned credit rules
+  // read as the EPA to credit, or a College instrument's evidence EPA when it credits nothing (T154). Empty for a type
+  // that is no instrument and credits nothing, and for one that credits a fixed curriculum item.
+  private IReadOnlySet<string> _narrowedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
 
   // Whether the pinned credit rules can credit, so a filing of this form can be late (T160). Asked once per load, with the
   // rules, rather than on every render of every field.
@@ -296,7 +300,7 @@ else if (_schema is not null)
       {
         _schema = FormSchemaParser.Parse(SchemaJson);
         _loadedOptionsKey = optionsKey;
-        _creditedEpaFieldKeys = ResolveCreditedEpaFieldKeys();
+        _narrowedEpaFieldKeys = ResolveNarrowedEpaFieldKeys(_schema);
         _canFileLate = FilingLateness.WarnsFor(CreditRulesJson);
         await LoadOptionsAsync();
       }
@@ -309,7 +313,7 @@ else if (_schema is not null)
       _schema = null;
       _data = [];
       _catalogueOptionsByField.Clear();
-      _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+      _narrowedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
       _canFileLate = false;
       _loadedOptionsKey = null;
     }
@@ -529,7 +533,7 @@ else if (_schema is not null)
           principal,
           new EpaOptionScope(
             SubjectUserId,
-            _creditedEpaFieldKeys.Contains(field.Key),
+            _narrowedEpaFieldKeys.Contains(field.Key),
             GetString(field.Key),
             WbaToolKey)),
         FieldType.User => await LoadNomineeOptionsAsync(referenceData, schema, field),
@@ -614,18 +618,19 @@ else if (_schema is not null)
   }
 
   /// <summary>
-  /// Which schema field keys the credit rules name as the EPA to credit.
+  /// Which schema field keys the credit rules name as the EPA to credit, or, for a College instrument that credits
+  /// nothing, the schema's evidence EPA (T154): the targets the write path's tool gate judges.
   /// </summary>
   /// <remarks>
-  /// Only <c>curriculum_item_match.epa_field</c> counts. A directive matching a fixed
+  /// Only <c>curriculum_item_match.epa_field</c> counts among the credit rules. A directive matching a fixed
   /// <c>curriculum_item_id</c> never reads an EPA, and one matching a <c>curriculum_item_field</c> reads
   /// its epa field only as a fallback when the item field holds no id, so an epa field alongside either is
   /// left un-narrowed: narrowing it would usually hide choices that change nothing. The write path's tool
   /// gate follows the engine exactly and is the authority in that fallback case (T122). Unparseable rules
   /// are not this method's error to surface — fall back to no narrowing.
   /// </remarks>
-  private IReadOnlySet<string> ResolveCreditedEpaFieldKeys()
-    => CreditRuleFields.ResolveCreditedEpaFieldKeys(CreditRulesJson);
+  private IReadOnlySet<string> ResolveNarrowedEpaFieldKeys(FormSchema schema)
+    => CreditRuleFields.ResolveNarrowedEpaFieldKeys(CreditRulesJson, schema.EvidenceEpaField, WbaToolKey);
 
   private static int CompareNumeric(string left, string right)
   {

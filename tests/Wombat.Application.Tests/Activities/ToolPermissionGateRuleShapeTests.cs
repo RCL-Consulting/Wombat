@@ -425,6 +425,42 @@ public sealed class ToolPermissionGateRuleShapeTests
         }
     }
 
+    [Theory]
+    [InlineData("mini_cex", new[] { Paed001, Paed003 })]
+    [InlineData("cbd", new[] { Paed001, Paed003, Paed005, Paed009 })]
+    [InlineData("dops", new[] { Paed003, Paed005, LocalExtra })]
+    [InlineData("portfolio_review", new[] { Paed003 })]
+    public async Task ThePickerAndTheGateAgree_ForAnInstrumentThatCreditsNothing_OnItsEvidenceEpa(string wbaToolKey, int[] expectedOffered)
+    {
+        // T154: an unrated instrument credits nothing, but it is held to the lists by the EPA it is evidence for. The form
+        // decides to narrow that field by the rule the gate uses to judge it (CreditRuleFields.ResolveNarrowedEpaFieldKeys
+        // and ToolPermissionGate.GatedTargets), so the two agree exactly as they do for a crediting type above.
+        await using var db = NewSeededDatabase();
+        var typeId = AddType(db, id: 802, key: "unrated_tool_under_test", wbaToolKey, CreditsNothing, WorkflowJson, EvidenceEpaSchemaJson);
+        var service = Service(db);
+        int[] onTheCurriculum = [Paed001, Paed003, Paed005, Paed009, LocalExtra];
+
+        CreditRuleFields.ResolveNarrowedEpaFieldKeys(CreditsNothing, "epa_id", wbaToolKey)
+            .Should().BeEquivalentTo(["epa_id"], "the form narrows the evidence EPA of an instrument that credits nothing");
+
+        var offered = await PickerAsync(db, TraineePrincipal(), new EpaOptionScope(Trainee, NarrowToCreditable: true, CurrentValue: null, WbaToolKey: wbaToolKey));
+        offered.Should().BeEquivalentTo(expectedOffered, "guard: the fixture's expected narrowing");
+
+        foreach (var epaId in offered)
+        {
+            var create = async () => await CreateAsync(service, typeId, Data(epaId: epaId));
+            await create.Should().NotThrowAsync($"the picker offered EPA {epaId} for tool '{wbaToolKey}'");
+        }
+
+        foreach (var epaId in onTheCurriculum.Except(offered))
+        {
+            var message = await RefusalOfAsync(db, service, typeId, Data(epaId: epaId));
+            message.Should().Contain(
+                "cannot be used as evidence for " + Catalogue[epaId].Code,
+                $"the picker withheld EPA {epaId} for tool '{wbaToolKey}', so the gate must refuse it");
+        }
+    }
+
     [Fact]
     public async Task PinnedDivergence_AToolNoItemPermits_ThePickerFallsBackToTheCreditableSet_AndTheGateRefusesEachWithAReason()
     {
@@ -678,7 +714,14 @@ public sealed class ToolPermissionGateRuleShapeTests
     private static int AddMiniCexType(ApplicationDbContext db, string creditRulesJson)
         => AddType(db, id: 600, key: "mini_cex_under_test", wbaToolKey: "mini_cex", creditRulesJson, WorkflowJson);
 
-    private static int AddType(ApplicationDbContext db, int id, string key, string? wbaToolKey, string creditRulesJson, string workflowJson)
+    private static int AddType(
+        ApplicationDbContext db,
+        int id,
+        string key,
+        string? wbaToolKey,
+        string creditRulesJson,
+        string workflowJson,
+        string schemaJson = SchemaJson)
     {
         var publishedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -690,7 +733,7 @@ public sealed class ToolPermissionGateRuleShapeTests
             Scope = ActivityScope.Institution,
             ScopeId = InstitutionId,
             Version = 1,
-            SchemaJson = SchemaJson,
+            SchemaJson = schemaJson,
             WorkflowJson = workflowJson,
             CreditRulesJson = creditRulesJson,
             DisplayFieldsJson = """["epa_id","score"]""",
@@ -703,7 +746,7 @@ public sealed class ToolPermissionGateRuleShapeTests
         {
             ActivityTypeId = id,
             Version = 1,
-            SchemaJson = SchemaJson,
+            SchemaJson = schemaJson,
             WorkflowJson = workflowJson,
             CreditRulesJson = creditRulesJson,
             DisplayFieldsJson = activityType.DisplayFieldsJson,
@@ -744,6 +787,12 @@ public sealed class ToolPermissionGateRuleShapeTests
           ]
         }
         """;
+
+    /// <summary>The same form, declaring its EPA field as the EPA each activity is evidence for (T137).</summary>
+    private static readonly string EvidenceEpaSchemaJson = SchemaJson.Replace(
+        "\"version\": 1,",
+        "\"version\": 1, \"evidence_epa_field\": \"epa_id\",",
+        StringComparison.Ordinal);
 
     private const string WorkflowJson = """
         {

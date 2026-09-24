@@ -165,6 +165,8 @@ public sealed class SeedScaleKeyTests
             ["cbd_cpsa"] = "Conversation",
             ["cca_cpsa"] = "Case analysis",
             ["chart_stimulated_recall_cpsa"] = "Conversation",
+            // T154. Unrated evidence has no category, so each counts as its own source under its own key.
+            ["clinical_audit_cpsa"] = "clinical_audit_cpsa",
             ["direct_observation_cpsa"] = "Direct observation",
             ["dops"] = "Direct observation",
             ["dops_cpsa"] = "Direct observation",
@@ -172,6 +174,7 @@ public sealed class SeedScaleKeyTests
             ["mini_cex"] = "Direct observation",
             ["mini_cex_cpsa"] = "Direct observation",
             ["msf_cpsa"] = "msf_cpsa",
+            ["portfolio_review_cpsa"] = "portfolio_review_cpsa",
             ["procedure_log"] = "procedure_log",
             ["qi_project"] = "qi_project",
             ["rca_cpsa"] = "Case analysis",
@@ -263,7 +266,8 @@ public sealed class SeedScaleKeyTests
             .ToArray();
 
         // T120 added three rated instruments. reflective_exercise_cpsa is deliberately absent: D6 makes it unrated
-        // evidence, so it declares no rated_level_field and nothing charts it as entrustment.
+        // evidence, so it declares no rated_level_field and nothing charts it as entrustment. So are T154's
+        // clinical_audit_cpsa and portfolio_review_cpsa, for the same reason.
         rated.Should().Equal(
             "acat", "cbd", "cbd_cpsa", "cca_cpsa", "chart_stimulated_recall_cpsa", "direct_observation_cpsa",
             "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa", "rca_cpsa");

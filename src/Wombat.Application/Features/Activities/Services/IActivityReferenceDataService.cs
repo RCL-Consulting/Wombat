@@ -121,9 +121,11 @@ public sealed record ActivityCatalogueOption(
 /// </param>
 /// <param name="NarrowToCreditable">
 /// True only when this field's key is the one the pinned version's credit rules actually read
-/// (<c>epa_field</c>). A reflective note tags an EPA and credits nothing by design; an MSF form
-/// credits a fixed <c>curriculum_item_id</c> and never reads its EPA field. Narrowing either of
-/// those would hide EPAs whose selection changes nothing.
+/// (<c>epa_field</c>), or, for a College instrument that credits nothing, the field its schema names as
+/// its evidence EPA, which the write path holds to the instrument's list (T154;
+/// <c>CreditRuleFields.ResolveNarrowedEpaFieldKeys</c>). A reflective note tags an EPA, credits nothing
+/// and is no instrument; an MSF form of the legacy shape credits a fixed <c>curriculum_item_id</c> and
+/// never reads its EPA field. Narrowing either of those would hide EPAs whose selection changes nothing.
 /// </param>
 /// <param name="CurrentValue">
 /// The EPA id already stored in this field, if any. It is always offered back, whatever the

@@ -126,7 +126,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
     ];
 
     /// <summary>
-    /// The seeded types that ARE College instruments, ordinal by type key: the nine CPSA seeds and the generic
+    /// The seeded types that ARE College instruments, ordinal by type key: the eleven CPSA seeds and the generic
     /// Mini-CEX, DOPS and CBD. ACAT and the other generics are not instruments the College names, so D21 leaves them
     /// unkeyed.
     /// </summary>
@@ -136,26 +136,31 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
         ("cbd_cpsa", "cbd"),
         ("cca_cpsa", "cca"),
         ("chart_stimulated_recall_cpsa", "chart_stimulated_recall"),
+        ("clinical_audit_cpsa", "clinical_audit"),
         ("direct_observation_cpsa", "direct_observation"),
         ("dops", "dops"),
         ("dops_cpsa", "dops"),
         ("mini_cex", "mini_cex"),
         ("mini_cex_cpsa", "mini_cex"),
         ("msf_cpsa", "msf"),
+        ("portfolio_review_cpsa", "portfolio_review"),
         ("rca_cpsa", "rca"),
         ("reflective_exercise_cpsa", "reflective_exercise"),
     ];
 
     /// <summary>
-    /// The four instruments T120 seeded after T122 shipped. A seed added after T122 is keyed where it is new, by the
-    /// seeder on create, with no migration: on an upgraded database they are the only types a boot creates.
+    /// The instruments seeded after T122 shipped: T120's four and T154's two. A seed added after T122 is keyed where it
+    /// is new, by the seeder on create, with no migration: on an upgraded database they are the only types a boot
+    /// creates.
     /// </summary>
-    private static readonly (string TypeKey, string ToolKey)[] TypesAddedByT120 =
+    private static readonly (string TypeKey, string ToolKey)[] TypesAddedAfterT122 =
     [
         ("cca_cpsa", "cca"),
         ("chart_stimulated_recall_cpsa", "chart_stimulated_recall"),
         ("rca_cpsa", "rca"),
         ("reflective_exercise_cpsa", "reflective_exercise"),
+        ("clinical_audit_cpsa", "clinical_audit"),
+        ("portfolio_review_cpsa", "portfolio_review"),
     ];
 
     /// <summary>Every activity type the two seeders had created when T122 shipped.</summary>
@@ -328,8 +333,8 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
                 var types = await db.ActivityTypes.AsNoTracking().Select(type => new { type.Key, type.WbaToolKey, type.OwnerUserId }).ToListAsync();
 
                 types.Select(type => type.Key).Should().BeEquivalentTo(
-                    TypesSeededBeforeT122.Concat(TypesAddedByT120.Select(added => added.TypeKey)),
-                    "the ten generic seeds and the nine CPSA seeds");
+                    TypesSeededBeforeT122.Concat(TypesAddedAfterT122.Select(added => added.TypeKey)),
+                    "the ten generic seeds and the eleven CPSA seeds");
                 types.Should().OnlyContain(type => type.OwnerUserId == SeedOwnerUserId);
                 types.Where(type => type.WbaToolKey != null)
                     .OrderBy(type => type.Key, StringComparer.Ordinal)
@@ -399,9 +404,9 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
                 .OrderBy(type => type.Key, StringComparer.Ordinal)
                 .Select(type => (type.Key, type.WbaToolKey!))
                 .Should().Equal(
-                    // The migration stamps only what existed before T120: the four T120 types do not exist yet.
+                    // The migration stamps only what existed before T120: the types seeded after T122 do not exist yet.
                     SeededToolKeys.Where(pair => pair.TypeKey != OperatorCollisionKey &&
-                                                 !TypesAddedByT120.Any(added => added.TypeKey == pair.TypeKey)),
+                                                 !TypesAddedAfterT122.Any(added => added.TypeKey == pair.TypeKey)),
                     "every seed-owned instrument type is stamped, and nothing else is");
             typesAfterMigration.Single(type => type.Key == OperatorCollisionKey)
                 .Should().Be(new TypeRow(OperatorCollisionKey, null, OperatorUserId), "an operator's type under a seed key is not asserted to be anything");
@@ -432,7 +437,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
             // Every type the migration saw is left exactly as the migration stamped it. The only rows the boot adds are
             // the instruments seeded after T122, each keyed on create.
             (await StoredTypesAsync(fixture.Schema)).Should().BeEquivalentTo(
-                typesAfterMigration.Concat(TypesAddedByT120.Select(added => new TypeRow(added.TypeKey, added.ToolKey, SeedOwnerUserId))),
+                typesAfterMigration.Concat(TypesAddedAfterT122.Select(added => new TypeRow(added.TypeKey, added.ToolKey, SeedOwnerUserId))),
                 "no existing type is re-stamped, and the only types created are the ones seeded after T122");
             (await ScalarAsync<long>(fixture.Schema, """SELECT COUNT(*) FROM "WbaTools" """)).Should().Be(12);
 

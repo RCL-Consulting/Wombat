@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "initial_state": "draft",
+  "states": [
+    {
+      "key": "draft",
+      "label": "Draft"
+    },
+    {
+      "key": "submitted",
+      "label": "Awaiting review",
+      "editable_by": "field:assessor_user_id"
+    },
+    {
+      "key": "signed_off",
+      "label": "Signed off",
+      "terminal": true
+    },
+    {
+      "key": "cancelled",
+      "label": "Cancelled"
+    }
+  ],
+  "transitions": [
+    {
+      "key": "submit",
+      "from": "draft",
+      "to": "submitted",
+      "actor": "subject|creator",
+      "validation": "owned"
+    },
+    {
+      "key": "sign_off",
+      "from": "submitted",
+      "to": "signed_off",
+      "actor": "field:assessor_user_id",
+      "validation": "all"
+    },
+    {
+      "key": "return",
+      "from": "submitted",
+      "to": "draft",
+      "actor": "field:assessor_user_id",
+      "requires_note": true,
+      "validation": "draft"
+    },
+    {
+      "key": "cancel",
+      "from": [
+        "draft",
+        "submitted"
+      ],
+      "to": "cancelled",
+      "actor": "subject|creator",
+      "validation": "draft"
+    }
+  ]
+}

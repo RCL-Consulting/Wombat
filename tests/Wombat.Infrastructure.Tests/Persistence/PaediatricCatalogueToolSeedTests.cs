@@ -7,6 +7,11 @@ using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Activities.Services;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Infrastructure.Persistence;
@@ -122,9 +127,10 @@ public sealed class PaediatricCatalogueToolSeedTests
     private static readonly string[] UndefinedOnPage8 = ["chart_stimulated_recall", "learner_feedback", "portfolio_review"];
 
     /// <summary>
-    /// Which instrument every seeded activity type is. The nine CPSA seeds, the generic Mini-CEX, DOPS and CBD (the same
-    /// instruments: unkeyed, they would be unrestricted on every EPA with a list), and null for the seven generic types
-    /// that are not College-named instruments (D21). Every seed entry is listed, so a new seed forces a decision here.
+    /// Which instrument every seeded activity type is. The eleven CPSA seeds, the generic Mini-CEX, DOPS and CBD (the
+    /// same instruments: unkeyed, they would be unrestricted on every EPA with a list), and null for the seven generic
+    /// types that are not College-named instruments (D21). Every seed entry is listed, so a new seed forces a decision
+    /// here.
     /// </summary>
     private static readonly (string TypeKey, string? WbaToolKey)[] SeededTypeToolKeys =
     [
@@ -137,6 +143,8 @@ public sealed class PaediatricCatalogueToolSeedTests
         ("rca_cpsa", "rca"),
         ("chart_stimulated_recall_cpsa", "chart_stimulated_recall"),
         ("reflective_exercise_cpsa", "reflective_exercise"),
+        ("clinical_audit_cpsa", "clinical_audit"),
+        ("portfolio_review_cpsa", "portfolio_review"),
         ("mini_cex", "mini_cex"),
         ("dops", "dops"),
         ("cbd", "cbd"),
@@ -638,6 +646,157 @@ public sealed class PaediatricCatalogueToolSeedTests
     }
 
     /// <summary>
+    /// T154: the two instruments seeded last are permitted on exactly the EPAs whose Annexure A cell names them, on a
+    /// freshly booted database, judged by the predicate the picker and the write path share. Clinical audit is named
+    /// by EPAs 1, 2 and 3; portfolio and logbook review by EPA 15 alone. The instrument is read from each seed's
+    /// catalogue entry, so a seed keyed as the wrong instrument fails here by name.
+    /// </summary>
+    /// <remarks>
+    /// Both credit nothing (D7), but each is held to these lists by the EPA it is evidence for (T154). This pins the
+    /// lists; the next test pins what the picker offers from them, and <c>RemainingWbaToolsTests</c> the filing.
+    /// </remarks>
+    [Theory]
+    [InlineData("clinical_audit_cpsa", new[] { "PAED-001", "PAED-002", "PAED-003" })]
+    [InlineData("portfolio_review_cpsa", new[] { "PAED-015" })]
+    public async Task TheT154Instruments_ArePermittedOnExactlyTheEpasAnnexureANamesThemOn(string seedKey, string[] expectedCodes)
+    {
+        var toolKey = ActivityTypeSeedCatalogue.Entries.Single(entry => entry.Key == seedKey).WbaToolKey;
+        var database = new SeedDatabase();
+        await database.BootAsync();
+
+        await using var dbContext = database.NewContext();
+        var items = await LoadCatalogueItemsAsync(dbContext);
+        items.Should().HaveCount(15);
+
+        var permitted = items
+            .Where(item => ToolPermission.Evaluate(CurriculumItem.ParsePermittedTools(item.PermittedToolsJson), toolKey)
+                           == ToolPermissionVerdict.Permitted)
+            .Select(item => item.Code)
+            .Order(StringComparer.Ordinal);
+
+        permitted.Should().Equal(expectedCodes, "'{0}' is instrument '{1}'", seedKey, toolKey);
+        items.Where(item => !expectedCodes.Contains(item.Code))
+            .Should().OnlyContain(item => ToolPermission.Evaluate(
+                    CurriculumItem.ParsePermittedTools(item.PermittedToolsJson), toolKey) == ToolPermissionVerdict.NotPermitted,
+                "every other EPA has a list, and none names '{0}'", toolKey);
+    }
+
+    /// <summary>
+    /// T154's second verification line, on a freshly booted catalogue, through the reader the form uses: a v11.1
+    /// trainee filing an unrated instrument is offered exactly the EPAs whose list names it, and no other. The form's
+    /// decision to narrow is taken from the booted type itself (its credit rules, its schema's evidence EPA, its
+    /// instrument), so a seed that lost its pointer or its key would be offered every EPA again and fail here.
+    /// </summary>
+    [Theory]
+    [InlineData("clinical_audit_cpsa", new[] { "PAED-001", "PAED-002", "PAED-003" })]
+    [InlineData("portfolio_review_cpsa", new[] { "PAED-015" })]
+    [InlineData("reflective_exercise_cpsa", new[] { "PAED-001", "PAED-003", "PAED-008", "PAED-014" })]
+    public async Task AnUnratedInstrumentsEpaPicker_OffersAV11TraineeExactlyTheEpasItsListNames(string seedKey, string[] expectedCodes)
+    {
+        const string traineeId = "t154-trainee";
+        var database = new SeedDatabase();
+        await database.BootAsync();
+        await database.EditAsync(async dbContext =>
+        {
+            var curriculumId = await dbContext.Curricula
+                .Where(curriculum => curriculum.Name == CurriculumName && curriculum.Version == CatalogueVersion)
+                .Select(curriculum => curriculum.Id)
+                .SingleAsync();
+            dbContext.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = traineeId,
+                InstitutionId = 1,
+                CurriculumId = curriculumId,
+                ProgrammeStartDate = new DateOnly(2026, 1, 12),
+                ExpectedCompletionDate = new DateOnly(2030, 1, 11),
+                IsActive = true
+            });
+        });
+
+        await using var read = database.NewContext();
+        var type = await read.ActivityTypes.AsNoTracking().SingleAsync(entity => entity.Key == seedKey);
+        var schema = Wombat.Domain.Activities.Schema.FormSchemaParser.Parse(type.SchemaJson ?? throw new InvalidOperationException($"{seedKey} was booted with no schema."));
+
+        var narrowed = CreditRuleFields.ResolveNarrowedEpaFieldKeys(type.CreditRulesJson, schema.EvidenceEpaField, type.WbaToolKey);
+        narrowed.Should().BeEquivalentTo(["epa_id"], "the form narrows the evidence EPA of an instrument that credits nothing");
+
+        var offered = await new Wombat.Infrastructure.Activities.ActivityReferenceDataService(read).GetEpaOptionsAsync(
+            new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity()),
+            new EpaOptionScope(traineeId, NarrowToCreditable: true, CurrentValue: null, WbaToolKey: type.WbaToolKey));
+
+        var offeredIds = offered.Select(option => int.Parse(option.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+        var offeredCodes = await read.Epas.AsNoTracking()
+            .Where(epa => offeredIds.Contains(epa.Id))
+            .Select(epa => epa.Code)
+            .ToListAsync();
+
+        offeredCodes.Order(StringComparer.Ordinal).Should().Equal(expectedCodes);
+    }
+
+    /// <summary>
+    /// T154's first verification line: a fresh boot creates both instruments, published at version 1 at the Paediatrics
+    /// speciality under their catalogue names and keys, and the seed refresher that runs after the seeders at startup
+    /// finds every CPSA seed in sync, on that boot and on the next. A seed that is not a canonicalisation fixed point
+    /// would be republished here, and on every start for ever.
+    /// </summary>
+    [Fact]
+    public async Task AFreshBoot_CreatesBothT154Instruments_AndNoBootRepublishesAnyCpsaSeed()
+    {
+        var database = new SeedDatabase();
+
+        for (var boot = 1; boot <= 2; boot++)
+        {
+            await database.BootAsync();
+
+            await using var dbContext = database.NewContext();
+            var results = await new ActivityTypeSeedRefresher(
+                    dbContext,
+                    NullLogger<ActivityTypeSeedRefresher>.Instance,
+                    Options.Create(new WombatOptions { RefreshSeededActivityTypes = true }))
+                .RefreshAsync();
+
+            results.Where(result => ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege)
+                    .Any(entry => entry.Key == result.Key))
+                .Should().HaveCount(11)
+                .And.OnlyContain(result => result.Outcome == ActivityTypeSeedRefreshOutcome.Unchanged, "boot {0}", boot);
+        }
+
+        await using var read = database.NewContext();
+        var paediatricsSpecialityId = await read.ActivityTypes.AsNoTracking()
+            .Where(type => type.Key == "mini_cex_cpsa")
+            .Select(type => type.ScopeId)
+            .SingleAsync();
+
+        var created = await read.ActivityTypes.AsNoTracking()
+            .Where(type => type.Key == "clinical_audit_cpsa" || type.Key == "portfolio_review_cpsa")
+            .OrderBy(type => type.Key)
+            .Select(type => new { type.Key, type.Name, type.Version, type.IsActive, type.Scope, type.ScopeId, type.WbaToolKey, type.OwnerUserId })
+            .ToListAsync();
+
+        created.Select(type => (type.Key, type.Name, type.WbaToolKey)).Should().Equal(
+            ("clinical_audit_cpsa", "Clinical Audit (Paediatrics)", "clinical_audit"),
+            ("portfolio_review_cpsa", "Portfolio and Logbook Review (Paediatrics)", "portfolio_review"));
+        created.Should().OnlyContain(type =>
+            type.Version == 1 && type.IsActive && type.Scope == ActivityScope.Speciality &&
+            type.ScopeId == paediatricsSpecialityId && type.OwnerUserId == ActivityTypeSeedCatalogue.SeedActorUserId);
+    }
+
+    /// <summary>
+    /// T154 seeded the last two instruments an activity type can be, so of the College's twelve only learner feedback
+    /// has no seed: it is MSF-shaped, and belongs to [T164] (D35). A new instrument in the vocabulary, or a seed
+    /// withdrawn, changes this list deliberately.
+    /// </summary>
+    [Fact]
+    public void EveryInstrumentButLearnerFeedback_HasACpsaSeed()
+    {
+        var seeded = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege)
+            .Select(entry => entry.WbaToolKey)
+            .ToHashSet(StringComparer.Ordinal);
+
+        VocabularyKeys.Where(key => !seeded.Contains(key)).Should().Equal("learner_feedback");
+    }
+
+    /// <summary>
     /// A CPSA seed with no key would, under D21, credit every EPA of the curriculum, and one naming a key the
     /// vocabulary does not define would be refused on every EPA. Either is a College instrument with no instrument.
     /// </summary>
@@ -648,7 +807,7 @@ public sealed class PaediatricCatalogueToolSeedTests
         var vocabulary = catalogue.WbaToolVocabulary.Select(tool => tool.Key).ToHashSet(StringComparer.Ordinal);
 
         var entries = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege).ToArray();
-        entries.Should().HaveCount(9);
+        entries.Should().HaveCount(11);
 
         using var scope = new AssertionScope();
         foreach (var entry in entries)

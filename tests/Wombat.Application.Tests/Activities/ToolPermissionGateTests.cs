@@ -518,10 +518,11 @@ public sealed class ToolPermissionGateTests
     }
 
     [Fact]
-    public async Task D21_AKeyedTypeWhosePinnedRulesCreditNothing_IsAccepted()
+    public async Task D21_AKeyedTypeWhosePinnedRulesCreditNothing_AndThatNamesNoEvidenceEpa_IsAccepted()
     {
-        // msf_cpsa and every unrated instrument declare `counts_for: []`. They can credit no item, so there is
-        // nothing to protect.
+        // `counts_for: []` and no `evidence_epa_field`: it can credit no item and is filed against no EPA, so there is
+        // nothing to judge. An unrated instrument that DOES name its evidence EPA is held to the list by that EPA (T154;
+        // RemainingWbaToolsTests).
         var options = NewDatabase();
         await SeedAsync(options);
 

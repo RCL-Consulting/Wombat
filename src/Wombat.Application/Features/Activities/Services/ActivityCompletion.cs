@@ -10,7 +10,8 @@ namespace Wombat.Application.Features.Activities.Services;
 /// <remarks>
 /// <para>
 /// Not the literal <c>completed</c>. That is where the assessor-rated seeds finish, but <c>reflective_exercise_cpsa</c>
-/// finishes in <c>discussed</c>, <c>msf_cpsa</c> in <c>recorded</c>, <c>procedure_log</c> and <c>journal_club</c> in
+/// finishes in <c>discussed</c>, <c>clinical_audit_cpsa</c> and <c>portfolio_review_cpsa</c> in <c>signed_off</c>,
+/// <c>msf_cpsa</c> in <c>recorded</c>, <c>procedure_log</c> and <c>journal_club</c> in
 /// <c>logged</c>, <c>qi_project</c> in <c>reviewed</c>, <c>reflective_note</c> in <c>approved</c>,
 /// <c>research_output</c> in <c>verified</c> and <c>teaching_session</c> in <c>accepted</c>. The portfolio summary
 /// counted only the literal, so every one of those printed as never completed (T169).
