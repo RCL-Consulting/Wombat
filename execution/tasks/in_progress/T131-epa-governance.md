@@ -369,3 +369,28 @@ by clone.
 
 **Seen, filed:** the pending list stays stale after ratify until reload (it predates T131), and two cosmetic issues.
 
+## Slices 3 and 4 — shipped 2026-09-24 (`870fc1e`, `c3e6a18`), merged with T165's quorum
+
+**Routing.** A panel may sit as a decision body, and EPAs 4–5 route to the neonatal panel where one exists. A speciality
+panel reviews only its own speciality. `MayAdministerPanelAsync` bounds speciality admins to their own speciality.
+
+**The agenda.**
+- A review carries its period, and its agenda lists the EPAs due by cadence.
+- A closing line must be staged or deferred **before Record** (settled at record, fixed afterwards).
+- Defer and Reinstate are chair only.
+- Ratify sets the line states.
+- There is one open binding review per period per seat.
+
+**Browser on dev (scripted Chrome):**
+- **Panels.** The routing card sent PAED-004/005 to the general panel. Once "Neonatal CCC" (panel 2) was created by the
+  InstitutionalAdmin, they route to it, and a second institution-wide neonatal panel is refused, naming it.
+- **Review 4 (2026 S2).**
+  - The window filled the whole year. Its 13 lines left PAED-004/005 to Neonatal CCC, and 8, 9 and 13 were optional.
+  - Record was disabled with the open lines named. Defer and Reinstate worked.
+  - PAED-002 was staged on two Mini-CEX items, recorded with quorum and ratified. The lines ended Decided (STAR #4),
+    Deferred with reasons, or Not decided.
+  - The trainee's My reviews shows the agenda read-only, with the committee's reasons.
+- **Found:** PAED-001 and PAED-006 were planned as Due although their STARs are active in the window. Filed as
+  [T215] (P2). The deferral form never shows its "say why" message, and My reviews lists reviews by window, not by
+  period: both added to [T212].
+

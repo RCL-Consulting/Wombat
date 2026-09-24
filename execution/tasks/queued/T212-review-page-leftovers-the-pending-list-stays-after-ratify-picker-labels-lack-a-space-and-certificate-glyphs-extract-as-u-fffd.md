@@ -29,6 +29,11 @@ created: 2026-09-24
    text layer is lossy for search and screen readers. Check the font's glyph coverage and ToUnicode map (T200 is
    related).
 
+4. The agenda's deferral form blocks an empty reason (`aria-invalid`) but never shows "Say why the committee is
+   deferring the decision.": it has no ValidationMessage.
+5. My reviews lists several ratified reviews that read the same, because its Period column shows the window
+   ("2026-01-01 to 2026-12-31") and not the period label ("2026 S2").
+
 ## Verification
 
 - [ ] Each item fixed: a bUnit test for 1 and 2, a text-extraction test for 3.

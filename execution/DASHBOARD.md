@@ -13,6 +13,7 @@
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T207](tasks/queued/T207-msf-anonymisation-keeps-an-unsalted-hash-of-each-respondent-s-email-so-a-response-can-be-re-identified.md) | P2 | MSF 'anonymisation' keeps an unsalted hash of each respondent's email, |  |
 | queued | [T213](tasks/queued/T213-committee-races-and-wording-left-by-the-t131-t165-merge-remove-can-race-record-record-has-no-friendly-concurrency-refusal.md) | P2 | Committee races and wording left by the T131/T165 merge: Remove can ra |  |
+| queued | [T215](tasks/queued/T215-the-agenda-planner-ignores-stars-that-no-agenda-line-records-so-an-epa-already-decided-comes-up-as-due-again.md) | P2 | The agenda planner ignores STARs that no agenda line records, so an EP |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -72,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+a1826a6 docs(execution): T159 notes the committee act's new order (stage or defer, then record, then ratify)
 c3e6a18 feat(committee): a review carries its period and an agenda of the EPAs due by cadence; a closing line must be staged or deferred before ratify; one open binding review per period per seat (T131 slice 4)
 870fc1e feat(committee): a panel may sit as a decision body, EPAs 4–5 route to the neonatal panel where one exists, and a speciality panel reviews only its own speciality (T131 slice 3)
 48fcf3c docs(execution): close T165, T164, T205 and T206 — browser-verified on dev with a local SMTP sink (review 3 ratified by a quorate sitting; respondent pages for MSF and learner feedback; withdraw)
 2d78d5c docs(execution): D35 closed (learner feedback, T164), D46 (quorum, T165) and D47 (interim MSF scale, T205) recorded; file T213, T214
-5f9db98 chore(dev): seed a dev InstitutionalAdmin, so panel membership can be edited without the administrator's credential
 ```
