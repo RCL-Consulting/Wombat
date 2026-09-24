@@ -35,6 +35,8 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
         // Closing anonymises every respondent (MsfCampaign.Close), the same routine the auto-close job reaches. (T184)
         campaign.Close(DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return _aggregationService.BuildReport(campaign);
+
+        // Closed, not released: nothing has been recorded yet.
+        return _aggregationService.BuildReport(campaign, []);
     }
 }

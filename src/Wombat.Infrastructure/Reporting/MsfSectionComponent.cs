@@ -29,8 +29,8 @@ internal static class MsfSectionComponent
     }
 
     /// <summary>
-    /// An EPA code, saying so when the campaign covered it but recorded nothing for it - the EPA had
-    /// left the trainee's curriculum by release day.
+    /// An EPA code, saying so when the campaign declared it but recorded no evidence for it. It gives no
+    /// reason: a missing evidence row does not show why it is missing (T186).
     /// </summary>
     private static string DescribeCoveredEpa(MsfCoveredEpaDto epa)
         => epa.Recorded ? epa.Code : $"{epa.Code} (not recorded)";

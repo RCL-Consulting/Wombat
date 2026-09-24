@@ -256,6 +256,46 @@ public sealed class MsfEvidenceFanOutTests
         // activity that was never written.
         released.CoveredEpas.Single(covered => covered.EpaId == EpaOnCurriculum).RecordedOn.Should().NotBeNull();
         released.CoveredEpas.Single(covered => covered.EpaId == EpaOffCurriculum).RecordedOn.Should().BeNull();
+
+        // T186: the writer and the one reader of coverage, end to end. The rows this release wrote, read back by the
+        // reader every screen shares, name exactly the EPA it recorded. A change to how the release links a row to its
+        // campaign that a reader's fixture was updated to match would still fail here.
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            db,
+            TraineeUserId,
+            [(released.Id, released.State)],
+            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            CancellationToken.None);
+        recorded[released.Id].Select(epa => epa.EpaId).Should().Equal(EpaOnCurriculum);
+
+        // And the report the coordinator and the trainee open says so per EPA.
+        (await ReportAsync(db, released.Id)).CoveredEpas
+            .Select(covered => (covered.EpaId, covered.Recorded))
+            .Should().BeEquivalentTo([(EpaOnCurriculum, true), (EpaOffCurriculum, false)]);
+    }
+
+    /// <summary>
+    /// The campaign report reads "recorded" from the evidence rows, as the committee snapshot and the coverage grid do,
+    /// not from the per-EPA stamp. A campaign released before the stamp existed has its rows and a null stamp; its
+    /// report said every EPA was "no longer on the trainee's curriculum". (T186)
+    /// </summary>
+    [Fact]
+    public async Task TheReport_ReadsRecordedFromTheEvidenceRows_NotFromThePerEpaStamp()
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum, EpaOffCurriculum]);
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: null, narrative: null);
+
+        // The dev case, and its mirror: the recorded EPA's stamp cleared, as on a campaign released before the stamp
+        // existed; the dropped EPA stamped, with no row behind it.
+        var released = await db.MsfCampaigns.Include(c => c.CoveredEpas).SingleAsync();
+        released.CoveredEpas.Single(covered => covered.EpaId == EpaOnCurriculum).RecordedOn = null;
+        released.CoveredEpas.Single(covered => covered.EpaId == EpaOffCurriculum).RecordedOn = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        (await ReportAsync(db, campaign.Id)).CoveredEpas
+            .Select(covered => (covered.EpaId, covered.Recorded))
+            .Should().BeEquivalentTo([(EpaOnCurriculum, true), (EpaOffCurriculum, false)]);
     }
 
     [Fact]
@@ -509,6 +549,11 @@ public sealed class MsfEvidenceFanOutTests
             new ReleaseMsfCampaignCommand(campaignId, CoordinatorUserId, narrative, entrustmentLevel, Coordinator()),
             CancellationToken.None);
     }
+
+    /// <summary>The campaign's report as the coordinator who runs it reads it (<see cref="GetCampaignAggregateReportQuery" />).</summary>
+    private static async Task<MsfCampaignAggregateReportDto> ReportAsync(ApplicationDbContext db, int campaignId)
+        => (await new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService())
+            .Handle(new GetCampaignAggregateReportQuery(campaignId, Coordinator()), CancellationToken.None))!;
 
     private static ActivityService BuildActivityService(ApplicationDbContext db, TimeProvider? clock = null)
         => new(db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator(), clock);

@@ -7,6 +7,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
@@ -123,13 +124,21 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         var describe = await ActivityDescriber.LoadAsync(_dbContext, activities, cancellationToken);
         var activityEvidence = activities.Select(describe.Describe);
 
+        // Which EPAs each campaign's evidence rows carry: the reader T168's coverage grid shares (T186).
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            _dbContext,
+            review.TraineeUserId,
+            msfCampaigns.Select(campaign => (campaign.Id, campaign.State)),
+            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            cancellationToken);
+
         var msfEvidence = msfCampaigns.Select(campaign => new CommitteeEvidence
         {
             SourceType = CommitteeEvidenceSourceType.MsfCampaign,
             MsfCampaignId = campaign.Id,
             SourceLabel = $"{campaign.Template.Name} #{campaign.Id}",
             Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; " +
-                      $"closed {campaign.ClosedOn:yyyy-MM-dd}.{DescribeCoverage(campaign)}",
+                      $"closed {campaign.ClosedOn:yyyy-MM-dd}.{DescribeCoverage(campaign, recorded[campaign.Id])}",
             SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn,
             // A campaign is a report across the EPAs it covers, not evidence for one: it has no EPA, instrument, rating
             // or encounter of its own. Its per-EPA claims are ordinary activities above, each under its EPA. (T167)
@@ -277,43 +286,53 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     }
 
     /// <summary>
-    /// What a campaign declared itself evidence for, and whether that reached the portfolio. (T121)
+    /// What a campaign declared itself evidence for, and which of that reached the portfolio. (T121, T186)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A released campaign appears in this snapshot twice over: once here, and once per covered EPA as
     /// an ordinary <c>msf_cpsa</c> activity. That is deliberate — the panel wants both the report and
     /// the per-EPA claims — but it is only readable if the parent names the children, which is what this
     /// sentence does. An empty coverage set is worth printing too: it is the one case where a released
     /// campaign left no evidence at all. Only released campaigns reach the snapshot (T138), so there is
     /// no "to be recorded on release" case to describe.
+    /// </para>
+    /// <para>
+    /// "Recorded" is read from the evidence rows themselves (<see cref="MsfCampaignCoverage" />), the rows
+    /// the panel sees listed as activities, never from the per-EPA stamp <c>MsfCampaignEpa.RecordedOn</c>:
+    /// a campaign released before the stamp existed has its rows and no stamp, and this sentence used to
+    /// say its EPAs were no longer on the trainee's curriculum (T186). A declared EPA with no row is said
+    /// to be declared but not recorded, and no more. The release does drop an EPA that has left the
+    /// curriculum, but a missing row does not show that that was the reason, so the sentence gives none.
+    /// </para>
     /// </remarks>
-    private static string DescribeCoverage(MsfCampaign campaign)
+    private static string DescribeCoverage(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> evidence)
     {
-        var covered = campaign.CoveredEpas
-            .Where(entry => entry.Epa is not null)
-            .OrderBy(entry => entry.Epa.Code, StringComparer.Ordinal)
+        var recorded = evidence.ToArray();
+        var recordedEpaIds = recorded.Select(epa => epa.EpaId).ToHashSet();
+
+        // Per EPA, never per campaign: a campaign can be half recorded, and a panel told "recorded as one
+        // activity each" about an EPA whose activity was never written would go looking for a record that
+        // does not exist. Released with nothing recorded is terminal, not pending: Release refuses a second
+        // attempt.
+        var notRecorded = campaign.CoveredEpas
+            .Where(entry => entry.Epa is not null && !recordedEpaIds.Contains(entry.EpaId))
+            .Select(entry => entry.Epa.Code)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(code => code, StringComparer.Ordinal)
             .ToArray();
 
-        if (covered.Length == 0)
+        if (recorded.Length == 0 && notRecorded.Length == 0)
         {
             return " Names no EPA, so it recorded no evidence.";
         }
 
-        // Per EPA, never per campaign. A release records evidence for the EPAs still on the trainee's
-        // curriculum and drops the rest, so a campaign can be half recorded - and a panel told
-        // "recorded as one activity each" about an EPA whose activity was never written would go
-        // looking for a record that does not exist. Released with nothing recorded is terminal, not
-        // pending: Release refuses a second attempt.
-        var recorded = covered.Where(entry => entry.RecordedOn is not null).Select(entry => entry.Epa.Code).ToArray();
-        var missing = covered.Where(entry => entry.RecordedOn is null).Select(entry => entry.Epa.Code).ToArray();
-
         var sentence = recorded.Length > 0
-            ? $" Evidence recorded for {string.Join(", ", recorded)}, one activity each."
+            ? $" Evidence recorded for {string.Join(", ", recorded.Select(epa => epa.EpaCode))}, one activity each."
             : string.Empty;
 
-        return missing.Length > 0
-            ? sentence + $" Also declared {string.Join(", ", missing)}, no longer on the trainee's " +
-              "curriculum, so nothing was recorded for those."
+        return notRecorded.Length > 0
+            ? sentence + $" Declared but not recorded: {string.Join(", ", notRecorded)}."
             : sentence;
     }
 }

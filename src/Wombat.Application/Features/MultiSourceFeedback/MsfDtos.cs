@@ -44,9 +44,10 @@ public sealed record MsfCategoryAggregateDto(
 
 /// <summary>One EPA a campaign is declared to be evidence for. (T121)</summary>
 /// <param name="Recorded">
-/// Whether this EPA's evidence activity was actually written. False on a released campaign means the
-/// EPA had left the subject's curriculum by release day and was dropped - a terminal state, not a
-/// pending one.
+/// Whether this EPA's evidence activity exists: read from the campaign's evidence rows
+/// (<see cref="MsfCampaignCoverage" />, T186), never from the per-EPA stamp. False on a released campaign
+/// is terminal, not pending, and says nothing about why: the release drops an EPA that has left the
+/// subject's curriculum, but a missing row does not show that that was the reason.
 /// </param>
 public sealed record MsfCoveredEpaDto(int EpaId, string Code, string Title, bool Recorded);
 

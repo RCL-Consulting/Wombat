@@ -61,30 +61,100 @@ public sealed class CommitteeDecisionHandlersTests
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewAsync(dbContext);
 
-        dbContext.Epas.Add(new Epa { Id = 70, SubSpecialityId = 1, Code = "PAED-010", Title = "Leading a clinical team" });
-        dbContext.Epas.Add(new Epa { Id = 71, SubSpecialityId = 1, Code = "PAED-011", Title = "Managing population health" });
+        AddPaed010AndPaed011(dbContext);
         dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa
         {
             CampaignId = 50,
             EpaId = 70,
             RecordedOn = new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc)
         });
+        await AddMsfEvidenceAsync(dbContext, campaignId: 50, epaId: 70);
 
-        // Declared but never recorded: this EPA had left the trainee's curriculum by release day, so
-        // the release dropped it. The snapshot must not claim an activity that was never written.
+        // Declared but never recorded: the release wrote no evidence row for it. The snapshot must not
+        // claim an activity that was never written, nor guess why there is none.
         dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 71 });
         (await dbContext.MsfCampaigns.SingleAsync(campaign => campaign.Id == 50)).EvidenceRecordedOn =
             new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc);
         await dbContext.SaveChangesAsync();
 
-        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
-            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        var msfEvidence = (await StartAsync(dbContext, review)).EvidenceItems
+            .Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
 
-        var msfEvidence = started.EvidenceItems.Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
-        msfEvidence.Summary.Should().Contain("Evidence recorded for PAED-010, one activity each.");
-        msfEvidence.Summary.Should().Contain("Also declared PAED-011");
-        msfEvidence.Summary.Should().NotContain("Evidence recorded for PAED-010, PAED-011");
+        msfEvidence.Summary.Should().EndWith(
+            " Evidence recorded for PAED-010, one activity each. Declared but not recorded: PAED-011.");
+        msfEvidence.Summary.Should().NotContain("curriculum", "a missing row does not say why it is missing");
+    }
+
+    /// <summary>
+    /// The dev case T186 was filed for. Campaigns released before the per-EPA stamp existed carry a null
+    /// stamp on every declared EPA and have their <c>msf_cpsa</c> rows all the same. Their line names
+    /// the EPAs those rows carry, and says nothing about the curriculum.
+    /// </summary>
+    [Fact]
+    public async Task StartReview_ACampaignWhosePerEpaStampIsNull_NamesTheEpasItsEvidenceRowsCarry()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        AddPaed010AndPaed011(dbContext);
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 70 });
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 71 });
+        await AddMsfEvidenceAsync(dbContext, campaignId: 50, epaId: 71);
+        await AddMsfEvidenceAsync(dbContext, campaignId: 50, epaId: 70);
+        await dbContext.SaveChangesAsync();
+
+        var msfEvidence = (await StartAsync(dbContext, review)).EvidenceItems
+            .Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
+
+        msfEvidence.Summary.Should().EndWith(" Evidence recorded for PAED-010, PAED-011, one activity each.");
+        msfEvidence.Summary.Should().NotContain("not recorded").And.NotContain("curriculum");
+    }
+
+    /// <summary>
+    /// A declared EPA with no evidence row reads "declared but not recorded", whatever its per-EPA stamp
+    /// says: the row is the evidence, and the stamp is not. With no row at all, nothing is said to be
+    /// recorded.
+    /// </summary>
+    [Fact]
+    public async Task StartReview_DeclaredEpasWithNoEvidenceRow_ReadDeclaredButNotRecorded_WhateverTheirStampSays()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        AddPaed010AndPaed011(dbContext);
+        var stamped = new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc);
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 70, RecordedOn = stamped });
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 71 });
+        await dbContext.SaveChangesAsync();
+
+        var msfEvidence = (await StartAsync(dbContext, review)).EvidenceItems
+            .Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
+
+        msfEvidence.Summary.Should().EndWith(" Declared but not recorded: PAED-010, PAED-011.");
+        msfEvidence.Summary.Should().NotContain("Evidence recorded");
+    }
+
+    /// <summary>
+    /// A withdrawn campaign counts nowhere, even with an evidence row naming it; and a row counts only
+    /// for the campaign its data names, so another campaign's row does not cover this one's EPA.
+    /// </summary>
+    [Fact]
+    public async Task StartReview_AnEvidenceRowOfAWithdrawnCampaign_CoversNothing_AndIsNotTheReleasedOnesEvidence()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        AddPaed010AndPaed011(dbContext);
+        dbContext.MsfCampaigns.Add(CreateCampaignClosingInWindow(51, MsfCampaignState.Withdrawn));
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 50, EpaId = 70 });
+        dbContext.MsfCampaignEpas.Add(new MsfCampaignEpa { CampaignId = 51, EpaId = 70 });
+        await AddMsfEvidenceAsync(dbContext, campaignId: 51, epaId: 70);
+        await dbContext.SaveChangesAsync();
+
+        var lines = (await StartAsync(dbContext, review)).EvidenceItems;
+
+        lines.Should().NotContain(item => item.MsfCampaignId == 51);
+        lines.Single(item => item.MsfCampaignId == 50).Summary.Should().EndWith(" Declared but not recorded: PAED-010.");
     }
 
     /// <summary>
@@ -258,6 +328,61 @@ public sealed class CommitteeDecisionHandlersTests
         resolved.State.Should().Be(CommitteeReviewState.Final);
         resolved.Decisions.Should().HaveCount(2);
         resolved.Decisions[0].Category.Should().Be(CommitteeDecisionCategory.SatisfactoryProgress);
+    }
+
+    private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext dbContext, CommitteeReview review)
+        => new StartCommitteeReviewCommandHandler(dbContext).Handle(
+            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+    private static void AddPaed010AndPaed011(ApplicationDbContext dbContext)
+    {
+        dbContext.Epas.Add(new Epa { Id = 70, SubSpecialityId = 1, Code = "PAED-010", Title = "Leading a clinical team" });
+        dbContext.Epas.Add(new Epa { Id = 71, SubSpecialityId = 1, Code = "PAED-011", Title = "Managing population health" });
+    }
+
+    /// <summary>
+    /// One <c>msf_cpsa</c> evidence row as <c>ReleaseMsfCampaign</c> writes it: the campaign in its data,
+    /// the EPA stamped (T137), observed on the day the fixture's campaign 50 closed.
+    /// </summary>
+    private static async Task AddMsfEvidenceAsync(ApplicationDbContext dbContext, int campaignId, int epaId)
+    {
+        const int msfTypeId = 11;
+        if (await dbContext.ActivityTypes.FindAsync(msfTypeId) is null)
+        {
+            dbContext.ActivityTypes.Add(new ActivityType
+            {
+                Id = msfTypeId,
+                Key = "msf_cpsa",
+                Name = "Multi-Source Feedback (Paediatrics)",
+                Scope = ActivityScope.Institution,
+                ScopeId = 1,
+                Version = 1,
+                SchemaJson = "{}",
+                // The shipped workflow, whose terminal state is the rows' `recorded`: evidence is a finished activity (D44).
+                WorkflowJson = File.ReadAllText(
+                    Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+                CreditRulesJson = "{}",
+                OwnerUserId = "seed-system",
+                CreatedOn = DateTime.UtcNow
+            });
+        }
+
+        var releasedOn = new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc);
+        dbContext.Activities.Add(new Activity
+        {
+            ActivityTypeId = msfTypeId,
+            SchemaVersion = 1,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "coord-1",
+            CurrentState = "recorded",
+            DataJson = $$"""{ "epa_id": {{epaId}}, "campaign_id": {{campaignId}}, "observed_on": "2026-02-16", "respondent_count": 8 }""",
+            EpaId = epaId,
+            CreatedOn = releasedOn,
+            ObservedOn = new DateOnly(2026, 2, 16),
+            ObservedOnSource = ObservationDateSource.Declared,
+            UpdatedOn = releasedOn
+        });
     }
 
     private static ApplicationDbContext CreateDbContext()

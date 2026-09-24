@@ -51,9 +51,10 @@ public sealed class ReleaseMsfCampaignCommandValidator : AbstractValidator<Relea
 public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMsfCampaignCommand>
 {
     /// <summary>
-    /// The seeded activity type that carries a released campaign's evidence, one row per covered EPA.
+    /// The seeded activity type that carries a released campaign's evidence, one row per covered EPA. The one key
+    /// <see cref="MsfCampaignCoverage" /> reads coverage back from, so the writer and its readers cannot name two types.
     /// </summary>
-    private const string MsfActivityTypeKey = "msf_cpsa";
+    private const string MsfActivityTypeKey = MsfCampaignCoverage.MsfEvidenceTypeKey;
 
     /// <summary>The single transition out of that type's draft state, into its terminal one.</summary>
     private const string RecordTransitionKey = "record";
@@ -85,7 +86,8 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
 
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
-        var report = _aggregationService.BuildReport(campaign);
+        // Only the release gates are read from this report, before the release has written any evidence.
+        var report = _aggregationService.BuildReport(campaign, []);
         if (!report.ReadyForRelease)
         {
             throw new InvalidOperationException(
@@ -200,8 +202,9 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
 
         // Marked per EPA, not only on the campaign: declaring coverage and recording evidence are
         // different facts, and a release honours the first for EPAs it cannot honour the second for.
-        // Without this the committee snapshot would list every declared EPA as "recorded as one
-        // activity each", including the ones that were dropped.
+        // Nothing reads this stamp any more (T186): the committee snapshot, the coverage grid, the campaign
+        // report and the portfolio PDF all read the rows staged above (MsfCampaignCoverage), because
+        // campaigns released before the stamp existed have the rows and not the stamp.
         var recordedOn = DateTime.UtcNow;
         foreach (var epa in campaign.CoveredEpas.Where(entry => covered.Contains(entry.EpaId)))
         {
@@ -224,7 +227,8 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         var data = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             ["epa_id"] = epaId,
-            ["campaign_id"] = campaign.Id,
+            // The link back to the campaign, and the only one: coverage is read from these rows by it (T186).
+            [MsfCampaignCoverage.CampaignIdField] = campaign.Id,
 
             // The day the window actually shut, not the release date: that is when the evidence was
             // complete. It is what Activity.ObservedOn is stamped from (T119) and what [T130]'s period

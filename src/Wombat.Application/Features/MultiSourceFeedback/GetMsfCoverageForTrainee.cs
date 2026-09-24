@@ -18,8 +18,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// <remarks>
 /// <para>
 /// <b>What "covered" means is the College's D9.</b> A campaign is run once per period across many EPAs, so "MSF completed
-/// for EPA 7" means "a campaign covering EPA 7 was released this period", never "a campaign about EPA 7". The join that
-/// says which EPAs a campaign covered is <see cref="MsfCampaignEpa" />, and this reads it, not <c>counts_for</c> and not
+/// for EPA 7" means "a campaign covering EPA 7 was released this period", never "a campaign about EPA 7". Which EPAs a
+/// released campaign covered is read by <see cref="MsfCampaignCoverage" />, not from <c>counts_for</c> and not from
 /// <c>CurriculumItemProgress</c>: by D8 MSF credits nothing (<c>msf_cpsa</c> ships <c>counts_for: []</c>), so it moves
 /// no progress row and consumes none of Annexure A's encounters. Nothing here is a target or a shortfall. Whether the
 /// College wants one campaign per semester, or some other cadence, is not confirmed from Annexure B, so the reader shows
@@ -29,9 +29,12 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// <b>Which campaigns.</b> Released ones only, the cut [T138] makes for the committee snapshot and
 /// <see cref="ListMsfCampaignsForTraineeQuery" /> makes for the trainee: before release the trainee has not seen the
 /// report and the coordinator may still withdraw it, and a withdrawn campaign was retracted. And of a released campaign,
-/// only the EPAs its release recorded evidence for (<see cref="MsfCampaignEpa.RecordedOn" />): a release drops a declared
-/// EPA that had left the trainee's curriculum, and an EPA with no evidence row was not covered. So a covered EPA is
-/// exactly an <c>msf_cpsa</c> evidence activity with that EPA (<c>Activity.EpaId</c>, T137), and the two cannot disagree.
+/// only the EPAs its evidence rows carry: the <c>msf_cpsa</c> activities its release wrote, one per EPA it could honour,
+/// each naming the campaign and stamped with its EPA (<c>Activity.EpaId</c>, T137). A declared EPA with no such row was
+/// not covered, whatever the reason. Not the per-EPA stamp <see cref="MsfCampaignEpa.RecordedOn" />, which a campaign
+/// released before it existed does not carry although its evidence does (T186). So a covered EPA is exactly an
+/// <c>msf_cpsa</c> evidence activity with that EPA, the rule the committee snapshot's campaign line is written by, and
+/// the two cannot disagree.
 /// </para>
 /// <para>
 /// <b>Which semester.</b> The one containing the UTC day the campaign actually closed (<see cref="MsfCampaign.ClosedOn" />),
@@ -164,25 +167,46 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
             ? after.Start.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
             : DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc);
 
-        var covering = epaIds.Length == 0
+        // The campaigns first, windowed and cut to released in SQL; then which EPAs each one's evidence rows carry, from
+        // the one reader the committee snapshot shares (T186). No campaign, no second read.
+        var releasedCampaigns = epaIds.Length == 0
             ? []
-            : await _dbContext.Set<MsfCampaignEpa>()
+            : await _dbContext.Set<MsfCampaign>()
                 .AsNoTracking()
-                .Where(covered => covered.Campaign.SubjectUserId == traineeUserId &&
-                                  covered.Campaign.State == MsfCampaignState.Released &&
-                                  covered.RecordedOn != null &&
-                                  covered.Campaign.ClosedOn >= closedFrom &&
-                                  covered.Campaign.ClosedOn < closedBefore &&
-                                  epaIds.Contains(covered.EpaId))
-                .Select(covered => new
+                .Where(campaign => campaign.SubjectUserId == traineeUserId &&
+                                   campaign.State == MsfCampaignState.Released &&
+                                   campaign.ClosedOn >= closedFrom &&
+                                   campaign.ClosedOn < closedBefore)
+                .Select(campaign => new
                 {
-                    covered.EpaId,
-                    covered.CampaignId,
-                    TemplateName = covered.Campaign.Template.Name,
-                    ClosedOn = covered.Campaign.ClosedOn!.Value,
-                    covered.Campaign.ReleasedOn
+                    campaign.Id,
+                    campaign.State,
+                    TemplateName = campaign.Template.Name,
+                    ClosedOn = campaign.ClosedOn!.Value,
+                    campaign.ReleasedOn
                 })
                 .ToListAsync(cancellationToken);
+
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            _dbContext,
+            traineeUserId,
+            releasedCampaigns.Select(campaign => (campaign.Id, campaign.State)),
+            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            cancellationToken);
+
+        var onCurriculum = epaIds.ToHashSet();
+        var covering = releasedCampaigns
+            .SelectMany(campaign => recorded[campaign.Id]
+                .Where(epa => onCurriculum.Contains(epa.EpaId))
+                .Select(epa => new
+                {
+                    epa.EpaId,
+                    CampaignId = campaign.Id,
+                    campaign.TemplateName,
+                    campaign.ClosedOn,
+                    campaign.ReleasedOn
+                }))
+            .ToList();
 
         var campaignsByEpaAndPeriod = covering
             .Select(entry => new

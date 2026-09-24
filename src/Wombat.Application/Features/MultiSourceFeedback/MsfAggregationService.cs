@@ -4,14 +4,25 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 public interface IMsfAggregationService
 {
-    MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign);
+    /// <summary>A campaign's aggregate report, and what it was evidence for.</summary>
+    /// <param name="recordedEpas">
+    /// The EPAs the campaign's evidence rows carry, as <see cref="MsfCampaignCoverage.RecordedEpasAsync" /> reads them
+    /// for it: the one source of whether a declared EPA was recorded (T186). Empty for a campaign that is not released,
+    /// which has no evidence rows; the release gates are computed before the release writes any.
+    /// </param>
+    MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas);
 }
 
 public sealed class MsfAggregationService : IMsfAggregationService
 {
-    public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign)
+    public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas)
     {
         ArgumentNullException.ThrowIfNull(campaign);
+        ArgumentNullException.ThrowIfNull(recordedEpas);
+
+        // Recorded is read from the evidence rows, never from the per-EPA stamp MsfCampaignEpa.RecordedOn, which a
+        // campaign released before the stamp existed does not carry although its rows exist (T186).
+        var recordedEpaIds = recordedEpas.Select(epa => epa.EpaId).ToHashSet();
 
         var templateQuestions = campaign.Template.Questions
             .OrderBy(question => question.Order)
@@ -96,7 +107,7 @@ public sealed class MsfAggregationService : IMsfAggregationService
                     covered.EpaId,
                     covered.Epa.Code,
                     covered.Epa.Title,
-                    covered.RecordedOn is not null))
+                    recordedEpaIds.Contains(covered.EpaId)))
                 .OrderBy(covered => covered.Code, StringComparer.Ordinal)
                 .ToList(),
             campaign.ReviewerEntrustmentLevel,

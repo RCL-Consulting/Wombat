@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
 55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
 4db504b feat(committee): the review and the trainee see each EPA's entrustment against Annexure A's target for the year, and exit-rule readiness — informational, no graduation gate (T166)
 2352a16 docs(execution): handoff progress
 89ac84e test(integration): T201's audit test supplies the trainee's name T202 now requires; docs(execution): close T200–T203, file T205–T209 (P1: MSF respondents have no page)
-ea54fe1 fix(dashboards): an activity counts as finished in any terminal state of its pinned workflow; an assessor's dashboard leaves out their own portfolio (T203 item 1)
 ```

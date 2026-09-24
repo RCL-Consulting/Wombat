@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -93,6 +94,58 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// The MSF section says which declared EPAs the campaign recorded from its evidence rows, as the committee snapshot,
+    /// the coverage grid and the campaign report have it, not from the per-EPA stamp. A campaign released before the
+    /// stamp existed has its rows and a null stamp, and printed every EPA "(not recorded)" beside the activities section
+    /// listing its records. (T186)
+    /// </summary>
+    [Fact]
+    public async Task TheMsfSection_ReadsRecordedFromTheEvidenceRows_NotFromThePerEpaStamp()
+    {
+        await using var db = SeededDb();
+        db.Set<Epa>().Add(new Epa { Id = 2, SubSpecialityId = 1, Code = "PAED-002", Title = "Chronic care", IsActive = true });
+        var campaign = SeedReleasedCampaign(db, coveredEpaIds: [1, 2]);
+
+        // PAED-001: an evidence row and a null stamp, the campaign released before the stamp existed. PAED-002: stamped,
+        // with no row behind it.
+        campaign.CoveredEpas.Single(covered => covered.EpaId == 2).RecordedOn = campaign.ReleasedOn;
+        db.Set<ActivityType>().Add(new ActivityType
+        {
+            Id = 30,
+            Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+            Name = "Multi-Source Feedback (Paediatrics)",
+            Version = 1,
+            WorkflowJson = File.ReadAllText(
+                Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+            OwnerUserId = "seed-system",
+            CreatedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
+        db.Set<Activity>().Add(new Activity
+        {
+            ActivityTypeId = 30,
+            SchemaVersion = 1,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "coord-1",
+            CurrentState = "recorded",
+            DataJson = $$"""{ "epa_id": 1, "{{MsfCampaignCoverage.CampaignIdField}}": {{campaign.Id}}, "respondent_count": 2 }""",
+            EpaId = 1,
+            CreatedOn = campaign.ReleasedOn!.Value,
+            UpdatedOn = campaign.ReleasedOn!.Value,
+            ObservedOn = campaign.ClosesOn,
+            ObservedOnSource = ObservationDateSource.Declared
+        });
+        await db.SaveChangesAsync();
+
+        var data = await new PortfolioPdfService(db, new MsfAggregationService()).LoadPortfolioDataAsync(
+            new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1")),
+            CancellationToken.None);
+
+        data.MsfReports.Should().ContainSingle().Which.CoveredEpas
+            .Select(covered => (covered.Code, covered.Recorded))
+            .Should().Equal(("PAED-001", true), ("PAED-002", false));
+    }
+
+    /// <summary>
     /// The portfolio is headed by the profile <c>TraineeScopeResolver</c> prefers: the active one, else the most recent
     /// (highest id). (T101, T113)
     /// </summary>
@@ -163,7 +216,7 @@ public sealed class PortfolioPdfServiceTests
         db.SaveChanges();
     }
 
-    private static void SeedReleasedCampaign(ApplicationDbContext db)
+    private static MsfCampaign SeedReleasedCampaign(ApplicationDbContext db, int[]? coveredEpaIds = null)
     {
         var template = new MsfTemplate
         {
@@ -185,7 +238,7 @@ public sealed class PortfolioPdfServiceTests
             ReleasedOn = new DateTime(2029, 7, 1, 0, 0, 0, DateTimeKind.Utc),
             ReviewedByUserId = "coord-1",
             Template = template,
-            CoveredEpas = [new MsfCampaignEpa { EpaId = 1 }]
+            CoveredEpas = (coveredEpaIds ?? [1]).Select(epaId => new MsfCampaignEpa { EpaId = epaId }).ToList()
         };
 
         foreach (var category in new[] { MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse })
@@ -216,6 +269,7 @@ public sealed class PortfolioPdfServiceTests
 
         db.Set<MsfCampaign>().Add(campaign);
         db.SaveChanges();
+        return campaign;
     }
 
     private static ApplicationDbContext SeededDb()
@@ -239,7 +293,8 @@ public sealed class PortfolioPdfServiceTests
     private sealed class ThrowingMsfAggregationService : IMsfAggregationService
     {
         // Never reached: the seeded data has no released MSF campaigns.
-        public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign) => throw new NotSupportedException();
+        public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas)
+            => throw new NotSupportedException();
     }
 
     /// <summary>

@@ -50,6 +50,16 @@ public sealed class GetCampaignAggregateReportQueryHandler
         }
 
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
-        return _aggregationService.BuildReport(campaign);
+
+        // Which declared EPAs were recorded, from the evidence rows, as the committee snapshot and the coverage grid
+        // read it (T186). Nothing is read for a campaign that is not released.
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            _dbContext,
+            campaign.SubjectUserId,
+            [(campaign.Id, campaign.State)],
+            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            cancellationToken);
+
+        return _aggregationService.BuildReport(campaign, recorded[campaign.Id]);
     }
 }

@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Tests.TestHelpers;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -17,6 +18,11 @@ namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 /// completed for EPA 7" means a campaign covering EPA 7 was released this period. Released only, and only the EPAs the
 /// release recorded evidence for, bucketed by the UTC day the campaign closed.
 /// </summary>
+/// <remarks>
+/// "Recorded evidence for" is read from the campaign's <c>msf_cpsa</c> evidence rows, never from the per-EPA stamp
+/// <c>MsfCampaignEpa.RecordedOn</c> (T186). The fixture writes the rows and leaves the stamp null, as it is on every
+/// campaign released before the stamp existed, so every test here is also that case.
+/// </remarks>
 public sealed class GetMsfCoverageForTraineeTests
 {
     private const string TraineeUserId = "trainee-1";
@@ -25,6 +31,7 @@ public sealed class GetMsfCoverageForTraineeTests
     private const int CurriculumId = 10;
     private const int OtherCurriculumId = 11;
     private const int TemplateId = 40;
+    private const int MsfTypeId = 60;
 
     private static readonly DateOnly Year2026From = new(2026, 1, 1);
     private static readonly DateOnly Year2026To = new(2026, 12, 31);
@@ -36,7 +43,7 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001"), Item(2, "PAED-002"), Item(7, "PAED-007")]);
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (7, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (7, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
@@ -62,8 +69,8 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        // Closed in the span and marked recorded, so only the state can be what leaves it out.
-        db.MsfCampaigns.Add(Campaign(50, state, Utc(2026, 3, 10, 9), (1, true)));
+        // Closed in the span, with an evidence row naming it, so only the state can be what leaves it out.
+        AddCampaign(db, 50, state, Utc(2026, 3, 10, 9), (1, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
@@ -77,13 +84,75 @@ public sealed class GetMsfCoverageForTraineeTests
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001"), Item(3, "PAED-003")]);
         // PAED-003 was declared but had left the curriculum at release, so the release dropped it.
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (3, false)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (3, false));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
 
         Covered(coverage!, "PAED-001").Should().Equal((2026, 1, 50));
         Covered(coverage!, "PAED-003").Should().BeEmpty("no msf_cpsa evidence row was written for it");
+    }
+
+    /// <summary>
+    /// The dev case T186 was filed for: a campaign released before the per-EPA stamp existed has its evidence rows and a
+    /// null stamp on every declared EPA. Its rows say what it covered.
+    /// </summary>
+    [Fact]
+    public async Task ACampaignWhosePerEpaStampIsNull_IsCoveredByItsEvidenceRows()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001"), Item(10, "PAED-010"), Item(12, "PAED-012")]);
+        var campaign = AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (10, true), (12, true));
+        await db.SaveChangesAsync();
+
+        campaign.CoveredEpas.Should().OnlyContain(covered => covered.RecordedOn == null, "the fixture is the unstamped case");
+        var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
+
+        Covered(coverage!, "PAED-001").Should().Equal((2026, 1, 50));
+        Covered(coverage!, "PAED-010").Should().Equal((2026, 1, 50));
+        Covered(coverage!, "PAED-012").Should().Equal((2026, 1, 50));
+        coverage!.Periods[0].EpasCovered.Should().Be(3);
+    }
+
+    /// <summary>The other direction: a stamp with no evidence row behind it covers nothing.</summary>
+    [Fact]
+    public async Task ADeclaredEpaWhosePerEpaStampIsSetButWhichHasNoEvidenceRow_IsNotCovered()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001"), Item(3, "PAED-003")]);
+        var campaign = AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true), (3, false));
+        foreach (var covered in campaign.CoveredEpas)
+        {
+            covered.RecordedOn = campaign.ReleasedOn;
+        }
+
+        await db.SaveChangesAsync();
+
+        var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
+
+        Covered(coverage!, "PAED-001").Should().Equal((2026, 1, 50));
+        Covered(coverage!, "PAED-003").Should().BeEmpty("the stamp is not the evidence; the row is");
+    }
+
+    /// <summary>
+    /// A row covers the campaign its data names and no other, and only for the trainee it is about. The trainee's own row
+    /// naming a campaign that does not exist, and another trainee's row naming this trainee's campaign, both leave the
+    /// campaign's declared EPA uncovered.
+    /// </summary>
+    [Fact]
+    public async Task AnEvidenceRowCoversOnlyTheCampaignItNames_AndOnlyForItsOwnSubject()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001"), Item(2, "PAED-002")]);
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, false), (2, true));
+        db.Activities.Add(EvidenceRow(campaignId: 99, epaId: 1, TraineeUserId, Utc(2026, 3, 10, 9)));
+        db.Activities.Add(EvidenceRow(campaignId: 50, epaId: 1, "trainee-2", Utc(2026, 3, 10, 9)));
+        await db.SaveChangesAsync();
+
+        var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
+
+        Covered(coverage!, "PAED-002").Should().Equal((2026, 1, 50));
+        Covered(coverage!, "PAED-001").Should().BeEmpty("neither row is campaign 50's evidence about this trainee");
     }
 
     [Fact]
@@ -94,15 +163,14 @@ public sealed class GetMsfCoverageForTraineeTests
 
         // Scheduled to close in July, closed early on the last UTC day of June (already 1 July in South Africa), and
         // released in July: semester 1, the day its evidence is dated.
-        var closedEarly = Campaign(50, MsfCampaignState.Released, Utc(2026, 6, 30, 23), (1, true));
+        var closedEarly = AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 6, 30, 23), (1, true));
         closedEarly.ClosesOn = new DateOnly(2026, 7, 10);
         closedEarly.ReleasedOn = Utc(2026, 7, 3, 9);
 
         // Scheduled for the last day of June, auto-closed just after midnight UTC: semester 2.
-        var closedLate = Campaign(51, MsfCampaignState.Released, Utc(2026, 7, 1, 0), (2, true));
+        var closedLate = AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 7, 1, 0), (2, true));
         closedLate.ClosesOn = new DateOnly(2026, 6, 30);
 
-        db.MsfCampaigns.AddRange(closedEarly, closedLate);
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
@@ -117,7 +185,7 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), subjectUserId: "trainee-2", epas: (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), subjectUserId: "trainee-2", epas: (1, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
@@ -130,9 +198,8 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.AddRange(
-            Campaign(50, MsfCampaignState.Released, Utc(2026, 2, 10, 9), (1, true)),
-            Campaign(51, MsfCampaignState.Released, Utc(2026, 5, 20, 9), (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 2, 10, 9), (1, true));
+        AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 5, 20, 9), (1, true));
         await db.SaveChangesAsync();
 
         var cell = (await ReadAsync(db, Self(), Year2026From, Year2026To))!.Epas.Single().For(2026, 1)!;
@@ -148,17 +215,16 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001"), Item(2, "PAED-002"), Item(3, "PAED-003"), Item(4, "PAED-004")]);
-        db.MsfCampaigns.AddRange(
-            Campaign(50, MsfCampaignState.Released, Utc(2025, 12, 5, 9), (1, true)),
-            Campaign(51, MsfCampaignState.Released, Utc(2026, 4, 1, 9), (2, true)),
-            // The day after the span's last semester: outside it.
-            Campaign(52, MsfCampaignState.Released, Utc(2026, 7, 1, 9), (3, true)),
-            // The day before its first: outside it.
-            Campaign(53, MsfCampaignState.Released, Utc(2025, 6, 30, 9), (3, true)),
-            // The first and the last half hour the span's semesters hold: inside it, though the review period itself
-            // starts a month later.
-            Campaign(54, MsfCampaignState.Released, Utc(2025, 7, 1, 0), (4, true)),
-            Campaign(55, MsfCampaignState.Released, Utc(2026, 6, 30, 23), (4, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2025, 12, 5, 9), (1, true));
+        AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 4, 1, 9), (2, true));
+        // The day after the span's last semester: outside it.
+        AddCampaign(db, 52, MsfCampaignState.Released, Utc(2026, 7, 1, 9), (3, true));
+        // The day before its first: outside it.
+        AddCampaign(db, 53, MsfCampaignState.Released, Utc(2025, 6, 30, 9), (3, true));
+        // The first and the last half hour the span's semesters hold: inside it, though the review period itself
+        // starts a month later.
+        AddCampaign(db, 54, MsfCampaignState.Released, Utc(2025, 7, 1, 0), (4, true));
+        AddCampaign(db, 55, MsfCampaignState.Released, Utc(2026, 6, 30, 23), (4, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), new DateOnly(2025, 8, 1), new DateOnly(2026, 6, 30));
@@ -176,9 +242,8 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.AddRange(
-            Campaign(50, MsfCampaignState.Released, Utc(2025, 11, 15, 9), (1, true)),
-            Campaign(51, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2025, 11, 15, 9), (1, true));
+        AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), from: null, to: new DateOnly(2026, 9, 1));
@@ -217,13 +282,12 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001"), Item(2, "PAED-002"), Item(3, "PAED-003")]);
-        db.MsfCampaigns.AddRange(
-            // After the College's 30 November, inside the bucket (D40): semester 2.
-            Campaign(50, MsfCampaignState.Released, Utc(2026, 12, 15, 9), (1, true)),
-            // The bucket's last half minute.
-            Campaign(51, MsfCampaignState.Released, new DateTime(2026, 12, 31, 23, 59, 30, DateTimeKind.Utc), (2, true)),
-            // The next year's first instant: outside it.
-            Campaign(52, MsfCampaignState.Released, new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc), (3, true)));
+        // After the College's 30 November, inside the bucket (D40): semester 2.
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 12, 15, 9), (1, true));
+        // The bucket's last half minute.
+        AddCampaign(db, 51, MsfCampaignState.Released, new DateTime(2026, 12, 31, 23, 59, 30, DateTimeKind.Utc), (2, true));
+        // The next year's first instant: outside it.
+        AddCampaign(db, 52, MsfCampaignState.Released, new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc), (3, true));
         await db.SaveChangesAsync();
 
         // The committee's span, a year of whole semesters; and the progress page's, which ends on the day read as today.
@@ -265,7 +329,7 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 12, 20, 9), (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 12, 20, 9), (1, true));
         await db.SaveChangesAsync();
 
         var coverage = await ReadAsync(db, Self(), from: null, to: null, asOf: new DateOnly(2027, 2, 1));
@@ -309,7 +373,7 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true));
         await db.SaveChangesAsync();
 
         (await ReadAsync(db, TestPrincipals.Coordinator(OtherInstitution), Year2026From, Year2026To)).Should().BeNull();
@@ -325,7 +389,7 @@ public sealed class GetMsfCoverageForTraineeTests
     {
         await using var db = CreateDb();
         await SeedAsync(db, [Item(1, "PAED-001")]);
-        db.MsfCampaigns.Add(Campaign(50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true)));
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (1, true));
         await db.SaveChangesAsync();
 
         ClaimsPrincipal[] readers =
@@ -393,19 +457,26 @@ public sealed class GetMsfCoverageForTraineeTests
     private static DateTime Utc(int year, int month, int day, int hour)
         => new(year, month, day, hour, 30, 0, DateTimeKind.Utc);
 
-    private static MsfCampaign Campaign(
+    /// <summary>
+    /// A campaign as a release leaves it: every EPA in <paramref name="epas" /> declared, and for each one marked
+    /// <c>Evidence</c> an <c>msf_cpsa</c> row naming the campaign. The per-EPA stamp is left null, as on a campaign
+    /// released before it existed (T186). Added to <paramref name="db" />, unsaved.
+    /// </summary>
+    private static MsfCampaign AddCampaign(
+        ApplicationDbContext db,
         int id,
         MsfCampaignState state,
         DateTime closedOn,
-        params (int EpaId, bool Recorded)[] epas)
-        => Campaign(id, state, closedOn, TraineeUserId, epas);
+        params (int EpaId, bool Evidence)[] epas)
+        => AddCampaign(db, id, state, closedOn, TraineeUserId, epas);
 
-    private static MsfCampaign Campaign(
+    private static MsfCampaign AddCampaign(
+        ApplicationDbContext db,
         int id,
         MsfCampaignState state,
         DateTime closedOn,
         string subjectUserId,
-        params (int EpaId, bool Recorded)[] epas)
+        params (int EpaId, bool Evidence)[] epas)
     {
         var releasedOn = closedOn.AddDays(3);
         var campaign = new MsfCampaign
@@ -424,13 +495,35 @@ public sealed class GetMsfCoverageForTraineeTests
             WithdrawnOn = state == MsfCampaignState.Withdrawn ? releasedOn : null
         };
 
-        foreach (var (epaId, recorded) in epas)
+        foreach (var (epaId, evidence) in epas)
         {
-            campaign.CoveredEpas.Add(new MsfCampaignEpa { EpaId = epaId, RecordedOn = recorded ? releasedOn : null });
+            campaign.CoveredEpas.Add(new MsfCampaignEpa { EpaId = epaId });
+            if (evidence)
+            {
+                db.Activities.Add(EvidenceRow(id, epaId, subjectUserId, closedOn));
+            }
         }
 
+        db.MsfCampaigns.Add(campaign);
         return campaign;
     }
+
+    /// <summary>One <c>msf_cpsa</c> row as <c>ReleaseMsfCampaign</c> writes it: the campaign in its data, the EPA stamped (T137).</summary>
+    private static Activity EvidenceRow(int campaignId, int epaId, string subjectUserId, DateTime closedOn)
+        => new()
+        {
+            ActivityTypeId = MsfTypeId,
+            SchemaVersion = 1,
+            SubjectUserId = subjectUserId,
+            CreatedByUserId = "coord-1",
+            CurrentState = "recorded",
+            DataJson = $$"""{ "epa_id": {{epaId}}, "campaign_id": {{campaignId}}, "respondent_count": 8 }""",
+            EpaId = epaId,
+            CreatedOn = closedOn.AddDays(3),
+            UpdatedOn = closedOn.AddDays(3),
+            ObservedOn = DateOnly.FromDateTime(closedOn),
+            ObservedOnSource = ObservationDateSource.Declared
+        };
 
     private static CurriculumItem Item(
         int epaId,
@@ -478,6 +571,18 @@ public sealed class GetMsfCoverageForTraineeTests
         });
 
         db.MsfTemplates.Add(new MsfTemplate { Id = TemplateId, Name = "Annual MSF" });
+        db.ActivityTypes.Add(new ActivityType
+        {
+            Id = MsfTypeId,
+            Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+            Name = "Multi-Source Feedback (Paediatrics)",
+            Version = 1,
+            // The shipped workflow, whose terminal state is the rows' `recorded`: evidence is a finished activity (D44).
+            WorkflowJson = File.ReadAllText(
+                Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+            OwnerUserId = "seed-system",
+            CreatedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
 
         await db.SaveChangesAsync();
     }

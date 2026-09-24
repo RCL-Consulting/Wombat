@@ -318,8 +318,17 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .OrderByDescending(campaign => campaign.ReleasedOn)
             .ToListAsync(cancellationToken);
 
+        // Which declared EPAs each campaign recorded, from its evidence rows, as every other reader of coverage has it
+        // (T186). Not the per-EPA stamp, which a campaign released before it existed does not carry.
+        var recordedMsfEpas = await MsfCampaignCoverage.RecordedEpasAsync(
+            _dbContext,
+            request.TraineeUserId,
+            msfCampaigns.Select(campaign => (campaign.Id, campaign.State)),
+            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            cancellationToken);
+
         var msfReports = msfCampaigns
-            .Select(campaign => _msfAggregationService.BuildReport(campaign))
+            .Select(campaign => _msfAggregationService.BuildReport(campaign, recordedMsfEpas[campaign.Id]))
             .ToList();
 
         var auditEntries = activities

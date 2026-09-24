@@ -38,6 +38,13 @@ public sealed class MsfCampaignEpa
     /// dropped rather than thrown on. Without this column the campaign could only say what it
     /// DECLARED, so a committee reading "evidence for EPA 1, 2, 3, recorded as one activity each"
     /// would be told about a record that was never written.
+    /// <para>
+    /// <b>Not the coverage source, and read by nothing (T186).</b> Which EPAs a released campaign covered is
+    /// read from the evidence rows its release wrote (<c>MsfCampaignCoverage</c>), by the committee
+    /// snapshot, the coverage grid, the campaign report and the portfolio PDF alike, because a campaign
+    /// released before this stamp existed has the rows and a null here. The release still writes it; the
+    /// column is left for a later migration to drop.
+    /// </para>
     /// </remarks>
     public DateTime? RecordedOn { get; set; }
 

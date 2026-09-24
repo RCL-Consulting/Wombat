@@ -49,7 +49,7 @@
                 @epa.Code — @epa.Title
                 @if (_report.State == MsfCampaignState.Released && !epa.Recorded)
                 {
-                  <text> — not recorded: this EPA is no longer on the trainee's curriculum</text>
+                  <text> — not recorded</text>
                 }
               </li>
             }
@@ -178,8 +178,8 @@
     }
   }
 
-  /// <summary>The seeded type the release writes its per-EPA evidence as.</summary>
-  private const string MsfEvidenceActivityTypeKey = "msf_cpsa";
+  /// <summary>The seeded type the release writes its per-EPA evidence as, and coverage is read back from.</summary>
+  private const string MsfEvidenceActivityTypeKey = MsfCampaignCoverage.MsfEvidenceTypeKey;
 
   /// <summary>
   /// Which of the two release gates is closed. Both are computed in one place — the aggregation

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -21,12 +22,20 @@ namespace Wombat.Integration.Tests.MultiSourceFeedback;
 /// (<see cref="GetMsfCoverageForTraineeQuery" />).
 /// </summary>
 /// <remarks>
+/// <para>
 /// The unit suite runs on EF InMemory, which evaluates the state rule, the recorded-EPA rule and the close-day bounds in
 /// memory. Here they must translate: <c>ClosedOn</c> is a <c>timestamptz</c>, so the semester edges are compared on the
 /// server as UTC instants, the last instant of 30 June in semester 1 and the first of 1 July in semester 2, and at the
 /// span's far end the December fold (D40): a campaign closed in December, as late as its last instant, is semester 2's,
 /// and one closed at the first instant of the next year is outside. The schema helpers follow
 /// <c>MsfCampaignsOutsideSnapshotPostgresTests</c>.
+/// </para>
+/// <para>
+/// Since T186 a campaign covers the EPAs its <c>msf_cpsa</c> evidence rows carry, not those its per-EPA stamp marks. The
+/// rows here are written as the release writes them, with the campaign id inside a <c>jsonb</c> document, which Postgres
+/// re-renders on the way in; the stamp is left null on every campaign but one, which is stamped with no row behind it.
+/// One more row names a released campaign from a draft, and is not evidence (D44).
+/// </para>
 /// </remarks>
 public sealed class MsfCoveragePostgresTests : IAsyncLifetime
 {
@@ -45,7 +54,7 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
     public Task DisposeAsync() => DropSchemasAsync();
 
     [Fact]
-    public async Task Coverage_OnPostgres_IsReleasedAndRecordedOnly_BucketedByTheUtcCloseDay_InOneServerSideQuery()
+    public async Task Coverage_OnPostgres_IsReleasedCampaignsEvidenceRowsOnly_BucketedByTheUtcCloseDay_FilteredOnTheServer()
     {
         try
         {
@@ -85,17 +94,45 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
 
                 var template = new MsfTemplate { Name = "T168 MSF" };
                 db.MsfTemplates.Add(template);
+
+                // The type the release records its evidence as. DataSeeder seeds only the generic types.
+                db.ActivityTypes.Add(new ActivityType
+                {
+                    Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+                    Name = "Multi-Source Feedback (Paediatrics)",
+                    Scope = ActivityScope.Institution,
+                    ScopeId = host,
+                    Version = 1,
+                    // The shipped workflow: its terminal state is the rows' `recorded`, and evidence is a finished
+                    // activity (D44). No version row, so the type's own column is the pin's workflow.
+                    WorkflowJson = File.ReadAllText(
+                        Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+                    OwnerUserId = "seed-system",
+                    CreatedOn = DateTime.UtcNow
+                });
                 await db.SaveChangesAsync();
 
-                // Semester 1's last instant, covering both but recording only the first: the second was dropped.
+                // Semester 1's last instant, declaring both and with a row for the first only. The second's per-EPA stamp
+                // is set, with no row behind it: the stamp is not what is read.
                 closedLastInstantOfJune = await AddCampaignAsync(
                     db, template.Id, MsfCampaignState.Released, "2026-06-30T23:59:30Z", (first, true), (second, false));
+                (await db.MsfCampaignEpas.SingleAsync(entity => entity.CampaignId == closedLastInstantOfJune && entity.EpaId == second))
+                    .RecordedOn = DateTime.UtcNow;
+                await db.SaveChangesAsync();
                 // Semester 2's first instant.
                 closedFirstInstantOfJuly = await AddCampaignAsync(
                     db, template.Id, MsfCampaignState.Released, "2026-07-01T00:00:00Z", (second, true));
                 // After the College's 30 November, and the bucket's last instant: semester 2 to the end of December.
                 closedMidDecember = await AddCampaignAsync(
                     db, template.Id, MsfCampaignState.Released, "2026-12-15T12:00:00Z", (first, true));
+                // An unfinished row naming it for the second EPA: in a draft, so not evidence, and semester 2's campaigns
+                // for the second EPA below do not include it.
+                db.Activities.Add(EvidenceRow(
+                    await MsfTypeIdAsync(db), closedMidDecember, second, Trainee,
+                    DateTime.Parse(
+                        "2026-12-15T12:00:00Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal),
+                    state: "draft"));
+                await db.SaveChangesAsync();
                 closedLastInstantOfDecember = await AddCampaignAsync(
                     db, template.Id, MsfCampaignState.Released, "2026-12-31T23:59:30Z", (second, true));
                 // Withdrawn, before the year, and after it: none covers anything in 2026.
@@ -126,10 +163,22 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
                     [(closedLastInstantOfDecember, new DateOnly(2026, 12, 31)), (closedFirstInstantOfJuly, new DateOnly(2026, 7, 1))],
                     "semester 2 runs from July's first instant to December's last, newest first");
 
-            var read = commands.Texts.Where(text => text.Contains("\"MsfCampaignEpas\"", StringComparison.Ordinal))
-                .Should().ContainSingle("one round trip: nothing is fetched and filtered on the client").Subject;
-            read.Should().Contain("\"MsfCampaigns\"", "the state and close-day rules are the campaign's, joined in SQL");
-            read.Should().Contain("\"RecordedOn\"");
+            commands.Texts.Should().NotContain(
+                text => text.Contains("\"MsfCampaignEpas\"", StringComparison.Ordinal),
+                "coverage is read from the evidence rows, not from the declared set or its per-EPA stamp (T186)");
+
+            var campaigns = commands.Texts.Where(text => text.Contains("\"MsfCampaigns\"", StringComparison.Ordinal))
+                .Should().ContainSingle("one read of the trainee's campaigns").Subject;
+            campaigns.Should().Contain("\"State\"").And.Contain("\"ClosedOn\"").And.Contain("\"SubjectUserId\"",
+                "the state, close-day and trainee rules are the campaign's, applied in SQL");
+
+            var evidence = commands.Texts.Where(text => text.Contains("\"Activities\"", StringComparison.Ordinal))
+                .Should().ContainSingle("one read of the trainee's evidence rows").Subject;
+            evidence.Should().Contain("\"ActivityTypes\"").And.Contain("\"Key\"").And.Contain("\"SubjectUserId\"")
+                .And.Contain("\"EpaId\"", "only this trainee's rows of the evidence type that carry an EPA leave the server");
+            commands.Texts.Should().Contain(
+                text => text.Contains("\"ActivityTypeVersions\"", StringComparison.Ordinal),
+                "whether a row is finished is judged by the workflow it is pinned to (D44)");
         }
         finally
         {
@@ -148,16 +197,20 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
         int templateId,
         MsfCampaignState state,
         string closedOn,
-        params (int EpaId, bool Recorded)[] epas)
+        params (int EpaId, bool Evidence)[] epas)
         => AddCampaignAsync(db, templateId, state, closedOn, Trainee, epas);
 
+    /// <summary>
+    /// A campaign declaring each of <paramref name="epas" />, with an <c>msf_cpsa</c> evidence row naming it for each one
+    /// marked <c>Evidence</c>, written as <c>ReleaseMsfCampaign</c> writes it. The per-EPA stamp is left null.
+    /// </summary>
     private static async Task<int> AddCampaignAsync(
         ApplicationDbContext db,
         int templateId,
         MsfCampaignState state,
         string closedOn,
         string subjectUserId,
-        params (int EpaId, bool Recorded)[] epas)
+        params (int EpaId, bool Evidence)[] epas)
     {
         var closed = DateTime.Parse(closedOn, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
         var released = closed.AddDays(2);
@@ -176,15 +229,54 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
             WithdrawnOn = state == MsfCampaignState.Withdrawn ? released : null
         };
 
-        foreach (var (epaId, recorded) in epas)
+        foreach (var (epaId, _) in epas)
         {
-            campaign.CoveredEpas.Add(new MsfCampaignEpa { EpaId = epaId, RecordedOn = recorded ? released : null });
+            campaign.CoveredEpas.Add(new MsfCampaignEpa { EpaId = epaId });
         }
 
         db.MsfCampaigns.Add(campaign);
         await db.SaveChangesAsync();
+
+        var evidenceTypeId = await MsfTypeIdAsync(db);
+
+        foreach (var (epaId, _) in epas.Where(entry => entry.Evidence))
+        {
+            db.Activities.Add(EvidenceRow(evidenceTypeId, campaign.Id, epaId, subjectUserId, closed));
+        }
+
+        await db.SaveChangesAsync();
         return campaign.Id;
     }
+
+    private static Task<int> MsfTypeIdAsync(ApplicationDbContext db)
+        => db.ActivityTypes
+            .Where(type => type.Key == MsfCampaignCoverage.MsfEvidenceTypeKey)
+            .Select(type => type.Id)
+            .SingleAsync();
+
+    /// <summary>One <c>msf_cpsa</c> row as <c>ReleaseMsfCampaign</c> writes it, in <paramref name="state" />.</summary>
+    private static Activity EvidenceRow(
+        int evidenceTypeId, int campaignId, int epaId, string subjectUserId, DateTime closed, string state = "recorded")
+        => new()
+        {
+            ActivityTypeId = evidenceTypeId,
+            SchemaVersion = 1,
+            SubjectUserId = subjectUserId,
+            CreatedByUserId = "coordinator-t168",
+            CurrentState = state,
+            DataJson = JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["epa_id"] = epaId,
+                [MsfCampaignCoverage.CampaignIdField] = campaignId,
+                ["observed_on"] = DateOnly.FromDateTime(closed).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                ["respondent_count"] = 8
+            }),
+            EpaId = epaId,
+            CreatedOn = closed.AddDays(2),
+            UpdatedOn = closed.AddDays(2),
+            ObservedOn = DateOnly.FromDateTime(closed),
+            ObservedOnSource = ObservationDateSource.Declared
+        };
 
     /// <summary>A committee member at the trainee's institution: overseen, so the scope lookup runs on the server too.</summary>
     private static ClaimsPrincipal CommitteeMember(int institutionId)
