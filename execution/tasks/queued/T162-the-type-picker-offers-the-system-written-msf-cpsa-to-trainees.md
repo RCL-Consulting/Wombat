@@ -57,3 +57,14 @@ Observed at `431e69e`:
 
 [T121] (the system-written MSF evidence rows), [T118] (closed), [T135] (a stray `msf_cpsa` draft also reaches the sampling
 report), [T122] (`WbaToolKey`, the precedent for a catalogue-entry property).
+
+## Update 2026-09-24 — observed in the browser (T107)
+
+A trainee-created `msf_cpsa` draft is not merely inert; it is **stuck for good**. The `draft` state declares no
+`editable_by`, so it falls back to `subject|creator`. The evidence and review sections are Coordinator or
+Administrator. Field write is the conjunction of the two, so on a trainee's draft nobody can write the required
+evidence, and the workflow has no cancel. Since T107 the Administrator sees **Record** disabled with "Needs EPA, MSF
+campaign, Feedback window closed and Questionnaires returned, which you cannot fill in here." Dev activity 23 is one;
+since T127 the trainee is told "Filed. It is now Draft." Stop offering the type (this task), and delete or regenerate
+activity 23 when done.
+
