@@ -1,9 +1,10 @@
 ---
 id: T104
 title: "Retire the legacy FCPaed paediatric world alongside the national CPSA catalogue"
-status: queued
+status: done
 priority: P2
 created: 2026-09-16
+completed: 2026-09-24
 ---
 # T104 — Retire the legacy FCPaed paediatric world alongside the national CPSA catalogue
 
@@ -12,7 +13,8 @@ created: 2026-09-16
 > activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
 > re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
 
-**Status:** open — **do this LAST of the T098 catalogue work**
+**Status:** done 2026-09-24. Closed by finding: the legacy world exists on neither database, so none of the work below
+is left. Two surviving pieces were filed as [T158] and [T159]. See Closed at the foot.
 **Surfaced:** 2026-09-16 (T098 gap 8); scoped against the dev database 2026-09-17.
 **Severity:** Medium, but **hazardous**: this is a live-data migration, not a code change, and it carries a
 silent rating-reinterpretation hazard.
@@ -108,3 +110,33 @@ T098 gap 8. Depends on T099 (scope) being settled first. Do after T070, T100, T1
 **Blocked by T109.** Re-pinning a trainee from curriculum 2 to curriculum 3 is exactly the cross-scale
 remap T109 describes: the two curricula carry minima on a five-rung and a six-rung scale, and nothing
 binds a stored ordinal to either. Do not re-pin anyone until T109 is resolved.
+
+## Closed — 2026-09-24
+
+Closed by finding, from the EPA-stream survey. The data this task was written to retire does not exist anywhere:
+
+- **Dev (observed in the record):** W-006 (DECISIONS.md, 2026-09-20) dropped the dev database and rebuilt it from
+  migrations and seeders. The four `*_paed` types and the duplicate "Paed General Entrustment Scale" are gone, 16/16
+  curriculum items are pinned, and activities went from 15 to 0. The inventory under "What actually exists" and the
+  dependent counts under "Why it cannot be a delete" describe a database that no longer exists.
+- **Production (observed, read-only):** [T157]'s query on 2026-09-24 found one college (DEMO-C), one user, no CPSA
+  types, no activities, and last migration T096. Production never had the legacy world, so "the same manual migration
+  has to be repeated by hand on production" is false.
+- **Code (observed):** nothing in `src` recreates it. A grep for `FCPaed`, `_paed` and `Paed General` outside
+  migrations matches comments only (`PaediatricCatalogueSeeder.cs:84-86`, `RatedActivityTypes.cs:65,83`).
+
+So there is no trainee to re-pin, no type to rename or deactivate, and no production runbook to write. The ordinal-remap
+hazard never fires, because no profile is pinned to a five-rung curriculum. **D24** (the five legacy trainees) and
+**D31** (which duplicate-named types to rename) have no subject left and are moot.
+
+Two pieces outlive the data. Each is filed as its own task:
+
+- **Step 2's code change** → [T158] (P3). Progress readers still ignore `Epa.IsActive`. The query T104 cited
+  (`GetCurriculumProgressForTrainee.cs:67-80`) no longer exists; the omission is now at `TraineeQuotaProgress.cs:165-168`
+  and `CurriculumCoverage.cs:93-95`, and credit ignores `IsActive` too.
+- **The scenario runbook** → [T159] (P3). T104's scope never mentioned it, but `scenario-paediatrics.md` Acts 1-2
+  still build the FCPaed college, scale, curriculum and `*_paed` types by hand, so a replay would recreate everything
+  above.
+
+The Verification items above hold vacuously: no legacy trainee, retired EPA or `*_paed` type exists to check. The one
+that is not vacuous, "retired EPAs no longer appear on `/portfolio/progress`", moves to [T158].

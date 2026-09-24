@@ -72,3 +72,8 @@ T109 (ordinals pinned to a scale) is why the refusal exists. Found while verifyi
   together. That is the whole evidence; the cause is inferred from it and from T109's rule.
 - **Not checked:** whether the same silence affects other admin grids that edit an ordinal beside a
   scale. Worth a look while in there.
+
+## Update 2026-09-24 — EPA-stream survey
+
+Folded into [T125], which covers the same page and handler. Its message wording and tests are listed in T125's update,
+and this task closes when T125 lands.

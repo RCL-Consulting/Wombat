@@ -27,10 +27,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T157** (deploy), then **T155** (security). EPA track: **T125**, then **T135**.
-- **Before deploying T130 + T122 + T102 + T105 + T120 + T149 to production:** take a `pg_dump`. T130's migration empties the
-  progress table (the bootstrapper refills it); T122's stamps the v11.1 lists and seeded keys once. Rollback = restore.
-- Send the College the § 3F questions; decide T128's destination.
+- **The operator, 2026-09-24: "Not deploying yet, we need to get the EPA stream completed."** T157 waits for the
+  stream. The order is `EPA-PROGRAMME.md` § 4 "Order to finish the stream": the T127 group, T138, T107, T125, T137,
+  T135, T160, T113 and the small ones; then the committee work (T167, T165, T166, T131); then the gated instruments.
+- Operator decisions along the way: D38 (T131), D34 + portfolio shape (T154), D35 (T164), T165's quorum, T139.
+- Send the College the § 3F questions (now eleven); decide T128's destination.
 
 ## Open questions
 

@@ -65,3 +65,16 @@ many activities are actually affected in production.
 
 Consequence of T103's pinning semantics; the stranded case is the one T070 does **not** reach. Related to
 T106 item 9 (the trajectory does not filter by workflow state).
+
+## Update 2026-09-24 — EPA-stream survey
+
+**D33 part 1 stands as decided unless the operator overrules it.** `EPA-PROGRAMME.md` § 3D says "the recommendation
+stands unless overruled". Suppress the impossible action: render it **disabled, with a reason naming the fields**, not
+hidden. Restated after [T105]: offer a transition only if every field that `ValidateForTransition`
+(`ActivityService.cs:1105-1124`) would flag against the stored data is writable by this actor in the current state.
+That covers the transition's `validation` scope (`all`, `owned` or `draft`) plus its `requires_fields`. The test is
+"writable by this actor", not "already filled". The [T122] tool gate and the [T102] nominee gate stay out of this
+predicate.
+
+**D33 part 2, the re-pin: recommendation (b), defer.** It is filed as [T171] (P3, pre-launch readiness). Option 3 is
+moot: production has no activities ([T157]), and W-006 emptied dev.

@@ -83,3 +83,37 @@ complaints. [T119] is the precedent for stamping a column from a schema-declared
 - **Observed:** `Activity.EpaId` and `Activity.CurriculumItemId` are both dead columns today.
 - **Observed:** the information is one click away on `ActivityView`, which renders every field; this is
   a list-projection gap, not a data loss.
+
+## Update 2026-09-24 — EPA-stream survey
+
+**[T106] item 14 is folded in.** Carry the last crediting transition's `CreditedItemCount` on `ActivitySummaryDto`,
+through `ListActivitiesBySubjectQuery`, and show it as a column on `MyActivities`. It is three-valued, per [T108]: a
+count, zero ("credited nothing"), or null ("credit never evaluated", shown blank). Same DTO, same row, same change. It
+is how a registrar sees across the whole list which completions counted.
+
+**The plan: the survey's recommendations, adopted.**
+
+- **Option 2: stamp `Activity.EpaId` from a schema-root pointer.** The pointer must agree with the credit directive's
+  `epa_field` (`CreditRulesParser.cs:108-112`). Either publish refuses a type where the two differ, or a credit
+  directive that names no `epa_field` defaults to the pointer. Either way the list and credit can never name different
+  EPAs. The pointer needs both a Parse half and a Serialize half, and a named `SeedRoundTripTests` fixture (CLAUDE.md's
+  Serialize-half trap). Choose a name that cannot be misread as the credit directive's property, or state plainly
+  that the two are the same field.
+- **Stamp at all three sites that stamp `ObservedOn`:** create (`ActivityService.cs:188`), transition (`:302`), and
+  the system-written path (`:479`). The last is where the MSF rows come from, and is the reason this task exists.
+- **Add `ObservedOn` to `ActivitySummaryDto` in the same change (option 1).** It costs almost nothing and replaces the
+  audit clock the list shows today for every type. On its own it cannot separate MSF siblings: every row of a campaign
+  shares one `observed_on` (`ReleaseMsfCampaign.cs:226-230`).
+- **Fix `/activities/inbox` too.** It uses the same DTO (`ActivityInbox.razor:13-27`). Its raw subject id is [T142]'s.
+- Observed seed survey: 14 of 19 seed schemas carry exactly one `epa` field, all keyed `epa_id`. Add the pointer to
+  each; the refresher republishes them. `msf_cpsa` credits nothing, so only the pointer can supply its EPA.
+
+[T167] (the committee's evidence snapshot) depends on this stamp.
+
+**Verification, added:**
+
+- [ ] `MyActivities` shows, for each completed activity, whether it credited, credited nothing, or was never
+      evaluated. bUnit test, and in the browser.
+- [ ] A type whose schema pointer and credit `epa_field` disagree cannot be published. Test.
+- [ ] `EpaId` is stamped on create, on transition, and on the MSF release path. Application tests.
+- [ ] `/activities/inbox` shows each row's EPA and encounter date. bUnit test.

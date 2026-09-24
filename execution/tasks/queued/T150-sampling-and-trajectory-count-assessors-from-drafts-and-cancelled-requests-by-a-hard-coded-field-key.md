@@ -43,3 +43,8 @@ exactly.
 ## Related
 
 T102, T131.
+
+## Update 2026-09-24 — EPA-stream survey
+
+Folded into [T135] (same query, same verification), and closes with it. [T106] item 9 (the trajectory charts
+non-terminal states) is folded in with it. The decisions this file needed are recorded in T135's update.

@@ -55,7 +55,11 @@ the UI does not.
 
 Doing this properly needs a "trainees I may assess" query, which does not exist.
 
-## 3. `ActivityWorkflowActions` evaluates the workflow client-side against a fabricated `ActivityType`
+## 3. ~~`ActivityWorkflowActions` evaluates the workflow client-side against a fabricated `ActivityType`~~
+
+> **Closed by [T070] (survey, 2026-09-24).** `ActivityWorkflowActions.razor` is presentational now: the server computes
+> the actions. The layering residue is elsewhere. `NewActivity.razor:5-6` and `:319-331` still build Domain objects in a
+> `.razor`, exempted as a probe at `ActivityWritePathTests.cs:58-65`.
 
 `ActivityWorkflowActions.razor:49` constructs `new Activity { ActivityType = new ActivityType() }` to probe
 which transitions to render. `ActivityScope` defaults to `Global` and `ScopeId` to null
@@ -68,7 +72,9 @@ The same file constructs Domain types directly in a `.razor`, which `CLAUDE.md` 
 T070's plan makes this component presentational (server-computed actions passed in), which fixes both. If
 T070 is descoped, this stands alone.
 
-## 4. Raw user ids are rendered where names belong
+## 4. ~~Raw user ids are rendered where names belong~~
+
+> **Duplicated by [T142]** (survey, 2026-09-24), which owns it.
 
 `ActivityInbox.razor:24` shows a bare `SubjectUserId` GUID. T095 fixed the same class of bug on the
 Coordinator dashboard by injecting `IUserAdministrationService` and resolving display names — the same
@@ -83,7 +89,10 @@ schemas; relevant the moment T019-c (repeatable/nested sections) lands.
 **No test covers `DataPatchJson` at all** — a grep for `DataPatch` across `tests/` returns nothing.
 `ActivityHandlersTests.cs:63-70` exercises `complete` with a null patch only.
 
-## 6. Authorization runs *before* the patch merge
+## 6. ~~Authorization runs *before* the patch merge~~
+
+> **Not a defect: documented design** (survey, 2026-09-24). The gate runs before the merge (`ActivityService.cs:215`,
+> merge at `:239`), and the comment at `:226-229` says why: it stops a patch escalating its own authorisation.
 
 `ActivityService.cs:118` evaluates the actor rule against the pre-patch `DataJson`; the merge is at
 `:129-131`. Any future flow that expects the patch to supply the field a `field:` actor rule points at will
@@ -97,19 +106,27 @@ ordering constraint worth knowing about. It is also what stops a patch escalatin
 numeric strings), so this is not urgent. But anything writing `assessor_user_id` as a non-string silently
 breaks the actor binding (`WorkflowEvaluator.cs:84-107` requires `ValueKind == String`).
 
-## 8. Three field types render nothing useful
+## 8. ~~Three field types render nothing useful~~
+
+> **Closed** (survey, 2026-09-24). The builder does not offer Checkbox, DateTime or Markdown (`SupportedFieldTypes`,
+> `ActivityTypeEdit.razor:327-342`); `EPA-PROGRAMME.md` § 2 recorded it at `431e69e`. `File` still renders a
+> placeholder. That is [T154] / D34.
 
 `ActivityForm.razor:98-102` renders a placeholder for `File`. Check `Checkbox`, `DateTime` and `Markdown`
 against the builder's advertised type list before the remaining ten v11.1 tools are authored against them.
 
-## 9. The trajectory chart does not filter by workflow state
+## 9. ~~The trajectory chart does not filter by workflow state~~
+
+> **Moved to [T135]** (via [T150], folded into T135), 2026-09-24.
 
 `GetEpaTrajectoryForTraineeQuery` charts any activity carrying `epa_id` + a rating + `assessor_user_id`,
 including one still in `draft` or `requested`. Reachable today only via trainee self-fill (see T102), and it
 would become reachable through a half-finished assessor form if T070 ever persists partial ratings before
 `complete`. Whatever T070 does, it must not create charted observations that no assessor has signed.
 
-## 10. `CurriculumItem.WindowMonths` is stored, validated and editable — and read by nothing in the credit path
+## 10. ~~`CurriculumItem.WindowMonths` is stored, validated and editable — and read by nothing in the credit path~~
+
+> **Tracked as D19 and [T139]** (survey, 2026-09-24).
 
 Validated `GreaterThan(0)` at `ManageCurriculumItems.cs:41,57`, carried through clone, editable in the admin
 UI. Its sole consumer is `AdmitTrainee.cs:126` (`GetDefaultCompletionMonths`, taking the max across items to
@@ -128,7 +145,9 @@ That is a direct dent in the platform premise. An actor-rule input on the sectio
 `ActivityTypeEdit.razor` (and on the state editor, once T019-d's visual workflow editor exists) is the
 fix. Worth its own task when picked up.
 
-## 12. ✅ DONE 2026-09-19 (with T119) — `RebuildCurriculumProgress` did not stamp `CreditedItemCount`, so a stale zero was never cleared (added 2026-09-17)
+## 12. ~~✅ DONE 2026-09-19 (with T119) — `RebuildCurriculumProgress` did not stamp `CreditedItemCount`, so a stale zero was never cleared (added 2026-09-17)~~
+
+> **Done** (see Resolution below).
 
 T108 stamps the credit outcome on the transition, and `ActivityView` warns when it is `0`. But the stamp
 happens only on the transition path. `RebuildCurriculumProgressCommand` deletes every progress row and
@@ -185,6 +204,10 @@ Tests: `tests/Wombat.Application.Tests/Activities/RebuildCurriculumProgressTests
 
 ## 13. `AssessorPendingNudgeJob` reads the live workflow, not the pinned version (added 2026-09-17)
 
+> **Named site closed** (survey, 2026-09-24): `AssessorPendingNudgeJob.cs:47-54` reads the pinned version. The audit
+> this item asks for is still open. Rated-ness is classified from the LIVE schema at
+> `GetEpaTrajectoryForTraineeQuery.cs:166` and `RatedActivityTypes.cs:176-181`. That residue stays here.
+
 Noted while building T103. The job reads `ActivityType.WorkflowJson` — the *current* published version —
 while each activity validates against the version it was created under. None of T103's nine republishes
 renamed or removed a state key, so nudges are unaffected today.
@@ -193,7 +216,9 @@ A future seed edit that renamed a state would silently stop nudging every activi
 version: no error, no log, just assessors who stop being chased. Audit every reader of the live
 `WorkflowJson`/`SchemaJson` for the same assumption.
 
-## 14. A zero-credit completion is only visible one activity at a time (added 2026-09-17)
+## 14. ~~A zero-credit completion is only visible one activity at a time (added 2026-09-17)~~
+
+> **Moved to [T137]**, 2026-09-24. Same DTO and the same row as T137's change.
 
 T108's warning is per-activity. A registrar has to open each record to discover the pattern, which is
 exactly the failure mode the task was filed against — "fifty-five encounters logged, nothing counted" is a
@@ -202,3 +227,21 @@ statement about a *year*, not about one form.
 The surface that closes it is a column on `MyActivities`: widen `ActivitySummaryDto` and have
 `ListActivitiesBySubjectQuery` correlate the last transition's `CreditedItemCount`. Cheap now that the
 data exists.
+
+## Update 2026-09-24 — EPA-stream survey
+
+Triaged against `431e69e`. Each item's heading above carries its pointer.
+
+- **Struck, closed or duplicated:** 3 ([T070]), 4 ([T142]), 6 (documented design), 8 (closed; `File` is [T154]),
+  10 (D19 / [T139]) and 12 (done).
+- **Moved into the EPA stream:** 9 → [T135] (through [T150], which is folded into T135), and 14 → [T137].
+- **Item 13:** the named site is fixed. The live-schema audit it asks for stays open.
+- **Still here, as platform holding items outside the EPA stream:**
+  - **1.** There is still no post-creation save path. The "cannot cancel" half was fixed by [T105]. [T127]'s
+    navigate-away approach makes a second save moot on `/activities/new`.
+  - **2.** Assessor-initiated WBAs are a product decision. Nothing in the EPA documents requires them.
+  - **5.** The merge is still shallow. Its line "no test covers `DataPatchJson`" is stale: `ActivityFieldPermissionTests`,
+    `TransitionValidationTests` and the Web `ActivityDataPatchTests` all drive patched transitions.
+  - **7.** Values are still written as strings (`ActivityForm.razor:359`).
+  - **11.** There is still no `editable_by` editor. `BuilderModels.cs:347-380` carries the value through, with no input.
+  - **13's residue.**

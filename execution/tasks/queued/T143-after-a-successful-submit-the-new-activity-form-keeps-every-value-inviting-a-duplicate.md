@@ -41,3 +41,8 @@ Check the interaction with [T127] (a failed submit leaves an orphan draft).
 ## Related
 
 [T127].
+
+## Update 2026-09-24 — EPA-stream survey
+
+Lands with [T127], in the same change to `CreateOrTransitionAsync`: navigate to `/activities/{id}` after a successful
+create. Closes with T127.

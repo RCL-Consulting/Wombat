@@ -105,3 +105,60 @@ defect 2 be closed properly by declaring where an EPA lives rather than reading 
 - **Observed 2026-09-21:** dev now holds three released `msf_cpsa` activities, each of which is a live
   instance of defect 2's path. They are readable by the committee, so `EvidenceComplete` still reads
   true; the visible consequence today is only that they are absent from `TotalRatedActivities`.
+
+## Update 2026-09-24 — EPA-stream survey
+
+**[T150] is folded in.** It is the same query (`GetSamplingConcentrationWarnings`) with the same verification, and T150
+closes with this task. **[T106] item 9 comes with it**: the trajectory also charts rows in any state
+(`GetEpaTrajectoryForTraineeQuery.cs:127-133` has no state predicate). Inferred: that is reachable today by a row an
+assessor rated and then declined, because `declined` is a non-terminal dead end in the CPSA workflows.
+
+**Item 1, which states count: the recommended decision.** Record it as a D-number when built. An activity counts as
+sampled evidence when its `CurrentState` is **a terminal state of its pinned workflow**, the point where credit fires
+(`ActivityService.cs:340`). That is `completed` for 11 of the 12 rated seeds and `recorded` for the twelfth,
+`msf_cpsa`. Types with no workflow fall back to the literal `completed`. The test fixtures carry no `WorkflowJson`
+(`SamplingConcentrationWarningsTests.cs:539-554`), so the existing tests stay green unedited. Drafts, `requested`,
+`declined` and `cancelled` are out; in every CPSA WBA seed the last two are non-terminal dead ends, which this file
+missed.
+*Rejected:* literal `completed`, which drops `msf_cpsa`. Also rejected: "or carry a rating" (T150's wording), which
+re-admits a rated-then-declined row. And credited-only, because a below-minimum rating is still evidence.
+
+**Item 2: two new counts, not one.**
+
+- `UnreadableRatedActivities` counts a row whose declared EPA or assessor field cannot be read. It sets
+  `EvidenceComplete` false and gets its own sentence on the page. `ReviewDetail.razor:24-50` blames a gap on read
+  scope, so folding these rows into `WithheldRatedActivities` would make that sentence false.
+- A separate count covers rated rows with no assessor attribution: `msf_cpsa`, whose schema declares no assessor field,
+  and rows with no rating value (D10 makes the MSF ordinal optional). It is reported and **does not** affect
+  `EvidenceComplete`.
+- To tell them apart, check whether the pinned schema declares the field. No new DSL property now.
+- Read the EPA through the credit rules' `epa_field` (`CreditRuleFields.ResolveCreditedEpaFieldKeys`,
+  `CreditRuleFields.cs:37`), with the literal `epa_id` as fallback. [T137]'s stamped `Activity.EpaId` replaces this
+  once it lands.
+
+**From T150:**
+
+- "The assessor" is whoever the `field:` rule on the rated field's effective `editable_by` names, that is, whoever may
+  write the rating. If that names none, fall back to every nominee field. Compare ids exactly: no `Trim`
+  (`GetSamplingConcentrationWarnings.cs:317`).
+- The trajectory reads the declared `rated_level_field`, not the literal `overall`/`overall_level`
+  (`GetEpaTrajectoryForTraineeQuery.cs:476-481`), and gets the same state predicate.
+
+**The committee snapshot keeps every state.** `StartCommitteeReview` labels each line with its state
+(`StartCommitteeReview.cs:98`), so it keeps showing all of them. The handler comment claiming the two windows match
+(`GetSamplingConcentrationWarnings.cs:105-109`) is wrong and gets corrected.
+
+**Stale above:** "T120's three unrated instruments". [T120] shipped CCA, RCA and chart-stimulated recall as rated, each
+carrying `assessor_user_id`. `reflective_exercise_cpsa` declares no `rated_level_field`, so it never enters the gate.
+
+**Verification, added:**
+
+- [ ] A draft, a cancelled and a declined row in the window move neither the rated count nor the distinct-assessor
+      count. Handler tests.
+- [ ] An `msf_cpsa` row is counted as unattributed and leaves `EvidenceComplete` true. Handler test.
+- [ ] Total + Withheld + Unreadable + Unattributed equals the rated rows in the window in a qualifying state.
+      Property test.
+- [ ] A type whose assessor field has another key is counted, on the sampling report and on the trajectory. Tests.
+- [ ] The trajectory plots no draft or declined row, and does plot a rated builder type whose rated field is not
+      `overall_level`. Query tests.
+- [ ] Browser, on dev: a committee review for a trainee with a released MSF.

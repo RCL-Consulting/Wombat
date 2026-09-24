@@ -105,6 +105,8 @@ an instruction to treat the two names as one instrument.
 Answer: mini CEX and a clinical examination is the same thing. Would propose: clinical observed interaction 
 This will include a mini cex, handover, communication etc.
 
+Second pass (2026-09-20): No, EPA 7 does not exclude general Direct observation; EPA 7's allow-list gains it. Whether the proposed "clinical observed interaction" merges Mini-CEX with Direct observation was not settled — see EPA-PROGRAMME.md §3A-ii
+
 ### D6 — Which instruments produce an entrustment level, and which are evidence only?
 
 Some tools end in a supervisor stating a level on the entrustment ladder. Others are better
@@ -122,6 +124,8 @@ decides whether each instrument can, by itself, move a trainee's entrustment lev
 
 Answer :  default all rated
 
+Second pass (2026-09-20): nine rated, three unrated, as proposed (Reflective exercise, Clinical audit and Portfolio and logbook review are unrated evidence) — see EPA-PROGRAMME.md §3A-ii
+
 ### D7 — Does an unrated instrument count toward an EPA's annual frequency?
 
 If a trainee's EPA 1 target is eight encounters a year, does a reflective exercise consume one
@@ -133,6 +137,8 @@ toward both.
 
 **Proposed default: (a), volume only.** We flag it because it changes what "55 encounters a
 year" means. If the 55 is meant to be 55 *supervised, rated* encounters, the answer is (b).
+
+Second pass (2026-09-20): No, option (b): an unrated instrument is documentation, not assessment, and consumes none of an EPA's published encounters — see EPA-PROGRAMME.md §3A-ii
 
 ---
 
@@ -201,6 +207,9 @@ required evidence tracked in its own right and does not consume the encounter co
 the 55 meaning what the College says it means.
 
 Answer: not sure. 
+
+Second pass (2026-09-20): No, option (c): MSF is required evidence tracked in its own right, and the 55 keeps meaning the sum of Annexure A's per-EPA quotas — see EPA-PROGRAMME.md §3A-ii
+
 ### D11 — Must a campaign draw responses from more than one respondent group to count?
 
 Our reports suppress any respondent category with too few responses, to protect anonymity. As
@@ -235,6 +244,8 @@ same month.
 
 Answer: 
 
+Second pass (2026-09-20): January to November, with the semester boundary in June; national, as proposed. Whether June itself falls in the first semester or the second was not settled — see EPA-PROGRAMME.md §3A-ii
+
 ### D14 — What happens to a registrar who starts mid-year?
 
 They will not have eleven months before the first boundary.
@@ -255,6 +266,8 @@ hard limit unless the College wants one: a registrar blocked by a date validator
 today's date instead, which destroys the accuracy of the encounter date — the very thing the
 rule was meant to protect.
 Answer: no default time
+
+Second pass (2026-09-20): a soft warning beyond fourteen days, and no hard refusal — see EPA-PROGRAMME.md §3A-ii
 
 ---
 

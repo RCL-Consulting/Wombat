@@ -101,3 +101,44 @@ failing path common. Found while browser-verifying [T100] and [T123]; unrelated 
 
 > **Note from T105, 2026-09-24.** A half-filled draft can now be cancelled (`cancel` validates `draft`), so an orphan
 > left by a refused Submit is at least disposable by its author. The duplicate itself is still this task's.
+
+## Update 2026-09-24 — EPA-stream survey
+
+**[T143] and [T148] land in the same change**, to `NewActivity.razor`'s `CreateOrTransitionAsync`, and both close with this
+task. Three sequential edits to the same seventy lines would be worse than one.
+
+**The approach: the survey's recommendation, replacing option 2 above.**
+
+- **After a successful create, navigate to `/activities/{id}`.** This closes T143, because the filled form is gone.
+  Any further action happens on `ActivityView`, which already sends edits as a patched transition.
+- **If the submit is refused after the draft saved, navigate to the draft** and show the refusal with the message "Saved
+  as a draft", so it is clear the activity exists. No second create is possible from there.
+- **A second "Save draft" becomes moot**, because the page has navigated after the first. No `save` self-transition is
+  added; [T106] item 1 stays out of this task.
+- **Create-and-transition in one transaction (option 1) stays rejected.** `TransitionAsync` loads a saved activity
+  (`ActivityService.cs:205`, `:600-609`), so it is the larger change for no gain here.
+- **T148, same method:** `ResolveInitialTransitionKey` skips any transition whose target cannot reach a terminal state
+  without passing back through the initial state (`CanReachTerminal(to, avoidingState: initial)`, mirroring the T122
+  gate's withdrawal rule). When only withdrawals remain, it reports the create as the submission.
+- Carry the outcome message across the navigation (a query flag, or `ActivityView` stating the state).
+
+Changed since this was filed (observed at `431e69e`):
+
+- The [T122] tool gate and the [T102] nominee gate now run before the activity is added (`ActivityService.cs:67-93`),
+  so their refusals no longer leave an orphan.
+- What still leaves one is the submit's `owned` validation. `mini_cex_cpsa` has six trainee-owned required fields.
+- The `_busy` guard stops a double-click, not a deliberate second press.
+- "Cleanup owed on dev" is stale. Activity 13 on today's dev database is a T122 staging leftover (STATE.md), not this
+  orphan.
+
+**Verification, added:**
+
+- [ ] After a successful Submit or Save draft the page is on `/activities/{id}`. bUnit test with a FakeSender that
+      records commands.
+- [ ] A refused Submit sends one `CreateActivityCommand`, lands on the draft showing the refusal and the "saved as a
+      draft" message, and nothing on that page can create again. bUnit test.
+- [ ] T148: Submit on a requested-born workflow sends no `TransitionActivityCommand` and reports "Submitted". On a
+      draft-born CPSA workflow it sends `submit`. bUnit tests.
+- [ ] Browser, on dev: a CPSA Mini-CEX with one trainee-owned required field blank leaves one activity. A generic
+      Mini-CEX filed by a trainee on an O-R curriculum stays in `requested` and reaches the assessor's inbox.
+- [ ] Full suite green, no `--no-build`.

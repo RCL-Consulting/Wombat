@@ -91,3 +91,62 @@ The page already has everything it needs. `_scales` is loaded at `:166` and popu
 Split out of [T100], whose tiers 1–3 shipped 2026-09-19. Depends on nothing. The re-pin hazard in step 3
 is the same one D24 weighs for [T104]. Blocks nothing, but it is the last surface where a rung ordinal is
 still written by hand.
+
+## Update 2026-09-24 — EPA-stream survey
+
+**[T136] is folded in.** It is the same page (`CurriculumItemsEdit.razor`) and the same handler
+(`UpdateCurriculumItemCommandHandler`), and T136 closes when this task lands. Under rule 1 below, the page can no longer
+submit a scale change whose ordinals do not fit, so what remains of T136 is its message wording and tests, listed
+here.
+
+Observed at `431e69e`: T136's premise ("the row closes, no message") is contradicted by the code. The handler refuses before mutating (`ManageCurriculumItems.cs:229-231`). The page closes the row only on success
+and otherwise shows `_actionError` as an alert at the top of the page (`CurriculumItemsEdit.razor:23-26`), which is
+easy to miss. Reproduce it in the browser before relying on either reading.
+
+Line numbers above have drifted (observed at `431e69e`):
+
+| What | Where now |
+|---|---|
+| Minimum input | `:75` (edit row), `:173` (add form) |
+| Per-stage map | `:85`, `:188`, a single-line `InputText`, not a textarea; help text `:189` |
+| Read-mode cells | `:100` (minimum), `:102` (raw JSON) |
+| `_scales` loaded | `:267` |
+| Add-form default | `:365-372`: `MinimumLevelOrder = 4` with no scale, which is 3b on v11.1 |
+
+**The plan: the survey's recommendations, adopted.**
+
+1. **A scale change resets the minima.** When the scale changes, every minimum picker (flat and per-year) resets to an
+   empty, required "choose a rung", and Save is disabled until each is re-picked on the new ladder. Never clamp and
+   never remap: the stored ordinal is not carried across. This replaces step 3's "say plainly what it is doing".
+   *Rejected:* keeping the ordinals behind a "was Independent on O-R, is 3b on CPSA" confirm, because one click still
+   changes what a number means. Also rejected: clamping, which this file and T136 both refuse.
+2. **The per-stage editor** shows one row per key already in the map, plus add-year and remove-year controls. The
+   curriculum has no programme length (`Curriculum.cs:5-14`) and `GetStage` is uncapped (`TraineeProfile.cs:66-76`),
+   so fixed rows could drop a year-5 key. **A key the editor does not render round-trips untouched.** The editor
+   serialises to the JSON the command already accepts; `NormalizeStageOverridesJson` and the validator do not change.
+3. **Read-mode labels are resolved on the page** from the loaded `_scales` levels (`EntrustmentScaleDto.Levels`),
+   falling back to the ordinal when the item is unpinned or the value is off the ladder. This replaces step 5's
+   `CurriculumItemDto` change, so the positional DTO keeps its three construction sites and the bUnit helper.
+4. **From T136: the refusal names the scale and the field.** `CurriculumMappings.EnsureScaleCanExpressMinimaAsync`
+   (`CurriculumMappings.cs:89-122`) should say, for example, "Minimum level 6 (rung 5) is not a rung on O-R Scale, which
+   has 5" or "Year 4 minimum …". Show it next to the edited row, in an inline sub-row like the Tools one, not only in the
+   top alert. Keep the check before the first mutation. The tests that match `*requires level N*`
+   (`CurriculumItemScalePinTests.cs:88,104`; `EntrustmentScaleAdminHandlerTests.cs:347`) change their text but must
+   still assert the refusal.
+5. [T109]'s server-side refusal stays. The pickers are guidance only.
+
+Left to the implementer: the add form's default scale, either the siblings' shared scale or
+`SubSpeciality.DefaultEntrustmentScaleId`, in place of "unpinned, 4". [T139] edits the same page (`WindowMonths` at
+`:48`, `:86`, `:103`, `:192-195`); sequence the two so the page is reworked once.
+
+**Verification, added (the last four come from T136):**
+
+- [ ] Changing the scale empties the minimum pickers and disables Save until each is re-picked. bUnit test.
+- [ ] A per-stage key the editor does not render survives a save. bUnit or handler test.
+- [ ] Browser, on dev (read DESIGN.md first): a v11.1 item offers 1/2/3a/3b/4/5. Re-pin PAED-001 to the O-R Scale
+      and back.
+- [ ] Update refuses an incompatible scale-and-ordinals combination. Handler test on the Update path; today only Add
+      is covered (`CurriculumItemScalePinTests.cs:76-117`).
+- [ ] Update succeeds when scale, flat minimum and stage minima change together. Handler test.
+- [ ] The refusal names the scale and the offending value, next to the row. bUnit test.
+- [ ] Full suite green, no `--no-build`.

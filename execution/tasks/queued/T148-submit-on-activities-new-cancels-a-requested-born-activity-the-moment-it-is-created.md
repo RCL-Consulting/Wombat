@@ -56,3 +56,9 @@ the submission ("Submitted.") instead of sending a transition.
 ## Related
 
 [T095] (introduced `ResolveInitialTransitionKey`), [T122], [T127].
+
+## Update 2026-09-24 — EPA-stream survey
+
+Lands with [T127], in the same change to `CreateOrTransitionAsync`, and closes with it. Use
+`CanReachTerminal(to, avoidingState: initial state)`, not plain `CanReachTerminal(to)`. Otherwise a builder-made
+"cancelled" state with a reopen transition would count as a submission.
