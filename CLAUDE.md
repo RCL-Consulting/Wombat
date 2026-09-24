@@ -207,6 +207,17 @@ Runtime services in Infrastructure:
   The picker is the same query. `ActorFieldRules` (Domain) is the one walker of declared actor rules; save and publish
   refuse duplicate keys, a `field:` rule naming a non-user field, and options on a user field
   (`ActorFieldRules.EnsurePublishable`).
+- `EncounterDateGate` — the encounter date (the pinned schema's `observation_date_field`) may not be after today on the
+  South African calendar, for every type. A type whose pinned credit rules can credit (`EncounterDatePolicy.CanCredit`,
+  meaning a non-empty `counts_for`) is also held to the subject's `ProgrammeStartDate`; with no profile, only the future
+  check applies. A refusal is a field error on the date (T160). A changed date is judged on every write, and an unchanged
+  one only at the author's hand-on (`UnchangedFieldsHandedOn`). The system-written MSF path gets the future check only.
+  A filing more than `EncounterDatePolicy.LateFilingDays` (14, D15) after the encounter is **never refused**. On a type
+  that can credit, the form warns while the date is typed, and the filing's history row records
+  `ActivityTransition.DaysAfterEncounter`. A research output, journal club or reflective exercise gets neither. Only the
+  first filing records it: a re-submission after a supervisor's `return` is not a filing (`Workflow.LeftInitialStateLeadingOn`
+  is the shared test). "Today" comes from `ActivityService`'s `TimeProvider`, so a test can pin 22:30 UTC, which is
+  already tomorrow in South Africa.
 
 ### Editing a seed folder
 

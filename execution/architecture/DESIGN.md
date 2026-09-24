@@ -369,6 +369,7 @@ T019 introduces a small builder-specific extension to the shared system:
 .validation-message          /* inline field error, --danger-color, .85rem */
 .validation-summary-errors   /* form-level error panel */
 .input-validation-error      /* adds --danger-color border to an input */
+.field-warning               /* inline NON-blocking warning under a field, input accepted as typed: --warning-bg, --warning-color left stripe, body text, .85rem (T160 late filing) */
 ```
 
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
@@ -594,7 +595,7 @@ body, h1..h5, .page-subtitle
 .alert, .alert-{kind}
 
 /* ── Validation ────────────────────────────────────── */
-.validation-message, .validation-summary-errors, .input-validation-error
+.validation-message, .validation-summary-errors, .input-validation-error, .field-warning
 
 /* ── Cards ─────────────────────────────────────────── */
 .detail-card, .detail-card--{variant}

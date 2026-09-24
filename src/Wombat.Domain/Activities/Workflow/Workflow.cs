@@ -34,6 +34,22 @@ public sealed record Workflow(
             CanReachTerminal(transition.To, avoidingState: stateKey));
 
     /// <summary>
+    /// Whether a recorded move left the initial state by one of its <see cref="TransitionsLeadingOn" />: for a
+    /// draft-born type, the move that filed the activity, or a later one that filed it again after it came back (T160).
+    /// </summary>
+    /// <remarks>
+    /// Asked of a history row (its from state, to state and key) rather than of a declared transition, so the write
+    /// path's entity rows and the page's DTO rows get one answer. The row must match a declared move by key and by
+    /// target, so the create row, from the initial state to itself, never matches: no move that leads on is a
+    /// self-transition.
+    /// </remarks>
+    public bool LeftInitialStateLeadingOn(string fromState, string toState, string transitionKey)
+        => string.Equals(fromState, InitialState, StringComparison.Ordinal) &&
+           TransitionsLeadingOn(InitialState).Any(transition =>
+               string.Equals(transition.Key, transitionKey, StringComparison.Ordinal) &&
+               string.Equals(transition.To, toState, StringComparison.Ordinal));
+
+    /// <summary>
     /// Whether an activity in this state can still reach a terminal state, the only place credit fires, by any
     /// sequence of transitions. Optionally without passing through <paramref name="avoidingState" />, which excludes
     /// that state as a starting point too.

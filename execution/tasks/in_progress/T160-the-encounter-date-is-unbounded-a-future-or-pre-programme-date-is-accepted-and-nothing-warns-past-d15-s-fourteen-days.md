@@ -1,11 +1,12 @@
 ---
 id: T160
 title: The encounter date is unbounded: a future or pre-programme date is accepted, and nothing warns past D15's fourteen days
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+started: 2026-09-24
 ---
 
 # T160 — An encounter date can be in the future or before the programme began, and a late filing goes unremarked

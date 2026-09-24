@@ -141,7 +141,8 @@ public sealed class ActivityViewCreditSignalTests : TestContext
             null,
             "{}",
             creditedItemCount,
-            creditScaleMismatchCount);
+            creditScaleMismatchCount,
+            null);
 
         var activity = new ActivityDto(
             11,

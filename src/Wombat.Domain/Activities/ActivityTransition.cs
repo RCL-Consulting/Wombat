@@ -43,5 +43,37 @@ public sealed class ActivityTransition
     /// </remarks>
     public int? CreditScaleMismatchCount { get; set; }
 
+    /// <summary>
+    /// On the move that filed an activity of a type that can credit, how many days after its stated encounter it was
+    /// filed; <c>null</c> on every other move, and on every move of a type that credits nothing (T160, D15).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The filing is the author's first move out of the workflow's initial state that leads on towards credit (a CPSA
+    /// <c>submit</c>), or the create itself when no such move is the author's (a type born in <c>requested</c> or born
+    /// terminal, T127). Only the first: a re-submission after a supervisor's <c>return</c> to the draft is not a second
+    /// filing, and its row records nothing, so the delay a reader is shown is the author's alone. Counted in South
+    /// African calendar days from <see cref="Activity.ObservedOn" /> to the day of <see cref="OccurredOn" />, so it is
+    /// never negative: an encounter date after the filing day is refused.
+    /// </para>
+    /// <para>
+    /// Recorded on every filing whose encounter date was stated, late or not, so the lateness a reader is shown is the
+    /// policy applied to a fact (<see cref="EncounterDatePolicy.IsLateFiling" />), not a verdict frozen at the time.
+    /// <c>null</c> as well when nobody stated the date (<see cref="ObservationDateSource.CreatedOn" />): the encounter
+    /// date is then the filing date, and "zero days late" would be a claim nobody made. The system-written path (an MSF
+    /// release) files nothing and records nothing.
+    /// </para>
+    /// <para>
+    /// Only a type whose pinned credit rules can credit records it (<see cref="EncounterDatePolicy.CanCredit" />): D15 is
+    /// about late WBA filing, and a research output or a reflective exercise filed late is late for nobody. So the
+    /// history's "Filed N days after the encounter" never appears on such a type either.
+    /// </para>
+    /// <para>
+    /// Never a refusal. D15: a late filing is warned about and recorded, and a registrar who is refused types today's
+    /// date instead.
+    /// </para>
+    /// </remarks>
+    public int? DaysAfterEncounter { get; set; }
+
     public Activity Activity { get; set; } = null!;
 }

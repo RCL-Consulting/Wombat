@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
@@ -96,6 +97,9 @@ public static class DependencyInjection
         services.AddScoped<SsoGroupMapper>();
         services.AddScoped<ExternalLoginHandler>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
+        // The clock the activity write path judges the encounter date's "today" by (T160). TryAdd: a host that already
+        // registers one keeps it.
+        services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IActivityReferenceDataService, ActivityReferenceDataService>();
         services.AddScoped<ISchemaValidator, SchemaValidator>();

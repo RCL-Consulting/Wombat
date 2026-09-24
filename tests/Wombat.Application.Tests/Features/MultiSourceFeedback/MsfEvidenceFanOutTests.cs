@@ -140,6 +140,96 @@ public sealed class MsfEvidenceFanOutTests
         activity.ObservedOn.Should().BeBefore(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1));
     }
 
+    // ---- T160: the system-written path gets the future check only, and records no lateness ------------------------
+
+    /// <summary>
+    /// A release is never a filing: nobody typed the date, so nothing is late. Forty days after the window shut is well
+    /// past D15's fourteen, and the release still records its evidence without a lateness figure.
+    /// </summary>
+    [Fact]
+    public async Task Release_LongAfterTheWindowShut_IsNotRefused_AndRecordsNoLateness()
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum, SecondEpaOnCurriculum]);
+        campaign.ClosedOn = DateTime.UtcNow.AddDays(-40);
+        await db.SaveChangesAsync();
+
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: null);
+
+        var activities = await db.Activities.Include(activity => activity.Transitions).ToListAsync();
+        activities.Should().HaveCount(2);
+        activities.Should().OnlyContain(activity => activity.ObservedOn == DateOnly.FromDateTime(campaign.ClosedOn!.Value));
+        activities.SelectMany(activity => activity.Transitions)
+            .Should().OnlyContain(transition => transition.DaysAfterEncounter == null);
+    }
+
+    /// <summary>
+    /// The programme-start bound is not applied to a system-written record: its date is the day the window shut, and
+    /// nobody on the release can correct it.
+    /// </summary>
+    [Fact]
+    public async Task Release_OfEvidenceDatedBeforeTheProgrammeStarted_IsNotRefused()
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum]);
+        var profile = await db.Set<TraineeProfile>().SingleAsync();
+        profile.ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        await db.SaveChangesAsync();
+
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: null);
+
+        (await db.Activities.SingleAsync()).ObservedOn.Should().BeBefore(profile.ProgrammeStartDate);
+    }
+
+    [Fact]
+    public async Task TheSystemWrittenPath_RefusesAnEncounterDatedTomorrow_AndStagesNothing()
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum]);
+
+        // 22:30 UTC on the 24th is 00:30 on the 25th in South Africa, so "tomorrow" is the 26th.
+        var stage = () => BuildActivityService(db, new FixedClock(LateEveningUtc)).StageCompletedAsync(
+            new RecordCompletedActivitiesInput(
+                "msf_cpsa", TraineeUserId, CoordinatorUserId, "record", [MsfPayload(campaign.Id, new DateOnly(2026, 9, 26))], Coordinator()));
+
+        (await stage.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Be("Feedback window closed: The encounter date cannot be after today (2026-09-25).");
+        db.ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Should().BeEmpty("the caller's audit save would commit anything staged");
+    }
+
+    [Fact]
+    public async Task TheSystemWrittenPath_JudgesTheFutureOnTheSouthAfricanCalendar()
+    {
+        // On the UTC calendar it is still the 24th, and a row dated the 25th would be refused as tomorrow.
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum]);
+
+        var staged = await BuildActivityService(db, new FixedClock(LateEveningUtc)).StageCompletedAsync(
+            new RecordCompletedActivitiesInput(
+                "msf_cpsa", TraineeUserId, CoordinatorUserId, "record", [MsfPayload(campaign.Id, new DateOnly(2026, 9, 25))], Coordinator()));
+
+        staged.Should().Be(1);
+    }
+
+    /// <summary>22:30 UTC on 24 September: already 00:30 on 25 September in South Africa.</summary>
+    private static readonly DateTimeOffset LateEveningUtc = new(2026, 9, 24, 22, 30, 0, TimeSpan.Zero);
+
+    private static string MsfPayload(int campaignId, DateOnly observedOn)
+        => JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["epa_id"] = EpaOnCurriculum,
+            ["campaign_id"] = campaignId,
+            ["observed_on"] = observedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            ["respondent_count"] = 4
+        });
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
     [Fact]
     public async Task Release_DropsAnEpaThatHasLeftTheSubjectsCurriculum_WithoutFailingTheRelease()
     {
@@ -370,8 +460,8 @@ public sealed class MsfEvidenceFanOutTests
             CancellationToken.None);
     }
 
-    private static ActivityService BuildActivityService(ApplicationDbContext db)
-        => new(db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator());
+    private static ActivityService BuildActivityService(ApplicationDbContext db, TimeProvider? clock = null)
+        => new(db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator(), clock);
 
     /// <summary>
     /// A curriculum, an admitted trainee, the real <c>msf_cpsa</c> type, and a campaign sitting in

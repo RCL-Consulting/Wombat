@@ -90,6 +90,7 @@ else if (_schema is not null)
             }
 
             <FormField Label="@field.Label" InputId="@field.Key" HelpText="@field.HelpText" Required="@field.Required">
+              <ChildContent>
               @switch (field.Type)
               {
                 case FieldType.Text:
@@ -106,7 +107,7 @@ else if (_schema is not null)
                   <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Date:
-                  <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@(WarnsOfLateFiling(field.Key) ? LateFilingWarningId(field.Key) : null)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Choice:
                 case FieldType.Epa:
@@ -137,6 +138,24 @@ else if (_schema is not null)
                   }
                   break;
               }
+              </ChildContent>
+              <ValidationContent>
+                @if (WarnsOfLateFiling(field.Key))
+                {
+                  @* T160, D15. A soft warning, never a refusal: the date the author types is the one T119 protects, and a
+                     registrar refused for filing late types today's date instead. The live region is always present, so a
+                     screen reader hears the warning when it appears as the date is typed. *@
+                  <div id="@LateFilingWarningId(field.Key)" role="status">
+                    @if (LateFilingDaysAfter(field.Key) is int daysLate)
+                    {
+                      <p class="field-warning">
+                        This encounter was @daysLate days ago. It can still be filed, but a filing more than
+                        @EncounterDatePolicy.LateFilingDays days after the encounter is recorded as late.
+                      </p>
+                    }
+                  </div>
+                }
+              </ValidationContent>
             </FormField>
           }
         </div>
@@ -212,6 +231,21 @@ else if (_schema is not null)
   /// </remarks>
   [Parameter] public string? StoredDataJson { get; set; }
 
+  /// <summary>
+  /// The South African date this form would be filed on, when what is typed here can still be the filing; null
+  /// otherwise (T160, D15).
+  /// </summary>
+  /// <remarks>
+  /// While it is set, the encounter date field (the schema's <c>observation_date_field</c>) warns, without refusing, as
+  /// soon as the date typed is more than <see cref="EncounterDatePolicy.LateFilingDays" /> days before it: the lateness
+  /// the filing's history row will record. The create page passes today; an activity's page passes today only to its
+  /// author while it is still in its initial state; the builder preview passes nothing. A parameter rather than a clock
+  /// read here, so the page decides whether this is a filing and a test can fix the day. Whether the type can file late
+  /// at all is this form's to decide, from <see cref="CreditRulesJson" />: only a type that can credit records lateness,
+  /// so only its form warns (<see cref="FilingLateness.WarnsFor" />).
+  /// </remarks>
+  [Parameter] public DateOnly? FiledOn { get; set; }
+
   [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
 
   private FormSchema? _schema;
@@ -222,6 +256,10 @@ else if (_schema is not null)
   // Schema field keys the pinned credit rules actually read as the EPA to credit. Empty for every
   // activity type that credits nothing, and for one that credits a fixed curriculum item.
   private IReadOnlySet<string> _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+
+  // Whether the pinned credit rules can credit, so a filing of this form can be late (T160). Asked once per load, with the
+  // rules, rather than on every render of every field.
+  private bool _canFileLate;
 
   private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
 
@@ -259,6 +297,7 @@ else if (_schema is not null)
         _schema = FormSchemaParser.Parse(SchemaJson);
         _loadedOptionsKey = optionsKey;
         _creditedEpaFieldKeys = ResolveCreditedEpaFieldKeys();
+        _canFileLate = FilingLateness.WarnsFor(CreditRulesJson);
         await LoadOptionsAsync();
       }
 
@@ -271,6 +310,7 @@ else if (_schema is not null)
       _data = [];
       _catalogueOptionsByField.Clear();
       _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
+      _canFileLate = false;
       _loadedOptionsKey = null;
     }
   }
@@ -299,6 +339,37 @@ else if (_schema is not null)
       or FieldType.Date
       or FieldType.Choice or FieldType.Epa or FieldType.User
       or FieldType.Scale;
+
+  /// <summary>
+  /// Whether this field is the encounter date of a form that may be the filing, of a type that can credit, and the actor
+  /// can type in it (T160). A type that credits nothing records no lateness, so warning that its filing "is recorded as
+  /// late" would be untrue. A locked date is not being typed, and on this page nobody could act on the warning.
+  /// </summary>
+  private bool WarnsOfLateFiling(string key)
+    => FiledOn is not null &&
+       _canFileLate &&
+       _schema is not null &&
+       string.Equals(_schema.ObservationDateField, key, StringComparison.Ordinal) &&
+       !IsFieldLocked(key);
+
+  private static string LateFilingWarningId(string key) => $"{key}-late-filing";
+
+  /// <summary>
+  /// How many days before <see cref="FiledOn" /> the typed encounter date is, when that makes the filing late (T160, D15);
+  /// otherwise null. The same policy the server applies to the filing's history row (<see cref="EncounterDatePolicy" />).
+  /// A date after the filing day is the server's to refuse, not a late filing.
+  /// </summary>
+  private int? LateFilingDaysAfter(string key)
+  {
+    if (FiledOn is not DateOnly filedOn ||
+        !DateOnly.TryParse(GetString(key), CultureInfo.InvariantCulture, DateTimeStyles.None, out var encounteredOn))
+    {
+      return null;
+    }
+
+    var days = EncounterDatePolicy.DaysAfterEncounter(encounteredOn, filedOn);
+    return EncounterDatePolicy.IsLateFiling(days) ? days : null;
+  }
 
   private string GetString(string key)
   {

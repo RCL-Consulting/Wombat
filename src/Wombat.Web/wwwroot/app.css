@@ -512,6 +512,19 @@ h1[tabindex="-1"]:focus {
   font-size: 0.85rem;
 }
 
+/* A non-blocking warning under a field, beside .validation-message's refusal: the input is accepted as typed (T160's
+   late-filing warning). Body text on the warning tint, with the warning colour as a stripe, since orange text on white
+   does not reach 4.5:1. */
+.field-warning {
+  background-color: var(--warning-bg);
+  border-left: 4px solid var(--warning-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+}
+
 .validation-summary-errors {
   background-color: var(--danger-bg);
   border: 1px solid var(--danger-color);

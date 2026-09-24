@@ -24,6 +24,9 @@ public sealed class ActivityTransitionConfiguration : IEntityTypeConfiguration<A
 
         // Same three-valued contract, same reason (T109): null means credit was never evaluated here.
         builder.Property(entity => entity.CreditScaleMismatchCount);
+
+        // T160, D15. Null on every move that is not the filing, and on a filing with no stated encounter date.
+        builder.Property(entity => entity.DaysAfterEncounter);
         builder.HasIndex(entity => new { entity.ActivityId, entity.OccurredOn });
     }
 }

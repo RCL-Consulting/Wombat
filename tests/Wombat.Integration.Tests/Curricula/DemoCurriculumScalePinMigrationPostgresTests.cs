@@ -32,7 +32,8 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
 
     private const string T174Migration = "20260924140337_T174_PinDemoCurriculumItemScale";
-    private const string LastMigrationBeforeT174 = "20260924123852_T137_ActivityEvidenceEpa";
+    // T160's migration, merged after T174 but timestamped before it, sorts between T137 and T174.
+    private const string LastMigrationBeforeT174 = "20260924134441_T160_FilingDaysAfterEncounter";
 
     private readonly List<string> _schemas = [];
     private string _baseConnectionString = null!;

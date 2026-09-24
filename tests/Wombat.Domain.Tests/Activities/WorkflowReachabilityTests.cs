@@ -130,6 +130,75 @@ public sealed class WorkflowReachabilityTests
         Assert.Equal(["finish", "send"], workflow.TransitionsLeadingOn("draft").Select(transition => transition.Key));
     }
 
+    /// <summary>
+    /// T160. Which recorded rows filed the activity: a move out of the initial state that leads on, matched by key and by
+    /// target. Asked of history rows so the write path and the page agree about whether a draft was filed already.
+    /// </summary>
+    [Theory]
+    [InlineData("draft", "requested", "submit", true)]
+    [InlineData("draft", "draft", "create", false)] // the create row
+    [InlineData("requested", "draft", "recall", false)] // back into the initial state
+    [InlineData("requested", "completed", "complete", false)] // not out of the initial state
+    [InlineData("draft", "completed", "complete", false)] // no such move out of the draft
+    [InlineData("draft", "withdrawn", "submit", false)] // the right key, but not the declared target
+    public void WhichRecordedMovesLeftTheInitialStateLeadingOn(string from, string to, string key, bool expected)
+    {
+        Assert.Equal(expected, WorkflowParser.Parse(WorkflowJson).LeftInitialStateLeadingOn(from, to, key));
+    }
+
+    /// <summary>A move out of the initial state into a dead end is a withdrawal, not a filing.</summary>
+    [Fact]
+    public void AWithdrawalFromTheInitialStateIsNotAFiling()
+    {
+        var workflow = WorkflowParser.Parse("""
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [
+                { "key": "draft", "label": "Draft" },
+                { "key": "done", "label": "Done", "terminal": true },
+                { "key": "cancelled", "label": "Cancelled" }
+              ],
+              "transitions": [
+                { "key": "finish", "from": "draft", "to": "done", "actor": "subject" },
+                { "key": "cancel", "from": "draft", "to": "cancelled", "actor": "subject" }
+              ]
+            }
+            """);
+
+        Assert.True(workflow.LeftInitialStateLeadingOn("draft", "done", "finish"));
+        Assert.False(workflow.LeftInitialStateLeadingOn("draft", "cancelled", "cancel"));
+    }
+
+    /// <summary>
+    /// A move declared from the draft and from elsewhere left the initial state only when the row says it came from it:
+    /// a re-submission out of <c>returned</c> is the same declared move, but it is not the filing.
+    /// </summary>
+    [Fact]
+    public void TheSameMoveFromAnotherStateDidNotLeaveTheInitialState()
+    {
+        var workflow = WorkflowParser.Parse("""
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [
+                { "key": "draft", "label": "Draft" },
+                { "key": "requested", "label": "Requested" },
+                { "key": "returned", "label": "Returned" },
+                { "key": "completed", "label": "Completed", "terminal": true }
+              ],
+              "transitions": [
+                { "key": "submit", "from": ["draft", "returned"], "to": "requested", "actor": "subject" },
+                { "key": "return", "from": "requested", "to": "returned", "actor": "role:Assessor" },
+                { "key": "complete", "from": "requested", "to": "completed", "actor": "role:Assessor" }
+              ]
+            }
+            """);
+
+        Assert.True(workflow.LeftInitialStateLeadingOn("draft", "requested", "submit"));
+        Assert.False(workflow.LeftInitialStateLeadingOn("returned", "requested", "submit"));
+    }
+
     /// <summary>A cycle with no exit terminates and reports what it is: a dead end in two states rather than one.</summary>
     [Fact]
     public void ACycleWithNoWayOutIsADeadEnd_AndTheSearchTerminates()

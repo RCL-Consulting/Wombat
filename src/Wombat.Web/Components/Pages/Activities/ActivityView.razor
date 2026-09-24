@@ -104,6 +104,7 @@
                         IsExistingActivity="true"
                         ActivityInstitutionId="@_activity.InstitutionId"
                         StoredDataJson="@_activity.DataJson"
+                        FiledOn="@_filedOn"
                         DataJsonChanged="OnDataChanged" />
 
           <FormActions>
@@ -133,7 +134,14 @@
             <td>@transition.TransitionKey</td>
             <td>@($"{transition.FromState} → {transition.ToState}")</td>
             <td>@transition.ActorUserId</td>
-            <td>@transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+            <td>
+              @transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+              @if (FilingLateness.Label(transition.DaysAfterEncounter) is { } lateFiling)
+              {
+                @* T160, D15: recorded on the filing's own row, never a refusal. *@
+                <div class="text-sm">@lateFiling</div>
+              }
+            </td>
             <td>@CreditLabel(transition.CreditedItemCount)</td>
             <td>@(string.IsNullOrWhiteSpace(transition.Note) ? "—" : transition.Note)</td>
           </tr>
@@ -161,6 +169,10 @@
   // reconciled with the server on every successful load.
   private string _workingDataJson = "{}";
   private bool _hasPendingChanges;
+
+  // Today, when this viewer's next move could file the activity, so its encounter date warns of a late filing (T160);
+  // null otherwise. Re-read with the activity and its actions, since a move changes whether the next one is the filing.
+  private DateOnly? _filedOn;
 
   private bool _loading = true;
   private string? _loadError;
@@ -244,6 +256,7 @@
       _editable = new HashSet<string>(StringComparer.Ordinal);
       _workingDataJson = "{}";
       _hasPendingChanges = false;
+      _filedOn = null;
       return;
     }
 
@@ -252,6 +265,7 @@
     _editable = new HashSet<string>(detail.EditableFieldKeys, StringComparer.Ordinal);
     _workingDataJson = detail.Activity.DataJson;
     _hasPendingChanges = false;
+    _filedOn = FilingLateness.FiledOnFor(detail.Activity, detail.AvailableActions, user);
   }
 
   private void OnDataChanged(string dataJson)

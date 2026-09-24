@@ -111,7 +111,17 @@ public sealed class Activity
     /// as a consequence of the move — credit, for one (T108) — onto the very row it belongs to,
     /// rather than fishing the newest one back out of the collection.
     /// </summary>
-    public ActivityTransition ApplyTransition(Workflow.Workflow workflow, string transitionKey, string actorUserId, string newDataJson, string? note)
+    /// <param name="occurredOn">
+    /// The UTC instant of the move, when the caller has already taken one, so the row's timestamp is the instant its
+    /// checks were judged at (T160's "today"); the current time otherwise.
+    /// </param>
+    public ActivityTransition ApplyTransition(
+        Workflow.Workflow workflow,
+        string transitionKey,
+        string actorUserId,
+        string newDataJson,
+        string? note,
+        DateTime? occurredOn = null)
     {
         ArgumentNullException.ThrowIfNull(workflow);
         ArgumentException.ThrowIfNullOrWhiteSpace(transitionKey);
@@ -133,7 +143,7 @@ public sealed class Activity
         var previousState = CurrentState;
         CurrentState = transition.To;
         DataJson = normalizedDataJson;
-        UpdatedOn = DateTime.UtcNow;
+        UpdatedOn = occurredOn ?? DateTime.UtcNow;
 
         var record = new ActivityTransition
         {

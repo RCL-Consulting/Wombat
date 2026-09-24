@@ -58,7 +58,8 @@ public sealed record ActivityTypeEditorDto(
 /// One recorded workflow move. <paramref name="CreditedItemCount" /> is the T108 signal: <c>null</c>
 /// when credit was never evaluated for this move (non-terminal, or a version that credits nothing by
 /// design), <c>0</c> when it was evaluated and matched no curriculum item, otherwise the number of
-/// curriculum items credited.
+/// curriculum items credited. <paramref name="DaysAfterEncounter" /> is set only on the move that filed the
+/// activity, when its encounter date was stated and its pinned version can credit (T160, D15).
 /// </summary>
 public sealed record ActivityTransitionDto(
     int Id,
@@ -72,7 +73,9 @@ public sealed record ActivityTransitionDto(
     int? CreditedItemCount,
     // No default: this is the only signal that a completion counted for volume but was refused its
     // supervision level, and a defaulted argument is one a future call site can silently drop (T109).
-    int? CreditScaleMismatchCount);
+    int? CreditScaleMismatchCount,
+    // No default either, for the same reason: it is the only record that a filing was late (T160).
+    int? DaysAfterEncounter);
 
 public sealed record ActivityDto(
     int Id,

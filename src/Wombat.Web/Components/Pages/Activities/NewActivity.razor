@@ -46,7 +46,9 @@
   @* The creator IS the subject here — this page files an activity about the current user — so the
      EPA picker narrows to what would actually credit for them (T108), and to what this instrument may be
      filed against (T122): the write path refuses anything else. *@
-  @* Keyed on a generation so a refused create remounts it with fresh option lists (T102). *@
+  @* Keyed on a generation so a refused create remounts it with fresh option lists (T102). What is typed here is filed
+     today, whether by the create or by the submit sent straight after it, so the encounter date warns of a late filing
+     against today (T160, D15), on a type that can credit: the form reads that from the credit rules. *@
   <ActivityForm @key="_formGeneration"
                 SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
                 DataJson="@_dataJson"
@@ -54,6 +56,7 @@
                 CreditRulesJson="@(_selectedEditor.PublishedCreditRulesJson ?? _selectedEditor.DraftCreditRulesJson)"
                 WbaToolKey="@_selectedEditor.WbaToolKey"
                 EditableFieldKeys="_editableFieldKeys"
+                FiledOn="@FilingLateness.Today()"
                 DataJsonChanged="OnDataChanged" />
 
   <FormActions>

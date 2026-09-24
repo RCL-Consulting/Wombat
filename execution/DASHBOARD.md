@@ -4,6 +4,7 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T160](tasks/in_progress/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T182](tasks/queued/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
@@ -11,7 +12,6 @@
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
-| queued | [T160](tasks/queued/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
@@ -74,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+cf7b246 docs(execution): close T175, T180, T172, T177 and T174 — browser-verified on dev (activities 25, 26); file T187–T191; T181's cause found
 f05bde8 fix(catalogue): the seeders pin a curriculum item's scale only when they create it, and warn rather than re-pin; a data migration pins the demo item where it is unpinned (T174)
 0c2c20b fix(activities): every label on an activity form names a real control; group fields are named fieldsets (T177)
 9369920 fix(activities): a refusal names each field by the label the user sees, with its section where the label repeats (T172)
 6f10a8f fix(web): app.css and the other first-party assets are linked through fingerprinted URLs, and the tab title follows in-app navigation (T175, T180)
-f2545db docs(execution): handoff progress
 ```

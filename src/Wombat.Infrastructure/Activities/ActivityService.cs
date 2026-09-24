@@ -26,20 +26,29 @@ public sealed class ActivityService : IActivityService
     private readonly IWorkflowEvaluator _workflowEvaluator;
     private readonly ICreditApplier _creditApplier;
     private readonly IFieldPermissionEvaluator _fieldPermissionEvaluator;
+    private readonly TimeProvider _timeProvider;
 
+    /// <param name="timeProvider">
+    /// The clock every write takes its instant from, and so the South African "today" the encounter date is judged
+    /// against (T160). Optional so that a caller without one gets the system clock; a test passes a fixed one.
+    /// </param>
     public ActivityService(
         IApplicationDbContext dbContext,
         ISchemaValidator schemaValidator,
         IWorkflowEvaluator workflowEvaluator,
         ICreditApplier creditApplier,
-        IFieldPermissionEvaluator fieldPermissionEvaluator)
+        IFieldPermissionEvaluator fieldPermissionEvaluator,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _schemaValidator = schemaValidator;
         _workflowEvaluator = workflowEvaluator;
         _creditApplier = creditApplier;
         _fieldPermissionEvaluator = fieldPermissionEvaluator;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
+
+    private DateTime UtcNow() => _timeProvider.GetUtcNow().UtcDateTime;
 
     public async Task<ActivityDto> CreateDraftAsync(CreateActivityInput input, CancellationToken cancellationToken = default)
     {
@@ -53,6 +62,7 @@ public sealed class ActivityService : IActivityService
         var subjectUserId = input.SubjectUserId.Trim();
         var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
 
+        var utcNow = UtcNow();
         var activity = await BuildDraftActivityAsync(
             activityType,
             schema,
@@ -62,10 +72,27 @@ public sealed class ActivityService : IActivityService
             input.CreatedByUserId,
             input.InitialDataJson,
             input.Principal,
-            DateTime.UtcNow,
+            utcNow,
             cancellationToken);
 
-        ThrowIfFiledIncomplete(schema, workflow, activity, input.Principal);
+        var createIsTheFiling = CreateIsTheFiling(workflow, activity, input.Principal);
+        if (createIsTheFiling)
+        {
+            ThrowIfFiledIncomplete(schema, workflow, activity, input.Principal);
+        }
+
+        // T160. A create writes the encounter date for the first time, so it is always judged, draft or filing. After the
+        // schema's own checks, so an unparseable date fails as a format error first, and before either gate and the Add.
+        // The live published rules ARE the pinned version's (BuildDraftActivityAsync pins to activityType.Version), so they
+        // decide whether the programme-start bound applies.
+        ThrowIfInvalid(schema, await EncounterDateGate.ValidateAsync(
+            _dbContext,
+            activity,
+            schema,
+            activity.DataJson,
+            ProgrammeCalendar.DateOf(utcNow),
+            activityType.CreditRulesJson,
+            cancellationToken));
 
         // T122. A create always writes the credit target, and for a type whose initial state is already `requested`
         // (the legacy WBA shape) the create IS the author's submission: the next move is the assessor's. Gating here
@@ -96,6 +123,13 @@ public sealed class ActivityService : IActivityService
             activity.SubjectUserId,
             cancellationToken);
 
+        // T160, D15. When the create is itself the filing of a type that can credit, its own history row records how late
+        // the filing was. The entity is not in the context yet, so this is no mutation of it.
+        if (createIsTheFiling && EncounterDatePolicy.CanCredit(activityType.CreditRulesJson))
+        {
+            RecordFiling(activity, activity.Transitions.Single());
+        }
+
         _dbContext.Set<Activity>().Add(activity);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -103,15 +137,70 @@ public sealed class ActivityService : IActivityService
     }
 
     /// <summary>
+    /// Whether creating this activity files it: no move out of the initial state that leads on is the author's to take
+    /// (<see cref="Workflow.TransitionsLeadingOn" />). T127's rule, shared by <see cref="ThrowIfFiledIncomplete" /> and
+    /// the lateness record (T160).
+    /// </summary>
+    private bool CreateIsTheFiling(Workflow workflow, Activity activity, ClaimsPrincipal principal)
+        => !workflow.TransitionsLeadingOn(workflow.InitialState)
+            .Any(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed);
+
+    /// <summary>
+    /// Whether this move files the activity: the author's FIRST move out of the workflow's initial state that leads on
+    /// towards credit (a CPSA <c>submit</c>). The counterpart of <see cref="CreateIsTheFiling" /> for a draft-born type
+    /// (T160).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The author's, because out of a type born in <c>requested</c> the assessor's <c>accept</c> also leaves the initial
+    /// state and leads on, and there the create was the filing. Asked before the move, while the activity is still in
+    /// the state it leaves.
+    /// </para>
+    /// <para>
+    /// The first, because a workflow can bring the activity back: <c>reflective_exercise_cpsa</c>'s supervisor
+    /// <c>return</c>s it to <c>draft</c>. The re-submission after that is not a second filing, and recording it as one
+    /// would call an encounter filed on day 3 and returned on day 18 "filed 19 days after". Once any move has left the
+    /// initial state and led on (<see cref="Workflow.LeftInitialStateLeadingOn" />), whoever made it, nothing later is
+    /// the filing. The page asks the same of the same rows (<c>FilingLateness.FiledOnFor</c>).
+    /// </para>
+    /// <para>
+    /// Whether the filing's lateness is RECORDED is a further question, asked by the caller: only a type that can credit
+    /// records it (<see cref="EncounterDatePolicy.CanCredit" />). <c>reflective_exercise_cpsa</c> itself credits nothing,
+    /// so it records no lateness at all; a crediting type built with the same <c>return</c> is what this rule protects.
+    /// </para>
+    /// </remarks>
+    private static bool IsTheFiling(Workflow workflow, Activity activity, WorkflowTransition transition, string actorUserId)
+        => string.Equals(activity.CurrentState, workflow.InitialState, StringComparison.Ordinal) &&
+           IsTheAuthor(actorUserId, activity) &&
+           workflow.TransitionsLeadingOn(workflow.InitialState).Contains(transition) &&
+           !activity.Transitions.Any(row => workflow.LeftInitialStateLeadingOn(row.FromState, row.ToState, row.TransitionKey));
+
+    /// <summary>
+    /// Records on the filing's history row how many days after the stated encounter it was filed (T160, D15). Nothing is
+    /// recorded when nobody stated the date; see <see cref="ActivityTransition.DaysAfterEncounter" />. Never a refusal.
+    /// Called only for a type that can credit (<see cref="EncounterDatePolicy.CanCredit" />), which the caller decides
+    /// before its first mutation.
+    /// </summary>
+    /// <remarks>
+    /// Synchronous and total: it runs where nothing may fail, after <c>ApplyTransition</c>. It reads the stamp, which
+    /// the caller writes from the same data first, and the South African day of the row's own timestamp, so the figure
+    /// agrees with the "today" the future check used: an encounter on or before that day is on or before this one.
+    /// </remarks>
+    private static void RecordFiling(Activity activity, ActivityTransition filing)
+        => filing.DaysAfterEncounter = activity.ObservedOnSource == ObservationDateSource.Declared
+            ? EncounterDatePolicy.DaysAfterEncounter(activity.ObservedOn, ProgrammeCalendar.DateOf(filing.OccurredOn))
+            : null;
+
+    /// <summary>
     /// Refuses a create that files the activity with a required field of the author's still empty.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A create is the author's filing when no move out of the initial state that leads on is theirs to take
-    /// (<see cref="Workflow.TransitionsLeadingOn" />). For a type born in <c>requested</c> (the generic <c>mini_cex</c>,
-    /// <c>dops</c>, <c>cbd</c> and <c>acat</c>) the create is the submission and the next move is the assessor's; for a
-    /// type born terminal (<c>procedure_log</c>, <c>journal_club</c>) the create is the whole record. Either way no later
-    /// move of the author's will check what they owe, so the create checks it now, as a submit declaring
+    /// Asked only when the create is the author's filing (<see cref="CreateIsTheFiling" />). For a type born in
+    /// <c>requested</c> (the generic <c>mini_cex</c>, <c>dops</c>, <c>cbd</c> and <c>acat</c>) the create is the
+    /// submission and the next move is the assessor's; for a type born terminal (<c>procedure_log</c>,
+    /// <c>journal_club</c>) the create is the whole record. Either way no later move of the author's will check what
+    /// they owe, so the create checks it now, as a submit declaring
     /// <c>validation: owned</c> would (T105): the required fields the author may write. Without it a trainee could file
     /// a request that names no assessor, which nobody could then accept or repair: edits travel only with a move, and
     /// the author's one move left is the withdrawal (found in the T127/T148 review).
@@ -126,13 +215,6 @@ public sealed class ActivityService : IActivityService
     /// </remarks>
     private void ThrowIfFiledIncomplete(FormSchema schema, Workflow workflow, Activity activity, ClaimsPrincipal principal)
     {
-        var authorMovesItOn = workflow.TransitionsLeadingOn(workflow.InitialState)
-            .Any(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed);
-        if (authorMovesItOn)
-        {
-            return;
-        }
-
         var owned = _fieldPermissionEvaluator.GetWritableFieldKeys(
             schema,
             workflow,
@@ -307,6 +389,31 @@ public sealed class ActivityService : IActivityService
         // T105: the transition says how much of the form it insists on. Against the pre-move state and the merged data.
         ThrowIfInvalid(schema, ValidateForTransition(schema, workflow, activity, transition, input.Principal, mergedDataJson));
 
+        // One instant for the whole move: the date is judged against its South African day, and the history row is
+        // stamped with it, so the lateness recorded below counts to the same day the future check used.
+        var utcNow = UtcNow();
+
+        // T160: the encounter date's two bounds, as field errors. Which moves judge it is EncounterDateToJudge's decision;
+        // see its remarks. After the transition's own validation, so a malformed date fails as a format error first, and
+        // before both gates and the first mutation below.
+        if (EncounterDateToJudge(workflow, schema, activity, transition, input.Principal, input.ActorUserId, mergedDataJson))
+        {
+            ThrowIfInvalid(schema, await EncounterDateGate.ValidateAsync(
+                _dbContext,
+                activity,
+                schema,
+                mergedDataJson,
+                ProgrammeCalendar.DateOf(utcNow),
+                version.CreditRulesJson,
+                cancellationToken));
+        }
+
+        // Asked before the move, while the activity is still in the state the move leaves. Only a type that can credit
+        // records its filing's lateness (EncounterDatePolicy.CanCredit); its rules are parsed here, before the first
+        // mutation, because RecordFiling runs where nothing may fail.
+        var recordsTheFiling = IsTheFiling(workflow, activity, transition, input.ActorUserId) &&
+                               EncounterDatePolicy.CanCredit(version.CreditRulesJson);
+
         // T122, D20: a changed credit target is checked on any move that can still lead to credit; an unchanged one is
         // re-checked only when the author, before anyone else has acted, hands it on while still able to correct it
         // (see DirectivesToJudge). So an assessor's `complete` or `decline`, a sign-off after assessment, or a
@@ -362,7 +469,14 @@ public sealed class ActivityService : IActivityService
         StampObservedOn(activity, schema, mergedDataJson);
         activity.EpaId = epaId;
 
-        var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
+        var record = activity.ApplyTransition(
+            workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note, occurredOn: utcNow);
+
+        // T160, D15: how late the filing was, from the stamp written just above. Recorded, never refused.
+        if (recordsTheFiling)
+        {
+            RecordFiling(activity, record);
+        }
 
         if (creditPlan is not null)
         {
@@ -484,7 +598,7 @@ public sealed class ActivityService : IActivityService
 
         EnsureSubjectIsInTypeScope(activityType, subjectScope, subjectUserId);
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = UtcNow();
 
         var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
 
@@ -512,6 +626,18 @@ public sealed class ActivityService : IActivityService
                 input.Principal,
                 utcNow,
                 cancellationToken);
+
+            // T160: the future check only, whatever the type's credit rules (null). A system-written record has nobody who
+            // could correct its date, and it is never a filing, so it is never judged against the programme start and never
+            // records lateness. Its type credits nothing anyway (refused above), so CanCredit would say the same today.
+            ThrowIfInvalid(schema, await EncounterDateGate.ValidateAsync(
+                _dbContext,
+                activity,
+                schema,
+                activity.DataJson,
+                ProgrammeCalendar.DateOf(utcNow),
+                creditRulesJson: null,
+                cancellationToken));
 
             // T102, as at create: every nominee a system-written record carries is judged, before AddRange. msf_cpsa has
             // no user field, so today this judges nothing; it is here so no write path is left without it.
@@ -1165,6 +1291,52 @@ public sealed class ActivityService : IActivityService
     }
 
     /// <summary>
+    /// Whether a transition must put the encounter date to <see cref="EncounterDateGate" /> (T160).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A changed date is judged on every move, whoever makes it</b>, including a move into a dead end, as a changed
+    /// nominee is (T102): the stamp is rewritten from it on any move, and the stamp is what credit buckets on.
+    /// </para>
+    /// <para>
+    /// <b>An unchanged date is judged only at the author's hand-on</b> (<see cref="UnchangedFieldsHandedOn" />, the clause
+    /// the EPA→tool gate and the nominee gate share). A stored date cannot newly fall in the future, but it can newly fall
+    /// before the programme when the trainee's profile is created or its start date is moved after the draft was saved.
+    /// The hand-on is the last moment the author can still correct it; an assessor's completion, a sign-off, or anyone
+    /// else's move is never refused for a date they cannot write.
+    /// </para>
+    /// </remarks>
+    private bool EncounterDateToJudge(
+        Workflow workflow,
+        FormSchema schema,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        string actorUserId,
+        string mergedDataJson)
+    {
+        if (string.IsNullOrWhiteSpace(schema.ObservationDateField))
+        {
+            return false;
+        }
+
+        if (EncounterDateGate.Changed(activity, schema, activity.DataJson, mergedDataJson))
+        {
+            return true;
+        }
+
+        return UnchangedFieldsHandedOn(
+            workflow,
+            schema,
+            activity,
+            transition,
+            principal,
+            actorUserId,
+            mergedDataJson,
+            new HashSet<string>(StringComparer.Ordinal) { schema.ObservationDateField }).Count > 0;
+    }
+
+    /// <summary>
     /// The indices of the directives whose target differs between two payloads, as the credit engine would resolve it.
     /// </summary>
     private static IReadOnlySet<int> ChangedDirectives(string? creditRulesJson, string storedDataJson, string newDataJson)
@@ -1446,7 +1618,8 @@ public sealed class ActivityService : IActivityService
                     entity.Note,
                     entity.SnapshotJson,
                     entity.CreditedItemCount,
-                    entity.CreditScaleMismatchCount))
+                    entity.CreditScaleMismatchCount,
+                    entity.DaysAfterEncounter))
                 .ToList());
     }
 }

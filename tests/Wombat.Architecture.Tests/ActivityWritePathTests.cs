@@ -47,9 +47,9 @@ public class ActivityWritePathTests
     /// </summary>
     private static readonly Dictionary<string, string> ActivityServiceSurface = new(StringComparer.Ordinal)
     {
-        ["CreateDraftAsync"] = "Write: builds the draft through BuildDraftActivity (T070 filter, self-nomination guard, validation), then the EPA→tool gate and the nominee gate, before Add.",
-        ["TransitionAsync"] = "Write: the actor gate, the T070 merge, the self-nomination guard, Submit validation, the EPA→tool gate and the nominee gate, before ApplyTransition.",
-        ["StageCompletedAsync"] = "Write: BuildDraftActivity per row, the nominee gate, the actor gate and validation per row, and AddRange only after the whole batch has passed.",
+        ["CreateDraftAsync"] = "Write: builds the draft through BuildDraftActivity (T070 filter, self-nomination guard, validation), then the encounter-date bounds (T160), the EPA→tool gate and the nominee gate, before Add.",
+        ["TransitionAsync"] = "Write: the actor gate, the T070 merge, the self-nomination guard, Submit validation, the encounter-date bounds (T160), the EPA→tool gate and the nominee gate, before ApplyTransition.",
+        ["StageCompletedAsync"] = "Write: BuildDraftActivity per row, the encounter-date future check (T160), the nominee gate, the actor gate and validation per row, and AddRange only after the whole batch has passed.",
         ["GetDetailAsync"] = "Read: behind the T101 read gate. Writes nothing."
     };
 
