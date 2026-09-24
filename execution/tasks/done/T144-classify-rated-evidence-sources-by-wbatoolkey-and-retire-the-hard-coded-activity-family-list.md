@@ -1,13 +1,14 @@
 ---
 id: T144
 title: Classify rated evidence sources by WbaToolKey and retire the hard-coded activity-family list
-status: in_progress
+status: done
 priority: P3
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-23
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T144 — Rated evidence is still categorised by guessing from its key, although types now say which instrument they are
@@ -48,11 +49,31 @@ Update the comments that name this task (`RatedActivityTypes.cs`, `GetEpaTraject
 
 ## Verification
 
-- [ ] A builder-made rated type keyed `mini_cex` under an unfamiliar key charts as Direct observation —
+- [x] A builder-made rated type keyed `mini_cex` under an unfamiliar key charts as Direct observation —
       `RatedActivityTypesTests`
-- [ ] The seeded CPSA tools classify exactly as today — `RatedActivityTypesTests`, `SeedScaleKeyTests`
-- [ ] The committee sampling report's source counts are unchanged on the scenario corpus — browser check
+- [x] The seeded CPSA tools classify exactly as today — `RatedActivityTypesTests`, `SeedScaleKeyTests`
+- [x] The committee sampling report's source counts are unchanged on the scenario corpus. Closed on database
+      evidence rather than in the browser: dev holds exactly the 19 seeded types, each with its catalogue tool key,
+      no builder types, and zero `CommitteeReviews`, so there is no report to render. Each seeded type's bucket is
+      pinned by `SeedScaleKeyTests.ExpectedSourceBucketBySeed`.
 
 ## Related
 
 [T122] (introduced `WbaToolKey` and the `WbaTools` vocabulary), [T134] (consolidated the family map), [T120].
+
+---
+
+## As built — 2026-09-24
+
+- `RatedActivityTypes.Classify(key, wbaToolKey, schemaJson)` resolves the evidence category from a **static map keyed
+  on the instrument** (`WbaToolKey`), with no migration. It falls back to today's family match only for an unkeyed
+  type; `acat` is the only such fallback. `msf`, `reflective_exercise`, `clinical_audit`, `portfolio_review` and
+  `learner_feedback` have no category. A type with no category counts as a source under its own key, which is how
+  `msf_cpsa` would appear. `chart_stimulated_recall` stays under Conversation (College question 8 may move it).
+- `LoadAsync` projects `WbaToolKey`, and the trajectory passes the type's key. The T144 comments are gone.
+- Tests:
+  - A builder type keyed `mini_cex` under an unfamiliar type key classifies as Mini-CEX.
+  - Each seeded tool's category is pinned per seed.
+  - An unkeyed `*_paed`-style type still buckets by its family.
+  - All three are mutation-checked.
+- **Documented, not fixed:** the category follows the live `WbaToolKey`, which a draft save writes. Filed as [T179].
