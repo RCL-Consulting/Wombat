@@ -142,6 +142,7 @@ public static class DependencyInjection
             }
             return registry;
         });
+        services.AddSingleton<ScheduledJobLocks>();
         services.AddSingleton<IScheduledJobDispatcher, ScheduledJobDispatcher>();
         services.AddHostedService<ScheduledJobHost>();
 

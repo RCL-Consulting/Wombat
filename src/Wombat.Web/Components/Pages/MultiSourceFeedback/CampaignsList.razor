@@ -11,6 +11,20 @@
   </Actions>
 </PageHeader>
 
+@* What a withdraw did. Announced as it appears, and given the focus once the dialog has closed: after a withdraw the
+   row's button that opened the dialog is gone, and the focus would otherwise fall to the page (T206 review). *@
+<div @ref="_result" class="action-result" tabindex="-1">
+  @if (!string.IsNullOrWhiteSpace(_status))
+  {
+    <Alert Kind="success" Role="status">@_status</Alert>
+  }
+
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger" Role="alert">@_actionError</Alert>
+  }
+</div>
+
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No MSF campaigns" EmptyBody="Create the first MSF campaign to start respondent outreach.">
   <DataTable Items="_items" Caption="MSF campaigns">
     <HeaderRow>
@@ -35,24 +49,55 @@
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")">Edit</a>
           <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")">Report</a>
+          @if (CanWithdraw(item))
+          {
+            @* The accessible name starts with the visible label and says which row it acts on (T206). *@
+            <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
+                    aria-label="@($"Withdraw the campaign for {Describe(item)}")"
+                    @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
+          }
         </td>
       </tr>
     </Row>
   </DataTable>
 </StatePanel>
 
+@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
+   respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202). *@
+<ConfirmDialog @ref="_confirmWithdraw"
+               Title="Withdraw this campaign?"
+               Body="@WithdrawBody"
+               ConfirmLabel="Withdraw campaign"
+               DangerAction="true"
+               OnConfirm="WithdrawAsync"
+               OnCancel="CancelWithdraw" />
+
 @code {
   private readonly List<MsfCampaignSummaryDto> _items = [];
+  private ConfirmDialog? _confirmWithdraw;
+  private ElementReference _result;
+
+  /// <summary>The region holding a withdraw's result, which takes the focus once it has answered. For its tests.</summary>
+  internal ElementReference ResultRegion => _result;
+
+  /// <summary>A withdraw has answered, and its result takes the focus after the next render. (T206 review)</summary>
+  private bool _focusResult;
   private bool _loading = true;
   private string? _error;
+  private string? _status;
+  private string? _actionError;
+
+  /// <summary>The campaign the open dialog asks about, or null when none is open. (T206)</summary>
+  private MsfCampaignSummaryDto? _pendingWithdraw;
+
+  /// <summary>A withdraw has been sent and has not yet answered. (T206)</summary>
+  private bool _withdrawing;
 
   protected override async Task OnInitializedAsync()
   {
     try
     {
-      // Scoped by the handler to the campaigns this caller runs: their own institution's trainees (T113).
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _items.AddRange(await Sender.Send(new ListMsfCampaignsForCoordinatorQuery(authState.User)));
+      await LoadAsync();
     }
     catch (Exception exception)
     {
@@ -61,6 +106,110 @@
     finally
     {
       _loading = false;
+    }
+  }
+
+  /// <summary>Scoped by the handler to the campaigns this caller runs: their own institution's trainees (T113).</summary>
+  private async Task LoadAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var items = await Sender.Send(new ListMsfCampaignsForCoordinatorQuery(authState.User));
+    _items.Clear();
+    _items.AddRange(items);
+  }
+
+  /// <summary>
+  /// A draft or an open campaign: the two a coordinator stops before any report exists (T206). The aggregate would also
+  /// withdraw one under review; that is a decision not to release, which this list does not offer.
+  /// </summary>
+  private static bool CanWithdraw(MsfCampaignSummaryDto item)
+    => item.State is MsfCampaignState.Draft or MsfCampaignState.Open;
+
+  private static string Describe(MsfCampaignSummaryDto item)
+    => $"{item.SubjectName ?? item.SubjectUserId} ({item.TemplateName}, closing {item.ClosesOn:yyyy-MM-dd})";
+
+  private string WithdrawBody
+    => _pendingWithdraw is null
+      ? string.Empty
+      : $"Withdraw the campaign for {Describe(_pendingWithdraw)}? It will take no more responses: any link already sent " +
+        "stops working, and every respondent's email address is removed. A withdrawn campaign is never released to the " +
+        "trainee, and withdrawing cannot be undone.";
+
+  private async Task AskWithdrawAsync(MsfCampaignSummaryDto item)
+  {
+    if (_withdrawing)
+    {
+      return;
+    }
+
+    _pendingWithdraw = item;
+    _status = null;
+    _actionError = null;
+
+    if (_confirmWithdraw is not null)
+    {
+      await _confirmWithdraw.ShowAsync();
+    }
+  }
+
+  private void CancelWithdraw() => _pendingWithdraw = null;
+
+  /// <remarks>
+  /// Sent at most once at a time, as the campaign editor's open is (T202): the flag is set before the first await, so a
+  /// second confirm that reaches the circuit before the re-render does nothing.
+  /// </remarks>
+  private async Task WithdrawAsync()
+  {
+    if (_pendingWithdraw is not { } campaign || _withdrawing)
+    {
+      return;
+    }
+
+    _withdrawing = true;
+    _status = null;
+    _actionError = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new WithdrawMsfCampaignCommand(campaign.Id, authState.User));
+      _status = $"The campaign for {Describe(campaign)} has been withdrawn. Its respondents' links no longer work, and their email addresses have been removed.";
+    }
+    catch (Exception exception)
+    {
+      _actionError = exception.Message;
+    }
+    finally
+    {
+      _pendingWithdraw = null;
+      _withdrawing = false;
+    }
+
+    // Reloaded after a refusal too: the likeliest refusal is a campaign that changed elsewhere (released, say), and the
+    // list should show what it is now.
+    try
+    {
+      await LoadAsync();
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+
+    _focusResult = true;
+  }
+
+  /// <remarks>
+  /// The result takes the focus here, once the browser has acknowledged the render that follows the withdraw. By then the
+  /// dialog is closed: ConfirmDialog asks the browser to close it as soon as <see cref="WithdrawAsync" /> returns. It must
+  /// be: while a modal dialog is open, everything outside it is inert and cannot take the focus. (T206 review)
+  /// </remarks>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult)
+    {
+      _focusResult = false;
+      await _result.FocusAsync();
     }
   }
 }

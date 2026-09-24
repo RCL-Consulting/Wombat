@@ -572,6 +572,13 @@ h1[tabindex="-1"]:focus {
   outline-offset: 2px;
 }
 
+/* The result of a row action taken through a ConfirmDialog (Withdraw on the MSF campaign list): it takes the focus once
+   the dialog closes, since the row's button may be gone (tabindex="-1"). Its alerts carry the role (T206 review). */
+.action-result:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 /* ── Validation ────────────────────────────────────── */
 .validation-message {
   color: var(--danger-color);

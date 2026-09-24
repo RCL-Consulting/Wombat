@@ -170,7 +170,8 @@
           }
         </div>
         @* Both are disabled while an open is in flight (T202). A second open would mail every respondent a second link,
-           and an invitee added mid-open would be left out of the mailing yet stored on a campaign that is now open. *@
+           and an invitee added mid-open would be left out of the mailing yet stored on a campaign that is now open.
+           That covers this tab; an invitee added from another tab is refused, or refuses the open, at the save (T206). *@
         <FormActions>
           <button type="submit" class="btn btn-outline" disabled="@_opening">Add invitee</button>
           <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@_opening" @onclick="OpenCampaignAsync">

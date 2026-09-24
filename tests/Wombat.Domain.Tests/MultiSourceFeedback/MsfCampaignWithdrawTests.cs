@@ -83,6 +83,23 @@ public sealed class MsfCampaignWithdrawTests
         Assert.Null(invitation.AnonymizedOn);
     }
 
+    /// <summary>
+    /// A second withdrawal, from a list another tab left stale, is refused: the first one's time stands beside the
+    /// anonymising it did. (T206 review)
+    /// </summary>
+    [Fact]
+    public void Withdraw_RefusesACampaignAlreadyWithdrawn_AndTheFirstWithdrawalStands()
+    {
+        var campaign = Campaign(MsfCampaignState.Open, Invitation("nurse-1@example.test"));
+        campaign.Withdraw(Earlier);
+
+        var refusal = Assert.Throws<InvalidOperationException>(() => campaign.Withdraw(WithdrawnAt));
+
+        Assert.Equal(MsfCampaign.AlreadyWithdrawn, refusal.Message);
+        Assert.Equal(Earlier, campaign.WithdrawnOn);
+        Assert.Equal(Earlier, campaign.Invitations.Single().AnonymizedOn);
+    }
+
     private static MsfCampaign Campaign(MsfCampaignState state, params MsfInvitation[] invitations)
         => new() { State = state, Invitations = invitations.ToList() };
 

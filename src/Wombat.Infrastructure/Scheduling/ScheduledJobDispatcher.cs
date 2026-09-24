@@ -9,16 +9,26 @@ namespace Wombat.Infrastructure.Scheduling;
 public sealed class ScheduledJobDispatcher : IScheduledJobDispatcher
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ScheduledJobLocks _locks;
     private readonly ILogger<ScheduledJobDispatcher> _logger;
 
-    public ScheduledJobDispatcher(IServiceScopeFactory scopeFactory, ILogger<ScheduledJobDispatcher> logger)
+    public ScheduledJobDispatcher(
+        IServiceScopeFactory scopeFactory,
+        ScheduledJobLocks locks,
+        ILogger<ScheduledJobDispatcher> logger)
     {
         _scopeFactory = scopeFactory;
+        _locks = locks;
         _logger = logger;
     }
 
     public async Task DispatchNowAsync(IScheduledJob job, string? triggeredByUserId, CancellationToken cancellationToken)
     {
+        // The scheduler's own lock for the job (T206 review): a run by hand while another is going is refused, not run
+        // beside it. Refused before a run row is written, since nothing runs.
+        using var held = _locks.TryEnter(job.Key)
+            ?? throw new InvalidOperationException(AlreadyRunning(job.Key));
+
         await using var scope = _scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
@@ -51,4 +61,9 @@ public sealed class ScheduledJobDispatcher : IScheduledJobDispatcher
 
         await dbContext.SaveChangesAsync(CancellationToken.None);
     }
+
+    /// <summary>The refusal of "Run now" while the job is already running. (T206 review)</summary>
+    public static string AlreadyRunning(string jobKey)
+        => $"Job '{jobKey}' is already running, so it was not started again. Wait for that run to finish, then run it " +
+           "again if it is still needed.";
 }

@@ -179,13 +179,19 @@ public sealed class MsfCampaign
     /// <remarks>
     /// A withdrawn campaign is finished: it takes no more responses and is never released. Until T202 it kept every
     /// respondent's address for good, because only closing anonymised. The caller must have loaded
-    /// <see cref="Invitations" />: an unloaded collection is empty, and nothing would be anonymised.
+    /// <see cref="Invitations" />: an unloaded collection is empty, and nothing would be anonymised. A campaign already
+    /// withdrawn is refused, so its <see cref="WithdrawnOn" /> stands beside the anonymising it did (T206 review).
     /// </remarks>
     public void Withdraw(DateTime utcNow)
     {
         if (State == MsfCampaignState.Released)
         {
             throw new InvalidOperationException("Released campaigns cannot be withdrawn.");
+        }
+
+        if (State == MsfCampaignState.Withdrawn)
+        {
+            throw new InvalidOperationException(AlreadyWithdrawn);
         }
 
         State = MsfCampaignState.Withdrawn;
@@ -196,4 +202,7 @@ public sealed class MsfCampaign
             invitation.Anonymize(utcNow);
         }
     }
+
+    /// <summary>The refusal of a second withdrawal. (T206 review)</summary>
+    public const string AlreadyWithdrawn = "This campaign has already been withdrawn.";
 }

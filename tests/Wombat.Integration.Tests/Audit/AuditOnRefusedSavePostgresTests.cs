@@ -85,8 +85,10 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
 
             var secondOpen = () => OpenThroughTheAuditPipelineAsync(schema, campaignId, second, secondOutcome);
 
-            var thrown = (await secondOpen.Should().ThrowAsync<DbUpdateConcurrencyException>()).Which;
-            secondOutcome.Thrown.Should().BeOfType<DbUpdateConcurrencyException>("the handler's own save was refused");
+            // Since T206 the handler names the refusal for the coordinator, and carries the concurrency error inside it.
+            var thrown = (await secondOpen.Should().ThrowAsync<InvalidOperationException>()).Which;
+            secondOutcome.Thrown.Should().BeOfType<InvalidOperationException>()
+                .Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>("the handler's own save was refused");
             thrown.Should().BeSameAs(
                 secondOutcome.Thrown,
                 "the caller must see the handler's error, not one the audit write raised re-saving the refused changes");

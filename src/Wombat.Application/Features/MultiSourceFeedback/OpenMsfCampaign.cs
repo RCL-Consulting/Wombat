@@ -128,17 +128,44 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         // double-click can) both pass EnsureCanOpen() and both mail. The hashes and the open go in this one save, under
         // the campaign's xmin token, so the second save is refused whole: the first open's links are the stored ones,
         // and a racing open cannot overwrite them (MsfOpenCampaignRacePostgresTests). The refused request keeps its
-        // failure audit row and its own concurrency error: the audit pipeline discards refused changes before writing
-        // (T201, AuditOnRefusedSavePostgresTests).
+        // failure audit row and gets CampaignChanged, which carries the concurrency error: the audit pipeline discards
+        // refused changes before writing (T201, AuditOnRefusedSavePostgresTests).
+        //
+        // The same token refuses an open that an added invitee raced (T206). Adding an invitee writes the campaign row
+        // (AddMsfInvitationCommandHandler), so an invitee stored after this open read the invitations it mails changes
+        // the xmin this save is checked against: the open is refused, and opening again mails them too. An add that read
+        // the draft before this save commits, and saves after it, is refused at its own save the same way
+        // (MsfInviteDuringOpenRacePostgresTests).
+        var openedAt = DateTime.UtcNow;
+
         foreach (var link in links)
         {
-            link.Invitation.TokenHash = link.TokenHash;
+            // Stamped as issued now, so the reminder job does not replace a link mailed inside its window (T206).
+            link.Invitation.IssueLink(link.TokenHash, openedAt);
         }
 
-        campaign.Open(DateTime.UtcNow);
+        campaign.Open(openedAt);
 
-        await _dbContext.SaveChangesAsync(CancellationToken.None);
+        try
+        {
+            await _dbContext.SaveChangesAsync(CancellationToken.None);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
+            // (T201). EF's own message names row counts; the coordinator needs to know what to do next.
+            throw new InvalidOperationException(CampaignChanged, exception);
+        }
     }
+
+    /// <summary>
+    /// The refusal when the campaign changed between being read and the save: an invitee was added, or it was opened or
+    /// withdrawn elsewhere. Nothing this attempt did is stored. (T206)
+    /// </summary>
+    public const string CampaignChanged =
+        "The campaign changed while it was being opened: an invitee was added, or it was opened or withdrawn elsewhere. " +
+        "This attempt did not open it, and any link it sent will not work. If the campaign is still a draft on the " +
+        "campaigns list, open it again: every respondent, including anyone just added, is sent a new link.";
 
     /// <summary>The refusal when an invitation could not be sent. Nothing about the campaign has changed. (T184)</summary>
     public const string InvitationsNotSent =

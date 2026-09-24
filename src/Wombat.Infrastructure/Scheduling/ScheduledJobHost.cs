@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Cronos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,16 +16,18 @@ public sealed class ScheduledJobHost : BackgroundService
 
     private readonly IScheduledJobRegistry _registry;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ScheduledJobLocks _locks;
     private readonly ILogger<ScheduledJobHost> _logger;
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
     public ScheduledJobHost(
         IScheduledJobRegistry registry,
         IServiceScopeFactory scopeFactory,
+        ScheduledJobLocks locks,
         ILogger<ScheduledJobHost> logger)
     {
         _registry = registry;
         _scopeFactory = scopeFactory;
+        _locks = locks;
         _logger = logger;
     }
 
@@ -53,7 +54,7 @@ public sealed class ScheduledJobHost : BackgroundService
         }
     }
 
-    private async Task TickAsync(CancellationToken stoppingToken)
+    internal async Task TickAsync(CancellationToken stoppingToken)
     {
         var utcNow = DateTime.UtcNow;
 
@@ -75,8 +76,9 @@ public sealed class ScheduledJobHost : BackgroundService
             if (!IsDue(definition, utcNow, dbContext, stoppingToken, out _))
                 continue;
 
-            var semaphore = _locks.GetOrAdd(job.Key, _ => new SemaphoreSlim(1, 1));
-            if (!semaphore.Wait(0))
+            // Shared with "Run now" (ScheduledJobDispatcher), so neither starts a job the other is running (T206 review).
+            var held = _locks.TryEnter(job.Key);
+            if (held is null)
             {
                 _logger.LogDebug("Job '{JobKey}' is still running, skipping.", job.Key);
                 continue;
@@ -84,13 +86,9 @@ public sealed class ScheduledJobHost : BackgroundService
 
             _ = Task.Run(async () =>
             {
-                try
+                using (held)
                 {
                     await DispatchJobAsync(job, null, stoppingToken);
-                }
-                finally
-                {
-                    semaphore.Release();
                 }
             }, stoppingToken);
         }
@@ -156,21 +154,34 @@ public sealed class ScheduledJobHost : BackgroundService
         await dbContext.SaveChangesAsync(CancellationToken.None);
     }
 
-    private async Task SeedDefinitionsAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Stores a definition for each registered job not yet stored, and brings a stored one's description up to date with
+    /// the job's. Its schedule and whether it is enabled are left as an administrator set them.
+    /// </summary>
+    /// <remarks>
+    /// Until the T206 review a description was written only when the job was first seen, so /admin/jobs went on
+    /// describing what a job did when it was first deployed: the MSF reminder's said it reminded respondents whose
+    /// invitations expire within 48 hours after T206 had changed that.
+    /// </remarks>
+    internal async Task SeedDefinitionsAsync(CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
         var existing = await dbContext.Set<ScheduledJobDefinition>()
-            .Select(d => d.Key)
-            .ToListAsync(cancellationToken);
-
-        var existingKeys = existing.ToHashSet(StringComparer.Ordinal);
+            .ToDictionaryAsync(d => d.Key, StringComparer.Ordinal, cancellationToken);
 
         foreach (var job in _registry.Jobs)
         {
-            if (existingKeys.Contains(job.Key))
+            if (existing.TryGetValue(job.Key, out var stored))
+            {
+                if (!string.Equals(stored.Description, job.Description, StringComparison.Ordinal))
+                {
+                    stored.Description = job.Description;
+                }
+
                 continue;
+            }
 
             dbContext.Set<ScheduledJobDefinition>().Add(new ScheduledJobDefinition
             {
@@ -207,7 +218,7 @@ public sealed class ScheduledJobHost : BackgroundService
         }
     }
 
-    private async Task CatchUpMissedRunsAsync(CancellationToken cancellationToken)
+    internal async Task CatchUpMissedRunsAsync(CancellationToken cancellationToken)
     {
         var utcNow = DateTime.UtcNow;
 
@@ -246,6 +257,15 @@ public sealed class ScheduledJobHost : BackgroundService
             var nextAfterLastRun = cron.GetNextOccurrence(lastRun.Value, inclusive: false);
             if (nextAfterLastRun.HasValue && nextAfterLastRun.Value <= utcNow && (utcNow - nextAfterLastRun.Value) <= GraceWindow)
             {
+                // Under the job's shared lock, as a tick's run is: an administrator can reach "Run now" while the host
+                // is still catching up (T206 review).
+                using var held = _locks.TryEnter(job.Key);
+                if (held is null)
+                {
+                    _logger.LogInformation("Job '{Key}' is already running, so its missed run was not caught up.", definition.Key);
+                    continue;
+                }
+
                 _logger.LogInformation("Catching up missed run for job '{Key}' (was due {DueAt}).", definition.Key, nextAfterLastRun.Value);
                 await DispatchJobAsync(job, null, cancellationToken);
             }

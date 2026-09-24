@@ -1,54 +1,47 @@
 using System.Security.Claims;
 using System.Text.Json;
-using System.Web;
 using FluentAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Wombat.Application.Audit;
-using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
-using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
 /// <summary>
-/// T184 on a real PostgreSQL server: when two opens of one draft campaign race, the first to save wins, and the links
-/// it mailed are the ones stored.
+/// A withdraw that another change to the campaign races is refused with a message a coordinator can act on, and stores
+/// nothing. (T206 review)
 /// </summary>
 /// <remarks>
 /// <para>
-/// Opening mails every respondent before the campaign is touched, then assigns the new token hashes and opens the
-/// campaign in one save. Two opens that race (a double-click on the editor's button can) both read a draft, both pass
-/// <see cref="MsfCampaign.EnsureCanOpen" />, and both mail. What keeps the first round of links alive is that the hashes
-/// travel in the same save as the campaign, under its <c>xmin</c> token: the second save is refused whole. Were the
-/// hashes saved on their own, the loser would overwrite the winner's, and every link the open that "succeeded" sent
-/// would be dead. EF InMemory has no <c>xmin</c>, so only Postgres can show this.
+/// Withdrawing saves under the campaign's <c>xmin</c> token (<c>MsfCampaignConfiguration</c>), and since T206 adding an
+/// invitee writes the campaign row too, as do opening and closing it. So a withdraw whose save comes after one of those
+/// is refused by the server. Until the T206 review its refusal reached the campaign list as EF's own message ("The
+/// database operation was expected to affect 1 row(s)…"), a link to Microsoft's documentation included.
 /// </para>
 /// <para>
-/// Each open runs inside the real <see cref="AuditPipelineBehavior{TRequest,TResponse}" /> writing through the real
-/// <see cref="AuditWriter" /> on its own context, as a request would. The schema helpers follow
-/// <c>MsfCampaignScopePostgresTests</c>: a schema of its own, dropped in a <c>finally</c> and again in
-/// <see cref="DisposeAsync" />.
+/// EF InMemory has no <c>xmin</c>, so only Postgres can show this. The withdraw runs inside the real
+/// <see cref="AuditPipelineBehavior{TRequest,TResponse}" /> writing through the real <see cref="AuditWriter" /> on its own
+/// context, as a request would, so the refused changes meet the audit trap too (T201). The schema helpers follow
+/// <c>MsfInviteDuringOpenRacePostgresTests</c>.
 /// </para>
 /// </remarks>
-public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
+public sealed class MsfWithdrawRacePostgresTests : IAsyncLifetime
 {
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-    private const string RespondUrl = "https://wombat.example/msf/respond";
+    private const string LateInvitee = "peer-late@example.test";
 
     private static readonly string[] Respondents =
     [
         "nurse-1@example.test",
-        "nurse-2@example.test",
         "consultant-1@example.test"
     ];
 
@@ -65,26 +58,24 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
     public Task DisposeAsync() => DropSchemasAsync();
 
     [Fact]
-    public async Task TwoOpensThatRace_TheFirstToSaveWins_AndOnlyTheLinksItMailedWork()
+    public async Task AWithdrawThatAnAddedInviteeRaced_IsRefusedSayingWhat_AndStoresNothing()
     {
         try
         {
             var schema = await MigratedSchemaAsync();
             var campaignId = await SeedDraftCampaignAsync(schema);
 
-            // The second open reads the draft, and at its first send the first open runs from start to save.
-            var first = new RecordingSender(beforeFirstSend: null);
-            var second = new RecordingSender(beforeFirstSend: () => OpenThroughTheAuditPipelineAsync(schema, campaignId, first));
+            // The withdraw has read the draft and anonymised it in memory; just before its save, the other tab's add runs
+            // from start to save.
+            var raceBeforeTheWithdrawsSave = new RaceBeforeFirstSave();
+            raceBeforeTheWithdrawsSave.Arm(() => AddAsync(schema, campaignId, LateInvitee));
 
-            var secondOpen = () => OpenThroughTheAuditPipelineAsync(schema, campaignId, second);
-            (await secondOpen.Should().ThrowAsync<InvalidOperationException>())
-                .WithMessage(OpenMsfCampaignCommandHandler.CampaignChanged)
-                .WithInnerException<DbUpdateConcurrencyException>(
-                    "the campaign's xmin changed under the second open when the first one saved (T206 names the refusal)");
+            var withdraw = () => WithdrawThroughTheAuditPipelineAsync(schema, campaignId, raceBeforeTheWithdrawsSave);
+            (await withdraw.Should().ThrowAsync<InvalidOperationException>())
+                .WithMessage(WithdrawMsfCampaignCommandHandler.CampaignChanged)
+                .WithInnerException<DbUpdateConcurrencyException>("the add changed the campaign's xmin under the withdraw");
 
-            // Both mailed everyone: the race is not prevented, only made safe for the links already stored.
-            first.Sent.Select(message => message.To).Should().BeEquivalentTo(Respondents);
-            second.Sent.Select(message => message.To).Should().BeEquivalentTo(Respondents);
+            raceBeforeTheWithdrawsSave.Ran.Should().BeTrue("guard: the add ran between the withdraw's read and its save");
 
             await using var read = NewContext(schema);
             var campaign = await read.MsfCampaigns
@@ -92,22 +83,17 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
                 .Include(entity => entity.Invitations)
                 .SingleAsync(entity => entity.Id == campaignId);
 
-            campaign.State.Should().Be(MsfCampaignState.Open);
-            campaign.OpenedOn.Should().NotBeNull();
+            campaign.State.Should().Be(MsfCampaignState.Draft, "the refused withdraw stored nothing");
+            campaign.WithdrawnOn.Should().BeNull();
+            campaign.Invitations.Select(invitation => invitation.RespondentEmail)
+                .Should().BeEquivalentTo([.. Respondents, LateInvitee], "nobody was anonymised, and the add committed");
+            campaign.Invitations.Should().OnlyContain(invitation => invitation.AnonymizedOn == null);
 
-            foreach (var message in first.Sent)
-            {
-                var stored = campaign.Invitations.Single(invitation => invitation.RespondentEmail == message.To);
-                _tokens.VerifyToken(TokenIn(message), stored.TokenHash)
-                    .Should().BeTrue($"{message.To}'s link from the open that saved must work");
-            }
-
-            foreach (var message in second.Sent)
-            {
-                var stored = campaign.Invitations.Single(invitation => invitation.RespondentEmail == message.To);
-                _tokens.VerifyToken(TokenIn(message), stored.TokenHash)
-                    .Should().BeFalse($"the refused open must not have replaced {message.To}'s stored link");
-            }
+            (await read.AuditEntries.AsNoTracking()
+                    .Where(entry => entry.Action == nameof(WithdrawMsfCampaignCommand))
+                    .Select(entry => entry.Success)
+                    .ToListAsync())
+                .Should().Equal([false], "the refused withdraw leaves its failure row, written alone (T201)");
         }
         finally
         {
@@ -115,20 +101,15 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
         }
     }
 
-    // ─── The open, as a request runs it ──────────────────────────────────────
+    // ─── The commands, as a request runs them ────────────────────────────────
 
-    private async Task OpenThroughTheAuditPipelineAsync(string schema, int campaignId, IEmailSender sender)
+    private async Task WithdrawThroughTheAuditPipelineAsync(string schema, int campaignId, IInterceptor interceptor)
     {
-        await using var db = NewContext(schema);
-        var command = new OpenMsfCampaignCommand(campaignId, Administrator());
-        var handler = new OpenMsfCampaignCommandHandler(
-            db,
-            sender,
-            new InvitationTokenService(),
-            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
-            Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
+        await using var db = NewContext(schema, interceptor);
+        var command = new WithdrawMsfCampaignCommand(campaignId, Administrator());
+        var handler = new WithdrawMsfCampaignCommandHandler(db);
 
-        await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
+        await new AuditPipelineBehavior<WithdrawMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
             .Handle(
                 command,
                 async () =>
@@ -139,12 +120,12 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
                 CancellationToken.None);
     }
 
-    private static string TokenIn(EmailMessage message)
+    private async Task AddAsync(string schema, int campaignId, string email)
     {
-        var url = message.TextBody
-            .Split('\n', StringSplitOptions.TrimEntries)
-            .Single(line => line.StartsWith(RespondUrl, StringComparison.Ordinal));
-        return HttpUtility.ParseQueryString(new Uri(url).Query)["token"]!;
+        await using var db = NewContext(schema);
+        await new AddMsfInvitationCommandHandler(db, new InvitationTokenService()).Handle(
+            new AddMsfInvitationCommand(campaignId, email, MsfRespondentCategory.PeerDoctor, Administrator()),
+            CancellationToken.None);
     }
 
     private async Task<int> SeedDraftCampaignAsync(string schema)
@@ -158,7 +139,7 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
             OpensOn = DateOnly.FromDateTime(DateTime.UtcNow),
             ClosesOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(14),
             State = MsfCampaignState.Draft,
-            Template = new MsfTemplate { Name = "T184 MSF" },
+            Template = new MsfTemplate { Name = "T206 review MSF" },
             Invitations = Respondents
                 .Select(email => new MsfInvitation
                 {
@@ -188,19 +169,29 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
             ClaimTypes.Name,
             ClaimTypes.Role));
 
-    /// <summary>Records every send. The first send can run something first: here, the other open.</summary>
-    private sealed class RecordingSender(Func<Task>? beforeFirstSend) : IEmailSender
+    /// <summary>Runs the competing request once, just before the first save on the context it is attached to.</summary>
+    private sealed class RaceBeforeFirstSave : SaveChangesInterceptor
     {
-        public List<EmailMessage> Sent { get; } = [];
+        private Func<Task>? _armed;
 
-        public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        public bool Ran { get; private set; }
+
+        public void Arm(Func<Task> competing) => _armed = competing;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
         {
-            if (Sent.Count == 0 && beforeFirstSend is not null)
+            // Disarmed before it runs, so the audit row's own save after the refusal passes straight through.
+            var competing = Interlocked.Exchange(ref _armed, null);
+            if (competing is not null)
             {
-                await beforeFirstSend();
+                await competing();
+                Ran = true;
             }
 
-            Sent.Add(message);
+            return result;
         }
     }
 
@@ -215,7 +206,7 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
         public void DeclareActor(string userId, string display) { }
     }
 
-    // ─── Schema helpers (as MsfCampaignScopePostgresTests) ───────────────────
+    // ─── Schema helpers (as MsfInviteDuringOpenRacePostgresTests) ────────────
 
     private async Task<string> MigratedSchemaAsync()
     {
@@ -268,8 +259,16 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
         }
     }
 
-    private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
+    private ApplicationDbContext NewContext(string schema, IInterceptor? interceptor = null)
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema));
+        if (interceptor is not null)
+        {
+            options.AddInterceptors(interceptor);
+        }
+
+        return new ApplicationDbContext(options.Options);
+    }
 
     /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
     private string SchemaConnectionString(string schema)

@@ -32,7 +32,18 @@ public sealed class MsfInvitation
     public string? TeachingContext { get; set; }
 
     public string TokenHash { get; set; } = string.Empty;
+
+    /// <summary>
+    /// When the link <see cref="TokenHash" /> verifies was issued: when the invitation was added, then when the campaign
+    /// opened and mailed it, then when a reminder replaced it (<see cref="IssueLink" />, T206).
+    /// </summary>
+    /// <remarks>
+    /// The reminder is sent once per link, and this is what says so (<see cref="IsReminderDue" />). A link issued on or
+    /// after the first reminder day is not replaced by a reminder: its email already named the same last day, and a
+    /// reminder would only retire it.
+    /// </remarks>
     public DateTime IssuedOn { get; set; }
+
     public DateOnly ExpiresOn { get; set; }
     public DateTime? RespondedOn { get; set; }
     public DateTime? RevokedOn { get; set; }
@@ -57,6 +68,84 @@ public sealed class MsfInvitation
     /// </remarks>
     public static DateOnly LastDayToRespond(DateOnly campaignClosesOn, DateOnly expiresOn)
         => expiresOn < campaignClosesOn ? expiresOn : campaignClosesOn;
+
+    /// <summary>
+    /// How many days before <see cref="LastDayToRespond" /> a respondent who has not answered is first due a reminder.
+    /// (T206)
+    /// </summary>
+    public const int ReminderDaysBeforeLastDay = 2;
+
+    /// <summary>
+    /// How long a link must have been out before a reminder may replace it. (T206 review)
+    /// </summary>
+    /// <remarks>
+    /// A reminder retires the link it replaces, and a respondent part-way through the questionnaire on that link loses
+    /// what they typed when they submit (the page cannot tell a replaced link from a mistyped one). That is likeliest
+    /// just after the invitation arrives, so a link mailed less than a day before the job runs is left alone: a campaign
+    /// opened the evening before the first reminder day is reminded a day later, not the next morning. A day is the job's
+    /// own cadence, so the reminder comes at most one run later than it otherwise would.
+    /// </remarks>
+    public static readonly TimeSpan ReminderMinimumLinkAge = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// Whether this respondent is due the reminder: their campaign is open and its window has begun, they have not
+    /// answered, their link has not been revoked, and today falls between the first reminder day and their last day to
+    /// respond, inclusive. Only for a link issued before the first reminder day, so each link is replaced by a reminder
+    /// at most once, and at least <see cref="ReminderMinimumLinkAge" /> ago. (T206)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Keyed on <see cref="LastDayToRespond" />, the one deadline the invitation and the respondent page give, and so in
+    /// practice on the day the campaign's window closes. Until T206 the reminder job keyed on <see cref="ExpiresOn" />,
+    /// which the product writes a week after the window closes, so it could fire only on a campaign the auto-close job
+    /// had closed days before, and never did.
+    /// </para>
+    /// <para>
+    /// A window, not a single day: the job runs daily, and a run missed on the first reminder day (the host was down)
+    /// is made up on the next. A second run on one day, the scheduler's catch-up or an administrator's "Run now", finds
+    /// the link it just issued and sends nothing. The scheduler never runs the job twice at once
+    /// (<c>ScheduledJobLocks</c>), which is what makes that hold.
+    /// </para>
+    /// <para>
+    /// The campaign is asked here, not only by the job's query, so that the rule is whole in one place: a draft's
+    /// invitees were never sent a link to be reminded of, and a closed or withdrawn campaign takes no response. A
+    /// campaign opened early is not chased before its window opens (T206 review).
+    /// </para>
+    /// </remarks>
+    public bool IsReminderDue(MsfCampaign campaign, DateTime utcNow)
+    {
+        ArgumentNullException.ThrowIfNull(campaign);
+
+        if (campaign.State != MsfCampaignState.Open ||
+            RespondedOn is not null ||
+            RevokedOn is not null ||
+            string.IsNullOrWhiteSpace(RespondentEmail))
+        {
+            return false;
+        }
+
+        var today = DateOnly.FromDateTime(utcNow);
+        var lastDay = LastDayToRespond(campaign.ClosesOn, ExpiresOn);
+        var firstReminderDay = lastDay.AddDays(-ReminderDaysBeforeLastDay);
+
+        return today >= campaign.OpensOn &&
+               today >= firstReminderDay &&
+               today <= lastDay &&
+               IssuedOn < firstReminderDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) &&
+               utcNow - IssuedOn >= ReminderMinimumLinkAge;
+    }
+
+    /// <summary>
+    /// Stores the hash of a newly issued link, which retires the one before it, and when it was issued. Opening the
+    /// campaign issues the first link a respondent is sent, and a reminder replaces it. (T206)
+    /// </summary>
+    public void IssueLink(string tokenHash, DateTime utcNow)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+
+        TokenHash = tokenHash;
+        IssuedOn = utcNow;
+    }
 
     /// <summary>
     /// Replaces the respondent's address with a one-way hash of it. An invitation already anonymised is left as it

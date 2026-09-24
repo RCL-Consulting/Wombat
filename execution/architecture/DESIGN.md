@@ -213,6 +213,13 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - Row-level list actions (Edit, Delete) are `.btn .btn-sm .btn-outline`, wrapped in `<div class="actions-cell">` for a flex-gap cluster.
 - The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot.
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
+- A destructive row action on a list (Withdraw on the MSF campaign list, T206) is one `ConfirmDialog` for the page,
+  whose body names the row it was opened from and says what cannot be undone. The row's button carries an `aria-label`
+  that starts with its visible label and names the row ("Withdraw the campaign for …"): a column of identical
+  "Withdraw" buttons is otherwise indistinguishable to a screen reader. It is disabled while the action is in flight.
+  Its result is an `Alert` with `Role="status"` (done) or `Role="alert"` (refused) inside a `.action-result` region
+  (`tabindex="-1"`), which takes the focus in `OnAfterRenderAsync`, after the dialog has closed: the row's button may be
+  gone, and while the modal is open nothing outside it can take the focus (T206 review).
 
 ## Table system
 

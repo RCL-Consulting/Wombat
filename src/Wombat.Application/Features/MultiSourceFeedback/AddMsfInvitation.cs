@@ -99,7 +99,27 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
         };
 
         _dbContext.Set<MsfInvitation>().Add(invitation);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // The campaign is marked modified, though nothing about it changes, so that this save writes the campaign row
+        // and is checked against its xmin token (MsfCampaignConfiguration). Until T206 an invitee added from another tab
+        // while an open was running was stored on a campaign that then opened without mailing them, and there is no
+        // resend. Now either side of that race is refused whole: an open that read the invitations before this save
+        // commits is refused at its own save and, opened again, mails this invitee too; and this save, if the campaign
+        // was opened, withdrawn or given another invitee after it was read above, is refused here with nothing stored.
+        // (MsfInviteDuringOpenRacePostgresTests)
+        _dbContext.Set<MsfCampaign>().Entry(campaign).Property(candidate => candidate.State).IsModified = true;
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
+            // (T201).
+            throw new InvalidOperationException(CampaignChanged, exception);
+        }
+
         return invitation.Id;
     }
 
@@ -109,4 +129,12 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
             : category == MsfRespondentCategory.Learner
                 ? "A learner answers learner feedback, not multi-source feedback: run a learner-feedback campaign for them."
                 : "This template does not allow patient responses.";
+
+    /// <summary>
+    /// The refusal when the campaign changed between being read and the save: it was opened or withdrawn, or another
+    /// invitee was added at the same moment. Nothing is stored. (T206)
+    /// </summary>
+    public const string CampaignChanged =
+        "The campaign changed while this invitee was being added: it was opened or withdrawn, or another invitee was " +
+        "added at the same moment. The invitee has not been added. If the campaign is still a draft, add them again.";
 }

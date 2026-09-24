@@ -35,21 +35,15 @@ public static class MsfInvitationEmail
         ArgumentNullException.ThrowIfNull(content);
 
         var trainee = content.TraineeName;
-        var window = $"{Date(content.OpensOn)} to {Date(content.ClosesOn)}";
-        var lastDay = Date(MsfInvitation.LastDayToRespond(content.ClosesOn, content.ExpiresOn));
+        var window = Window(content);
+        var lastDay = LastDay(content);
         var subject = $"Feedback request: {trainee} ({content.TemplateName}, {window})";
 
         // T164: a learner is asked about the trainee's teaching, not as a colleague, and is grouped with the other
         // learners rather than by role.
-        var learner = content.Kind == MsfTemplateKind.LearnerFeedback;
-        var heading = learner ? "Learner feedback request" : "Multi-source feedback request";
-        var askedHtml = learner
-            ? $"You have been asked to give feedback on the teaching of <strong>{Encode(trainee)}</strong>, a trainee who has taught you."
-            : $"You have been asked to give multi-source feedback on <strong>{Encode(trainee)}</strong>, a trainee you have worked with.";
-        var askedText = learner
-            ? $"You have been asked to give feedback on the teaching of {trainee}, a trainee who has taught you."
-            : $"You have been asked to give multi-source feedback on {trainee}, a trainee you have worked with.";
-        var grouping = learner ? "together with the other learners' feedback" : "grouped by respondent role";
+        var heading = content.Kind == MsfTemplateKind.LearnerFeedback ? "Learner feedback request" : "Multi-source feedback request";
+        var askedHtml = $"You have been asked to give {Request(content.Kind, $"<strong>{Encode(trainee)}</strong>")}.";
+        var askedText = $"You have been asked to give {Request(content.Kind, trainee)}.";
 
         var html = EmailTemplateBase.WrapHtml(heading, $"""
             <p>{askedHtml}</p>
@@ -57,7 +51,7 @@ public static class MsfInvitationEmail
             <p><a class="btn" href="{Encode(content.ResponseUrl)}">Give feedback</a></p>
             <p>Or copy this link into your browser:<br><code>{Encode(content.ResponseUrl)}</code></p>
             <p>The link is yours alone and can be used once. The last day to respond is <strong>{lastDay}</strong>.</p>
-            <p>Your name and email address are never shown to {Encode(trainee)}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, {grouping}.</p>
+            <p>{Encode(Anonymity(trainee, content.Kind))}</p>
             """);
 
         var text = $"""
@@ -71,7 +65,7 @@ public static class MsfInvitationEmail
 
             The link is yours alone and can be used once. The last day to respond is {lastDay}.
 
-            Your name and email address are never shown to {trainee}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, {grouping}.
+            {Anonymity(trainee, content.Kind)}
             """;
 
         return new EmailMessage(
@@ -82,9 +76,39 @@ public static class MsfInvitationEmail
             Tags: ["msf-invite", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"]);
     }
 
-    private static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    /// <summary>The feedback window, as the invitation and the reminder both give it.</summary>
+    internal static string Window(MsfInvitationEmailContent content)
+        => $"{Date(content.OpensOn)} to {Date(content.ClosesOn)}";
 
-    private static string Encode(string value) => WebUtility.HtmlEncode(value);
+    /// <summary>
+    /// The one deadline, <see cref="MsfInvitation.LastDayToRespond" />, as the invitation, the reminder and the page all
+    /// give it.
+    /// </summary>
+    internal static string LastDay(MsfInvitationEmailContent content)
+        => Date(MsfInvitation.LastDayToRespond(content.ClosesOn, content.ExpiresOn));
+
+    /// <summary>
+    /// What the respondent is asked to give, as the invitation and the reminder both say it, about
+    /// <paramref name="trainee" /> as the caller writes the name (encoded and emphasised in HTML). A learner is asked
+    /// about the trainee's teaching, not for multi-source feedback on a colleague (T164).
+    /// </summary>
+    internal static string Request(MsfTemplateKind kind, string trainee)
+        => kind == MsfTemplateKind.LearnerFeedback
+            ? $"feedback on the teaching of {trainee}, a trainee who has taught you"
+            : $"multi-source feedback on {trainee}, a trainee you have worked with";
+
+    /// <summary>
+    /// What the invitation and the reminder both promise about anonymity, as plain text. A learner's answers are shown
+    /// together with the other learners', not grouped by role (T164).
+    /// </summary>
+    internal static string Anonymity(string trainee, MsfTemplateKind kind)
+        => $"Your name and email address are never shown to {trainee}. They see the feedback only after the campaign " +
+           "has closed and a coordinator has reviewed and released it, " +
+           (kind == MsfTemplateKind.LearnerFeedback ? "together with the other learners' feedback." : "grouped by respondent role.");
+
+    internal static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    internal static string Encode(string value) => WebUtility.HtmlEncode(value);
 }
 
 /// <summary>What one respondent's invitation says. (T202)</summary>
