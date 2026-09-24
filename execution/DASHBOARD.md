@@ -41,7 +41,6 @@
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
 | queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
 | queued | [T185](tasks/queued/T185-leftover-principal-less-queries-national-speciality-counts-and-three-shapes-of-the-overseer-rule.md) | P3 | Leftover principal-less queries, national speciality counts, and three |  |
-| queued | [T186](tasks/queued/T186-a-released-msf-campaign-s-snapshot-row-can-say-its-epas-are-no-longer-on-the-curriculum-when-their-evidence-exists.md) | P3 | A released MSF campaign's snapshot row can say its EPAs are 'no longer |  |
 | queued | [T187](tasks/queued/T187-a-sub-speciality-s-default-entrustment-scale-is-reset-by-the-catalogue-seeder-on-every-boot.md) | P3 | A sub-speciality's default entrustment scale is reset by the catalogue |  |
 | queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
 | queued | [T189](tasks/queued/T189-refusal-texts-errors-joined-with-after-full-stops-and-transitionasync-s-remaining-key-named-refusals.md) | P3 | Refusal texts: errors joined with '; ' after full stops, and Transitio |  |
@@ -56,8 +55,9 @@
 | queued | [T208](tasks/queued/T208-an-audit-row-is-refused-when-a-user-agent-or-display-name-is-longer-than-its-column.md) | P3 | An audit row is refused when a User-Agent or display name is longer th |  |
 | queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
 | queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
+| queued | [T211](tasks/queued/T211-curriculum-pages-a-collegeadmin-sees-edit-on-another-institution-s-local-items-and-an-institutionaladmin-s-curriculum-list-links-to-a-404.md) | P3 | Curriculum pages: a CollegeAdmin sees Edit on another institution's lo |  |
 
-Done: 145 task(s).
+Done: 146 task(s).
 
 ## From STATE.md
 
@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+722cfe5 feat(curricula): each curriculum item carries Annexure B's decision cadence and its decision body (neonatal for EPAs 4–5), stamped on create and by migration (T131 slice 2)
 bfc5d58 feat(committee): every staged entrustment decision names the frozen evidence it rests on, and ratify issues nothing without it (T131 slice 1, D38)
 26bc740 fix(msf): coverage is read from the released campaign's finished evidence rows everywhere — committee snapshot, coverage card, campaign report and portfolio PDF — so a campaign released before the per-EPA stamp is not reported as covering nothing (T186)
 455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
 55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
-4db504b feat(committee): the review and the trainee see each EPA's entrustment against Annexure A's target for the year, and exit-rule readiness — informational, no graduation gate (T166)
 ```
