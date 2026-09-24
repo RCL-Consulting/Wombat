@@ -6,13 +6,26 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 - Housekeeping committed (`47a9aad`, `54c9805`): T118 and T104 closed by finding, T158–T171 filed, and
   `EPA-PROGRAMME.md` § 2 rewritten as the live queue, with § 4 "Order to finish the stream".
-- Shipped on master (not pushed): **T127 + T143 + T148** `5fbc8c2` (create once, then navigate with a notice; the
-  server checks a create that is itself the filing), **T138** `29aad11` (released MSF only, windowed by the close day),
-  **T107** `6934294` + `5f5e097` (disabled action with its reason; browser, activity 23). Filed T172, T173. All five
-  suites green on master: 2,221.
-- Running in workflow worktrees, squash-merged as each lands: T125 (+T136), T137, T135 (+T150), T113, and the smalls
-  T141, T144, T147 and T140. T145, T162 and T163 wait for T137's migration to merge, so the snapshots do not collide.
-- Dev DB: activities 20–23 are this session's browser checks. 23 is a stuck trainee-created `msf_cpsa` draft (T162).
+- **Shipped on master (not pushed), each browser-verified on dev:**
+  - T127 + T143 + T148: create once, then navigate with a notice.
+  - T138: released MSF only.
+  - T107: a disabled action with its reason.
+  - T125 + T136: rung pickers.
+  - T137: EPA stamp and the list columns; its migration is applied on dev.
+  - T135 + T150: sampling and trajectory, D44.
+  - T113: trainee and MSF scope.
+  - The smalls: T141, T144, T147 and T140 (integration is green).
+- Master suites: Domain 398, Application 1112, Infrastructure 660, Architecture 31, Web 400, Integration 29.
+- **Running in workflow worktrees:**
+  - T160 (encounter-date bounds; migration lane). T162, T145 and T163 follow it, one migration at a time.
+  - The second small batch: T175 + T180, T172, T177, T174.
+  - The P1 security pair: T182, T183.
+- **Filed today:** T172–T186. The P1s are T182 and T183 (cross-institution committee and entrustment admin).
+- **Dev DB additions** from the browser checks:
+  - activities 20–24;
+  - institution 2 and coordinator.t113b@wombat.local (password not recorded; reset it if needed);
+  - decision panel 1, committee review 1;
+  - activity 23, a stuck `msf_cpsa` draft (T162).
 
 ## Earlier today (Opus) — T102, T105, T120, T149, T099 and W-007 shipped
 
