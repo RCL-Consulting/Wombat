@@ -28,13 +28,13 @@
     @* Interactive, like Routes: every page after the first renders in the circuit, and only an
        outlet in the same circuit can take its PageTitle. A static outlet is rendered once, so
        the tab kept the first page's title (T180). It still prerenders, so a full load arrives
-       titled. *@
-    <HeadOutlet @rendermode="InteractiveServer" />
+       titled. On a page excluded from interactive routing both are static (PageRenderMode). *@
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 
 <body>
     <CascadingAuthenticationState>
-        <Routes @rendermode="InteractiveServer" />
+        <Routes @rendermode="PageRenderMode" />
     </CascadingAuthenticationState>
     <ReconnectModal />
     <script src="@Assets["wombat.js"]"></script>
@@ -48,4 +48,19 @@
 @code {
     private string? CspNonce =>
         HttpContextAccessor.HttpContext?.Items[SecurityHeadersMiddleware.NonceItemKey] as string;
+
+    /// <summary>
+    /// Interactive server for every page, except one marked <c>[ExcludeFromInteractiveRouting]</c>, which renders as
+    /// static server-side HTML with plain form posts and no circuit. (T205)
+    /// </summary>
+    /// <remarks>
+    /// The one such page is the MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not signed
+    /// in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies to it;
+    /// over a circuit the submit would be a SignalR message the limiter never sees. It needs no circuit at all, so the
+    /// fallback policy on the Blazor hub (T181) cannot stop it, and it works without WebSockets or script.
+    /// </remarks>
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContextAccessor.HttpContext is { } context && !context.AcceptsInteractiveRouting()
+            ? null
+            : InteractiveServer;
 }

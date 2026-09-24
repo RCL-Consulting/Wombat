@@ -4,6 +4,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -47,7 +48,7 @@ public sealed class MsfTokenValidationTests
 
         await dbContext.SaveChangesAsync();
 
-        var queryHandler = new GetMsfResponseFormQueryHandler(dbContext, _tokenService);
+        var queryHandler = new GetMsfResponseFormQueryHandler(dbContext, _tokenService, FakeUserDirectory.Empty);
         var commandHandler = new SubmitMsfResponseCommandHandler(dbContext, _tokenService);
 
         var getAct = () => queryHandler.Handle(new GetMsfResponseFormQuery(token), CancellationToken.None);

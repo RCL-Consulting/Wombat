@@ -95,6 +95,16 @@ wombat.example.com {
 
 `flush_interval -1` is required for SignalR / Blazor Server streaming responses. Do not forget it.
 
+Every path goes to Wombat.Web on 5080, which is all the MSF respondent page needs (`/msf/respond`, T205): it is a page
+of Wombat.Web, anonymous, static (no Blazor circuit) and rate-limited in the app, so Caddy carries no route, header or
+exemption for it. The access log (`/var/log/caddy/wombat.log`) records each request's full URI, so a respondent's
+unused link (`/msf/respond?token=…`) is readable there, as a registration link (`/account/register?token=…`) always has
+been. Both die once used; filtering `token` out of the log is not done. The page sends `Referrer-Policy: no-referrer`,
+so the link is not also copied into the `Referer` of the stylesheets and scripts it loads (the app's own policy,
+`strict-origin-when-cross-origin`, sends the full address on a same-origin request). If filtering is ever wanted, it
+must cover `request>uri` and `request>headers>Referer` both: the registration page still sends its link as a Referer.
+The page also sends `X-Robots-Tag: noindex, nofollow`: a leaked link must not put a trainee's name in a search engine.
+
 Caddy handles TLS automatically via Let's Encrypt. No manual cert management.
 
 ## Database
@@ -167,6 +177,25 @@ sections, not children of `Wombat` — `EmailSettings.SectionName` is `"Email"`.
 - **`Wombat__SeedAdminPassword`** — only consumed the first time the admin user does not exist;
   `AdminSeeder` returns early if it does. Changing it later has no effect. Rotate the live
   password through the admin UI, not by editing this value.
+- **`Wombat__MsfRespondUrl`** — optional; **leave it unset.** The absolute address of the MSF
+  respondent page on this host. Unset, it is `{Wombat__BaseUrl}/msf/respond`, for this deployment
+  `https://wombat.rcl.co.za/msf/respond` (T205). Set, it must be on `Wombat__BaseUrl`'s scheme, host
+  and port, or opening a campaign and the expiry reminder refuse, saying why: a wrong value (the Api's
+  `:5090`, `http` for an `https` site, another host) used to open the campaign without complaint and
+  mail every respondent a link nobody could use. With neither set, opening a campaign refuses to send
+  anything (T132). Every invitation and every expiry reminder links to `{MsfRespondUrl}?token=…`.
+  `deploy/verify/drift-check.sh` prints both values from the server's `wombat.env`.
+  The page is Wombat.Web's own (T205): anonymous, rendered as plain server-side HTML with form
+  posts (no circuit, no script needed), and limited to 10 requests a minute per link per client
+  address, and 60 a minute per client address whatever the links (an IPv6 client by its /64). A
+  link that is used, expired, revoked or of a closed request gets a page saying so, with a 404 or
+  410. `deploy/verify/smoke-test.sh` probes it anonymously.
+  - Dev (`appsettings.Development.json`): `http://localhost:5080/msf/respond`, the web app.
+  - **Never point it at the Api host.** `Wombat.Api` answers `/msf/respond` too, as JSON: it is
+    the integration endpoint, sending the same query and command with the same rate limit and
+    refusal statuses. It is not deployed (`deploy.ps1` and `deploy.sh` publish Wombat.Web only),
+    and a respondent sent there gets JSON, not a questionnaire. Until T205 dev pointed there
+    (port 5090) and production had no page at all.
 
 ### SSO (optional, not currently configured)
 

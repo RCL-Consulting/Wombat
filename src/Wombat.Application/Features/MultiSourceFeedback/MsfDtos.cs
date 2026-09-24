@@ -110,11 +110,47 @@ public sealed record MsfCampaignAggregateReportDto(
     IReadOnlyList<string>? TeachingContextsResponded = null,
     int? TeachingContextCount = null);
 
-public sealed record MsfResponsePromptDto(int QuestionId, string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
+/// <summary>One point a respondent can choose on a scale question: the value stored, and what it means. (T205)</summary>
+public sealed record MsfScalePointDto(int Value, string Label, string? Description);
 
+/// <summary>One question of the questionnaire a respondent's link opens. (T021, T205)</summary>
+/// <param name="ScalePoints">
+/// The points a scale question is answered on, lowest first (<see cref="MsfRatingScale" />): the only values the submit
+/// accepts for it. Empty for a comment question.
+/// </param>
+public sealed record MsfResponsePromptDto(
+    int QuestionId,
+    string Prompt,
+    MsfQuestionType Type,
+    bool Required,
+    IReadOnlyList<MsfScalePointDto> ScalePoints);
+
+/// <summary>
+/// What a respondent's link opens: whom the feedback is for, the last day to give it, and the questions. Nothing about
+/// any other respondent or response. (T021, T202, T205)
+/// </summary>
+/// <param name="TraineeName">
+/// The trainee the feedback is about, by name, as the invitation email names them (T202). Null only when the trainee has
+/// no name on record any more; the page then points the respondent at their invitation, which named them.
+/// </param>
+/// <param name="Kind">
+/// What the questionnaire collects (T164): the page asks a learner about the trainee's teaching, as their invitation
+/// did, and asks everyone else for multi-source feedback on a colleague. The questionnaire's, not the respondent's: it
+/// says nothing about who else was asked.
+/// </param>
+/// <param name="LastDayToRespond">
+/// The one deadline the invitation gave (<see cref="MsfInvitation.LastDayToRespond" />), not the campaign's closing date:
+/// the invitation's own expiry can come first.
+/// </param>
+/// <remarks>
+/// No campaign id: neither the page nor the Api's JSON needs one, and a sequential internal id is one more thing a link
+/// would disclose (T205). No teaching context either: a learner's is the coordinator's record of where they were taught
+/// (<see cref="MsfInvitation.TeachingContext" />), never asked of the learner, and not the page's to show.
+/// </remarks>
 public sealed record MsfResponseFormDto(
-    int CampaignId,
     string TemplateName,
-    DateOnly ClosesOn,
+    MsfTemplateKind Kind,
+    string? TraineeName,
+    DateOnly LastDayToRespond,
     MsfRespondentCategory RespondentCategory,
     IReadOnlyList<MsfResponsePromptDto> Questions);

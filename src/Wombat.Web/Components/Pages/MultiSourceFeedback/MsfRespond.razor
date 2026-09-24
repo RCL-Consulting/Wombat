@@ -1,0 +1,457 @@
+@page "/msf/respond"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@attribute [EnableRateLimiting(MsfRespondRateLimit.PolicyName)]
+@attribute [RequireAntiforgeryToken(required: false)]
+@layout Layout.AuthLayout
+@using System.Globalization
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.RateLimiting
+@using Wombat.Infrastructure.MultiSourceFeedback
+@inject IScopedSender Sender
+@inject ILogger<MsfRespond> Logger
+
+@*
+  The page an MSF respondent's invitation link opens (T205). Anonymous: the respondent is a stranger holding a link,
+  never signed in. Static server-rendered HTML with plain form posts, not a circuit ([ExcludeFromInteractiveRouting],
+  App.razor), so the link's rate limit sees the submit as well as the load, and nothing here needs the Blazor hub or
+  script. It asks the same query and sends the same command as the Api's respond endpoint, and answers each refusal with
+  the status that endpoint does (MsfResponseRefusals).
+
+  No antiforgery check, and no token in the form: the link's token is the post's whole authority, and whoever holds it
+  can post without a browser. The check protected nothing here, and a browser that lost or refused the antiforgery cookie
+  had its answers answered with Blazor's bare 400.
+
+  Anonymity: the page shows the respondent their own questionnaire and nothing else. No count, no other response, no
+  threshold: what it says about who sees the feedback is only what the invitation email says (T202). Who sent a response
+  is not recorded, even when they are signed in to Wombat in the same browser (SubmitMsfResponseCommand's audit row).
+
+  Learner feedback (T164, D35) is a questionnaire of its own kind on the same page. A learner is asked about the
+  trainee's teaching, in the invitation email's words, and never for their teaching context: the coordinator recorded
+  where they were taught on the invitation.
+*@
+
+<PageTitle>@PageTitleText</PageTitle>
+
+<div class="account-form-container account-form-container--wide shadow">
+  <div class="account-brand">
+    <img class="account-brand-mark" src="/brand/wombat-mark.svg" alt="" width="44" height="44" />
+    <span class="account-brand-text">Wombat</span>
+  </div>
+
+  @if (_fault)
+  {
+    <h2>Something went wrong</h2>
+    <Alert Kind="danger" Role="alert">
+      Something went wrong on our side, and this page could not be shown. Please try again in a few minutes. If you had
+      submitted the form, opening your link again will say whether your feedback was recorded.
+    </Alert>
+  }
+  else if (_refusal is not null)
+  {
+    <h2>@MsfResponseRefusals.Describe(_refusal.Reason).Title</h2>
+    <Alert Kind="warning" Role="alert">@_refusal.Message</Alert>
+    <p class="page-subtitle">You can close this page.</p>
+  }
+  else if (_submitted)
+  {
+    <h2>Thank you</h2>
+    <Alert Kind="success" Role="status">Your feedback on @FeedbackSubject has been recorded.</Alert>
+    <p>
+      The link in your invitation has now been used, so it will not open the questionnaire again. You can close this
+      page.
+    </p>
+  }
+  else if (_form is not null)
+  {
+    <h2>Feedback on @FeedbackSubject</h2>
+    <p class="page-subtitle">
+      @_form.TemplateName · Last day to respond: <strong>@_form.LastDayToRespond.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</strong>
+    </p>
+    @if (IsLearnerFeedback)
+    {
+      <p>
+        You have been asked to give feedback on the teaching of @TraineeLabel, a trainee who has taught you. Your name
+        and email address are never shown to @TraineeLabel. They see the feedback only after the request has closed and
+        a coordinator has reviewed and released it, together with the other learners' feedback.
+      </p>
+    }
+    else
+    {
+      <p>
+        You have been asked to give multi-source feedback on @TraineeLabel, a trainee you have worked with. Your name and
+        email address are never shown to @TraineeLabel. They see the feedback only after the request has closed and a
+        coordinator has reviewed and released it, grouped by respondent role.
+      </p>
+    }
+    @if (_form.Questions.Any(question => question.Type == MsfQuestionType.Scale))
+    {
+      if (IsLearnerFeedback)
+      {
+        <p>For each rating, think of the teaching you had from @TraineeLabel.</p>
+      }
+      else
+      {
+        <p>For each rating, compare @TraineeLabel with what you would expect of a trainee at their stage of training.</p>
+      }
+    }
+    @if (_form.Questions.Any(question => question.Required))
+    {
+      <p class="page-subtitle">Questions marked * must be answered.</p>
+    }
+
+    @if (_submitError is not null)
+    {
+      @* A refused submit is a full page load, and a screen reader starts a new page at its top, where an alert present
+         from the first paint is often not announced. So the summary takes the focus as the page loads. *@
+      <div id="@ErrorSummaryId" class="error-summary" tabindex="-1" autofocus>
+        <Alert Kind="danger" Role="alert">@_submitError</Alert>
+      </div>
+    }
+  }
+
+  @* Always in the tree, even when it holds nothing (then hidden). A post names this form, and Blazor answers a post whose
+     form is not on the page with a bare 400 in place of the page. A link can die between loading the questionnaire and
+     submitting it (the campaign closes, the day passes), and the respondent must then be told so, on this page. *@
+  <form method="post" @formname="@FormName" @onsubmit="SubmitAsync" data-submit-once hidden="@(!ShowsQuestionnaire)">
+    @if (ShowsQuestionnaire)
+    {
+      <div class="form-grid">
+        @foreach (var question in _form!.Questions)
+        {
+          var questionId = question.QuestionId;
+          if (question.Type == MsfQuestionType.Scale)
+          {
+            <fieldset class="form-group full-width" aria-describedby="@(IsAtFault(questionId) ? ErrorSummaryId : null)">
+              <legend>
+                @question.Prompt
+                @if (question.Required)
+                {
+                  <span aria-hidden="true">*</span>
+                  <span class="visually-hidden">required</span>
+                }
+              </legend>
+              <div class="scale-choices">
+                @foreach (var point in question.ScalePoints)
+                {
+                  var value = point.Value;
+                  var inputId = $"msf-q{questionId}-{value}";
+                  <div class="form-check">
+                    <input id="@inputId"
+                           class="form-check-input"
+                           type="radio"
+                           name="@ScaleFieldName(questionId)"
+                           value="@value"
+                           checked="@IsChosen(questionId, value)"
+                           required="@question.Required"
+                           @onchange="() => Choose(questionId, value)" />
+                    <label for="@inputId">
+                      @point.Label
+                      @if (!string.IsNullOrWhiteSpace(point.Description))
+                      {
+                        <small class="page-subtitle">@point.Description</small>
+                      }
+                    </label>
+                  </div>
+                }
+              </div>
+            </fieldset>
+          }
+          else
+          {
+            var inputId = $"msf-q{questionId}";
+            <FormField Label="@question.Prompt" InputId="@inputId" Required="@question.Required" FullWidth="true"
+                       HelpText="@CommentHelpText">
+              <textarea id="@inputId"
+                        class="@(IsAtFault(questionId) ? "form-control input-validation-error" : "form-control")"
+                        name="@CommentFieldName(questionId)"
+                        rows="5"
+                        maxlength="@MsfResponseAnswer.LongTextMaxLength"
+                        required="@question.Required"
+                        aria-invalid="@(IsAtFault(questionId) ? "true" : null)"
+                        aria-describedby="@CommentDescribedBy(inputId, questionId)"
+                        @oninput="args => Write(questionId, args.Value as string)">@CommentOf(questionId)</textarea>
+            </FormField>
+          }
+        }
+      </div>
+
+      <FormActions>
+        <button type="submit" class="btn btn-primary">Submit feedback</button>
+      </FormActions>
+    }
+  </form>
+</div>
+
+@code {
+  /// <summary>The name the questionnaire's post carries (Blazor's <c>_handler</c>).</summary>
+  internal const string FormName = "msf-response";
+
+  /// <summary>The prefix of every answer field the post carries.</summary>
+  internal const string FieldPrefix = "Answers";
+
+  /// <summary>The id of the summary of a refused submit, which the question at fault points at.</summary>
+  internal const string ErrorSummaryId = "msf-error";
+
+  /// <summary>The respondent's link, as the invitation email wrote it (<c>?token=</c>).</summary>
+  [SupplyParameterFromQuery(Name = "token")]
+  public string? Token { get; set; }
+
+  /// <summary>What a post sent: the chosen point of each scale question, and each comment, by question id.</summary>
+  [SupplyParameterFromForm(FormName = FormName, Name = FieldPrefix)]
+  public MsfRespondFields? Fields { get; set; }
+
+  /// <summary>Present when the page is rendered for a request (always, but in a component test).</summary>
+  [CascadingParameter]
+  public HttpContext? HttpContext { get; set; }
+
+  private MsfResponseFormDto? _form;
+  private MsfResponseRefusedException? _refusal;
+  private string? _submitError;
+  private int? _questionAtFault;
+  private bool _submitted;
+  private bool _fault;
+
+  private bool ShowsQuestionnaire => _form is not null && _refusal is null && !_submitted && !_fault;
+
+  private string TraineeLabel => _form?.TraineeName ?? "the trainee named in your invitation";
+
+  /// <summary>Whether the questionnaire is learner feedback, which asks about the trainee's teaching (T164).</summary>
+  private bool IsLearnerFeedback => _form?.Kind == MsfTemplateKind.LearnerFeedback;
+
+  /// <summary>What the feedback is on: the trainee, or for a learner the trainee's teaching, as the invitation said.</summary>
+  private string FeedbackSubject => IsLearnerFeedback ? $"the teaching of {TraineeLabel}" : TraineeLabel;
+
+  /// <summary>Each state's own title, so the tab and a screen reader's first words say what happened (T205).</summary>
+  private string PageTitleText => (_fault, _refusal, _submitted, _submitError) switch
+  {
+    (true, _, _, _) => "Something went wrong - Wombat",
+    (_, { } refusal, _, _) => $"{MsfResponseRefusals.Describe(refusal.Reason).Title} - Wombat",
+    (_, _, true, _) => "Thank you - Wombat",
+    (_, _, _, { }) => "Error: Feedback request - Wombat",
+    _ => "Feedback request - Wombat"
+  };
+
+  /// <summary>
+  /// A comment reaches the trainee word for word, unless its respondent role is too thin to show. The page promises
+  /// the respondent's name and email are hidden, so it says what that does not cover (T205).
+  /// </summary>
+  private string CommentHelpText =>
+    $"Up to {MsfResponseAnswer.LongTextMaxLength} characters. Your comments may be shown to {TraineeLabel} word for " +
+    "word, so leave out anything that would identify you.";
+
+  protected override async Task OnInitializedAsync()
+  {
+    KeepThePageToItsReader();
+
+    // The form mapper leaves a kind of answer the post did not carry as null, not empty: a questionnaire whose ratings
+    // are all optional, answered with a comment alone, posts no rating at all. The page reads both as it renders.
+    Fields ??= new MsfRespondFields();
+    Fields.Scale ??= [];
+    Fields.Comment ??= [];
+
+    try
+    {
+      _form = await Sender.Send(new GetMsfResponseFormQuery(Token ?? string.Empty));
+    }
+    catch (MsfResponseRefusedException refusal)
+    {
+      Refuse(refusal);
+    }
+    catch (Exception exception)
+    {
+      Fail(exception, "loading");
+    }
+  }
+
+  private async Task SubmitAsync()
+  {
+    // The link was refused, or failed, as the page loaded: that is what the respondent is shown, and nothing is sent.
+    if (!ShowsQuestionnaire)
+    {
+      return;
+    }
+
+    _submitError = null;
+    _questionAtFault = null;
+
+    try
+    {
+      await Sender.Send(new SubmitMsfResponseCommand(Token ?? string.Empty, CollectAnswers()));
+      _submitted = true;
+    }
+    catch (MsfResponseRefusedException refusal) when (refusal.Reason == MsfResponseRefusal.AnswersIncomplete)
+    {
+      // The respondent's to fix: the questionnaire stays, with what they sent in it.
+      _submitError = refusal.Message;
+      _questionAtFault = refusal.QuestionId;
+      SetStatus(MsfResponseRefusals.Describe(refusal.Reason).Status);
+    }
+    catch (MsfResponseRefusedException refusal)
+    {
+      Refuse(refusal);
+    }
+    catch (FluentValidation.ValidationException)
+    {
+      // The command's validator refuses a submission with no answers at all.
+      _submitError = "Please answer the questions below before submitting.";
+      SetStatus(MsfResponseRefusals.Describe(MsfResponseRefusal.AnswersIncomplete).Status);
+    }
+    catch (Exception exception)
+    {
+      Fail(exception, "submitting");
+    }
+  }
+
+  /// <summary>
+  /// The answers to the questions this questionnaire asks, and nothing else the post carried. A rating that is not a
+  /// number is left unanswered, so the command's rules say what is missing; any number is sent, and the command refuses
+  /// one that is not a point of the question's scale.
+  /// </summary>
+  private List<SubmitMsfResponseAnswerItem> CollectAnswers()
+  {
+    var answers = new List<SubmitMsfResponseAnswerItem>();
+
+    foreach (var question in _form!.Questions)
+    {
+      if (question.Type == MsfQuestionType.Scale)
+      {
+        if (Fields!.Scale.TryGetValue(question.QuestionId, out var chosen) &&
+            int.TryParse(chosen, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        {
+          answers.Add(new SubmitMsfResponseAnswerItem(question.QuestionId, value, null));
+        }
+      }
+      else if (Fields!.Comment.TryGetValue(question.QuestionId, out var comment) && !string.IsNullOrWhiteSpace(comment))
+      {
+        answers.Add(new SubmitMsfResponseAnswerItem(question.QuestionId, null, comment));
+      }
+    }
+
+    return answers;
+  }
+
+  private void Refuse(MsfResponseRefusedException refusal)
+  {
+    _refusal = refusal;
+    SetStatus(MsfResponseRefusals.Describe(refusal.Reason).Status);
+  }
+
+  /// <summary>
+  /// A fault, not a refusal. Its message is written for a developer, so it goes to the log and the respondent is told
+  /// only that something went wrong (T202's rule for the Api).
+  /// </summary>
+  private void Fail(Exception exception, string stage)
+  {
+    Logger.LogError(exception, "The MSF respondent page failed while {Stage}.", stage);
+    _fault = true;
+    SetStatus(StatusCodes.Status500InternalServerError);
+  }
+
+  /// <summary>
+  /// Keeps the page, and the link in its address, with the respondent: every state of it, refusals included (T205).
+  /// </summary>
+  /// <remarks>
+  /// <para>
+  /// No referrer. The app's policy (<c>strict-origin-when-cross-origin</c>) sends a same-origin request the page's whole
+  /// address as its Referer, so every stylesheet and script this page loads carried the link's token into the access log
+  /// a second time, in a header.
+  /// </para>
+  /// <para>
+  /// Not indexed: a link that leaks to the web must not put the trainee's name in a search engine. Not stored: the page
+  /// holds the trainee's name and, after a refused submit, what the respondent typed, and a shared computer's cache is no
+  /// place for either. Said here, not left to the antiforgery token the framework issues as it persists component state,
+  /// which sends the same no-store headers as a side effect.
+  /// </para>
+  /// </remarks>
+  private void KeepThePageToItsReader()
+  {
+    if (HttpContext is not { Response.HasStarted: false } context)
+    {
+      return;
+    }
+
+    var headers = context.Response.Headers;
+    headers["Referrer-Policy"] = "no-referrer";
+    headers["X-Robots-Tag"] = "noindex, nofollow";
+    headers.CacheControl = "no-cache, no-store";
+    headers.Pragma = "no-cache";
+  }
+
+  /// <summary>
+  /// The response's status, as the Api's endpoint would answer (<see cref="MsfResponseRefusals.Describe" />). No response
+  /// exists in a component test.
+  /// </summary>
+  /// <remarks>
+  /// Set as the response starts, after the page has rendered, not while it renders. .NET 10's Razor-components endpoint
+  /// writes no body for a page that ends its render with a 404 (its not-found handling), so a link nobody recognises was
+  /// answered with an empty page. Only a response still at 200 is changed: a fault's 500 set later stands.
+  /// </remarks>
+  private void SetStatus(int status)
+  {
+    if (HttpContext is not { Response.HasStarted: false } context)
+    {
+      return;
+    }
+
+    _status = status;
+    if (_statusRegistered)
+    {
+      return;
+    }
+
+    _statusRegistered = true;
+    context.Response.OnStarting(() =>
+    {
+      if (context.Response.StatusCode == StatusCodes.Status200OK)
+      {
+        context.Response.StatusCode = _status;
+      }
+
+      return Task.CompletedTask;
+    });
+  }
+
+  private int _status;
+  private bool _statusRegistered;
+
+  internal static string ScaleFieldName(int questionId)
+    => string.Create(CultureInfo.InvariantCulture, $"{FieldPrefix}.{nameof(MsfRespondFields.Scale)}[{questionId}]");
+
+  internal static string CommentFieldName(int questionId)
+    => string.Create(CultureInfo.InvariantCulture, $"{FieldPrefix}.{nameof(MsfRespondFields.Comment)}[{questionId}]");
+
+  /// <summary>Whether a refused submit named this question as the one to put right.</summary>
+  private bool IsAtFault(int questionId) => _questionAtFault == questionId;
+
+  /// <summary>A comment box is described by its help text, and by the refusal when it is the question at fault.</summary>
+  private string CommentDescribedBy(string inputId, int questionId)
+    => IsAtFault(questionId) ? $"{HelpTextId(inputId)} {ErrorSummaryId}" : HelpTextId(inputId);
+
+  private static string HelpTextId(string inputId) => Wombat.Web.Components.Shared.FormField.HelpTextId(inputId);
+
+  private bool IsChosen(int questionId, int value)
+    => Fields!.Scale.TryGetValue(questionId, out var chosen) &&
+       string.Equals(chosen, value.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+
+  private string? CommentOf(int questionId)
+    => Fields!.Comment.TryGetValue(questionId, out var comment) ? comment : null;
+
+  private void Choose(int questionId, int value)
+    => Fields!.Scale[questionId] = value.ToString(CultureInfo.InvariantCulture);
+
+  private void Write(int questionId, string? comment)
+    => Fields!.Comment[questionId] = comment;
+
+  /// <summary>
+  /// The fields of the questionnaire's post. Posted as <c>Answers.Scale[id]</c> and <c>Answers.Comment[id]</c>, kept as
+  /// text: what the respondent sent is judged by the command's rules, not by the form mapper. The mapper sets a kind the
+  /// post did not carry to null, whatever it was initialised to; the page puts that right before it reads either.
+  /// </summary>
+  public sealed class MsfRespondFields
+  {
+    public Dictionary<int, string?> Scale { get; set; } = [];
+
+    public Dictionary<int, string?> Comment { get; set; } = [];
+  }
+}

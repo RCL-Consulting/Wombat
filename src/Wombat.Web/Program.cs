@@ -22,6 +22,7 @@ using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure;
 using Wombat.Infrastructure.Identity;
+using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Web.Components;
 using Wombat.Web.Security;
@@ -94,11 +95,24 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
             }));
 
+    // The MSF respondent page (/msf/respond): ten requests a minute for one link from one address, and
+    // sixty from one address whatever the links (a global limiter confined to the page's route). The
+    // Api's respond endpoint carries the same, from the one definition both hosts register (T205).
+    options.AddMsfRespondPolicy();
+
     // This endpoint is a browser form post, so a bare 429 would render as a blank error
     // page. Redirect (302) back to the login form with an explanation instead, and set
     // Retry-After so non-browser clients still learn how long to wait.
+    //
+    // Except a respondent's link: they are not signed in and have no account, so the sign-in
+    // page is the wrong answer. They get a 429 that says what happened (T205).
     options.OnRejected = (context, cancellationToken) =>
     {
+        if (MsfRespondRateLimit.Limits(context.HttpContext))
+        {
+            return MsfRespondThrottle.RefuseAsync(context.HttpContext, cancellationToken);
+        }
+
         context.HttpContext.Response.Headers.RetryAfter = "300";
         context.HttpContext.Response.Redirect(
             BuildLoginUrl(null, "Too many sign-in attempts. Please wait a few minutes and try again."));
@@ -589,3 +603,9 @@ internal sealed class LinkExternalRequest
     public string? Password { get; init; }
     public string? ReturnUrl { get; init; }
 }
+
+/// <summary>
+/// Public so the integration suite can host this app whole (<c>WebApplicationFactory</c>), under an alias: the Api's
+/// <c>Program</c> is public too. The MSF respondent page is tested through it, from the link to the stored response (T205).
+/// </summary>
+public partial class Program;

@@ -275,6 +275,87 @@ public sealed class AuditPipelineBehaviorTests
         capturedEntry!.InstitutionId.Should().Be(9);
     }
 
+    /// <summary>
+    /// T205. An MSF respondent may be signed in to Wombat in the browser they answer from. Their submission's row must
+    /// not name them: not their id, not their email, not their institution (which would put the row before that
+    /// institution's admins), and not their user agent (which their own sign-in row carries beside their name). The
+    /// address stays, truncated, as T101 kept it. A handler's declaration does not bring the actor back either.
+    /// </summary>
+    [Fact]
+    public async Task Handle_AnonymousCommand_WritesASuccessRowThatNamesNobody()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var context = new DeclarableAuditContext(principalInstitutionId: 9);
+        var behavior = new AuditPipelineBehavior<AnonymousTestCommand, string>(_writerMock.Object, context);
+
+        await behavior.Handle(new AnonymousTestCommand(), Declaring(context, 3, "ok"), CancellationToken.None);
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.Success.Should().BeTrue();
+        capturedEntry.Action.Should().Be(nameof(AnonymousTestCommand), "the command is still audited");
+        ShouldNameNobody(capturedEntry);
+    }
+
+    [Fact]
+    public async Task Handle_AnonymousCommandThrows_WritesAFailureRowThatNamesNobody()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var context = new DeclarableAuditContext(principalInstitutionId: 9);
+        var behavior = new AuditPipelineBehavior<AnonymousTestCommand, string>(_writerMock.Object, context);
+
+        var act = async () => await behavior.Handle(
+            new AnonymousTestCommand(),
+            DeclaringThenFailing<string>(context, 3),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.Success.Should().BeFalse();
+        ShouldNameNobody(capturedEntry);
+    }
+
+    /// <summary>T205: the refused-save path writes its row alone, and that row names nobody either.</summary>
+    [Fact]
+    public async Task Handle_AnonymousCommandsSaveRefused_WritesAFailureRowThatNamesNobody()
+    {
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var behavior = new AuditPipelineBehavior<AnonymousTestCommand, string>(_writerMock.Object, _contextMock.Object);
+        _contextMock.Setup(c => c.InstitutionId).Returns(9);
+
+        var act = async () => await behavior.Handle(
+            new AnonymousTestCommand(),
+            Throwing<string>(new DbUpdateException("duplicate key value violates unique constraint")),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<DbUpdateException>();
+        capturedEntry.Should().NotBeNull();
+        ShouldNameNobody(capturedEntry!);
+    }
+
+    private static void ShouldNameNobody(AuditEntry entry)
+    {
+        entry.ActorUserId.Should().BeNull("the respondent's sign-in must not name them");
+        entry.ActorDisplay.Should().BeNull();
+        entry.ActorUserAgent.Should().BeNull("their user agent is on their own sign-in row, beside their name");
+        entry.InstitutionId.Should().BeNull("an institution stamp would show the row to that institution's admins");
+        entry.ActorIpAddress.Should().Be("10.0.0.0/24", "the truncated address is kept, as T101 kept it");
+    }
+
     private static RequestHandlerDelegate<T> Next<T>(T value)
         => () => Task.FromResult(value);
 
@@ -320,4 +401,6 @@ public sealed class AuditPipelineBehaviorTests
 
     // Named without "Command" suffix but opts in via marker interface
     private sealed record ExplicitAuditedRequest : IRequest<string>, IAuditedCommand;
+
+    private sealed record AnonymousTestCommand : IRequest<string>, IAnonymousAuditedCommand;
 }

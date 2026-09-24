@@ -134,6 +134,17 @@ for f in /opt/wombat/config/wombat.env /opt/wombat/data/keys; do
     else printf "  %-46s ABSENT\n" "$f"; fi
 done' 2>&1
 
+# The link every MSF invitation carries (T205). Printed, not judged: good is BaseUrl https://<this host>, and
+# MsfRespondUrl either unset (it is then {BaseUrl}/msf/respond) or exactly that. The app refuses to open a campaign when
+# MsfRespondUrl is off BaseUrl's origin, so a bad value shows up there too, but only once someone tries.
+echo
+echo "MSF respondent link settings (wombat.env):"
+ssh "${SSH_OPTS[@]}" "$REMOTE" '
+for k in Wombat__BaseUrl Wombat__MsfRespondUrl; do
+    v=$(grep "^$k=" /opt/wombat/config/wombat.env 2>/dev/null | tail -1 | cut -d= -f2-)
+    printf "  %-46s %s\n" "$k" "${v:-(unset)}"
+done' 2>&1
+
 # Executable bit on the cron scripts — a 644 wombat-backup.sh silently stops backing up.
 echo
 echo "Cron script permissions:"

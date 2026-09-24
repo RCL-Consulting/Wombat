@@ -394,6 +394,18 @@ h1[tabindex="-1"]:focus {
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
 }
 
+/* The points of one rating scale, one radio (.form-check) per line, lowest first: an ordered scale reads down, not
+   across in columns (T205's MSF questionnaire). A point's description sits under its label. */
+.scale-choices {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.scale-choices .form-check label small {
+  display: block;
+  margin: 0;
+}
+
 /* Rows of a label, one control and a Remove button, aligned in three columns (T125's minimum by training year). */
 .stage-minima {
   align-items: center;
@@ -441,6 +453,20 @@ h1[tabindex="-1"]:focus {
   max-width: 30rem;
   width: min(100%, 30rem);
   padding: 2.5rem;
+}
+
+/* An account-shaped page that holds a questionnaire, not two fields: the MSF respondent page (T205). Wide enough for a
+   scale's labels and a comment box; the shell and the card are the sign-in page's. */
+.account-form-container--wide {
+  max-width: 44rem;
+  width: min(100%, 44rem);
+}
+
+/* Respondents open their link on a phone as often as not: give the questions the width the card's padding would take. */
+@media (max-width: 640.98px) {
+  .account-form-container--wide {
+    padding: var(--space-lg);
+  }
 }
 
 .account-brand {
@@ -536,6 +562,14 @@ h1[tabindex="-1"]:focus {
   background-color: var(--info-bg);
   border: 1px solid var(--secondary-color);
   color: var(--secondary-color);
+}
+
+/* The summary of a refused form post that reloads the page: it takes the focus as the page loads (tabindex="-1" +
+   autofocus), so a screen reader starts there, and the field it is about names it with aria-describedby. It holds the
+   refusal's .alert-danger. The MSF respondent page's (T205). */
+.error-summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* ── Validation ────────────────────────────────────── */

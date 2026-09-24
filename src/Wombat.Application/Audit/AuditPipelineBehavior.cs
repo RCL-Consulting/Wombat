@@ -61,16 +61,17 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
         // Outside the try: only the handler's own exception makes a failure row. Were this write refused, the
         // command's work has committed, and a Success=false row under its name would record a lock, a grant or an
         // admission that did happen as one that did not. Its exception reaches the caller untouched. (T201)
+        var actor = ActorOf(request);
         await _auditWriter.WriteAsync(AuditEntry.Create(
             occurredAt: occurredAt,
             category: AuditCategory.Command,
             action: action,
             success: true,
-            actorUserId: _contextProvider.UserId,
-            actorDisplay: _contextProvider.UserDisplay,
-            actorIpAddress: _contextProvider.IpAddress,
-            actorUserAgent: _contextProvider.UserAgent,
-            institutionId: _contextProvider.InstitutionId,
+            actorUserId: actor.UserId,
+            actorDisplay: actor.Display,
+            actorIpAddress: actor.IpAddress,
+            actorUserAgent: actor.UserAgent,
+            institutionId: actor.InstitutionId,
             summaryJson: AuditPayloadSerializer.Serialize(request)),
             cancellationToken);
 
@@ -88,16 +89,17 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
         Exception ex,
         CancellationToken cancellationToken)
     {
+        var actor = ActorOf(request);
         var entry = AuditEntry.Create(
             occurredAt: occurredAt,
             category: AuditCategory.Command,
             action: action,
             success: false,
-            actorUserId: _contextProvider.UserId,
-            actorDisplay: _contextProvider.UserDisplay,
-            actorIpAddress: _contextProvider.IpAddress,
-            actorUserAgent: _contextProvider.UserAgent,
-            institutionId: _contextProvider.InstitutionId,
+            actorUserId: actor.UserId,
+            actorDisplay: actor.Display,
+            actorIpAddress: actor.IpAddress,
+            actorUserAgent: actor.UserAgent,
+            institutionId: actor.InstitutionId,
             summaryJson: AuditPayloadSerializer.Serialize(request),
             errorMessage: ex.Message);
 
@@ -137,6 +139,28 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
             await _auditWriter.WriteDiscardingPendingChangesAsync(entry, cancellationToken);
         }
     }
+
+    /// <summary>
+    /// Who the row names as having sent the command. Nobody, for a command whose sender is promised anonymity
+    /// (<see cref="IAnonymousAuditedCommand" />): only the truncated address is kept, whoever is signed in on the request
+    /// and whatever a handler declared. (T205)
+    /// </summary>
+    private Actor ActorOf(TRequest request)
+        => request is IAnonymousAuditedCommand
+            ? new Actor(null, null, _contextProvider.IpAddress, null, null)
+            : new Actor(
+                _contextProvider.UserId,
+                _contextProvider.UserDisplay,
+                _contextProvider.IpAddress,
+                _contextProvider.UserAgent,
+                _contextProvider.InstitutionId);
+
+    private readonly record struct Actor(
+        string? UserId,
+        string? Display,
+        string? IpAddress,
+        string? UserAgent,
+        int? InstitutionId);
 
     private static bool IsCommand(TRequest request)
         => typeof(TRequest).Name.EndsWith("Command", StringComparison.Ordinal)

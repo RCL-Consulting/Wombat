@@ -9,7 +9,7 @@ public sealed class MsfResponseAnswerConfiguration : IEntityTypeConfiguration<Ms
     public void Configure(EntityTypeBuilder<MsfResponseAnswer> builder)
     {
         builder.ToTable("MsfResponseAnswers");
-        builder.Property(entity => entity.LongText).HasMaxLength(4000);
+        builder.Property(entity => entity.LongText).HasMaxLength(MsfResponseAnswer.LongTextMaxLength);
         builder.HasIndex(entity => new { entity.ResponseId, entity.QuestionId }).IsUnique();
 
         builder.HasOne(entity => entity.Response)

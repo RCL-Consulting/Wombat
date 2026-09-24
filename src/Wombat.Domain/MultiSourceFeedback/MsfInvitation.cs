@@ -45,6 +45,20 @@ public sealed class MsfInvitation
         => RevokedOn is null && RespondedOn is null && ExpiresOn >= today;
 
     /// <summary>
+    /// The last day a respondent's link takes a response: the earlier of the day the feedback window closes and the
+    /// invitation's own expiry. (T202, T205)
+    /// </summary>
+    /// <remarks>
+    /// The one deadline a respondent is told, in the invitation email and on the page the link opens. A link is refused
+    /// once its expiry has passed, and once its campaign has closed, which the auto-close job does the day after
+    /// <paramref name="campaignClosesOn" />. The expiry is written a week after the window closes
+    /// (<c>AddMsfInvitationCommandHandler</c>), so printing it would tell a respondent the link works for a week it does
+    /// not (T202 review).
+    /// </remarks>
+    public static DateOnly LastDayToRespond(DateOnly campaignClosesOn, DateOnly expiresOn)
+        => expiresOn < campaignClosesOn ? expiresOn : campaignClosesOn;
+
+    /// <summary>
     /// Replaces the respondent's address with a one-way hash of it. An invitation already anonymised is left as it
     /// was, so its first <see cref="AnonymizedOn" /> stands.
     /// </summary>

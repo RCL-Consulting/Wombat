@@ -22,10 +22,10 @@ namespace Wombat.Application.Common.Email.Templates;
 /// sees nothing before a coordinator releases it, and sees it grouped by respondent role.
 /// </para>
 /// <para>
-/// It names one deadline: <see cref="LastDayToRespond" />. The invitation's own expiry is written a week after the window
-/// closes (<c>AddMsfInvitationCommandHandler</c>), but the auto-close job closes the campaign the day after the window
-/// does, and a closed campaign takes no response. Printing the expiry told a respondent the link worked for a week it
-/// does not (T202 review).
+/// It names one deadline: <see cref="MsfInvitation.LastDayToRespond" />, the date the page the link opens gives too
+/// (T205). The invitation's own expiry is written a week after the window closes (<c>AddMsfInvitationCommandHandler</c>),
+/// but the auto-close job closes the campaign the day after the window does, and a closed campaign takes no response.
+/// Printing the expiry told a respondent the link worked for a week it does not (T202 review).
 /// </para>
 /// </remarks>
 public static class MsfInvitationEmail
@@ -36,7 +36,7 @@ public static class MsfInvitationEmail
 
         var trainee = content.TraineeName;
         var window = $"{Date(content.OpensOn)} to {Date(content.ClosesOn)}";
-        var lastDay = Date(LastDayToRespond(content));
+        var lastDay = Date(MsfInvitation.LastDayToRespond(content.ClosesOn, content.ExpiresOn));
         var subject = $"Feedback request: {trainee} ({content.TemplateName}, {window})";
 
         // T164: a learner is asked about the trainee's teaching, not as a colleague, and is grouped with the other
@@ -80,17 +80,6 @@ public static class MsfInvitationEmail
             HtmlBody: html,
             TextBody: text,
             Tags: ["msf-invite", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"]);
-    }
-
-    /// <summary>
-    /// The last day the link takes a response: the earlier of the day the feedback window closes and the invitation's
-    /// own expiry. A link is refused once its expiry has passed, and once its campaign has closed, which the auto-close
-    /// job does the day after <see cref="MsfInvitationEmailContent.ClosesOn" />.
-    /// </summary>
-    private static DateOnly LastDayToRespond(MsfInvitationEmailContent content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        return content.ExpiresOn < content.ClosesOn ? content.ExpiresOn : content.ClosesOn;
     }
 
     private static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

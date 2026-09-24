@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- T205: reads the MSF respondent page as a browser would. Already pinned for Wombat.Web.Tests (bunit). -->
+    <PackageReference Include="AngleSharp" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,6 +28,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Wombat.Api\Wombat.Api.csproj" />
     <ProjectReference Include="..\..\src\Wombat.Infrastructure\Wombat.Infrastructure.csproj" />
+    <!-- T205: the web app hosted whole, for the MSF respondent page. Aliased: its Program and the Api's are both public. -->
+    <ProjectReference Include="..\..\src\Wombat.Web\Wombat.Web.csproj" Aliases="WombatWeb" />
   </ItemGroup>
 
   <ItemGroup>

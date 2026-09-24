@@ -10,7 +10,8 @@
 #   Get-Content -Raw deploy/verify/smoke-test.sh | ssh root@<host> "tr -d '\r' | bash -s"
 #
 # Good looks like: every row HTTP 200 and AUTHED YES. An AUTHED NO means the login
-# silently failed and the page fell back to the sign-in screen.
+# silently failed and the page fell back to the sign-in screen. The last row is the
+# anonymous MSF respondent page, whose good answer is printed under it (T205).
 #
 # Promoted 2026-09-20 from the 17-19 June first-boot scratch set.
 set -uo pipefail
@@ -40,4 +41,14 @@ for p in "${pages[@]}"; do
   printf '%-24s %-6s %-7s %s\n' "$p" "${code:-?}" "$authed" "${title:-(none)}"
 done
 rm -f "$JAR"
+
+# The MSF respondent page (T205) is the one page a stranger opens: anonymous, no cookie jar. A made-up link must get the
+# page's own refusal, HTTP 404 titled "Feedback link not recognised - Wombat" and saying so, never the sign-in page (the
+# fallback policy) and never an empty body. Anything else means respondents cannot answer.
+body=$(curl -sS -w '\n__HTTP__%{http_code}' "$BASE/msf/respond?token=smoke-test-not-a-link")
+code=$(printf '%s' "$body" | grep -oP '__HTTP__\K[0-9]+')
+title=$(printf '%s' "$body" | grep -oiP '<title>\K[^<]+' | head -1)
+if printf '%s' "$body" | grep -q 'Feedback link not recognised'; then refusal=YES; else refusal=NO; fi
+printf '%-24s %-6s %-7s %s\n' "/msf/respond (anon)" "${code:-?}" "$refusal" "${title:-(none)}"
+echo "  good: 404, YES (the page's refusal), Feedback link not recognised - Wombat"
 echo DONE

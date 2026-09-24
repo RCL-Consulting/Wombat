@@ -86,6 +86,7 @@ Email__FromAddress=no-reply@example.com
 Email__FromName=Wombat
 Email__UseSsl=false          # true for implicit SSL on port 465 (this deployment uses 465 + true)
 Wombat__BaseUrl=https://wombat.example.com
+Wombat__MsfRespondUrl=https://wombat.example.com/msf/respond
 Wombat__SeedAdminEmail=renier@rcl.co.za
 Wombat__SeedAdminPassword=REDACTED
 Wombat__PseudonymSalt=REDACTED
@@ -94,6 +95,10 @@ EOF
 chmod 600 /opt/wombat/config/wombat.env
 chown wombat:wombat /opt/wombat/config/wombat.env
 ```
+
+**`Wombat__MsfRespondUrl`** — the MSF respondent page every invitation links to. Optional: unset, it
+is `{Wombat__BaseUrl}/msf/respond`. Set, it must be on `Wombat__BaseUrl`'s scheme, host and port, or
+opening a campaign refuses. Never the Api's `:5090`: that host is not deployed.
 
 **Never rotate `Wombat__PseudonymSalt`** — it is used to generate stable pseudonyms
 for erased users. Rotating it breaks linkability across exports and erasure records.

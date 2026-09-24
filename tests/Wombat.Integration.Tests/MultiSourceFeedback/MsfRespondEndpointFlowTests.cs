@@ -514,6 +514,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             var token = ExtractToken(message.TextBody);
             var form = await (await Client.GetAsync($"/msf/respond?token={Uri.EscapeDataString(token)}")).Content.ReadFromJsonAsync<MsfResponseFormDto>();
             form!.RespondentCategory.Should().Be(MsfRespondentCategory.Learner);
+            form.Kind.Should().Be(MsfTemplateKind.LearnerFeedback, "the respondent page asks a learner about the trainee's teaching (T205)");
 
             var submit = await Client.PostAsJsonAsync(
                 $"/msf/respond?token={Uri.EscapeDataString(token)}",
@@ -742,18 +743,6 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             using var problem = JsonDocument.Parse(body);
             problem.RootElement.GetProperty("status").GetInt32().Should().Be(500);
             body.Should().NotContain(FaultingSender.Detail).And.NotContain("Exception");
-        }
-    }
-
-    /// <summary>Every refusal a respondent can meet has a 4xx answer, so none can surface as a 500. (T202 review)</summary>
-    [Fact]
-    public void EveryRefusal_HasAClientErrorAnswer()
-    {
-        foreach (var reason in Enum.GetValues<MsfResponseRefusal>())
-        {
-            var (status, title) = MsfRespondEndpoint.Describe(reason);
-            status.Should().BeInRange(400, 499, reason.ToString());
-            title.Should().NotBeNullOrWhiteSpace(reason.ToString());
         }
     }
 

@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wombat.Infrastructure.Identity;
+using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Web.Components;
 using Wombat.Web.Security;
 
@@ -58,7 +59,10 @@ internal sealed class AppTestHost : IAsyncDisposable
 
     public IServiceProvider Services => _app.Services;
 
-    public static async Task<AppTestHost> StartAsync()
+    /// <param name="configureServices">
+    /// Registers what a page under test injects beyond this host's own services: the MSF respondent page's sender (T205).
+    /// </param>
+    public static async Task<AppTestHost> StartAsync(Action<IServiceCollection>? configureServices = null)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
@@ -92,12 +96,23 @@ internal sealed class AppTestHost : IAsyncDisposable
         builder.Services.AddWombatAuthorization();
         builder.Services.AddHttpContextAccessor();
 
+        // The MSF respondent page's rate limit and what it answers when the limit refuses, as Program.cs registers them
+        // (T205). Program.cs also carries the sign-in throttle; the integration suite hosts the whole of it.
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.AddMsfRespondPolicy();
+            options.OnRejected = (context, cancellationToken) => MsfRespondThrottle.RefuseAsync(context.HttpContext, cancellationToken);
+        });
+
+        configureServices?.Invoke(builder.Services);
+
         var app = builder.Build();
 
         // The order Program.cs uses.
         app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseStaticFiles();
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseAntiforgery();

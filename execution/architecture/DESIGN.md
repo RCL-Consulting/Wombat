@@ -284,6 +284,7 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .form-select-sm   /* compact variant */
 
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
+.scale-choices    /* one radio per line for a rating scale's points, lowest first (T205) */
 .workflow-action-reasons /* list under a workflow action row: why a disabled action cannot be taken (T107) */
 .stage-minima     /* two-column grid: training year | rung picker, one row per year (T125 curriculum minima) */
 ```
@@ -291,7 +292,9 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 **Rules:**
 
 - Every form is inside a `.form-container`. Every form's submit/cancel cluster is a `.form-actions` row at the bottom.
-- `<FormField>` wraps a `<label for="…">` + input slot + `.validation-message` target.
+- `<FormField>` wraps a `<label for="…">` + input slot + `.validation-message` target. Its help text carries the id
+  `FormField.HelpTextId(InputId)` (`{InputId}-help`); the input in the slot is the caller's, so the caller names it
+  with `aria-describedby` (T205, the MSF comment boxes).
 - Inputs default to `.form-control`. Selects use `.form-select` (never native unstyled).
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
@@ -305,6 +308,10 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   `.form-group` makes its legend read as that field's label, not as the section title. Help text goes inside the
   fieldset, which names it with `aria-describedby`. The checkbox groups on the MSF campaign form (T147) and the
   curriculum item forms (T122) are plain fieldsets with a section-size legend.
+- A rating scale answered by choosing one point is a `fieldset.form-group` whose `<legend>` is the question (with the
+  required `*`), holding a `.scale-choices` list of `.form-check` rows: one radio each, lowest point first, each with its
+  own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not
+  a `<select>`: every point's label stays in view. Not a `.check-grid`: an ordered scale reads down, not in columns.
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
 - A workflow action the actor may take but cannot complete (T107) is a **disabled** button, never a hidden one. Its
   reason is visible text in a `.workflow-action-reasons` list below the row, starting with the action's name, and the
@@ -670,6 +677,62 @@ Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metri
 
 `.account-form-container` is a 400px centred card with a wide top margin — the shape ClinicAssist uses for its login/register/change-password pages.
 
+### Anonymous static page (the MSF respondent page, T205)
+
+A page for a stranger holding an emailed link, who never signs in: `/msf/respond`, where an MSF respondent answers. It
+is the account page's shape, widened for a questionnaire, and it is the one page that is **not interactive**:
+
+```razor
+@page "/msf/respond"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]              @* static HTML: App.razor gives it no render mode *@
+@attribute [EnableRateLimiting(MsfRespondRateLimit.PolicyName)]
+@attribute [RequireAntiforgeryToken(required: false)]  @* the link is the post's authority *@
+@layout Layout.AuthLayout
+
+<PageTitle>@PageTitleText</PageTitle>                   @* one per state; "Error: …" after a refused post *@
+<div class="account-form-container account-form-container--wide shadow">
+  brand lockup, <h2>, the state's Alert
+  <div id="msf-error" class="error-summary" tabindex="-1" autofocus>  @* only after a refused post *@
+    <Alert Kind="danger" Role="alert">…</Alert>
+  </div>
+  <form method="post" @formname="…" @onsubmit="…" data-submit-once>
+    … fields, only while the questionnaire is shown …
+  </form>
+</div>
+```
+
+- `App.razor` renders `Routes` and `HeadOutlet` with no render mode for a page marked `[ExcludeFromInteractiveRouting]`,
+  and `InteractiveServer` for every other. Static, the page opens no circuit, so the Blazor hub's fallback policy (T181)
+  cannot stop it, the link's rate limit sees the submit (an HTTP post, not a SignalR message), and it works without
+  WebSockets or script.
+- Fields are plain inputs named `Prefix.Key[id]`, read by `[SupplyParameterFromForm]`. Give them `@onchange`/`@oninput`
+  too: bUnit renders the page interactively, and the handlers are how its tests fill the form.
+- The `<form>` stays in the tree when it holds nothing. Blazor answers a post whose named form is not on the page with a
+  bare 400, and a link can die between loading the page and posting it.
+- `data-submit-once` (`wombat.js`) drops a second submit while the first is on its way: the link takes one response.
+- A refusal is the page's own state, with the status the Api would answer (`MsfResponseRefusals.Describe`), set as the
+  response starts: .NET 10 writes no body for a page that ends its render at 404.
+- Every state has its own `<PageTitle>` ("Feedback link expired - Wombat", "Thank you - Wombat"), and a refused post's
+  starts "Error:". A refused post reloads the whole page, so its summary is an `.error-summary` that takes the focus as
+  the page loads (`tabindex="-1"` + `autofocus`), and the question the refusal names points at it: the rating's
+  fieldset with `aria-describedby`, a comment box with `aria-invalid`, `.input-validation-error` and
+  `aria-describedby` (its help text, then the summary). Only that question.
+- No antiforgery check and no token in the form: whoever holds the link can post without a browser, so the check
+  protected nothing, and a browser that lost the cookie had its answers answered with a bare 400.
+- The page sets `Referrer-Policy: no-referrer` (the app's own policy sent its address, token and all, as the Referer of
+  every asset it loads), `X-Robots-Tag: noindex, nofollow` and `Cache-Control: no-cache, no-store`, in every state.
+- Declare what the post can leave out. The form mapper sets a dictionary the post carried no key for to null, whatever
+  it was initialised to: a radio group with nothing chosen posts nothing. Reset each to empty before the page reads it.
+- It says what the product guarantees and no more. MSF anonymity runs one way: the respondent sees their own
+  questionnaire and nothing of anyone else's answers, counts or thresholds. The comment boxes' help text says a comment
+  may reach the trainee word for word, which the promise that name and email are hidden does not cover.
+
+```css
+.account-form-container--wide  /* 44rem card for a questionnaire; less padding at ≤640px */
+.error-summary                 /* a refused post's summary, focused on load; a focus ring when focused (T205) */
+```
+
 ## app.css section order
 
 `app.css` is one file, but it has mandatory sections and section headers. Keep them in this order so two sessions don't re-sort and conflict.
@@ -691,10 +754,10 @@ body, h1..h5, .page-subtitle
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline
 
 /* ── Forms ─────────────────────────────────────────── */
-.form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .form-actions
+.form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
 
 /* ── Alerts ────────────────────────────────────────── */
-.alert, .alert-{kind}
+.alert, .alert-{kind}, .error-summary
 
 /* ── Validation ────────────────────────────────────── */
 .validation-message, .validation-summary-errors, .input-validation-error, .field-warning

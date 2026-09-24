@@ -255,6 +255,13 @@ public static class MsfCampaignRules
         => principal.IsInRole(WombatRoles.Coordinator) ? principal.GetInstitutionId() : null;
 
     /// <summary>
+    /// The refusal of a link a response has already been submitted through (T202). Also what the submit answers when a
+    /// second submission through one link loses the race to the first (T205).
+    /// </summary>
+    public const string LinkUsedMessage =
+        "This feedback link has already been used: a response was submitted through it, and each link takes one response.";
+
+    /// <summary>
     /// The invitation a respondent's link names, when it can still take a response; otherwise a refusal written for
     /// the respondent (<see cref="MsfResponseRefusedException" />, T202).
     /// </summary>
@@ -264,19 +271,21 @@ public static class MsfCampaignRules
         IInvitationTokenService tokenService,
         CancellationToken cancellationToken)
     {
+        // A link no token could be is refused before anything is read. The page answering it is public, and the lookup
+        // below loads every invitation (T163), so a made-up link must not cost that (T205).
+        if (!tokenService.IsWellFormed(rawToken))
+        {
+            throw LinkNotRecognised();
+        }
+
         var invitations = await dbContext.Set<MsfInvitation>()
             .Include(invitation => invitation.Campaign)
                 .ThenInclude(campaign => campaign.Template)
                     .ThenInclude(template => template.Questions)
             .ToListAsync(cancellationToken);
 
-        // The link that opened a campaign stops working when a reminder re-issues it (T132), which is the likeliest way
-        // for a respondent to arrive here with a link nobody recognises.
         var invitation = invitations.SingleOrDefault(candidate => tokenService.VerifyToken(rawToken, candidate.TokenHash))
-            ?? throw new MsfResponseRefusedException(
-                MsfResponseRefusal.LinkNotRecognised,
-                "This feedback link is not recognised. If you were sent a reminder about this request, its link " +
-                "replaces the first one: please use the link in the most recent email.");
+            ?? throw LinkNotRecognised();
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -296,10 +305,7 @@ public static class MsfCampaignRules
 
         if (invitation.RespondedOn is not null)
         {
-            throw new MsfResponseRefusedException(
-                MsfResponseRefusal.LinkUsed,
-                "This feedback link has already been used: a response was submitted through it, and each link " +
-                "takes one response.");
+            throw new MsfResponseRefusedException(MsfResponseRefusal.LinkUsed, LinkUsedMessage);
         }
 
         if (invitation.Campaign.State != MsfCampaignState.Open)
@@ -312,17 +318,41 @@ public static class MsfCampaignRules
         return invitation;
     }
 
+    /// <summary>The refusal of a link that names no invitation: malformed, mistyped, or replaced.</summary>
+    /// <remarks>
+    /// The link that opened a campaign stops working when a reminder re-issues it (T132), which is the likeliest way for a
+    /// respondent to arrive with a link nobody recognises.
+    /// </remarks>
+    private static MsfResponseRefusedException LinkNotRecognised()
+        => new(
+            MsfResponseRefusal.LinkNotRecognised,
+            "This feedback link is not recognised. If you were sent a reminder about this request, its link " +
+            "replaces the first one: please use the link in the most recent email.");
+
     /// <summary>
     /// Refuses answers that do not complete the questionnaire, as a refusal the respondent is shown
     /// (<see cref="MsfResponseRefusedException" />, T202).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A duplicate answer and an answer to a question not on the questionnaire are refused here too. The first used to
     /// throw from <c>SingleOrDefault</c> and the second from the save, both as faults (500) on input the respondent
     /// sent.
+    /// </para>
+    /// <para>
+    /// So are a rating that is not one of its question's points (<paramref name="scalePoints" />, from
+    /// <see cref="MsfRatingScale.ResolveAsync" />) and a comment longer than the column holds (T205). Before T205 any
+    /// integer was stored as a rating, where it entered the category means, and an over-long comment failed the save as
+    /// a fault.
+    /// </para>
     /// </remarks>
-    public static void ValidateResponsePayload(MsfTemplate template, IReadOnlyCollection<SubmitMsfResponseAnswerItem> answers)
+    public static void ValidateResponsePayload(
+        MsfTemplate template,
+        IReadOnlyDictionary<int, IReadOnlyList<MsfScalePointDto>> scalePoints,
+        IReadOnlyCollection<SubmitMsfResponseAnswerItem> answers)
     {
+        ArgumentNullException.ThrowIfNull(scalePoints);
+
         if (answers.GroupBy(answer => answer.QuestionId).Any(group => group.Count() > 1))
         {
             throw Incomplete("Each question can be answered once.");
@@ -339,7 +369,7 @@ public static class MsfCampaignRules
             var answer = answers.SingleOrDefault(candidate => candidate.QuestionId == question.Id);
             if (question.Required && answer is null)
             {
-                throw Incomplete($"A response is required for '{question.Prompt}'.");
+                throw Incomplete($"A response is required for '{question.Prompt}'.", question.Id);
             }
 
             if (answer is null)
@@ -349,16 +379,31 @@ public static class MsfCampaignRules
 
             if (question.Type == MsfQuestionType.Scale && !answer.ScaleValue.HasValue)
             {
-                throw Incomplete($"A scale value is required for '{question.Prompt}'.");
+                throw Incomplete($"A scale value is required for '{question.Prompt}'.", question.Id);
+            }
+
+            if (question.Type == MsfQuestionType.Scale &&
+                !(scalePoints.TryGetValue(question.Id, out var points) &&
+                  points.Any(point => point.Value == answer.ScaleValue!.Value)))
+            {
+                throw Incomplete($"Choose one of the points on the scale for '{question.Prompt}'.", question.Id);
             }
 
             if (question.Type == MsfQuestionType.LongText && string.IsNullOrWhiteSpace(answer.LongText))
             {
-                throw Incomplete($"A comment is required for '{question.Prompt}'.");
+                throw Incomplete($"A comment is required for '{question.Prompt}'.", question.Id);
+            }
+
+            if (question.Type == MsfQuestionType.LongText && answer.LongText!.Trim().Length > MsfResponseAnswer.LongTextMaxLength)
+            {
+                throw Incomplete(
+                    $"The comment for '{question.Prompt}' is longer than {MsfResponseAnswer.LongTextMaxLength} characters. " +
+                    "Please shorten it.",
+                    question.Id);
             }
         }
     }
 
-    private static MsfResponseRefusedException Incomplete(string message)
-        => new(MsfResponseRefusal.AnswersIncomplete, message);
+    private static MsfResponseRefusedException Incomplete(string message, int? questionId = null)
+        => new(MsfResponseRefusal.AnswersIncomplete, message) { QuestionId = questionId };
 }

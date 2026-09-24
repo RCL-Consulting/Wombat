@@ -1,18 +1,28 @@
-using System.Threading.RateLimiting;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.RateLimiting;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Infrastructure.MultiSourceFeedback;
 
 namespace Wombat.Api.Endpoints;
 
+/// <summary>
+/// The respondent's questionnaire and submission as JSON: the integration endpoint. (T021, T202)
+/// </summary>
+/// <remarks>
+/// Respondents do not come here. Their invitation link opens the web app's page (<c>/msf/respond</c> on Wombat.Web,
+/// T205), which is what <c>Wombat:MsfRespondUrl</c> names and what production serves; this host is not deployed. Both
+/// ask the same query and send the same command (<see cref="GetMsfResponseFormQuery" />,
+/// <see cref="SubmitMsfResponseCommand" />), answer a refusal with the same status (<see cref="MsfResponseRefusals" />)
+/// and carry the same rate limit (<see cref="MsfRespondRateLimit" />), so this endpoint cannot accept what the page
+/// refuses.
+/// </remarks>
 public static class MsfRespondEndpoint
 {
     public static IEndpointRouteBuilder MapMsfRespondEndpoint(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/msf")
             .AllowAnonymous()
-            .RequireRateLimiting("msf-respond")
+            .RequireRateLimiting(MsfRespondRateLimit.PolicyName)
             .AddEndpointFilter(AnswerRefusalsPlainly);
 
         group.MapGet("/respond", async (string token, ISender sender, CancellationToken cancellationToken) =>
@@ -60,7 +70,7 @@ public static class MsfRespondEndpoint
         }
         catch (MsfResponseRefusedException refusal)
         {
-            var (status, title) = Describe(refusal.Reason);
+            var (status, title) = MsfResponseRefusals.Describe(refusal.Reason);
             return Results.Problem(detail: refusal.Message, statusCode: status, title: title);
         }
         catch (ValidationException invalid)
@@ -73,40 +83,14 @@ public static class MsfRespondEndpoint
     }
 
     /// <summary>
-    /// The status and title a refusal answers with. A link that names nothing is 404; a link that did name an invitation
-    /// but can no longer be used is 410, because it will never work again; answers that do not complete the form are 400.
+    /// The web app's respondent page and this endpoint share one rate limit on a link (T205).
     /// </summary>
-    internal static (int Status, string Title) Describe(MsfResponseRefusal reason) => reason switch
-    {
-        MsfResponseRefusal.LinkNotRecognised => (StatusCodes.Status404NotFound, "Feedback link not recognised"),
-        MsfResponseRefusal.LinkExpired => (StatusCodes.Status410Gone, "Feedback link expired"),
-        MsfResponseRefusal.LinkRevoked => (StatusCodes.Status410Gone, "Feedback link revoked"),
-        MsfResponseRefusal.LinkUsed => (StatusCodes.Status410Gone, "Feedback link already used"),
-        MsfResponseRefusal.CampaignNotOpen => (StatusCodes.Status410Gone, "Feedback request closed"),
-        MsfResponseRefusal.AnswersIncomplete => (StatusCodes.Status400BadRequest, "The response is not complete"),
-        _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, "An MSF refusal with no answer.")
-    };
-
     public static void AddMsfResponseRateLimiter(this IServiceCollection services)
     {
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.AddPolicy("msf-respond", context =>
-            {
-                var token = context.Request.Query["token"].ToString();
-                var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown-ip";
-                var partitionKey = $"{remoteIp}:{token}";
-
-                return RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey,
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 10,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0
-                    });
-            });
+            options.AddMsfRespondPolicy();
         });
     }
 }
