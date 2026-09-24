@@ -265,6 +265,11 @@ columns, and measure a table at 1280px against the longest real values before ad
 .is-editing            /* on a clinic-table row: the item open for editing and its form row below (T176) */
 ```
 
+A table **grouped by one column** puts each group in its own `<tbody>`, and the group's first row opens with
+`<th scope="rowgroup" rowspan="n">` naming it; `app.css` aligns that label to the top of its group. No new class. The
+committee review's evidence snapshot is one table per EPA, grouped by instrument (T167). A card that holds such a table
+is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby`.
+
 ## Form system
 
 ```css

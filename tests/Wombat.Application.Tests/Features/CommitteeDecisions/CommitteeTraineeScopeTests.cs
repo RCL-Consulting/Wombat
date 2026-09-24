@@ -591,6 +591,12 @@ public sealed class CommitteeTraineeScopeTests
             new EntrustmentLevel { Id = 2, ScaleId = 1, Order = 2, Label = "Direct supervision" },
             new EntrustmentLevel { Id = LevelId, ScaleId = 1, Order = 3, Label = "Indirect supervision" });
         db.Epas.Add(new Epa { Id = EpaId, SubSpecialityId = GeneralPaediatrics, Code = "PAED-007", Title = "Triage", IsActive = true });
+        // A STAR is granted only on an EPA of the trainee's curriculum (T167), so the General Paediatrics curriculum
+        // every Stage, Issue and Ratify row's trainee follows holds the EPA they stage.
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 1000, CurriculumId = 100, EpaId = EpaId, RequiredCount = 1, MinimumLevelOrder = 3
+        });
 
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();

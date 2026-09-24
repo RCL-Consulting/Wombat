@@ -131,6 +131,7 @@ public sealed class RatedEvidenceProfile
         bool readable,
         IReadOnlySet<string> evidenceStates,
         string? ratedLevelField,
+        string? ratedScaleKey,
         IReadOnlyList<string> assessorFields,
         IReadOnlySet<string> statesRequiringRating,
         IReadOnlySet<string> statesRequiringAssessor)
@@ -138,6 +139,7 @@ public sealed class RatedEvidenceProfile
         _readable = readable;
         EvidenceStates = evidenceStates;
         RatedLevelField = ratedLevelField;
+        RatedScaleKey = ratedScaleKey;
         AssessorFields = assessorFields;
         _statesRequiringRating = statesRequiringRating;
         _statesRequiringAssessor = statesRequiringAssessor;
@@ -148,6 +150,19 @@ public sealed class RatedEvidenceProfile
 
     /// <summary>The field holding the rating, or null when neither the pinned version nor the type declares one.</summary>
     public string? RatedLevelField { get; }
+
+    /// <summary>
+    /// The <c>scale_key</c> of the rated field in the pinned version: the ladder the rating was recorded on, as
+    /// <c>EntrustmentRungLabels.LoadForScaleKeysAsync</c> resolves it. Null when the version cannot hold the rating or the
+    /// field names no ladder. (T167)
+    /// </summary>
+    public string? RatedScaleKey { get; }
+
+    /// <summary>
+    /// Whether the type rates the trainee at all: the pinned version, or failing that the type, declares a rated field.
+    /// A version that declares one it does not hold still says yes; <see cref="ReadRating" /> then reads nothing. (T167)
+    /// </summary>
+    public bool IsRatedInstrument => RatedLevelField is not null;
 
     /// <summary>The fields read for the assessor, in schema order. Empty when the version names no assessor.</summary>
     public IReadOnlyList<string> AssessorFields { get; }
@@ -246,6 +261,49 @@ public sealed class RatedEvidenceProfile
     }
 
     /// <summary>
+    /// The rung the rated field holds, whatever the row's state and whoever wrote it, or null when it holds none. (T167)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// For a reader that shows a row rather than counts it: the committee's evidence snapshot prints each activity's rating
+    /// beside its state, so a declined rating is visible AS declined, where <see cref="Read" /> leaves it out of every
+    /// count (D44). The field and the plausibility bound are <see cref="Read" />'s, so the two cannot disagree about what
+    /// the rating of a row is; only the question of whether it counts is left out.
+    /// </para>
+    /// <para>
+    /// Null for a version that cannot hold the rating, for a value that is empty, not an integer or not a plausible rung,
+    /// and for data that does not parse. Total: never throws on bad data.
+    /// </para>
+    /// </remarks>
+    public int? ReadRating(string? dataJson)
+    {
+        if (!_readable || RatedLevelField is null || string.IsNullOrWhiteSpace(dataJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(dataJson);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object ||
+                !root.TryGetProperty(RatedLevelField, out var ratingValue) ||
+                IsEmpty(ratingValue))
+            {
+                return null;
+            }
+
+            return TryGetInt32(ratingValue, out var rating) && rating >= 1 && rating <= MaxPlausibleRung
+                ? rating
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// The profile of one version, from its stored JSON.
     /// </summary>
     /// <param name="schemaJson">The pinned schema.</param>
@@ -314,13 +372,14 @@ public sealed class RatedEvidenceProfile
             true,
             evidenceStates,
             ratedLevelField,
+            string.IsNullOrWhiteSpace(rated.Field.ScaleKey) ? null : rated.Field.ScaleKey,
             assessorFields,
             statesRequiringRating,
             statesRequiringAssessor);
     }
 
     private static RatedEvidenceProfile Unreadable(IReadOnlySet<string> evidenceStates, string? ratedLevelField)
-        => new(false, evidenceStates, ratedLevelField, [], NoStates, NoStates);
+        => new(false, evidenceStates, ratedLevelField, null, [], NoStates, NoStates);
 
     /// <summary>The assessor rule in the class remarks, steps 1 to 4.</summary>
     private static HashSet<string> ResolveAssessorFieldNames(FormSchema schema, Workflow? workflow, ActorRule? ratedRule)

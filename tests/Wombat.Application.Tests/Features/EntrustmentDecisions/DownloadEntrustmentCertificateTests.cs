@@ -178,8 +178,9 @@ public sealed class DownloadEntrustmentCertificateTests
         dbContext.SubSpecialities.Add(subSpec);
 
         // The trainee trains at the test hospital (T183), which is the panel's institution: a panel acts only on its own
-        // institution's trainees (T182).
+        // institution's trainees (T182). A STAR is granted only on an EPA of the trainee's curriculum (T167).
         dbContext.Curricula.Add(new Curriculum { Id = 40, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
+        dbContext.CurriculumItems.Add(new CurriculumItem { Id = 41, CurriculumId = 40, EpaId = 7, RequiredCount = 1, MinimumLevelOrder = 3 });
         dbContext.Set<TraineeProfile>().Add(new TraineeProfile
         {
             UserId = "trainee-1", InstitutionId = 1, CurriculumId = 40,

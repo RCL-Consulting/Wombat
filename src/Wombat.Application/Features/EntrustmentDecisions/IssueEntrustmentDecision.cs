@@ -83,10 +83,15 @@ public sealed class IssueEntrustmentDecisionCommandHandler : IRequestHandler<Iss
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
         var chairUserId = EntrustmentDecisionAuthorization.GetRequiredUserId(request.Principal);
 
-        var epa = await _dbContext.Set<Epa>().SingleOrDefaultAsync(e => e.Id == request.EpaId, cancellationToken)
+        var epa = await _dbContext.Set<Epa>().AsNoTracking().SingleOrDefaultAsync(e => e.Id == request.EpaId, cancellationToken)
             ?? throw new InvalidOperationException("The specified EPA could not be found.");
-        _ = await _dbContext.Set<EntrustmentLevel>().SingleOrDefaultAsync(l => l.Id == request.AuthorisedLevelId, cancellationToken)
+        var level = await _dbContext.Set<EntrustmentLevel>().AsNoTracking().SingleOrDefaultAsync(l => l.Id == request.AuthorisedLevelId, cancellationToken)
             ?? throw new InvalidOperationException("The specified entrustment level could not be found.");
+
+        // T167: the same gate staging applies. The EPA must be on the trainee's curriculum and the level a rung of that
+        // item's ladder. Before the decision is built or any prior one superseded: the audit pipeline saves the
+        // request's context even when this throws.
+        await StarCurriculum.DemandAsync(_dbContext, review.TraineeUserId, epa, level, cancellationToken);
 
         var evidenceLinks = (request.EvidenceLinks ?? Array.Empty<EntrustmentEvidenceLinkInput>())
             .Select(link => EntrustmentEvidenceLink.Create(

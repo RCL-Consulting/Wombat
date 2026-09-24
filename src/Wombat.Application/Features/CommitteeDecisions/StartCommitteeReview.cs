@@ -1,10 +1,15 @@
+using System.Globalization;
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Epas;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -115,14 +120,8 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .OrderByDescending(campaign => campaign.ClosedOn)
             .ToListAsync(cancellationToken);
 
-        var activityEvidence = activities.Select(activity => new CommitteeEvidence
-        {
-            SourceType = CommitteeEvidenceSourceType.Activity,
-            ActivityId = activity.Id,
-            SourceLabel = $"{activity.ActivityType.Name} #{activity.Id}",
-            Summary = $"State: {activity.CurrentState}; created {activity.CreatedOn:yyyy-MM-dd}; updated {activity.UpdatedOn:yyyy-MM-dd HH:mm} UTC.",
-            SourceRecordedOn = activity.UpdatedOn
-        });
+        var describe = await ActivityDescriber.LoadAsync(_dbContext, activities, cancellationToken);
+        var activityEvidence = activities.Select(describe.Describe);
 
         var msfEvidence = msfCampaigns.Select(campaign => new CommitteeEvidence
         {
@@ -131,10 +130,150 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             SourceLabel = $"{campaign.Template.Name} #{campaign.Id}",
             Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; " +
                       $"closed {campaign.ClosedOn:yyyy-MM-dd}.{DescribeCoverage(campaign)}",
-            SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn
+            SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn,
+            // A campaign is a report across the EPAs it covers, not evidence for one: it has no EPA, instrument, rating
+            // or encounter of its own. Its per-EPA claims are ordinary activities above, each under its EPA. (T167)
+            SourceState = campaign.State.ToString()
         });
 
         return activityEvidence.Concat(msfEvidence).ToArray();
+    }
+
+    /// <summary>
+    /// What an activity's snapshot line says about it: its EPA, instrument, rating, encounter date and state. (T167)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Built once per snapshot from lookups bounded by the window's activities, never per row.
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><b>The EPA</b> is the stamped <c>Activity.EpaId</c> (T137), with its code and title. It is not re-read out
+    ///   of <c>DataJson</c>; the stamp is the EPA the activity's list shows and its credit went to.</item>
+    ///   <item><b>The instrument</b> is the type's <c>WbaToolKey</c> (T122) by the College's name for it, and the type's
+    ///   own name when it declares none or the key names no instrument.</item>
+    ///   <item><b>The rating</b> is the pinned version's <c>rated_level_field</c>, read by <see cref="RatedEvidenceProfile" />
+    ///   (T135), the reader the sampling report and the trajectory share, and labelled as a rung on the ladder that field
+    ///   names, falling back to the ordinal. It is read in every state and printed beside the state: a snapshot shows a
+    ///   declined rating as declined, where the sampling report leaves it out (D44).</item>
+    ///   <item><b>The encounter date</b> is <c>Activity.ObservedOn</c> (T119) with its source, so a date nobody stated is
+    ///   shown as the filing day it is (T161), not as a clinical fact.</item>
+    /// </list>
+    /// <para>
+    /// Each is also written into <see cref="CommitteeEvidence.Summary" />, so the line reads on its own wherever the
+    /// summary is quoted (an evidence link on a STAR, T131).
+    /// </para>
+    /// </remarks>
+    private sealed class ActivityDescriber
+    {
+        private readonly IReadOnlyDictionary<(int ActivityTypeId, int Version), RatedEvidenceProfile> _profiles;
+        private readonly EntrustmentRungLookup _ladders;
+        private readonly IReadOnlyDictionary<int, (string Code, string Title)> _epas;
+        private readonly IReadOnlyDictionary<string, string> _instrumentNames;
+
+        private ActivityDescriber(
+            IReadOnlyDictionary<(int ActivityTypeId, int Version), RatedEvidenceProfile> profiles,
+            EntrustmentRungLookup ladders,
+            IReadOnlyDictionary<int, (string Code, string Title)> epas,
+            IReadOnlyDictionary<string, string> instrumentNames)
+        {
+            _profiles = profiles;
+            _ladders = ladders;
+            _epas = epas;
+            _instrumentNames = instrumentNames;
+        }
+
+        public static async Task<ActivityDescriber> LoadAsync(
+            IApplicationDbContext dbContext,
+            IReadOnlyCollection<Activity> activities,
+            CancellationToken cancellationToken)
+        {
+            var profiles = await RatedEvidenceProfiles.LoadAsync(
+                dbContext,
+                activities.Select(activity => (activity.ActivityTypeId, activity.SchemaVersion)),
+                cancellationToken);
+
+            var ladders = await EntrustmentRungLabels.LoadForScaleKeysAsync(
+                dbContext,
+                profiles.Values.Select(profile => profile.RatedScaleKey),
+                cancellationToken);
+
+            var epaIds = activities.Select(activity => activity.EpaId).OfType<int>().Distinct().ToArray();
+            var epas = epaIds.Length == 0
+                ? new Dictionary<int, (string Code, string Title)>()
+                : (await dbContext.Set<Epa>()
+                    .AsNoTracking()
+                    .Where(epa => epaIds.Contains(epa.Id))
+                    .Select(epa => new { epa.Id, epa.Code, epa.Title })
+                    .ToListAsync(cancellationToken))
+                    .ToDictionary(epa => epa.Id, epa => (epa.Code, epa.Title));
+
+            var toolKeys = activities
+                .Select(activity => WbaTool.NormalizeKey(activity.ActivityType.WbaToolKey))
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            var instrumentNames = toolKeys.Length == 0
+                ? new Dictionary<string, string>(StringComparer.Ordinal)
+                : await dbContext.Set<WbaTool>()
+                    .AsNoTracking()
+                    .Where(tool => toolKeys.Contains(tool.Key))
+                    .ToDictionaryAsync(tool => tool.Key, tool => tool.Name, StringComparer.Ordinal, cancellationToken);
+
+            return new ActivityDescriber(profiles, ladders, epas, instrumentNames);
+        }
+
+        public CommitteeEvidence Describe(Activity activity)
+        {
+            var profile = _profiles[(activity.ActivityTypeId, activity.SchemaVersion)];
+
+            (string Code, string Title)? epa = activity.EpaId is int epaId && _epas.TryGetValue(epaId, out var found)
+                ? found
+                : null;
+
+            var instrumentKey = WbaTool.NormalizeKey(activity.ActivityType.WbaToolKey);
+            var instrumentName = instrumentKey is not null && _instrumentNames.TryGetValue(instrumentKey, out var toolName)
+                ? toolName
+                : activity.ActivityType.Name;
+
+            var rating = profile.ReadRating(activity.DataJson);
+            var ratingLabel = rating is int order ? _ladders.FormatByScaleKey(profile.RatedScaleKey, order) : null;
+            var declared = activity.ObservedOnSource == ObservationDateSource.Declared;
+
+            var summary = new List<string>
+            {
+                $"State: {activity.CurrentState}",
+                epa is { } described ? $"EPA {described.Code}" : "about no EPA",
+                instrumentName,
+                ratingLabel is not null
+                    ? $"rated {ratingLabel}"
+                    : profile.IsRatedInstrument ? "no rating recorded" : "unrated",
+                // The one wording of an encounter date (T161, D28), so the summary says what the page's column does.
+                $"encounter {EncounterDate.Label(activity.ObservedOn, declared)}",
+                Invariant($"updated {activity.UpdatedOn:yyyy-MM-dd HH:mm} UTC")
+            };
+
+            return new CommitteeEvidence
+            {
+                SourceType = CommitteeEvidenceSourceType.Activity,
+                ActivityId = activity.Id,
+                SourceLabel = $"{activity.ActivityType.Name} #{activity.Id}",
+                Summary = string.Join("; ", summary) + ".",
+                SourceRecordedOn = activity.UpdatedOn,
+                EpaId = epa is null ? null : activity.EpaId,
+                EpaCode = epa?.Code,
+                EpaTitle = epa?.Title,
+                InstrumentKey = instrumentKey,
+                InstrumentName = instrumentName,
+                IsRatedInstrument = profile.IsRatedInstrument,
+                RatingOrder = rating,
+                RatingLabel = ratingLabel,
+                ObservedOn = activity.ObservedOn,
+                ObservedOnSource = activity.ObservedOnSource,
+                SourceState = activity.CurrentState
+            };
+        }
+
+        private static string Invariant(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>

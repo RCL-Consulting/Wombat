@@ -289,8 +289,12 @@ public sealed class EntrustmentDecisionHandlersTests
         dbContext.SubSpecialities.Add(subSpec);
 
         // The trainee trains at the test hospital, so its InstitutionalAdmin oversees them (T183), and it is the panel's
-        // institution: a panel acts only on its own institution's trainees (T182).
+        // institution: a panel acts only on its own institution's trainees (T182). A STAR is granted only on an EPA of
+        // the trainee's curriculum (T167), so the curriculum holds both EPAs.
         dbContext.Curricula.Add(new Curriculum { Id = 40, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
+        dbContext.CurriculumItems.AddRange(
+            new CurriculumItem { Id = 41, CurriculumId = 40, EpaId = 7, RequiredCount = 1, MinimumLevelOrder = 3 },
+            new CurriculumItem { Id = 42, CurriculumId = 40, EpaId = 8, RequiredCount = 1, MinimumLevelOrder = 3 });
         dbContext.Set<TraineeProfile>().Add(new TraineeProfile
         {
             UserId = "trainee-1", InstitutionId = 1, CurriculumId = 40,

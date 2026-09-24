@@ -65,6 +65,26 @@ public sealed record CommitteeAppealDto(
     string? ResolvedByUserId,
     CommitteeAppealOutcome? Outcome);
 
+/// <summary>
+/// One frozen line of a review's evidence snapshot. The parameters from <paramref name="EpaId" /> on are T167's and are
+/// null on a line frozen before it, and on an MSF campaign's line, which reports across EPAs.
+/// </summary>
+/// <param name="EpaId">The EPA the activity is evidence for (its stamped <c>Activity.EpaId</c>), or null.</param>
+/// <param name="EpaCode">That EPA's code when the review started.</param>
+/// <param name="EpaTitle">That EPA's title when the review started.</param>
+/// <param name="InstrumentKey">The type's <c>WbaToolKey</c>, or null when it declares none.</param>
+/// <param name="InstrumentName">The instrument by name, else the activity type's name.</param>
+/// <param name="IsRatedInstrument">
+/// Whether the pinned version rates the trainee at all. False is an unrated instrument; true with no
+/// <paramref name="RatingLabel" /> is a rating nobody recorded.
+/// </param>
+/// <param name="RatingOrder">The rung as the stored ordinal.</param>
+/// <param name="RatingLabel">The rung as a clinician reads it ("3a"), else the bare ordinal.</param>
+/// <param name="ObservedOn">When the encounter happened.</param>
+/// <param name="ObservedOnDeclared">
+/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the filing day (T161).
+/// </param>
+/// <param name="SourceState">The activity's workflow state, or the campaign's state, when the review started.</param>
 public sealed record CommitteeEvidenceDto(
     int Id,
     CommitteeEvidenceSourceType SourceType,
@@ -73,7 +93,25 @@ public sealed record CommitteeEvidenceDto(
     int? SupervisorReportId,
     string SourceLabel,
     string Summary,
-    DateTime? SourceRecordedOn);
+    DateTime? SourceRecordedOn,
+    int? EpaId = null,
+    string? EpaCode = null,
+    string? EpaTitle = null,
+    string? InstrumentKey = null,
+    string? InstrumentName = null,
+    bool? IsRatedInstrument = null,
+    int? RatingOrder = null,
+    string? RatingLabel = null,
+    DateOnly? ObservedOn = null,
+    bool? ObservedOnDeclared = null,
+    string? SourceState = null)
+{
+    /// <summary>
+    /// An activity line frozen before T167, which recorded none of the columns above: every activity line frozen since
+    /// carries its encounter date. The page lists these as they were written rather than under an EPA they never named.
+    /// </summary>
+    public bool FrozenBeforeLinesNamedTheirEpa => SourceType == CommitteeEvidenceSourceType.Activity && ObservedOn is null;
+}
 
 public sealed record CommitteeReviewDetailDto(
     int Id,

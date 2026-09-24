@@ -19,6 +19,12 @@ namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 /// STARs for its trainees are constrained to that scale: the picker filters to it and the stage
 /// handler rejects a level from any other scale. Unset falls back to offering every scale.
 /// </summary>
+/// <remarks>
+/// Since T167 the programme scale is the fallback for a curriculum item that is not pinned to a scale of its own; the
+/// fixture's item is unpinned, so these are the T076 rules as they still stand. A pinned item's ladder wins
+/// (<c>StarCurriculumTests</c>). The picker is <see cref="ListStarEpaOptionsForReviewQuery" />, which replaced
+/// <c>GetProgramScaleIdForReviewQuery</c>: its one programme scale is now each EPA option's fallback.
+/// </remarks>
 public sealed class ProgramDefaultScaleTests
 {
     private const int ScaleA = 1;   // not the programme scale
@@ -32,27 +38,27 @@ public sealed class ProgramDefaultScaleTests
     private const string TraineeUserId = "trainee-x";
 
     [Fact]
-    public async Task Resolver_ReturnsProgrammeScale_WhenConfigured()
+    public async Task Picker_OffersTheProgrammeScale_WhenConfigured()
     {
         await using var db = SeededDb(defaultScaleId: ScaleB);
         var reviewId = await AddInProgressReviewAsync(db);
 
-        var result = await new GetProgramScaleIdForReviewQueryHandler(db)
-            .Handle(new GetProgramScaleIdForReviewQuery(reviewId), CancellationToken.None);
+        var result = await new ListStarEpaOptionsForReviewQueryHandler(db)
+            .Handle(new ListStarEpaOptionsForReviewQuery(reviewId, TestPrincipals.Administrator()), CancellationToken.None);
 
-        result.Should().Be(ScaleB);
+        result.Should().ContainSingle().Which.ScaleId.Should().Be(ScaleB);
     }
 
     [Fact]
-    public async Task Resolver_ReturnsNull_WhenUnset()
+    public async Task Picker_OffersEveryScale_WhenUnset()
     {
         await using var db = SeededDb(defaultScaleId: null);
         var reviewId = await AddInProgressReviewAsync(db);
 
-        var result = await new GetProgramScaleIdForReviewQueryHandler(db)
-            .Handle(new GetProgramScaleIdForReviewQuery(reviewId), CancellationToken.None);
+        var result = await new ListStarEpaOptionsForReviewQueryHandler(db)
+            .Handle(new ListStarEpaOptionsForReviewQuery(reviewId, TestPrincipals.Administrator()), CancellationToken.None);
 
-        result.Should().BeNull();
+        result.Should().ContainSingle().Which.ScaleId.Should().BeNull();
     }
 
     [Fact]
@@ -168,6 +174,8 @@ public sealed class ProgramDefaultScaleTests
         db.Set<Curriculum>().Add(new Curriculum { Id = CurriculumId, SubSpecialityId = SubSpecialityId, Name = "Paed", Version = "2026.1" });
         db.Set<TraineeProfile>().Add(new TraineeProfile { UserId = TraineeUserId, CurriculumId = CurriculumId, ProgrammeStartDate = new DateOnly(2023, 1, 15), ExpectedCompletionDate = new DateOnly(2029, 12, 31) });
         db.Set<Epa>().Add(new Epa { Id = EpaId, SubSpecialityId = SubSpecialityId, Code = "PAED-001", Title = "Acute admission" });
+        // Unpinned (T109), so the programme's scale is the ladder a STAR's level must be on (T167).
+        db.Set<CurriculumItem>().Add(new CurriculumItem { Id = 50, CurriculumId = CurriculumId, EpaId = EpaId, RequiredCount = 1, MinimumLevelOrder = 3 });
         db.SaveChanges();
         return db;
     }

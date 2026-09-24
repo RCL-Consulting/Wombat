@@ -197,6 +197,12 @@ h5 {
   background-color: var(--hover-bg);
 }
 
+/* A table grouped by one column: each group is a <tbody> whose first row opens with
+   <th scope="rowgroup" rowspan="n">. The label sits at the top of its group, as the cells beside it do (T167). */
+.clinic-table tbody th[scope="rowgroup"] {
+  vertical-align: top;
+}
+
 /* A table of many narrow columns (T176, nine on the curriculum items page). At the default padding the padding alone
    was 288px of a 907px container at 1280px, so the table scrolled sideways with nothing in it too wide. A cell that
    spans the table holds a form, and keeps the default padding. */

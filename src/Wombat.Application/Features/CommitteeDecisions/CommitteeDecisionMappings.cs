@@ -1,3 +1,4 @@
+using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -55,7 +56,18 @@ internal static class CommitteeDecisionMappings
                     item.SupervisorReportId,
                     item.SourceLabel,
                     item.Summary,
-                    item.SourceRecordedOn))
+                    item.SourceRecordedOn,
+                    item.EpaId,
+                    item.EpaCode,
+                    item.EpaTitle,
+                    item.InstrumentKey,
+                    item.InstrumentName,
+                    item.IsRatedInstrument,
+                    item.RatingOrder,
+                    item.RatingLabel,
+                    item.ObservedOn,
+                    item.ObservedOnSource is null ? null : item.ObservedOnSource == ObservationDateSource.Declared,
+                    item.SourceState))
                 .ToArray(),
             review.IsFormative,
             review.ReviewType);

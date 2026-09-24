@@ -45,11 +45,17 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
         var chairUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
         var utcNow = DateTime.UtcNow;
 
-        review.Ratify(chairUserId, utcNow);
-
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .Where(p => p.ReviewId == review.Id)
             .ToListAsync(cancellationToken);
+
+        // T167: ratifying is what turns a staged decision into a STAR, so each is held to the trainee's curriculum again
+        // here, not only when it was staged; the item, its ladder, its EPA or the trainee's curriculum may have changed
+        // since. Before review.Ratify, the first mutation: the audit pipeline saves the request's context even when a
+        // check throws.
+        await StarCurriculum.DemandStagedAsync(_dbContext, review.TraineeUserId, pending, cancellationToken);
+
+        review.Ratify(chairUserId, utcNow);
 
         if (pending.Count > 0)
         {

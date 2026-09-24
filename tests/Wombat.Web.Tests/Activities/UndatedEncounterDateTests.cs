@@ -105,9 +105,8 @@ public sealed class UndatedEncounterDateTests : TestContext
             [typeof(GetSamplingConcentrationWarningsQuery)] = null,
             [typeof(CountMsfCampaignsOutsideSnapshotQuery)] = MsfCampaignsOutsideSnapshotDto.None,
             [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
-            [typeof(ListEpasForSubSpecialityQuery)] = (IReadOnlyList<EpaDto>)[],
-            [typeof(GetEntrustmentScalesListQuery)] = (IReadOnlyList<EntrustmentScaleDto>)[],
-            [typeof(GetProgramScaleIdForReviewQuery)] = null
+            [typeof(ListStarEpaOptionsForReviewQuery)] = (IReadOnlyList<StarEpaOptionDto>)[],
+            [typeof(GetEntrustmentScalesListQuery)] = (IReadOnlyList<EntrustmentScaleDto>)[]
         }));
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 5));

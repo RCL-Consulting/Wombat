@@ -200,23 +200,30 @@
 
         @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
         {
+          @* The EPAs are the trainee's curriculum, and each EPA's levels are the rungs of its item's ladder: the same
+             list StagePendingEntrustmentDecision enforces (StarCurriculum, T167). Before T167 this listed the EPAs in
+             the chair's scope, so a STAR could be staged on an EPA the trainee's programme does not contain. *@
+          @if (_starEpas.Count == 0)
+          {
+            <p class="muted">This trainee's curriculum lists no EPA, so no entrustment decision can be staged.</p>
+          }
           <EditForm Model="_pending" OnValidSubmit="StagePendingAsync" FormName="pending-entrustment">
             <DataAnnotationsValidator />
             <ValidationSummary class="validation-summary-errors" />
             <div class="form-grid">
-              <FormField Label="EPA" InputId="pending-epa" Required="true">
-                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId">
+              <FormField Label="EPA" InputId="pending-epa" Required="true" HelpText="The EPAs on the trainee's curriculum.">
+                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged">
                   <option value="0">Select an EPA…</option>
-                  @foreach (var epa in _epas)
+                  @foreach (var epa in _starEpas)
                   {
-                    <option value="@epa.Id">@epa.Code — @epa.Title</option>
+                    <option value="@epa.EpaId">@epa.Code — @epa.Title</option>
                   }
                 </InputSelect>
               </FormField>
-              <FormField Label="Authorised level" InputId="pending-level" Required="true">
+              <FormField Label="Authorised level" InputId="pending-level" Required="true" HelpText="@LevelHelpText">
                 <InputSelect id="pending-level" class="form-select" @bind-Value="_pending.AuthorisedLevelId">
-                  <option value="0">Select a level…</option>
-                  @foreach (var scale in _scales)
+                  <option value="0">@(SelectedStarEpa is null ? "Select an EPA first…" : "Select a level…")</option>
+                  @foreach (var scale in LevelScales)
                   {
                     <optgroup label="@scale.Name">
                       @foreach (var level in scale.Levels)
@@ -267,8 +274,8 @@
       </section>
     }
 
-    <section class="detail-card">
-      <h3>Evidence snapshot</h3>
+    <section class="detail-card" aria-labelledby="evidence-snapshot-heading">
+      <h3 id="evidence-snapshot-heading">Evidence snapshot</h3>
       @* Live, and not evidence: counts read on every load, beside the frozen list rather than in it. A campaign
          enters the snapshot only once released (T138), so one that closed in this window and is still under review
          at Start reaches no review's evidence, and releasing it later does not put it back; the panel is told it
@@ -309,12 +316,101 @@
       }
       else
       {
-        <ul class="list-unstyled">
-          @foreach (var item in _review.EvidenceItems)
+        @* Grouped by EPA, then by instrument, so a panel reads what each EPA rests on without opening every
+           activity. Every state is listed and labelled: a run of declines is evidence too (T135). Each line is
+           what was frozen at Start, not the activity as it stands now. (T167) *@
+        var snapshot = EvidenceSnapshotGroups.Build(_review.EvidenceItems);
+        <p class="muted">Frozen when the review started, grouped by EPA and then by instrument. Every state is listed.</p>
+        <div class="stack-list">
+          @foreach (var group in snapshot.ByEpa)
           {
-            <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
+            var headingId = $"evidence-epa-{group.EpaId}";
+            <article class="detail-card detail-card--compact" aria-labelledby="@headingId">
+              <h4 id="@headingId">@group.EpaCode@(string.IsNullOrWhiteSpace(group.EpaTitle) ? string.Empty : $" — {group.EpaTitle}")</h4>
+              <div class="table-container">
+                <table class="clinic-table">
+                  <caption>@group.LineCount record@(group.LineCount == 1 ? string.Empty : "s") from @group.Instruments.Count instrument@(group.Instruments.Count == 1 ? string.Empty : "s")</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Instrument</th>
+                      <th scope="col">Record</th>
+                      <th scope="col">Rating</th>
+                      <th scope="col">Encounter</th>
+                      <th scope="col">State</th>
+                    </tr>
+                  </thead>
+                  @foreach (var instrument in group.Instruments)
+                  {
+                    <tbody>
+                      @for (var index = 0; index < instrument.Lines.Count; index++)
+                      {
+                        var line = instrument.Lines[index];
+                        <tr>
+                          @if (index == 0)
+                          {
+                            <th scope="rowgroup" rowspan="@instrument.Lines.Count">@instrument.InstrumentName</th>
+                          }
+                          <td><a href="/activities/@line.ActivityId">@line.SourceLabel</a></td>
+                          <td>@EvidenceSnapshotGroups.RatingText(line)</td>
+                          <td>
+                            @if (line.ObservedOn is DateOnly observedOn)
+                            {
+                              <EncounterDateLabel ObservedOn="observedOn" Declared="@(line.ObservedOnDeclared == true)" />
+                            }
+                          </td>
+                          <td>@line.SourceState</td>
+                        </tr>
+                      }
+                    </tbody>
+                  }
+                </table>
+              </div>
+            </article>
           }
-        </ul>
+
+          @if (snapshot.AcrossEpas.Count > 0)
+          {
+            <article class="detail-card detail-card--compact" aria-labelledby="evidence-across-epas">
+              <h4 id="evidence-across-epas">Not about a single EPA</h4>
+              @* Each sentence only when it is true of this list. A review frozen before T167 has no EPA cards: its
+                 campaign's per-EPA records are among the old lines in the card below, not "under each EPA above". *@
+              @if (snapshot.AcrossEpasHoldsACampaignReport)
+              {
+                <p class="muted">@(snapshot.FrozenBeforeLinesNamedTheirEpa.Count == 0
+                  ? "A multi-source feedback report covers several EPAs; its per-EPA records are listed under each EPA above."
+                  : "A multi-source feedback report covers several EPAs; its per-EPA records are among the lines below, " +
+                    "frozen before lines named their EPA.")</p>
+              }
+              @if (snapshot.AcrossEpasHoldsAnActivity)
+              {
+                <p class="muted">An activity here names no EPA.</p>
+              }
+              <ul class="list-unstyled">
+                @foreach (var item in snapshot.AcrossEpas)
+                {
+                  <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
+                }
+              </ul>
+            </article>
+          }
+
+          @if (snapshot.FrozenBeforeLinesNamedTheirEpa.Count > 0)
+          {
+            <article class="detail-card detail-card--compact" aria-labelledby="evidence-frozen-before">
+              <h4 id="evidence-frozen-before">Frozen before lines named their EPA</h4>
+              <p class="muted">
+                This review started before each line recorded its EPA, instrument, rating and encounter date, so these
+                are listed as they were frozen.
+              </p>
+              <ul class="list-unstyled">
+                @foreach (var item in snapshot.FrozenBeforeLinesNamedTheirEpa)
+                {
+                  <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
+                }
+              </ul>
+            </article>
+          }
+        </div>
       }
     </section>
 
@@ -404,7 +500,7 @@
   private AppealResolutionModel _appeal = new();
   private PendingDecisionFormModel _pending = new();
   private IReadOnlyList<PendingEntrustmentDecisionDto> _pendingDecisions = Array.Empty<PendingEntrustmentDecisionDto>();
-  private IReadOnlyList<EpaDto> _epas = Array.Empty<EpaDto>();
+  private IReadOnlyList<StarEpaOptionDto> _starEpas = Array.Empty<StarEpaOptionDto>();
   private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
   private SamplingConcentrationReportDto? _samplingReport;
   private MsfCampaignsOutsideSnapshotDto _msfOutsideSnapshot = MsfCampaignsOutsideSnapshotDto.None;
@@ -425,19 +521,12 @@
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
       _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId, authState.User));
-      if (_epas.Count == 0)
-      {
-        _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(authState.User));
-      }
+      // T167: the trainee's curriculum, each EPA with the ladder its level must be on. The same list the stage
+      // handler enforces, so the picker cannot offer what the gate refuses.
+      _starEpas = await Sender.Send(new ListStarEpaOptionsForReviewQuery(ReviewId, authState.User));
       if (_scales.Count == 0)
       {
-        var allScales = await Sender.Send(new GetEntrustmentScalesListQuery());
-        // T076/F-4D-1: constrain the STAR level picker to the trainee's programme scale when one is
-        // configured; otherwise offer every scale.
-        var programScaleId = await Sender.Send(new GetProgramScaleIdForReviewQuery(ReviewId));
-        _scales = programScaleId.HasValue && allScales.Any(scale => scale.Id == programScaleId.Value)
-          ? allScales.Where(scale => scale.Id == programScaleId.Value).ToList()
-          : allScales;
+        _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
       }
     }
     catch (Exception exception)
@@ -506,6 +595,34 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+    }
+  }
+
+  private StarEpaOptionDto? SelectedStarEpa => _starEpas.FirstOrDefault(option => option.EpaId == _pending.EpaId);
+
+  // The rungs of the selected EPA's ladder: its curriculum item's pinned scale, else the programme's scale, else every
+  // scale (StarCurriculum). Nothing until an EPA is chosen, because the ladder is the EPA's.
+  private IEnumerable<EntrustmentScaleDto> LevelScales => SelectedStarEpa switch
+  {
+    null => Array.Empty<EntrustmentScaleDto>(),
+    { ScaleId: int scaleId } => _scales.Where(scale => scale.Id == scaleId),
+    _ => _scales
+  };
+
+  private string LevelHelpText => SelectedStarEpa switch
+  {
+    null => "The rungs of the chosen EPA's ladder.",
+    { ScaleName: { } name } => $"Rungs of {name}, the ladder this EPA is assessed on.",
+    _ => "This EPA is on no ladder, so any scale's rung may be chosen."
+  };
+
+  // A level chosen for one EPA is not a rung of another's ladder; clear it rather than submit a level the picker no
+  // longer shows.
+  private void OnStarEpaChanged()
+  {
+    if (!LevelScales.SelectMany(scale => scale.Levels).Any(level => level.Id == _pending.AuthorisedLevelId))
+    {
+      _pending.AuthorisedLevelId = 0;
     }
   }
 

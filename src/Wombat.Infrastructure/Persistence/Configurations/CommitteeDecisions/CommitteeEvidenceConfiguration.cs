@@ -12,5 +12,16 @@ public sealed class CommitteeEvidenceConfiguration : IEntityTypeConfiguration<Co
         builder.Property(entity => entity.SourceLabel).HasMaxLength(200).IsRequired();
         builder.Property(entity => entity.Summary).HasMaxLength(4000).IsRequired();
         builder.HasIndex(entity => new { entity.ReviewId, entity.SourceType });
+
+        // T167: what each line is about, frozen at Start. Lengths follow the columns they are copied from (Epas.Code and
+        // Title, ActivityTypes.WbaToolKey, WbaTools.Name, EntrustmentLevels.Label, Activities.CurrentState). No foreign
+        // key on EpaId, for the reason ActivityId has none: the snapshot must outlive, and never block, a change to the
+        // catalogue.
+        builder.Property(entity => entity.EpaCode).HasMaxLength(64);
+        builder.Property(entity => entity.EpaTitle).HasMaxLength(200);
+        builder.Property(entity => entity.InstrumentKey).HasMaxLength(64);
+        builder.Property(entity => entity.InstrumentName).HasMaxLength(200);
+        builder.Property(entity => entity.RatingLabel).HasMaxLength(200);
+        builder.Property(entity => entity.SourceState).HasMaxLength(100);
     }
 }

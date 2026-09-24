@@ -1,0 +1,306 @@
+using System.Globalization;
+using System.Security.Claims;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Application.Common.Security;
+using Wombat.Domain.Activities;
+using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Identity;
+using Wombat.Tests.Shared;
+using Wombat.Infrastructure.Persistence;
+
+namespace Wombat.Integration.Tests.CommitteeDecisions;
+
+/// <summary>
+/// T167 on a real PostgreSQL server, migrated and seeded with the v11.1 catalogue: a committee snapshot line records its
+/// EPA, instrument, rung and encounter date in the columns T167's migration adds, and a STAR is held to the trainee's
+/// curriculum by the same query the page's picker runs.
+/// </summary>
+/// <remarks>
+/// The unit suites run on EF InMemory, which neither applies the migration nor translates the preferred-profile
+/// predicate the curriculum lookup shares with <see cref="TraineeScopeResolver" />. The schema helpers follow
+/// <c>MsfCampaignScopePostgresTests</c>: a schema of the test's own, registered before it is created and dropped in a
+/// <c>finally</c>, with <see cref="DisposeAsync" /> as a backstop.
+/// </remarks>
+public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
+{
+    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
+    private const string TraineeUserId = "trainee-t167";
+    private const string ChairUserId = "chair-t167";
+
+    private readonly List<string> _schemas = [];
+    private string _baseConnectionString = null!;
+
+    public Task InitializeAsync()
+    {
+        _baseConnectionString = ResolveBaseConnectionString();
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync() => DropSchemasAsync();
+
+    [Fact]
+    public async Task TheSnapshotNamesEachLine_AndAStarIsHeldToTheTraineesCurriculum_OnPostgres()
+    {
+        try
+        {
+            var schema = await SeededSchemaAsync();
+            int reviewId, paed001, demoEpa, ladderId, activityId;
+
+            await using (var db = NewContext(schema))
+            {
+                var host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                var curriculumId = await db.Curricula
+                    .Where(entity => entity.Name == "Paediatric EPA Curriculum" && entity.Version == "11.1")
+                    .Select(entity => entity.Id)
+                    .SingleAsync();
+                paed001 = await db.Epas.Where(epa => epa.Code == "PAED-001" && epa.OwningInstitutionId == null).Select(epa => epa.Id).SingleAsync();
+                demoEpa = await db.Epas.Where(epa => epa.Code == "EPA-001").Select(epa => epa.Id).SingleAsync();
+                ladderId = await db.EntrustmentScales
+                    .Where(scale => scale.Name == "CPSA Paediatric Entrustment Scale v11.1")
+                    .Select(scale => scale.Id)
+                    .SingleAsync();
+                var cca = await db.ActivityTypes.Where(type => type.Key == "cca_cpsa").Select(type => new { type.Id, type.Version }).SingleAsync();
+
+                db.TraineeProfiles.Add(new TraineeProfile
+                {
+                    UserId = TraineeUserId,
+                    InstitutionId = host,
+                    CurriculumId = curriculumId,
+                    ProgrammeStartDate = new DateOnly(2025, 1, 15),
+                    ExpectedCompletionDate = new DateOnly(2029, 1, 14)
+                });
+
+                var panel = new DecisionPanel
+                {
+                    Name = "T167 CCC",
+                    Scope = DecisionPanelScope.Institution,
+                    InstitutionId = host,
+                    CreatedOn = DateTime.UtcNow,
+                    Members = [new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair }]
+                };
+                db.DecisionPanels.Add(panel);
+                var review = new CommitteeReview
+                {
+                    Panel = panel,
+                    TraineeUserId = TraineeUserId,
+                    ReviewPeriodFrom = new DateOnly(2026, 1, 1),
+                    ReviewPeriodTo = new DateOnly(2026, 6, 30),
+                    ScheduledOn = new DateOnly(2026, 7, 2)
+                };
+                db.CommitteeReviews.Add(review);
+
+                var filed = new DateTime(2026, 2, 11, 9, 0, 0, DateTimeKind.Utc);
+                var activity = new Activity
+                {
+                    ActivityTypeId = cca.Id,
+                    SchemaVersion = cca.Version,
+                    InstitutionId = host,
+                    SubjectUserId = TraineeUserId,
+                    CreatedByUserId = TraineeUserId,
+                    CurrentState = "completed",
+                    DataJson = $$"""{ "epa_id": {{paed001.ToString(CultureInfo.InvariantCulture)}}, "assessor_user_id": "assessor-1", "observed_on": "2026-02-10", "overall_level": 3 }""",
+                    EpaId = paed001,
+                    CreatedOn = filed,
+                    UpdatedOn = filed,
+                    ObservedOn = new DateOnly(2026, 2, 10),
+                    ObservedOnSource = ObservationDateSource.Declared
+                };
+                db.Activities.Add(activity);
+                await db.SaveChangesAsync();
+                reviewId = review.Id;
+                activityId = activity.Id;
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                await new StartCommitteeReviewCommandHandler(db).Handle(
+                    new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                var review = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                    new GetCommitteeReviewByIdQuery(reviewId, Chair()), CancellationToken.None);
+
+                var line = review.EvidenceItems.Should().ContainSingle(item => item.ActivityId == activityId).Subject;
+                line.EpaCode.Should().Be("PAED-001");
+                line.InstrumentKey.Should().Be("cca");
+                line.InstrumentName.Should().Be("CCA");
+                line.RatingOrder.Should().Be(3);
+                line.RatingLabel.Should().Be("3a");
+                line.ObservedOn.Should().Be(new DateOnly(2026, 2, 10));
+                line.ObservedOnDeclared.Should().BeTrue();
+                line.SourceState.Should().Be("completed");
+
+                var options = await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+                    new ListStarEpaOptionsForReviewQuery(reviewId, Chair()), CancellationToken.None);
+                options.Should().HaveCount(15, "the v11.1 curriculum's national core");
+                options.Should().OnlyContain(option => option.ScaleId == ladderId, "every v11.1 item is pinned to the v11.1 ladder");
+                options.Should().NotContain(option => option.EpaId == demoEpa, "EPA-001 is the demo curriculum's, not this trainee's");
+            }
+
+            var rung3b = await RungAsync(schema, ladderId, "3b");
+
+            await using (var db = NewContext(schema))
+            {
+                var offCurriculum = () => StageAsync(db, reviewId, demoEpa, rung3b);
+                await offCurriculum.Should().ThrowAsync<InvalidOperationException>().WithMessage("*EPA-001 is not on this trainee's curriculum*");
+                await db.SaveChangesAsync();
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0, "a refusal writes nothing, even through the audit save");
+
+                var staged = await StageAsync(db, reviewId, paed001, rung3b);
+                staged.EpaCode.Should().Be("PAED-001");
+            }
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    private static Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int reviewId, int epaId, int levelId)
+        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+            new StagePendingEntrustmentDecisionCommand(
+                reviewId,
+                null,
+                epaId,
+                levelId,
+                new DateOnly(2026, 7, 2),
+                null,
+                "Target met.",
+                Array.Empty<EntrustmentEvidenceLinkInput>(),
+                Chair()),
+            CancellationToken.None);
+
+    private async Task<int> RungAsync(string schema, int ladderId, string label)
+    {
+        await using var db = NewContext(schema);
+        return await db.EntrustmentLevels
+            .Where(level => level.ScaleId == ladderId && level.Label == label)
+            .Select(level => level.Id)
+            .SingleAsync();
+    }
+
+    private static ClaimsPrincipal Chair()
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, ChairUserId),
+                new Claim(ClaimTypes.Role, WombatRoles.CommitteeMember)
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
+
+    private async Task<string> SeededSchemaAsync()
+    {
+        var schema = await CreateSchemaAsync();
+
+        await using (var db = NewContext(schema))
+        {
+            await db.Database.MigrateAsync();
+        }
+
+        await using (var db = NewContext(schema))
+        {
+            await new DataSeeder(db).SeedAsync();
+        }
+
+        await using (var db = NewContext(schema))
+        {
+            await new PaediatricCatalogueSeeder(db).SeedAsync();
+        }
+
+        return schema;
+    }
+
+    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
+    private async Task<string> CreateSchemaAsync()
+    {
+        var schema = $"it_{Guid.NewGuid():N}";
+        _schemas.Add(schema);
+
+        await using var connection = new NpgsqlConnection(_baseConnectionString);
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
+        await command.ExecuteNonQueryAsync();
+
+        return schema;
+    }
+
+    /// <summary>Drops every schema this test created. Called from the test's finally and again from DisposeAsync.</summary>
+    private async Task DropSchemasAsync()
+    {
+        if (_schemas.Count == 0)
+        {
+            return;
+        }
+
+        await using var connection = new NpgsqlConnection(_baseConnectionString);
+        await connection.OpenAsync();
+
+        foreach (var schema in _schemas.ToList())
+        {
+            // Belt and braces: this class only ever drops a schema it named itself.
+            if (schema.StartsWith("it_", StringComparison.Ordinal))
+            {
+                await using var drop = connection.CreateCommand();
+                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
+                await drop.ExecuteNonQueryAsync();
+            }
+
+            _schemas.Remove(schema);
+        }
+    }
+
+    private ApplicationDbContext NewContext(string schema)
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
+
+    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
+    private string SchemaConnectionString(string schema)
+        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
+        {
+            SearchPath = schema,
+            Pooling = false
+        }.ConnectionString;
+
+    /// <summary>The same resolution order as <c>MsfRespondEndpointFlowTests</c>.</summary>
+    private static string ResolveBaseConnectionString()
+    {
+        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
+        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
+        {
+            return environmentConnectionString;
+        }
+
+        var secretsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Microsoft",
+            "UserSecrets",
+            WombatWebUserSecretsId,
+            "secrets.json");
+
+        if (File.Exists(secretsPath))
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
+            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
+                && property.ValueKind == JsonValueKind.String
+                && !string.IsNullOrWhiteSpace(property.GetString()))
+            {
+                return property.GetString()!;
+            }
+        }
+
+        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
+    }
+}
