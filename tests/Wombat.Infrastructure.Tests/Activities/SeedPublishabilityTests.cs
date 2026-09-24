@@ -28,7 +28,9 @@ public sealed class SeedPublishabilityTests
     /// <summary>The seeds that name a person: every generic and CPSA WBA instrument.</summary>
     private static readonly string[] SeedsWithANomineeField =
     [
-        "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa", "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa"
+        "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa", "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa",
+        // T120. The reflective exercise's "supervisor or mentor" is the same nominee field, requiring an Assessor.
+        "cca_cpsa", "rca_cpsa", "chart_stimulated_recall_cpsa", "reflective_exercise_cpsa"
     ];
 
     public static TheoryData<string> SeedDirectories

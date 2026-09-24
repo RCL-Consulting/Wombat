@@ -126,6 +126,25 @@ public static class ActivityTypeSeedCatalogue
             "Observation of the trainee in routine practice - ward rounds, handover and family meetings.",
             ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "direct_observation"),
 
+        // T120. Descriptions are page 8's definitions. "Case note review" is not a seed (D4: an alias of CCA), nor is
+        // "Directly observed clinical examination" (D12: the same instrument as Mini-CEX).
+        new("cca_cpsa", "Clinical Case Analysis (Paediatrics)",
+            "Review of clinical documentation and discussion of the reasoning and management plan recorded.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "cca"),
+        new("rca_cpsa", "Random Case Analysis (Paediatrics)",
+            "Review of cases selected at random from the trainee's records to identify knowledge gaps.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "rca"),
+        new("chart_stimulated_recall_cpsa", "Chart-Stimulated Recall (Paediatrics)",
+            "Questioning based on the trainee's own records, to probe the reasoning behind documented decisions.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
+            WbaToolKey: "chart_stimulated_recall"),
+
+        // Unrated evidence (D6) that credits nothing (D7): no rated_level_field and an empty counts_for.
+        new("reflective_exercise_cpsa", "Reflective Exercise (Paediatrics)",
+            "A written or verbal reflection on a challenging case or critical incident, discussed with a supervisor or mentor.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
+            WbaToolKey: "reflective_exercise"),
+
         // System-written, never hand-filed. One row is created per EPA a released MSF campaign covers
         // (T121). A trainee CAN still create a stray draft from /activities/new — nothing in the product
         // expresses "system-managed" — but both its sections declare

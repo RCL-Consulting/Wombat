@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "observation_date_field": "observed_on",
+  "rated_level_field": "overall_level",
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Assessor",
+          "required": true,
+          "help_text": "The supervisor who questioned you on the record. They complete this assessment."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Date of the discussion",
+          "required": true,
+          "help_text": "When the discussion happened, not when this form is completed."
+        },
+        {
+          "key": "record_reference",
+          "type": "text",
+          "label": "Record discussed",
+          "required": true,
+          "help_text": "A reference you and your assessor will recognise, such as a bed and date. No patient names or record numbers."
+        },
+        {
+          "key": "setting",
+          "type": "choice",
+          "label": "Setting",
+          "required": true,
+          "options": [
+            "ward",
+            "outpatient_clinic",
+            "emergency_unit",
+            "neonatal_unit",
+            "picu",
+            "community"
+          ]
+        },
+        {
+          "key": "decisions_probed",
+          "type": "longtext",
+          "label": "Decisions discussed",
+          "required": true,
+          "help_text": "The documented decisions your assessor asked you to explain."
+        }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Entrustment",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "overall_level",
+          "type": "scale",
+          "label": "Supervision required for this case",
+          "scale_key": "CPSA Paediatric Entrustment Scale v11.1",
+          "validation": {
+            "min": 1,
+            "max": 6
+          },
+          "help_text": "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "strengths",
+          "type": "longtext",
+          "label": "What was done well",
+          "required": true
+        },
+        {
+          "key": "improvements",
+          "type": "longtext",
+          "label": "Areas for development",
+          "required": true
+        },
+        {
+          "key": "plan",
+          "type": "longtext",
+          "label": "Agreed plan",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

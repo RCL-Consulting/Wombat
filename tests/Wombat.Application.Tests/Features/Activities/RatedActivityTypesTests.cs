@@ -73,6 +73,9 @@ public sealed class RatedActivityTypesTests
     [InlineData("dops_cpsa", WbaEvidenceSource.DirectObservation)]
     [InlineData("cbd_cpsa", WbaEvidenceSource.Conversation)]
     [InlineData("direct_observation_cpsa", WbaEvidenceSource.DirectObservation)]
+    [InlineData("cca_cpsa", WbaEvidenceSource.CaseAnalysis)]
+    [InlineData("rca_cpsa", WbaEvidenceSource.CaseAnalysis)]
+    [InlineData("chart_stimulated_recall_cpsa", WbaEvidenceSource.Conversation)]
     public void TheSuffixedFormOfAFamilyIsCategorisedToo(string key, WbaEvidenceSource expected)
     {
         RatedActivityTypes.Classify(key, schemaJson: null).Category.Should().Be(expected);

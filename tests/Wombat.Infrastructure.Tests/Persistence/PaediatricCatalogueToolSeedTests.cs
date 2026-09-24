@@ -122,7 +122,7 @@ public sealed class PaediatricCatalogueToolSeedTests
     private static readonly string[] UndefinedOnPage8 = ["chart_stimulated_recall", "learner_feedback", "portfolio_review"];
 
     /// <summary>
-    /// Which instrument every seeded activity type is. The five CPSA seeds, the generic Mini-CEX, DOPS and CBD (the same
+    /// Which instrument every seeded activity type is. The nine CPSA seeds, the generic Mini-CEX, DOPS and CBD (the same
     /// instruments: unkeyed, they would be unrestricted on every EPA with a list), and null for the seven generic types
     /// that are not College-named instruments (D21). Every seed entry is listed, so a new seed forces a decision here.
     /// </summary>
@@ -133,6 +133,10 @@ public sealed class PaediatricCatalogueToolSeedTests
         ("cbd_cpsa", "cbd"),
         ("direct_observation_cpsa", "direct_observation"),
         ("msf_cpsa", "msf"),
+        ("cca_cpsa", "cca"),
+        ("rca_cpsa", "rca"),
+        ("chart_stimulated_recall_cpsa", "chart_stimulated_recall"),
+        ("reflective_exercise_cpsa", "reflective_exercise"),
         ("mini_cex", "mini_cex"),
         ("dops", "dops"),
         ("cbd", "cbd"),
@@ -644,7 +648,7 @@ public sealed class PaediatricCatalogueToolSeedTests
         var vocabulary = catalogue.WbaToolVocabulary.Select(tool => tool.Key).ToHashSet(StringComparer.Ordinal);
 
         var entries = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege).ToArray();
-        entries.Should().HaveCount(5);
+        entries.Should().HaveCount(9);
 
         using var scope = new AssertionScope();
         foreach (var entry in entries)

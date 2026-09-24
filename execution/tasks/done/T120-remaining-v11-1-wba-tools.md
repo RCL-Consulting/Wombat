@@ -1,9 +1,11 @@
 ---
 id: T120
 title: "Author the ten remaining v11.1 WBA tools, and separate the five an engineer can write from the five only the College can"
-status: queued
+status: done
 priority: P1
 created: 2026-09-19
+started: 2026-09-24
+completed: 2026-09-24
 ---
 # T120 — Author the ten remaining v11.1 WBA tools, and separate the five an engineer can write from the five only the College can
 
@@ -12,7 +14,7 @@ created: 2026-09-19
 > activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
 > re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
 
-**Status:** open
+**Status:** done 2026-09-24 for the four instruments that could be seeded; clinical audit and portfolio review split to [T154]. See As built.
 **Surfaced:** 2026-09-19, planning the remaining EPA work after the Wave-0 evidence run ([T118]).
 **Severity:** Medium. Nothing is broken and nothing is unreachable — every one of the 15 EPAs already has
 at least one seeded tool (verified below). What is missing is fidelity: ten of the College's fourteen
@@ -393,16 +395,26 @@ first. It is the cheapest action in the whole task and it may remove four of the
 
 ## Verification
 
-- All five Group-1 seeds exist on disk, are registered in `ActivityTypeSeedCatalogue`, and are created by
-  `PaediatricCatalogueSeeder` on a fresh database.
-- A second boot reports no seed difference — the canonical form is a fixed point and no version churns.
-- `CpsaWbaSeedTests` runs over nine keys, not four, and passes every assertion for each.
-- A trainee on curriculum 3 files one of the new tools against a permitted EPA, an assessor rates it at
-  3a, and it credits: `CreditedItemCount = 1`, `CreditScaleMismatchCount = 0`, `CountsSoFar` increments.
-  This is [T118]'s evidence run repeated with a new tool, and it is the only proof that matters.
-- The observation appears on the trainee's EPA trajectory with the right source label. That is the check
-  that catches a mis-named key, and nothing else catches it.
-- The type picker shows each new tool under a name no other type shares.
+Group 1 is three seeds, not five: D4 made case note review an alias of CCA and D12 made the observed clinical
+examination the same instrument as Mini-CEX. Reflective exercise (D6, D7 closed) was seeded alongside.
+
+- [x] **Every new seed exists on disk, is registered in `ActivityTypeSeedCatalogue` with its `WbaToolKey`, and is
+  created on an existing database.** Dev, first boot: four `INSERT INTO "ActivityTypes"`, refresher "0 republished,
+  19 unchanged". Fresh database: `WbaToolAllowListPostgresTests.FreshDatabase_…` (real PostgreSQL) sees all 19 types
+  and every key.
+- [x] **A second boot reports no seed difference.** Dev, second boot: 0 inserts, 0 republished, 0 warnings.
+- [x] **`CpsaWbaSeedTests` runs over seven keys** (the four plus `cca_cpsa`, `rca_cpsa`,
+  `chart_stimulated_recall_cpsa`), every assertion passing for each.
+- [x] **Filed against a permitted EPA, rated at 3a, it credits.** `RemainingWbaToolsTests` for each of the three:
+  `CreditedItemCount = 1`, `CreditScaleMismatchCount = 0`, `CountsSoFar` and `MinimumLevelReachedCount` 1. Browser,
+  dev, activity 19: a Clinical Case Analysis on PAED-001, completed by Demo Committee at 3a, "1 item" credited.
+- [x] **It appears on the trajectory with the right source label.** Browser, `/portfolio/progress`: "2026-09-23 · 3a ·
+  Case analysis" under PAED-001. `RatedActivityTypesTests` pins the category of each new key.
+- [x] **The type picker shows each new tool under a name no other type shares.** Browser: Clinical Case Analysis,
+  Random Case Analysis, Chart-Stimulated Recall and Reflective Exercise (Paediatrics), all distinct.
+- [x] Also: the CCA EPA picker offers exactly PAED-001, 002, 003, 004 and 006 (browser); a rated tool filed against
+  an EPA whose list does not name it is refused (tests); the reflective exercise is discussed by the named mentor,
+  can be returned with a note, and credits nothing (tests).
 
 ## Related
 
@@ -413,3 +425,25 @@ Learner feedback from the rest; the true figure is ten missing, of which two are
 ambiguity, which [T104] resolves. MSF and Learner feedback belong to the MSF credit-path task. The unread
 `wbaTools` and `currency` properties are the same omission, and `currency` is already claimed by T098
 phase 3.
+
+---
+
+## As built — 2026-09-24
+
+**Seeded:** `cca_cpsa` "Clinical Case Analysis (Paediatrics)", `rca_cpsa` "Random Case Analysis (Paediatrics)",
+`chart_stimulated_recall_cpsa` "Chart-Stimulated Recall (Paediatrics)" — rated, the CPSA shape copied from
+`mini_cex_cpsa` with its T105 validation and honest `required` flags, and a request section drawn from page 8's
+definitions (CCA: case, documentation reviewed, setting, reasoning discussed; RCA: case, how it was selected, setting;
+CSR: record, setting, decisions discussed). And `reflective_exercise_cpsa` "Reflective Exercise (Paediatrics)" —
+unrated (no `rated_level_field`, D6) and crediting nothing (`counts_for: []`, D7): the trainee writes it, names a
+supervisor or mentor (a nominee field, T102), and that person records the discussion or returns it with a note.
+
+**Not seeded here:** clinical audit and portfolio review, split to [T154] on the operator's call. Case note review
+(D4) and the observed clinical examination (D12) are not instruments of their own. MSF and learner feedback belong to
+MSF, as this task always said.
+
+**No map fix was needed.** The sampling handler's blindness to the CPSA keys, which this task was to fix, was already
+fixed by T134's shared `RatedActivityTypes`; the new keys land on its `cca`/`rca`/`chart_stimulated_recall` families.
+
+**Order:** T105 landed first (operator's call), so the new seeds say what they mean from their first line.
+

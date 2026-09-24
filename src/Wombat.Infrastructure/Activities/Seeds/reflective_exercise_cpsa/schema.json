@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "observation_date_field": "observed_on",
+  "sections": [
+    {
+      "key": "reflection",
+      "title": "Reflection",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Supervisor or mentor",
+          "required": true,
+          "help_text": "The person you will discuss this reflection with. They record the discussion."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Date of the case or incident",
+          "required": true
+        },
+        {
+          "key": "prompt",
+          "type": "choice",
+          "label": "Reflecting on",
+          "required": true,
+          "options": [
+            "challenging_case",
+            "critical_incident"
+          ]
+        },
+        {
+          "key": "what_happened",
+          "type": "longtext",
+          "label": "What happened",
+          "required": true,
+          "help_text": "No patient names or record numbers."
+        },
+        {
+          "key": "analysis",
+          "type": "longtext",
+          "label": "What went well, and what could have gone differently",
+          "required": true
+        },
+        {
+          "key": "learning",
+          "type": "longtext",
+          "label": "What I learned",
+          "required": true
+        },
+        {
+          "key": "action_plan",
+          "type": "longtext",
+          "label": "What I will do differently",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "discussion",
+      "title": "Discussion",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "discussion_notes",
+          "type": "longtext",
+          "label": "Discussion",
+          "required": true,
+          "help_text": "What you discussed and agreed. This reflection is not rated."
+        }
+      ]
+    }
+  ]
+}

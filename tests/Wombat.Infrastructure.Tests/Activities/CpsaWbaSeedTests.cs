@@ -32,7 +32,10 @@ public sealed class CpsaWbaSeedTests
         "mini_cex_cpsa",
         "dops_cpsa",
         "cbd_cpsa",
-        "direct_observation_cpsa"
+        "direct_observation_cpsa",
+        "cca_cpsa",
+        "rca_cpsa",
+        "chart_stimulated_recall_cpsa"
     ];
 
     private static string SeedDirectory(string key)

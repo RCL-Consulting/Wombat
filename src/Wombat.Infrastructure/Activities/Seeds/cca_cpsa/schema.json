@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "observation_date_field": "observed_on",
+  "rated_level_field": "overall_level",
+  "sections": [
+    {
+      "key": "request",
+      "title": "Request",
+      "fields": [
+        {
+          "key": "epa_id",
+          "type": "epa",
+          "label": "EPA",
+          "required": true
+        },
+        {
+          "key": "assessor_user_id",
+          "type": "user",
+          "label": "Assessor",
+          "required": true,
+          "help_text": "The supervisor who reviewed the documentation with you. They complete this assessment."
+        },
+        {
+          "key": "observed_on",
+          "type": "date",
+          "label": "Date of the review",
+          "required": true,
+          "help_text": "When you and your assessor reviewed the documentation, not when this form is completed."
+        },
+        {
+          "key": "case_reference",
+          "type": "text",
+          "label": "Case",
+          "required": true,
+          "help_text": "A reference you and your assessor will recognise, such as a bed and date. No patient names or record numbers."
+        },
+        {
+          "key": "documents_reviewed",
+          "type": "multichoice",
+          "label": "Documentation reviewed",
+          "required": true,
+          "options": [
+            "admission_notes",
+            "progress_notes",
+            "referral_letters",
+            "discharge_summary",
+            "prescriptions"
+          ]
+        },
+        {
+          "key": "setting",
+          "type": "choice",
+          "label": "Setting",
+          "required": true,
+          "options": [
+            "ward",
+            "outpatient_clinic",
+            "emergency_unit",
+            "neonatal_unit",
+            "picu",
+            "community"
+          ]
+        },
+        {
+          "key": "reasoning_discussed",
+          "type": "longtext",
+          "label": "Reasoning and management plan discussed",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Entrustment",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "overall_level",
+          "type": "scale",
+          "label": "Supervision required for this case",
+          "scale_key": "CPSA Paediatric Entrustment Scale v11.1",
+          "validation": {
+            "min": 1,
+            "max": 6
+          },
+          "help_text": "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "feedback",
+      "title": "Feedback",
+      "editable_by": "field:assessor_user_id",
+      "fields": [
+        {
+          "key": "strengths",
+          "type": "longtext",
+          "label": "What was done well",
+          "required": true
+        },
+        {
+          "key": "improvements",
+          "type": "longtext",
+          "label": "Areas for development",
+          "required": true
+        },
+        {
+          "key": "plan",
+          "type": "longtext",
+          "label": "Agreed plan",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

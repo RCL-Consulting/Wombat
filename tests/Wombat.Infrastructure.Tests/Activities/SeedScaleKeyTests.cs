@@ -167,7 +167,7 @@ public sealed class SeedScaleKeyTests
     /// <c>TryParseObservation</c> for the same reason.
     /// </remarks>
     [Fact]
-    public void ExactlyNineSeededToolsAreRated()
+    public void ExactlyTwelveSeededToolsAreRated()
     {
         var rated = Directory
             .EnumerateDirectories(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds"))
@@ -178,9 +178,11 @@ public sealed class SeedScaleKeyTests
             .OrderBy(key => key, StringComparer.Ordinal)
             .ToArray();
 
+        // T120 added three rated instruments. reflective_exercise_cpsa is deliberately absent: D6 makes it unrated
+        // evidence, so it declares no rated_level_field and nothing charts it as entrustment.
         rated.Should().Equal(
-            "acat", "cbd", "cbd_cpsa", "direct_observation_cpsa",
-            "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa");
+            "acat", "cbd", "cbd_cpsa", "cca_cpsa", "chart_stimulated_recall_cpsa", "direct_observation_cpsa",
+            "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa", "rca_cpsa");
     }
 
     /// <summary>
