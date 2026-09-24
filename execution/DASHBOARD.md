@@ -15,6 +15,7 @@
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T206](tasks/queued/T206-msf-the-invitation-expiry-reminder-can-never-send-and-no-product-action-withdraws-a-campaign.md) | P2 | MSF: the invitation expiry reminder can never send, and no product act |  |
 | queued | [T207](tasks/queued/T207-msf-anonymisation-keeps-an-unsalted-hash-of-each-respondent-s-email-so-a-response-can-be-re-identified.md) | P2 | MSF 'anonymisation' keeps an unsalted hash of each respondent's email, |  |
+| queued | [T213](tasks/queued/T213-committee-races-and-wording-left-by-the-t131-t165-merge-remove-can-race-record-record-has-no-friendly-concurrency-refusal.md) | P2 | Committee races and wording left by the T131/T165 merge: Remove can ra |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -57,6 +58,7 @@
 | queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
 | queued | [T211](tasks/queued/T211-curriculum-pages-a-collegeadmin-sees-edit-on-another-institution-s-local-items-and-an-institutionaladmin-s-curriculum-list-links-to-a-404.md) | P3 | Curriculum pages: a CollegeAdmin sees Edit on another institution's lo |  |
 | queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
+| queued | [T214](tasks/queued/T214-a-reminder-that-replaces-an-msf-link-can-lose-the-answers-of-someone-typing-into-the-old-one.md) | P3 | A reminder that replaces an MSF link can lose the answers of someone t |  |
 
 Done: 146 task(s).
 
@@ -74,9 +76,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+5f9db98 chore(dev): seed a dev InstitutionalAdmin, so panel membership can be edited without the administrator's credential
 3a17890 fix(msf): the expiry reminder fires before the campaign closes, a Coordinator can withdraw a draft or open campaign, an invitee added during an open is not lost, and a job never runs twice at once (T206)
 e48a2a6 feat(msf): respondents answer on an anonymous page in the web app, reached from their invitation link; a respondent is never named on the audit row (T205)
 b9eea1c feat(msf): learner feedback is an MSF template kind with a Learner category; its release records learner_feedback evidence for PAED-015 and counts the teaching contexts that responded (T164, D35)
 02a60db feat(committee): a committee decision needs a quorum — at least two committee members at the panel's institution, the chair plus one, recorded as present on each decision — only the chair ratifies, with no Administrator bypass (T165, D46)
-c03fb30 docs(execution): T131 slices 1–2 browser-verified (review 2 ratified with evidence-grounded STARs); file T212
 ```

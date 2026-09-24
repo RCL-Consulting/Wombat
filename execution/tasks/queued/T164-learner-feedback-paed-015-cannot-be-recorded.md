@@ -67,3 +67,5 @@ After D35, and assuming its recommendation:
 
 D35, D8 (MSF credits nothing), D11 (category minimum), [T120], [T121], [T122], [T154] (the other two unbuilt
 instruments), [T168] (MSF coverage per EPA).
+
+**Merged 2026-09-24** as `b9eea1c`, with T165 as `02a60db`. Browser check pending; see the handoff.
