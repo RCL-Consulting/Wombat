@@ -10,9 +10,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 40 queued, 1 blocked. **One P1 remains:** T099 (production scope rows). Security:
-  **T155** (P2) — SSO rewrites an account's email from an unverified claim.
-- **2026-09-24 shipped T102, T105, T120, T149.** A `user` field names only an eligible nominee (role + the activity's
+- Nothing in `in_progress/`. 40 queued, 1 blocked. **One P1:** T157 — production runs the 16 September build (last
+  migration T096, one user, no catalogue). Security: **T155** (P2).
+- **2026-09-24 shipped T102, T105, T120, T149, T099.** A `user` field names only an eligible nominee (role + the activity's
   institution; picker = gate). A transition declares `validation` (`all`/`owned`/`draft`), so `required` flags are
   honest. Four more v11.1 instruments: CCA, RCA, chart-stimulated recall (rated), reflective exercise (unrated).
   Clinical audit and portfolio review are [T154]. The SSO link endpoint and SSO sign-in are hardened (T149).
@@ -27,7 +27,7 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T099**, then **T155** (security). EPA track: **T125**, then **T135**.
+- **T157** (deploy), then **T155** (security). EPA track: **T125**, then **T135**.
 - **Before deploying T130 + T122 + T102 + T105 + T120 + T149 to production:** take a `pg_dump`. T130's migration empties the
   progress table (the bootstrapper refills it); T122's stamps the v11.1 lists and seeded keys once. Rollback = restore.
 - Send the College the § 3F questions; decide T128's destination.

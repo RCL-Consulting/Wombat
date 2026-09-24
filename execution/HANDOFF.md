@@ -2,9 +2,9 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-24 (Opus) — T102, T105, T120, T149, and W-007
+## Session 2026-09-24 (Opus) — T102, T105, T120, T149, T099, and W-007
 
-Four tasks shipped (three P1s); eight follow-ups filed. The previous handoff (T122) is in
+Five tasks shipped (four P1s); nine follow-ups filed. The previous handoff (T122) is in
 `execution/log/2026-09-23-t122-handoff.md`.
 
 ### Done
@@ -38,6 +38,9 @@ Four tasks shipped (three P1s); eight follow-ups filed. The previous handoff (T1
   account of another institution. Erasure and an institution move drop external logins.
   - One review: no major defect; its minor findings are fixed. 14 handler tests and a PostgreSQL erasure test,
     all mutation-checked; on dev, curl showed the 11th link post rate-limited.
+- **[T099] — closed by finding.** Dev was fixed on 2026-09-17, and a fresh database is fixed by T130's `DevUserSeeder`.
+  A read-only production query showed production at the 16 September build (last migration T096), with one user and no
+  catalogue, so there is nobody to re-scope. The deploy is **[T157] (P1)**.
 - **W-007: every open task carries a "compatibility is not a constraint" preamble**, from `tasks/_template.md`. The
   operator asked for it to be durable at the point of work. CLAUDE.md § Nothing is live points at it.
 
@@ -46,17 +49,14 @@ Four tasks shipped (three P1s); eight follow-ups filed. The previous handoff (T1
 - **[T155] P2: SSO sign-in rewrites an account's email from an unverified claim**, and can re-key it onto another
   person's address. From the T149 review.
 - [T156] P3: login hardening leftovers (a /24 throttle that counts successes, enumeration, a sliding external cookie).
-- [T150]–[T153] P3 (T102 follow-ups): sampling counts drafts and cancels; nudges reach deactivated or opted-out
-  nominees; no cross-institution supervisor; a trainee who left still files at the old institution.
-- [T154] P3: clinical audit and portfolio review (D34 and a design).
+- [T150]–[T154] P3: T102 follow-ups (sampling, nudges, cross-institution, leavers); T154 audit and portfolio review.
 
 ### Next
 
-1. **[T099] — Model: Sonnet.** The last P1: mostly an operations fix (production scope rows, and provisioning them on a
-   fresh database).
+1. **[T157] — the production deploy (operator, or Sonnet with your go-ahead).** `pg_dump`, then `deploy/deploy.ps1`.
+   Production holds only the admin, so the risk is low but the migrations are many.
 2. **[T155] — Model: Opus.** Security, P2.
-3. **[T125], then [T135] — Opus.** The EPA track's ready work.
-4. **Production deploy of T130 + T122 + T102 + T105 + T120 + T149:** take a `pg_dump` first. T105 and T120 add no migration;
+3. **[T125], then [T135] — Opus.** The EPA track's ready work. T105 and T120 add no migration;
    the refresher republishes 12 types and the seeders create 4.
 
 ### Traps
@@ -76,5 +76,5 @@ Four tasks shipped (three P1s); eight follow-ups filed. The previous handoff (T1
 
 - Suites, no `--no-build`: Domain **356**, Application **895**, Infrastructure **582**, Architecture **28**, Web
   **288**, for **2149** in all, up from 1555 at session start. Integration: 22 of 23; the failure is T140.
-- Release build clean; `harness.py lint` clean. T102, T105 and T120 are pushed; T149 is squash-merged on master,
+- Release build clean; `harness.py lint` clean. T102, T105, T120 and T149 are pushed; T099 is squash-merged on master,
   **not pushed**. Dev DB: activities 16–19 are this session's browser checks.

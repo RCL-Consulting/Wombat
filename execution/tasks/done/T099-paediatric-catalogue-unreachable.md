@@ -1,9 +1,11 @@
 ---
 id: T099
 title: "The CPSA paediatric catalogue is seeded but unreachable by every non-admin user"
-status: queued
+status: done
 priority: P1
 created: 2026-09-17
+started: 2026-09-24
+completed: 2026-09-24
 ---
 # T099 — The CPSA paediatric catalogue is seeded but unreachable by every non-admin user
 
@@ -12,8 +14,8 @@ created: 2026-09-17
 > activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
 > re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
 
-**Status:** open — **dev done 2026-09-17** (10 users scoped, see Progress at the foot). Production
-outstanding, and nothing provisions these rows on a fresh database.
+**Status:** done 2026-09-24 — dev fixed, a fresh database fixed by T130's `DevUserSeeder`, and production turned out
+not to have the catalogue at all ([T157]). See Closed at the foot.
 **Surfaced:** 2026-09-17, verifying the T098 phase-2a handoff against the dev database.
 **Severity:** High — blocks end-to-end verification of T070 and makes the whole v11.1 catalogue invisible
 in the product. Cheap to fix.
@@ -78,11 +80,11 @@ cohort on a dev database, so this is not re-discovered on the next fresh DB.
 
 ## Verification
 
-Sign in as a paediatric trainee (fresh sign-in, not a resumed session) and confirm:
-- `/activities/new` lists Mini-CEX (CPSA), CBD (CPSA), DOPS (CPSA) and Direct observation (CPSA).
-- The EPA picker inside those forms lists the 15 `PAED-001..015` EPAs of the **CPSA** sub-speciality.
-- The `overall_level` field renders the six-rung ladder, not a bare number box (a bare box means the
-  `scale_key` did not resolve — `ActivityReferenceDataService.cs:151-160` matches on exact scale Name).
+- [x] **A trainee sees the four CPSA instruments** at `/activities/new` — dev, 2026-09-24, fresh sign-in as the demo
+  trainee: Mini-CEX, DOPS, Case-Based Discussion and Direct Observation (Paediatrics), and since T120 four more.
+- [x] **The EPA picker lists the CPSA PAED EPAs** — dev, same session: PAED-001..006 on the Mini-CEX (narrowed by
+  T122's allow-list, which is why not all fifteen), PAED-001..004 and 006 on the CCA.
+- [x] **The rating field renders the six-rung ladder** — dev, activity 19: options 1, 2, 3a, 3b, 4, 5.
 
 ## Related
 
@@ -120,3 +122,21 @@ cookie, not the database.
   admin UI as an ordinary operator action (which is what it is, in production terms).
 - **Noticed en route, unrelated:** `molefe@kgk.wombat.local` holds **no roles at all**, so that account
   can do nothing in the product. Pre-existing; worth a look when next in `/admin/users`.
+
+---
+
+## Closed — 2026-09-24
+
+Two of the three "still open" items above were overtaken, and the third was wrong:
+
+- **A fresh database:** fixed by T130. `DevUserSeeder` scopes every dev user to the national Paediatrics speciality
+  and admits the dev trainee to the v11.1 curriculum, so a rebuilt dev database shows the catalogue with no hand step.
+  In production terms scoping is an ordinary admin action: the invitation form offers Paediatrics / Paediatrics
+  (checked on dev 2026-09-24).
+- **Production "has the identical problem": it does not.** A read-only query on 2026-09-24 found production at
+  migration `20260619065511_T096_AuditDeleteForArchival` with one user (the admin), the demo college only, no CPSA
+  types and no activities. The catalogue has never been deployed there, so there is nobody to re-scope. Deploying
+  master creates it, and onboarding scopes new users correctly. The deploy is [T157].
+- **`molefe` with no roles:** that account lived in the scenario corpus that W-006 emptied on 2026-09-20; it no longer
+  exists.
+

@@ -62,7 +62,8 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T123] d3 | Narrow the activity-type picker by the subject's pinned ladder (T109's unshipped option 2) | **DONE 2026-09-19** | S | SQL check passed; ⚠ must be sequenced with [T110] |
 | [T123] d2 | Two "Mini-CEX (Paediatrics)", two "DOPS (Paediatrics)" in the picker | NEEDS A DECISION | S | **D31**. Data edit, no code |
 | [T111] | `/activities/new?type=mini_cex` is silently ignored | **DONE 2026-09-19** | S | — |
-| [T099] | Speciality-3 scope rows on **production**; nothing provisions them on a fresh database | **READY** | S | production access |
+| [T099] | The CPSA catalogue was invisible to non-admin users (no speciality scope) | **DONE 2026-09-24** | S | dev fixed; a fresh DB fixed by T130's `DevUserSeeder`; production never had the catalogue ([T157]) |
+| [T157] | Production runs the 16 September build: nothing from T098 on is deployed | **READY** | S, operator | `pg_dump`, then `deploy/deploy.ps1`; production holds only the admin |
 | [T100] | Entrustment rungs render as `"{Order}. {Label}"` — 6 sites; 8 more print a bare ordinal; 1 PDF site prints a raw `DataJson` integer | **DONE 2026-09-19** | M | premise rewritten (it was wrong twice); admin editor split out as [T125] |
 | [T105] | Every transition validates the whole schema in Submit mode, so a half-filled draft cannot be cancelled | **DONE 2026-09-24** | M | D22 closed: an explicit `validation` per transition (`all` / `owned` / `draft`) |
 | [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | **DONE 2026-09-24** | M | D23 closed as recommended; nominee = active holder of the field's `role` at the activity's institution. Follow-ups [T149]–[T153] |
