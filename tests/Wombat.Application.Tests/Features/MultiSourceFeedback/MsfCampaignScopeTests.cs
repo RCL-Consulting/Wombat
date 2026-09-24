@@ -279,6 +279,7 @@ public sealed class MsfCampaignScopeTests
                         db,
                         _emailSender,
                         new InvitationTokenService(),
+                        new FakeUserDirectory((SubjectUserId, "Thandi Nkosi")),
                         Options.Create(new WombatOptions { MsfRespondUrl = "https://wombat.example/msf/respond" }))
                     .Handle(new OpenMsfCampaignCommand(campaignId, principal), CancellationToken.None);
                 break;

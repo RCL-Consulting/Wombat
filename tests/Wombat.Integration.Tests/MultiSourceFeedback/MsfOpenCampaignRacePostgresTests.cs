@@ -16,6 +16,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -122,6 +123,7 @@ public sealed class MsfOpenCampaignRacePostgresTests : IAsyncLifetime
             db,
             sender,
             new InvitationTokenService(),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())

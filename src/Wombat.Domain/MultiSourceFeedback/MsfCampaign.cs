@@ -157,6 +157,15 @@ public sealed class MsfCampaign
         ReleasedOn = utcNow;
     }
 
+    /// <summary>
+    /// Withdraws the campaign and anonymises every respondent (<see cref="MsfInvitation.Anonymize" />), as
+    /// <see cref="Close" /> does.
+    /// </summary>
+    /// <remarks>
+    /// A withdrawn campaign is finished: it takes no more responses and is never released. Until T202 it kept every
+    /// respondent's address for good, because only closing anonymised. The caller must have loaded
+    /// <see cref="Invitations" />: an unloaded collection is empty, and nothing would be anonymised.
+    /// </remarks>
     public void Withdraw(DateTime utcNow)
     {
         if (State == MsfCampaignState.Released)
@@ -166,5 +175,10 @@ public sealed class MsfCampaign
 
         State = MsfCampaignState.Withdrawn;
         WithdrawnOn = utcNow;
+
+        foreach (var invitation in Invitations)
+        {
+            invitation.Anonymize(utcNow);
+        }
     }
 }

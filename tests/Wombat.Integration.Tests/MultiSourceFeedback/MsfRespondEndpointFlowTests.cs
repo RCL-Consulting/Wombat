@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Scheduling;
 
@@ -53,6 +55,9 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
     /// <summary>The institution <c>DataSeeder</c> creates.</summary>
     private const string DemoInstitutionShortCode = "DEMO";
+
+    private const string SubjectFirstName = "Thandi";
+    private const string SubjectLastName = "Nkosi";
 
     private readonly string _schemaName = $"it_{Guid.NewGuid():N}";
     private ApiFactory? _factory;
@@ -245,6 +250,18 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         await dbContext.SaveChangesAsync();
 
+        // The invitations name the trainee, and opening refuses a trainee with no name on record (T202).
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
+        (await users.CreateAsync(new WombatIdentityUser
+        {
+            Id = "trainee-1",
+            UserName = "trainee-1@example.test",
+            Email = "trainee-1@example.test",
+            FirstName = SubjectFirstName,
+            LastName = SubjectLastName,
+            InstitutionId = _institutionId
+        })).Succeeded.Should().BeTrue("guard: the subject exists as a named user");
+
         // Built with the role and institution claim types the app issues, and with ClaimsIdentity told
         // which claim carries a role - ClaimsPrincipal.IsInRole is the BCL instance method and reads
         // RoleClaimType, so an identity built without it matches no role: and `role:Coordinator` is what
@@ -294,6 +311,10 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         Factory.EmailSender.Messages.Should().HaveCount(8);
         Factory.EmailSender.Messages.Should().OnlyContain(message => message.TextBody.Contains("http://localhost/msf/respond?token=", StringComparison.Ordinal));
+
+        // T202: through the real user directory, each invitation says whom it is about.
+        Factory.EmailSender.Messages.Should().OnlyContain(message =>
+            message.Subject.StartsWith($"Feedback request: {SubjectFirstName} {SubjectLastName} (Annual MSF, ", StringComparison.Ordinal));
 
         // Two consultants and two nurses: two categories at the floor of two responses each, which is what the
         // release gate (D11) asks of this campaign. Chosen by address rather than as "the first four messages",
@@ -448,6 +469,221 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// A link that can no longer take a response answers with a status and a body that say so, never a bare 500. (T202)
+    /// </summary>
+    /// <remarks>
+    /// Until T202 the Api handled no exception: every refusal below was an <see cref="InvalidOperationException" />
+    /// escaping the endpoint, and the respondent's browser got 500 and an empty page.
+    /// </remarks>
+    [Fact]
+    public async Task ADeadOrUsedLink_AnswersWithAReadableRefusal_NotA500()
+    {
+        var template = await SendAsync(new CreateMsfTemplateCommand(
+            "Annual MSF",
+            null,
+            false,
+            [
+                new CreateMsfTemplateQuestionItem("Rates the trainee's overall professional performance.", MsfQuestionType.Scale, null, true),
+                new CreateMsfTemplateQuestionItem("What should the trainee keep doing or improve?", MsfQuestionType.LongText, null, false)
+            ]));
+
+        var campaign = await SendAsync(new CreateMsfCampaignCommand(
+            "trainee-1",
+            template.Id,
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            4,
+            2,
+            2,
+            [_coveredEpaId],
+            "coordinator-1",
+            _coordinator));
+
+        const string First = "consultant-1@example.test";
+        const string Second = "nurse-1@example.test";
+        await SendAsync(new AddMsfInvitationCommand(campaign.Id, First, MsfRespondentCategory.Consultant, _coordinator));
+        await SendAsync(new AddMsfInvitationCommand(campaign.Id, Second, MsfRespondentCategory.Nurse, _coordinator));
+        await SendAsync(new OpenMsfCampaignCommand(campaign.Id, _coordinator));
+
+        var firstToken = ExtractToken(Factory.EmailSender.Messages.Single(message => message.To == First).TextBody);
+        var secondToken = ExtractToken(Factory.EmailSender.Messages.Single(message => message.To == Second).TextBody);
+        var firstLink = $"/msf/respond?token={Uri.EscapeDataString(firstToken)}";
+        var secondLink = $"/msf/respond?token={Uri.EscapeDataString(secondToken)}";
+
+        var form = await Client.GetFromJsonAsync<MsfResponseFormDto>(firstLink);
+        var scale = form!.Questions.Single(question => question.Type == MsfQuestionType.Scale);
+        var comment = form.Questions.Single(question => question.Type == MsfQuestionType.LongText);
+        var complete = new MsfRespondSubmission
+        {
+            Answers =
+            [
+                new MsfRespondAnswerRequest { QuestionId = scale.QuestionId, ScaleValue = 4 },
+                new MsfRespondAnswerRequest { QuestionId = comment.QuestionId, LongText = "Consistent and helpful." }
+            ]
+        };
+        (await Client.PostAsJsonAsync(firstLink, complete)).StatusCode.Should().Be(HttpStatusCode.OK, "guard: the first use works");
+
+        // Used: the form and a second submission are both refused as gone.
+        await ShouldRefuseAsync(await Client.GetAsync(firstLink), HttpStatusCode.Gone, "Feedback link already used", "already been used");
+        await ShouldRefuseAsync(
+            await Client.PostAsJsonAsync(firstLink, complete), HttpStatusCode.Gone, "Feedback link already used", "already been used");
+
+        // A link that names no invitation, as the first link does once a reminder has replaced it (T132).
+        await ShouldRefuseAsync(
+            await Client.GetAsync("/msf/respond?token=not-a-token-anyone-was-sent"),
+            HttpStatusCode.NotFound,
+            "Feedback link not recognised",
+            "not recognised");
+
+        // Answers that do not complete the questionnaire are the respondent's to fix, and use nothing up.
+        var incomplete = new MsfRespondSubmission
+        {
+            Answers = [new MsfRespondAnswerRequest { QuestionId = comment.QuestionId, LongText = "No rating given." }]
+        };
+        await ShouldRefuseAsync(
+            await Client.PostAsJsonAsync(secondLink, incomplete),
+            HttpStatusCode.BadRequest,
+            "The response is not complete",
+            "A response is required for 'Rates the trainee's overall professional performance.'");
+        await ShouldRefuseAsync(
+            await Client.PostAsJsonAsync(secondLink, new MsfRespondSubmission()),
+            HttpStatusCode.BadRequest,
+            "The response is not complete",
+            "must not be empty");
+
+        // A question answered twice, and an answer to a question the form does not ask. Before T202's review the first
+        // threw from SingleOrDefault and the second failed the save on a foreign key, both as 500s.
+        await ShouldRefuseAsync(
+            await Client.PostAsJsonAsync(secondLink, new MsfRespondSubmission
+            {
+                Answers = [.. complete.Answers, new MsfRespondAnswerRequest { QuestionId = scale.QuestionId, ScaleValue = 5 }]
+            }),
+            HttpStatusCode.BadRequest,
+            "The response is not complete",
+            "Each question can be answered once.");
+        await ShouldRefuseAsync(
+            await Client.PostAsJsonAsync(secondLink, new MsfRespondSubmission
+            {
+                Answers =
+                [
+                    .. complete.Answers,
+                    new MsfRespondAnswerRequest { QuestionId = form.Questions.Max(question => question.QuestionId) + 1_000, ScaleValue = 3 }
+                ]
+            }),
+            HttpStatusCode.BadRequest,
+            "The response is not complete",
+            "not on this questionnaire");
+
+        (await Client.GetAsync(secondLink)).StatusCode.Should().Be(HttpStatusCode.OK, "a refused submission used nothing up");
+
+        // Expired, then revoked: each is gone for good, so 410 (T202 review). Each state is set on the second link's
+        // invitation and put back, so the withdrawal below is what refuses it last: were either left behind, that
+        // refusal would name it instead. The link's rate limit (ten a minute) is why each is asked once.
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+        var expiresOn = await UpdateInvitationAsync(campaign.Id, Second, invitation => invitation.ExpiresOn, yesterday);
+        await ShouldRefuseAsync(await Client.GetAsync(secondLink), HttpStatusCode.Gone, "Feedback link expired", "has expired");
+        await UpdateInvitationAsync(campaign.Id, Second, invitation => invitation.ExpiresOn, expiresOn);
+
+        await UpdateInvitationAsync(campaign.Id, Second, invitation => invitation.RevokedOn, DateTime.UtcNow);
+        await ShouldRefuseAsync(await Client.GetAsync(secondLink), HttpStatusCode.Gone, "Feedback link revoked", "has been revoked");
+        await UpdateInvitationAsync(campaign.Id, Second, invitation => invitation.RevokedOn, (DateTime?)null);
+
+        // Withdrawn: the campaign takes no more responses, and its respondents are anonymised (T202).
+        await SendAsync(new WithdrawMsfCampaignCommand(campaign.Id, _coordinator));
+        await ShouldRefuseAsync(await Client.GetAsync(secondLink), HttpStatusCode.Gone, "Feedback request closed", "no longer accepting responses");
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var invitations = await dbContext.MsfInvitations.AsNoTracking()
+            .Where(invitation => invitation.CampaignId == campaign.Id)
+            .ToListAsync();
+        invitations.Should().HaveCount(2);
+        invitations.Should().OnlyContain(invitation =>
+            invitation.RespondentEmail == null && invitation.RespondentEmailHash != null && invitation.AnonymizedOn != null);
+    }
+
+    /// <summary>
+    /// A fault, as opposed to a refusal, answers 500 with a problem-details body that names neither the exception nor
+    /// its message. (T202 review)
+    /// </summary>
+    /// <remarks>
+    /// The endpoint answers <see cref="MsfResponseRefusedException" /> and nothing else, so an
+    /// <see cref="InvalidOperationException" /> that is not one (the refusal's own base type) must reach the host's
+    /// exception handler. A fault's message is written for a developer, not for a stranger holding a link.
+    /// </remarks>
+    [Fact]
+    public async Task AFault_AnswersA500_ThatNamesNeitherTheExceptionNorItsMessage()
+    {
+        await using var faulting = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<ISender>();
+            services.AddTransient<ISender, FaultingSender>();
+        }));
+        using var client = faulting.CreateClient();
+
+        foreach (var response in new[]
+        {
+            await client.GetAsync("/msf/respond?token=any"),
+            await client.PostAsJsonAsync("/msf/respond?token=any", new MsfRespondSubmission())
+        })
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError, body);
+            response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+
+            using var problem = JsonDocument.Parse(body);
+            problem.RootElement.GetProperty("status").GetInt32().Should().Be(500);
+            body.Should().NotContain(FaultingSender.Detail).And.NotContain("Exception");
+        }
+    }
+
+    /// <summary>Every refusal a respondent can meet has a 4xx answer, so none can surface as a 500. (T202 review)</summary>
+    [Fact]
+    public void EveryRefusal_HasAClientErrorAnswer()
+    {
+        foreach (var reason in Enum.GetValues<MsfResponseRefusal>())
+        {
+            var (status, title) = MsfRespondEndpoint.Describe(reason);
+            status.Should().BeInRange(400, 499, reason.ToString());
+            title.Should().NotBeNullOrWhiteSpace(reason.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Sets one property of an invitation, found by campaign and address, and returns what it held before.
+    /// </summary>
+    private async Task<TValue> UpdateInvitationAsync<TValue>(
+        int campaignId,
+        string respondentEmail,
+        System.Linq.Expressions.Expression<Func<MsfInvitation, TValue>> property,
+        TValue value)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var invitations = dbContext.MsfInvitations
+            .Where(invitation => invitation.CampaignId == campaignId && invitation.RespondentEmail == respondentEmail);
+
+        var before = await invitations.Select(property).SingleAsync();
+        (await invitations.ExecuteUpdateAsync(setters => setters.SetProperty(property, value)))
+            .Should().Be(1, "guard: one invitation is updated");
+        return before;
+    }
+
+    /// <summary>A problem-details refusal: the status, a title, and a detail written for the respondent.</summary>
+    private static async Task ShouldRefuseAsync(HttpResponseMessage response, HttpStatusCode status, string title, string detailPart)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+        response.StatusCode.Should().Be(status, body);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+
+        using var problem = JsonDocument.Parse(body);
+        problem.RootElement.GetProperty("status").GetInt32().Should().Be((int)status);
+        problem.RootElement.GetProperty("title").GetString().Should().Be(title);
+        problem.RootElement.GetProperty("detail").GetString().Should().Contain(detailPart);
+        body.Should().NotContain("Exception", "a refusal is written for the respondent, not a stack");
+    }
+
     private static IReadOnlyList<(string Email, MsfRespondentCategory Category)> CreateInvitees(int campaignId)
         => new (string Email, MsfRespondentCategory Category)[]
         {
@@ -566,6 +802,28 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
                     && descriptor.ImplementationType == typeof(ScheduledJobHost)));
             });
         }
+    }
+
+    /// <summary>A sender every request through which faults: the fault a respondent must not be shown.</summary>
+    private sealed class FaultingSender : ISender
+    {
+        public const string Detail = "fault-detail-for-developers-only";
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException(Detail);
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+            where TRequest : IRequest
+            => throw new InvalidOperationException(Detail);
+
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException(Detail);
+
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException(Detail);
+
+        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException(Detail);
     }
 
     public sealed class CapturingEmailSender : IEmailSender

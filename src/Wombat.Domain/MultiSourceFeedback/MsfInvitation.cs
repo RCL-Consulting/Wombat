@@ -30,7 +30,8 @@ public sealed class MsfInvitation
     /// <remarks>
     /// The one place a respondent is anonymised. <see cref="MsfCampaign.Close" /> calls it for every invitation, and
     /// both ways a campaign closes (the coordinator's close command and the hourly auto-close job) go through that, so
-    /// the two cannot drift apart. Until T184 the job carried its own copy of this routine.
+    /// the two cannot drift apart. Until T184 the job carried its own copy of this routine. <see cref="MsfCampaign.Withdraw" />
+    /// calls it too (T202).
     /// </remarks>
     public void Anonymize(DateTime utcNow)
     {

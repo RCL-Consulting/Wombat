@@ -230,6 +230,10 @@ public static class MsfCampaignRules
     private static int? CampaignInstitutionOf(ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.Coordinator) ? principal.GetInstitutionId() : null;
 
+    /// <summary>
+    /// The invitation a respondent's link names, when it can still take a response; otherwise a refusal written for
+    /// the respondent (<see cref="MsfResponseRefusedException" />, T202).
+    /// </summary>
     public static async Task<MsfInvitation> GetActiveInvitationByTokenAsync(
         IApplicationDbContext dbContext,
         string rawToken,
@@ -242,42 +246,76 @@ public static class MsfCampaignRules
                     .ThenInclude(template => template.Questions)
             .ToListAsync(cancellationToken);
 
+        // The link that opened a campaign stops working when a reminder re-issues it (T132), which is the likeliest way
+        // for a respondent to arrive here with a link nobody recognises.
         var invitation = invitations.SingleOrDefault(candidate => tokenService.VerifyToken(rawToken, candidate.TokenHash))
-            ?? throw new InvalidOperationException("The response link is invalid or has already been used.");
+            ?? throw new MsfResponseRefusedException(
+                MsfResponseRefusal.LinkNotRecognised,
+                "This feedback link is not recognised. If you were sent a reminder about this request, its link " +
+                "replaces the first one: please use the link in the most recent email.");
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         if (invitation.ExpiresOn < today)
         {
-            throw new InvalidOperationException("The response link has expired.");
+            throw new MsfResponseRefusedException(
+                MsfResponseRefusal.LinkExpired,
+                "This feedback link has expired, so it can no longer be used.");
         }
 
         if (invitation.RevokedOn is not null)
         {
-            throw new InvalidOperationException("The response link has been revoked.");
+            throw new MsfResponseRefusedException(
+                MsfResponseRefusal.LinkRevoked,
+                "This feedback link has been revoked, so it can no longer be used.");
         }
 
         if (invitation.RespondedOn is not null)
         {
-            throw new InvalidOperationException("The response link has already been used.");
+            throw new MsfResponseRefusedException(
+                MsfResponseRefusal.LinkUsed,
+                "This feedback link has already been used: a response was submitted through it, and each link " +
+                "takes one response.");
         }
 
         if (invitation.Campaign.State != MsfCampaignState.Open)
         {
-            throw new InvalidOperationException("This campaign is not currently accepting responses.");
+            throw new MsfResponseRefusedException(
+                MsfResponseRefusal.CampaignNotOpen,
+                "This feedback request has closed and is no longer accepting responses.");
         }
 
         return invitation;
     }
 
+    /// <summary>
+    /// Refuses answers that do not complete the questionnaire, as a refusal the respondent is shown
+    /// (<see cref="MsfResponseRefusedException" />, T202).
+    /// </summary>
+    /// <remarks>
+    /// A duplicate answer and an answer to a question not on the questionnaire are refused here too. The first used to
+    /// throw from <c>SingleOrDefault</c> and the second from the save, both as faults (500) on input the respondent
+    /// sent.
+    /// </remarks>
     public static void ValidateResponsePayload(MsfTemplate template, IReadOnlyCollection<SubmitMsfResponseAnswerItem> answers)
     {
+        if (answers.GroupBy(answer => answer.QuestionId).Any(group => group.Count() > 1))
+        {
+            throw Incomplete("Each question can be answered once.");
+        }
+
+        var questionIds = template.Questions.Select(question => question.Id).ToHashSet();
+        if (answers.Any(answer => !questionIds.Contains(answer.QuestionId)))
+        {
+            throw Incomplete("An answer names a question that is not on this questionnaire.");
+        }
+
         foreach (var question in template.Questions)
         {
             var answer = answers.SingleOrDefault(candidate => candidate.QuestionId == question.Id);
             if (question.Required && answer is null)
             {
-                throw new InvalidOperationException($"A response is required for '{question.Prompt}'.");
+                throw Incomplete($"A response is required for '{question.Prompt}'.");
             }
 
             if (answer is null)
@@ -287,13 +325,16 @@ public static class MsfCampaignRules
 
             if (question.Type == MsfQuestionType.Scale && !answer.ScaleValue.HasValue)
             {
-                throw new InvalidOperationException($"A scale value is required for '{question.Prompt}'.");
+                throw Incomplete($"A scale value is required for '{question.Prompt}'.");
             }
 
             if (question.Type == MsfQuestionType.LongText && string.IsNullOrWhiteSpace(answer.LongText))
             {
-                throw new InvalidOperationException($"A comment is required for '{question.Prompt}'.");
+                throw Incomplete($"A comment is required for '{question.Prompt}'.");
             }
         }
     }
+
+    private static MsfResponseRefusedException Incomplete(string message)
+        => new(MsfResponseRefusal.AnswersIncomplete, message);
 }

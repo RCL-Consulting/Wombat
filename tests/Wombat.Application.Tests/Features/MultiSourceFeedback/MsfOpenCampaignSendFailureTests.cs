@@ -13,6 +13,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -162,6 +163,7 @@ public sealed class MsfOpenCampaignSendFailureTests
             db,
             sender,
             new InvitationTokenService(),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())

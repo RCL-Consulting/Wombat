@@ -148,9 +148,13 @@
             </InputSelect>
           </FormField>
         </div>
+        @* Both are disabled while an open is in flight (T202). A second open would mail every respondent a second link,
+           and an invitee added mid-open would be left out of the mailing yet stored on a campaign that is now open. *@
         <FormActions>
-          <button type="submit" class="btn btn-outline">Add invitee</button>
-          <button type="button" class="btn btn-primary" @onclick="OpenCampaignAsync">Open campaign</button>
+          <button type="submit" class="btn btn-outline" disabled="@_opening">Add invitee</button>
+          <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@_opening" @onclick="OpenCampaignAsync">
+            @(_opening ? "Opening campaign…" : "Open campaign")
+          </button>
         </FormActions>
       </EditForm>
     }
@@ -165,6 +169,10 @@
   private readonly List<ActivityCatalogueOption> _epaOptions = [];
   private string? _status;
   private string? _error;
+
+  /// <summary>An open has been sent and has not yet answered. (T202)</summary>
+  private bool _opening;
+
   private TemplateFormModel _template = new();
   private CampaignFormModel _campaign = new();
   private InviteeFormModel _invitee = new();
@@ -309,7 +317,7 @@
 
   private async Task AddInviteeAsync()
   {
-    if (!CampaignId.HasValue)
+    if (!CampaignId.HasValue || _opening)
     {
       return;
     }
@@ -329,13 +337,20 @@
     }
   }
 
+  /// <remarks>
+  /// Sent at most once at a time (T202). The disabled button is not enough on its own: a second click can leave the
+  /// browser before the render that disables the button arrives, and the circuit then runs it as soon as the first open
+  /// awaits. So the flag is set before the first await, and a click that finds it set does nothing. Before T202 a
+  /// double-click raced two opens, and every respondent was mailed two links, one of them dead.
+  /// </remarks>
   private async Task OpenCampaignAsync()
   {
-    if (!CampaignId.HasValue)
+    if (!CampaignId.HasValue || _opening)
     {
       return;
     }
 
+    _opening = true;
     _error = null;
     _status = null;
 
@@ -349,6 +364,11 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+    }
+    finally
+    {
+      // Released on a refusal too: a failed send asks the coordinator to open the campaign again (T184).
+      _opening = false;
     }
   }
 

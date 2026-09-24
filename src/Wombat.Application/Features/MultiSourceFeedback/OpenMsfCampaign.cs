@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Email;
+using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
@@ -24,17 +25,20 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
     private readonly IApplicationDbContext _dbContext;
     private readonly IEmailSender _emailSender;
     private readonly IInvitationTokenService _tokenService;
+    private readonly IUserAdministrationService _users;
     private readonly WombatOptions _options;
 
     public OpenMsfCampaignCommandHandler(
         IApplicationDbContext dbContext,
         IEmailSender emailSender,
         IInvitationTokenService tokenService,
+        IUserAdministrationService users,
         IOptions<WombatOptions> options)
     {
         _dbContext = dbContext;
         _emailSender = emailSender;
         _tokenService = tokenService;
+        _users = users;
         _options = options.Value;
     }
 
@@ -61,6 +65,9 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         // Refused before the first mail, not by Open() after it: an open campaign must not mail a second round of
         // links that its stored tokens do not match. (T184)
         campaign.EnsureCanOpen();
+
+        // Whom the invitations ask about, resolved before the first mail for the same reason as the check above. (T202)
+        var traineeName = await ResolveTraineeNameAsync(campaign.SubjectUserId, cancellationToken);
 
         // Every link is minted and every respondent mailed BEFORE the campaign or any invitation is touched. (T184)
         //
@@ -91,7 +98,17 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
 
             try
             {
-                await _emailSender.SendAsync(BuildInvitationEmail(campaign, link.Invitation, submitUrl), cancellationToken);
+                await _emailSender.SendAsync(
+                    MsfInvitationEmail.Build(new MsfInvitationEmailContent(
+                        campaign.Id,
+                        link.Invitation.RespondentEmail!,
+                        traineeName,
+                        campaign.Template.Name,
+                        campaign.OpensOn,
+                        campaign.ClosesOn,
+                        link.Invitation.ExpiresOn,
+                        submitUrl)),
+                    cancellationToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -127,22 +144,25 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         "The invitations could not all be sent, so the campaign has not been opened. Open it again to send every " +
         "respondent a new link; any link sent before this failure will not work.";
 
-    private static EmailMessage BuildInvitationEmail(MsfCampaign campaign, MsfInvitation invitation, string submitUrl)
-        => new(
-            To: invitation.RespondentEmail!,
-            Subject: $"MSF request: {campaign.Template.Name}",
-            HtmlBody: $"""
-                <p>You have been invited to provide anonymous multi-source feedback for <strong>{System.Net.WebUtility.HtmlEncode(campaign.Template.Name)}</strong>.</p>
-                <p><a href="{System.Net.WebUtility.HtmlEncode(submitUrl)}">Submit your response</a></p>
-                <p>This link expires on <strong>{invitation.ExpiresOn:yyyy-MM-dd}</strong>.</p>
-                """,
-            TextBody: $"""
-                You have been invited to provide anonymous multi-source feedback.
+    /// <summary>The refusal when the trainee has no name to put in an invitation. Nothing has been sent. (T202)</summary>
+    public const string TraineeHasNoName =
+        "The trainee this campaign is about has no name on record, so the invitations could not say whom the feedback " +
+        "is for. Nothing has been sent. Ask an administrator to add the trainee's name, then open the campaign again.";
 
-                Submit your response:
-                {submitUrl}
+    /// <summary>
+    /// The trainee's name as the invitations give it, or a refusal when there is none. (T202)
+    /// </summary>
+    /// <remarks>
+    /// A refusal rather than a fallback. Elsewhere the product shows a user id where no name exists (T142), but an id
+    /// in an email means nothing to its reader and names an internal record to someone outside the product, and a
+    /// feedback request that does not say whom it is about cannot be answered.
+    /// </remarks>
+    private async Task<string> ResolveTraineeNameAsync(string subjectUserId, CancellationToken cancellationToken)
+    {
+        var names = await _users.GetDisplayNamesAsync([subjectUserId], cancellationToken);
 
-                This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
-                """,
-            Tags: ["msf-invite", $"campaign:{campaign.Id}"]);
+        return names.TryGetValue(subjectUserId, out var name) && !string.IsNullOrWhiteSpace(name)
+            ? name.Trim()
+            : throw new InvalidOperationException(TraineeHasNoName);
+    }
 }

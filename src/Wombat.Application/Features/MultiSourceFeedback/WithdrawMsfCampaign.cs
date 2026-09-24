@@ -27,6 +27,7 @@ public sealed class WithdrawMsfCampaignCommandHandler : IRequestHandler<Withdraw
         await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
             _dbContext, request.Principal, request.CampaignId, cancellationToken);
 
+        // The graph carries the invitations, which withdrawing anonymises (MsfCampaign.Withdraw), as closing does. (T202)
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
         campaign.Withdraw(DateTime.UtcNow);

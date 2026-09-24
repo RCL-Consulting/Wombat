@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+badeba0 fix(audit): a handler whose own save is refused leaves its audit row and surfaces its own error; a refused success-row write is not recorded as a failed command (T201)
 aee5db8 fix(reporting): PDF rendering is serialised process-wide, so concurrent exports keep their text layer (T200)
 d6833ae docs(execution): close T154 — browser-verified on dev (types 20–21, activities 33–34, forged EPAs refused)
 2d0aeb6 feat(activities): the last two v11.1 instruments — Clinical audit (report as a link, D34) and Portfolio and logbook review (a signed review of a period); an instrument that credits nothing is judged by the EPA it is evidence for (T154, D45)
 da4053b docs(execution): close T204 — dev Coordinator seeded; T167's snapshot and T184's MSF checks verified in the browser (review 2, campaign 5); T186's cause found
-02336bc chore(dev): seed a dev Coordinator, so committee scheduling and MSF campaigns can be exercised without the administrator's credential (T204)
 ```

@@ -13,8 +13,14 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMsfResponseRateLimiter();
 
+// Every error answers with a problem-details body rather than an empty one. A fault is a 500 that names no exception;
+// a refusal meant for a respondent is answered by the respond endpoint itself (MsfRespondEndpoint). (T202)
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseRateLimiter();
 
 app.MapGet("/health", () => "ok");
