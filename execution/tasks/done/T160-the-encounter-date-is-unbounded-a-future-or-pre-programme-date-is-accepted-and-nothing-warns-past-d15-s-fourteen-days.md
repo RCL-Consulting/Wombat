@@ -1,12 +1,13 @@
 ---
 id: T160
 title: The encounter date is unbounded: a future or pre-programme date is accepted, and nothing warns past D15's fourteen days
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T160 — An encounter date can be in the future or before the programme began, and a late filing goes unremarked
@@ -57,15 +58,54 @@ falls back to the flat minimum instead of a stage minimum ([T119]).
 
 ## Verification
 
-- [ ] `observed_on` set to tomorrow is refused with a field error on that field. Application test, and in the browser.
-- [ ] A date before the trainee's `ProgrammeStartDate` is refused. Application test.
-- [ ] A refused create leaves no activity row behind (the audit trap). Application test.
-- [ ] A date 15 days back files, shows the warning, and the transition records it. Test, and in the browser.
-- [ ] A date exactly 14 days back files with no warning. Boundary test.
-- [ ] Full suite green, no `--no-build`.
+- [x] `observed_on` set to tomorrow is refused with a field error on that field. Application test, and in the browser.
+- [x] A date before the trainee's `ProgrammeStartDate` is refused. Application test.
+- [x] A refused create leaves no activity row behind (the audit trap). Application test.
+- [x] A date 15 days back files, shows the warning, and the transition records it. Test, and in the browser.
+- [x] A date exactly 14 days back files with no warning. Boundary test.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 D15 (closed: soft warning, fourteen days), [T119] (the design and the two rules), [T130] (the calendar that makes a
 future date creditable), [T102] (the changed-value-on-every-write pattern). `EPA-PROGRAMME.md`
 § 3A-ii D15, and § 3B's pre-reply D15 text at `431e69e`.
+
+---
+
+## As built — 2026-09-24
+
+- **The bounds.** `EncounterDateGate` runs on create, transition and the MSF path, before any mutation.
+  - For every type with an `observation_date_field`, the date may not be after today, taken on the South African
+    calendar (`ActivityService`'s `TimeProvider`).
+  - A type that can credit (`EncounterDatePolicy.CanCredit`, meaning a non-empty `counts_for`) is also held to the
+    subject's `ProgrammeStartDate`, taken from the profile credit uses. With no profile, only the future check
+    applies. This scope was decided at the merge: the bounds and the lateness protect credit (T119, D15). A research
+    output published before the programme is legitimate.
+  - A changed date is judged on every write, and an unchanged one only at the author's hand-on. The MSF path gets the
+    future check only.
+  - A refusal is a field error named by label (T172).
+- **Lateness.** A crediting filing more than `LateFilingDays` (14) after the encounter is never refused.
+  - The form warns while the date is typed, in a `role="status"` region referenced by the input.
+  - The filing's history row records `ActivityTransition.DaysAfterEncounter` (a fact, judged late when read), and the
+    history shows "Filed N days after the encounter".
+  - Only the first filing records it (`Workflow.LeftInitialStateLeadingOn`), so a re-submission after a `return` is not
+    a second filing.
+- **Migration** `20260924134441_T160_FilingDaysAfterEncounter` adds the nullable column. It sorts before T174's data
+  migration, and applied cleanly out of order on dev.
+- **Evidence.**
+  - Tests: Domain +30, Application +40, Web +20 or so. 50+ mutants across the rounds, all killed.
+  - Suites on master: Domain 428, Application 1152, Infrastructure 669, Architecture 31, Web 501, Integration 32.
+  - Browser on dev (the trainee's programme started on 2026-01-01; today is 2026-09-24):
+    - Tomorrow was refused ("Nothing was saved. Date observed: The encounter date cannot be after today
+      (2026-09-24).").
+    - 2025-12-31 was refused as before the programme.
+    - Activity 27, 14 days back: no warning, and it recorded 14.
+    - Activity 28, 15 days back: the warning showed while typing, the filing went through, the history reads "Filed 15
+      days after the encounter", and it recorded 15.
+    - Research output 29, dated 2025-06-01, was accepted with no warning. Journal club 30 was accepted, and tomorrow
+      was still refused on both.
+- **Filed:** [T192] (the warning contradicts a pre-programme refusal), [T193] (alerts not announced, help text not linked).
+  From the review: whether bounds and lateness should key on the instrument instead is answered by the credit rule
+  above.
+

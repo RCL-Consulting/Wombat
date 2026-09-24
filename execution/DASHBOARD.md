@@ -4,7 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T160](tasks/in_progress/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T182](tasks/queued/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
@@ -57,8 +56,10 @@
 | queued | [T189](tasks/queued/T189-refusal-texts-errors-joined-with-after-full-stops-and-transitionasync-s-remaining-key-named-refusals.md) | P3 | Refusal texts: errors joined with '; ' after full stops, and Transitio |  |
 | queued | [T190](tasks/queued/T190-page-titles-follow-no-common-pattern.md) | P3 | Page titles follow no common pattern |  |
 | queued | [T191](tasks/queued/T191-choice-options-in-some-seeds-are-bare-keys-so-the-form-shows-admission-notes-instead-of-a-label.md) | P3 | Choice options in some seeds are bare keys, so the form shows admissio |  |
+| queued | [T192](tasks/queued/T192-the-late-filing-warning-says-a-date-can-still-be-filed-when-the-server-will-refuse-it-as-before-the-programme.md) | P3 | The late-filing warning says a date 'can still be filed' when the serv |  |
+| queued | [T193](tasks/queued/T193-refusal-alerts-are-not-announced-and-field-help-text-is-not-linked-to-its-input.md) | P3 | Refusal alerts are not announced, and field help text is not linked to |  |
 
-Done: 125 task(s).
+Done: 126 task(s).
 
 ## From STATE.md
 
@@ -74,9 +75,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+d2d1086 feat(activities): an encounter date may not be in the future, nor (for a type that can credit) before the programme; a crediting filing more than fourteen days late is warned about and recorded, never refused (T160, D15)
 cf7b246 docs(execution): close T175, T180, T172, T177 and T174 — browser-verified on dev (activities 25, 26); file T187–T191; T181's cause found
 f05bde8 fix(catalogue): the seeders pin a curriculum item's scale only when they create it, and warn rather than re-pin; a data migration pins the demo item where it is unpinned (T174)
 0c2c20b fix(activities): every label on an activity form names a real control; group fields are named fieldsets (T177)
 9369920 fix(activities): a refusal names each field by the label the user sees, with its section where the label repeats (T172)
-6f10a8f fix(web): app.css and the other first-party assets are linked through fingerprinted URLs, and the tab title follows in-app navigation (T175, T180)
 ```
