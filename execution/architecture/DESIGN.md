@@ -744,10 +744,29 @@ Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metri
 
 `.account-form-container` is a 400px centred card with a wide top margin — the shape ClinicAssist uses for its login/register/change-password pages.
 
+**A visitor who has not signed in gets static pages** (T181). `App.razor` gives them no render mode, so no page they
+reach opens a circuit: the Blazor hub stays behind the fallback policy, because inside a circuit navigation never meets
+an endpoint's policy. So everything on an `[AllowAnonymous]` page must work as plain HTML: links, form posts to a
+minimal-API endpoint (as sign-in, register and forgot-password do), and `wombat.js` for any behaviour. `@onclick`,
+`@bind`, `OnAfterRenderAsync` and JS interop do nothing there.
+
+The same page is **interactive for a signed-in visitor** unless it carries `[ExcludeFromInteractiveRouting]`. So a page
+that posts back to itself (`@formname` + `[SupplyParameterFromForm]`) runs two ways. Signed out, the submit is an HTTP
+post that the pipeline sees. Signed in, it is an `@onsubmit` event in the circuit: there is no post, so
+`[SupplyParameterFromForm]` binds nothing, the cascaded `HttpContext` is null, and no per-request middleware (a rate
+limit) or response status applies to it. Such a page carries `[ExcludeFromInteractiveRouting]` as well, as `/msf/respond`
+does, or it posts to an endpoint instead.
+
+Three predate the rule and are dead signed out: `PasswordToggleButton` (sign-in, register, link), the register page's
+`OnAfterRenderAsync` that clears the invitation token from the address, and `/portfolio/verify`'s Verify button (a
+`?hash=` link still verifies, in the server render). None ever worked signed out: the hub has always refused an
+anonymous circuit.
+
 ### Anonymous static page (the MSF respondent page, T205)
 
 A page for a stranger holding an emailed link, who never signs in: `/msf/respond`, where an MSF respondent answers. It
-is the account page's shape, widened for a questionnaire, and it is the one page that is **not interactive**:
+is the account page's shape, widened for a questionnaire, and it is the one page that is **never interactive**, signed
+in or not:
 
 ```razor
 @page "/msf/respond"
@@ -769,10 +788,11 @@ is the account page's shape, widened for a questionnaire, and it is the one page
 </div>
 ```
 
-- `App.razor` renders `Routes` and `HeadOutlet` with no render mode for a page marked `[ExcludeFromInteractiveRouting]`,
-  and `InteractiveServer` for every other. Static, the page opens no circuit, so the Blazor hub's fallback policy (T181)
-  cannot stop it, the link's rate limit sees the submit (an HTTP post, not a SignalR message), and it works without
-  WebSockets or script.
+- `App.razor` renders `Routes` and `HeadOutlet` with no render mode for a page marked `[ExcludeFromInteractiveRouting]`
+  and for a visitor who has not signed in (T181), and `InteractiveServer` for a signed-in user's every other page. The
+  attribute is what keeps the page static for a respondent who happens to be signed in. Static, the page opens no
+  circuit, the link's rate limit sees the submit (an HTTP post, not a SignalR message), and it works without WebSockets
+  or script. `Hosting/MsfRespondPageHostingTests` loads it signed in for that reason.
 - Fields are plain inputs named `Prefix.Key[id]`, read by `[SupplyParameterFromForm]`. Give them `@onchange`/`@oninput`
   too: bUnit renders the page interactively, and the handlers are how its tests fill the form.
 - The `<form>` stays in the tree when it holds nothing. Blazor answers a post whose named form is not on the page with a

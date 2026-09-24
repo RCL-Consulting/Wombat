@@ -28,7 +28,8 @@
     @* Interactive, like Routes: every page after the first renders in the circuit, and only an
        outlet in the same circuit can take its PageTitle. A static outlet is rendered once, so
        the tab kept the first page's title (T180). It still prerenders, so a full load arrives
-       titled. On a page excluded from interactive routing both are static (PageRenderMode). *@
+       titled. On a page excluded from interactive routing, and for a visitor who has not signed in,
+       both are static (PageRenderMode). *@
     <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 
@@ -50,17 +51,37 @@
         HttpContextAccessor.HttpContext?.Items[SecurityHeadersMiddleware.NonceItemKey] as string;
 
     /// <summary>
-    /// Interactive server for every page, except one marked <c>[ExcludeFromInteractiveRouting]</c>, which renders as
-    /// static server-side HTML with plain form posts and no circuit. (T205)
+    /// Interactive server for a signed-in user's every page, except one marked <c>[ExcludeFromInteractiveRouting]</c>.
+    /// That page, and every page for a visitor who has not signed in, renders as static server-side HTML with plain
+    /// form posts and no circuit. (T205, T181)
     /// </summary>
     /// <remarks>
-    /// The one such page is the MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not signed
-    /// in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies to it;
-    /// over a circuit the submit would be a SignalR message the limiter never sees. It needs no circuit at all, so the
-    /// fallback policy on the Blazor hub (T181) cannot stop it, and it works without WebSockets or script.
+    /// <para>
+    /// The one excluded page is the MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
+    /// signed in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies
+    /// to it; over a circuit the submit would be a SignalR message the limiter never sees. It works without WebSockets
+    /// or script, for a signed-in user too.
+    /// </para>
+    /// <para>
+    /// A visitor who has not signed in gets no interactive root because the circuit is not theirs to have. The Blazor
+    /// hub is under the fallback policy, which requires a signed-in user, and it stays there: inside a circuit,
+    /// navigation never reaches an endpoint, so a page that relies on the fallback policy rather than
+    /// <c>[Authorize]</c> would render to anyone holding an anonymous circuit. Given an interactive root anyway,
+    /// <c>blazor.web.js</c> asked for a circuit on every sign-in page and logged the refusal: until T181 as a JSON
+    /// parse error, the fallback policy having answered <c>/_blazor/initializers</c> with the sign-in page's HTML;
+    /// with that endpoint opened, as a failed negotiation. Every page such a visitor reaches is <c>[AllowAnonymous]</c>,
+    /// and none ever had a circuit, so static takes nothing from them. What such a page may rely on is in DESIGN.md
+    /// (§ Account / auth page).
+    /// </para>
+    /// <para>
+    /// "Signed in" is the test the hub's fallback policy makes (<c>DenyAnonymousAuthorizationRequirement</c>: any
+    /// identity authenticated), not the primary identity's, so a page is interactive exactly when the hub will take
+    /// its circuit.
+    /// </para>
     /// </remarks>
     private IComponentRenderMode? PageRenderMode =>
-        HttpContextAccessor.HttpContext is { } context && !context.AcceptsInteractiveRouting()
+        HttpContextAccessor.HttpContext is { } context
+        && (!context.User.Identities.Any(identity => identity.IsAuthenticated) || !context.AcceptsInteractiveRouting())
             ? null
             : InteractiveServer;
 }

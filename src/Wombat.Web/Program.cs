@@ -24,7 +24,6 @@ using Wombat.Infrastructure;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
-using Wombat.Web.Components;
 using Wombat.Web.Security;
 using Wombat.Web.Services;
 
@@ -167,8 +166,12 @@ app.MapHealthChecks("/health").AllowAnonymous();
 // page's own stylesheets and scripts redirect to /account/login (T175). Call this, never a bare
 // MapStaticAssets(): Hosting/AppAssetUrlTests maps the same method under the same policy.
 app.MapWombatStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+
+// MapRazorComponents<App>().AddInteractiveServerRenderMode(), with /_blazor/initializers, a list of public module names,
+// open to a visitor who has not signed in. The circuit stays behind the fallback policy, and App.razor gives such a
+// visitor no interactive root, so their browser never asks for one (T181). Call this, never a bare MapRazorComponents:
+// Hosting/BlazorEndpointAccessTests maps the same method under the same policy.
+app.MapWombatRazorComponents();
 
 app.MapPost("/account/login/submit", async (
     SignInManager<WombatIdentityUser> signInManager,

@@ -29,9 +29,11 @@ namespace Wombat.Web.Tests.Hosting;
 /// </para>
 /// <para>
 /// It mirrors <c>Program.cs</c> only as far as <see cref="App" /> and <see cref="AnonymousPage" /> need, and runs as
-/// Production, as the server does. The authorization policies and the static-asset endpoints are registered by the
-/// methods <c>Program.cs</c> calls, so an anonymous visitor meets the real fallback policy (T175). There is no
-/// database, so a page rendered through it must inject nothing beyond what is registered here.
+/// Production, as the server does. The authorization policies, the static-asset endpoints and the Razor-components
+/// endpoints are registered by the methods <c>Program.cs</c> calls, so an anonymous visitor meets the real fallback
+/// policy and its real opt-outs (T175, T181). A request is anonymous unless the test signs it in
+/// (<see cref="SignedInVisitor" />). There is no database, so a page rendered through it must inject nothing beyond
+/// what is registered here.
 /// </para>
 /// <para>
 /// The files are the ones a publish copies into <c>wwwroot</c>: the project's own, the scoped-CSS bundle and the
@@ -117,7 +119,7 @@ internal sealed class AppTestHost : IAsyncDisposable
         app.UseAuthorization();
         app.UseAntiforgery();
         app.MapWombatStaticAssets();
-        app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+        app.MapWombatRazorComponents();
 
         await app.StartAsync();
         return new AppTestHost(app);

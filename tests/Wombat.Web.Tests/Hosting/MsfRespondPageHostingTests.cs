@@ -165,9 +165,15 @@ public sealed partial class MsfRespondPageHostingTests
         document.QuerySelectorAll("script[src]").Select(script => script.GetAttribute("src")!)
             .Should().OnlyContain(src => src.StartsWith('/') || !src.Contains("://"), "every script is same-origin");
 
-        // And the rest of the app is still interactive: the change is confined to the page that asks for it.
-        var (_, otherHtml, _) = await host.LoadAsync(AppTestHost.AnonymousPage);
-        ServerComponentMarker().IsMatch(otherHtml).Should().BeTrue("every other page renders in the circuit, as before");
+        // Signed in, the page is still static, and every other page is interactive: the change is confined to the page
+        // that asks for it. Since T181 no page is interactive for a visitor who has not signed in, so only a signed-in
+        // load tells [ExcludeFromInteractiveRouting]'s work apart; it is what keeps a colleague who holds a link, and is
+        // signed in, off a circuit the link's rate limit cannot see.
+        await using var signedIn = await StartAsync(new FakeRespondSender(), signedIn: true);
+        var (_, signedInHtml, _) = await signedIn.LoadAsync(Link(Token));
+        ServerComponentMarker().IsMatch(signedInHtml).Should().BeFalse("the page is static for a signed-in respondent too");
+        var (_, otherHtml, _) = await signedIn.LoadAsync(AppTestHost.AnonymousPage);
+        ServerComponentMarker().IsMatch(otherHtml).Should().BeTrue("every other page renders in a signed-in user's circuit");
     }
 
     [Fact]
@@ -378,8 +384,15 @@ public sealed partial class MsfRespondPageHostingTests
             .Cast<Microsoft.AspNetCore.Components.RouteAttribute>()
             .Should().ContainSingle().Which.Template.Should().Be(WombatOptionsExtensions.MsfRespondPath);
 
-    private static Task<AppTestHost> StartAsync(FakeRespondSender sender)
-        => AppTestHost.StartAsync(services => services.AddSingleton<IScopedSender>(sender));
+    private static Task<AppTestHost> StartAsync(FakeRespondSender sender, bool signedIn = false)
+        => AppTestHost.StartAsync(services =>
+        {
+            services.AddSingleton<IScopedSender>(sender);
+            if (signedIn)
+            {
+                SignedInVisitor.Register(services);
+            }
+        });
 
     private static string Link(string token) => $"/msf/respond?token={Uri.EscapeDataString(token)}";
 

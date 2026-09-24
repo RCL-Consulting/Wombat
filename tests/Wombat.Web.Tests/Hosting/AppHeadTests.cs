@@ -32,10 +32,14 @@ public sealed class AppHeadTests
     /// title sits inside an interactive server component's markers, which is how the circuit takes the outlet over and
     /// re-renders it when a page reached in the circuit sets its title.
     /// </summary>
+    /// <remarks>
+    /// Signed in: only a signed-in user has a circuit, so only their pages are interactive. A visitor who has not signed
+    /// in gets static pages, whose head is rendered whole on every load (T181; <see cref="BlazorEndpointAccessTests" />).
+    /// </remarks>
     [Fact]
     public async Task TheHeadOutlet_IsAnInteractiveServerRoot_SoTheTitleCanFollowInAppNavigation()
     {
-        await using var host = await AppTestHost.StartAsync();
+        await using var host = await AppTestHost.StartAsync(SignedInVisitor.Register);
         var (_, _, document) = await host.LoadAsync(AppTestHost.AnonymousPage);
 
         var head = document.Head!.ChildNodes.ToList();
