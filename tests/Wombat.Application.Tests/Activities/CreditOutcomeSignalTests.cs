@@ -117,8 +117,38 @@ public sealed class CreditOutcomeSignalTests
     private static ActivityTransition Completion(Activity activity)
         => activity.Transitions.Single(transition => transition.TransitionKey == "complete");
 
+    /// <summary>
+    /// T158. The EPA was active when the activity was filed and submitted, and deactivated before the assessor
+    /// completed it. Credit is judged at the moment of credit, so it counts towards nothing, and the stamp says so:
+    /// the T108 warning is how the activity explains it. Reactivating the EPA brings credit back for the next one.
+    /// </summary>
+    [Fact]
+    public async Task ACompletionAfterItsEpaWasDeactivated_CreditsNothing_AndIsStampedZero()
+    {
+        await using var db = CreateDb();
+        Seed(db, CreditsAnEpa);
+
+        var activity = await CompleteAsync(db, CreditedEpaId, beforeCompletion: async () =>
+        {
+            (await db.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = false;
+            await db.SaveChangesAsync();
+        });
+
+        db.CurriculumItemProgresses.Should().BeEmpty("the EPA was inactive at the moment of credit");
+        Completion(activity).CreditedItemCount.Should().Be(0);
+
+        (await db.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = true;
+        await db.SaveChangesAsync();
+
+        var afterReactivation = await CompleteAsync(db, CreditedEpaId);
+
+        Completion(afterReactivation).CreditedItemCount.Should().Be(1);
+        (await db.CurriculumItemProgresses.SingleAsync()).CountsSoFar.Should().Be(1,
+            "the completion made while the EPA was inactive is not credited retroactively; only a rebuild replays it");
+    }
+
     /// <summary>Creates a draft, submits it, and completes it — the whole live path.</summary>
-    private static async Task<Activity> CompleteAsync(ApplicationDbContext db, int epaId)
+    private static async Task<Activity> CompleteAsync(ApplicationDbContext db, int epaId, Func<Task>? beforeCompletion = null)
     {
         var service = new ActivityService(
             db,
@@ -136,6 +166,11 @@ public sealed class CreditOutcomeSignalTests
         await service.TransitionAsync(
             new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
             CancellationToken.None);
+
+        if (beforeCompletion is not null)
+        {
+            await beforeCompletion();
+        }
 
         await service.TransitionAsync(
             new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, null, null),

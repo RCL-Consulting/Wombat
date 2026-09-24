@@ -40,6 +40,11 @@ namespace Wombat.Infrastructure.Activities;
 ///   today, and refusing would turn this gate into a curriculum-membership check that neither D20 nor D21 decided.
 ///   The boundary this leaves is recorded: a profile created or re-pointed after submission is not re-checked
 ///   when the activity completes, because credit never re-litigates (D20).</item>
+///   <item>An EPA that is deactivated. Its item is not in force, so the resolver matches nothing, exactly as for an
+///   EPA with no item (T158). The picker does not offer it, so only a stored value or a forged id reaches here. The
+///   boundary is the one above: an EPA reactivated after the gate last judged the activity is not re-checked when
+///   it completes, so it can credit a tool its list forbids (pinned by
+///   <c>ToolPermissionGateTests.T158Boundary_AnEpaReactivatedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited</c>).</item>
 /// </list>
 /// </para>
 /// </remarks>

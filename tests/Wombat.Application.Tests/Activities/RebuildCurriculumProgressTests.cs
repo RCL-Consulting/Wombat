@@ -557,6 +557,76 @@ public sealed class RebuildCurriculumProgressTests
         }
     }
 
+    /// <summary>
+    /// T158. A rebuild replays through the same resolver as the live path, under the rule as it stands. While the EPA is
+    /// deactivated its item is not in force, so the replay reproduces no row for it and the completion is stamped zero.
+    /// After reactivation the next rebuild restores both.
+    /// </summary>
+    [Fact]
+    public async Task Rebuild_WhileTheEpaIsDeactivated_CreditsNothing_AndAfterReactivationRestoresTheCredit()
+    {
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 100);
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            (await Rebuild(db)).ProgressRowsWritten.Should().Be(1);
+        }
+
+        await using (var deactivate = new ApplicationDbContext(options))
+        {
+            (await deactivate.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = false;
+            await deactivate.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+
+            result.ActivitiesReplayed.Should().Be(1, "credit was evaluated, and matched nothing");
+            result.CreditApplications.Should().Be(0);
+            result.ProgressRowsWritten.Should().Be(0);
+            result.ProgressRowsRemoved.Should().Be(1);
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            verify.CurriculumItemProgresses.Should().BeEmpty();
+            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
+                .CreditedItemCount.Should().Be(0);
+        }
+
+        await using (var reactivate = new ApplicationDbContext(options))
+        {
+            (await reactivate.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = true;
+            await reactivate.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+
+            result.CreditApplications.Should().Be(1);
+            result.ProgressRowsWritten.Should().Be(1);
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            var row = await verify.CurriculumItemProgresses.SingleAsync();
+            row.CurriculumItemId.Should().Be(NationalItemId);
+            row.CountsSoFar.Should().Be(1);
+            row.CreditedActivityKeysJson.Should().Be("""["200:complete"]""");
+            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
+                .CreditedItemCount.Should().Be(1);
+        }
+    }
+
     [Fact]
     public async Task Rebuild_RefusesACallerWhoIsNotAnAdministrator()
     {

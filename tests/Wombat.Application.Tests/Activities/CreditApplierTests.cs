@@ -49,6 +49,44 @@ public sealed class CreditApplierTests
         dbContext.CurriculumItemProgresses.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// T158. Credit follows the picker: an item whose EPA is deactivated is not in force, so a completion while it is
+    /// inactive credits nothing, by every way a directive can name its target. Reactivating brings credit back.
+    /// </summary>
+    [Theory]
+    [InlineData("""{ "epa_field": "epa_id" }""")]
+    [InlineData("""{ "curriculum_item_field": "item_id" }""")]
+    [InlineData("""{ "curriculum_item_id": 4000 }""")]
+    public async Task ApplyAsync_WhenTheItemsEpaIsDeactivated_CreditsNothing_AndCreditsOnceItIsReactivated(string match)
+    {
+        await using var dbContext = CreateDbContext();
+        SeedCurriculum(dbContext);
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).IsActive = false;
+        await dbContext.SaveChangesAsync();
+
+        var activityType = new ActivityType
+        {
+            CreditRulesJson = $$"""{ "counts_for": [ { "curriculum_item_match": {{match}}, "amount": 1 } ] }"""
+        };
+        const string data = """{ "epa_id": 5000, "item_id": 4000, "score": 4 }""";
+        var applier = new CreditApplier(dbContext);
+
+        var whileInactive = await applier.ApplyAsync(CreateCompletedActivity(data, activityId: 100), activityType, CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        whileInactive.UpdatedRows.Should().BeEmpty("the EPA is deactivated, so its item takes no new credit");
+        dbContext.CurriculumItemProgresses.Should().BeEmpty();
+
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).IsActive = true;
+        await dbContext.SaveChangesAsync();
+
+        var onceActive = await applier.ApplyAsync(CreateCompletedActivity(data, activityId: 101), activityType, CancellationToken.None);
+        await dbContext.SaveChangesAsync();
+
+        onceActive.UpdatedRows.Should().ContainSingle();
+        (await dbContext.CurriculumItemProgresses.SingleAsync()).CountsSoFar.Should().Be(1);
+    }
+
     [Fact]
     public async Task ApplyAsync_WhenMinimumLevelIsBelowRequired_CountsVolumeButNotLevelReached()
     {

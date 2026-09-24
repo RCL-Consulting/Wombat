@@ -156,6 +156,40 @@ public sealed class ListActivityTypesNarrowingTests
         offered.Should().Contain("mini_cex_paed");
     }
 
+    /// <summary>
+    /// T158. A deactivated EPA's item is not in force, so its ladder offers no tool: nothing filed with that tool could
+    /// credit the item, and the EPA picker beside this one no longer offers its EPA. Reactivating brings the tool back.
+    /// </summary>
+    [Fact]
+    public async Task ALadderOnlyADeactivatedEpasItemIsPinnedTo_OffersNoTool_UntilItIsReactivated()
+    {
+        await using var db = CreateDb();
+        SeedLadders(db);
+        SeedTypes(db);
+        SeedTrainee(db, "mixed", pinnedTo: CpsaScaleId);
+        db.CurriculumItems.Add(new CurriculumItem
+        {
+            Id = 902, CurriculumId = 90, EpaId = 2, RequiredCount = 1,
+            MinimumLevelOrder = 3, WindowMonths = 12, ScaleId = LegacyScaleId
+        });
+        await db.SaveChangesAsync();
+
+        (await Offer(db, "mixed")).Should().Contain("mini_cex_paed", "the legacy ladder is pinned by an item in force");
+
+        (await db.Epas.SingleAsync(epa => epa.Id == 2)).IsActive = false;
+        await db.SaveChangesAsync();
+
+        var offered = await Offer(db, "mixed");
+        offered.Should().NotContain("mini_cex_paed", "only the deactivated EPA's item is on the legacy ladder");
+        offered.Should().NotContain("msf_paed");
+        offered.Should().Contain("mini_cex_cpsa", "the item in force still pins the six-rung ladder");
+
+        (await db.Epas.SingleAsync(epa => epa.Id == 2)).IsActive = true;
+        await db.SaveChangesAsync();
+
+        (await Offer(db, "mixed")).Should().Contain("mini_cex_paed");
+    }
+
     [Fact]
     public async Task AnotherInstitutionsLocalCurriculumItemDoesNotDecideThisTraineesMenu()
     {
@@ -370,6 +404,13 @@ public sealed class ListActivityTypesNarrowingTests
 
     private static void SeedTrainee(ApplicationDbContext db, string userId, int? pinnedTo, int institutionId = 2)
     {
+        // Every item a fact here adds names one of these. An item is read only while its EPA is active (T158), so an
+        // item whose EPA row is missing would be read as not in force, a state Postgres cannot hold.
+        foreach (var epaId in new[] { 1, 2, 3 })
+        {
+            db.Epas.Add(new Epa { Id = epaId, SubSpecialityId = 1, Code = $"PAED-00{epaId}", Title = $"EPA {epaId}" });
+        }
+
         db.Set<Curriculum>().Add(new Curriculum
         {
             Id = 90, SubSpecialityId = 1, Name = "Paediatric EPA Curriculum",

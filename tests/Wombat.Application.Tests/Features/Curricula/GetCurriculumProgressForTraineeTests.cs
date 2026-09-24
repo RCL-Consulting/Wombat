@@ -130,6 +130,45 @@ public sealed class GetCurriculumProgressForTraineeTests
         (await Read(db)).Items.Select(entry => entry.EpaCode).Should().Equal("LOCAL-1", "PAED-001", "PAED-002");
     }
 
+    /// <summary>
+    /// T158. A deactivated EPA leaves the picker, so its item is a target nobody can file against: it leaves the page
+    /// and every figure the summary counts. Deactivating deletes nothing, so reactivating brings it back with the
+    /// credit it had.
+    /// </summary>
+    [Fact]
+    public async Task AnItemWhoseEpaIsDeactivated_LeavesTheSummary_AndReturnsWithItsCreditWhenReactivated()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 3, reached: 3, lastObservedOn: new DateOnly(2026, 8, 12));
+        db.SaveChanges();
+
+        db.Epas.Single(epa => epa.Id == 1).IsActive = false;
+        db.SaveChanges();
+
+        var retired = await Read(db);
+
+        retired.Items.Select(entry => entry.EpaCode).Should().Equal(["PAED-002"],
+            "PAED-001's EPA is deactivated: it cannot be filed against, so it is no target");
+        retired.HasSemesterItems.Should().BeFalse("the only per-semester item is retired");
+        retired.SemesterTargetsMet.Should().Be(0, "its met target leaves the count with it");
+        retired.SemesterTargetsApplying.Should().Be(0);
+        retired.HasYearItems.Should().BeTrue();
+        retired.YearTargetsApplying.Should().Be(1);
+
+        db.Epas.Single(epa => epa.Id == 1).IsActive = true;
+        db.SaveChanges();
+
+        var restored = await Read(db);
+
+        restored.Items.Select(entry => entry.EpaCode).Should().Equal("PAED-001", "PAED-002");
+        var item = restored.Items.Single(entry => entry.EpaCode == "PAED-001");
+        item.Current.Count.Should().Be(3, "deactivating deleted nothing");
+        item.Current.IsMet.Should().BeTrue();
+        restored.SemesterTargetsMet.Should().Be(1);
+        restored.SemesterTargetsApplying.Should().Be(1);
+    }
+
     [Fact]
     public async Task SummaryCountsTargetsMetByKind()
     {

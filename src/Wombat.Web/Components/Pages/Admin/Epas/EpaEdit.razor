@@ -70,11 +70,19 @@
 
         @if (!IsNew)
         {
+          @* T158. The help text is the checkbox's description, not only text beside it: FormField's HelpText names no
+             control, so it is written here with an id the checkbox points at. *@
           <FormField Label="Status" InputId="epa-active">
             <div class="form-check">
-              <InputCheckbox id="epa-active" class="form-check-input" @bind-Value="_model.IsActive" />
+              <InputCheckbox id="epa-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="epa-active-help" />
               <label for="epa-active">Active</label>
             </div>
+            <small id="epa-active-help" class="page-subtitle">
+              An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard.
+              Evidence already recorded against it is kept. An activity completed against it while it is inactive counts
+              towards nothing, and still does after the EPA is reactivated unless an administrator rebuilds curriculum
+              progress.
+            </small>
           </FormField>
         }
       </div>
@@ -83,7 +91,7 @@
         <a class="btn btn-outline" href="/admin/epas">Cancel</a>
         @if (!IsNew)
         {
-          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@_saving">Deactivate</button>
         }
         <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
       </FormActions>
@@ -91,11 +99,21 @@
   </div>
 </StatePanel>
 
+@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system). Since T158 deactivating an EPA takes
+   its items off every progress page and stops their credit, in every institution that has adopted the curriculum. *@
+<ConfirmDialog @ref="_confirmDeactivate"
+               Title="Deactivate this EPA?"
+               Body="It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. An activity completed against it while it is inactive counts towards nothing. You can reactivate it on this page."
+               ConfirmLabel="Deactivate"
+               DangerAction="true"
+               OnConfirm="DeactivateAsync" />
+
 @code {
   [Parameter]
   public int? Id { get; set; }
 
   private readonly EpaFormModel _model = new();
+  private ConfirmDialog? _confirmDeactivate;
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
@@ -186,6 +204,14 @@
     finally
     {
       _saving = false;
+    }
+  }
+
+  private async Task AskDeactivateAsync()
+  {
+    if (_confirmDeactivate is not null)
+    {
+      await _confirmDeactivate.ShowAsync();
     }
   }
 

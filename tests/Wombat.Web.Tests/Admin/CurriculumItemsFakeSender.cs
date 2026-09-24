@@ -73,19 +73,27 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         string? permittedToolsJson,
         int minimumLevelOrder = 3,
         string? stageMinimaJson = null,
-        EntrustmentScaleDto? scale = null)
+        EntrustmentScaleDto? scale = null,
+        bool epaIsActive = true)
     {
         var epa = Epas.Single(candidate => candidate.Id == epaId);
         return new CurriculumItemDto(id, epaId, epa.Code, epa.Title, requiredCount, period, minimumLevelOrder, 12, null,
-            stageMinimaJson, permittedToolsJson, scale?.Id, scale?.Name);
+            stageMinimaJson, permittedToolsJson, epaIsActive, scale?.Id, scale?.Name);
     }
+
+    /// <summary>What <see cref="ListEpasForSubSpecialityQuery" /> answers; <see cref="Epas" />, all active, when not set.</summary>
+    public IReadOnlyList<EpaDto> EpaList { get; init; } = Epas;
+
+    /// <summary><see cref="Epas" /> with the named ones inactive, as the EPA list would return them after a deactivation.</summary>
+    public static IReadOnlyList<EpaDto> EpasWithInactive(params int[] inactiveIds)
+        => Epas.Select(epa => inactiveIds.Contains(epa.Id) ? epa with { IsActive = false } : epa).ToList();
 
     public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         object response = request switch
         {
             GetCurriculumByIdQuery => Curriculum(),
-            ListEpasForSubSpecialityQuery => Epas,
+            ListEpasForSubSpecialityQuery => EpaList,
             GetEntrustmentScalesListQuery => Scales,
             GetWbaToolsQuery => Vocabulary,
             UpdateCurriculumItemCommand update => Update(update),

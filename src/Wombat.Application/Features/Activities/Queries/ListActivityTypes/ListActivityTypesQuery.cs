@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
@@ -242,9 +243,11 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
     /// </summary>
     /// <remarks>
     /// The profile is resolved active-first then by latest <c>ProgrammeStartDate</c> and is NOT filtered
-    /// on <c>IsActive</c>, and the items are scoped by <c>OwningInstitutionId</c> — both the same rules
-    /// as <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so this picker and the EPA
-    /// picker beside it on the same page cannot disagree about which curriculum items are in force.
+    /// on <c>IsActive</c>, the items are scoped by <c>OwningInstitutionId</c>, and only items in force count
+    /// (<see cref="CurriculumItemsInForce" />, T158) — all three the same rules as
+    /// <c>ActivityReferenceDataService.ResolveCreditableEpaIdsAsync</c>, so this picker and the EPA
+    /// picker beside it on the same page cannot disagree about which curriculum items are in force. A ladder only a
+    /// deactivated EPA's item is pinned to offers no tool: nothing filed with it could credit that item.
     /// </remarks>
     private async Task<HashSet<int>> ResolveSubjectScaleIdsAsync(
         string subjectUserId,
@@ -272,6 +275,7 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
         // and without this predicate its ladder would decide which tools this trainee is offered.
         var scaleIds = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
+            .InForce()
             .Where(item => item.CurriculumId == profile.CurriculumId
                 && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
                 && item.ScaleId != null)

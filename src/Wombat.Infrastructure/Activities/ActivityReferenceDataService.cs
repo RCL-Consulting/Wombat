@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
@@ -257,24 +258,20 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return [];
         }
 
-        // The IsActive join is the difference between "no curriculum items" and "no OFFERABLE curriculum
-        // items". DeactivateEpaCommandHandler does not check for referencing items, so a curriculum can
-        // hold items whose EPAs are all deactivated — which the caller then filters out, leaving an empty
-        // required <select> that cannot be submitted. Resolving emptiness here, against the same
-        // IsActive predicate the caller applies, is what makes the fallback guard mean what it says.
+        // In force only: the difference between "no curriculum items" and "no OFFERABLE curriculum items".
+        // DeactivateEpaCommandHandler does not check for referencing items, so a curriculum can hold items
+        // whose EPAs are all deactivated — which the caller then filters out, leaving an empty required
+        // <select> that cannot be submitted. Resolving emptiness here, against the same IsActive predicate the
+        // caller applies, is what makes the fallback guard mean what it says.
         //
-        // CreditApplier itself does not check Epa.IsActive, so a deactivated EPA would still credit. That
-        // divergence is deliberate and one-directional: it can only make the picker offer less than the
-        // engine would credit, never more, and an admin who deactivates an EPA means it not to be chosen.
+        // It is the predicate credit applies (CreditTargetResolver, T158), so the picker offers exactly what can
+        // credit: a deactivated EPA is neither offered nor credited, and no progress page lists it.
         return await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
+            .InForce()
             .Where(entity => entity.CurriculumId == profile.CurriculumId
                 && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == profile.InstitutionId))
-            .Join(
-                _dbContext.Set<Epa>().AsNoTracking().Where(epa => epa.IsActive),
-                item => item.EpaId,
-                epa => epa.Id,
-                (item, epa) => new SubjectCurriculumItem(epa.Id, item.PermittedToolsJson))
+            .Select(item => new SubjectCurriculumItem(item.EpaId, item.PermittedToolsJson))
             .ToListAsync(cancellationToken);
     }
 

@@ -13,9 +13,14 @@
             LoadError="@_error">
   <section>
     <h2>Curriculum targets</h2>
-    @if (_summary is null || _summary.Items.Count == 0)
+    @if (_summary is null)
     {
       <p class="muted">No curriculum items assigned yet. Once you are admitted to a curriculum, your EPAs will appear here.</p>
+    }
+    else if (_summary.Items.Count == 0)
+    {
+      @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
+      <p class="muted">No EPA on your curriculum is in use at the moment, so no target applies to you.</p>
     }
     else
     {

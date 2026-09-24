@@ -90,8 +90,11 @@ public static class CurriculumCoverageReader
         var curriculumIds = activeProfiles.Select(profile => profile.CurriculumId).Distinct().ToList();
         var traineeUserIds = activeProfiles.Select(profile => profile.UserId).Distinct().ToList();
 
+        // In force only (T158): a deactivated EPA's item is owed by nobody, so it has no row here and puts nobody in a
+        // denominator. A trainee whose every item is retired then has no targets, which is not an exemption.
         var items = await dbContext.Set<CurriculumItem>()
             .AsNoTracking()
+            .InForce()
             .Where(item => curriculumIds.Contains(item.CurriculumId))
             .Select(item => new CoverageItem(
                 item.Id,

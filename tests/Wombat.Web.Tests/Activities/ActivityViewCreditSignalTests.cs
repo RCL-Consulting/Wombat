@@ -62,6 +62,11 @@ public sealed class ActivityViewCreditSignalTests : TestContext
 
         cut.Markup.Should().Contain("alert-warning");
         cut.Markup.Should().Contain("counted towards no curriculum requirement");
+        cut.Markup.Should().Contain("or was not in use at the time",
+            "a completion against a deactivated EPA credits nothing too (T158), and the warning is how it is explained");
+        cut.Markup.Should().Contain("If it should have counted, raise it with the programme administrator.",
+            "zero credit on a retired EPA is intended, so the warning must not call every such record a fault");
+        cut.Markup.Should().NotContain("so it can be credited correctly");
         cut.Markup.Should().Contain("None", "the history row spells out the same thing");
     }
 

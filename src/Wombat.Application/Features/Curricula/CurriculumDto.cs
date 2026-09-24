@@ -39,6 +39,13 @@ public sealed record CurriculumItemDto(
     /// hand the editor an item that reads as unrestricted. Read <see cref="PermittedToolKeys" /> for the parsed list.
     /// </summary>
     string? PermittedToolsJson,
+    /// <summary>
+    /// Whether the item's EPA is active, and so whether the item is in force (<see cref="CurriculumItemsInForce" />,
+    /// T158). The editor lists every item as a record and marks one that is not in force: nobody can file against it,
+    /// it takes no credit, and no progress page shows it. Positional and not defaulted for the reason above: a
+    /// projection that forgot it would show a retired item as in force.
+    /// </summary>
+    bool EpaIsActive,
     /// <summary>The entrustment scale the minima above are expressed on, or null when unpinned (T109).</summary>
     int? ScaleId = null,
     string? ScaleName = null)

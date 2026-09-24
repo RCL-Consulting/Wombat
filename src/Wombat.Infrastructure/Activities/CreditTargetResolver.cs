@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -22,7 +23,8 @@ namespace Wombat.Infrastructure.Activities;
 /// </para>
 /// <para>
 /// The EPA picker applies the same profile pick through <see cref="PickProfileAsync" />, so the three cannot choose
-/// different curricula for a user who somehow holds two profiles.
+/// different curricula for a user who somehow holds two profiles. It applies the same
+/// <see cref="CurriculumItemsInForce" /> predicate too, so an EPA it does not offer is one credit cannot land on (T158).
 /// </para>
 /// </remarks>
 internal static class CreditTargetResolver
@@ -94,7 +96,13 @@ internal static class CreditTargetResolver
         // Every match is confined to the trainee's adopted curriculum version (national core) plus their
         // own institution's local extras. This prevents credit leaking across curriculum versions or
         // onto another institution's local items that happen to share an EPA. (T091 phase 4.)
+        //
+        // And to items in force (T158). A deactivated EPA is not offered by the picker and is no target on any
+        // progress page, so it takes no credit either: a completion while it is inactive matches nothing, and the
+        // transition is stamped zero. Here rather than in CreditApplier, so the tool gate reads it the same way: an
+        // inactive EPA is, to both, an EPA with no item on the trainee's curriculum.
         var scoped = dbContext.Set<CurriculumItem>()
+            .InForce()
             .Where(entity => entity.CurriculumId == trainee.CurriculumId
                 && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == trainee.InstitutionId));
 

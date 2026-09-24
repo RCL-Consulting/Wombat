@@ -132,7 +132,9 @@ public static class TraineeQuotaProgressReader
     /// Items are listed from the curriculum, not from the progress rows: a new period has no rows yet, and it must
     /// read "0 of 3", not vanish. The items are the national core plus the trainee's own institution's local
     /// extras. A curriculum row is shared by every adopting institution, and another institution's local item is
-    /// a target this trainee could never meet.
+    /// a target this trainee could never meet. An item whose EPA is deactivated is no target either
+    /// (<see cref="CurriculumItemsInForce" />, T158): it cannot be filed against or credited, so listing it would
+    /// show a shortfall nobody can close.
     /// </para>
     /// <para>
     /// Rows are loaded for every semester and read through <see cref="QuotaProgressCalculator" /> in memory. No
@@ -164,6 +166,7 @@ public static class TraineeQuotaProgressReader
 
         var items = await dbContext.Set<CurriculumItem>()
             .AsNoTracking()
+            .InForce()
             .Where(item => item.CurriculumId == profile.CurriculumId &&
                            (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId))
             .OrderBy(item => item.Epa.Code)

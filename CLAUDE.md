@@ -193,7 +193,10 @@ Runtime services in Infrastructure:
   workflow state's `editable_by` and the field's (falling back to its section's). Default is
   `subject|creator`, which reproduces pre-T070 behaviour, so a type declaring nothing is unchanged.
 - `CreditApplier` — matches completed activities to curriculum items and applies credit. Which items an activity
-  would credit is `CreditTargetResolver`, the one implementation shared with the tool gate below.
+  would credit is `CreditTargetResolver`, the one implementation shared with the tool gate below. It reads only items
+  in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered, takes no credit, and is on
+  no progress page. Every picker, credit and progress reader applies it; the curriculum editor and scale-reference
+  checks do not.
 - `ToolPermissionGate` — the write-path half of the EPA→tool allow-list (T122, D20): refuses an activity whose
   instrument (`ActivityType.WbaToolKey`) the matched curriculum item's `PermittedToolsJson` does not name, judged per
   credit directive: at create; on a change of target wherever credit can still follow; and for an unchanged target only

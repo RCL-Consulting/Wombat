@@ -35,6 +35,18 @@
       checked when an activity is filed and submitted, and never takes back credit already earned.
     </Alert>
 
+    @* T158. The editor lists every item as a record, so an item whose EPA is inactive is still here. It must say that
+       the item is not in force, or an admin sees a target that no trainee sees and nothing tells them why. *@
+    @if (InactiveEpaCodes is { Count: > 0 } inactive)
+    {
+      <Alert Kind="info">
+        @(inactive.Count == 1
+          ? $"{inactive[0]} is inactive, so its item is not in force: no trainee can file against it, it takes no credit, and no progress page or dashboard shows it."
+          : $"{string.Join(", ", inactive)} are inactive, so their items are not in force: no trainee can file against them, they take no credit, and no progress page or dashboard shows them.")
+        Reactivating an EPA on its own page brings its item back.
+      </Alert>
+    }
+
     <div class="detail-card">
       <h3>Existing items</h3>
       <div class="table-container shadow">
@@ -62,7 +74,7 @@
                     <InputSelect class="form-select" TValue="int" @bind-Value="_editModel.EpaId">
                       @foreach (var epa in AvailableEpas)
                       {
-                        <option value="@epa.Id">@epa.Code - @epa.Title</option>
+                        <option value="@epa.Id">@EpaOptionText(epa)</option>
                       }
                     </InputSelect>
                   </td>
@@ -102,7 +114,13 @@
                 else
                 {
                   var stages = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
-                  <td>@item.EpaCode - @item.EpaTitle</td>
+                  <td>
+                    @item.EpaCode - @item.EpaTitle
+                    @if (!item.EpaIsActive)
+                    {
+                      <span class="muted">(inactive: not in force)</span>
+                    }
+                  </td>
                   <td>@TargetText(item)</td>
                   <td>@(item.ScaleName ?? "Not pinned")</td>
                   <td>@RungText(item.ScaleId, item.MinimumLevelOrder)</td>
@@ -201,7 +219,7 @@
             <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
               @foreach (var epa in AvailableEpas)
               {
-                <option value="@epa.Id">@epa.Code - @epa.Title</option>
+                <option value="@epa.Id">@EpaOptionText(epa)</option>
               }
             </InputSelect>
           </FormField>
@@ -570,6 +588,15 @@
       .ToList();
     return names.Count == 0 ? "Any instrument" : string.Join(", ", names);
   }
+
+  /// <summary>The codes of the EPAs whose items this curriculum holds but are not in force (T158), in display order.</summary>
+  private IReadOnlyList<string> InactiveEpaCodes
+    => _curriculum?.Items.Where(item => !item.EpaIsActive).Select(item => item.EpaCode).ToList() ?? [];
+
+  // An inactive EPA can still be picked (an item may be prepared before its EPA is reactivated), but it says so: its
+  // item would not be in force (T158).
+  private static string EpaOptionText(EpaDto epa)
+    => epa.IsActive ? $"{epa.Code} - {epa.Title}" : $"{epa.Code} - {epa.Title} (inactive)";
 
   private static string TargetText(CurriculumItemDto item)
     => item.QuotaPeriod == QuotaPeriod.Semester

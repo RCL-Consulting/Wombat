@@ -316,6 +316,18 @@ public sealed class QuotaProgressRenderingTests : TestContext
     }
 
     [Fact]
+    public void AnAdmittedTraineeWithNoItemInForce_IsNotToldToWaitForAdmission()
+    {
+        // T158. The reader returns a summary with no items when every EPA on the trainee's curriculum is inactive. They
+        // are admitted, so "once you are admitted" would be wrong.
+        var cut = RenderMyProgress(Summary(AsOf, programmeStart: new(2025, 1, 1), stage: 2, []));
+
+        PageText(cut).Should().Contain("No EPA on your curriculum is in use at the moment, so no target applies to you.")
+            .And.NotContain("Once you are admitted");
+        cut.FindAll(".progress-bar").Should().BeEmpty();
+    }
+
+    [Fact]
     public void ThePage_AsksForTheSignedInTraineesProgress_WithoutPinningADate()
     {
         // The page takes "today" from the reader's South African calendar. A page that pinned AsOf would
@@ -397,6 +409,18 @@ public sealed class QuotaProgressRenderingTests : TestContext
         var card = CurriculumTargetsCard(cut);
 
         Text(card).Should().Contain("No curriculum assigned yet.");
+        card.QuerySelectorAll(".dashboard-metric").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheDashboardCard_ForAnAdmittedTraineeWithNoItemInForce_DoesNotSayNoCurriculum()
+    {
+        // T158: every EPA on the curriculum is inactive, so the summary has no items, but the trainee is admitted.
+        var cut = RenderTraineeDashboard(Summary(AsOf, programmeStart: new(2025, 1, 1), stage: 2, []));
+        var card = CurriculumTargetsCard(cut);
+
+        Text(card).Should().Contain("No EPA on your curriculum is in use at the moment, so no target applies to you.")
+            .And.NotContain("No curriculum assigned yet.");
         card.QuerySelectorAll(".dashboard-metric").Should().BeEmpty();
     }
 
@@ -503,6 +527,19 @@ public sealed class QuotaProgressRenderingTests : TestContext
         JSInterop.VerifyInvoke("wombatDialog.showModal");
         sender.Received.Should().BeEmpty("only the dialog's confirm button runs the rebuild");
         cut.FindAll("dl.details-list").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheRebuildPage_WarnsThatAnInactiveEpaLosesItsProgress_BeforeTheOperatorConfirms()
+    {
+        // T158. Deactivating an EPA deletes nothing; a rebuild while it is inactive is the one step that does. The
+        // operator must read that on the page and again in the dialog, before the rebuild runs.
+        var cut = RenderRebuildPage(new FakeSender());
+
+        Text(cut.Find(".alert.alert-warning")).Should()
+            .Contain("While an EPA is inactive, a rebuild removes the progress its item had earned")
+            .And.Contain("Reactivate the EPA and rebuild again to restore them.");
+        Text(cut.Find("dialog")).Should().Contain("An EPA that is inactive now keeps none of its progress.");
     }
 
     [Fact]

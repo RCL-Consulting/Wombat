@@ -461,6 +461,63 @@ public sealed class ToolPermissionGateTests
     }
 
     [Fact]
+    public async Task T158_ADeactivatedEpa_IsAcceptedLikeAnEpaWithNoItem_AndCreditsNothing()
+    {
+        // The gate and credit share CreditTargetResolver, which reads only items in force. A deactivated EPA's item is
+        // not in force, so to both it is an EPA with no item: nothing is credited, so there is nothing to protect.
+        // The picker does not offer it, so only a forged id or a stored value reaches here. The boundary this leaves, an
+        // EPA reactivated after the gate last judged the activity, is pinned by the T158Boundary test below.
+        var options = NewDatabase();
+        await SeedAsync(options);
+        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: false);
+
+        var created = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId);
+        await TransitionAsync(options, created.Id, "submit", TraineeId);
+        await TransitionAsync(options, created.Id, "complete", AssessorId, """{ "overall_level": 4 }""");
+
+        (await ProgressRowsAsync(options)).Should().BeEmpty("a deactivated EPA takes no credit");
+        (await StoredAsync(options, created.Id)).Transitions
+            .Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(0);
+
+        // Guard: active again, PAED-005 forbids Mini-CEX, so the acceptance above was the deactivation and not a gate
+        // that is off for this EPA.
+        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: true);
+        await AssertNowForbiddenAsync(options, MiniCexTypeId, ForbiddingEpaId);
+    }
+
+    [Fact]
+    public async Task T158Boundary_AnEpaReactivatedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited()
+    {
+        // KNOWN BEHAVIOUR, pinned deliberately: the D20 boundary below, reached through T158. Filed and handed on while
+        // PAED-005 was deactivated, the gate saw an EPA with no item in force and passed it. The EPA is reactivated
+        // before the assessor completes; an unchanged target is not re-judged once the author has handed it on, and
+        // credit never re-litigates (D20), so CreditApplier credits PAED-005 with a tool its list forbids. If this test
+        // starts failing, the boundary has moved (a gate that refuses an EPA not in force at the hand-on would close
+        // it): that needs a decision in EPA-PROGRAMME, not a test edit.
+        var options = NewDatabase();
+        await SeedAsync(options);
+        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: false);
+
+        var request = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId);
+        await TransitionAsync(options, request.Id, "submit", TraineeId);
+
+        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: true);
+
+        // Guard: in force again, PAED-005 forbids Mini-CEX, so what follows is the boundary and not a gate that is off
+        // for this EPA.
+        await AssertNowForbiddenAsync(options, MiniCexTypeId, ForbiddingEpaId);
+
+        var completed = await TransitionAsync(options, request.Id, "complete", AssessorId, """{ "overall_level": 4 }""");
+
+        completed.CurrentState.Should().Be("completed");
+        var row = (await ProgressRowsAsync(options)).Should().ContainSingle().Subject;
+        row.CurriculumItemId.Should().Be(ForbiddingItemId, "PAED-005 forbids Mini-CEX, and it is credited all the same");
+        row.CountsSoFar.Should().Be(1);
+        (await StoredAsync(options, request.Id)).Transitions
+            .Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task D21_AKeyedTypeWhosePinnedRulesCreditNothing_IsAccepted()
     {
         // msf_cpsa and every unrated instrument declare `counts_for: []`. They can credit no item, so there is
@@ -999,6 +1056,13 @@ public sealed class ToolPermissionGateTests
         await using var db = new ApplicationDbContext(options);
         var item = await db.CurriculumItems.SingleAsync(entity => entity.Id == curriculumItemId);
         item.PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(toolKeys);
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SetEpaActiveAsync(DbContextOptions<ApplicationDbContext> options, int epaId, bool isActive)
+    {
+        await using var db = new ApplicationDbContext(options);
+        (await db.Epas.SingleAsync(epa => epa.Id == epaId)).IsActive = isActive;
         await db.SaveChangesAsync();
     }
 

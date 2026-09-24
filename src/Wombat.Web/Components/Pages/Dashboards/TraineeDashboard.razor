@@ -21,9 +21,14 @@
   {
     <div class="dashboard-grid">
       <DashboardCard Title="Curriculum targets" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2">
-        @if (_vm.CurriculumTargets is not { Items.Count: > 0 } targets)
+        @if (_vm.CurriculumTargets is null)
         {
           <p class="muted">No curriculum assigned yet. Once you are admitted, your targets for each period appear here.</p>
+        }
+        else if (_vm.CurriculumTargets is not { Items.Count: > 0 } targets)
+        {
+          @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
+          <p class="muted">No EPA on your curriculum is in use at the moment, so no target applies to you.</p>
         }
         else
         {

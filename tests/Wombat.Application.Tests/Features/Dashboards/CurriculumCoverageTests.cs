@@ -432,6 +432,63 @@ public sealed class CurriculumCoverageTests
         coverage.Trainees.Select(trainee => trainee.TraineeUserId).Should().Equal("amara");
     }
 
+    /// <summary>
+    /// T158. A deactivated EPA's item is owed by nobody: it has no row, and it leaves every trainee's count by kind. A
+    /// trainee whose only item is retired has no targets, which is not an exemption. Reactivating restores all of it,
+    /// with the credit the rows still hold.
+    /// </summary>
+    [Fact]
+    public async Task ADeactivatedEpaLeavesCoverage_AndReturnsWithItsCreditWhenReactivated()
+    {
+        await using var db = CreateDb();
+        SeedScope(db);
+        SeedSemesterAndYearCurriculum(db, semesterTarget: 1, yearTarget: 1);
+        AddCurriculum(db, 2, subSpecialityId: 1);
+        AddEpa(db, 2, "PAED-002");
+        AddItem(db, 2, curriculumId: 2, epaId: 2, QuotaPeriod.Semester, target: 1);
+
+        AddTrainee(db, "amara", curriculumId: 1, OnTime);
+        AddTrainee(db, "bongani", curriculumId: 2, OnTime);
+        AddRow(db, SemesterItem, "amara", 2026, 2, counts: 1);
+        AddRow(db, YearItem, "amara", 2026, 1, counts: 1);
+        AddRow(db, 2, "bongani", 2026, 2, counts: 1);
+        Commit(db);
+
+        var handler = new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object);
+        var query = new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: [1]), AsOf);
+
+        foreach (var epa in db.Epas.Where(epa => epa.Id == SemesterEpa || epa.Id == 2))
+        {
+            epa.IsActive = false;
+        }
+
+        db.SaveChanges();
+
+        var retired = await handler.Handle(query, CancellationToken.None);
+
+        retired.EpaTargets.Should().Equal(
+            new EpaTargetCoverage(YearEpa, "PAED-011", TitleOf("PAED-011"), QuotaPeriod.AcademicYear, 1, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0));
+        retired.TraineeTargets.Should().Equal(
+            new TraineeTargetsItem("amara", "Amara Okafor", SemesterTargetsMet: 0, SemesterTargetsApplying: 0, YearTargetsMet: 1, YearTargetsApplying: 1));
+        retired.ExemptTraineeCount.Should().Be(0, "bongani's only target is retired, which leaves him no target to waive");
+
+        foreach (var epa in db.Epas)
+        {
+            epa.IsActive = true;
+        }
+
+        db.SaveChanges();
+
+        var restored = await handler.Handle(query, CancellationToken.None);
+
+        restored.EpaTargets.Should().Equal(
+            new EpaTargetCoverage(SemesterEpa, "PAED-001", TitleOf("PAED-001"), QuotaPeriod.Semester, 1, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0),
+            new EpaTargetCoverage(2, "PAED-002", TitleOf("PAED-002"), QuotaPeriod.Semester, 1, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0),
+            new EpaTargetCoverage(YearEpa, "PAED-011", TitleOf("PAED-011"), QuotaPeriod.AcademicYear, 1, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0));
+        restored.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().BeEquivalentTo("amara", "bongani");
+        restored.TraineeTargets.Single(trainee => trainee.TraineeUserId == "amara").SemesterTargetsMet.Should().Be(1);
+    }
+
     [Fact]
     public async Task CommitteeMemberDashboard_WhenEveryTraineeIsExempt_ShowsNoTraineesAndNoneApplying()
     {
