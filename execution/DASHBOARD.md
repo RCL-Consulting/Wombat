@@ -74,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
-59ede4a docs(execution): close T186 — browser-verified (6 of 15 covered; reports say not recorded, never why); file T211
-722cfe5 feat(curricula): each curriculum item carries Annexure B's decision cadence and its decision body (neonatal for EPAs 4–5), stamped on create and by migration (T131 slice 2)
-bfc5d58 feat(committee): every staged entrustment decision names the frozen evidence it rests on, and ratify issues nothing without it (T131 slice 1, D38)
-26bc740 fix(msf): coverage is read from the released campaign's finished evidence rows everywhere — committee snapshot, coverage card, campaign report and portfolio PDF — so a campaign released before the per-EPA stamp is not reported as covering nothing (T186)
-455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
+3a17890 fix(msf): the expiry reminder fires before the campaign closes, a Coordinator can withdraw a draft or open campaign, an invitee added during an open is not lost, and a job never runs twice at once (T206)
+e48a2a6 feat(msf): respondents answer on an anonymous page in the web app, reached from their invitation link; a respondent is never named on the audit row (T205)
+b9eea1c feat(msf): learner feedback is an MSF template kind with a Learner category; its release records learner_feedback evidence for PAED-015 and counts the teaching contexts that responded (T164, D35)
+02a60db feat(committee): a committee decision needs a quorum — at least two committee members at the panel's institution, the chair plus one, recorded as present on each decision — only the chair ratifies, with no Administrator bypass (T165, D46)
+c03fb30 docs(execution): T131 slices 1–2 browser-verified (review 2 ratified with evidence-grounded STARs); file T212
 ```

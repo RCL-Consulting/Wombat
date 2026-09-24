@@ -46,6 +46,11 @@ public sealed class DevUserSeeder
     private const string CoordinatorEmail = "coordinator@wombat.local";
     private const string CoordinatorPassword = "ChangeThisCoordinator123!";
 
+    // A panel's membership is edited by an InstitutionalAdmin (T182). Without one, panel changes cannot be exercised on
+    // dev with a seeded account.
+    private const string InstitutionalAdminEmail = "instadmin@wombat.local";
+    private const string InstitutionalAdminPassword = "ChangeThisInstAdmin123!";
+
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<DevUserSeeder> _logger;
@@ -106,6 +111,7 @@ public sealed class DevUserSeeder
         await EnsureStaffUserAsync(SecondCommitteeMemberEmail, SecondCommitteeMemberPassword, "Committee Two", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId, scopes, cancellationToken);
+        await EnsureStaffUserAsync(InstitutionalAdminEmail, InstitutionalAdminPassword, "Institutional Admin", WombatRoles.InstitutionalAdmin, institutionId, scopes, cancellationToken);
     }
 
     private async Task EnsureTraineeAsync(
