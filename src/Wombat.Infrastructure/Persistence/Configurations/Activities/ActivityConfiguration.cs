@@ -34,6 +34,12 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         builder.HasIndex(entity => entity.SpecialityId);
         builder.HasIndex(entity => entity.SubSpecialityId);
 
+        // T137: the EPA the activity is evidence for, stamped from the pinned schema's pointer. Indexed for the
+        // per-EPA readers the stamp exists for (the committee's evidence snapshot, a trajectory by EPA), which filter
+        // on it rather than re-parsing DataJson. No foreign key, for the T101 reason: it is a stamp of what the form
+        // said, the resolver never writes an id that did not exist, and every reader joins it LEFT.
+        builder.HasIndex(entity => entity.EpaId);
+
         builder.HasMany(entity => entity.Transitions)
             .WithOne(entity => entity.Activity)
             .HasForeignKey(entity => entity.ActivityId)

@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "evidence_epa_field": "epa_id",
   "sections": [
     {
       "key": "reflection",

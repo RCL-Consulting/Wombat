@@ -69,3 +69,11 @@ Observed at `431e69e`:
 [T137] (the `EpaId` stamp; dependency), [T138] (MSF campaigns in the snapshot), [T131] (the agenda; D38's evidence links
 will draw from this snapshot), [T135] (the state decision), [T144] (classification by `WbaToolKey`), [T161], [T165],
 [T166], [T109].
+
+## Note from T137, 2026-09-24
+
+`Activity.EpaId` is now stamped from the schema's `evidence_epa_field` (create, transition, MSF release), and the
+migration backfilled existing rows. It records the EPA the activity is evidence **for**. It does **not** say the EPA is
+on the trainee's curriculum. Staging a STAR must still check the trainee's curriculum (scoped on `OwningInstitutionId`),
+not the presence of an `EpaId`.
+

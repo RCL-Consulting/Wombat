@@ -26,13 +26,24 @@ internal sealed class BuilderSchemaModel
     /// <inheritdoc cref="ObservationDateField" />
     public string? RatedLevelField { get; set; }
 
+    /// <summary>
+    /// The root pointer at the <c>epa</c> field naming the EPA this activity is evidence for (T137).
+    /// </summary>
+    /// <remarks>
+    /// Carried through the round-trip from the day it existed, which T119 and T126 were not (T133). Losing it on a save
+    /// would be worse than losing either of those: a type whose credit reads an EPA field refuses to save without it,
+    /// so the Form tab would make the type unsaveable rather than merely quieter.
+    /// </remarks>
+    public string? EvidenceEpaField { get; set; }
+
     public static BuilderSchemaModel Parse(string schemaJson)
     {
         var schema = FormSchemaParser.Parse(schemaJson);
         var model = new BuilderSchemaModel
         {
             ObservationDateField = schema.ObservationDateField,
-            RatedLevelField = schema.RatedLevelField
+            RatedLevelField = schema.RatedLevelField,
+            EvidenceEpaField = schema.EvidenceEpaField
         };
 
         foreach (var section in schema.Sections)
@@ -86,7 +97,8 @@ internal sealed class BuilderSchemaModel
             1,
             sections,
             PointerIfStillValid(sections, ObservationDateField, FieldType.Date),
-            PointerIfStillValid(sections, RatedLevelField, FieldType.Scale));
+            PointerIfStillValid(sections, RatedLevelField, FieldType.Scale),
+            PointerIfStillValid(sections, EvidenceEpaField, FieldType.Epa));
 
         return FormSchemaParser.Serialize(schema);
     }
@@ -218,12 +230,13 @@ internal sealed class BuilderSchemaModel
             }
         }
 
-        // The root pointers, which this diff never mentioned. They are the two settings whose loss is
+        // The root pointers, which this diff never mentioned. They are the settings whose loss is
         // silent by construction -- nothing on the form changes, nothing refuses, and the feature just
         // stops. An operator who deletes a pointed-at field sees the field removal warned above and
         // had no way to know the pointer went with it. (T133)
         AddPointerWarning(warnings, "encounter date", published.ObservationDateField, draft.ObservationDateField);
         AddPointerWarning(warnings, "entrustment rating", published.RatedLevelField, draft.RatedLevelField);
+        AddPointerWarning(warnings, "EPA", published.EvidenceEpaField, draft.EvidenceEpaField);
 
         return warnings;
     }

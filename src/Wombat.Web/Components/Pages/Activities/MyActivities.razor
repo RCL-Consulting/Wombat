@@ -14,18 +14,25 @@
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No activities yet" EmptyBody="Create the first activity from the activity catalogue.">
   <DataTable Items="_items">
     <HeaderRow>
+      @* T137. The EPA and the encounter date are what tell one activity from its siblings: a released MSF campaign
+         records one row per EPA, all of one type, one state and one date. The credit column is T106 item 14, so a
+         registrar can see across the whole list which completions counted. *@
       <tr>
         <th>Type</th>
+        <th>EPA</th>
+        <th>Encounter date</th>
         <th>State</th>
-        <th>Updated</th>
+        <th>Credited</th>
         <th></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
       <tr>
         <td>@item.ActivityTypeName</td>
+        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" /></td>
+        <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentState</td>
-        <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+        <td>@CreditOutcome.Label(item.CreditedItemCount)</td>
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">View</a>
         </td>

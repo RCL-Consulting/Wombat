@@ -4,9 +4,15 @@ namespace Wombat.Domain.Tests.Activities;
 
 internal static class ActivityTestData
 {
+    /// <summary>
+    /// Publishable beside <see cref="ValidCreditRulesJson" />. Since T137 that needs the EPA field the credit rule reads
+    /// and the pointer naming it: before, the pair credited from an <c>epa_id</c> the form did not have, which nothing
+    /// checked. Properties are in the serialiser's order, so the round-trip tests can compare it modulo whitespace.
+    /// </summary>
     public const string ValidSchemaJson = """
         {
           "version": 1,
+          "evidence_epa_field": "epa_id",
           "sections": [
             {
               "key": "details",
@@ -27,6 +33,12 @@ internal static class ActivityTestData
                     "min": 1,
                     "max": 5
                   }
+                },
+                {
+                  "key": "epa_id",
+                  "type": "epa",
+                  "label": "EPA",
+                  "required": false
                 }
               ]
             }

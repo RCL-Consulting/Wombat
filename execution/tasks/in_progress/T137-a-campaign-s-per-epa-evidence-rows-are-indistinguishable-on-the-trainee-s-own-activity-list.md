@@ -1,12 +1,13 @@
 ---
 id: T137
 title: A campaign's per-EPA evidence rows are indistinguishable on the trainee's own activity list
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 model: opus
 depends_on: []
 created: 2026-09-21
+started: 2026-09-24
 ---
 
 # T137 — Eight identical rows, one per EPA, and nothing on the page says which is which

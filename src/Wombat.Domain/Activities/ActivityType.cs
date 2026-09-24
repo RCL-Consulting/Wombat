@@ -85,12 +85,17 @@ public sealed class ActivityType
         var schema = FormSchemaParser.Parse(schemaJson);
         var workflow = WorkflowParser.Parse(workflowJson);
 
+        var creditRules = CreditRulesParser.Parse(creditRulesJson);
+
         // T102: the nominee fields must be unambiguous before anything is assigned. See ActorFieldRules.
         ActorFieldRules.EnsurePublishable(schema, workflow);
 
+        // T137: the EPA an activity stamps and the EPA its credit lands on are one field. See EvidenceEpa.
+        EvidenceEpa.EnsureCreditAgrees(schema, creditRules);
+
         var stagingSchemaJson = FormSchemaParser.Serialize(schema);
         var stagingWorkflowJson = WorkflowParser.Serialize(workflow);
-        var stagingCreditRulesJson = CreditRulesParser.Serialize(CreditRulesParser.Parse(creditRulesJson));
+        var stagingCreditRulesJson = CreditRulesParser.Serialize(creditRules);
         var stagingDisplayFieldsJson = NormalizeDisplayFieldsJson(displayFieldsJson);
 
         StagingSchemaJson = stagingSchemaJson;
@@ -112,9 +117,11 @@ public sealed class ActivityType
 
         // T102: also here, because a draft staged before the rule existed never met it, and a publish is the step that
         // makes it what new activities pin to. Nothing is assigned until it passes.
-        ActorFieldRules.EnsurePublishable(
-            FormSchemaParser.Parse(StagingSchemaJson!),
-            WorkflowParser.Parse(StagingWorkflowJson!));
+        var stagedSchema = FormSchemaParser.Parse(StagingSchemaJson!);
+        ActorFieldRules.EnsurePublishable(stagedSchema, WorkflowParser.Parse(StagingWorkflowJson!));
+
+        // T137, for the same reason: a draft staged before the rule never met it.
+        EvidenceEpa.EnsureCreditAgrees(stagedSchema, CreditRulesParser.Parse(StagingCreditRulesJson!));
 
         SchemaJson = StagingSchemaJson;
         WorkflowJson = StagingWorkflowJson;

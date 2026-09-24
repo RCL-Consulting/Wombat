@@ -10,9 +10,14 @@
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="Inbox clear" EmptyBody="There are no activities waiting for your action.">
   <DataTable Items="_items">
     <HeaderRow>
+      @* T137. The EPA and the encounter date, so three requests from one trainee are three different things at a
+         glance. "Updated" stays: in an inbox, how long something has waited is the point. The raw subject id is
+         T142's to replace. *@
       <tr>
         <th>Type</th>
         <th>Subject</th>
+        <th>EPA</th>
+        <th>Encounter date</th>
         <th>State</th>
         <th>Updated</th>
         <th></th>
@@ -22,6 +27,8 @@
       <tr>
         <td>@item.ActivityTypeName</td>
         <td>@item.SubjectUserId</td>
+        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" /></td>
+        <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentState</td>
         <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
         <td class="actions-cell">

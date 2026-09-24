@@ -135,6 +135,25 @@ public sealed record ActivityDetailDto(
     IReadOnlyList<string> EditableFieldKeys,
     IReadOnlyList<ActivityActionDto> AvailableActions);
 
+/// <summary>
+/// One row of an activity list: enough to tell an activity from its siblings without opening it (T137).
+/// </summary>
+/// <param name="EpaId">The stamped <c>Activity.EpaId</c>: the EPA this activity is evidence for, or null.</param>
+/// <param name="EpaCode">That EPA's code, or null when the activity is about no EPA.</param>
+/// <param name="EpaTitle">That EPA's title, or null when the activity is about no EPA.</param>
+/// <param name="ObservedOn">
+/// When the encounter happened (<c>Activity.ObservedOn</c>, T119), not when the paperwork was filed.
+/// </param>
+/// <param name="ObservedOnDeclared">
+/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the filing day. A list must
+/// not present that as a clinical fact.
+/// </param>
+/// <param name="CreditedItemCount">
+/// The T108 outcome of the LATEST transition on which credit was evaluated: null when credit was never evaluated (the
+/// activity is not complete, or its type credits nothing by design), 0 when it was evaluated and matched no curriculum
+/// item, otherwise the number of items credited. The same three-valued contract as
+/// <see cref="ActivityTransitionDto.CreditedItemCount" />, read from the same column. (T106 item 14)
+/// </param>
 public sealed record ActivitySummaryDto(
     int Id,
     int ActivityTypeId,
@@ -143,7 +162,13 @@ public sealed record ActivitySummaryDto(
     string SubjectUserId,
     string CurrentState,
     DateTime CreatedOn,
-    DateTime UpdatedOn);
+    DateTime UpdatedOn,
+    int? EpaId,
+    string? EpaCode,
+    string? EpaTitle,
+    DateOnly ObservedOn,
+    bool ObservedOnDeclared,
+    int? CreditedItemCount);
 
 public sealed record ActivityValidationErrorDto(
     string? FieldKey,

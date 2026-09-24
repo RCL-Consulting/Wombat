@@ -26,7 +26,9 @@ namespace Wombat.Infrastructure.Activities;
 /// <c>curriculum_item_field</c> to <c>epa_field</c>. So an item the gate passes is exactly an item credit can land on.
 /// It is the authority where the picker is not: a literal <c>curriculum_item_id</c> rule, a rule mixing
 /// <c>curriculum_item_field</c> with <c>epa_field</c>, or an <c>epa_field</c> that is not an <c>epa</c>-typed field.
-/// The picker narrows none of those.
+/// The picker narrows none of those. Since T137 the last two can no longer be saved or published
+/// (<c>EvidenceEpa.EnsureCreditAgrees</c>), but a version pinned before then can still carry them, so the gate keeps
+/// covering them.
 /// </para>
 /// <para>
 /// What it deliberately lets through:

@@ -119,7 +119,7 @@
           <div class="header-container">
             <div>
               <h3>Form settings</h3>
-              <p class="page-subtitle">Which field carries the encounter date, and which carries the entrustment rating.</p>
+              <p class="page-subtitle">Which field carries the encounter date, which carries the entrustment rating, and which names the EPA.</p>
             </div>
           </div>
           <div class="form-grid">
@@ -142,6 +142,20 @@
                 @foreach (var key in EligibleFieldKeys(FieldType.Scale))
                 {
                   <option value="@key" selected="@(key == _builderSchema.RatedLevelField)">@key</option>
+                }
+              </select>
+            </FormField>
+            @* T137. Which EPA an activity is evidence for: it is stamped on every activity and shown on every list.
+               Credit that reads an EPA field must read this one, and a save says so if it does not. *@
+            <FormField Label="EPA field" InputId="evidence-epa-field"
+                       HelpText="The field naming the EPA this activity is evidence for. It is shown on activity lists, and credit rules that match on an EPA field must use this one.">
+              <select id="evidence-epa-field" class="form-select"
+                      value="@(_builderSchema.EvidenceEpaField ?? string.Empty)"
+                      @onchange="OnEvidenceEpaFieldChanged">
+                <option value="">None — this form is about no single EPA</option>
+                @foreach (var key in EligibleFieldKeys(FieldType.Epa))
+                {
+                  <option value="@key" selected="@(key == _builderSchema.EvidenceEpaField)">@key</option>
                 }
               </select>
             </FormField>
@@ -430,9 +444,13 @@
       .Distinct(StringComparer.Ordinal)
       .ToList();
 
-    var current = fieldType == FieldType.Date
-      ? _builderSchema.ObservationDateField
-      : _builderSchema.RatedLevelField;
+    var current = fieldType switch
+    {
+      FieldType.Date => _builderSchema.ObservationDateField,
+      FieldType.Scale => _builderSchema.RatedLevelField,
+      FieldType.Epa => _builderSchema.EvidenceEpaField,
+      _ => null
+    };
 
     if (!string.IsNullOrWhiteSpace(current) && !keys.Contains(current, StringComparer.Ordinal))
     {
@@ -451,6 +469,12 @@
   private void OnRatedLevelFieldChanged(ChangeEventArgs args)
   {
     _builderSchema.RatedLevelField = NullIfEmpty(args.Value?.ToString());
+    RefreshWarnings();
+  }
+
+  private void OnEvidenceEpaFieldChanged(ChangeEventArgs args)
+  {
+    _builderSchema.EvidenceEpaField = NullIfEmpty(args.Value?.ToString());
     RefreshWarnings();
   }
 

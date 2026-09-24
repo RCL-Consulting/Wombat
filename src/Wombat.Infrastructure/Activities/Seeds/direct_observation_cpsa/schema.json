@@ -2,6 +2,7 @@
   "version": 1,
   "observation_date_field": "observed_on",
   "rated_level_field": "overall_level",
+  "evidence_epa_field": "epa_id",
   "sections": [
     {
       "key": "request",

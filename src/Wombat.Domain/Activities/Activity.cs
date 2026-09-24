@@ -12,6 +12,25 @@ public sealed class Activity
     public string CreatedByUserId { get; set; } = string.Empty;
     public string CurrentState { get; set; } = string.Empty;
     public string DataJson { get; set; } = "{}";
+
+    /// <summary>
+    /// The EPA this activity is evidence for, or null. (T137)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Resolved from the field the PINNED schema's <c>evidence_epa_field</c> names, and stamped by <c>ActivityService</c>
+    /// wherever it stamps <see cref="ObservedOn" />: at create, on every transition, and on the system-written path that
+    /// records a released MSF campaign's per-EPA evidence. Null when the pinned schema declares no pointer, when the
+    /// field is empty or not an integer, or when no EPA with that id exists, so a reader can join on it without a
+    /// dangling id.
+    /// </para>
+    /// <para>
+    /// Before T137 the column existed and nothing wrote it. The EPA lived only inside <see cref="DataJson" />, which is
+    /// not SQL-projectable, so the trainee's own list could not say which EPA a row was about, and a campaign covering
+    /// eight EPAs left eight identical rows. It agrees with credit by construction: <c>EvidenceEpa.EnsureCreditAgrees</c>
+    /// refuses a type whose credit reads its EPA from any other field.
+    /// </para>
+    /// </remarks>
     public int? EpaId { get; set; }
     public int? CurriculumItemId { get; set; }
     public DateTime CreatedOn { get; set; }

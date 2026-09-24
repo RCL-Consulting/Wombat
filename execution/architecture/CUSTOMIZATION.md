@@ -136,6 +136,27 @@ Trainee — the roles whose authority is not bounded by a speciality), and never
 matched, never the nominee's speciality: an assessor from another discipline at the same institution can be named (D23). It takes no `options` or `catalogue`: its people come from the directory. See
 rule 3 under field permissions.
 
+**Root pointers** name, at the schema's top level, which field plays a role the platform reads without knowing the
+form:
+
+- `observed_on_field`: the encounter date (T119).
+- `rated_level_field`: the entrustment rating (T126).
+- `evidence_epa_field`: the EPA this activity is evidence for (T137). It must name an `epa`-typed field.
+
+`evidence_epa_field` is what stamps `Activity.EpaId`, at create, on every transition, and on the system-written MSF
+path, by `EvidenceEpaResolver`. The lists and the committee read that stamp.
+
+So the list and credit can never name different EPAs, publish enforces exactly one of two shapes
+(`EvidenceEpa.EnsureCreditAgrees`, run by `SaveDraft` and `PublishDraft` before anything is assigned):
+
+- **one EPA:** the pointer is declared, every credit directive's `epa_field` equals it, and no directive targets a
+  curriculum item directly (`curriculum_item_id` or `curriculum_item_field`); or
+- **no single EPA:** no pointer, and no directive reads an `epa_field`. Crediting a fixed item or an item field still
+  works (journal club).
+
+Every pointer needs both a Parse half and a Serialize half, plus a `SeedRoundTripTests` fixture (CLAUDE.md § Editing a
+seed folder).
+
 New field types are new tasks, not T019 drive-bys. Every field type is a renderer, a builder editor, a validator, a JSON serialization, and a PDF renderer in T023 — the marginal cost is real.
 
 Conditional visibility (`show_if`) is supported on sections and fields as a **single** condition per element in v1: one field, one operator (`equals` / `not_equals` / `is_set` / `is_not_set` / `greater_than` / `less_than`), one value. Multi-condition visibility with ANDs/ORs is T019-f. Covers roughly 90% of the real cases — "show site when procedure = central line", "show escalation note when complication = yes".
@@ -394,6 +415,13 @@ An `ActivityType` can be edited. When it is, its `Version` increments. New activ
 If a schema change is incompatible with existing data (field removed, field type changed), the admin UI warns and requires a migration step: either leave old activities alone (safe default) or run a small transformation (a tiny DSL) over the old data.
 
 No automatic schema rewrites on existing activities. Ever. Old data is sacred.
+
+**One recorded exception while nothing is live (W-007).** T137's migration (`20260924123852_T137_ActivityEvidenceEpa`)
+added `evidence_epa_field` to stored schemas, published versions included, wherever the version's own credit rules or
+its only `epa` field decide it. It then stamped `Activities.EpaId` from the data. The pointer is inert: nothing
+rendered, validated or credited changes. Without it, an in-flight activity pinned to a pre-T137 version would have its
+backfilled `EpaId` reset to null on its next transition. When Wombat takes on real users this exception closes with
+W-007: a later pointer of this kind needs a resolver fallback for old versions, not a rewrite.
 
 ## Trade-offs, honestly
 

@@ -536,6 +536,126 @@ public sealed class SeedRoundTripTests
         }
     }
 
+    /// <summary>
+    /// T137 added a root <c>evidence_epa_field</c> pointer at the <c>epa</c> field naming the EPA an activity is
+    /// evidence for. Named explicitly, like the other two pointers, so a Serialize that forgets it fails here by name.
+    /// </summary>
+    /// <remarks>
+    /// This loss would re-create the defect T137 exists for without failing anything: every activity created after the
+    /// publish would stamp no EPA, and a released MSF campaign would list as identical rows again. Worse than the other
+    /// two pointers, it would also make every EPA-crediting type unsaveable, because <c>EvidenceEpa.EnsureCreditAgrees</c>
+    /// refuses credit that reads an EPA field the form does not declare.
+    /// </remarks>
+    [Fact]
+    public void EvidenceEpaField_SurvivesParseSerializeParse()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "evidence_epa_field": "epa_id",
+              "sections": [
+                {
+                  "key": "evidence",
+                  "title": "Evidence",
+                  "fields": [
+                    { "key": "epa_id", "type": "epa", "label": "EPA", "required": true }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().Contain("\"evidence_epa_field\":\"epa_id\"");
+        FormSchemaParser.Parse(canonical).EvidenceEpaField.Should().Be("epa_id");
+        FormSchemaParser.Serialize(FormSchemaParser.Parse(canonical)).Should().Be(canonical, "the pointer must canonicalise to a fixed point");
+        AssertNothingLost(schemaJson, canonical, "evidence_epa_field fixture");
+    }
+
+    /// <summary>
+    /// The mirror. A journal club, a procedure log, a QI project, a research output and a teaching session are about no
+    /// single EPA, so canonicalisation must not invent one.
+    /// </summary>
+    [Fact]
+    public void EvidenceEpaField_StaysAbsentWhenTheSchemaDeclaresNone()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "evidence",
+                  "title": "Evidence",
+                  "fields": [
+                    { "key": "epa_id", "type": "epa", "label": "EPA" }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().NotContain("evidence_epa_field");
+        FormSchemaParser.Parse(canonical).EvidenceEpaField.Should().BeNull();
+    }
+
+    /// <summary>
+    /// The corpus-wide invariant that catches the next seed: a schema carrying an <c>epa</c> field says which field is
+    /// its EPA, and one carrying none says nothing. The parser cannot catch the omission, because "about no EPA" is a
+    /// legitimate state; this is what stops a new instrument shipping with rows the lists cannot tell apart.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void Schema_DeclaresAnEvidenceEpaFieldExactlyWhenItCarriesAnEpaField(string seedKey)
+    {
+        var schema = FormSchemaParser.Parse(ReadSeedFile(seedKey, "schema.json"));
+
+        var epaFields = schema.Sections
+            .SelectMany(section => section.Fields)
+            .Where(field => field.Type == FieldType.Epa)
+            .Select(field => field.Key)
+            .ToArray();
+
+        if (epaFields.Length == 0)
+        {
+            schema.EvidenceEpaField.Should().BeNull(
+                "'{0}' declares no EPA field, so it is about no EPA and must not claim to be", seedKey);
+            return;
+        }
+
+        schema.EvidenceEpaField.Should().NotBeNull(
+            "'{0}' declares EPA field(s) ({1}) and nothing else can stamp which EPA its activities are about — the gap " +
+            "T137 closed",
+            seedKey, string.Join(", ", epaFields));
+
+        epaFields.Should().Contain(schema.EvidenceEpaField!);
+    }
+
+    /// <summary>
+    /// The list and credit can never name different EPAs, across the whole corpus: every directive that reads an EPA
+    /// field reads the schema's pointer. Asserted here by the same check publish runs, and restated by hand so the test
+    /// does not merely agree with the rule it guards.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void Schema_EvidenceEpaFieldIsTheFieldEveryCreditDirectiveReads(string seedKey)
+    {
+        var schema = FormSchemaParser.Parse(ReadSeedFile(seedKey, "schema.json"));
+        var credit = CreditRulesParser.Parse(ReadSeedFile(seedKey, "credit.json"));
+
+        foreach (var directive in credit.CountsFor.Where(directive => directive.CurriculumItemMatchRule.EpaField is not null))
+        {
+            directive.CurriculumItemMatchRule.EpaField.Should().Be(schema.EvidenceEpaField,
+                "'{0}' credits the EPA in '{1}', so that is the EPA its activities must be stamped with",
+                seedKey, directive.CurriculumItemMatchRule.EpaField);
+        }
+
+        var agrees = () => Wombat.Domain.Activities.EvidenceEpa.EnsureCreditAgrees(schema, credit);
+        agrees.Should().NotThrow();
+    }
+
     private static void CollectMinimumLevelFields(JsonElement element, List<string> into)
     {
         switch (element.ValueKind)

@@ -4,6 +4,7 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T137](tasks/in_progress/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | in_progress | [T141](tasks/in_progress/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
 | in_progress | [T147](tasks/in_progress/T147-campaignedit-s-epa-checkbox-group-has-a-label-pointing-at-no-element.md) | P3 | CampaignEdit's EPA checkbox group has a label pointing at no element | sonnet |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
@@ -12,7 +13,6 @@
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T135](tasks/queued/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
-| queued | [T137](tasks/queued/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T160](tasks/queued/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+d0f8a90 docs(execution): close T144 and T140 (integration 23/23, no leaked schemas); file T177, T178, T179
 e2f4858 test(integration): the MSF respond-flow fixture seeds as startup does, cleans up on a failed setup, runs no scheduler, and asserts the ClosedOn date (T140)
 9ea13d2 fix(msf): every label on the campaign editor names a real control (T147)
 342660f fix(activities): a rated source is classified by the instrument it declares, not by its type key (T144)
 e0a06a2 fix(nav): a trainee's My Progress goes to their progress page; a pending trainee is offered no trainee-only page (T141)
-87123be docs(execution): close T125 and T136 — browser-verified on dev (PAED-001 re-pinned to O-R and back, byte-identical); file T174, T175, T176
 ```

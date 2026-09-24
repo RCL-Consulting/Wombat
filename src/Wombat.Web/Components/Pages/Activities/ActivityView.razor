@@ -194,13 +194,8 @@
   private bool CreditedAcrossScales
     => _activity?.Transitions.Any(transition => transition.CreditScaleMismatchCount > 0) == true;
 
-  private static string CreditLabel(int? creditedItemCount) => creditedItemCount switch
-  {
-    null => "—",
-    0 => "None",
-    1 => "1 item",
-    _ => $"{creditedItemCount} items"
-  };
+  // One wording with the activity lists (T137).
+  private static string CreditLabel(int? creditedItemCount) => CreditOutcome.Label(creditedItemCount);
 
   protected override async Task OnParametersSetAsync()
   {

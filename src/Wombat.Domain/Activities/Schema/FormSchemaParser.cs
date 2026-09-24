@@ -45,6 +45,14 @@ public static class FormSchemaParser
             writer.WriteString("rated_level_field", schema.RatedLevelField);
         }
 
+        // Same rule, same trap, and the same position argument: after `rated_level_field`, before `sections`.
+        // Without this half, every publish would drop the pointer and every activity created afterwards would
+        // stamp no EPA, with nothing failing. (T137)
+        if (schema.EvidenceEpaField is not null)
+        {
+            writer.WriteString("evidence_epa_field", schema.EvidenceEpaField);
+        }
+
         writer.WritePropertyName("sections");
         writer.WriteStartArray();
 
@@ -167,7 +175,10 @@ public static class FormSchemaParser
     private static FormSchema ParseSchema(JsonElement root)
     {
         EnsureObject(root, "Schema root must be an object.");
-        EnsureAllowedProperties(root, ["version", "sections", "observation_date_field", "rated_level_field"], "schema");
+        EnsureAllowedProperties(
+            root,
+            ["version", "sections", "observation_date_field", "rated_level_field", "evidence_epa_field"],
+            "schema");
 
         var version = GetRequiredInt(root, "version");
         var sectionsElement = GetRequiredProperty(root, "sections");
@@ -222,7 +233,25 @@ public static class FormSchemaParser
             }
         }
 
-        return new FormSchema(version, sections, observationDateField, ratedLevelField);
+        var evidenceEpaField = GetOptionalTrimmedString(root, "evidence_epa_field");
+        if (evidenceEpaField is not null)
+        {
+            // Validated here for the same reason as the other two pointers: a pointer at a missing field, or at a
+            // field that holds no EPA id, would stamp nothing on every activity and fail nowhere. (T137)
+            var target = sections
+                .SelectMany(section => section.Fields)
+                .FirstOrDefault(field => string.Equals(field.Key, evidenceEpaField, StringComparison.Ordinal))
+                ?? throw new SchemaParseException(
+                    $"evidence_epa_field '{evidenceEpaField}' does not match any field in the schema.");
+
+            if (target.Type != FieldType.Epa)
+            {
+                throw new SchemaParseException(
+                    $"evidence_epa_field '{evidenceEpaField}' must point at an 'epa' field, but it is '{target.Type}'.");
+            }
+        }
+
+        return new FormSchema(version, sections, observationDateField, ratedLevelField, evidenceEpaField);
     }
 
     private static FormSection ParseSection(JsonElement element)

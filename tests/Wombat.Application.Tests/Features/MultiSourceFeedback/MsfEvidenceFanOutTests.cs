@@ -82,6 +82,25 @@ public sealed class MsfEvidenceFanOutTests
         released.CoveredEpas.Should().OnlyContain(covered => covered.RecordedOn != null);
     }
 
+    /// <summary>
+    /// T137. The rows of one campaign share a type, a state and an encounter date, so the stamped EPA is the only thing
+    /// a list can tell them apart by. <c>msf_cpsa</c> credits nothing (D8), so only its schema's pointer can supply it.
+    /// </summary>
+    [Fact]
+    public async Task Release_StampsEachRowWithTheEpaItIsEvidenceFor()
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum, SecondEpaOnCurriculum]);
+
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: null);
+
+        var activities = await db.Activities.AsNoTracking().ToListAsync();
+        activities.Select(activity => activity.EpaId)
+            .Should().BeEquivalentTo(new int?[] { EpaOnCurriculum, SecondEpaOnCurriculum });
+        activities.Should().OnlyContain(activity => activity.EpaId == ReadInt(activity.DataJson, "epa_id"),
+            "each row is stamped with the EPA its own payload names, not a sibling's");
+    }
+
     [Fact]
     public async Task Release_CreditsNothing_BecauseMsfConsumesNoneOfTheFiftyFiveEncounters()
     {

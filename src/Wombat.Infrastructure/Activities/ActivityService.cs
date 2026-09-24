@@ -53,7 +53,7 @@ public sealed class ActivityService : IActivityService
         var subjectUserId = input.SubjectUserId.Trim();
         var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
 
-        var activity = BuildDraftActivity(
+        var activity = await BuildDraftActivityAsync(
             activityType,
             schema,
             workflow,
@@ -62,18 +62,20 @@ public sealed class ActivityService : IActivityService
             input.CreatedByUserId,
             input.InitialDataJson,
             input.Principal,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            cancellationToken);
 
         ThrowIfFiledIncomplete(schema, workflow, activity, input.Principal);
 
         // T122. A create always writes the credit target, and for a type whose initial state is already `requested`
         // (the legacy WBA shape) the create IS the author's submission: the next move is the assessor's. Gating here
         // also means a refused Submit on /activities/new fails before the draft exists, so it leaves no orphan behind.
-        // After BuildDraftActivity, which never touches the context, and before Add: see ToolPermissionGate.
+        // After BuildDraftActivityAsync, which reads the context but never writes to it, and before Add: see
+        // ToolPermissionGate.
         await ToolPermissionGate.EnsurePermittedAsync(
             _dbContext,
             activityType.WbaToolKey,
-            // The live published rules ARE the pinned version's: BuildDraftActivity pins to activityType.Version.
+            // The live published rules ARE the pinned version's: BuildDraftActivityAsync pins to activityType.Version.
             activityType.CreditRulesJson,
             schema,
             activity.SubjectUserId,
@@ -159,15 +161,21 @@ public sealed class ActivityService : IActivityService
 
     /// <summary>
     /// A new activity in its type's initial state, pinned, scope-stamped, filtered to what this creator
-    /// may write, validated and date-stamped — everything but <c>Add</c> and <c>SaveChanges</c>.
+    /// may write, validated, date-stamped and EPA-stamped — everything but <c>Add</c> and <c>SaveChanges</c>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Extracted so <see cref="StageCompletedAsync" /> creates activities by exactly the same rules as
     /// <see cref="CreateDraftAsync" /> rather than by a second, drifting copy of them (T121). The
     /// per-create work that is NOT here is the work that must not be repeated per row in a batch: the
     /// type lookup and the subject-scope resolution, both of which are the same for every row.
+    /// </para>
+    /// <para>
+    /// Asynchronous since T137, for one read: whether the EPA the data names exists. It still writes nothing to the
+    /// context, so both callers can refuse after it without the audit pipeline committing anything.
+    /// </para>
     /// </remarks>
-    private Activity BuildDraftActivity(
+    private async Task<Activity> BuildDraftActivityAsync(
         ActivityType activityType,
         FormSchema schema,
         Workflow workflow,
@@ -176,7 +184,8 @@ public sealed class ActivityService : IActivityService
         string createdByUserId,
         string initialDataJson,
         ClaimsPrincipal principal,
-        DateTime utcNow)
+        DateTime utcNow,
+        CancellationToken cancellationToken)
     {
         var submittedDataJson = NormalizeObjectJson(initialDataJson);
 
@@ -230,6 +239,9 @@ public sealed class ActivityService : IActivityService
 
         // T119: after the writable-key filter, so the stamp reflects what was actually stored.
         StampObservedOn(activity, schema, normalizedDataJson);
+
+        // T137: the same rule for the EPA, from the same stored data and the same pinned schema.
+        activity.EpaId = await EvidenceEpaResolver.ResolveAsync(_dbContext, schema, normalizedDataJson, cancellationToken);
 
         activity.Transitions.Add(new ActivityTransition
         {
@@ -338,12 +350,17 @@ public sealed class ActivityService : IActivityService
         // is about to write, because the entity does not carry them yet.
         var creditPlan = await PlanCreditIfTerminalAsync(activity, version, schema, workflow, transition, mergedDataJson, cancellationToken);
 
+        // T137. Resolved here, with the other reads, and assigned below with the date stamp. It reads the MERGED data,
+        // so a trainee who corrects the EPA in the submit's own patch moves the stamp with it.
+        var epaId = await EvidenceEpaResolver.ResolveAsync(_dbContext, schema, mergedDataJson, cancellationToken);
+
         // T119. Ordering here is load-bearing twice: stamping BEFORE ApplyTransition keeps the column and
         // the transition's SnapshotJson in agreement, and the stamp is the same pure function of (pinned
         // schema, data, CreatedOn) that the credit plan above was built from, so the two cannot disagree
         // about the encounter date. CreditApplier picks the curriculum item's effective minimum from the
         // stage the trainee was in ON THE ENCOUNTER DATE, and the bucket from the semester containing it.
         StampObservedOn(activity, schema, mergedDataJson);
+        activity.EpaId = epaId;
 
         var record = activity.ApplyTransition(workflow, input.TransitionKey, input.ActorUserId, mergedDataJson, input.Note);
 
@@ -482,7 +499,9 @@ public sealed class ActivityService : IActivityService
         var built = new List<Activity>(input.DataJsonPerActivity.Count);
         foreach (var dataJson in input.DataJsonPerActivity)
         {
-            var activity = BuildDraftActivity(
+            // Stamps ObservedOn and EpaId (T119, T137). For an MSF release this is where each per-EPA row gets the EPA
+            // that tells it apart from its siblings, which share a type, a state and an encounter date.
+            var activity = await BuildDraftActivityAsync(
                 activityType,
                 schema,
                 workflow,
@@ -491,7 +510,8 @@ public sealed class ActivityService : IActivityService
                 input.CreatedByUserId,
                 dataJson,
                 input.Principal,
-                utcNow);
+                utcNow,
+                cancellationToken);
 
             // T102, as at create: every nominee a system-written record carries is judged, before AddRange. msf_cpsa has
             // no user field, so today this judges nothing; it is here so no write path is left without it.
@@ -519,7 +539,9 @@ public sealed class ActivityService : IActivityService
             ThrowIfInvalid(ValidateForTransition(schema, workflow, activity, transition, input.Principal, activity.DataJson));
 
             // T119, and the ordering note from TransitionAsync applies unchanged: stamping before
-            // ApplyTransition keeps the column and the transition's SnapshotJson in agreement.
+            // ApplyTransition keeps the column and the transition's SnapshotJson in agreement. EpaId (T137) is not
+            // re-resolved: the move below writes the very DataJson BuildDraftActivityAsync stamped it from, so a second
+            // read per row could only return the same answer.
             StampObservedOn(activity, schema, activity.DataJson);
 
             activity.ApplyTransition(
@@ -1189,7 +1211,7 @@ public sealed class ActivityService : IActivityService
     /// <summary>
     /// A detached copy of the activity as it would be in <paramref name="stateKey" />, for asking what the mover could
     /// write there. Never added to the context: it references the tracked type only one way, so change detection can
-    /// never reach it (the same reasoning <see cref="BuildDraftActivity" /> relies on).
+    /// never reach it (the same reasoning <see cref="BuildDraftActivityAsync" /> relies on).
     /// </summary>
     private static Activity ProbeInState(Activity activity, string stateKey, string dataJson)
         => new()

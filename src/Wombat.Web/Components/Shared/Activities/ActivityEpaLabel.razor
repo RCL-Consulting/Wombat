@@ -1,0 +1,19 @@
+@* The EPA an activity is evidence for, as a list cell (T137). "Code — Title", the form every other EPA surface uses;
+   a dash when the activity is about no EPA. *@
+@if (string.IsNullOrWhiteSpace(Code))
+{
+  <span>—</span>
+}
+else if (string.IsNullOrWhiteSpace(Title))
+{
+  <span>@Code</span>
+}
+else
+{
+  <span>@Code — @Title</span>
+}
+
+@code {
+  [Parameter] public string? Code { get; set; }
+  [Parameter] public string? Title { get; set; }
+}
