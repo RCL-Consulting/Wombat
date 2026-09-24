@@ -451,6 +451,17 @@ Used in the Administrator dashboard system-health card to show service status at
 
 Every page in `Wombat.Web` follows one of these shapes. Pick one at the top of the file and stick to it.
 
+**A person is shown by name, never by user id** (T142). The name is a field on the page's DTO, filled by the query
+that serves the page with one `UserDisplayNames.ResolveAsync` call for every id it lists. Razor never looks a name up,
+nothing looks one up per row, and a mapper that other handlers share stays lookup-free. The id is shown only where no
+user by that id exists, or the user has no name on record. Plain text, not `<code>`: a name is not an identifier. A
+filter that narrows a list to one person takes what the list shows, a name, not an id.
+
+Five pages keep ids on purpose. The audit log and an audit entry (`/admin/audit`), and the data-rights request list and
+a request (`/admin/data-rights`), because the id is the record there. The anonymous portfolio verification page
+(`/portfolio/verify`), because it must not disclose a name. One input still takes a raw id until its task replaces it
+with a picker: the trainee on the committee review schedule form (T182).
+
 ### List page
 
 ```

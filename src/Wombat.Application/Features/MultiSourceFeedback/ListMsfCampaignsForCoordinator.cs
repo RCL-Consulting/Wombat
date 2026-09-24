@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -20,17 +21,19 @@ public sealed record ListMsfCampaignsForCoordinatorQuery(ClaimsPrincipal Princip
 public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler<ListMsfCampaignsForCoordinatorQuery, IReadOnlyList<MsfCampaignSummaryDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListMsfCampaignsForCoordinatorQueryHandler(IApplicationDbContext dbContext)
+    public ListMsfCampaignsForCoordinatorQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<MsfCampaignSummaryDto>> Handle(ListMsfCampaignsForCoordinatorQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request.Principal);
 
-        return await _dbContext.Set<MsfCampaign>()
+        var campaigns = await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .WhereRunBy(_dbContext, request.Principal)
             .OrderByDescending(campaign => campaign.CreatedOn)
@@ -47,5 +50,13 @@ public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler
                 campaign.Responses.Count,
                 campaign.ReleasedOn))
             .ToListAsync(cancellationToken);
+
+        // T142. The Subject column by name, in one lookup for the campaigns this caller runs.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users, campaigns.Select(campaign => campaign.SubjectUserId), cancellationToken);
+
+        return campaigns
+            .Select(campaign => campaign with { SubjectName = names.NameOf(campaign.SubjectUserId) })
+            .ToList();
     }
 }

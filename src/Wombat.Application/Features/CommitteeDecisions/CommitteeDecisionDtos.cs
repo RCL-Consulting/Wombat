@@ -37,7 +37,15 @@ public sealed record CommitteeReviewListItemDto(
     CommitteeDecisionCategory? CurrentDecisionCategory,
     DateTime? RatifiedOn,
     bool IsFormative = false,
-    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression);
+    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression)
+{
+    /// <summary>
+    /// Whose review it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// schedule's Trainee column (T142). Filled by <c>ListReviewsForPanelQuery</c> in one lookup for the page. Null from
+    /// the trainee's own list and the chair's, which do not show it, and from scheduling.
+    /// </summary>
+    public string? TraineeName { get; init; }
+}
 
 public sealed record CommitteeDecisionDto(
     int Id,
@@ -85,4 +93,13 @@ public sealed record CommitteeReviewDetailDto(
     IReadOnlyList<CommitteeAppealDto> Appeals,
     IReadOnlyList<CommitteeEvidenceDto> EvidenceItems,
     bool IsFormative = false,
-    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression);
+    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression)
+{
+    /// <summary>
+    /// Whose review it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// review page's Trainee (T142). Filled by <c>GetCommitteeReviewByIdQuery</c>. Null from the commands that answer
+    /// with the review: <c>CommitteeDecisionMappings.ToDetailDto</c> is shared with six commands and does no lookup, so
+    /// the review page reads the review back through the query after each action.
+    /// </summary>
+    public string? TraineeName { get; init; }
+}

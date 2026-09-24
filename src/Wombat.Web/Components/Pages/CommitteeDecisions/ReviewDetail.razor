@@ -108,7 +108,7 @@
     <section class="detail-card">
       <h3>Review</h3>
       <dl class="details-list">
-        <div><dt>Trainee</dt><dd><code>@_review.TraineeUserId</code></dd></div>
+        <div><dt>Trainee</dt><dd>@_review.TraineeName</dd></div>
         <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
         <div><dt>Period</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
         <div><dt>Type</dt><dd>@(_review.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation review" : "Annual progression review")</dd></div>
@@ -502,7 +502,12 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _review = await action(authState.User);
+      var updated = await action(authState.User);
+
+      // The command's answer is the review as it now stands, but it is built by the mapper the commands share, which
+      // names nobody. A review's trainee never changes, so the name the page loaded with carries over. Reading the
+      // review back instead would be a second round trip that can fail after the action has already succeeded. (T142)
+      _review = updated with { TraineeName = _review?.TraineeName };
       _status = status;
     }
     catch (Exception exception)

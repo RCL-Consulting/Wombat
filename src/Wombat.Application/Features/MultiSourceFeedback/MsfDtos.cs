@@ -17,7 +17,15 @@ public sealed record MsfCampaignSummaryDto(
     MsfCampaignState State,
     int InvitationCount,
     int ResponseCount,
-    DateTime? ReleasedOn);
+    DateTime? ReleasedOn)
+{
+    /// <summary>
+    /// Whose feedback it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// campaign list's Subject column (T142). Filled by <c>ListMsfCampaignsForCoordinatorQuery</c> in one lookup for the
+    /// page. Null from the trainee's own list and from create, which do not show it.
+    /// </summary>
+    public string? SubjectName { get; init; }
+}
 
 public sealed record MsfScaleAggregateDto(double Average, int ResponseCount, IReadOnlyDictionary<int, int> Distribution);
 

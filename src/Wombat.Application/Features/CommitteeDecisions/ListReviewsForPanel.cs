@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Institutions;
 
@@ -13,10 +14,12 @@ public sealed record ListReviewsForPanelQuery(ClaimsPrincipal Principal) : IRequ
 public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReviewsForPanelQuery, IReadOnlyList<CommitteeReviewListItemDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListReviewsForPanelQueryHandler(IApplicationDbContext dbContext)
+    public ListReviewsForPanelQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<CommitteeReviewListItemDto>> Handle(ListReviewsForPanelQuery request, CancellationToken cancellationToken)
@@ -52,7 +55,7 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
             query = query.Where(review => review.Panel.Members.Any(member => member.UserId == userId));
         }
 
-        return await query
+        var reviews = await query
             .OrderByDescending(review => review.ScheduledOn)
             .Select(review => new CommitteeReviewListItemDto(
                 review.Id,
@@ -68,5 +71,13 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
                 review.IsFormative,
                 review.ReviewType))
             .ToListAsync(cancellationToken);
+
+        // T142. The Trainee column by name, in one lookup for the reviews this caller may list.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users, reviews.Select(review => review.TraineeUserId), cancellationToken);
+
+        return reviews
+            .Select(review => review with { TraineeName = names.NameOf(review.TraineeUserId) })
+            .ToList();
     }
 }

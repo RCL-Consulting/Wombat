@@ -6,6 +6,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -94,7 +95,7 @@ public sealed class ReviewSchedulingScopeGuardTests
         await AddReviewAsync(db, panelA, "trainee-a");
         await AddReviewAsync(db, panelB, "trainee-b");
 
-        var handler = new ListReviewsForPanelQueryHandler(db);
+        var handler = new ListReviewsForPanelQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListReviewsForPanelQuery(TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
@@ -109,7 +110,7 @@ public sealed class ReviewSchedulingScopeGuardTests
         var panelId = await AddPanelAsync(db, DecisionPanelScope.Institution, institutionId: InstitutionA);
         var reviewId = await AddReviewAsync(db, panelId, "trainee-a");
 
-        var handler = new GetCommitteeReviewByIdQueryHandler(db);
+        var handler = new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetCommitteeReviewByIdQuery(reviewId, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
@@ -124,7 +125,7 @@ public sealed class ReviewSchedulingScopeGuardTests
         var panelId = await AddPanelAsync(db, DecisionPanelScope.Institution, institutionId: InstitutionB);
         var reviewId = await AddReviewAsync(db, panelId, "trainee-b");
 
-        var handler = new GetCommitteeReviewByIdQueryHandler(db);
+        var handler = new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty);
         var act = () => handler.Handle(
             new GetCommitteeReviewByIdQuery(reviewId, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);

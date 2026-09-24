@@ -13,6 +13,7 @@ using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.EntrustmentDecisions;
 
@@ -219,7 +220,7 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
     }
 
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => (await new ListEntrustmentDecisionsForAdminQueryHandler(db)
+        => (await new ListEntrustmentDecisionsForAdminQueryHandler(db, FakeUserDirectory.Empty)
                 .Handle(new ListEntrustmentDecisionsForAdminQuery(null, null, principal), CancellationToken.None))
             .Select(decision => decision.Id)
             .ToArray();

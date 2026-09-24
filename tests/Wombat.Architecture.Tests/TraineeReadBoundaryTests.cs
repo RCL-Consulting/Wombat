@@ -26,10 +26,10 @@ public class TraineeReadBoundaryTests
         typeof(Wombat.Application.DependencyInjection).Assembly;
 
     /// <summary>
-    /// The property names by which a request says which trainee it is about. A filter is included: narrowing a list to
-    /// one trainee is naming them.
+    /// The property names by which a request says which trainee it is about. A filter is included, whether it takes an
+    /// id or a name: narrowing a list to one trainee is naming them.
     /// </summary>
-    private static readonly string[] TraineeIdPropertyNames = ["TraineeUserId", "SubjectUserId", "TraineeUserIdFilter"];
+    private static readonly string[] TraineeIdPropertyNames = ["TraineeUserId", "SubjectUserId", "TraineeUserIdFilter", "TraineeFilter"];
 
     [Fact]
     public void Requests_that_name_a_trainee_carry_the_caller()

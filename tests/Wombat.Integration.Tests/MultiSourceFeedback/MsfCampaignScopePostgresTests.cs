@@ -11,6 +11,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -117,7 +118,7 @@ public sealed class MsfCampaignScopePostgresTests : IAsyncLifetime
     }
 
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => (await new ListMsfCampaignsForCoordinatorQueryHandler(db)
+        => (await new ListMsfCampaignsForCoordinatorQueryHandler(db, FakeUserDirectory.Empty)
                 .Handle(new ListMsfCampaignsForCoordinatorQuery(principal), CancellationToken.None))
             .Select(summary => summary.Id)
             .ToArray();

@@ -40,7 +40,16 @@ public sealed record EntrustmentDecisionDto(
     string? RevokedByUserId,
     string? RevocationReason,
     int? SupersededByDecisionId,
-    IReadOnlyList<EntrustmentEvidenceLinkDto> EvidenceLinks);
+    IReadOnlyList<EntrustmentEvidenceLinkDto> EvidenceLinks)
+{
+    /// <summary>
+    /// Whose decision it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// admin list's Trainee column and its revoke confirmation (T142). Filled by
+    /// <c>ListEntrustmentDecisionsForAdminQuery</c> in one lookup for the page. Null from every other producer:
+    /// <c>EntrustmentDecisionMappings.ToDto</c> is shared by six handlers and does no lookup.
+    /// </summary>
+    public string? TraineeName { get; init; }
+}
 
 public sealed record PendingEntrustmentDecisionDto(
     int Id,

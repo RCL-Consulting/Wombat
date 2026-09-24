@@ -279,6 +279,30 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         cut.Markup.Should().Contain("requested → declined");
     }
 
+    /// <summary>
+    /// T142. The Actor column printed each actor's user id. It shows the name the query resolved for each move.
+    /// </summary>
+    [Fact]
+    public void TheHistoryCard_NamesEachActor_NotTheirUserId()
+    {
+        var transitions = new[]
+        {
+            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null, null)
+                { ActorName = "Thandi Nkosi" },
+            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null, null)
+                { ActorName = "Dr Ruth Mokoena" }
+        };
+
+        var cut = RenderPage(new FakeSender(Detail(NoOne(), transitions: transitions)));
+
+        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
+        var actorColumn = history.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("Actor");
+        history.QuerySelectorAll("tbody tr")
+            .Select(row => row.QuerySelectorAll("td")[actorColumn].TextContent.Trim())
+            .Should().Equal("Thandi Nkosi", "Dr Ruth Mokoena");
+        history.TextContent.Should().NotContain("assessor-1").And.NotContain("trainee-1");
+    }
+
     [Fact]
     public void TheHistoryCard_HasAnEmptyState()
     {

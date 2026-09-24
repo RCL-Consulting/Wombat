@@ -75,7 +75,16 @@ public sealed record ActivityTransitionDto(
     // supervision level, and a defaulted argument is one a future call site can silently drop (T109).
     int? CreditScaleMismatchCount,
     // No default either, for the same reason: it is the only record that a filing was late (T160).
-    int? DaysAfterEncounter);
+    int? DaysAfterEncounter)
+{
+    /// <summary>
+    /// Who made the move, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// history table's Actor column (T142). Filled by <c>GetActivityByIdQuery</c>, the query that shows the history, in
+    /// one lookup for every actor. Null from every other producer: <c>ActivityService.Map</c> is shared by create,
+    /// transition and detail, and does no lookup.
+    /// </summary>
+    public string? ActorName { get; init; }
+}
 
 public sealed record ActivityDto(
     int Id,
@@ -175,7 +184,15 @@ public sealed record ActivitySummaryDto(
     string? EpaTitle,
     DateOnly ObservedOn,
     bool ObservedOnDeclared,
-    int? CreditedItemCount);
+    int? CreditedItemCount)
+{
+    /// <summary>
+    /// Whose activity it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// inbox's Subject column (T142). Filled by <c>ListActivitiesByActorInboxQuery</c> in one lookup for the page. Null
+    /// on the subject's own list, which is all one person and does not show them.
+    /// </summary>
+    public string? SubjectName { get; init; }
+}
 
 public sealed record ActivityValidationErrorDto(
     string? FieldKey,

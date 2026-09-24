@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
+using Wombat.Tests.Shared;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Epas;
 using Wombat.Infrastructure.Activities;
@@ -168,7 +169,7 @@ public sealed class ActivityListProjectionTests
     {
         await using var db = await SeededAsync();
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator())
+        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
             .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
 
         rows.Select(row => row.Id).Should().BeEquivalentTo([3, 6, 8], "only the requested activities naming this assessor are actionable");
@@ -195,11 +196,35 @@ public sealed class ActivityListProjectionTests
     {
         await using var db = await SeededAsync();
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator())
+        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
             .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
 
         rows.Single(row => row.Id == 8).CreditedItemCount.Should().Be(2);
         rows.Single(row => row.Id == 3).CreditedItemCount.Should().BeNull("its only move evaluated nothing");
+    }
+
+    /// <summary>
+    /// T142. The Subject column used to print the trainee's user id. It names them now, in one lookup for the page, and
+    /// only for the rows the page lists: the subject of an activity this assessor cannot act on is nobody's business here.
+    /// </summary>
+    [Fact]
+    public async Task Inbox_NamesEachSubject_InOneLookupForTheRowsItLists()
+    {
+        await using var db = await SeededAsync();
+        db.Activities.Single(activity => activity.Id == 6).SubjectUserId = "departed-trainee";
+        db.Activities.Single(activity => activity.Id == 1).SubjectUserId = "someone-else";
+        await db.SaveChangesAsync();
+        var users = new FakeUserDirectory((TraineeId, "Thandi Nkosi"), ("someone-else", "Sipho Mahlangu"));
+
+        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), users)
+            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+
+        rows.Single(row => row.Id == 3).SubjectName.Should().Be("Thandi Nkosi");
+        rows.Single(row => row.Id == 8).SubjectName.Should().Be("Thandi Nkosi");
+        rows.Single(row => row.Id == 6).SubjectName.Should().Be("departed-trainee", "no user by that id exists any more");
+
+        users.Lookups.Should().ContainSingle()
+            .Which.Should().BeEquivalentTo([TraineeId, "departed-trainee"], "activity 1 is complete, so not in this inbox");
     }
 
     // ---- fixtures ---------------------------------------------------------------------------------------------------

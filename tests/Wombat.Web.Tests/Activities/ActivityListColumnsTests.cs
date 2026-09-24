@@ -101,8 +101,23 @@ public sealed class ActivityListColumnsTests : TestContext
         Column(cut, rows, "EPA").Should().Equal("PAED-004 — Resuscitate a child", "—");
         Column(cut, rows, "Encounter date").Should().Equal("2026-03-11", "2026-03-12 (filed; no encounter date)");
 
-        // The raw subject id stays, for T142 to replace, and the inbox keeps its waiting clock.
+        // The inbox keeps its subject and its waiting clock.
         cut.FindAll("th").Select(header => header.TextContent.Trim()).Should().Contain(["Subject", "Updated"]);
+    }
+
+    /// <summary>
+    /// T142. The Subject column printed the trainee's user id. It shows the name the query resolved, and nothing here
+    /// looks one up.
+    /// </summary>
+    [Fact]
+    public void Inbox_NamesTheSubject_NotTheirUserId()
+    {
+        var cut = RenderInbox(
+            Row(1, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi" },
+            Row(2, "requested", creditedItemCount: null) with { SubjectUserId = "departed-trainee", SubjectName = "departed-trainee" });
+
+        Column(cut, BodyRows(cut), "Subject").Should().Equal("Thandi Nkosi", "departed-trainee");
+        cut.Markup.Should().NotContain("trainee-1", "the first row's user id is not on the page");
     }
 
     // ---- helpers ----------------------------------------------------------------------------------------------------

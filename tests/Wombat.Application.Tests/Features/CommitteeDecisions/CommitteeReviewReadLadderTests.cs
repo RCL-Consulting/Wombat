@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Tests.Shared;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -31,7 +32,7 @@ public sealed class CommitteeReviewReadLadderTests
         await using var db = CreateDbContext();
         var reviewId = await SeedReviewAsync(db);
 
-        var review = await new GetCommitteeReviewByIdQueryHandler(db).Handle(
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new GetCommitteeReviewByIdQuery(reviewId, Principal("coord-1", WombatRoles.Coordinator, HostInstitution)),
             CancellationToken.None);
 
@@ -44,7 +45,7 @@ public sealed class CommitteeReviewReadLadderTests
         await using var db = CreateDbContext();
         var reviewId = await SeedReviewAsync(db);
 
-        var act = () => new GetCommitteeReviewByIdQueryHandler(db).Handle(
+        var act = () => new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new GetCommitteeReviewByIdQuery(reviewId, Principal("coord-2", WombatRoles.Coordinator, OtherInstitution)),
             CancellationToken.None);
 

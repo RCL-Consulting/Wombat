@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -16,11 +17,16 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IWorkflowEvaluator _workflowEvaluator;
+    private readonly IUserAdministrationService _users;
 
-    public ListActivitiesByActorInboxQueryHandler(IApplicationDbContext dbContext, IWorkflowEvaluator workflowEvaluator)
+    public ListActivitiesByActorInboxQueryHandler(
+        IApplicationDbContext dbContext,
+        IWorkflowEvaluator workflowEvaluator,
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
         _workflowEvaluator = workflowEvaluator;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<ActivitySummaryDto>> Handle(ListActivitiesByActorInboxQuery request, CancellationToken cancellationToken)
@@ -66,6 +72,11 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
                     .ToListAsync(cancellationToken))
                 .ToDictionary(epa => epa.Id, epa => (epa.Code, epa.Title));
 
+        // T142. Whose activity each row is, by name, in one lookup for the rows that survived the act gate. The column
+        // used to print the subject's user id.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users, actionable.Select(activity => activity.SubjectUserId), cancellationToken);
+
         return actionable
             .Select(activity =>
             {
@@ -92,7 +103,10 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
                         .OrderByDescending(transition => transition.OccurredOn)
                         .ThenByDescending(transition => transition.Id)
                         .Select(transition => transition.CreditedItemCount)
-                        .FirstOrDefault());
+                        .FirstOrDefault())
+                {
+                    SubjectName = names.NameOf(activity.SubjectUserId)
+                };
             })
             .ToList();
     }

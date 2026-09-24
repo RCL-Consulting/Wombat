@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -11,10 +12,12 @@ public sealed record GetCommitteeReviewByIdQuery(int ReviewId, ClaimsPrincipal P
 public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetCommitteeReviewByIdQuery, CommitteeReviewDetailDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public GetCommitteeReviewByIdQueryHandler(IApplicationDbContext dbContext)
+    public GetCommitteeReviewByIdQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeReviewDetailDto> Handle(GetCommitteeReviewByIdQuery request, CancellationToken cancellationToken)
@@ -35,6 +38,9 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // now (T091), so no further lookup is needed to place a review. (T101 finding E)
         CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
-        return review.ToDetailDto();
+        // T142. The trainee by name, looked up only once the caller has passed the review ladder above.
+        var names = await UserDisplayNames.ResolveAsync(_users, [review.TraineeUserId], cancellationToken);
+
+        return review.ToDetailDto() with { TraineeName = names.NameOf(review.TraineeUserId) };
     }
 }

@@ -11,6 +11,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
@@ -252,7 +253,7 @@ public sealed class EntrustmentDecisionAdminScopeTests
         await using var db = CreateDb();
         await SeedAsync(db);
 
-        var filtered = await new ListEntrustmentDecisionsForAdminQueryHandler(db).Handle(
+        var filtered = await new ListEntrustmentDecisionsForAdminQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new ListEntrustmentDecisionsForAdminQuery(ElsewhereTraineeUserId, null, TestPrincipals.InstitutionalAdmin(HostInstitution)),
             CancellationToken.None);
 
@@ -437,7 +438,7 @@ public sealed class EntrustmentDecisionAdminScopeTests
     }
 
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => (await new ListEntrustmentDecisionsForAdminQueryHandler(db).Handle(
+        => (await new ListEntrustmentDecisionsForAdminQueryHandler(db, FakeUserDirectory.Empty).Handle(
                 new ListEntrustmentDecisionsForAdminQuery(null, null, principal), CancellationToken.None))
             .Select(decision => decision.Id)
             .ToArray();

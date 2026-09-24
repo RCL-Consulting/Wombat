@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Identity;
 
@@ -55,15 +56,13 @@ public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
 
         // Names, not user ids (the old card printed the id in the name column), and only for the trainees
         // listed: whatever roles they hold now, since nothing ties an active profile to the Trainee role.
-        var names = coverage.Trainees.Count == 0
-            ? new Dictionary<string, string>(StringComparer.Ordinal)
-            : await _users.GetDisplayNamesAsync(
-                coverage.Trainees.Select(trainee => trainee.TraineeUserId).ToList(), cancellationToken);
+        var names = await UserDisplayNames.ResolveAsync(
+            _users, coverage.Trainees.Select(trainee => trainee.TraineeUserId), cancellationToken);
 
         var trainees = coverage.Trainees
             .Select(trainee => new TraineeTargetsItem(
                 trainee.TraineeUserId,
-                names.TryGetValue(trainee.TraineeUserId, out var name) && name.Length > 0 ? name : trainee.TraineeUserId,
+                names.NameOf(trainee.TraineeUserId),
                 trainee.SemesterTargetsMet,
                 trainee.SemesterTargetsApplying,
                 trainee.YearTargetsMet,

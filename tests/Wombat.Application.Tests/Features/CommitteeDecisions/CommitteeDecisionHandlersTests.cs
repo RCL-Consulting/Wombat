@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Common.Security;
+using Wombat.Tests.Shared;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
@@ -36,7 +37,7 @@ public sealed class CommitteeDecisionHandlersTests
         activity.UpdatedOn = DateTime.UtcNow.AddDays(1);
         await dbContext.SaveChangesAsync();
 
-        var refreshed = await new GetCommitteeReviewByIdQueryHandler(dbContext).Handle(
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(dbContext, FakeUserDirectory.Empty).Handle(
             new GetCommitteeReviewByIdQuery(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 

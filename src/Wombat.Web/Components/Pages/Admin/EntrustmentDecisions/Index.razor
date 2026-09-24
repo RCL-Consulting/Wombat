@@ -21,8 +21,8 @@
 
 <section class="detail-card">
   <div class="form-grid">
-    <FormField Label="Trainee user id" InputId="filter-trainee">
-      <input id="filter-trainee" class="form-control" @bind="_traineeFilter" @bind:event="oninput" placeholder="Filter by trainee user id" />
+    <FormField Label="Trainee" InputId="filter-trainee">
+      <input id="filter-trainee" class="form-control" @bind="_traineeFilter" @bind:event="oninput" placeholder="Filter by name" />
     </FormField>
     <FormField Label="Status" InputId="filter-status">
       <InputSelect id="filter-status" class="form-select" @bind-Value="_statusFilter">
@@ -68,7 +68,7 @@ else
         @foreach (var decision in _decisions)
         {
           <tr>
-            <td><code>@decision.TraineeUserId</code></td>
+            <td>@decision.TraineeName</td>
             <td>@decision.EpaCode — @decision.EpaTitle</td>
             <td>@decision.AuthorisedLevelLabel</td>
             <td>@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
@@ -95,7 +95,7 @@ else
     <p>
       You are about to revoke the entrustment decision for
       <strong>@_revokingDecision.EpaCode — @_revokingDecision.EpaTitle</strong>
-      held by <code>@_revokingDecision.TraineeUserId</code>.
+      held by <strong>@_revokingDecision.TraineeName</strong>.
       Revocation is immediate and irreversible. The trainee is notified.
     </p>
     <FormField Label="Revocation reason" InputId="revoke-reason" Required="true">

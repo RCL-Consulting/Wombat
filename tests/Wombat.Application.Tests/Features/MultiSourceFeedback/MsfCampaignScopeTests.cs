@@ -13,6 +13,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -316,7 +317,7 @@ public sealed class MsfCampaignScopeTests
             .Handle(new GetCampaignAggregateReportQuery(campaignId, principal), CancellationToken.None);
 
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => (await new ListMsfCampaignsForCoordinatorQueryHandler(db)
+        => (await new ListMsfCampaignsForCoordinatorQueryHandler(db, FakeUserDirectory.Empty)
                 .Handle(new ListMsfCampaignsForCoordinatorQuery(principal), CancellationToken.None))
             .Select(summary => summary.Id)
             .ToArray();

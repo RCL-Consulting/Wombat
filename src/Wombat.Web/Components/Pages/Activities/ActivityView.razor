@@ -136,7 +136,7 @@
           <tr>
             <td>@transition.TransitionKey</td>
             <td>@($"{transition.FromState} → {transition.ToState}")</td>
-            <td>@transition.ActorUserId</td>
+            <td>@transition.ActorName</td>
             <td>
               @transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
               @if (FilingLateness.Label(transition.DaysAfterEncounter) is { } lateFiling)

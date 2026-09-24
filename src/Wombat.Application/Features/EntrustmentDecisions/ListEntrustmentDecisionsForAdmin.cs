@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 
@@ -18,8 +19,9 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// <remarks>
 /// <para>
 /// Until T183 this checked the role and nothing else, so every hospital's admin saw, and could filter to, every
-/// trainee's decisions in the country. <see cref="TraineeUserIdFilter" /> is a raw id the caller types; one that names
-/// a trainee out of scope returns what a trainee with no decisions returns, an empty list.
+/// trainee's decisions in the country. <see cref="TraineeFilter" /> is text the caller types; it narrows only what the
+/// scope has already let through, so one that names a trainee out of scope returns what a trainee with no decisions
+/// returns, an empty list.
 /// </para>
 /// <para>
 /// A decision carries no institution of its own; its trainee's preferred profile does. The query is narrowed to the
@@ -36,8 +38,12 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// speciality's, and this list is the administrator's.
 /// </para>
 /// </remarks>
+/// <param name="TraineeFilter">
+/// Narrows the list to the trainees whose name contains this text, ignoring case, or whose user id is exactly it. The
+/// page shows names, not ids (T142), so a filter that took only an id would ask for something the page never shows.
+/// </param>
 public sealed record ListEntrustmentDecisionsForAdminQuery(
-    string? TraineeUserIdFilter,
+    string? TraineeFilter,
     EntrustmentDecisionStatus? StatusFilter,
     ClaimsPrincipal Principal) : IRequest<IReadOnlyList<EntrustmentDecisionDto>>;
 
@@ -53,10 +59,12 @@ public sealed class ListEntrustmentDecisionsForAdminQueryHandler
     : IRequestHandler<ListEntrustmentDecisionsForAdminQuery, IReadOnlyList<EntrustmentDecisionDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListEntrustmentDecisionsForAdminQueryHandler(IApplicationDbContext dbContext)
+    public ListEntrustmentDecisionsForAdminQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<EntrustmentDecisionDto>> Handle(ListEntrustmentDecisionsForAdminQuery request, CancellationToken cancellationToken)
@@ -84,11 +92,6 @@ public sealed class ListEntrustmentDecisionsForAdminQueryHandler
                 profile.InstitutionId == institutionId));
         }
 
-        if (!string.IsNullOrWhiteSpace(request.TraineeUserIdFilter))
-        {
-            query = query.Where(d => d.TraineeUserId == request.TraineeUserIdFilter);
-        }
-
         if (request.StatusFilter.HasValue)
         {
             query = query.Where(d => d.Status == request.StatusFilter.Value);
@@ -110,7 +113,23 @@ public sealed class ListEntrustmentDecisionsForAdminQueryHandler
                 .ToList();
         }
 
-        return decisions.Select(d => d.ToDto()).ToArray();
+        // T142. The Trainee column by name, in one lookup for the rows listed, and only for them: the names follow
+        // whatever this handler's scope (T183, above) lets through. The trainee filter matches those names, so it runs
+        // after the lookup and can only narrow what the scope has already let through.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users, decisions.Select(d => d.TraineeUserId), cancellationToken);
+
+        var rows = decisions.Select(d => d.ToDto() with { TraineeName = names.NameOf(d.TraineeUserId) });
+
+        var trainee = request.TraineeFilter?.Trim();
+        if (!string.IsNullOrEmpty(trainee))
+        {
+            rows = rows.Where(row =>
+                row.TraineeName!.Contains(trainee, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(row.TraineeUserId, trainee, StringComparison.Ordinal));
+        }
+
+        return rows.ToArray();
     }
 
     private static void DemandAdminAccess(ClaimsPrincipal principal)
