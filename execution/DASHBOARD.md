@@ -15,6 +15,8 @@
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
 | queued | [T184](tasks/queued/T184-msf-respondent-emails-are-written-to-the-audit-log-and-opening-a-campaign-sends-mail-after-the-mutation.md) | P2 | MSF: respondent emails are written to the audit log, and opening a cam |  |
+| queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
+| queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -58,6 +60,9 @@
 | queued | [T191](tasks/queued/T191-choice-options-in-some-seeds-are-bare-keys-so-the-form-shows-admission-notes-instead-of-a-label.md) | P3 | Choice options in some seeds are bare keys, so the form shows admissio |  |
 | queued | [T192](tasks/queued/T192-the-late-filing-warning-says-a-date-can-still-be-filed-when-the-server-will-refuse-it-as-before-the-programme.md) | P3 | The late-filing warning says a date 'can still be filed' when the serv |  |
 | queued | [T193](tasks/queued/T193-refusal-alerts-are-not-announced-and-field-help-text-is-not-linked-to-its-input.md) | P3 | Refusal alerts are not announced, and field help text is not linked to |  |
+| queued | [T196](tasks/queued/T196-reactivating-an-epa-does-not-re-credit-what-was-filed-while-it-was-inactive-and-a-rebuild-while-inactive-drops-earned-credit.md) | P3 | Reactivating an EPA does not re-credit what was filed while it was ina |  |
+| queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
+| queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
 
 Done: 126 task(s).
 
@@ -75,9 +80,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+fd1d1ec fix(curricula): the curriculum item edit form reads in full at laptop widths and every input has a name (T176)
+c702d5c feat(committee): a review says how many MSF campaigns closed in its window are awaiting release or were released after it started (T173)
+d67f0a8 fix(web): people are shown by name, not id, on the inbox, the activity history and the committee, entrustment and MSF pages (T142)
+382d483 fix(curricula): a deactivated EPA leaves progress and takes no new credit, as it already leaves the pickers; the editor marks items not in force (T158)
 bf7d8f9 fix(activities): an undated activity's date is marked as the filing date on the trajectory, the activity page and the portfolio PDF (T161, D28)
-c749799 fix(security): entrustment-decision admin list, revoke and certificate are scoped to the caller's institution; one nested set of trainee-scope predicates (T183)
-8347264 fix(security): a committee review can be scheduled, started and ratified only for a trainee at the panel's institution; every panel has an institution (T182)
-2fe9c5b docs(execution): close T160 — browser-verified on dev (activities 27–30; migration applied out of order cleanly); file T192, T193
-d2d1086 feat(activities): an encounter date may not be in the future, nor (for a type that can credit) before the programme; a crediting filing more than fourteen days late is warned about and recorded, never refused (T160, D15)
 ```

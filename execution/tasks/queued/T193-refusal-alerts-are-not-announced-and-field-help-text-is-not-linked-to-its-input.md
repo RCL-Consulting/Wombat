@@ -39,3 +39,10 @@ field's help text gets an id, and the input's `aria-describedby` lists the help 
 ## Related
 
 T160, T177, T125.
+
+## Note, 2026-09-24 (T158 review)
+
+The root of the help-text half: `FormField.razor:13-16` renders `HelpText` with no id, so no page can reference it.
+Give `FormField` an id for its help, and have `FormField` set the input's `aria-describedby` itself where it can. T158
+fixed EpaEdit only locally.
+

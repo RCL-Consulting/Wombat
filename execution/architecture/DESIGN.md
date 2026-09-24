@@ -493,8 +493,8 @@ filter that narrows a list to one person takes what the list shows, a name, not 
 
 Five pages keep ids on purpose. The audit log and an audit entry (`/admin/audit`), and the data-rights request list and
 a request (`/admin/data-rights`), because the id is the record there. The anonymous portfolio verification page
-(`/portfolio/verify`), because it must not disclose a name. One input still takes a raw id until its task replaces it
-with a picker: the trainee on the committee review schedule form (T182).
+(`/portfolio/verify`), because it must not disclose a name. No input takes a raw user id: the committee review schedule
+form's trainee is a picker since T182.
 
 ### List page
 

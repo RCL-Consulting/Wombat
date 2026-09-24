@@ -550,13 +550,25 @@
       _review = updated with { TraineeName = _review?.TraineeName };
       _status = status;
 
-      // The MSF notice is live, and an action can change what it must say. Start above all: it freezes the snapshot
-      // the counts are measured against, and a campaign released since the page loaded is now in it. (T173)
-      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
     }
     catch (Exception exception)
     {
       _error = exception.Message;
+      return;
+    }
+
+    // The MSF notice is live, and an action can change what it must say. Start above all: it freezes the snapshot the
+    // counts are measured against, and a campaign released since the page loaded is now in it (T173). Refreshed outside
+    // the action's try: the action has succeeded, and a failed count must not show that success beside an error (T142).
+    // The notice keeps its last value instead.
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
+    }
+    catch (Exception)
+    {
+      // Deliberately silent: the notice is advisory, and the page already says what the action did.
     }
   }
 

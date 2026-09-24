@@ -40,3 +40,14 @@ uniform.
 ## Related
 
 T113, T153, T056.
+
+## Note, 2026-09-24 (T183 review)
+
+- `MayReadAsync` has no trainee-first rule. `CommitteeDecisionAuthorization.DemandReviewAccess` stops a Trainee who also
+  holds an oversight role from reading other trainees' records; `MayReadAsync` does not.
+- The entrustment admin list loads every decision at the institution for a Speciality or SubSpecialityAdmin, then
+  filters in memory. Nothing leaks, but it is inefficient.
+- After T183 the predicates nest: `IsAdministeredBy` ⊂ `IsAdministeredOrCoordinatedBy` ⊂ `IsOverseenBy`. Item 4
+  (three shapes of the overseer rule) now means folding `ActivityService.IsScopedOverseerOf` and
+  `ActivityReadScope.WhereReadableBy` into these.
+
