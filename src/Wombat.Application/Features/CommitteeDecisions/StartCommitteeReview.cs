@@ -58,10 +58,15 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         // decision D2 — and note this is a visible change to what a panel is shown.)
         //
         // Both bounds are DateOnly against a DateOnly column, inclusive at each end, which is what the
-        // AddDays(1)-exclusive instant was emulating. The MSF window below already compared this way.
+        // AddDays(1)-exclusive instant was emulating. MSF below windows on an instant column, so it turns
+        // the same inclusive days into a half-open UTC range.
         var fromDate = review.ReviewPeriodFrom;
         var toDate = review.ReviewPeriodTo;
 
+        // No state filter here, deliberately. A declined, cancelled or still-draft WBA is evidence about
+        // the trainee's progress in the window - a run of declines is exactly what a panel should see - and
+        // each row prints its state. MSF below is the opposite: a campaign is evidence only once released,
+        // so do not "fix" this asymmetry by filtering activities to match. (T138)
         var activities = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
@@ -71,6 +76,17 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                 activity.ObservedOn <= toDate)
             .OrderByDescending(activity => activity.UpdatedOn)
             .ToListAsync(cancellationToken);
+
+        // A campaign falls in the window by the day it actually closed, not the day it was scheduled to
+        // (T138). That is the date a release stamps on its per-EPA evidence activities as ObservedOn
+        // (ReleaseMsfCampaign.EvidenceCompleteOn), so the report and its per-EPA claims land in the same
+        // review. Windowing by ClosesOn split them whenever the two dates fell either side of a boundary,
+        // and the auto-close job makes that routine: it closes a campaign on the day after ClosesOn at the
+        // earliest, so every auto-closed campaign scheduled for a window's last day was split. Every campaign
+        // here is released, and a released one always has ClosedOn: Release requires UnderReview, which
+        // only Close produces, and Close stamps it. ObservedOn is ClosedOn's UTC date, hence UTC bounds.
+        var closedFrom = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var closedBefore = toDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
 
         var msfCampaigns = await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
@@ -83,11 +99,21 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             // summary below is where that is said.
             .Include(campaign => campaign.CoveredEpas)
                 .ThenInclude(covered => covered.Epa)
+            // Released only (T138), the same rule as PortfolioPdfService and ListMsfCampaignsForTraineeQuery.
+            // Before release the trainee has not seen the report and the coordinator may still withdraw it;
+            // a withdrawn campaign was deliberately retracted. Neither is evidence a panel should weigh.
+            //
+            // The cost: a campaign still under review when the chair starts is in no snapshot, ever. The
+            // snapshot is frozen here and the release comes later, and the next review's window does not
+            // cover the day it closed; the per-EPA activities the release creates miss both the same way,
+            // exactly as a WBA observed in the window but filed after Start does. A panel that should know one is pending needs a live notice on
+            // the review, not a frozen row that is not evidence.
             .Where(campaign =>
                 campaign.SubjectUserId == review.TraineeUserId &&
-                campaign.ClosesOn >= review.ReviewPeriodFrom &&
-                campaign.ClosesOn <= review.ReviewPeriodTo)
-            .OrderByDescending(campaign => campaign.ClosesOn)
+                campaign.State == MsfCampaignState.Released &&
+                campaign.ClosedOn >= closedFrom &&
+                campaign.ClosedOn < closedBefore)
+            .OrderByDescending(campaign => campaign.ClosedOn)
             .ToListAsync(cancellationToken);
 
         var activityEvidence = activities.Select(activity => new CommitteeEvidence
@@ -105,7 +131,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             MsfCampaignId = campaign.Id,
             SourceLabel = $"{campaign.Template.Name} #{campaign.Id}",
             Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; " +
-                      $"closes {campaign.ClosesOn:yyyy-MM-dd}.{DescribeCoverage(campaign)}",
+                      $"closed {campaign.ClosedOn:yyyy-MM-dd}.{DescribeCoverage(campaign)}",
             SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn
         });
 
@@ -120,7 +146,8 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     /// an ordinary <c>msf_cpsa</c> activity. That is deliberate — the panel wants both the report and
     /// the per-EPA claims — but it is only readable if the parent names the children, which is what this
     /// sentence does. An empty coverage set is worth printing too: it is the one case where a released
-    /// campaign left no evidence at all.
+    /// campaign left no evidence at all. Only released campaigns reach the snapshot (T138), so there is
+    /// no "to be recorded on release" case to describe.
     /// </remarks>
     private static string DescribeCoverage(MsfCampaign campaign)
     {
@@ -131,14 +158,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
 
         if (covered.Length == 0)
         {
-            return campaign.State == MsfCampaignState.Released
-                ? " Names no EPA, so it recorded no evidence."
-                : string.Empty;
-        }
-
-        if (campaign.State != MsfCampaignState.Released)
-        {
-            return $" Evidence for {string.Join(", ", covered.Select(entry => entry.Epa.Code))}, to be recorded on release.";
+            return " Names no EPA, so it recorded no evidence.";
         }
 
         // Per EPA, never per campaign. A release records evidence for the EPAs still on the trainee's

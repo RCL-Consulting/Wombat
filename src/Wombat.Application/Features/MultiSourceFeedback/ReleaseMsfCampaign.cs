@@ -256,7 +256,8 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
     /// put it outside the committee review window it belongs to and into the wrong period for
     /// [T130]'s quota. The fallback cannot be reached today - release refuses anything but
     /// <c>UnderReview</c>, which only <c>Close</c> produces - and is here so that stops being an
-    /// assumption.
+    /// assumption. <c>StartCommitteeReview</c> windows the campaign itself by the same UTC date, so a
+    /// panel sees the report and these activities together; change one and you must change the other.
     /// </remarks>
     private static DateOnly EvidenceCompleteOn(MsfCampaign campaign)
         => campaign.ClosedOn is DateTime closedOn

@@ -30,7 +30,6 @@
 | queued | [T114](tasks/queued/T114-audit-log-hygiene.md) | P3 | Audit log hygiene: an unenforced size bound, an unstamped speciality,  |  |
 | queued | [T115](tasks/queued/T115-isinrole-extension-is-dead-code.md) | P3 | `ClaimsPrincipalExtensions.IsInRole` never executes, and every `role:` |  |
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
-| queued | [T138](tasks/queued/T138-the-committee-evidence-snapshot-includes-draft-open-and-withdrawn-msf-campaigns.md) | P3 | The committee evidence snapshot includes draft, open and withdrawn MSF | sonnet |
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
 | queued | [T141](tasks/queued/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
 | queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
@@ -55,8 +54,9 @@
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T172](tasks/queued/T172-a-refusal-names-the-form-s-fields-by-key-presenting-problem-not-by-the-label-the-user-sees.md) | P3 | A refusal names the form's fields by key (presenting_problem), not by  |  |
+| queued | [T173](tasks/queued/T173-a-committee-review-cannot-tell-that-an-msf-campaign-closing-in-its-window-is-still-awaiting-release.md) | P3 | A committee review cannot tell that an MSF campaign closing in its win |  |
 
-Done: 108 task(s).
+Done: 109 task(s).
 
 ## From STATE.md
 
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+5fbc8c2 fix(activities): /activities/new creates once and moves to the activity with the outcome; a requested-born type is never withdrawn on Submit; a create that is the filing checks the author's fields (T127, T143, T148)
 54c9805 docs(execution): STATE back under its 60-line cap
 47a9aad docs(execution): re-baseline the EPA stream — close T118 and T104 by finding, fold merged tasks, file T158–T171, rewrite EPA-PROGRAMME §2 as the live queue
 431e69e docs(execution): close T099 — the catalogue is reachable on dev and on a fresh database; production never received it, filed as T157
 10834cf fix(identity): the SSO link endpoint reads everything from the external cookie, counts failures and is rate-limited; SSO sign-in refuses deactivated, Administrator and other-institution accounts (T149)
-69fc5d9 feat(activities): four more v11.1 instruments — Clinical Case Analysis, Random Case Analysis, Chart-Stimulated Recall, Reflective Exercise (T120)
 ```

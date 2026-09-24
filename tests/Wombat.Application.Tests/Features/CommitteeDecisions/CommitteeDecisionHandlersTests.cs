@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +84,120 @@ public sealed class CommitteeDecisionHandlersTests
         msfEvidence.Summary.Should().Contain("Evidence recorded for PAED-010, one activity each.");
         msfEvidence.Summary.Should().Contain("Also declared PAED-011");
         msfEvidence.Summary.Should().NotContain("Evidence recorded for PAED-010, PAED-011");
+    }
+
+    /// <summary>
+    /// A campaign that was never released is not evidence, however squarely it closes inside the review
+    /// window. (T138)
+    /// </summary>
+    /// <remarks>
+    /// Before release the trainee has not seen the report and it may still be withdrawn; a withdrawn one
+    /// was deliberately retracted. The portfolio PDF and the trainee's own MSF list already read released
+    /// campaigns only, and a panel is shown the same set. The released fixture campaign sits beside it in
+    /// the same window, so the assertion is about state, not about the window. A draft or open campaign
+    /// has no <c>ClosedOn</c> and so misses the window as well; the closed, under-review and
+    /// withdrawn-after-close cases are the ones only the state rule keeps out.
+    /// </remarks>
+    [Theory]
+    [InlineData(MsfCampaignState.Draft)]
+    [InlineData(MsfCampaignState.Open)]
+    [InlineData(MsfCampaignState.Closed)]
+    [InlineData(MsfCampaignState.UnderReview)]
+    [InlineData(MsfCampaignState.Withdrawn)]
+    public async Task StartReview_LeavesOutAnMsfCampaignThatWasNeverReleased(MsfCampaignState state)
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        dbContext.MsfCampaigns.Add(CreateCampaignClosingInWindow(51, state));
+        await dbContext.SaveChangesAsync();
+
+        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        started.EvidenceItems.Should().NotContain(item => item.MsfCampaignId == 51);
+        started.EvidenceItems.Should().ContainSingle(item => item.MsfCampaignId == 50);
+    }
+
+    /// <summary>
+    /// A released campaign closing inside the window is in the snapshot, and one that named no EPA says
+    /// so. (T138)
+    /// </summary>
+    [Fact]
+    public async Task StartReview_IncludesAReleasedMsfCampaignClosingInTheWindow()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        dbContext.MsfCampaigns.Add(CreateCampaignClosingInWindow(51, MsfCampaignState.Released));
+        await dbContext.SaveChangesAsync();
+
+        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        var msfEvidence = started.EvidenceItems.Should().ContainSingle(item => item.MsfCampaignId == 51).Subject;
+        msfEvidence.SourceType.Should().Be(CommitteeEvidenceSourceType.MsfCampaign);
+        msfEvidence.Summary.Should().Contain("State: Released");
+        msfEvidence.Summary.Should().Contain("closed 2026-03-10.");
+        msfEvidence.Summary.Should().EndWith(" Names no EPA, so it recorded no evidence.");
+    }
+
+    /// <summary>
+    /// A released campaign falls in the review window by the UTC day it actually closed, which is the day
+    /// its per-EPA evidence activities are observed on, so the report and its claims reach the same panel.
+    /// (T138)
+    /// </summary>
+    /// <remarks>
+    /// Each case also adds the per-EPA activity a release would have written, observed on the closing day
+    /// (<c>ReleaseMsfCampaign.EvidenceCompleteOn</c>), and asserts it lands on the same side of the window
+    /// as its campaign. Windowing by <c>ClosesOn</c> split the first two: the auto-close job shuts a
+    /// campaign the day after <c>ClosesOn</c> at the earliest, and a coordinator can close one early.
+    /// </remarks>
+    [Theory]
+    // Scheduled for the window's last day, auto-closed the next morning: its evidence belongs to the next review.
+    [InlineData("2026-03-31", "2026-04-01T01:00:00Z", false)]
+    // Scheduled after the window, closed early inside it: its evidence is dated inside it.
+    [InlineData("2026-04-10", "2026-03-28T09:00:00Z", true)]
+    // The window's days are inclusive at both ends, in UTC.
+    [InlineData("2026-03-31", "2026-03-31T23:30:00Z", true)]
+    [InlineData("2026-01-10", "2026-01-01T00:00:00Z", true)]
+    [InlineData("2025-12-31", "2025-12-31T23:59:00Z", false)]
+    public async Task StartReview_WindowsAnMsfCampaignByTheDayItClosed(string closesOn, string closedOn, bool inSnapshot)
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+
+        var closedAt = DateTime.Parse(closedOn, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+        var campaign = CreateCampaignClosingInWindow(51, MsfCampaignState.Released);
+        campaign.ClosesOn = DateOnly.Parse(closesOn, CultureInfo.InvariantCulture);
+        campaign.ClosedOn = closedAt;
+        campaign.ReleasedOn = closedAt.AddDays(2);
+        dbContext.MsfCampaigns.Add(campaign);
+
+        dbContext.Activities.Add(new Activity
+        {
+            Id = 101,
+            ActivityTypeId = 10,
+            SchemaVersion = 1,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "coord-1",
+            CurrentState = "completed",
+            DataJson = "{}",
+            CreatedOn = closedAt.AddDays(2),
+            ObservedOn = DateOnly.FromDateTime(closedAt),
+            UpdatedOn = closedAt.AddDays(2)
+        });
+        await dbContext.SaveChangesAsync();
+
+        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+            new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        started.EvidenceItems.Any(item => item.MsfCampaignId == 51).Should().Be(inSnapshot);
+        started.EvidenceItems.Any(item => item.ActivityId == 101).Should().Be(
+            inSnapshot, "the campaign's per-EPA evidence is observed on the day it closed, and must travel with it");
     }
 
     [Fact]
@@ -231,6 +346,9 @@ public sealed class CommitteeDecisionHandlersTests
             MinimumResponses = 4,
             MinimumCategoryResponses = 2,
             State = MsfCampaignState.Released,
+            // A released campaign was closed first: Release requires UnderReview, and Close stamps this.
+            OpenedOn = new DateTime(2026, 2, 3, 8, 0, 0, DateTimeKind.Utc),
+            ClosedOn = new DateTime(2026, 2, 16, 1, 0, 0, DateTimeKind.Utc),
             ReleasedOn = new DateTime(2026, 2, 20, 8, 0, 0, DateTimeKind.Utc),
             Responses =
             [
@@ -250,6 +368,37 @@ public sealed class CommitteeDecisionHandlersTests
         await dbContext.SaveChangesAsync();
 
         return review;
+    }
+
+    /// <summary>
+    /// A second campaign for the fixture's trainee, on the fixture's template, closing on 2026-03-10 —
+    /// inside the review window — with the timestamps its state implies. A withdrawn one was withdrawn
+    /// from under review, after it closed: the case where only the state rule keeps it out of a snapshot.
+    /// </summary>
+    private static MsfCampaign CreateCampaignClosingInWindow(int id, MsfCampaignState state)
+    {
+        var createdOn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc);
+
+        return new MsfCampaign
+        {
+            Id = id,
+            SubjectUserId = "trainee-1",
+            TemplateId = 40,
+            CreatedByUserId = "coord-1",
+            CreatedOn = createdOn,
+            OpensOn = new DateOnly(2026, 3, 1),
+            ClosesOn = new DateOnly(2026, 3, 10),
+            MinimumResponses = 4,
+            MinimumCategoryResponses = 2,
+            State = state,
+            OpenedOn = state == MsfCampaignState.Draft ? null : createdOn,
+            ClosedOn = state is MsfCampaignState.Closed or MsfCampaignState.UnderReview or MsfCampaignState.Released
+                    or MsfCampaignState.Withdrawn
+                ? new DateTime(2026, 3, 10, 18, 0, 0, DateTimeKind.Utc)
+                : null,
+            ReleasedOn = state == MsfCampaignState.Released ? new DateTime(2026, 3, 12, 8, 0, 0, DateTimeKind.Utc) : null,
+            WithdrawnOn = state == MsfCampaignState.Withdrawn ? new DateTime(2026, 3, 11, 8, 0, 0, DateTimeKind.Utc) : null
+        };
     }
 
     private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles)

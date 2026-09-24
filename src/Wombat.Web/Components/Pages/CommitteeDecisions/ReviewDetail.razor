@@ -232,9 +232,16 @@
 
     <section class="detail-card">
       <h3>Evidence snapshot</h3>
-      @if (_review.EvidenceItems.Count == 0)
+      @* Empty means two different things. Before Start nothing has been frozen; after it the window
+         genuinely held nothing, and telling a panel that starting would capture a bundle, on a review
+         already started, sends it looking for a button that is gone. (T138) *@
+      @if (_review.EvidenceItems.Count == 0 && _review.State == CommitteeReviewState.Scheduled)
       {
         <p>No evidence has been frozen yet. Starting the review captures the current bundle.</p>
+      }
+      else if (_review.EvidenceItems.Count == 0)
+      {
+        <p>The review window held no evidence when this review started.</p>
       }
       else
       {

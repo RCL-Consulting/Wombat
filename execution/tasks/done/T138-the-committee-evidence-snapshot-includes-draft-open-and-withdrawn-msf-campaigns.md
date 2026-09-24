@@ -1,12 +1,14 @@
 ---
 id: T138
 title: The committee evidence snapshot includes draft, open and withdrawn MSF campaigns
-status: queued
+status: done
 priority: P3
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-21
+started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T138 — A panel is shown feedback that was never released, and feedback that was withdrawn
@@ -50,11 +52,12 @@ a comment rather than left to be "fixed" later.
 
 ## Verification
 
-- [ ] A withdrawn campaign closing inside the review window does not appear in the snapshot — checked
-      by a `CommitteeDecisionHandlersTests` case
-- [ ] A released one still does, with its [T121] coverage sentence intact — checked by the existing
-      `StartReview_MsfEvidenceNamesTheEpasItStandsBehind`
-- [ ] Full suite green — `dotnet test` per project, no `--no-build`
+- [x] A withdrawn campaign closing inside the review window does not appear in the snapshot — checked
+      by a `CommitteeDecisionHandlersTests` case (`StartReview_LeavesOutAnMsfCampaignThatWasNeverReleased`, a theory over
+      Draft, Open, Closed, UnderReview and Withdrawn)
+- [x] A released one still does, with its [T121] coverage sentence intact — checked by the existing
+      `StartReview_MsfEvidenceNamesTheEpasItStandsBehind`, plus `StartReview_IncludesAReleasedMsfCampaignClosingInTheWindow`
+- [x] Full suite green — `dotnet test` per project, no `--no-build` (on master after the merge; see the commit)
 
 ## Related
 
@@ -64,3 +67,22 @@ committee-authorization work.
 ## Notes
 
 - **Observed:** the snapshot is a point-in-time copy, so fixing the query changes only future reviews.
+
+---
+
+## As built — 2026-09-24
+
+- **Decision (a): Released only**, written positively (`campaign.State == MsfCampaignState.Released`), the rule
+  `PortfolioPdfService` and `ListMsfCampaignsForTraineeQuery` already use. The activity side stays unfiltered; a comment
+  says why (a declined WBA is evidence of progress, and an MSF is evidence only once released).
+- **Found by the review, fixed: the parent row and its per-EPA evidence could land in different reviews.** The campaign
+  was windowed by `ClosesOn` (scheduled), while its per-EPA activities are dated `ClosedOn` (actual,
+  `ReleaseMsfCampaign.EvidenceCompleteOn`). Every auto-closed campaign scheduled for a window's last day was split,
+  because `MsfCampaignAutoCloseJob` closes the day after. It is now windowed by the UTC date of `ClosedOn`, and a note on
+  `EvidenceCompleteOn` says the two must move together.
+- `DescribeCoverage`'s non-released branches are deleted. `ReviewDetail`'s empty snapshot says "Starting the review
+  captures…" only while `Scheduled`; once started it says "The review window held no evidence when this review started."
+- Tests: Application 895 → 906, Web 288 → 293. Four mutants (the window, the end bound, the filter, the Razor branch)
+  were all caught.
+- **Filed:** [T173], the live notice for a campaign closing in the window but still awaiting release.
+
