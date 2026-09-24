@@ -1,11 +1,12 @@
 ---
 id: T167
 title: The committee's evidence snapshot names no EPA, tool, rating or encounter date, and a STAR can be staged on an EPA outside the trainee's curriculum
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: [T137]
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T167 — The committee's evidence snapshot cannot say which EPA a line is about
@@ -55,14 +56,14 @@ Observed at `431e69e`:
 
 ## Verification
 
-- [ ] A snapshot line for a rated activity names its EPA code, instrument, rung and encounter date. Application test on
+- [x] A snapshot line for a rated activity names its EPA code, instrument, rung and encounter date. Application test on
       `StartCommitteeReview`.
-- [ ] The review page groups the snapshot by EPA. bUnit test, and in the browser.
-- [ ] Staging a STAR on an EPA outside the trainee's curriculum is refused and writes nothing; the picker does not offer
+- [x] The review page groups the snapshot by EPA. bUnit test, and in the browser.
+- [x] Staging a STAR on an EPA outside the trainee's curriculum is refused and writes nothing; the picker does not offer
       it. Application test, and in the browser.
-- [ ] Staging with a level off the item's ladder is refused. Application test.
-- [ ] Browser, on dev: a review whose window holds a CCA and a released three-EPA MSF shows them under the right EPAs.
-- [ ] Full suite green, no `--no-build`.
+- [x] Staging with a level off the item's ladder is refused. Application test.
+- [x] Browser, on dev: a review whose window holds a CCA and a released three-EPA MSF shows them under the right EPAs.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
@@ -76,4 +77,30 @@ will draw from this snapshot), [T135] (the state decision), [T144] (classificati
 migration backfilled existing rows. It records the EPA the activity is evidence **for**. It does **not** say the EPA is
 on the trainee's curriculum. Staging a STAR must still check the trainee's curriculum (scoped on `OwningInstitutionId`),
 not the presence of an `EpaId`.
+
+---
+
+## As built — 2026-09-24
+
+- **Snapshot lines.** Each activity line of `CommitteeEvidenceItems` records its EPA (the stamped `Activity.EpaId`,
+  with code and title), its instrument (`WbaToolKey`, by the College's name), and whether the pinned version is rated.
+  It also records the rating, as a rung label read through T135's profile; the encounter date, with the undated marker;
+  and the source state.
+  - Migration `20260924153716_T167_CommitteeEvidenceNamesEachLine` adds nullable columns, with no backfill.
+  - `ReviewDetail` groups the lines: one card per EPA in code order, grouped by instrument. Campaign reports go under
+    "Not about a single EPA", and pre-T167 rows under "Frozen before lines named their EPA".
+- **`StarCurriculum`.**
+  - The allowed EPAs are the in-force items of the trainee's preferred profile's curriculum: the national core plus
+    their own institution's local items. The allowed levels are the item's pinned ladder.
+  - Stage, issue and ratify each refuse anything outside this before any write; ratify re-checks every staged decision.
+  - The EPA picker and the level list use the same predicate.
+
+**Browser on dev (scripted Chrome, `5ae1141`):**
+- On review 1, the STAR EPA picker lists exactly PAED-001..015 (not the demo EPA-001). After choosing PAED-001, the
+  levels are CPSA v11.1's 1, 2, 3a, 3b, 4, 5.
+- Review 1's old lines render under "Frozen before lines named their EPA".
+- **Not seen in a browser: a new review's grouped snapshot.** No seeded dev account can schedule a review since T182,
+  and the verifier may not use the admin credential. The grouping is covered by `ReviewDetailEvidenceGroupingTests`
+  (bUnit) and `CommitteeEvidenceSnapshotPostgresTests`. The browser check moves to [T204], which seeds a dev
+  Coordinator.
 

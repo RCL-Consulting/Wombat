@@ -1,11 +1,12 @@
 ---
 id: T162
 title: The type picker offers the system-written msf_cpsa to trainees
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T162 — Trainees are offered msf_cpsa, a type only the system can complete
@@ -46,12 +47,12 @@ Observed at `431e69e`:
 
 ## Verification
 
-- [ ] `/activities/new` no longer offers `msf_cpsa` to the dev trainee. Query test, and in the browser.
-- [ ] `CreateActivityCommand` for `msf_cpsa` is refused and writes no row. Application test.
-- [ ] A released MSF campaign still writes its per-EPA `msf_cpsa` rows. Existing [T121] tests stay green.
-- [ ] Whatever is decided about `ActivityPermissionRule` is done and recorded here; if it is dropped, the migration has
+- [x] `/activities/new` no longer offers `msf_cpsa` to the dev trainee. Query test, and in the browser.
+- [x] `CreateActivityCommand` for `msf_cpsa` is refused and writes no row. Application test.
+- [x] A released MSF campaign still writes its per-EPA `msf_cpsa` rows. Existing [T121] tests stay green.
+- [x] Whatever is decided about `ActivityPermissionRule` is done and recorded here; if it is dropped, the migration has
       been read after generation (the `--no-build` empty-migration trap).
-- [ ] Full suite green, no `--no-build`.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
@@ -67,4 +68,26 @@ evidence, and the workflow has no cancel. Since T107 the Administrator sees **Re
 campaign, Feedback window closed and Questionnaires returned, which you cannot fill in here." Dev activity 23 is one;
 since T127 the trainee is told "Filed. It is now Draft." Stop offering the type (this task), and delete or regenerate
 activity 23 when done.
+
+---
+
+## As built — 2026-09-24
+
+- **`ActivityType.SystemManaged`** is declared on the seed catalogue entry. Only `msf_cpsa` has it, and the migration
+  `20260924155631_T162_SystemManagedActivityTypes` stamps it once from a frozen key list.
+  - `ListActivityTypesQuery` omits the type.
+  - `CreateDraftAsync` refuses it for a person before any write.
+  - The MSF release still writes the evidence.
+  - The builder cannot set the flag.
+- **The same migration:**
+  - deletes stuck self-filed `msf_cpsa` drafts;
+  - drops the dead `ActivityPermissionRules` table, with its entity, configuration and DbSet.
+- **Docs:** CLAUDE.md, CUSTOMIZATION.md, DOMAIN.md, ARCHITECTURE.md and EPA-PROGRAMME § 5 are updated, and the
+  runbook's MSF step 3.9 is marked superseded ([T159] retargets it).
+
+**Browser on dev (master `5ae1141`, a scripted Chrome):**
+- The migration applied, `ActivityPermissionRules` is gone, `SystemManaged` is true only for `msf_cpsa`, and activity 23
+  was deleted.
+- As the trainee, `/activities/new` offers 14 types with no MSF, and `?type=msf_cpsa` leaves the picker unset
+  (`?type=mini_cex_cpsa` still preselects).
 

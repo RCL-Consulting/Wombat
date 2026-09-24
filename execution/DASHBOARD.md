@@ -11,12 +11,12 @@
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
-| queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T200](tasks/queued/T200-pdfs-rendered-at-the-same-time-can-lose-their-text-layer-questpdf-so-an-export-may-be-unsearchable-and-unreadable-to-a-screen-reader.md) | P2 | PDFs rendered at the same time can lose their text layer (QuestPDF), s |  |
 | queued | [T201](tasks/queued/T201-when-a-handler-s-own-save-fails-the-audit-pipeline-re-saves-the-same-changes-loses-the-audit-row-and-hides-the-real-error.md) | P2 | When a handler's own save fails, the audit pipeline re-saves the same  |  |
 | queued | [T202](tasks/queued/T202-msf-a-withdrawn-campaign-keeps-respondents-emails-invitations-don-t-say-which-campaign-and-a-dead-link-answers-500.md) | P2 | MSF: a withdrawn campaign keeps respondents' emails, invitations don't |  |
+| queued | [T204](tasks/queued/T204-the-dev-seed-has-no-coordinator-so-committee-scheduling-and-msf-campaigns-cannot-be-exercised-with-a-tracked-dev-account.md) | P2 | The dev seed has no Coordinator, so committee scheduling and MSF campa |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -36,7 +36,6 @@
 | queued | [T154](tasks/queued/T154-clinical-audit-and-portfolio-review-cannot-be-filed-one-needs-an-attached-report-the-other-a-design.md) | P3 | Clinical audit and portfolio review cannot be filed: one needs an atta |  |
 | queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
-| queued | [T162](tasks/queued/T162-the-type-picker-offers-the-system-written-msf-cpsa-to-trainees.md) | P3 | The type picker offers the system-written msf_cpsa to trainees |  |
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
 | queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
 | queued | [T168](tasks/queued/T168-no-surface-shows-per-epa-and-period-whether-an-msf-covered-it.md) | P3 | No surface shows, per EPA and period, whether an MSF covered it |  |
@@ -60,7 +59,7 @@
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
 
-Done: 135 task(s).
+Done: 137 task(s).
 
 ## From STATE.md
 
@@ -76,9 +75,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+5ae1141 fix(activities): the system-written MSF evidence type is not offered to or creatable by a person; the dead permission-rule table is dropped (T162)
 fb5a3f4 feat(committee): the evidence snapshot names each line's EPA, instrument, rating and encounter date and groups by EPA; a STAR is staged, issued and ratified only on an in-force EPA of the trainee's curriculum (T167)
 1a89410 docs(execution): close T169 (browser-verified, activity 32, exports 3–8) and T184 (tests; its browser checks were blocked by the credential permission and are left for the operator)
 45e7ed7 docs(execution): file T200–T203 from the T169 and T184 reviews (PDF render race, audit on a failed save, MSF withdraw/respondent path, terminal-state dashboards)
 d640787 fix(msf): respondent emails are redacted from the audit log, a failed invitation send leaves the campaign unopened, and one routine anonymises (T184)
-3c31fe5 feat(reporting): the portfolio PDF shows per-EPA progress against the period targets, and counts finished unrated and MSF evidence as complete (T169)
 ```
