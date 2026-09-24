@@ -159,11 +159,11 @@ public sealed class ActivityViewNoticeTests : TestContext
     public void ANewMove_ClearsTheNotice_SoARefusalStandsAlone()
     {
         Notices.Post(ActivityId, "warning", NoticeText);
-        _sender.TransitionFailure = new InvalidOperationException("epa_id: EPA is required.");
+        _sender.TransitionFailure = new InvalidOperationException("EPA: A value is required.");
         var cut = RenderPage();
 
         Click(cut, "Submit");
-        cut.WaitForAssertion(() => cut.Find(".alert-danger").TextContent.Should().Contain("EPA is required."));
+        cut.WaitForAssertion(() => cut.Find(".alert-danger").TextContent.Should().Contain("EPA: A value is required."));
 
         cut.FindAll(".alert-warning").Should().BeEmpty("the notice described the page as it arrived, not this refusal");
     }

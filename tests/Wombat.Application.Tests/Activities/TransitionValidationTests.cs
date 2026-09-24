@@ -31,7 +31,12 @@ public sealed class TransitionValidationTests
     private const int DisposalWithRequiredReasonTypeId = 302;
     private const int LogTypeId = 303;
 
-    private static readonly string[] AssessorFields = ["overall_level", "strengths", "improvements", "plan"];
+    // A refusal names each field by the label the form shows it under (T172), so these are the seeds' labels, not keys.
+    private static readonly string[] CpsaAssessorFieldLabels =
+        ["Supervision required for this encounter", "What was done well", "Areas for development", "Agreed plan"];
+
+    private static readonly string[] LegacyAssessorFieldLabels =
+        ["Overall performance", "Strengths", "Areas for improvement", "Agreed plan"];
 
     // ---- the CPSA Mini-CEX (draft-born) --------------------------------------------------------------------------
 
@@ -56,8 +61,8 @@ public sealed class TransitionValidationTests
 
         var message = await RefusedAsync(options, draft.Id, "submit", TraineeId);
 
-        message.Should().Contain("setting");
-        foreach (var assessorField in AssessorFields)
+        message.Should().Be("Clinical setting: A value is required.");
+        foreach (var assessorField in CpsaAssessorFieldLabels)
         {
             message.Should().NotContain(assessorField);
         }
@@ -93,9 +98,9 @@ public sealed class TransitionValidationTests
 
         var message = await RefusedAsync(options, requested.Id, "complete", AssessorId);
 
-        foreach (var assessorField in AssessorFields)
+        foreach (var assessorField in CpsaAssessorFieldLabels)
         {
-            message.Should().Contain(assessorField);
+            message.Should().Contain($"{assessorField}: A value is required.");
         }
     }
 
@@ -115,7 +120,7 @@ public sealed class TransitionValidationTests
 
         var message = await RefusedAsync(options, requested.Id, "complete", AssessorId, patch: Ratings());
 
-        message.Should().Contain("complexity");
+        message.Should().Be("Case complexity: A value is required.");
     }
 
     [Fact]
@@ -142,9 +147,9 @@ public sealed class TransitionValidationTests
         var missingAssessor = await RefusedCreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "assessor_user_id"));
         var missingComplexity = await RefusedCreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "complexity"));
 
-        missingAssessor.Should().Contain("assessor_user_id");
-        missingComplexity.Should().Contain("complexity");
-        foreach (var assessorField in new[] { "overall", "strengths", "improvements", "plan" })
+        missingAssessor.Should().Be("Assessor user id: A value is required.");
+        missingComplexity.Should().Be("Case complexity: A value is required.");
+        foreach (var assessorField in LegacyAssessorFieldLabels)
         {
             missingComplexity.Should().NotContain(assessorField, "the ratings are the assessor's to give, after the create");
         }
@@ -172,7 +177,7 @@ public sealed class TransitionValidationTests
         var message = await RefusedCreateAsync(options, LogTypeId, """{ "notes": "Uneventful." }""");
         var logged = await CreateAsync(options, LogTypeId, """{ "title": "Lumbar puncture" }""");
 
-        message.Should().Contain("title").And.NotContain("notes");
+        message.Should().Be("Title: A value is required.");
         logged.CurrentState.Should().Be("logged");
     }
 
@@ -210,9 +215,9 @@ public sealed class TransitionValidationTests
         await TransitionAsync(options, request.Id, "accept", AssessorId);
 
         var message = await RefusedAsync(options, request.Id, "complete", AssessorId);
-        foreach (var field in new[] { "overall", "strengths", "improvements", "plan" })
+        foreach (var field in LegacyAssessorFieldLabels)
         {
-            message.Should().Contain(field);
+            message.Should().Contain($"{field}: A value is required.");
         }
 
         var completed = await TransitionAsync(options, request.Id, "complete", AssessorId, patch: """
@@ -231,8 +236,8 @@ public sealed class TransitionValidationTests
         var draft = await CreateAsync(options, DisposalWithRequiredReasonTypeId, """{ "title": "Half done" }""");
 
         var message = await RefusedAsync(options, draft.Id, "withdraw", TraineeId);
-        message.Should().Contain("reason");
-        message.Should().NotContain("summary", "the schema's own required field does not count on a draft-validated move");
+        message.Should().Be("Reason: A value is required.",
+            "the schema's own required Summary does not count on a draft-validated move");
 
         var withdrawn = await TransitionAsync(options, draft.Id, "withdraw", TraineeId, patch: """{ "reason": "Duplicate." }""");
         withdrawn.CurrentState.Should().Be("withdrawn");

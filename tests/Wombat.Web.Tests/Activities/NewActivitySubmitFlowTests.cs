@@ -41,8 +41,10 @@ public sealed class NewActivitySubmitFlowTests : TestContext
 {
     private const int CreatedId = 41;
 
-    /// <summary>A submit's refusal as <c>ActivityService</c> words it: field key, the validator's sentence, "; " between.</summary>
-    private const string Refusal = "epa_id: A value is required.; assessor_user_id: A value is required.";
+    /// <summary>
+    /// A submit's refusal as <c>ActivityService</c> words it: the field's label (T172), the validator's sentence, "; " between.
+    /// </summary>
+    private const string Refusal = "EPA: A value is required.; Assessor: A value is required.";
 
     private const string SchemaJson = """
         {

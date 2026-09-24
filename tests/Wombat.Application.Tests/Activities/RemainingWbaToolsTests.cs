@@ -125,7 +125,7 @@ public sealed class RemainingWbaToolsTests
 
         var attempt = () => TransitionAsync(options, draft.Id, "record_discussion", AssessorId);
 
-        (await attempt.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("discussion_notes");
+        (await attempt.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("Discussion: A value is required.");
     }
 
     // ---- helpers -------------------------------------------------------------------------------------------------

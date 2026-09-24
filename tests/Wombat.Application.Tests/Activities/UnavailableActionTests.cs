@@ -80,7 +80,7 @@ public sealed class UnavailableActionTests
 
         // Not vacuous: against the stored data the validator does flag them, and the move that hides them is accepted.
         var unpatched = () => TransitionAsync(options, 910, "submit", TraineeId);
-        (await unpatched.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("review_note");
+        (await unpatched.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("Review note: A value is required.");
         (await TransitionAsync(options, 910, "submit", TraineeId, dataPatchJson: """{ "needs_review": "no" }"""))
             .CurrentState.Should().Be("submitted");
         (await TransitionAsync(options, 911, "submit", TraineeId, dataPatchJson: """{ "needs_countersign": "no" }"""))
@@ -132,7 +132,9 @@ public sealed class UnavailableActionTests
         await AddActivityAsync(options, 900, StrandableTypeId, schemaVersion: 1, RequestOnly);
 
         var complete = () => TransitionAsync(options, 900, "complete", AssessorId);
-        (await complete.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("overall_level");
+        // By label, as the disabled action's reason names them (T172), so the page never calls one field two things.
+        (await complete.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should()
+            .Be("Overall level: A value is required.; Strengths: A value is required.");
 
         (await TransitionAsync(options, 900, "decline", AssessorId, note: "Filed on a form I cannot complete."))
             .CurrentState.Should().Be("declined");

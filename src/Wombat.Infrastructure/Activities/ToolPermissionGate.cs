@@ -152,11 +152,6 @@ internal static class ToolPermissionGate
 
         string NameOf(string key) => names.TryGetValue(key, out var name) ? name : key;
 
-        var labels = schema.Sections
-            .SelectMany(section => section.Fields)
-            .GroupBy(field => field.Key, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.First().Label, StringComparer.Ordinal);
-
         var sentences = refusals.Take(MaxItemsNamed).Select(refusal =>
         {
             var epa = epas.TryGetValue(refusal.Item.EpaId, out var found)
@@ -175,10 +170,7 @@ internal static class ToolPermissionGate
                 return sentence;
             }
 
-            var label = labels.TryGetValue(refusal.MatchedFieldKey, out var fieldLabel) && !string.IsNullOrWhiteSpace(fieldLabel)
-                ? fieldLabel
-                : refusal.MatchedFieldKey;
-            return $"{label}: {sentence}";
+            return $"{schema.FieldLabel(refusal.MatchedFieldKey)}: {sentence}";
         });
 
         var message = string.Join(" ", sentences);

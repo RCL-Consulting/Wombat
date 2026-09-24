@@ -247,7 +247,7 @@ public sealed class NomineeGateTests
 
         var message = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", Raw(rawJson))));
 
-        message.Should().Contain("assessor_user_id");
+        message.Should().Be("Assessor: A string value is required.", "the validator names the field as the form does (T172)");
     }
 
     [Fact]

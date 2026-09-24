@@ -177,7 +177,7 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var sender = new FakeSender(Detail(Assessor()))
         {
-            TransitionFailure = new InvalidOperationException("strengths: A value is required")
+            TransitionFailure = new InvalidOperationException("Strengths: A value is required.")
         };
         var cut = RenderPage(sender);
 

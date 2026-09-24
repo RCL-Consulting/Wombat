@@ -83,7 +83,7 @@ internal static class NomineeGate
                 continue;
             }
 
-            var label = LabelOf(schema, field);
+            var label = schema.FieldLabel(field);
             var roles = requiredRolesByField.TryGetValue(field, out var declared) ? declared : [WombatRoles.Assessor];
 
             if (element.ValueKind != JsonValueKind.String)
@@ -141,12 +141,6 @@ internal static class NomineeGate
             WombatRoles.SubSpecialityAdmin => "Sub-speciality admin",
             _ => role
         }));
-
-    private static string LabelOf(FormSchema schema, string field)
-        => schema.Sections
-            .SelectMany(section => section.Fields)
-            .FirstOrDefault(candidate => string.Equals(candidate.Key, field, StringComparison.Ordinal))
-            ?.Label ?? field;
 
     private static IEnumerable<string> OrderBySchema(FormSchema schema, IReadOnlySet<string> fields)
     {

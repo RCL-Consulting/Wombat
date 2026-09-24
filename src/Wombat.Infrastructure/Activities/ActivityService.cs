@@ -140,7 +140,7 @@ public sealed class ActivityService : IActivityService
             principal,
             ignoreStateGate: true);
 
-        ThrowIfInvalid(_schemaValidator.Validate(
+        ThrowIfInvalid(schema, _schemaValidator.Validate(
             schema, activity.DataJson, SchemaValidationMode.Submit, requiredFieldScope: owned));
     }
 
@@ -235,7 +235,7 @@ public sealed class ActivityService : IActivityService
         ThrowIfActorFieldNamesSubject(schema, workflow, normalizedDataJson, activity.SubjectUserId);
         activity.DataJson = normalizedDataJson;
 
-        ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
+        ThrowIfInvalid(schema, _schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
 
         // T119: after the writable-key filter, so the stamp reflects what was actually stored.
         StampObservedOn(activity, schema, normalizedDataJson);
@@ -305,7 +305,7 @@ public sealed class ActivityService : IActivityService
         }
 
         // T105: the transition says how much of the form it insists on. Against the pre-move state and the merged data.
-        ThrowIfInvalid(ValidateForTransition(schema, workflow, activity, transition, input.Principal, mergedDataJson));
+        ThrowIfInvalid(schema, ValidateForTransition(schema, workflow, activity, transition, input.Principal, mergedDataJson));
 
         // T122, D20: a changed credit target is checked on any move that can still lead to credit; an unchanged one is
         // re-checked only when the author, before anyone else has acted, hands it on while still able to correct it
@@ -536,7 +536,7 @@ public sealed class ActivityService : IActivityService
                     decision.Reason ?? "The current actor is not allowed to perform this transition.");
             }
 
-            ThrowIfInvalid(ValidateForTransition(schema, workflow, activity, transition, input.Principal, activity.DataJson));
+            ThrowIfInvalid(schema, ValidateForTransition(schema, workflow, activity, transition, input.Principal, activity.DataJson));
 
             // T119, and the ordering note from TransitionAsync applies unchanged: stamping before
             // ApplyTransition keeps the column and the transition's SnapshotJson in agreement. EpaId (T137) is not
@@ -691,7 +691,7 @@ public sealed class ActivityService : IActivityService
             return null;
         }
 
-        var reason = $"Needs {JoinLabels(unwritable.Select(fieldKey => FieldLabel(schema, fieldKey)).ToList())}, " +
+        var reason = $"Needs {JoinLabels(unwritable.Select(schema.FieldLabel).ToList())}, " +
                      "which you cannot fill in here.";
 
         return activity.SchemaVersion < activity.ActivityType.Version
@@ -716,16 +716,6 @@ public sealed class ActivityService : IActivityService
 
     private static bool ReadsWritableField(VisibilityCondition? condition, IReadOnlySet<string> writableFieldKeys)
         => condition is not null && writableFieldKeys.Contains(condition.Field);
-
-    private static string FieldLabel(FormSchema schema, string fieldKey)
-    {
-        var label = schema.Sections
-            .SelectMany(section => section.Fields)
-            .FirstOrDefault(field => string.Equals(field.Key, fieldKey, StringComparison.Ordinal))
-            ?.Label;
-
-        return string.IsNullOrWhiteSpace(label) ? fieldKey : label.Trim();
-    }
 
     /// <summary>"A", "A and B", "A, B and C".</summary>
     private static string JoinLabels(IReadOnlyList<string> labels)
@@ -1280,7 +1270,16 @@ public sealed class ActivityService : IActivityService
                 schema, dataJson, SchemaValidationMode.Submit, transition.RequiresFields)
         };
 
-    private static void ThrowIfInvalid(IReadOnlyList<ActivityValidationErrorDto> validationErrors)
+    /// <summary>
+    /// Refuses the write when the validator found anything, naming each field by the label the form shows it under.
+    /// </summary>
+    /// <remarks>
+    /// The validator reports by key, and code that reasons about the errors (<see cref="ExplainUnreachable" />) reads the
+    /// key. The refusal is read by a person, on the same page as the form, so it names the field as the form does (T172),
+    /// through the same <see cref="FormSchema.FieldLabel" /> a disabled action's reason uses (T107). The schema passed in
+    /// is the one the data was validated against, the version the activity is pinned to.
+    /// </remarks>
+    private static void ThrowIfInvalid(FormSchema schema, IReadOnlyList<ActivityValidationErrorDto> validationErrors)
     {
         if (validationErrors.Count == 0)
         {
@@ -1290,7 +1289,7 @@ public sealed class ActivityService : IActivityService
         var message = string.Join("; ", validationErrors.Select(error =>
             error.FieldKey is null
                 ? error.Message
-                : $"{error.FieldKey}: {error.Message}"));
+                : $"{schema.FieldLabel(error.FieldKey)}: {error.Message}"));
 
         throw new InvalidOperationException(message);
     }
@@ -1329,13 +1328,8 @@ public sealed class ActivityService : IActivityService
             var value = ActorRuleMatcher.ReadUserFieldValue(dataJson, fieldName);
             if (string.Equals(value, subjectUserId, StringComparison.Ordinal))
             {
-                var label = schema.Sections
-                    .SelectMany(section => section.Fields)
-                    .FirstOrDefault(field => string.Equals(field.Key, fieldName, StringComparison.Ordinal))
-                    ?.Label ?? fieldName;
-
                 throw new InvalidOperationException(
-                    $"{label}: this decides who may act on the activity, so it cannot name the person the activity is about.");
+                    $"{schema.FieldLabel(fieldName)}: this decides who may act on the activity, so it cannot name the person the activity is about.");
             }
         }
     }

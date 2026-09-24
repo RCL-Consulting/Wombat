@@ -44,4 +44,58 @@ public sealed record FormSchema(
     IReadOnlyList<FormSection> Sections,
     string? ObservationDateField = null,
     string? RatedLevelField = null,
-    string? EvidenceEpaField = null);
+    string? EvidenceEpaField = null)
+{
+    /// <summary>
+    /// The words a user sees for the field <paramref name="fieldKey" />: its label, followed by its section's title in
+    /// brackets when another field in the form carries the same label, or the key itself when the schema declares no
+    /// such field or the field's label is blank.
+    /// </summary>
+    /// <remarks>
+    /// The one place a refusal or a reason turns a field key into what the form shows (T172). A validation refusal, a
+    /// disabled action's reason (T107), the nominee gate (T102), the tool gate (T122) and the subject-as-actor refusal all
+    /// name fields through it, so no two of them can call the same field by different names. The parser refuses a blank
+    /// label, so the key is what a user sees only for a schema built in code, or a key the schema does not declare.
+    /// Keys are unique once a type can be saved (<c>ActorFieldRules.EnsurePublishable</c>), so the first match is the
+    /// field.
+    /// <para>
+    /// Labels are not unique: <c>qi_project</c> has a "Plan", "Do", "Study" and "Act" under each of its three PDSA
+    /// cycles, and the builder lets any type do the same. The form tells them apart by the section each sits under, so a
+    /// repeated label is named with that section's title, "Plan (PDSA cycle 1)", which is what the user sees; a label
+    /// used once is named alone. Labels are compared as a reader sees them: trimmed and ignoring case. The title follows
+    /// in brackets rather than after a colon, because a refusal already uses the colon between the field and what is
+    /// wrong with it.
+    /// </para>
+    /// </remarks>
+    public string FieldLabel(string fieldKey)
+    {
+        FormSection? owner = null;
+        FormField? field = null;
+
+        foreach (var section in Sections)
+        {
+            field = section.Fields.FirstOrDefault(candidate => string.Equals(candidate.Key, fieldKey, StringComparison.Ordinal));
+            if (field is not null)
+            {
+                owner = section;
+                break;
+            }
+        }
+
+        if (field is null || owner is null || string.IsNullOrWhiteSpace(field.Label))
+        {
+            return fieldKey;
+        }
+
+        var label = field.Label.Trim();
+
+        var repeated = Sections
+            .SelectMany(section => section.Fields)
+            .Any(other => !string.Equals(other.Key, fieldKey, StringComparison.Ordinal) &&
+                          string.Equals(other.Label?.Trim(), label, StringComparison.OrdinalIgnoreCase));
+
+        return repeated && !string.IsNullOrWhiteSpace(owner.Title)
+            ? $"{label} ({owner.Title.Trim()})"
+            : label;
+    }
+}

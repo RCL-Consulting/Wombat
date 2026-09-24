@@ -378,7 +378,7 @@
       : stateKey;
 
   // A refusal is quoted mid-message, before more text, so it has to end as a sentence does. Most server refusals already
-  // do ("epa_id: A value is required."); a few do not.
+  // do ("Presenting problem: A value is required."); a few do not.
   private static string AsSentence(string message)
   {
     var trimmed = message.Trim();
