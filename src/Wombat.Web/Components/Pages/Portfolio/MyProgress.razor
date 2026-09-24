@@ -100,8 +100,21 @@
               <dd>@stage — it sets the minimum level each encounter is judged against</dd>
             </div>
           }
+          @if (_msfCoverage is { Epas.Count: > 0 } coverage)
+          {
+            <div>
+              <dt>Multi-source feedback</dt>
+              <dd>@MsfCoverageText.ThisSemesterLine(coverage)</dd>
+            </div>
+          }
         </dl>
       </section>
+
+      @* T168: apart from the targets, like the standing below. A failure says so here and takes no card down with it. *@
+      @if (!string.IsNullOrWhiteSpace(_msfCoverageError))
+      {
+        <Alert Kind="warning">Your multi-source feedback coverage could not be loaded: @_msfCoverageError</Alert>
+      }
 
       @if (HasSemesterItems)
       {
@@ -166,6 +179,8 @@
   private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
   private EntrustmentStandingDto? _standing;
   private string? _standingError;
+  private MsfCoverageDto? _msfCoverage;
+  private string? _msfCoverageError;
   private bool _loaded;
   private string? _error;
 
@@ -201,6 +216,19 @@
     catch (Exception exception)
     {
       _standingError = exception.Message;
+    }
+
+    // T168: this semester and the one before, beside each quota card. Its own try, like the standing.
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("Current user identifier missing.");
+      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _msfCoverageError = exception.Message;
     }
   }
 
@@ -297,6 +325,13 @@
       @if (item.Previous is { } previous)
       {
         <p class="progress-row-meta">@PreviousLine(previous)</p>
+      }
+
+      @* T168, D9: covered means a released campaign COVERING this EPA closed in the semester. Beside the quota lines and
+         apart from them: by D8 MSF counts towards no target, so it is never a count against one. *@
+      @if (_msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
+      {
+        <p class="progress-row-meta">@msfLine</p>
       }
     </section>
   };

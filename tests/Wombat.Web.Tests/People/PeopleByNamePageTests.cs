@@ -179,6 +179,7 @@ public sealed class PeopleByNamePageTests : TestContext
             .On<CountMsfCampaignsOutsideSnapshotQuery>(_ => MsfCampaignsOutsideSnapshotDto.None)
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => null)
             .On<ListStarEpaOptionsForReviewQuery>(_ => Array.Empty<StarEpaOptionDto>())
             .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>());
     }

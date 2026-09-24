@@ -476,6 +476,28 @@ the College's and counts only the College's EPAs. For someone else, "nothing to 
 the same null is what a caller outside the trainee's oversight gets. The exit rule is one sentence built in C#, because
 Razor drops a space standing alone before an expression and ran the sentences together.
 
+**Multi-source feedback coverage** (T168). `Components/Shared/MsfCoveragePanel.razor` renders
+`GetMsfCoverageForTraineeQuery` on the committee review page. It is a full-width card directly after the standing card,
+wherever that sits, so the pair of cards below keeps its pair. It has three parts:
+
+- An opening built as one C# string. It says what covered means, that MSF counts towards no target, and that it is read
+  live beside a frozen snapshot, in the review's own terms: on a Scheduled review, that nothing is frozen yet; in
+  progress, that a campaign released since Start is not in the snapshot; once decided (or a formative review closed),
+  that the card may differ from what the panel saw. Only when the review period starts or ends inside a semester does
+  it add that a semester is read whole.
+- A `details-list` giving each semester's "n of m EPAs covered".
+- A `.clinic-table--compact` with each EPA as a row header (`th scope="row"`) and one column per semester. A cell says
+  "Covered", with the campaign and the day it closed, or "None released" in muted text ("None released yet" while the
+  semester runs).
+
+It takes no badge and no warning tint. Coverage is not a verdict against a target, and there is no shortfall to show
+until Annexure B's cadence is confirmed. The trainee's My progress page says the same thing as one line per quota card,
+newest semester first, and gives this semester's count in the "This period" card. Both pages use the words
+`MsfCoverageText` builds. Every sentence says a released campaign *covering* the EPA closed in the semester, never a
+campaign "about" it (D9). An uncovered semester that has ended is never worded as final ("…that closed in the semester
+has been released"): a campaign is placed by the day it closed, so one closed in June and released in July covers
+semester 1 only from its release.
+
 ## Status dots
 
 ```css

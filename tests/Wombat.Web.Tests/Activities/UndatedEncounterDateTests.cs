@@ -13,6 +13,7 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Activities;
@@ -67,7 +68,8 @@ public sealed class UndatedEncounterDateTests : TestContext
         {
             [typeof(GetCurriculumProgressForTraineeQuery)] = null,
             [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
-            [typeof(GetEntrustmentStandingForTraineeQuery)] = null
+            [typeof(GetEntrustmentStandingForTraineeQuery)] = null,
+            [typeof(GetMsfCoverageForTraineeQuery)] = null
         }));
 
         var cut = RenderComponent<MyProgress>();
@@ -107,6 +109,7 @@ public sealed class UndatedEncounterDateTests : TestContext
             [typeof(CountMsfCampaignsOutsideSnapshotQuery)] = MsfCampaignsOutsideSnapshotDto.None,
             [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
             [typeof(GetEntrustmentStandingForTraineeQuery)] = null,
+            [typeof(GetMsfCoverageForTraineeQuery)] = null,
             [typeof(ListStarEpaOptionsForReviewQuery)] = (IReadOnlyList<StarEpaOptionDto>)[],
             [typeof(GetEntrustmentScalesListQuery)] = (IReadOnlyList<EntrustmentScaleDto>)[]
         }));

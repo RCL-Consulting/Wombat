@@ -193,6 +193,7 @@
       </section>
 
       @StandingSection
+      @MsfCoverageSection
 
       <section class="detail-card">
         <h3>Pending entrustment decisions</h3>
@@ -420,6 +421,7 @@
     @if (_review.IsFormative)
     {
       @StandingSection
+      @MsfCoverageSection
     }
 
     <section class="detail-card">
@@ -515,6 +517,8 @@
   private IReadOnlyList<EpaTrajectoryDto> _trajectories = Array.Empty<EpaTrajectoryDto>();
   private EntrustmentStandingDto? _standing;
   private string? _standingError;
+  private MsfCoverageDto? _msfCoverage;
+  private string? _msfCoverageError;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -545,6 +549,36 @@
     }
 
     await LoadStandingAsync();
+    await LoadMsfCoverageAsync();
+  }
+
+  /// <summary>
+  /// Per EPA and per semester of the review period, whether a released MSF campaign covering the EPA closed in it
+  /// (T168). Loaded apart, like the standing: it is advisory, and a failure says so in its own card. Read live, for the
+  /// whole period: no action on this page changes it, so it is not read again after one.
+  /// </summary>
+  private async Task LoadMsfCoverageAsync()
+  {
+    if (_review is null)
+    {
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(
+        _review.TraineeUserId,
+        authState.User,
+        _review.ReviewPeriodFrom,
+        _review.ReviewPeriodTo));
+      _msfCoverageError = null;
+    }
+    catch (Exception exception)
+    {
+      _msfCoverage = null;
+      _msfCoverageError = exception.Message;
+    }
   }
 
   /// <summary>
@@ -701,6 +735,19 @@
     <section class="detail-card full-width">
       <h3>Entrustment against Annexure A</h3>
       <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" ReviewPeriodTo="@_review?.ReviewPeriodTo" />
+    </section>
+  };
+
+  /// <summary>
+  /// Full width, directly after the standing wherever that sits, so the pair of cards below it stays a pair. (T168)
+  /// </summary>
+  private RenderFragment MsfCoverageSection => __builder =>
+  {
+    <section class="detail-card full-width" aria-labelledby="msf-coverage-heading">
+      <h3 id="msf-coverage-heading">Multi-source feedback by EPA</h3>
+      <MsfCoveragePanel Coverage="@_msfCoverage" LoadError="@_msfCoverageError"
+                        ReviewPeriodFrom="@_review?.ReviewPeriodFrom" ReviewPeriodTo="@_review?.ReviewPeriodTo"
+                        ReviewState="@_review?.State" />
     </section>
   };
 

@@ -11,6 +11,7 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
@@ -370,7 +371,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .On<GetCurriculumProgressForTraineeQuery>(_ => null)
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
-                Epa("PAED-001", decision: "3a", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below)));
+                Epa("PAED-001", decision: "3a", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below)))
+            .On<GetMsfCoverageForTraineeQuery>(_ => null);
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<MyProgress>();
@@ -390,7 +392,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         Services.AddSingleton<IScopedSender>(new RecordingSender()
             .On<GetCurriculumProgressForTraineeQuery>(_ => null)
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
-            .On<GetEntrustmentStandingForTraineeQuery>(_ => null));
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => null));
 
         var cut = RenderComponent<MyProgress>();
         cut.WaitForState(() => cut.Markup.Contains("Curriculum targets"));
@@ -489,7 +492,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .On<CountMsfCampaignsOutsideSnapshotQuery>(_ => MsfCampaignsOutsideSnapshotDto.None)
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<ListStarEpaOptionsForReviewQuery>(_ => Array.Empty<StarEpaOptionDto>())
-            .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>());
+            .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())
+            .On<GetMsfCoverageForTraineeQuery>(_ => null);
 
     private static string Text(string text) => Whitespace().Replace(text, " ").Trim();
 

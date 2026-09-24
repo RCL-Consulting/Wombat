@@ -1,0 +1,141 @@
+@* Per EPA and per semester, whether a released multi-source feedback campaign covering the EPA closed in the semester
+   (T168). The committee review page's rendering of GetMsfCoverageForTraineeQuery; the trainee's progress page says the
+   same thing a line per quota card, in the same words (MsfCoverageText).
+
+   Coverage, never a shortfall: whether the College wants one campaign a semester is not confirmed from Annexure B, so
+   an uncovered cell says "None released" in muted text and takes no warning tint. Live, not frozen: the evidence
+   snapshot beside it holds only the campaigns released before the review started, and this can show one released
+   since, so the opening's last sentence says so, in the review's own terms: before Start nothing is frozen yet, and
+   once the panel has decided (or closed a formative review) this may differ from what it saw. *@
+
+@if (!string.IsNullOrWhiteSpace(LoadError))
+{
+  <Alert Kind="warning">The multi-source feedback coverage could not be loaded: @LoadError</Alert>
+}
+else if (Coverage is null)
+{
+  @* The null a caller outside the trainee's oversight gets is the null a trainee with no curriculum gets (T113), so it
+     is not said to be "no curriculum". *@
+  <p class="muted">No coverage to show: this trainee has no curriculum on record, or your account does not oversee their programme.</p>
+}
+else if (Coverage.Epas.Count == 0)
+{
+  <p class="muted">No EPA on this trainee's curriculum is in use at the moment, so there is no coverage to show.</p>
+}
+else
+{
+  <p class="muted">@Opening(Coverage, ReviewPeriodFrom, ReviewPeriodTo, ReviewState)</p>
+
+  <dl class="details-list">
+    @foreach (var period in Coverage.Periods)
+    {
+      <div>
+        <dt>@period.Name (@period.Months)</dt>
+        <dd>@period.EpasCovered of @Coverage.Epas.Count EPAs covered@(period.HasEnded ? string.Empty : " so far")</dd>
+      </div>
+    }
+  </dl>
+
+  <div class="table-container mt-3">
+    <table class="clinic-table clinic-table--compact">
+      <caption>Each EPA of the trainee's curriculum, by semester: whether a released MSF campaign covering it closed in the semester.</caption>
+      <thead>
+        <tr>
+          <th scope="col">EPA</th>
+          @foreach (var period in Coverage.Periods)
+          {
+            <th scope="col">@period.Name</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var epa in Coverage.Epas)
+        {
+          <tr>
+            <th scope="row">
+              <strong>@epa.EpaCode</strong>
+              <div class="muted text-sm">@epa.EpaTitle</div>
+              @if (epa.IsLocal)
+              {
+                <div class="muted text-sm">The institution's own EPA</div>
+              }
+            </th>
+            @foreach (var period in Coverage.Periods)
+            {
+              var cell = epa.For(period.Year, period.Semester);
+              <td>
+                @if (cell is { IsCovered: true })
+                {
+                  <strong>Covered</strong>
+                  <div class="muted text-sm">@MsfCoverageText.CampaignNote(cell)</div>
+                }
+                else
+                {
+                  <span class="muted">@(period.HasEnded ? "None released" : "None released yet")</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@code {
+  /// <summary>The coverage, or null when there is nothing on record (or nothing the caller may read).</summary>
+  [Parameter] public MsfCoverageDto? Coverage { get; set; }
+
+  /// <summary>Why the coverage could not be loaded. The rest of the page stands without it.</summary>
+  [Parameter] public string? LoadError { get; set; }
+
+  /// <summary>The review period's first day: with the last, it says when a semester runs past the period.</summary>
+  [Parameter] public DateOnly? ReviewPeriodFrom { get; set; }
+
+  /// <summary>The review period's last day.</summary>
+  [Parameter] public DateOnly? ReviewPeriodTo { get; set; }
+
+  /// <summary>
+  /// Where the review stands, which decides how the card is set beside the snapshot. Null reads as a review in progress.
+  /// </summary>
+  [Parameter] public CommitteeReviewState? ReviewState { get; set; }
+
+  /// <summary>
+  /// What the table is and is not, built as one string: Razor drops a space standing alone before an expression.
+  /// </summary>
+  private static string Opening(MsfCoverageDto coverage, DateOnly? from, DateOnly? to, CommitteeReviewState? state)
+  {
+    var sentences = new List<string>
+    {
+      "For each semester the review period touches, whether a released multi-source feedback campaign covering the EPA " +
+      "closed in it. A campaign covers several EPAs and is not about any one of them. Only released campaigns count, and " +
+      "MSF counts towards no encounter target."
+    };
+
+    // A semester is read whole. Said only when one runs past the period, where it is the difference.
+    if (from is { } first && to is { } last &&
+        (coverage.Periods[0].Start < first || coverage.Periods[^1].End > last))
+    {
+      sentences.Add("A semester is read whole, so a campaign shown may have closed outside the review period.");
+    }
+
+    sentences.Add(LiveSentence(state));
+    return string.Join(" ", sentences);
+  }
+
+  /// <summary>
+  /// How a live card sits beside a frozen snapshot. Before Start there is no snapshot to be beside. After a decision, or
+  /// a formative review's close, the card goes on changing while the record of what the panel saw does not.
+  /// </summary>
+  private static string LiveSentence(CommitteeReviewState? state) => state switch
+  {
+    CommitteeReviewState.Scheduled =>
+      "Read live. Nothing is frozen yet: starting the review freezes the evidence snapshot, and a campaign released " +
+      "after that is shown here but not held in it.",
+    null or CommitteeReviewState.InProgress =>
+      "Read live: a campaign released after the review started is shown here, though the evidence snapshot does not hold it.",
+    _ =>
+      "Read live, so it may differ from what the panel saw: a campaign released after the review started is shown " +
+      "here, though the evidence snapshot does not hold it."
+  };
+}

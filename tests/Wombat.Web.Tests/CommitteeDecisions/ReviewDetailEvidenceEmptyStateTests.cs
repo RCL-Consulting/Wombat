@@ -8,6 +8,7 @@ using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
@@ -126,6 +127,7 @@ public sealed class ReviewDetailEvidenceEmptyStateTests : TestContext
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
                 GetEntrustmentStandingForTraineeQuery => null,
+                GetMsfCoverageForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => Array.Empty<StarEpaOptionDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")

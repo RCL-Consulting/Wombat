@@ -9,6 +9,7 @@ using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
@@ -296,6 +297,7 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
                 GetEntrustmentStandingForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => _starEpas,
                 GetEntrustmentScalesListQuery => Scales,
+                GetMsfCoverageForTraineeQuery => null,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 
