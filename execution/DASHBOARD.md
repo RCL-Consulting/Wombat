@@ -56,6 +56,7 @@
 | queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
 | queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
 | queued | [T211](tasks/queued/T211-curriculum-pages-a-collegeadmin-sees-edit-on-another-institution-s-local-items-and-an-institutionaladmin-s-curriculum-list-links-to-a-404.md) | P3 | Curriculum pages: a CollegeAdmin sees Edit on another institution's lo |  |
+| queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
 
 Done: 146 task(s).
 
@@ -73,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+59ede4a docs(execution): close T186 — browser-verified (6 of 15 covered; reports say not recorded, never why); file T211
 722cfe5 feat(curricula): each curriculum item carries Annexure B's decision cadence and its decision body (neonatal for EPAs 4–5), stamped on create and by migration (T131 slice 2)
 bfc5d58 feat(committee): every staged entrustment decision names the frozen evidence it rests on, and ratify issues nothing without it (T131 slice 1, D38)
 26bc740 fix(msf): coverage is read from the released campaign's finished evidence rows everywhere — committee snapshot, coverage card, campaign report and portfolio PDF — so a campaign released before the per-EPA stamp is not reported as covering nothing (T186)
 455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
-55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
 ```

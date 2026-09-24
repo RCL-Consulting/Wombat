@@ -335,3 +335,37 @@ Every slice: the full suite per project with no `--no-build`, a mutation check o
 - The agenda is frozen at Start: routing or curriculum changes made afterwards only reach the next review.
 - A trainee who moves institution strands their open review, which T182 refuses to act on; an Administrator closes it.
 - Snapshots taken before T167 have no `EpaId`; re-seed (W-007).
+
+---
+
+## Slices 1 and 2 — shipped 2026-09-24 (`bfc5d58`, `722cfe5`)
+
+**Slice 1: D38 and ratify integrity.**
+- A staged STAR names at least one item of the review's frozen snapshot, never a supervisor report. There is one per EPA
+  per review (unique index).
+- Stage authorises first, with one refusal.
+- Ratify checks scope, curriculum and D38 before one `SaveChanges`, and builds the links from the frozen rows
+  (`CommitteeEvidenceId`).
+- `IssueEntrustmentDecisionCommand` is deleted.
+- The review has a concurrency token, and a refused save says why.
+- Each snapshot line records `SourceFinished`, and the picker hints when nothing named was finished (O1 kept as a
+  hint).
+
+**Slice 2: cadence and bodies.** `DecisionBodies` holds neonatal. Every curriculum item carries `DecisionCadence`,
+`DecisionBodyKey` and `DecisionIsOpportunistic`, from Annexure B: semester for EPAs 1, 2, 4, 5, 10 and 12; annual for
+the rest; opportunistic for 8, 9 and 13; neonatal for 4 and 5. They are stamped on create and by migration, and copied
+by clone.
+
+**Browser on dev (scripted Chrome, `59ede4a`), review 2:**
+- **The picker.** It groups the snapshot by EPA, and the chosen EPA's group comes first (checked with PAED-006). Stage
+  is disabled with "Name at least one item of the evidence snapshot." until an item is ticked.
+- **Staging.** PAED-001 staged at 3a on Mini-CEX #12 and CCA #19, with the items listed. A second PAED-001 was refused
+  by name. PAED-006 staged on one item, showing the single-form hint.
+- **Decide and ratify.** The decision was recorded and ratified. It issued PAED-001 at 3a and PAED-006 at 3b, with
+  evidence links 1–3 byte-equal to the frozen rows.
+- **Downstream.** `/portfolio/authorisations` lists both, and the certificate prints the evidence. T166's standing card
+  reads "2 at or above".
+- **Cadence.** Confirmed by SQL on curriculum 2 (the coordinator may not open the items page).
+
+**Seen, filed:** the pending list stays stale after ratify until reload (it predates T131), and two cosmetic issues.
+
