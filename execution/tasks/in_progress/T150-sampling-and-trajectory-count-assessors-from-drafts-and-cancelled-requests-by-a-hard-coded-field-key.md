@@ -1,11 +1,12 @@
 ---
 id: T150
 title: Sampling and trajectory count assessors from drafts and cancelled requests, by a hard-coded field key
-status: queued
+status: in_progress
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+started: 2026-09-24
 ---
 
 # T150 — Sampling and trajectory count assessors from drafts and cancelled requests, by a hard-coded field key

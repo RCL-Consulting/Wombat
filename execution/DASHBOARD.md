@@ -4,12 +4,13 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T135](tasks/in_progress/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
+| in_progress | [T150](tasks/in_progress/T150-sampling-and-trajectory-count-assessors-from-drafts-and-cancelled-requests-by-a-hard-coded-field-key.md) | P3 | Sampling and trajectory count assessors from drafts and cancelled requ |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
-| queued | [T135](tasks/queued/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T160](tasks/queued/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
@@ -31,7 +32,6 @@
 | queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
 | queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
 | queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
-| queued | [T150](tasks/queued/T150-sampling-and-trajectory-count-assessors-from-drafts-and-cancelled-requests-by-a-hard-coded-field-key.md) | P3 | Sampling and trajectory count assessors from drafts and cancelled requ |  |
 | queued | [T151](tasks/queued/T151-the-assessor-nudge-job-emails-deactivated-and-opted-out-nominees.md) | P3 | The assessor nudge job emails deactivated and opted-out nominees |  |
 | queued | [T152](tasks/queued/T152-a-supervisor-based-at-another-institution-cannot-be-named-on-a-trainee-s-assessment.md) | P3 | A supervisor based at another institution cannot be named on a trainee |  |
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+eb459b6 docs(execution): close T137 — browser-verified on dev (migration applied, 21/21 stamped, activity 24 stamped at create); file T181
 c30df9c docs(execution): close T141 and T147 — browser-verified on dev; file T180 (tab title does not follow in-app navigation)
 7aab72a feat(activities): an activity knows its EPA — stamped from a schema pointer that agrees with credit; activity lists show the EPA, the encounter date and what it credited (T137, T106 item 14)
 d0f8a90 docs(execution): close T144 and T140 (integration 23/23, no leaked schemas); file T177, T178, T179
 e2f4858 test(integration): the MSF respond-flow fixture seeds as startup does, cleans up on a failed setup, runs no scheduler, and asserts the ClosedOn date (T140)
-9ea13d2 fix(msf): every label on the campaign editor names a real control (T147)
 ```

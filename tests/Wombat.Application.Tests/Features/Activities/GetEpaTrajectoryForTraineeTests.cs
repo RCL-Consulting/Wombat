@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -85,6 +86,8 @@ public sealed class GetEpaTrajectoryForTraineeTests
             CreatedByUserId = "assessor-a",
             CurrentState = "requested",
             DataJson = "{\"epa_id\": 7, \"assessor_user_id\": \"assessor-a\"}",
+            // T137: stamped as ActivityService would, so the missing rating is not hidden behind a missing EPA.
+            EpaId = 7,
             CreatedOn = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc),
             // T119: production stamps this in ActivityService; a fixture that builds the
             // entity directly must set it, or it defaults to 0001-01-01.
@@ -205,37 +208,184 @@ public sealed class GetEpaTrajectoryForTraineeTests
             .Which.Source.Should().Be("Direct observation");
     }
 
+    /// <summary>
+    /// T135/T150 retired the literal <c>overall</c>/<c>overall_level</c> pair: the rating is the field the schema
+    /// DECLARES. This replaces <c>ReadsOverallLevelFieldWhenOverallAbsent</c>, which pinned the literal fallback on a
+    /// type that declared <c>overall</c> and stored <c>overall_level</c> — a row whose declared rating is empty.
+    /// </summary>
     [Fact]
-    public async Task ReadsOverallLevelFieldWhenOverallAbsent()
+    public async Task DoesNotReadAnUndeclaredRatingKey()
     {
         await using var dbContext = CreateDbContext();
         await SeedCoreAsync(dbContext);
-        var miniCexPaed = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        var type = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
 
-        // Visual-builder schema stores the overall rating as "overall_level", not "overall".
-        dbContext.Activities.Add(new Activity
+        AddActivity(dbContext, type, "completed", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "overall_level": "4" }""");
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Should().BeEmpty("the type declares 'overall', which this row left empty");
+    }
+
+    /// <summary>
+    /// A builder type whose EPA, assessor and rating all live under other keys, finishing in a state that is not
+    /// called "completed". It charts by what it declares; a decoy <c>assessor_user_id</c> is not read.
+    /// </summary>
+    [Fact]
+    public async Task ChartsARatedBuilderTypeByTheFieldsItDeclares()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var type = await SeedPublishedTypeAsync(dbContext, "ward_round_review", BuilderSchema, BuilderWorkflow, BuilderCredit);
+
+        AddActivity(dbContext, type, "signed_off", """{ "target_epa": 7, "supervisor": "sup-a", "assessor_user_id": "decoy", "entrustment": 4 }""");
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var point = result.Should().ContainSingle().Which.Points.Should().ContainSingle().Subject;
+        point.Rating.Should().Be(4);
+        point.AssessorUserId.Should().Be("sup-a");
+    }
+
+    /// <summary>
+    /// T106 item 9: only a terminal state of the pinned workflow is an observation (D44). A rating an assessor wrote
+    /// and then declined, a draft the trainee filled in, and a request are not.
+    /// </summary>
+    [Theory]
+    [InlineData("draft")]
+    [InlineData("requested")]
+    [InlineData("declined")]
+    [InlineData("cancelled")]
+    public async Task PlotsOnlyATerminalStateOfThePinnedWorkflow(string state)
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedTypeFromSeedFolderAsync(dbContext, "mini_cex_cpsa");
+
+        AddActivity(dbContext, miniCex, "completed", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "overall_level": 3 }""");
+        AddActivity(dbContext, miniCex, state, """{ "epa_id": 7, "assessor_user_id": "assessor-b", "overall_level": 5 }""");
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var point = result.Should().ContainSingle().Which.Points.Should().ContainSingle().Subject;
+        point.AssessorUserId.Should().Be("assessor-a");
+        point.Rating.Should().Be(3);
+    }
+
+    /// <summary>
+    /// D36: an MSF names no observing assessor, so its level is not an assessor's rating and does not plot — now by
+    /// declaration (its rated field is written by a role, and it has no nominee field) rather than by the accident of
+    /// lacking a literal key.
+    /// </summary>
+    [Fact]
+    public async Task AReleasedMsfRecordIsNotPlotted()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var msf = await SeedTypeFromSeedFolderAsync(dbContext, "msf_cpsa");
+
+        AddActivity(dbContext, msf, "recorded", """{ "epa_id": 7, "campaign_id": 1, "observed_on": "2026-02-01", "respondent_count": 8, "overall_level": 4 }""");
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// The pinned version decides on the chart as it does in the committee report (T135 review). The type is now
+    /// <c>mini_cex_cpsa</c> as shipped (v2). Its v1 made <c>declined</c> terminal and let an <c>observer</c> field write
+    /// the rating, so a v1 declined row plots, attributed to its observer rather than to the v2 assessor key it also
+    /// carries; a v2 declined row does not plot.
+    /// </summary>
+    [Fact]
+    public async Task EachPointIsReadByItsPinnedVersion()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var schema = ReadSeedFile("mini_cex_cpsa", "schema.json");
+        var workflow = ReadSeedFile("mini_cex_cpsa", "workflow.json");
+        var credit = ReadSeedFile("mini_cex_cpsa", "credit.json");
+        var type = await SeedPublishedTypeAsync(dbContext, "mini_cex_cpsa", VersionOneSchema, VersionOneWorkflow, credit);
+        type.Version = 2;
+        type.SchemaJson = schema;
+        type.WorkflowJson = workflow;
+        type.Versions.Add(new ActivityTypeVersion
         {
-            ActivityTypeId = miniCexPaed.Id,
-            ActivityType = miniCexPaed,
-            SchemaVersion = miniCexPaed.Version,
-            SubjectUserId = "trainee-1",
-            CreatedByUserId = "assessor-a",
-            CurrentState = "completed",
-            DataJson = "{\"epa_id\": \"7\", \"assessor_user_id\": \"assessor-a\", \"overall_level\": \"4\"}",
-            CreatedOn = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc),
-            // T119: production stamps this in ActivityService; a fixture that builds the
-            // entity directly must set it, or it defaults to 0001-01-01.
-            ObservedOn = DateOnly.FromDateTime(new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc)),
-            UpdatedOn = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc)
+            Version = 2,
+            SchemaJson = schema,
+            WorkflowJson = workflow,
+            CreditRulesJson = credit,
+            PublishedByUserId = "seed-system",
+            PublishedOn = DateTime.UtcNow
         });
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetEpaTrajectoryForTraineeQueryHandler(dbContext);
-        var result = await handler.Handle(new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+        AddActivity(dbContext, type, "declined", """{ "epa_id": 7, "observer": "obs-b", "assessor_user_id": "decoy-v1", "overall_level": 2 }""", schemaVersion: 1);
+        AddActivity(dbContext, type, "completed", """{ "epa_id": 7, "observer": "obs-a", "assessor_user_id": "decoy-v1", "overall_level": 3 }""", schemaVersion: 1);
+        AddActivity(dbContext, type, "declined", """{ "epa_id": 7, "assessor_user_id": "assessor-d", "overall_level": 5 }""", schemaVersion: 2);
+        await dbContext.SaveChangesAsync();
 
-        var trajectory = result.Should().ContainSingle().Subject;
-        trajectory.Points.Should().ContainSingle();
-        trajectory.Points[0].Rating.Should().Be(4);
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var points = result.Should().ContainSingle().Which.Points;
+        points.Select(point => point.AssessorUserId).Should().Equal("obs-b", "obs-a");
+        points.Select(point => point.Rating).Should().Equal(2, 3);
+    }
+
+    /// <summary>
+    /// A point is drawn under the EPA stamped on its activity (T137), never under one read out of its data. In the
+    /// product the two cannot disagree, since the stamp is re-read from the data on every write, so this is the test that
+    /// shows which one the chart consults: two rows carry the same EPA in their data, one is stamped with another, and it
+    /// is drawn there.
+    /// </summary>
+    [Fact]
+    public async Task APointIsDrawnUnderTheEpaStampedOnItsActivity_NotOneReadFromItsData()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        dbContext.Epas.Add(new Epa { Id = 3, SubSpecialityId = 1, Code = "EPA-03", Title = "Ward round", IsActive = true });
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddActivity(dbContext, miniCex, "completed", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "overall": 3 }""");
+        AddActivity(dbContext, miniCex, "completed", """{ "epa_id": 7, "assessor_user_id": "assessor-b", "overall": 4 }""").EpaId = 3;
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Select(dto => dto.EpaCode).Should().Equal("EPA-03", "EPA-07");
+        result.Select(dto => dto.Points.Single().AssessorUserId).Should().Equal("assessor-b", "assessor-a");
+    }
+
+    /// <summary>
+    /// A rated type about no single EPA declares no <c>evidence_epa_field</c>, so its rows are stamped with none and
+    /// have no trajectory to be drawn on, however plainly their data holds an EPA. Before the stamp, the chart fell back
+    /// to the schema's <c>epa</c> field and drew this row.
+    /// </summary>
+    [Fact]
+    public async Task ARowStampedWithNoEpaIsNotDrawn()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var type = await SeedTypeAsync(dbContext, "item_review", NoEvidenceEpaRatedSchemaJson);
+
+        var row = AddActivity(dbContext, type, "completed", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "overall": 3 }""");
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        row.EpaId.Should().BeNull("the schema names no EPA field for the stamp to read");
+        result.Should().BeEmpty();
     }
 
     [Fact]
@@ -639,9 +789,15 @@ public sealed class GetEpaTrajectoryForTraineeTests
             ? string.Empty
             : "\"rated_level_field\": \"" + ratedField + "\",";
 
+        // The EPA field and its pointer are in every version, as T137's migration left every stored version whose EPA
+        // field was determined: the activity pinned here is stamped with its EPA from them.
         var schemaJson =
-            "{ \"version\": 1, " + pointer +
-            "  \"sections\": [ { \"key\": \"assessment\", \"title\": \"Assessment\", \"fields\": [" +
+            "{ \"version\": 1, " + pointer + " \"evidence_epa_field\": \"epa_id\"," +
+            "  \"sections\": [" +
+            "  { \"key\": \"request\", \"title\": \"Request\", \"fields\": [" +
+            "    { \"key\": \"epa_id\", \"type\": \"epa\", \"label\": \"EPA\" }," +
+            "    { \"key\": \"assessor_user_id\", \"type\": \"user\", \"label\": \"Assessor\" } ] }," +
+            "  { \"key\": \"assessment\", \"title\": \"Assessment\", \"editable_by\": \"field:assessor_user_id\", \"fields\": [" +
             "    { \"key\": \"overall\", \"type\": \"scale\", \"label\": \"Overall\"," +
             "      \"options\": [\"1\", \"2\", \"3\", \"4\", \"5\"], \"scale_key\": \"" + scaleKey + "\" }" +
             "  ] } ] }";
@@ -751,14 +907,56 @@ public sealed class GetEpaTrajectoryForTraineeTests
         return activityType;
     }
 
+    /// <summary>
+    /// Declares its assessor as well as its rated field (T135, T150): the chart plots an assessor's rating, and the
+    /// assessor is whoever the rated field's <c>editable_by</c> names. A type naming none is the MSF shape (D36). It also
+    /// names the field its rows are filed against (<c>evidence_epa_field</c>, T137): the chart draws a point under the EPA
+    /// stamped from that pointer, and a type with no pointer stamps none.
+    /// </summary>
     private const string RatedSchemaJson = """
+        {
+          "version": 1,
+          "rated_level_field": "overall",
+          "evidence_epa_field": "epa_id",
+          "sections": [
+            {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "epa_id", "type": "epa", "label": "EPA" },
+                { "key": "assessor_user_id", "type": "user", "label": "Assessor" }
+              ]
+            },
+            {
+              "key": "assessment",
+              "title": "Assessment",
+              "editable_by": "field:assessor_user_id",
+              "fields": [
+                { "key": "overall", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
+              ]
+            }
+          ]
+        }
+        """;
+
+    /// <summary><see cref="RatedSchemaJson" /> about no single EPA: the same <c>epa</c> field, and no pointer at it.</summary>
+    private const string NoEvidenceEpaRatedSchemaJson = """
         {
           "version": 1,
           "rated_level_field": "overall",
           "sections": [
             {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "epa_id", "type": "epa", "label": "EPA" },
+                { "key": "assessor_user_id", "type": "user", "label": "Assessor" }
+              ]
+            },
+            {
               "key": "assessment",
               "title": "Assessment",
+              "editable_by": "field:assessor_user_id",
               "fields": [
                 { "key": "overall", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
               ]
@@ -782,6 +980,176 @@ public sealed class GetEpaTrajectoryForTraineeTests
         }
         """;
 
+    private const string BuilderSchema = """
+        {
+          "version": 1,
+          "rated_level_field": "entrustment",
+          "evidence_epa_field": "target_epa",
+          "sections": [
+            {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "target_epa", "type": "epa", "label": "EPA" },
+                { "key": "supervisor", "type": "user", "label": "Supervisor" }
+              ]
+            },
+            {
+              "key": "judgement",
+              "title": "Judgement",
+              "editable_by": "field:supervisor",
+              "fields": [
+                { "key": "entrustment", "type": "scale", "label": "Entrustment", "scale_key": "CPSA Paediatric Entrustment Scale v11.1" }
+              ]
+            }
+          ]
+        }
+        """;
+
+    private const string BuilderWorkflow = """
+        {
+          "version": 1,
+          "initial_state": "draft",
+          "states": [
+            { "key": "draft", "label": "Draft" },
+            { "key": "signed_off", "label": "Signed off", "terminal": true }
+          ],
+          "transitions": [
+            { "key": "sign_off", "from": "draft", "to": "signed_off", "actor": "field:supervisor", "validation": "all" }
+          ]
+        }
+        """;
+
+    private const string BuilderCredit = """
+        {
+          "counts_for": [
+            { "curriculum_item_match": { "epa_field": "target_epa" }, "amount": 1, "minimum_level_field": "entrustment" }
+          ]
+        }
+        """;
+
+    private static Task<ActivityType> SeedTypeFromSeedFolderAsync(ApplicationDbContext dbContext, string key)
+        => SeedPublishedTypeAsync(
+            dbContext,
+            key,
+            ReadSeedFile(key, "schema.json"),
+            ReadSeedFile(key, "workflow.json"),
+            ReadSeedFile(key, "credit.json"));
+
+    private static string ReadSeedFile(string key, string fileName)
+        => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, fileName));
+
+    /// <summary>A type published at v1 with its version row, as the product pins an activity to it.</summary>
+    private static async Task<ActivityType> SeedPublishedTypeAsync(
+        ApplicationDbContext dbContext,
+        string key,
+        string schemaJson,
+        string workflowJson,
+        string creditRulesJson)
+    {
+        var activityType = new ActivityType
+        {
+            Key = key,
+            Name = key,
+            Version = 1,
+            IsActive = true,
+            OwnerUserId = "seed-system",
+            CreatedOn = DateTime.UtcNow,
+            SchemaJson = schemaJson,
+            WorkflowJson = workflowJson,
+            CreditRulesJson = creditRulesJson
+        };
+        activityType.Versions.Add(new ActivityTypeVersion
+        {
+            Version = 1,
+            SchemaJson = schemaJson,
+            WorkflowJson = workflowJson,
+            CreditRulesJson = creditRulesJson,
+            PublishedByUserId = "seed-system",
+            PublishedOn = DateTime.UtcNow
+        });
+        dbContext.ActivityTypes.Add(activityType);
+        await dbContext.SaveChangesAsync();
+        return activityType;
+    }
+
+    /// <summary><c>mini_cex_cpsa</c>'s v1 as it might have been: an <c>observer</c> writes the rating, and
+    /// <c>declined</c> is terminal, as the generic seeds before <c>c33c14b</c> had it.</summary>
+    private const string VersionOneSchema = """
+        {
+          "version": 1,
+          "rated_level_field": "overall_level",
+          "evidence_epa_field": "epa_id",
+          "sections": [
+            {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
+                { "key": "observer", "type": "user", "label": "Observer", "required": true },
+                { "key": "assessor_user_id", "type": "user", "label": "Assessor" }
+              ]
+            },
+            {
+              "key": "assessment",
+              "title": "Assessment",
+              "editable_by": "field:observer",
+              "fields": [
+                { "key": "overall_level", "type": "scale", "label": "Overall", "required": true, "scale_key": "CPSA Paediatric Entrustment Scale v11.1" }
+              ]
+            }
+          ]
+        }
+        """;
+
+    private const string VersionOneWorkflow = """
+        {
+          "version": 1,
+          "initial_state": "draft",
+          "states": [
+            { "key": "draft", "label": "Draft" },
+            { "key": "requested", "label": "Requested", "editable_by": "field:observer" },
+            { "key": "completed", "label": "Completed", "terminal": true },
+            { "key": "declined", "label": "Declined", "terminal": true }
+          ],
+          "transitions": [
+            { "key": "submit", "from": "draft", "to": "requested", "actor": "subject|creator", "validation": "owned" },
+            { "key": "complete", "from": "requested", "to": "completed", "actor": "field:observer", "validation": "all" },
+            { "key": "decline", "from": "requested", "to": "declined", "actor": "field:observer", "validation": "draft" }
+          ]
+        }
+        """;
+
+    /// <summary>
+    /// A row as <c>ActivityService</c> leaves it, including the EPA it stamps from the pinned version's pointer (T137),
+    /// which is the only place the chart reads the EPA from. Returned so a test can set a stamp the data does not imply.
+    /// </summary>
+    private static Activity AddActivity(
+        ApplicationDbContext dbContext,
+        ActivityType activityType,
+        string state,
+        string dataJson,
+        int? schemaVersion = null)
+    {
+        var on = new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc);
+        var pinnedVersion = schemaVersion ?? activityType.Version;
+        var activity = new Activity
+        {
+            ActivityTypeId = activityType.Id,
+            SchemaVersion = pinnedVersion,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "trainee-1",
+            CurrentState = state,
+            DataJson = dataJson,
+            EpaId = EvidenceEpaStamp.For(dbContext, activityType.Id, pinnedVersion, dataJson),
+            CreatedOn = on,
+            ObservedOn = DateOnly.FromDateTime(on),
+            UpdatedOn = on
+        };
+        dbContext.Activities.Add(activity);
+        return activity;
+    }
+
     private static void AddRatedActivity(
         ApplicationDbContext dbContext,
         ActivityType activityType,
@@ -803,6 +1171,8 @@ public sealed class GetEpaTrajectoryForTraineeTests
             CreatedByUserId = assessor,
             CurrentState = "completed",
             DataJson = dataJson,
+            // T137: likewise the EPA, from the pinned schema's pointer; the chart reads it from there alone.
+            EpaId = EvidenceEpaStamp.For(dbContext, activityType.Id, activityType.Version, dataJson),
             CreatedOn = createdOn,
             // T119: production stamps this in ActivityService; a fixture that builds the
             // entity directly must set it, or it defaults to 0001-01-01.

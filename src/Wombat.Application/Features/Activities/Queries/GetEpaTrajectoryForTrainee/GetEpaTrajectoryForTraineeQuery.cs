@@ -1,6 +1,4 @@
-using System.Globalization;
 using System.Security.Claims;
-using System.Text.Json;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -95,11 +93,6 @@ public sealed record TrajectoryPointDto(
 public sealed class GetEpaTrajectoryForTraineeQueryHandler
     : IRequestHandler<GetEpaTrajectoryForTraineeQuery, IReadOnlyList<EpaTrajectoryDto>>
 {
-    // An entrustment scale is data, so the rung count is not knowable here. This bound exists
-    // only to reject a value that cannot be a rung at all (a mis-mapped field, a year, a score
-    // out of 100) without re-introducing a hard-coded ceiling that silently hides observations.
-    private const int MaxPlausibleRung = 20;
-
     // Which types are rated, and what evidence they are, now has ONE answer for the whole
     // repository: RatedActivityTypes (T134). This file used to keep its own family map and the
     // committee sampling report kept a second, EXACT-key one — which is why every seeded CPSA tool
@@ -128,7 +121,6 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
 
         var query = _dbContext.Set<Activity>()
             .AsNoTracking()
-            .Include(activity => activity.ActivityType)
             .Where(activity => activity.SubjectUserId == traineeUserId)
             // The trainee id is whatever the caller asked about, so the rows are cut down to what
             // this caller may read: a trainee asking about themselves matches on SubjectUserId,
@@ -155,30 +147,58 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             query = query.Where(activity => activity.ObservedOn <= to);
         }
 
-        var activities = await query.ToListAsync(cancellationToken);
+        // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
+        // That retires the hard-coded family list as a gate: an institution's own rated tool
+        // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
+        // Its source is classified by the instrument it declares (WbaToolKey, T144), which
+        // RatedActivityTypes.LoadAsync reads. Classified once per type, not once per row.
+        var typeIds = await query
+            .Select(activity => activity.ActivityTypeId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+
+        var verdicts = await RatedActivityTypes.LoadAsync(_dbContext, typeIds, cancellationToken);
+        var ratedTypeIds = verdicts
+            .Where(entry => entry.Value.IsRated)
+            .Select(entry => entry.Key)
+            .ToArray();
+
+        var activities = await query
+            .Where(activity => ratedTypeIds.Contains(activity.ActivityTypeId))
+            .ToListAsync(cancellationToken);
+
+        // The same reading the committee sampling report makes, from the same profiles (T135, T150, T106 item 9):
+        // only a terminal state of the pinned workflow is an observation (D44), so a draft, a request, and a rating
+        // an assessor wrote and then declined are not plotted; the rating is the pinned schema's declared field, not
+        // the literal `overall`/`overall_level`; the EPA is the one stamped on the activity (EpaId, T137), not a key
+        // read out of its data; and the assessor is the one RatedEvidenceProfile names (whoever may write that field,
+        // else whoever finishes the record). A row that names no assessor (an MSF, D36, or a rating the trainee wrote
+        // themselves) or whose rating is empty is not an observation by an assessor and is not drawn; one stamped with
+        // no EPA is about no EPA, and has no trajectory to be drawn on.
+        var profiles = await RatedEvidenceProfiles.LoadAsync(
+            _dbContext,
+            activities.Select(activity => (activity.ActivityTypeId, activity.SchemaVersion)),
+            cancellationToken);
 
         var rawPoints = new List<(int EpaId, TrajectoryPointDto Point)>();
         foreach (var activity in activities)
         {
-            // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
-            // That retires the hard-coded family list as a gate: an institution's own rated tool
-            // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
-            // Its source is classified by the instrument it declares.
-            var verdict = RatedActivityTypes.Classify(
-                activity.ActivityType.Key,
-                activity.ActivityType.WbaToolKey,
-                activity.ActivityType.SchemaJson);
-            if (!verdict.IsRated)
+            var profile = profiles[(activity.ActivityTypeId, activity.SchemaVersion)];
+            if (!profile.IsEvidence(activity.CurrentState))
             {
                 continue;
             }
 
-            var source = verdict.SourceBucket;
-
-            if (!TryParseObservation(activity.DataJson, out var epaId, out var rating, out var assessorUserId))
+            var reading = profile.Read(activity.CurrentState, activity.EpaId, activity.DataJson);
+            if (reading.Outcome != RatedEvidenceOutcome.Attributed)
             {
                 continue;
             }
+
+            var source = verdicts[activity.ActivityTypeId].SourceBucket;
+            var epaId = reading.EpaId;
+            var rating = reading.Rating;
+            var assessorUserId = reading.AssessorUserId;
 
             // The x-axis is the encounter date the clinician stated, which is what this chart has always
             // claimed to plot and never did — it plotted CreatedOn, the audit clock. (T119)
@@ -285,10 +305,9 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     /// </para>
     /// <para>
     /// What this does NOT do is resolve the ladder each plotted ACTIVITY was recorded against, which is
-    /// what would let a point on a different scale be drawn as such. That needs two things Wombat does
-    /// not have: a way to know which schema field carried the rating (<c>TryParseObservation</c> reads
-    /// the literal keys, it does not consult the schema) and a navigation from an activity to its pinned
-    /// <c>ActivityTypeVersion</c>. Both are real work; see T126.
+    /// what lets a point on a different scale be drawn as such. That is
+    /// <see cref="ResolveRatedScaleIdsAsync" /> (T126), from the pinned version's declared rated field, the
+    /// same field the rating itself is read from (<see cref="RatedEvidenceProfile" />, T135).
     /// </para>
     /// </remarks>
     private async Task<PinnedLadders> ResolvePinnedLaddersAsync(
@@ -444,93 +463,5 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             // trainee's progress page over one bad row.
             return null;
         }
-    }
-
-    private static bool TryParseObservation(string dataJson, out int epaId, out int rating, out string assessorUserId)
-    {
-        epaId = 0;
-        rating = 0;
-        assessorUserId = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(dataJson))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(dataJson);
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-
-            if (!TryGetInt32(document.RootElement, "epa_id", out epaId) || epaId <= 0)
-            {
-                return false;
-            }
-
-            // "overall" is the legacy seeded field name; schema-driven types built via the
-            // visual builder name the overall rating "overall_level".
-            //
-            // The upper bound is deliberately NOT the old hard-coded 5. An entrustment scale is
-            // data — the paediatric v11.1 ladder has six rungs (1, 2, 3a, 3b, 4, 5) — and a scale
-            // with more rungs than the chart happened to assume must not make observations
-            // disappear. Callers derive the axis maximum from the data; this guard only rejects
-            // values that cannot be a rung at all.
-            if ((!TryGetInt32(document.RootElement, "overall", out rating) &&
-                 !TryGetInt32(document.RootElement, "overall_level", out rating)) ||
-                rating < 1 || rating > MaxPlausibleRung)
-            {
-                return false;
-            }
-
-            if (!TryGetTrimmedString(document.RootElement, "assessor_user_id", out assessorUserId))
-            {
-                return false;
-            }
-
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
-    }
-
-    private static bool TryGetInt32(JsonElement root, string propertyName, out int value)
-    {
-        if (root.TryGetProperty(propertyName, out var property))
-        {
-            if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out value))
-            {
-                return true;
-            }
-
-            if (property.ValueKind == JsonValueKind.String &&
-                int.TryParse(property.GetString(), CultureInfo.InvariantCulture, out value))
-            {
-                return true;
-            }
-        }
-
-        value = 0;
-        return false;
-    }
-
-    private static bool TryGetTrimmedString(JsonElement root, string propertyName, out string value)
-    {
-        if (root.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String)
-        {
-            var raw = property.GetString();
-            if (!string.IsNullOrWhiteSpace(raw))
-            {
-                value = raw.Trim();
-                return true;
-            }
-        }
-
-        value = string.Empty;
-        return false;
     }
 }

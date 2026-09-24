@@ -1,11 +1,12 @@
 ---
 id: T135
 title: "The sampling denominator and numerator disagree about what counts as a rating"
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-20
+started: 2026-09-24
 ---
 
 # T135 — Two ways `TotalRatedActivities` can be wrong while `EvidenceComplete` says it is not
@@ -162,3 +163,54 @@ carrying `assessor_user_id`. `reflective_exercise_cpsa` declares no `rated_level
 - [ ] The trajectory plots no draft or declined row, and does plot a rated builder type whose rated field is not
       `overall_level`. Query tests.
 - [ ] Browser, on dev: a committee review for a trainee with a released MSF.
+
+---
+
+## As built — 2026-09-24 (with [T150] and [T106] item 9)
+
+**D44, decided here** (recorded in `EPA-PROGRAMME.md` § 3D). The committee sampling report and the entrustment
+trajectory count an activity only when its state is a terminal state of its **pinned** workflow, which is where credit
+fires. That is `completed` for the assessor-rated seeds and `recorded` for `msf_cpsa`; a type with no workflow falls
+back to `completed`. Drafts and requests are out. So are `declined` and `cancelled`, wherever the pinned workflow makes
+them non-terminal dead ends, as every current seed does.
+
+What is read from each row, all from the pinned version:
+- **EPA:** the stamped `Activity.EpaId` ([T137]). A null stamp, or an EPA that no longer exists, makes the row
+  unreadable.
+- **Rating:** `rated_level_field`, else the type's current one. The version must declare the field, or its rows are
+  unreadable.
+- **Assessor:** the fields named by the `field:` rule on the rating's `editable_by`, the field's own rule before its
+  section's. Else the `field:` actors of the transitions into a terminal state. Else every nominee field, when a role
+  or scope writes the rating. Else nobody. Ids are compared exactly.
+
+Every evidence row lands in exactly one of four counts. The test `EveryEvidenceRowIsInExactlyOneCount` checks this
+over 8 seeded random mixes:
+- **Attributed:** counted in the figures.
+- **Withheld:** the caller may not read it, and its version names an assessor.
+- **Unreadable:** a declared field is missing or malformed, or empty where every transition into the row's state
+  required it.
+- **Not attributed:** the version names nobody for the rating (MSF), or the rating or assessor was left empty where the
+  form allows it.
+
+Withheld and unreadable make the report incomplete (`EvidenceComplete`). Not attributed does not.
+
+*Rejected:*
+- literal `completed`, which drops `msf_cpsa`;
+- "completed or carries a rating", which lets a rated-then-declined row back in;
+- credited-only, since a below-minimum rating is still evidence;
+- folding unreadable into withheld, since the page blames withheld on read scope;
+- counting a withheld MSF as withheld, which would make the banner false;
+- the first nominee as the assessor when the trainee writes their own rating, which pads the count.
+
+**Code**
+- `RatedEvidence.cs` builds one profile per pinned (type, version) and is shared by both readers. The old literal-key
+  parser is gone.
+- `SamplingConcentrationReportDto` gains `UnreadableRatedActivities` and `UnattributedRatedActivities`.
+- `ReviewDetail.razor` states each count in its own true sentence, and "Ask a panel member…" appears only for withheld
+  rows.
+- The snapshot in `StartCommitteeReview` still lists every state, and its comment is corrected: the report is live, the
+  snapshot is frozen at Start.
+
+**Evidence.** Two rounds, 45 mutants, all killed. At the merge the EPA source was switched to the stamped `EpaId`; that
+switch was mutation-checked too (5 tests fail without it). Suites on master: Domain 398, Application 1022,
+Infrastructure 658, Architecture 28, Web 391, Integration 28.

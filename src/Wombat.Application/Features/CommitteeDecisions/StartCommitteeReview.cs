@@ -67,6 +67,13 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         // the trainee's progress in the window - a run of declines is exactly what a panel should see - and
         // each row prints its state. MSF below is the opposite: a campaign is evidence only once released,
         // so do not "fix" this asymmetry by filtering activities to match. (T138)
+        //
+        // The sampling report on the same page (GetSamplingConcentrationWarnings) shares these date bounds
+        // but NOT this row set: it samples only rated activities in a terminal state of their pinned workflow
+        // (D44), and it is computed live while this list is frozen here. So it leaves out rows listed here,
+        // and it can count rows this list never held (a WBA observed in the window and completed after
+        // Start). Do not "fix" that either; the snapshot labels each row's state, and the report's
+        // arithmetic has no label to carry a declined rating. (T135)
         var activities = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)

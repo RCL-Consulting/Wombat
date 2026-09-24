@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
@@ -547,14 +548,31 @@ public sealed class SamplingConcentrationWarningsTests
         }
         """;
 
+    /// <summary>
+    /// A rated type as the product publishes one: it declares its rated field, the assessor who writes it
+    /// (the section's <c>field:</c> rule), and the EPA field its rows are filed against (<c>evidence_epa_field</c>,
+    /// T137). T135 reads the rating and the assessor from the declaration and the EPA from the stamp that pointer
+    /// produces, so a fixture that declared no assessor would be a type that names none by design (the MSF shape), and
+    /// one that declared no pointer would be a type about no single EPA.
+    /// </summary>
     private const string RatedSchemaJson = """
         {
           "version": 1,
           "rated_level_field": "overall_level",
+          "evidence_epa_field": "epa_id",
           "sections": [
+            {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "epa_id", "type": "epa", "label": "EPA" },
+                { "key": "assessor_user_id", "type": "user", "label": "Assessor" }
+              ]
+            },
             {
               "key": "assessment",
               "title": "Assessment",
+              "editable_by": "field:assessor_user_id",
               "fields": [
                 { "key": "overall_level", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
               ]
@@ -592,7 +610,8 @@ public sealed class SamplingConcentrationWarningsTests
         DateTime createdOn,
         int? institutionId = null)
     {
-        var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\"}}";
+        // T135: a rated observation carries its rating. A row with none is not an assessor's rating to count.
+        var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\", \"overall_level\": 3}}";
         dbContext.Activities.Add(new Activity
         {
             ActivityTypeId = activityType.Id,
@@ -603,6 +622,8 @@ public sealed class SamplingConcentrationWarningsTests
             CreatedByUserId = assessor,
             CurrentState = "completed",
             DataJson = dataJson,
+            // T137: ActivityService stamps the EPA from the schema's pointer, and the report reads it from there alone.
+            EpaId = EvidenceEpaStamp.For(dbContext, activityType.Id, activityType.Version, dataJson),
             CreatedOn = createdOn,
             // T119: production stamps this in ActivityService; a fixture that builds the
             // entity directly must set it, or it defaults to 0001-01-01.
