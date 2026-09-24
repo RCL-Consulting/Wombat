@@ -88,11 +88,7 @@ public static class StarCurriculum
             .Select(entity => entity.SubSpeciality.DefaultEntrustmentScaleId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var items = await dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .InForce()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId))
+        var items = await AdmittedItems(dbContext, profile.CurriculumId, profile.InstitutionId)
             .Select(item => new { item.EpaId, item.Epa.Code, item.Epa.Title, item.ScaleId })
             .ToListAsync(cancellationToken);
 
@@ -119,6 +115,24 @@ public static class StarCurriculum
             .OrderBy(option => option.Code, StringComparer.Ordinal)
             .ThenBy(option => option.EpaId)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The curriculum items a trainee on <paramref name="curriculumId" /> at <paramref name="institutionId" /> may be
+    /// decided on: in force, and the national core or that institution's own local items, never another institution's
+    /// (a curriculum row is shared by every institution that adopted it). The one predicate <see cref="ListAsync" /> and
+    /// the committee's agenda (<c>AgendaPlanner</c>, T131) read, so the agenda plans nothing a STAR could not be granted
+    /// on. Untracked.
+    /// </summary>
+    public static IQueryable<CurriculumItem> AdmittedItems(IApplicationDbContext dbContext, int curriculumId, int institutionId)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+
+        return dbContext.Set<CurriculumItem>()
+            .AsNoTracking()
+            .InForce()
+            .Where(item => item.CurriculumId == curriculumId &&
+                           (item.OwningInstitutionId == null || item.OwningInstitutionId == institutionId));
     }
 
     /// <summary>

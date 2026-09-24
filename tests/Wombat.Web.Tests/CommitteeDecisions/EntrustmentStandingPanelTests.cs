@@ -482,7 +482,11 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             [],
             [],
             [],
-            IsFormative: formative);
+            IsFormative: formative)
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     private static RecordingSender ReviewSender(CommitteeReviewDetailDto review)
         => new RecordingSender()

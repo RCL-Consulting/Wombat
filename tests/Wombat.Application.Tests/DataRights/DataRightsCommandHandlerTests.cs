@@ -63,6 +63,8 @@ public sealed class DataRightsCommandHandlerTests
 
         db.Set<CommitteeReview>().Add(new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "user-1",
             PanelId = 1,
             ReviewPeriodFrom = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6)),

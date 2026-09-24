@@ -103,7 +103,11 @@ public sealed class UndatedEncounterDateTests : TestContext
                 null,
                 [],
                 [],
-                []),
+                [])
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        },
             [typeof(ListPendingEntrustmentDecisionsForReviewQuery)] = (IReadOnlyList<PendingEntrustmentDecisionDto>)[],
             [typeof(GetSamplingConcentrationWarningsQuery)] = null,
             [typeof(CountMsfCampaignsOutsideSnapshotQuery)] = MsfCampaignsOutsideSnapshotDto.None,

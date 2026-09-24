@@ -415,7 +415,11 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
             [],
             [],
             [],
-            IsFormative: formative);
+            IsFormative: formative)
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     private IRenderedComponent<ReviewDetail> RenderReview()
     {

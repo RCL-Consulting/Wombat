@@ -530,6 +530,8 @@ public sealed class CommitteeEvidenceSnapshotTests
         });
         db.CommitteeReviews.Add(new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = ReviewId,
             PanelId = 20,
             TraineeUserId = "trainee-1",

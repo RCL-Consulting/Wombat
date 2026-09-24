@@ -1,3 +1,6 @@
+using Wombat.Domain.Curricula;
+using Wombat.Domain.EntrustmentDecisions;
+
 namespace Wombat.Domain.CommitteeDecisions;
 
 public sealed class CommitteeReview
@@ -20,6 +23,22 @@ public sealed class CommitteeReview
     public int Id { get; set; }
     public string TraineeUserId { get; set; } = string.Empty;
     public int PanelId { get; set; }
+
+    /// <summary>
+    /// The academic year of the period the review sits for (T131, Decision 4). With <see cref="Semester" /> it is the
+    /// <see cref="AcademicPeriod" /> whose decisions the review's agenda holds.
+    /// </summary>
+    /// <remarks>
+    /// Stored, chosen when the review is scheduled, and never derived from <see cref="ReviewPeriodTo" />: the evidence
+    /// window is an arbitrary range the scheduler may widen or narrow, and <see cref="AcademicPeriod" /> is not it. The
+    /// scheduling page's period select fills the window from the period, and the window stays editable. Required, not
+    /// defaulted: the zero value is no year, and a review with no period would plan no agenda.
+    /// </remarks>
+    public required int AcademicYear { get; set; }
+
+    /// <summary>The semester, 1 or 2, of the period the review sits for (T131, Decision 4).</summary>
+    public required int Semester { get; set; }
+
     public DateOnly ReviewPeriodFrom { get; set; }
     public DateOnly ReviewPeriodTo { get; set; }
     public DateOnly ScheduledOn { get; set; }
@@ -37,11 +56,34 @@ public sealed class CommitteeReview
     public ICollection<CommitteeAppeal> Appeals { get; private set; } = [];
     public ICollection<CommitteeEvidence> EvidenceItems { get; private set; } = [];
 
+    /// <summary>
+    /// The EPAs the review is there to decide (T131 slice 4). Planned when a binding review is scheduled and again when it
+    /// starts, which only adds; then each line only changes state. A formative review has none.
+    /// </summary>
+    public ICollection<CommitteeAgendaLine> AgendaLines { get; private set; } = [];
+
+    /// <summary>The academic period the review sits for.</summary>
+    public AcademicPeriod Period => new(AcademicYear, Semester);
+
     public CommitteeDecision? GetCurrentDecision()
         => Decisions.OrderByDescending(decision => decision.DecidedOn).ThenByDescending(decision => decision.Id).FirstOrDefault();
 
     public void Start(IEnumerable<CommitteeEvidence> evidenceItems, string actorUserId, DateTime utcNow)
+        => Start(evidenceItems, [], actorUserId, utcNow);
+
+    /// <summary>
+    /// Starts the review: freezes the evidence snapshot, and with it the agenda, after adding the cadence lines planned
+    /// now for EPAs it does not yet hold (T131). Nothing is changed unless every check passes.
+    /// </summary>
+    public void Start(
+        IEnumerable<CommitteeEvidence> evidenceItems,
+        IEnumerable<CommitteeAgendaLine> agendaLines,
+        string actorUserId,
+        DateTime utcNow)
     {
+        ArgumentNullException.ThrowIfNull(evidenceItems);
+        ArgumentNullException.ThrowIfNull(agendaLines);
+
         if (State != CommitteeReviewState.Scheduled)
         {
             throw new InvalidOperationException("Only scheduled reviews can be started.");
@@ -52,6 +94,10 @@ public sealed class CommitteeReview
             throw new InvalidOperationException("The starting user is required.");
         }
 
+        var lines = agendaLines.ToArray();
+        DemandAddableCadenceLines(lines);
+        AddNewLines(lines);
+
         EvidenceItems.Clear();
         foreach (var evidenceItem in evidenceItems)
         {
@@ -61,6 +107,206 @@ public sealed class CommitteeReview
         StartedByUserId = actorUserId.Trim();
         StartedOn = utcNow;
         State = CommitteeReviewState.InProgress;
+    }
+
+    /// <summary>
+    /// Adds the cadence lines planned for a review not yet started, skipping any EPA it already holds. Planning only adds:
+    /// a line already on the agenda keeps its window and state. (T131)
+    /// </summary>
+    public void AddCadenceLines(IEnumerable<CommitteeAgendaLine> agendaLines)
+    {
+        ArgumentNullException.ThrowIfNull(agendaLines);
+
+        if (State != CommitteeReviewState.Scheduled)
+        {
+            throw new InvalidOperationException("An agenda is planned only before the review starts.");
+        }
+
+        var lines = agendaLines.ToArray();
+        DemandAddableCadenceLines(lines);
+        AddNewLines(lines);
+    }
+
+    /// <summary>
+    /// Adds the line the chair creates by staging a decision on an EPA the agenda does not hold. The routing check is the
+    /// staging handler's (<c>AgendaPlanner</c>); this holds the rest. (T131, Decision 3)
+    /// </summary>
+    /// <remarks>
+    /// Only while the review is in progress: staging is (T165), and the agenda is fixed with the decision the panel records
+    /// (<see cref="EnsureAgendaSettled" />).
+    /// </remarks>
+    public CommitteeAgendaLine AddChairLine(CommitteeAgendaLine line)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+
+        if (IsFormative)
+        {
+            throw new InvalidOperationException(FormativeHasNoAgenda);
+        }
+
+        if (State != CommitteeReviewState.InProgress)
+        {
+            throw new InvalidOperationException("The chair adds to the agenda only while the review is in progress.");
+        }
+
+        if (line.Origin != CommitteeAgendaLineOrigin.Chair)
+        {
+            throw new ArgumentException("Only a chair's line is added while the review sits.", nameof(line));
+        }
+
+        if (AgendaLineFor(line.EpaId) is not null)
+        {
+            throw new InvalidOperationException($"{line.EpaCode} is already on this review's agenda.");
+        }
+
+        AgendaLines.Add(line);
+        return line;
+    }
+
+    /// <summary>
+    /// Takes off the agenda the chair's line on this EPA, when the decision that put it there is removed: a chair's line
+    /// exists because a decision was staged on it. Returns the line removed, or null when there was none.
+    /// </summary>
+    public CommitteeAgendaLine? RemoveChairLineFor(int epaId)
+    {
+        var line = AgendaLineFor(epaId);
+        if (line is not { Origin: CommitteeAgendaLineOrigin.Chair, State: CommitteeAgendaLineState.Due })
+        {
+            return null;
+        }
+
+        AgendaLines.Remove(line);
+        return line;
+    }
+
+    /// <summary>The agenda's line on this EPA, or null.</summary>
+    public CommitteeAgendaLine? AgendaLineFor(int epaId) => AgendaLines.FirstOrDefault(line => line.EpaId == epaId);
+
+    /// <summary>
+    /// The closing lines still neither staged nor deferred, in code order: what keeps the review from being ratified
+    /// (Decision 6). <paramref name="stagedEpaIds" /> are the EPAs with a decision staged at the review.
+    /// </summary>
+    public IReadOnlyList<CommitteeAgendaLine> OutstandingClosingLines(IEnumerable<int> stagedEpaIds)
+    {
+        ArgumentNullException.ThrowIfNull(stagedEpaIds);
+
+        var staged = stagedEpaIds.ToHashSet();
+        return AgendaLines
+            .Where(line => line.BlocksRatify(staged.Contains(line.EpaId)))
+            .OrderBy(line => line.EpaCode, StringComparer.Ordinal)
+            .ThenBy(line => line.EpaId)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Refuses, without changing anything, while a closing line is neither staged nor deferred. The ratify handler runs it
+    /// before its first mutation; <see cref="CloseAgenda" /> runs it again.
+    /// </summary>
+    public void EnsureAgendaClosable(IEnumerable<int> stagedEpaIds)
+    {
+        var outstanding = OutstandingClosingLines(stagedEpaIds);
+        if (outstanding.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "This review cannot be ratified: " +
+                OutstandingClosingLinesReason(outstanding.Select(line => line.EpaCode).ToArray()));
+        }
+    }
+
+    /// <summary>
+    /// Refuses, without changing anything, while a closing line is neither staged nor deferred: the check recording the
+    /// committee's decision runs before its first mutation. (T131 slice 4, T165)
+    /// </summary>
+    /// <remarks>
+    /// The decision the panel records fixes what it decided with it: the staged decisions (T165) and the deferrals, each
+    /// the committee's reasoning, so neither changes once it is recorded. A decision recorded with a closing line still
+    /// open would leave a review nothing could ratify, so the agenda is settled first, by the predicate ratify enforces.
+    /// </remarks>
+    public void EnsureAgendaSettled(IEnumerable<int> stagedEpaIds)
+    {
+        var outstanding = OutstandingClosingLines(stagedEpaIds);
+        if (outstanding.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "The committee's decision cannot be recorded yet: " +
+                OutstandingClosingLinesReason(outstanding.Select(line => line.EpaCode).ToArray()));
+        }
+    }
+
+    /// <summary>
+    /// Why a review with these closing lines outstanding cannot be ratified, or its decision recorded: the one sentence the
+    /// refusals and the page's disabled Ratify and Record buttons share.
+    /// </summary>
+    public static string OutstandingClosingLinesReason(IReadOnlyList<string> epaCodes)
+    {
+        ArgumentNullException.ThrowIfNull(epaCodes);
+
+        var codes = epaCodes.Count switch
+        {
+            0 => string.Empty,
+            1 => epaCodes[0],
+            _ => string.Join(", ", epaCodes.Take(epaCodes.Count - 1)) + " and " + epaCodes[^1]
+        };
+
+        return epaCodes.Count == 1
+            ? $"{codes} must be decided at this sitting. Stage a decision on it, or defer it with a reason."
+            : $"{codes} must be decided at this sitting. Stage a decision on each, or defer it with a reason.";
+    }
+
+    /// <summary>
+    /// Closes the agenda as the review is ratified: a staged line is Decided with the STAR issued on it, an optional line
+    /// nothing was staged on is NotDecided, and a deferred line stays deferred. <paramref name="issuedByEpa" /> are the
+    /// STARs ratifying issues, by EPA.
+    /// </summary>
+    public void CloseAgenda(IReadOnlyDictionary<int, EntrustmentDecision> issuedByEpa)
+    {
+        ArgumentNullException.ThrowIfNull(issuedByEpa);
+
+        EnsureAgendaClosable(issuedByEpa.Keys);
+
+        foreach (var line in AgendaLines.Where(line => line.State == CommitteeAgendaLineState.Due).ToArray())
+        {
+            if (issuedByEpa.TryGetValue(line.EpaId, out var decision))
+            {
+                line.Decide(decision);
+            }
+            else
+            {
+                line.CloseUndecided();
+            }
+        }
+    }
+
+    /// <summary>The refusal for an agenda on a formative review.</summary>
+    public const string FormativeHasNoAgenda = "A formative review carries no agenda: it issues no entrustment decision.";
+
+    private void DemandAddableCadenceLines(IReadOnlyCollection<CommitteeAgendaLine> lines)
+    {
+        if (lines.Count == 0)
+        {
+            return;
+        }
+
+        if (IsFormative)
+        {
+            throw new InvalidOperationException(FormativeHasNoAgenda);
+        }
+
+        if (lines.Any(line => line.Origin != CommitteeAgendaLineOrigin.Cadence))
+        {
+            throw new ArgumentException("Only cadence lines are planned before the review starts.", nameof(lines));
+        }
+    }
+
+    private void AddNewLines(IEnumerable<CommitteeAgendaLine> lines)
+    {
+        foreach (var line in lines)
+        {
+            if (AgendaLineFor(line.EpaId) is null)
+            {
+                AgendaLines.Add(line);
+            }
+        }
     }
 
     /// <summary>

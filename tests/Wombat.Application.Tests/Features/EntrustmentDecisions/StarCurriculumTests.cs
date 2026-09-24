@@ -353,6 +353,16 @@ public sealed class StarCurriculumTests
         await SaveAndClearAsync(db);
         (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
 
+        // Admitted by the curriculum; the host's panel still does not cover a trainee of another institution, so the EPA is
+        // not its to add to the agenda (T131 slice 4, Decision 3). At a panel of the trainee's own institution it is staged.
+        var atTheHostsPanel = () => StageAsync(db, ForeignLocalEpa, RungOf(ProgrammeLadder, 3), principal: TestPrincipals.Administrator());
+        await atTheHostsPanel.Should().ThrowAsync<InvalidOperationException>().WithMessage("*PAED-004*does not cover the trainee's programme*");
+        await SaveAndClearAsync(db);
+
+        var panel = await db.DecisionPanels.SingleAsync();
+        panel.InstitutionId = OtherInstitution;
+        await SaveAndClearAsync(db);
+
         (await StageAsync(db, ForeignLocalEpa, RungOf(ProgrammeLadder, 3), principal: TestPrincipals.Administrator()))
             .EpaId.Should().Be(ForeignLocalEpa);
     }
@@ -500,6 +510,8 @@ public sealed class StarCurriculumTests
         });
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 2,
             Id = ReviewId,
             PanelId = 50,
             TraineeUserId = TraineeUserId,

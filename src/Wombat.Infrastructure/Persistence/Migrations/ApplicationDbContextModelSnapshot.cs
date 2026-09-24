@@ -606,6 +606,81 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditEntryArchives", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.CommitteeAgendaLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CurriculumItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DeferralReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("EntrustmentDecisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EpaCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("EpaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EpaTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsClosing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPartialPeriod")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WindowSemester")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WindowYear")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntrustmentDecisionId");
+
+                    b.HasIndex("ReviewId", "EpaId")
+                        .IsUnique();
+
+                    b.ToTable("CommitteeAgendaLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CommitteeAgendaLines_DecidedNamesItsStar", "(\"State\" = 3) = (\"EntrustmentDecisionId\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_CommitteeAgendaLines_DeferredHasAReason", "(\"State\" = 2) = (\"DeferralReason\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_CommitteeAgendaLines_WindowSemester", "\"WindowSemester\" IS NULL OR \"WindowSemester\" IN (1, 2)");
+                        });
+                });
+
             modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.CommitteeAppeal", b =>
                 {
                     b.Property<int>("Id")
@@ -812,6 +887,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AcademicYear")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("FinalizedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -840,6 +918,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("ScheduledOn")
                         .HasColumnType("date");
 
+                    b.Property<int>("Semester")
+                        .HasColumnType("integer");
+
                     b.Property<string>("StartedByUserId")
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
@@ -867,7 +948,17 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TraineeUserId", "State");
 
-                    b.ToTable("CommitteeReviews", (string)null);
+                    b.HasIndex("TraineeUserId", "PanelId", "AcademicYear", "Semester")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CommitteeReviews_OneOpenBindingReviewPerPeriod")
+                        .HasFilter("\"IsFormative\" = FALSE AND \"State\" IN (1, 2, 3)");
+
+                    b.ToTable("CommitteeReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CommitteeReviews_AcademicYear", "\"AcademicYear\" BETWEEN 2 AND 9998");
+
+                            t.HasCheckConstraint("CK_CommitteeReviews_Semester", "\"Semester\" IN (1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.DecisionPanel", b =>
@@ -2782,6 +2873,24 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Navigation("ActivityType");
                 });
 
+            modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.CommitteeAgendaLine", b =>
+                {
+                    b.HasOne("Wombat.Domain.EntrustmentDecisions.EntrustmentDecision", "EntrustmentDecision")
+                        .WithMany()
+                        .HasForeignKey("EntrustmentDecisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Wombat.Domain.CommitteeDecisions.CommitteeReview", "Review")
+                        .WithMany("AgendaLines")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EntrustmentDecision");
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.CommitteeAppeal", b =>
                 {
                     b.HasOne("Wombat.Domain.CommitteeDecisions.CommitteeReview", "Review")
@@ -3355,6 +3464,8 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Wombat.Domain.CommitteeDecisions.CommitteeReview", b =>
                 {
+                    b.Navigation("AgendaLines");
+
                     b.Navigation("Appeals");
 
                     b.Navigation("Decisions");

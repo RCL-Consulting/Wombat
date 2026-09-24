@@ -111,7 +111,8 @@
       <dl class="details-list">
         <div><dt>Trainee</dt><dd>@_review.TraineeName</dd></div>
         <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
-        <div><dt>Period</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
+        <div><dt>Sits for</dt><dd>@_review.PeriodLabel</dd></div>
+        <div><dt>Evidence window</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
         <div><dt>Type</dt><dd>@(_review.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation review" : "Annual progression review")</dd></div>
         <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
         <div><dt>State</dt><dd>@_review.State</dd></div>
@@ -138,22 +139,23 @@
         }
         @if (_review.State == CommitteeReviewState.Decided)
         {
-          if (_review.QuorumShortfall is null)
+          @* Shown, not hidden, so the chair learns why (T107's pattern): the attendance falls short of a quorum (T165), or a
+             closing line of the agenda is neither staged nor deferred (T131 slice 4). The reason is the first the server
+             would refuse with, in the ratify handler's order. No click handler while one stands. *@
+          if (RatifyBlockedReason is null)
           {
             <button type="button" class="btn btn-primary" @onclick="RatifyAsync">Ratify</button>
           }
           else
           {
-            @* T165. Shown, not hidden, so the chair learns why (T107's pattern). No click handler: the server refuses a
-               decision whose recorded attendance falls short of the quorum. *@
             <button type="button" class="btn btn-primary" disabled aria-describedby="ratify-reason">Ratify</button>
           }
         }
       </FormActions>
-      @if (_review.State == CommitteeReviewState.Decided && _review.QuorumShortfall is { } shortfall)
+      @if (_review.State == CommitteeReviewState.Decided && RatifyBlockedReason is { } ratifyReason)
       {
         <ul class="workflow-action-reasons">
-          <li id="ratify-reason"><strong>Ratify:</strong> @shortfall</li>
+          <li id="ratify-reason"><strong>Ratify:</strong> @ratifyReason</li>
         </ul>
       }
     </section>
@@ -201,15 +203,20 @@
               @PresentFieldset("decision-present", _decision.PresentUserIds, lockedUserId: null)
             }
           </div>
+          @if (_review.State == CommitteeReviewState.InProgress && CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
+          {
+            <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
+          }
           <FormActions>
             @if (_review.State == CommitteeReviewState.InProgress)
             {
-              @* The staged STARs below are part of this decision and are fixed with it (T165): said at the button, the
-                 click that fixes them. *@
+              @* The staged STARs below are part of this decision and are fixed with it (T165), and so are the agenda's
+                 deferrals (T131 slice 4): said at the button, the click that fixes them. *@
               <span id="record-decision-note" class="muted">
-                Recording fixes the entrustment decisions staged below: they cannot be changed afterwards.
+                Recording fixes the entrustment decisions staged below and the agenda's deferrals:
+                they cannot be changed afterwards.
               </span>
-              if (_review.PanelShortfall is null)
+              if (RecordBlockedReason is null)
               {
                 <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note">Record decision</button>
               }
@@ -221,10 +228,10 @@
               }
             }
           </FormActions>
-          @if (_review.State == CommitteeReviewState.InProgress && _review.PanelShortfall is { } panelShortfall)
+          @if (_review.State == CommitteeReviewState.InProgress && RecordBlockedReason is { } recordReason)
           {
             <ul class="workflow-action-reasons">
-              <li id="record-reason"><strong>Record decision:</strong> @panelShortfall</li>
+              <li id="record-reason"><strong>Record decision:</strong> @recordReason</li>
             </ul>
           }
         </EditForm>
@@ -267,6 +274,7 @@
 
       @StandingSection
       @MsfCoverageSection
+      @AgendaSection
 
       <section class="detail-card">
         <h3>Pending entrustment decisions</h3>
@@ -298,7 +306,7 @@
             <ValidationSummary class="validation-summary-errors" />
             <div class="form-grid">
               <FormField Label="EPA" InputId="pending-epa" Required="true" HelpText="The EPAs on the trainee's curriculum.">
-                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged">
+                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged" @ref="_pendingEpaSelect">
                   <option value="0">Select an EPA…</option>
                   @foreach (var epa in _starEpas)
                   {
@@ -710,6 +718,27 @@
   private MsfCoverageDto? _msfCoverage;
   private string? _msfCoverageError;
   private string? _currentUserId;
+  private CommitteeAgendaDto? _agenda;
+  private string? _agendaError;
+  private DeferralFormModel? _deferral;
+  private InputSelect<int>? _pendingEpaSelect;
+  private InputTextArea? _deferralReason;
+
+  // Set when a deferral form opens: the reason box exists only after the next render, so the focus moves there then.
+  private bool _focusDeferralReason;
+
+  /// <summary>
+  /// Why Ratify is refused now, or null when it is not: the first reason the ratify handler would give, in its order. The
+  /// decision's recorded attendance first (T165), then the agenda's closing lines (T131 slice 4).
+  /// </summary>
+  private string? RatifyBlockedReason => _review?.QuorumShortfall ?? _agenda?.RatifyBlockedReason;
+
+  /// <summary>
+  /// Why Record is refused now, or null when it is not, in the record handler's order: the panel cannot seat a quorum
+  /// (T165), or a closing line of the agenda is neither staged nor deferred, since the decision fixes the agenda with it
+  /// (T131 slice 4). The agenda's sentence is the one Ratify shows: it names the lines, not the button.
+  /// </summary>
+  private string? RecordBlockedReason => _review?.PanelShortfall ?? _agenda?.RatifyBlockedReason;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -723,6 +752,8 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
+      _agenda = _review.Agenda;
+      _agendaError = null;
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
       _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
@@ -939,7 +970,10 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+      return;
     }
+
+    await LoadAgendaAsync();
   }
 
   private StarEpaOptionDto? SelectedStarEpa => _starEpas.FirstOrDefault(option => option.EpaId == _pending.EpaId);
@@ -1070,7 +1104,10 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+      return;
     }
+
+    await LoadAgendaAsync();
   }
 
   /// <summary>
@@ -1155,6 +1192,270 @@
     // Ratifying issues the staged STAR decisions, which is exactly what the standing reads, so it is read again after
     // every action. A failure lands in the standing card, not beside the action's success.
     await LoadStandingAsync();
+    await LoadAgendaAsync();
+  }
+
+  /// <summary>
+  /// The review's agenda, read again after an action (T131 slice 4): Start plans it, and staging, removing, deferring,
+  /// reinstating and ratifying move its lines. The commands answer with the review as the shared mapper builds it,
+  /// which reads no agenda. A failure lands in the agenda card, not beside the action's success.
+  /// </summary>
+  private async Task LoadAgendaAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _agenda = await Sender.Send(new GetCommitteeAgendaQuery(ReviewId, authState.User));
+      _agendaError = null;
+    }
+    catch (Exception exception)
+    {
+      _agendaError = exception.Message;
+    }
+  }
+
+  /// <summary>
+  /// Whether the agenda's lines may still be staged, deferred or reinstated: only while the review is in progress, as the
+  /// staged decisions (T165). Once the decision is recorded they are fixed with it.
+  /// </summary>
+  private bool AgendaIsOpen => _review?.State is CommitteeReviewState.InProgress;
+
+  /// <summary>
+  /// A decided review's one open action: deferring a closing line that keeps it from being ratified, which recording's
+  /// own check leaves only when the decision staged on it was removed afterwards because it no longer fits the trainee's
+  /// curriculum (T165's exception, <c>DeferAgendaLineCommand</c>).
+  /// </summary>
+  private bool MayDeferAfterRecording(CommitteeAgendaLineDto line)
+    => _review?.State is CommitteeReviewState.Decided && line.BlocksRatify;
+
+  /// <summary>Chooses the line's EPA in the staging form below, and moves the focus to it.</summary>
+  private async Task StageFromAgendaAsync(CommitteeAgendaLineDto line)
+  {
+    _deferral = null;
+    _pending.EpaId = line.EpaId;
+    OnStarEpaChanged();
+
+    if (_pendingEpaSelect?.Element is { } select)
+    {
+      try
+      {
+        await select.FocusAsync();
+      }
+      catch (Exception)
+      {
+        // Focus is a convenience; the EPA is chosen either way.
+      }
+    }
+  }
+
+  /// <summary>Opens the deferral form for the line; the focus moves to its reason once it is rendered, as Stage moves it.</summary>
+  private void OpenDeferral(CommitteeAgendaLineDto line)
+  {
+    _deferral = new DeferralFormModel { LineId = line.Id, EpaCode = line.EpaCode };
+    _focusDeferralReason = true;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusDeferralReason && _deferralReason?.Element is { } reason)
+    {
+      _focusDeferralReason = false;
+      try
+      {
+        await reason.FocusAsync();
+      }
+      catch (Exception)
+      {
+        // Focus is a convenience; the form is open either way.
+      }
+    }
+  }
+
+  private void CancelDeferral() => _deferral = null;
+
+  private async Task DeferAsync()
+  {
+    if (_deferral is not { } deferral)
+    {
+      return;
+    }
+
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new DeferAgendaLineCommand(ReviewId, deferral.LineId, deferral.Reason, authState.User));
+      _deferral = null;
+      _status = $"{deferral.EpaCode} deferred.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+      return;
+    }
+
+    await LoadAgendaAsync();
+  }
+
+  private async Task ReinstateAsync(CommitteeAgendaLineDto line)
+  {
+    _error = null;
+    _status = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new ReinstateAgendaLineCommand(ReviewId, line.Id, authState.User));
+      _status = $"{line.EpaCode} reinstated: it is due at this sitting again.";
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+      return;
+    }
+
+    await LoadAgendaAsync();
+  }
+
+  /// <summary>
+  /// The EPAs this sitting is there to decide (T131 slice 4): full width, directly above the staging form, so a chair
+  /// reads what is due and stages it in one place. A formative review carries none, and the card is not shown for it.
+  /// </summary>
+  private RenderFragment AgendaSection => __builder =>
+  {
+    <section class="detail-card full-width" aria-labelledby="agenda-heading">
+      <h3 id="agenda-heading">Agenda</h3>
+      @if (_agendaError is not null)
+      {
+        @* A warning, as the standing card's is: an action that succeeded is not shown beside a red error, and the agenda
+           last read stays in view below it. *@
+        <Alert Kind="warning">The agenda could not be read again: @_agendaError</Alert>
+      }
+      @if (_agenda is null)
+      {
+        if (_agendaError is null)
+        {
+          <p class="muted">The agenda is not available.</p>
+        }
+      }
+      else
+      {
+        <p class="muted">@AgendaIntro(_agenda)</p>
+        @if (_agenda.Lines.Count == 0)
+        {
+          <p>@AgendaEmpty(_review!.State)</p>
+        }
+        else
+        {
+          <div class="table-container">
+            <table class="clinic-table">
+              <caption>@AgendaCaption(_agenda)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">EPA</th>
+                  <th scope="col">Window</th>
+                  <th scope="col">State</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var line in _agenda.Lines)
+                {
+                  var detail = CommitteeAgendaText.StatusDetail(line);
+                  <tr id="@($"agenda-line-{line.EpaId}")">
+                    <th scope="row">@line.EpaCode — @line.EpaTitle</th>
+                    <td>@line.WindowLabel</td>
+                    <td>
+                      <span class="badge @CommitteeAgendaText.BadgeClass(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
+                      @if (detail is not null)
+                      {
+                        <div class="muted">@detail</div>
+                      }
+                    </td>
+                    <td>@line.EvidenceCount item@(line.EvidenceCount == 1 ? string.Empty : "s")</td>
+                    <td class="actions-cell">
+                      @if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged)
+                      {
+                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageFromAgendaAsync(line)"
+                                aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
+                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                                aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                      }
+                      else if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred)
+                      {
+                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => ReinstateAsync(line)"
+                                aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
+                      }
+                      else if (MayDeferAfterRecording(line))
+                      {
+                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                                aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (_deferral is { } deferral)
+        {
+          <EditForm Model="deferral" OnValidSubmit="DeferAsync" FormName="agenda-deferral">
+            <DataAnnotationsValidator />
+            <fieldset>
+              <legend>Defer @deferral.EpaCode</legend>
+              <div class="form-grid">
+                <FormField Label="Why the committee is deferring it" InputId="deferral-reason" Required="true" FullWidth="true"
+                           HelpText="Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.">
+                  <InputTextArea id="deferral-reason" class="form-control" @bind-Value="deferral.Reason" @ref="_deferralReason" />
+                </FormField>
+              </div>
+              <FormActions>
+                <button type="button" class="btn btn-outline" @onclick="CancelDeferral">Cancel</button>
+                <button type="submit" class="btn btn-primary">Defer @deferral.EpaCode</button>
+              </FormActions>
+            </fieldset>
+          </EditForm>
+        }
+
+        @if (_agenda.RoutedElsewhere.Count > 0)
+        {
+          <h4 id="agenda-elsewhere-heading">Decided by another panel</h4>
+          <ul class="list-unstyled" aria-labelledby="agenda-elsewhere-heading">
+            @foreach (var line in _agenda.RoutedElsewhere)
+            {
+              <li id="@($"agenda-elsewhere-{line.EpaId}")">
+                <strong>@line.EpaCode — @line.EpaTitle</strong>
+                <span>@line.PanelName · @line.WindowLabel</span>
+                <span class="badge @CommitteeAgendaText.ElsewhereBadgeClass(line.Status)">@CommitteeAgendaText.ElsewhereLabel(line.Status)</span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  };
+
+  private static string AgendaIntro(CommitteeAgendaDto agenda)
+    => $"The EPAs routed to this panel that are due for {agenda.PeriodLabel}, planned when the review was scheduled " +
+       "and when it started. A line marked Due must be staged or deferred with a reason before the decision is recorded; " +
+       "the others are optional.";
+
+  private static string AgendaEmpty(CommitteeReviewState state)
+    => state == CommitteeReviewState.Scheduled
+      ? "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period."
+      : "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that " +
+        "routes to this panel, and staging it adds it.";
+
+  private static string AgendaCaption(CommitteeAgendaDto agenda)
+  {
+    var outstanding = agenda.OutstandingClosingLines.Count;
+    return $"{agenda.Lines.Count} EPA{(agenda.Lines.Count == 1 ? string.Empty : "s")} for {agenda.PeriodLabel}" +
+           (outstanding == 0 ? string.Empty : $", {outstanding} still to stage or defer");
   }
 
   private sealed class DecisionFormModel
@@ -1182,6 +1483,17 @@
 
     /// <summary>The members ticked as present for a remitted replacement, other than those always present (T165).</summary>
     public HashSet<string> PresentUserIds { get; } = new(StringComparer.Ordinal);
+  }
+
+  private sealed class DeferralFormModel
+  {
+    public int LineId { get; init; }
+
+    public string EpaCode { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Say why the committee is deferring the decision.")]
+    [StringLength(2000)]
+    public string Reason { get; set; } = string.Empty;
   }
 
   private sealed class PendingDecisionFormModel

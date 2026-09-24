@@ -142,6 +142,8 @@ public sealed class CommitteeReviewReadLadderTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = 30,
             PanelId = panel.Id,
             TraineeUserId = "trainee-1",

@@ -1409,6 +1409,8 @@ public sealed class SamplingEvidenceStateAndAttributionTests
         });
         db.CommitteeReviews.Add(new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = ReviewId,
             PanelId = 1,
             TraineeUserId = "trainee-1",

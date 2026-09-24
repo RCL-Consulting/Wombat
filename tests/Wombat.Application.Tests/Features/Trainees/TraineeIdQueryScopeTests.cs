@@ -154,6 +154,8 @@ public sealed class TraineeIdQueryScopeTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = 30, PanelId = panel.Id, TraineeUserId = TraineeUserId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1), ReviewPeriodTo = new DateOnly(2026, 6, 30),
             ScheduledOn = new DateOnly(2026, 7, 1)

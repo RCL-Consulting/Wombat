@@ -185,6 +185,146 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// T131 slice 4: a deferral is how a closing line is let through ratify, and like a staged decision it is part of the
+    /// decision the panel records, so it is fixed then (T165). Deferring and reinstating act only on a review in progress,
+    /// and mark the review modified, so its xmin is checked with the line: one that read the review while it was in
+    /// progress is refused whole if the decision was recorded, and the review ratified, before it saved. Without that, a
+    /// ratify would commit around a reinstatement, leaving a ratified review with a closing line still due, or a line of a
+    /// ratified review would be changed. And one attempted once the decision is recorded is refused by the review's state
+    /// before anything races, so the ratify closes the agenda as it was recorded.
+    /// </summary>
+    [Fact]
+    public async Task AReinstatementAttemptedWhileARatifyIsInFlight_IsRefusedAsFixed_AndTheRatifyClosesTheAgendaAsRecorded()
+    {
+        try
+        {
+            var review = await DecidedReviewWithPaed001StagedAsync(everyClosingLineDeferred: true);
+
+            var ratify = () => RatifyAsync(review, beforeSave: async () =>
+                (await ReinstatingPaed002(review).Should().ThrowExactlyAsync<InvalidOperationException>())
+                    .Which.Message.Should().Be(DeferAgendaLineCommandHandler.FixedWhenDecided));
+
+            await ratify.Should().NotThrowAsync();
+
+            await using var read = NewContext(review.Schema);
+            (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.Ratified);
+            (await read.EntrustmentDecisions.Select(star => star.EpaId).ToListAsync()).Should().Equal(review.Paed001);
+            (await LineStateAsync(read, review.Paed002Line))
+                .Should().Be((CommitteeAgendaLineState.Deferred, Deferral), "the refused reinstatement changed nothing");
+            (await AuditRowsAsync(review.Schema)).Should().BeEquivalentTo(
+                $"ReinstateAgendaLineCommand: {DeferAgendaLineCommandHandler.FixedWhenDecided}",
+                "RatifyCommitteeDecisionCommand: succeeded");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    [Fact]
+    public async Task AReinstateThatReadTheReviewBeforeARatifyCommitted_IsRefusedWhole()
+    {
+        try
+        {
+            var review = await InProgressReviewWithPaed001StagedAsync(everyClosingLineDeferred: true);
+
+            // The reinstatement reads the review while it is in progress; the decision is recorded and the review
+            // ratified, each from start to commit; then the reinstatement saves.
+            var reinstate = () => ReinstateAsync(review, review.Paed002Line, beforeSave: async () =>
+            {
+                await RecordAsync(review);
+                await RatifyAsync(review);
+            });
+
+            var refusal = await reinstate.Should().ThrowExactlyAsync<InvalidOperationException>();
+            refusal.Which.Message.Should().Be(DeferAgendaLineCommandHandler.ReviewChanged);
+            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+
+            await using var read = NewContext(review.Schema);
+            (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.Ratified);
+            (await LineStateAsync(read, review.Paed002Line))
+                .Should().Be((CommitteeAgendaLineState.Deferred, Deferral), "a line of a ratified review is not reinstated");
+            (await AuditRowsAsync(review.Schema)).Should().BeEquivalentTo(
+                "RatifyCommitteeDecisionCommand: succeeded",
+                $"ReinstateAgendaLineCommand: {DeferAgendaLineCommandHandler.ReviewChanged}");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ADeferralAttemptedWhileARatifyIsInFlight_IsRefusedAsFixed_AndTheRatifyClosesTheLine()
+    {
+        try
+        {
+            var review = await DecidedReviewWithPaed001StagedAsync(everyClosingLineDeferred: true);
+
+            // PAED-003 is annual, so optional at this semester-1 sitting: the ratify closes it Not decided.
+            var ratify = () => RatifyAsync(review, beforeSave: async () =>
+                (await DeferringPaed003(review).Should().ThrowExactlyAsync<InvalidOperationException>())
+                    .Which.Message.Should().Be(DeferAgendaLineCommandHandler.FixedWhenDecided));
+
+            await ratify.Should().NotThrowAsync();
+
+            await using var read = NewContext(review.Schema);
+            (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.Ratified);
+            (await read.EntrustmentDecisions.Select(star => star.EpaId).ToListAsync()).Should().Equal(review.Paed001);
+            (await LineStateAsync(read, review.Paed003Line))
+                .Should().Be((CommitteeAgendaLineState.NotDecided, null), "the refused deferral changed nothing");
+            (await AuditRowsAsync(review.Schema)).Should().BeEquivalentTo(
+                $"DeferAgendaLineCommand: {DeferAgendaLineCommandHandler.FixedWhenDecided}",
+                "RatifyCommitteeDecisionCommand: succeeded");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ADeferralThatReadTheReviewBeforeARatifyCommitted_IsRefusedWhole()
+    {
+        try
+        {
+            var review = await InProgressReviewWithPaed001StagedAsync(everyClosingLineDeferred: true);
+
+            // The deferral reads the review while it is in progress; the decision is recorded and the review ratified,
+            // each from start to commit; then the deferral saves.
+            var defer = () => DeferAsync(review, review.Paed003Line, beforeSave: async () =>
+            {
+                await RecordAsync(review);
+                await RatifyAsync(review);
+            });
+
+            var refusal = await defer.Should().ThrowExactlyAsync<InvalidOperationException>();
+            refusal.Which.Message.Should().Be(DeferAgendaLineCommandHandler.ReviewChanged);
+            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+
+            await using var read = NewContext(review.Schema);
+            (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.Ratified);
+            (await LineStateAsync(read, review.Paed003Line))
+                .Should().Be((CommitteeAgendaLineState.NotDecided, null), "the ratify closed it, and nothing defers it after");
+            (await AuditRowsAsync(review.Schema)).Should().BeEquivalentTo(
+                "RatifyCommitteeDecisionCommand: succeeded",
+                $"DeferAgendaLineCommand: {DeferAgendaLineCommandHandler.ReviewChanged}");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    private Func<Task> ReinstatingPaed002(SeededReview review) => () => ReinstateAsync(review, review.Paed002Line);
+
+    private Func<Task> DeferringPaed003(SeededReview review) => () => DeferAsync(review, review.Paed003Line);
+
+    /// <summary>
     /// Check 7's race: a second decision on the EPA reaches the table after the stage's check read it. The unique index
     /// on (review, EPA) refuses the insert, and the chair is told which EPA, not EF's "see the inner exception".
     /// </summary>
@@ -263,6 +403,8 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
                 await db.SaveChangesAsync();
                 var review = new CommitteeReview
                 {
+                    AcademicYear = 2026,
+                    Semester = 1,
                     Panel = new DecisionPanel
                     {
                         Name = "Erasure CCC",
@@ -346,6 +488,26 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     private static FakeUserDirectory Committee(SeededReview review)
         => FakeUserDirectory.CommitteeMembersAt(review.HostId, ChairUserId, MemberUserId);
 
+    private async Task DeferAsync(SeededReview review, int lineId, Func<Task>? beforeSave = null)
+    {
+        await using var db = NewContext(review.Schema, beforeSave);
+        var command = new DeferAgendaLineCommand(review.ReviewId, lineId, Deferral, Chair());
+        await ThroughTheAuditPipelineAsync(db, command, () => new DeferAgendaLineCommandHandler(db).Handle(command, CancellationToken.None));
+    }
+
+    private async Task ReinstateAsync(SeededReview review, int lineId, Func<Task>? beforeSave = null)
+    {
+        await using var db = NewContext(review.Schema, beforeSave);
+        var command = new ReinstateAgendaLineCommand(review.ReviewId, lineId, Chair());
+        await ThroughTheAuditPipelineAsync(db, command, () => new ReinstateAgendaLineCommandHandler(db).Handle(command, CancellationToken.None));
+    }
+
+    private static async Task<(CommitteeAgendaLineState State, string? Reason)> LineStateAsync(ApplicationDbContext db, int lineId)
+    {
+        var line = await db.CommitteeAgendaLines.AsNoTracking().SingleAsync(entity => entity.Id == lineId);
+        return (line.State, line.DeferralReason);
+    }
+
     private async Task RemoveAsync(SeededReview review, int pendingId, Func<Task>? beforeSave = null)
     {
         await using var db = NewContext(review.Schema, beforeSave);
@@ -366,7 +528,8 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
         var rows = await read.AuditEntries
             .AsNoTracking()
             .Where(entry => entry.Category == AuditCategory.Command
-                && (entry.Action == "StagePendingEntrustmentDecisionCommand" || entry.Action == "RatifyCommitteeDecisionCommand"))
+                && (entry.Action == "StagePendingEntrustmentDecisionCommand" || entry.Action == "RatifyCommitteeDecisionCommand"
+                    || entry.Action == "DeferAgendaLineCommand" || entry.Action == "ReinstateAgendaLineCommand"))
             .Select(entry => new { entry.Action, entry.Success, entry.ErrorMessage })
             .ToListAsync();
 
@@ -385,16 +548,26 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
 
     // ---- The review ---------------------------------------------------------------------------------------------------
 
+    /// <summary>The reason every deferral here gives.</summary>
+    private const string Deferral = "Not observed this semester.";
+
+    /// <param name="Paed002Line">The agenda line on PAED-002: closing, and deferred when every closing line is.</param>
+    /// <param name="Paed003Line">The agenda line on PAED-003: annual, so optional at this semester-1 sitting, and due.</param>
     private sealed record SeededReview(
-        string Schema, int ReviewId, int PendingId, int Paed001, int Paed002, int Rung3a, int Rung3b, int LineA, int LineB, int HostId);
+        string Schema, int ReviewId, int PendingId, int Paed001, int Paed002, int Rung3a, int Rung3b, int LineA, int LineB,
+        int HostId, int Paed002Line, int Paed003Line);
 
     /// <summary>
     /// <see cref="InProgressReviewWithPaed001StagedAsync" />, with the committee's decision then recorded by a quorum,
     /// which fixes the staged decision (T165).
     /// </summary>
-    private async Task<SeededReview> DecidedReviewWithPaed001StagedAsync()
+    /// <param name="everyClosingLineDeferred">
+    /// The trainee started on time, so the semester EPAs' lines are closing, and every one but PAED-001's is deferred
+    /// before the decision is recorded, as recording demands (T131 slice 4): the review can be ratified.
+    /// </param>
+    private async Task<SeededReview> DecidedReviewWithPaed001StagedAsync(bool everyClosingLineDeferred = false)
     {
-        var review = await InProgressReviewWithPaed001StagedAsync();
+        var review = await InProgressReviewWithPaed001StagedAsync(everyClosingLineDeferred);
 
         await using (var db = NewContext(review.Schema))
         {
@@ -411,7 +584,12 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     /// A review in progress on the v11.1 catalogue, its snapshot holding one completed CCA on PAED-001 (line A) and one
     /// on PAED-002 (line B), with a decision on PAED-001 staged on line A. Its panel is the chair and one member.
     /// </summary>
-    private async Task<SeededReview> InProgressReviewWithPaed001StagedAsync()
+    /// <param name="everyClosingLineDeferred">
+    /// The trainee started on time, so the semester EPAs' lines are closing, and every one but PAED-001's is deferred
+    /// while the review is in progress: the decision can be recorded, and the review ratified (T131 slice 4). Otherwise
+    /// the trainee joined part-way through the semester, and no line is closing.
+    /// </param>
+    private async Task<SeededReview> InProgressReviewWithPaed001StagedAsync(bool everyClosingLineDeferred = false)
     {
         var schema = await SeededSchemaAsync();
         int reviewId, paed001, paed002, rung3a, rung3b, activityA, activityB, hostId;
@@ -434,17 +612,23 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             rung3b = await db.EntrustmentLevels.Where(level => level.ScaleId == ladderId && level.Label == "3b").Select(level => level.Id).SingleAsync();
             var cca = await db.ActivityTypes.Where(type => type.Key == "cca_cpsa").Select(type => new { type.Id, type.Version }).SingleAsync();
 
+            // Joined on 1 February, after semester 1's first month, so the review's semester lines are a partial period
+            // (T131 slice 4, Decision 9): on the agenda, optional, and never in the way of a ratify. These tests race
+            // staging against ratifying; the closing-line rule has tests of its own. The deferral races need closing
+            // lines, so their trainee started the year before.
             db.TraineeProfiles.Add(new TraineeProfile
             {
                 UserId = TraineeUserId,
                 InstitutionId = host,
                 CurriculumId = curriculumId,
-                ProgrammeStartDate = new DateOnly(2025, 1, 15),
+                ProgrammeStartDate = everyClosingLineDeferred ? new DateOnly(2025, 1, 15) : new DateOnly(2026, 2, 1),
                 ExpectedCompletionDate = new DateOnly(2029, 1, 14)
             });
 
             var review = new CommitteeReview
             {
+                AcademicYear = 2026,
+                Semester = 1,
                 Panel = new DecisionPanel
                 {
                     Name = "T131 race CCC",
@@ -492,8 +676,36 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             pendingId = staged.Id;
         }
 
-        return new SeededReview(schema, reviewId, pendingId, paed001, paed002, rung3a, rung3b, lineA, lineB, hostId);
+        int paed002Line, paed003Line;
+        await using (var db = NewContext(schema))
+        {
+            paed002Line = await AgendaLineOfAsync(db, reviewId, paed002);
+            paed003Line = await AgendaLineOfAsync(db, reviewId, await NationalEpaAsync(db, "PAED-003"));
+
+            // While the review is in progress: a deferral is part of the decision the panel records, and fixed with it.
+            if (everyClosingLineDeferred)
+            {
+                var closing = await db.CommitteeAgendaLines
+                    .Where(line => line.ReviewId == reviewId && line.IsClosing && line.EpaId != paed001)
+                    .Select(line => line.Id)
+                    .ToListAsync();
+                closing.Should().Contain(paed002Line);
+
+                foreach (var lineId in closing)
+                {
+                    await new DeferAgendaLineCommandHandler(db).Handle(
+                        new DeferAgendaLineCommand(reviewId, lineId, Deferral, Chair()), CancellationToken.None);
+                    db.ChangeTracker.Clear();
+                }
+            }
+        }
+
+        return new SeededReview(
+            schema, reviewId, pendingId, paed001, paed002, rung3a, rung3b, lineA, lineB, hostId, paed002Line, paed003Line);
     }
+
+    private static Task<int> AgendaLineOfAsync(ApplicationDbContext db, int reviewId, int epaId)
+        => db.CommitteeAgendaLines.Where(line => line.ReviewId == reviewId && line.EpaId == epaId).Select(line => line.Id).SingleAsync();
 
     private static Task<int> NationalEpaAsync(ApplicationDbContext db, string code)
         => db.Epas.Where(epa => epa.Code == code && epa.OwningInstitutionId == null).Select(epa => epa.Id).SingleAsync();

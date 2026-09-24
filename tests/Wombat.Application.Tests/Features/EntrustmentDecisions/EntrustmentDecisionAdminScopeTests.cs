@@ -526,6 +526,8 @@ public sealed class EntrustmentDecisionAdminScopeTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             PanelId = 20,
             TraineeUserId = traineeUserId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

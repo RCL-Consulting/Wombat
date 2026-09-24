@@ -94,7 +94,11 @@ public sealed partial class MyReviewsAttendanceTests : TestContext
         var review = new CommitteeReviewDetailDto(
             ReviewId, "trainee-1", 20, "Paediatrics CCC", new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30),
             new DateOnly(2026, 7, 2), state, null, null, null, null, null,
-            [Decision(41, "chair-1:Thandi Zulu:Chair", "member-1:Priya Naidoo:Member")], [], []);
+            [Decision(41, "chair-1:Thandi Zulu:Chair", "member-1:Priya Naidoo:Member")], [], [])
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
         return named
             ? review with { TraineeName = "Lerato Molefe" }
@@ -120,6 +124,10 @@ public sealed partial class MyReviewsAttendanceTests : TestContext
                     new CommitteeReviewListItemDto(
                         ReviewId, "trainee-1", 20, "Paediatrics CCC", review.ReviewPeriodFrom, review.ReviewPeriodTo,
                         review.ScheduledOn, review.State, CommitteeDecisionCategory.SatisfactoryProgress, null)
+                    {
+                        AcademicYear = 2026,
+                        Semester = 1
+                    }
                 },
                 GetCommitteeReviewByIdQuery => review,
                 // As the shared mapper answers: nobody named.

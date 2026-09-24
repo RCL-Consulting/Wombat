@@ -69,7 +69,11 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
                 review.Decisions.OrderByDescending(decision => decision.DecidedOn).Select(decision => (CommitteeDecisionCategory?)decision.Category).FirstOrDefault(),
                 review.RatifiedOn,
                 review.IsFormative,
-                review.ReviewType))
+                review.ReviewType)
+            {
+                AcademicYear = review.AcademicYear,
+                Semester = review.Semester
+            })
             .ToListAsync(cancellationToken);
 
         // T142. The Trainee column by name, in one lookup for the reviews this caller may list.

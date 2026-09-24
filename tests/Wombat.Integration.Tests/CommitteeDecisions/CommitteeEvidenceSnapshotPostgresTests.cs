@@ -96,6 +96,8 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 db.DecisionPanels.Add(panel);
                 var review = new CommitteeReview
                 {
+                    AcademicYear = 2026,
+                    Semester = 1,
                     Panel = panel,
                     TraineeUserId = TraineeUserId,
                     ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -150,6 +152,16 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 line.SourceState.Should().Be("completed");
                 line.SourceFinished.Should().BeTrue("T131: whether a line was finished work is frozen with its state");
 
+                // T131 slice 4: Start planned the agenda from the v11.1 cadence. A semester-1 sitting holds all fifteen
+                // EPAs; the six decided each semester are closing, and the nine annual ones are due by year end.
+                var agenda = review.Agenda!;
+                agenda.PeriodLabel.Should().Be("2026 S1");
+                agenda.Lines.Should().HaveCount(15);
+                agenda.Lines.Where(agendaLine => agendaLine.IsClosing).Select(agendaLine => agendaLine.EpaCode)
+                    .Should().Equal("PAED-001", "PAED-002", "PAED-004", "PAED-005", "PAED-010", "PAED-012");
+                agenda.Lines.Where(agendaLine => !agendaLine.IsClosing)
+                    .Should().OnlyContain(agendaLine => agendaLine.Status == CommitteeAgendaLineStatus.DueByYearEnd);
+
                 var options = await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
                     new ListStarEpaOptionsForReviewQuery(reviewId, Chair()), CancellationToken.None);
                 options.Should().HaveCount(15, "the v11.1 curriculum's national core");
@@ -189,13 +201,41 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 priorId = prior.Id;
             }
 
+            // A quorate sitting, the chair and the other member present, each a committee member at the host (T165).
+            RecordCommitteeDecisionCommandHandler Record(ApplicationDbContext db)
+                => new(db, FakeUserDirectory.CommitteeMembersAt(hostId, ChairUserId, MemberUserId));
+            var recordCommand = new RecordCommitteeDecisionCommand(
+                reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair());
+
+            // T131 slice 4: a closing line is staged or deferred before the decision is recorded, which fixes the agenda
+            // (T165), and so before ratify. PAED-001 is staged; the chair defers the other five semester EPAs, through the
+            // handler, as the page does.
             await using (var db = NewContext(schema))
             {
-                // A quorate sitting, the chair and the other member present, each a committee member at the host (T165).
-                await new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(hostId, ChairUserId, MemberUserId)).Handle(
-                    new RecordCommitteeDecisionCommand(
-                        reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair()),
-                    CancellationToken.None);
+                var closingUnstaged = await db.CommitteeAgendaLines
+                    .Where(agendaLine => agendaLine.ReviewId == reviewId && agendaLine.IsClosing && agendaLine.EpaId != paed001)
+                    .Select(agendaLine => agendaLine.Id)
+                    .ToListAsync();
+                closingUnstaged.Should().HaveCount(5);
+
+                var early = () => Record(db).Handle(recordCommand, CancellationToken.None);
+                await early.Should().ThrowAsync<InvalidOperationException>()
+                    .WithMessage("The committee's decision cannot be recorded yet: PAED-002, PAED-004, PAED-005, PAED-010 and PAED-012 must be decided at this sitting.*");
+                await db.SaveChangesAsync();
+                (await db.CommitteeDecisions.CountAsync(decision => decision.ReviewId == reviewId))
+                    .Should().Be(0, "a refused recording writes nothing, even through the audit save");
+
+                foreach (var agendaLineId in closingUnstaged)
+                {
+                    await new DeferAgendaLineCommandHandler(db).Handle(
+                        new DeferAgendaLineCommand(reviewId, agendaLineId, "Not yet observed enough to decide.", Chair()),
+                        CancellationToken.None);
+                }
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                await Record(db).Handle(recordCommand, CancellationToken.None);
             }
 
             await using (var db = NewContext(schema))
@@ -225,6 +265,17 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 prior.Status.Should().Be(EntrustmentDecisionStatus.Superseded);
                 prior.SupersededByDecisionId.Should().Be(star.Id);
                 (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
+
+                // The agenda closed in the same save as the STAR was issued: the staged line names it (the check constraint
+                // holds within the one save), the deferred lines keep their reason, and the optional ones were not decided.
+                var lines = await db.CommitteeAgendaLines.AsNoTracking().Where(agendaLine => agendaLine.ReviewId == reviewId).ToListAsync();
+                var decided = lines.Should().ContainSingle(agendaLine => agendaLine.State == CommitteeAgendaLineState.Decided).Subject;
+                decided.EpaId.Should().Be(paed001);
+                decided.EntrustmentDecisionId.Should().Be(star.Id);
+                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.Deferred).Should().Be(5);
+                lines.Where(agendaLine => agendaLine.State == CommitteeAgendaLineState.Deferred)
+                    .Should().OnlyContain(agendaLine => agendaLine.DeferralReason == "Not yet observed enough to decide.");
+                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.NotDecided).Should().Be(9);
             }
         }
         finally
@@ -262,6 +313,8 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 };
                 var review = new CommitteeReview
                 {
+                    AcademicYear = 2026,
+                    Semester = 1,
                     Panel = panel,
                     TraineeUserId = TraineeUserId,
                     ReviewPeriodFrom = new DateOnly(2026, 1, 1),

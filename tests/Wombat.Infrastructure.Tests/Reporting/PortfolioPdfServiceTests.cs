@@ -295,7 +295,7 @@ public sealed class PortfolioPdfServiceTests
     [Fact]
     public void APresentLine_ForAMemberWithNoNameOnRecord_ShowsTheId_AndForNobody_IsAbsent()
     {
-        var review = new CommitteeReview();
+        var review = new CommitteeReview { AcademicYear = 2026, Semester = 1 };
         CommitteeSectionComponent.PresentLine(review, new Dictionary<string, string>()).Should().BeNull("there is no decision");
 
         var decision = CommitteeDecision.Create(
@@ -356,6 +356,8 @@ public sealed class PortfolioPdfServiceTests
         var sitting = new DateTime(2029, 11, 18, 9, 0, 0, DateTimeKind.Utc);
         var review = new CommitteeReview
         {
+            AcademicYear = 2029,
+            Semester = 2,
             Panel = panel,
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2029, 1, 1),

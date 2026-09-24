@@ -524,6 +524,8 @@ public sealed class StagedEvidenceTests
     private static CommitteeReview Review(int id)
         => new()
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = id,
             PanelId = PanelId,
             TraineeUserId = "trainee-1",

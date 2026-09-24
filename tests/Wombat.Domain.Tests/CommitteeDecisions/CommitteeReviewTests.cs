@@ -26,6 +26,8 @@ public sealed class CommitteeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2029,
+            Semester = 2,
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2029, 1, 1),
             ReviewPeriodTo = new DateOnly(2029, 12, 31),
@@ -51,6 +53,8 @@ public sealed class CommitteeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
             ReviewPeriodTo = new DateOnly(2026, 3, 31),
@@ -110,6 +114,8 @@ public sealed class CommitteeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
             ReviewPeriodTo = new DateOnly(2026, 3, 31),

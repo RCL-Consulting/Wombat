@@ -512,6 +512,66 @@ campaign "about" it (D9). An uncovered semester that has ended is never worded a
 has been released"): a campaign is placed by the day it closed, so one closed in June and released in July covers
 semester 1 only from its release.
 
+**Committee agenda** (T131 slice 4). The committee review page's Agenda card is full width, directly above the
+"Pending entrustment decisions" card, so a chair reads what is due and stages it in one place. A formative review has
+no Agenda card. The card holds:
+
+- A muted sentence naming the period ("2026 S1") and saying that a line marked Due must be staged or deferred before
+  ratify.
+- A `.clinic-table` with five columns: EPA (the row header), window ("2026 S1" for a semester, "2026" for an annual EPA),
+  state, evidence count, and action. The caption counts the lines and the ones still to stage or defer. The state cell
+  holds the badge and, under it, a `.muted` line saying what the state means for this sitting: the deferral's reason,
+  the STAR a decided line names, or that an optional line is optional and why.
+- Each line offers only what its state allows. A Due line that is not staged offers Stage and Defer. Stage chooses the
+  EPA in the staging form below and moves the focus there. A deferred line offers Reinstate. The others offer nothing.
+  All of it only while the review is in progress: recording the decision fixes the agenda with the staged STARs (T165).
+  On a decided review the one action left is Defer on a closing line that blocks Ratify, which happens only when the
+  STAR staged on it was removed afterwards because it no longer fits the trainee's curriculum.
+- A deferral opens a `<fieldset>` form under the table, with its `<legend>` naming the EPA ("Defer PAED-002"), a
+  required reason, and Cancel and Defer in a `.form-actions` row. The focus moves to the reason once the form is
+  rendered, as Stage moves it to the EPA. The trainee sees the reason once the review is ratified (below).
+- The EPAs another panel sitting as a College committee decides for the period ("Decided by another panel"), as a
+  read-only list: the panel, the window, and a badge. While one is not yet decided, the progression Decision card shows
+  a `.field-warning` above Record decision. That is a warning, never a refusal (O8).
+
+The badges. Each says the state in words, and the three kinds of "still due" share one badge and differ by label:
+
+| State | Badge |
+|---|---|
+| Due, Due by year end, Partial period, As opportunity allows | `badge-draft` |
+| Staged | `badge-submitted` |
+| Decided | `badge-completed` |
+| Deferred | `badge-accepted` |
+| Not decided | `badge-declined` |
+
+Another panel's decision uses the same badges: Not yet decided is `badge-draft`, On the agenda of an open review is
+`badge-submitted`, Decided is `badge-completed`, Deferred is `badge-accepted`, and Missed is `badge-declined`. "Missed"
+is computed when the page is read, never stored. It means the window has ended with nothing decided, deferred, or on an
+open review's agenda. An EPA decided as opportunity allows, or in a partial period, is never missed.
+
+Record decision is a disabled button while a closing line is neither staged nor deferred (the T107 pattern above), and
+so is Ratify. Each one's `.workflow-action-reasons` line names the lines, in the refusal's own words
+(`CommitteeAgendaDto.RatifyBlockedReason`). Where more than one reason stands, the line gives the first the handler
+would refuse with: the panel's seats before the agenda for Record, the decision's quorum before the agenda for Ratify.
+The agenda is read again after every action on the page. A failure is a warning `Alert` in the card, never red beside
+the action's success, and the agenda last read stays in view. Every sentence is built in C# (`CommitteeAgendaText`),
+which the scheduling form's preview shares.
+
+**The trainee's own reviews** (`/committee/my-reviews`). A ratified review's detail shows its agenda read-only, as an
+`article.detail-card--compact` headed "Agenda": a muted sentence naming the period, then a `.clinic-table` of three
+columns, EPA (the row header), window and outcome. The outcome cell holds the same badge as the chair's table and, under
+it, a `.muted` line: the committee's reason for a deferral (O6), the STAR a decided line names, or that it was not
+decided at this review. No actions. Nothing is shown before ratify; the read ladder gives a trainee nothing sooner.
+
+**Scheduling a review.** The form asks for the period the review sits for: a select of semesters around today, labelled
+with the period itself, "2026 S2 · 1 Jul to 31 Dec 2026". Choosing one fills the evidence window, which stays editable,
+from the start of the period's academic year to the period's end: 2026-01-01 to 2026-12-31 for 2026 S2, because the
+annual EPAs a semester-2 sitting closes are judged on the whole year. Under the fields, a full-width section previews
+the agenda. It says how many EPAs will be on it and which must be decided, lists the optional ones with their status,
+says which EPAs another panel decides ("schedule them separately"), and says which are already decided in the window.
+Only the opening sentences sit in a `role="status"` region (`#agenda-preview-summary`), so a screen reader hears what a
+new choice changed, not every line again.
+
 ## Status dots
 
 ```css

@@ -54,6 +54,7 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
+            .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // Authorise first: an unknown review and one the caller does not chair get the one refusal (T194 item 1). The
@@ -73,6 +74,12 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
             .Where(p => p.ReviewId == review.Id)
             .OrderBy(p => p.Id)
             .ToListAsync(cancellationToken);
+
+        // T131 slice 4, Decision 6: every closing line of the agenda is staged or deferred with a reason. Right after the
+        // quorum, and before the staged decisions themselves are judged: recording the decision demanded it too, so this
+        // refuses only a review whose staged decision on a closing line has since been removed (T167's exception). The
+        // page shows Ratify disabled with the same lines named (CommitteeAgendaDto.RatifyBlockedReason).
+        review.EnsureAgendaClosable(pending.Select(p => p.EpaId));
 
         // T167: ratifying is what turns a staged decision into a STAR, so each is held to the trainee's curriculum again
         // here, not only when it was staged; the item, its ladder, its EPA or the trainee's curriculum may have changed
@@ -128,6 +135,10 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
                 prior.SupersedeBy(decision);
             }
         }
+
+        // The agenda closes with the review: a staged line is Decided with its STAR (through the navigation, as the STAR has
+        // no id until the save below), an optional line nothing was staged on is NotDecided, a deferred one stays so.
+        review.CloseAgenda(issued.ToDictionary(pair => pair.Staged.EpaId, pair => pair.Decision));
 
         // Refused whole when the review or a staged row changed after it was read: the review's xmin token, and a staged
         // row that is no longer there to delete. So a decision staged, edited or removed meanwhile, or a second ratify,

@@ -9,6 +9,8 @@ public sealed class FormativeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             IsFormative = true,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -29,6 +31,8 @@ public sealed class FormativeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             IsFormative = true,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -49,6 +53,8 @@ public sealed class FormativeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             IsFormative = true,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -66,6 +72,8 @@ public sealed class FormativeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             IsFormative = false,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -84,6 +92,8 @@ public sealed class FormativeReviewTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             IsFormative = true,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

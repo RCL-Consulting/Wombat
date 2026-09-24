@@ -91,6 +91,8 @@ internal static class CommitteeDecisionMappings
                 .ToArray(),
             QuorumShortfall = review is { IsFormative: false, State: CommitteeReviewState.Decided }
                 ? review.QuorumShortfall()
-                : null
+                : null,
+            AcademicYear = review.AcademicYear,
+            Semester = review.Semester
         };
 }

@@ -93,6 +93,7 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
             .Include(r => r.Panel)
                 .ThenInclude(p => p.Members)
             .Include(r => r.EvidenceItems)
+            .Include(r => r.AgendaLines)
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
         // 1-2. Authorise first: an unknown review and one the caller does not chair get the one refusal, before anything
@@ -143,6 +144,26 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
         // same predicate.
         await StarCurriculum.DemandAsync(_dbContext, review.TraineeUserId, epa, level, cancellationToken);
 
+        // 5. T131 slice 4: the review holds a line for this EPA, or the EPA routes to this panel for this trainee and the
+        // chair's staging adds one (DecisionRouting, Decision 3). Only the chair's line runs the routing check again: an
+        // agenda line, once written, says the EPA is this sitting's, so re-tagging a panel does not strand a review
+        // already under way. A deferred line is reinstated first. An edit keeps the line its decision was staged on.
+        CommitteeAgendaLine? chairLine = null;
+        if (existing is null)
+        {
+            var line = review.AgendaLineFor(epa.Id);
+            if (line is null)
+            {
+                var (added, refusal) = await AgendaPlanner.ChairLineAsync(_dbContext, review, epa, cancellationToken);
+                chairLine = added ?? throw new InvalidOperationException(refusal);
+            }
+            else if (line.State == CommitteeAgendaLineState.Deferred)
+            {
+                throw new InvalidOperationException(
+                    $"{epa.Code} is deferred at this review. Reinstate it to stage a decision on it.");
+            }
+        }
+
         // 6. D38 (T131): every named id is a line of THIS review's frozen snapshot, and none is a supervisor report. The
         // page's picker lists the same lines (CommitteeEvidenceDto.CanGroundADecision).
         StagedEvidence.Demand(review, request.EvidenceItemIds);
@@ -154,6 +175,12 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
         if (alreadyStaged)
         {
             throw new InvalidOperationException(AlreadyStaged(epa.Code));
+        }
+
+        // The first mutation.
+        if (chairLine is not null)
+        {
+            review.AddChairLine(chairLine);
         }
 
         PendingEntrustmentDecision pending;

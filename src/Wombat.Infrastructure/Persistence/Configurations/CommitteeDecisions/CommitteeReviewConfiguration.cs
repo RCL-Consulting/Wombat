@@ -8,8 +8,16 @@ public sealed class CommitteeReviewConfiguration : IEntityTypeConfiguration<Comm
 {
     public void Configure(EntityTypeBuilder<CommitteeReview> builder)
     {
-        builder.ToTable("CommitteeReviews");
+        // The period a review sits for is a semester of an academic year (T131, Decision 4). The year's bounds are
+        // ReviewPeriodRules' (2 to 9998), the years whose semesters and their neighbours AcademicPeriod can represent: a
+        // stored year outside them would make CommitteeReview.Period throw and take the review's page down with it.
+        builder.ToTable("CommitteeReviews", table =>
+        {
+            table.HasCheckConstraint("CK_CommitteeReviews_Semester", "\"Semester\" IN (1, 2)");
+            table.HasCheckConstraint("CK_CommitteeReviews_AcademicYear", "\"AcademicYear\" BETWEEN 2 AND 9998");
+        });
         builder.Property(entity => entity.TraineeUserId).HasMaxLength(450).IsRequired();
+        builder.Ignore(entity => entity.Period);
         builder.Property(entity => entity.StartedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.RatifiedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.ReviewPeriodFrom).HasColumnType("date");
@@ -26,6 +34,17 @@ public sealed class CommitteeReviewConfiguration : IEntityTypeConfiguration<Comm
 
         builder.HasIndex(entity => new { entity.TraineeUserId, entity.State });
         builder.HasIndex(entity => new { entity.PanelId, entity.ScheduledOn });
+
+        // One open binding review per trainee, panel and period (T131 slice 4): the agenda is planned per period, and two
+        // open sittings would each carry the same closing lines. Only while the review is Scheduled (1), InProgress (2)
+        // or Decided (3), so a remediation or post-appeal sitting can follow a ratified one; formative reviews carry no
+        // agenda and are left out. The schedule handler checks more widely first (one per seat: every general panel at
+        // the institution, or every panel sitting as the same College committee) and names the review in the way; this
+        // holds the same panel when two are scheduled at once.
+        builder.HasIndex(entity => new { entity.TraineeUserId, entity.PanelId, entity.AcademicYear, entity.Semester })
+            .IsUnique()
+            .HasFilter("\"IsFormative\" = FALSE AND \"State\" IN (1, 2, 3)")
+            .HasDatabaseName("IX_CommitteeReviews_OneOpenBindingReviewPerPeriod");
 
         builder.HasMany(entity => entity.Decisions)
             .WithOne(entity => entity.Review)

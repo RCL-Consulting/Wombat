@@ -25,7 +25,7 @@ public sealed class FormativeReviewHandlerTests
         var scheduleHandler = new ScheduleCommitteeReviewCommandHandler(dbContext);
         var dto = await scheduleHandler.Handle(
             new ScheduleCommitteeReviewCommand(
-                "trainee-1", 20,
+                "trainee-1", 20, 2026, 1,
                 new DateOnly(2026, 1, 1), new DateOnly(2026, 3, 31), new DateOnly(2026, 4, 1),
                 CreatePrincipal("coord-1", [WombatRoles.Coordinator]),
                 IsFormative: true),
@@ -154,6 +154,8 @@ public sealed class FormativeReviewHandlerTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = 30,
             PanelId = 20,
             TraineeUserId = "trainee-1",

@@ -47,6 +47,15 @@ public sealed record CommitteeReviewListItemDto(
     bool IsFormative = false,
     CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression)
 {
+    /// <summary>The academic year of the period the review sits for (T131, Decision 4).</summary>
+    public required int AcademicYear { get; init; }
+
+    /// <summary>The semester, 1 or 2, of the period the review sits for.</summary>
+    public required int Semester { get; init; }
+
+    /// <summary>The period the review sits for: "2026 S1".</summary>
+    public string PeriodLabel => $"{AcademicYear} S{Semester}";
+
     /// <summary>
     /// Whose review it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
     /// schedule's Trainee column (T142). Filled by <c>ListReviewsForPanelQuery</c> in one lookup for the page. Null from
@@ -164,6 +173,22 @@ public sealed record CommitteeReviewDetailDto(
     bool IsFormative = false,
     CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression)
 {
+    /// <summary>The academic year of the period the review sits for (T131, Decision 4).</summary>
+    public required int AcademicYear { get; init; }
+
+    /// <summary>The semester, 1 or 2, of the period the review sits for.</summary>
+    public required int Semester { get; init; }
+
+    /// <summary>The period the review sits for: "2026 S1".</summary>
+    public string PeriodLabel => $"{AcademicYear} S{Semester}";
+
+    /// <summary>
+    /// The review's agenda (T131 slice 4). Filled by <c>GetCommitteeReviewByIdQuery</c>, through the review's read ladder.
+    /// Null from the commands that answer with the review: the mapper they share reads nothing, so the review page reads
+    /// the agenda again (<c>GetCommitteeAgendaQuery</c>) after each action.
+    /// </summary>
+    public CommitteeAgendaDto? Agenda { get; init; }
+
     /// <summary>
     /// Whose review it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
     /// review page's Trainee (T142). Filled by <c>GetCommitteeReviewByIdQuery</c>. Null from the commands that answer

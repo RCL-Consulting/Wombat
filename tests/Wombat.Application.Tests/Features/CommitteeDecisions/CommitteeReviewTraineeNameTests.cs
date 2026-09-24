@@ -85,6 +85,8 @@ public sealed class CommitteeReviewTraineeNameTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 2,
             TraineeUserId = traineeUserId,
             PanelId = panelId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

@@ -35,6 +35,8 @@ public sealed class ReviewSchedulingScopeGuardTests
             new ScheduleCommitteeReviewCommand(
                 TraineeUserId: "trainee-1",
                 PanelId: panelId,
+                AcademicYear: 2026,
+                Semester: 2,
                 ReviewPeriodFrom: new DateOnly(2026, 1, 1),
                 ReviewPeriodTo: new DateOnly(2026, 12, 31),
                 ScheduledOn: new DateOnly(2027, 1, 8),
@@ -57,6 +59,8 @@ public sealed class ReviewSchedulingScopeGuardTests
             new ScheduleCommitteeReviewCommand(
                 TraineeUserId: "trainee-1",
                 PanelId: panelId,
+                AcademicYear: 2026,
+                Semester: 2,
                 ReviewPeriodFrom: new DateOnly(2026, 1, 1),
                 ReviewPeriodTo: new DateOnly(2026, 12, 31),
                 ScheduledOn: new DateOnly(2027, 1, 8),
@@ -77,6 +81,8 @@ public sealed class ReviewSchedulingScopeGuardTests
             new ScheduleCommitteeReviewCommand(
                 TraineeUserId: "trainee-1",
                 PanelId: panelId,
+                AcademicYear: 2026,
+                Semester: 2,
                 ReviewPeriodFrom: new DateOnly(2026, 1, 1),
                 ReviewPeriodTo: new DateOnly(2026, 12, 31),
                 ScheduledOn: new DateOnly(2027, 1, 8),
@@ -158,6 +164,8 @@ public sealed class ReviewSchedulingScopeGuardTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 2,
             TraineeUserId = traineeUserId,
             PanelId = panelId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

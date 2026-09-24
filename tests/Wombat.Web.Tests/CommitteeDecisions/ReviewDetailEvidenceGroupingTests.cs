@@ -258,7 +258,11 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             null,
             [],
             [],
-            evidence);
+            evidence)
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     private sealed class FakeSender : IScopedSender
     {

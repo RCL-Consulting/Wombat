@@ -40,7 +40,11 @@ public sealed class ListReviewsForChairQueryHandler : IRequestHandler<ListReview
                 review.Decisions.OrderByDescending(decision => decision.DecidedOn).Select(decision => (CommitteeDecisionCategory?)decision.Category).FirstOrDefault(),
                 review.RatifiedOn,
                 review.IsFormative,
-                review.ReviewType))
+                review.ReviewType)
+            {
+                AcademicYear = review.AcademicYear,
+                Semester = review.Semester
+            })
             .ToListAsync(cancellationToken);
     }
 }

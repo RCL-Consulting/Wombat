@@ -351,6 +351,8 @@ public sealed class SamplingConcentrationWarningsTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = 42,
             PanelId = 1,
             TraineeUserId = "trainee-1",

@@ -88,6 +88,8 @@ public sealed class MsfCampaignsOutsideSnapshotPostgresTests : IAsyncLifetime
 
                 var review = new CommitteeReview
                 {
+                    AcademicYear = 2026,
+                    Semester = 1,
                     PanelId = panel.Id,
                     TraineeUserId = Trainee,
                     ReviewPeriodFrom = new DateOnly(2026, 1, 1),

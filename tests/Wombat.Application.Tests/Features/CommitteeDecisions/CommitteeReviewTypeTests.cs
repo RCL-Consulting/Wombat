@@ -22,7 +22,7 @@ public sealed class CommitteeReviewTypeTests
         var handler = new ScheduleCommitteeReviewCommandHandler(dbContext);
         var dto = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
-                "trainee-1", 20,
+                "trainee-1", 20, 2026, 1,
                 new DateOnly(2026, 1, 1), new DateOnly(2026, 3, 31), new DateOnly(2026, 4, 1),
                 CreatePrincipal("coord-1", [WombatRoles.Coordinator]),
                 ReviewType: CommitteeReviewType.PreGraduation),
@@ -42,7 +42,7 @@ public sealed class CommitteeReviewTypeTests
         var handler = new ScheduleCommitteeReviewCommandHandler(dbContext);
         var dto = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
-                "trainee-1", 20,
+                "trainee-1", 20, 2026, 1,
                 new DateOnly(2026, 1, 1), new DateOnly(2026, 3, 31), new DateOnly(2026, 4, 1),
                 CreatePrincipal("coord-1", [WombatRoles.Coordinator])),
             CancellationToken.None);

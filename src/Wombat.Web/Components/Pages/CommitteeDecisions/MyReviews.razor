@@ -69,6 +69,44 @@
       </article>
     }
 
+    @* The EPAs the review was there to decide, and what the committee did with each, the deferral's reason included (T131
+       slice 4, O6). Only once ratified: the read ladder gives a trainee nothing sooner. *@
+    @if (IsRatified(_selectedReview.State) && _selectedReview.Agenda is { Lines.Count: > 0 } agenda)
+    {
+      <article class="detail-card detail-card--compact" aria-labelledby="my-review-agenda-heading">
+        <h4 id="my-review-agenda-heading">Agenda</h4>
+        <p class="muted">@CommitteeAgendaText.TraineeAgendaIntro(agenda)</p>
+        <div class="table-container">
+          <table class="clinic-table">
+            <thead>
+              <tr>
+                <th scope="col">EPA</th>
+                <th scope="col">Window</th>
+                <th scope="col">Outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach (var line in agenda.Lines)
+              {
+                var detail = CommitteeAgendaText.TraineeStatusDetail(line);
+                <tr id="@($"my-agenda-line-{line.EpaId}")">
+                  <th scope="row">@line.EpaCode — @line.EpaTitle</th>
+                  <td>@line.WindowLabel</td>
+                  <td>
+                    <span class="badge @CommitteeAgendaText.BadgeClass(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
+                    @if (detail is not null)
+                    {
+                      <div class="muted">@detail</div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+
     @if (_selectedReview.State == CommitteeReviewState.Ratified)
     {
       <EditForm Model="_appeal" OnValidSubmit="LodgeAppealAsync" FormName="trainee-appeal">
@@ -143,11 +181,13 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var agenda = _selectedReview.Agenda;
       var updated = await Sender.Send(new LodgeAppealCommand(_selectedReview.Id, _appeal.Reason, authState.User));
 
-      // The command's answer is built by the lookup-free mapper and names nobody; the review's people do not change when
-      // an appeal is lodged, so the names this page loaded with carry over (T142, T165).
-      _selectedReview = updated.WithNamesFrom(_selectedReview);
+      // The command's answer is built by the lookup-free mapper, which names nobody and reads no agenda. Lodging an appeal
+      // changes neither the review's people nor its agenda lines, so the names and the agenda this page loaded with carry
+      // over (T142, T165, T131 slice 4).
+      _selectedReview = updated.WithNamesFrom(_selectedReview) with { Agenda = agenda };
       _appeal = new();
       _status = "Appeal lodged.";
     }
@@ -156,6 +196,9 @@
       _actionError = exception.Message;
     }
   }
+
+  private static bool IsRatified(CommitteeReviewState state)
+    => state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;
 
   private sealed class AppealFormModel
   {

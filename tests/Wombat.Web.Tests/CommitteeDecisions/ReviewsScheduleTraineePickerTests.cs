@@ -53,7 +53,11 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
             .On<ScheduleCommitteeReviewCommand>(command => new CommitteeReviewListItemDto(
                 77, command.TraineeUserId, command.PanelId, "A's annual review panel",
                 command.ReviewPeriodFrom, command.ReviewPeriodTo, command.ScheduledOn,
-                CommitteeReviewState.Scheduled, null, null));
+                CommitteeReviewState.Scheduled, null, null)
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        });
     }
 
     [Fact]

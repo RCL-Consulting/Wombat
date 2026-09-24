@@ -10,6 +10,7 @@ using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.MultiSourceFeedback;
 
@@ -44,6 +45,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
+            .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
@@ -52,7 +54,25 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
 
         var actorUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
         var evidenceItems = await BuildEvidenceSnapshotAsync(review, cancellationToken);
-        review.Start(evidenceItems, actorUserId, DateTime.UtcNow);
+
+        // T131 slice 4: the agenda is frozen with the snapshot. Planned again now, by the planner scheduling ran, and only
+        // added to: an EPA already on the agenda keeps its line, and one that has come due, or routes here, since the
+        // review was scheduled joins it. A formative review carries none. Read before the first mutation.
+        IReadOnlyList<CommitteeAgendaLine> agenda = [];
+        if (!review.IsFormative && review.State == CommitteeReviewState.Scheduled)
+        {
+            agenda = (await AgendaPlanner.PlanAsync(
+                    _dbContext,
+                    review.TraineeUserId,
+                    review.Panel,
+                    review.Period,
+                    ProgrammeCalendar.DateOf(DateTime.UtcNow),
+                    cancellationToken))
+                .Lines;
+        }
+
+        // The first mutation.
+        review.Start(evidenceItems, agenda, actorUserId, DateTime.UtcNow);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return review.ToDetailDto();

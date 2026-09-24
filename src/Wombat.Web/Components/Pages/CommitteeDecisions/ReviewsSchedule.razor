@@ -3,6 +3,7 @@
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@using Wombat.Application.Features.Curricula.Quota
 
 <PageTitle>Committee Reviews</PageTitle>
 
@@ -35,11 +36,22 @@
           </InputSelect>
         </FormField>
         <FormField Label="Trainee" InputId="review-trainee" Required="true" HelpText="@TraineeHelpText">
-          <InputSelect id="review-trainee" class="form-select" @bind-Value="_model.TraineeUserId" disabled="@(_model.PanelId is null)">
+          <InputSelect id="review-trainee" class="form-select" @bind-Value="_model.TraineeUserId" @bind-Value:after="LoadPreviewAsync" disabled="@(_model.PanelId is null)">
             <option value="">Select trainee</option>
             @foreach (var trainee in _trainees)
             {
               <option value="@trainee.UserId">@trainee.DisplayName</option>
+            }
+          </InputSelect>
+        </FormField>
+        @* The period the review sits for (T131, Decision 4): its agenda is the EPAs due in it. Choosing one fills the
+           evidence window below, which stays editable: the window is what the snapshot reads, the period is what the
+           committee decides for, and neither is derived from the other. *@
+        <FormField Label="Period" InputId="review-period" Required="true" HelpText="The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.">
+          <InputSelect id="review-period" class="form-select" @bind-Value="_model.PeriodKey" @bind-Value:after="OnPeriodChangedAsync">
+            @foreach (var period in _periods)
+            {
+              <option value="@period.Key">@period.Label</option>
             }
           </InputSelect>
         </FormField>
@@ -60,10 +72,11 @@
         </FormField>
         <FormField Label="Formative only" InputId="review-formative">
           <label class="checkbox-label">
-            <InputCheckbox id="review-formative" @bind-Value="_model.IsFormative" />
+            <InputCheckbox id="review-formative" @bind-Value="_model.IsFormative" @bind-Value:after="LoadPreviewAsync" />
             <span>Formative review — closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins.</span>
           </label>
         </FormField>
+        @AgendaPreview
       </div>
       <FormActions>
         <button type="submit" class="btn btn-primary">Create review</button>
@@ -90,7 +103,7 @@
       <tr>
         <td>@item.TraineeName</td>
         <td>@item.PanelName</td>
-        <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        <td>@item.PeriodLabel <span class="muted">· @item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</span></td>
         <td>@ReviewTypeLabel(item.ReviewType)</td>
         <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.State</td>
@@ -113,6 +126,17 @@
   private string? _loadError;
   private string? _actionError;
   private ReviewFormModel _model = new();
+
+  // The periods a review can sit for, around today, read from the one academic calendar (T131).
+  private readonly IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = CommitteeReviewPeriods.Around(QuotaCalendar.Today());
+  private CommitteeAgendaPreviewDto? _preview;
+  private string? _previewError;
+  private int _previewRequest;
+
+  protected override void OnInitialized()
+  {
+    ApplyPeriod(CommitteeReviewPeriods.Current(QuotaCalendar.Today()));
+  }
 
   protected override async Task OnInitializedAsync()
   {
@@ -154,6 +178,7 @@
   {
     _trainees.Clear();
     _model.TraineeUserId = string.Empty;
+    ClearPreview();
 
     if (_model.PanelId is not int panelId)
     {
@@ -182,6 +207,120 @@
     }
   }
 
+  private CommitteeReviewPeriodOptionDto? SelectedPeriod
+    => _periods.FirstOrDefault(period => string.Equals(period.Key, _model.PeriodKey, StringComparison.Ordinal));
+
+  private void ApplyPeriod(CommitteeReviewPeriodOptionDto period)
+  {
+    _model.PeriodKey = period.Key;
+    _model.ReviewPeriodFrom = period.WindowFrom;
+    _model.ReviewPeriodTo = period.WindowTo;
+  }
+
+  private async Task OnPeriodChangedAsync()
+  {
+    if (SelectedPeriod is { } period)
+    {
+      ApplyPeriod(period);
+    }
+
+    await LoadPreviewAsync();
+  }
+
+  private void ClearPreview()
+  {
+    _preview = null;
+    _previewError = null;
+    _previewRequest++;
+  }
+
+  /// <summary>
+  /// What the review would put on its agenda, by the planner scheduling runs (PreviewCommitteeAgendaQuery), once a
+  /// panel, a trainee and a period are chosen. A formative review carries none. Advisory: a failure is said beside the
+  /// preview and never stops the form.
+  /// </summary>
+  private async Task LoadPreviewAsync()
+  {
+    ClearPreview();
+    var request = _previewRequest;
+
+    if (_model.IsFormative || _model.PanelId is not int panelId || string.IsNullOrEmpty(_model.TraineeUserId) ||
+        SelectedPeriod is not { } period ||
+        !_trainees.Any(trainee => string.Equals(trainee.UserId, _model.TraineeUserId, StringComparison.Ordinal)))
+    {
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var preview = await Sender.Send(new PreviewCommitteeAgendaQuery(
+        _model.TraineeUserId, panelId, period.AcademicYear, period.Semester, authState.User));
+
+      // A later choice started another preview while this one was in flight; the later one's answer counts.
+      if (request == _previewRequest)
+      {
+        _preview = preview;
+      }
+    }
+    catch (Exception exception)
+    {
+      if (request == _previewRequest)
+      {
+        _previewError = exception.Message;
+      }
+    }
+  }
+
+  private RenderFragment AgendaPreview => __builder =>
+  {
+    if (_model.IsFormative)
+    {
+      <p id="agenda-preview" class="full-width muted" role="status">A formative review carries no agenda: it decides no EPA.</p>
+      return;
+    }
+
+    @* Only the summary is a live region: a screen reader hears what changed when a choice changes the preview, not
+       every optional line and note read out again. *@
+    <section id="agenda-preview" class="full-width" aria-labelledby="agenda-preview-heading">
+      <h4 id="agenda-preview-heading">Agenda</h4>
+      <div id="agenda-preview-summary" role="status">
+        @if (_previewError is not null)
+        {
+          <p class="field-warning">The agenda could not be previewed: @_previewError</p>
+        }
+        else if (_preview is null)
+        {
+          <p class="muted">Choose a panel, a trainee and a period to see which EPAs the review will be there to decide.</p>
+        }
+        else
+        {
+          @foreach (var sentence in CommitteeAgendaText.PreviewSentences(_preview))
+          {
+            <p>@sentence</p>
+          }
+        }
+      </div>
+      @if (_previewError is null && _preview is not null)
+      {
+        var optional = _preview.Lines.Where(line => !line.IsClosing).ToArray();
+        @if (optional.Length > 0)
+        {
+          <ul class="list-unstyled">
+            @foreach (var line in optional)
+            {
+              <li>@line.EpaCode — @line.EpaTitle <span class="muted">· @CommitteeAgendaText.StatusLabel(line.Status)</span></li>
+            }
+          </ul>
+        }
+        @foreach (var sentence in CommitteeAgendaText.PreviewNotes(_preview))
+        {
+          <p class="muted">@sentence</p>
+        }
+      }
+    </section>
+  };
+
   private string? TraineeHelpText => _model.PanelId is null
     ? "Choose a panel first. The list holds the trainees at its institution you can schedule."
     : !_traineesLoading && _trainees.Count == 0
@@ -209,9 +348,17 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      if (SelectedPeriod is not { } period)
+      {
+        _actionError = "Choose the period the review sits for.";
+        return;
+      }
+
       var review = await Sender.Send(new ScheduleCommitteeReviewCommand(
         _model.TraineeUserId,
         _model.PanelId ?? 0,
+        period.AcademicYear,
+        period.Semester,
         _model.ReviewPeriodFrom,
         _model.ReviewPeriodTo,
         _model.ScheduledOn,
@@ -235,14 +382,19 @@
     [Required]
     public int? PanelId { get; set; }
 
+    // "2026-1": filled with the current period when the page opens.
     [Required]
-    public DateOnly ReviewPeriodFrom { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
+    public string PeriodKey { get; set; } = string.Empty;
+
+    // Filled from the period when the page opens and whenever one is chosen.
+    [Required]
+    public DateOnly ReviewPeriodFrom { get; set; }
 
     [Required]
-    public DateOnly ReviewPeriodTo { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly ReviewPeriodTo { get; set; }
 
     [Required]
-    public DateOnly ScheduledOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly ScheduledOn { get; set; } = QuotaCalendar.Today();
 
     public bool IsFormative { get; set; }
 

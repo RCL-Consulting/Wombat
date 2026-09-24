@@ -107,6 +107,8 @@ public sealed class CommitteeAttendancePostgresTests : IAsyncLifetime
                 var sitting = new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc);
                 var review = new CommitteeReview
                 {
+                    AcademicYear = 2026,
+                    Semester = 1,
                     Panel = panel,
                     TraineeUserId = "trainee-1",
                     ReviewPeriodFrom = new DateOnly(2026, 1, 1),

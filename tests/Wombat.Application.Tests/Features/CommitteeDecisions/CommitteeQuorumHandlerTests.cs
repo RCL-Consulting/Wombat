@@ -741,7 +741,11 @@ public sealed class CommitteeQuorumHandlerTests
     private static CommitteeReviewDetailDto Detail()
         => new(
             ReviewId, Trainee, PanelId, "Paediatrics CCC", new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30),
-            new DateOnly(2026, 7, 2), CommitteeReviewState.Decided, null, null, null, null, null, [], [], []);
+            new DateOnly(2026, 7, 2), CommitteeReviewState.Decided, null, null, null, null, null, [], [], [])
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     private IUserAdministrationService Directory() => _directory;
 
@@ -797,6 +801,8 @@ public sealed class CommitteeQuorumHandlerTests
         var review = new CommitteeReview
         {
             Id = ReviewId,
+            AcademicYear = 2026,
+            Semester = 1,
             PanelId = PanelId,
             TraineeUserId = Trainee,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

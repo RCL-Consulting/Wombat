@@ -139,6 +139,8 @@ public sealed class EntrustmentStandingPostgresTests : IAsyncLifetime
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2025,
+            Semester = 2,
             PanelId = panel.Id,
             TraineeUserId = TraineeUserId,
             ReviewPeriodFrom = new DateOnly(2025, 1, 1),

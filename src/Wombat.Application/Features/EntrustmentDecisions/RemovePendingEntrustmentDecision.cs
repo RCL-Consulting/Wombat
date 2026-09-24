@@ -39,6 +39,7 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
         var review = await _dbContext.Set<CommitteeReview>()
             .Include(r => r.Panel)
                 .ThenInclude(p => p.Members)
+            .Include(r => r.AgendaLines)
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
         // Authorise first: an unknown review and one the caller does not chair get the one refusal, before the review's
@@ -66,7 +67,13 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
             throw new InvalidOperationException(StagedStars.FixedWhenDecided);
         }
 
+        // The first mutation. A line the chair's staging added to the agenda goes with the decision that put it there
+        // (T131 slice 4): staging the EPA again runs the routing check again. A cadence line stays, due.
         _dbContext.Set<PendingEntrustmentDecision>().Remove(pending);
+        if (review.RemoveChairLineFor(pending.EpaId) is { } chairLine)
+        {
+            _dbContext.Set<CommitteeAgendaLine>().Remove(chairLine);
+        }
 
         try
         {

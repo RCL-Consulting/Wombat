@@ -262,6 +262,8 @@ public sealed class CommitteeQuorumTests
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
             ReviewPeriodTo = new DateOnly(2026, 6, 30),

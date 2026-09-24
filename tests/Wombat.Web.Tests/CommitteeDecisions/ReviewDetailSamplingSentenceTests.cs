@@ -178,7 +178,11 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
             null,
             [],
             [],
-            []);
+            [])
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     private sealed class FakeSender : IScopedSender
     {

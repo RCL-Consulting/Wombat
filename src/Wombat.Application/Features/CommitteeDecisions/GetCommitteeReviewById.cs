@@ -4,10 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
-public sealed record GetCommitteeReviewByIdQuery(int ReviewId, ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
+/// <param name="Today">The day the agenda's "missed" is judged on; the programme's today when null. (T131)</param>
+public sealed record GetCommitteeReviewByIdQuery(int ReviewId, ClaimsPrincipal Principal, DateOnly? Today = null)
+    : IRequest<CommitteeReviewDetailDto>;
 
 public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetCommitteeReviewByIdQuery, CommitteeReviewDetailDto>
 {
@@ -30,6 +33,7 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
+            .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
@@ -52,9 +56,14 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
 
         var seated = await SeatedAsync(review, request.Principal, cancellationToken);
 
+        // T131 slice 4. The agenda, read by the reader GetCommitteeAgendaQuery shares, past the same ladder.
+        var agenda = await CommitteeAgendaReader.ReadAsync(
+            _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
+
         return detail with
         {
             TraineeName = names.NameOf(review.TraineeUserId),
+            Agenda = agenda,
             PanelMembers = detail.PanelMembers
                 .Select(person => person with
                 {

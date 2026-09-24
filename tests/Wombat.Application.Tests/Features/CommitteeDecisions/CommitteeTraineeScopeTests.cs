@@ -203,6 +203,12 @@ public sealed class CommitteeTraineeScopeTests
 
         (await AcceptsAsync(db, paediatricsAdminOnTheCommittee, PanelA, PaedsAtA)).Should().BeTrue();
         (await AcceptsAsync(db, paediatricsAdminOnTheCommittee, PanelA, SurgeryAtA)).Should().BeFalse();
+
+        // A trainee has one open binding review per panel and period (T131 slice 4), so the first one goes before the
+        // second scheduler is asked about the same trainee on the same panel: this test is about scope alone.
+        db.CommitteeReviews.RemoveRange(await db.CommitteeReviews.ToListAsync());
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
         (await AcceptsAsync(db, generalPaediatricsAdminOnTheCommittee, PanelA, PaedsAtA)).Should().BeTrue();
         (await AcceptsAsync(db, generalPaediatricsAdminOnTheCommittee, PanelA, NeonatologyAtA)).Should().BeFalse();
     }
@@ -527,6 +533,8 @@ public sealed class CommitteeTraineeScopeTests
             new ScheduleCommitteeReviewCommand(
                 traineeUserId,
                 panelId,
+                2026,
+                2,
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31),
                 new DateOnly(2027, 1, 8),
@@ -643,6 +651,8 @@ public sealed class CommitteeTraineeScopeTests
         var now = new DateTime(2027, 1, 8, 9, 0, 0, DateTimeKind.Utc);
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 2,
             TraineeUserId = traineeUserId,
             PanelId = PanelA,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -664,7 +674,18 @@ public sealed class CommitteeTraineeScopeTests
 
         if (command != "Start")
         {
-            review.Start([line], "chair-a", now);
+            // A binding review starts with the EPA on its agenda (T131 slice 4), so staging on it, the Administrator's
+            // included, is not a chair's line and does not re-run routing for a trainee who has since moved.
+            IReadOnlyList<CommitteeAgendaLine> agenda = review.IsFormative
+                ? []
+                :
+                [
+                    CommitteeAgendaLine.ForCadence(
+                        1000, EpaId, "PAED-007", "Triage", isOpportunistic: false,
+                        QuotaWindow.For(QuotaPeriod.Semester, new DateOnly(2026, 12, 31), new DateOnly(2024, 1, 15)),
+                        new AcademicPeriod(2026, 2))
+                ];
+            review.Start([line], agenda, "chair-a", now);
         }
 
         if (command is "Ratify" or "ResolveAppeal")
@@ -685,7 +706,8 @@ public sealed class CommitteeTraineeScopeTests
         db.CommitteeReviews.Add(review);
         await db.SaveChangesAsync();
 
-        if (command is "Ratify" or "Remove")
+        // Recording demands a settled agenda (T131 slice 4), so a review the chair records has its one closing line staged.
+        if (command is "Ratify" or "Remove" or "Record")
         {
             db.Set<PendingEntrustmentDecision>().Add(PendingEntrustmentDecision.Stage(
                 review.Id, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready.", [line.Id], "chair-a", now));

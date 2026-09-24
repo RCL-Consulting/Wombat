@@ -378,6 +378,8 @@ public sealed class MsfCampaignsOutsideSnapshotTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = ReviewId,
             PanelId = panel.Id,
             TraineeUserId = "trainee-1",
@@ -395,6 +397,8 @@ public sealed class MsfCampaignsOutsideSnapshotTests
     {
         db.CommitteeReviews.Add(new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = OverlappingReviewId,
             PanelId = 20,
             TraineeUserId = "trainee-1",

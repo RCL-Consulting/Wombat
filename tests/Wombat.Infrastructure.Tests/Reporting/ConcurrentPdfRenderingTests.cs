@@ -335,7 +335,7 @@ public sealed class ConcurrentPdfRenderingTests
         db.Set<EntrustmentLevel>().Add(new EntrustmentLevel { Id = 9, ScaleId = 2, Order = 4, Label = "Unsupervised" });
         db.Set<Epa>().Add(new Epa { Id = 1, SubSpecialityId = 1, Code = "PAED-001", Title = "Acute admission", IsActive = true });
         db.Set<DecisionPanel>().Add(new DecisionPanel { Id = 1, Name = "Paediatrics CCC", InstitutionId = 1 });
-        db.Set<CommitteeReview>().Add(new CommitteeReview { Id = 1, TraineeUserId = Trainee, PanelId = 1 });
+        db.Set<CommitteeReview>().Add(new CommitteeReview { AcademicYear = 2026, Semester = 1, Id = 1, TraineeUserId = Trainee, PanelId = 1 });
         db.Set<EntrustmentDecision>().Add(EntrustmentDecision.Issue(
             Trainee, epaId: 1, authorisedLevelId: 9, issuedOn: new DateOnly(2026, 6, 18), expiresOn: null,
             committeeReviewId: 1, chairUserId: "chair-1", rationale: "Target met.",

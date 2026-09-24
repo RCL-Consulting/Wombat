@@ -436,6 +436,8 @@ public sealed class CommitteeDecisionHandlersTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             Id = 30,
             Panel = panel,
             TraineeUserId = "trainee-1",

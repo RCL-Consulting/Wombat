@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Application.Audit;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -70,6 +71,7 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
+            .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
@@ -81,6 +83,18 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
         // Every check, the domain's own included, runs before RecordDecision changes anything: the audit pipeline saves
         // the request's context from its catch. Who may be counted is PanelSeat's rule, read from the user store.
         var present = await PanelSeat.DemandPresentAsync(_users, review, request.PresentUserIds, cancellationToken);
+
+        // T131 slice 4: the decision fixes the agenda with the staged decisions (the deferrals are the committee's too), so
+        // every closing line must be staged or deferred before it is recorded, by the predicate ratify enforces again.
+        // Asked of a review that can take a decision; RecordDecision refuses any other with its own reason.
+        if (review is { IsFormative: false, State: CommitteeReviewState.InProgress })
+        {
+            var stagedEpaIds = await _dbContext.Set<PendingEntrustmentDecision>()
+                .Where(pending => pending.ReviewId == review.Id)
+                .Select(pending => pending.EpaId)
+                .ToListAsync(cancellationToken);
+            review.EnsureAgendaSettled(stagedEpaIds);
+        }
 
         review.RecordDecision(
             request.Category,

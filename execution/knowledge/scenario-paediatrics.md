@@ -1188,8 +1188,24 @@ trainee (Dr Mahlangu) lodges an appeal that the panel chair (Dr Zulu) resolves.
 
 > **T091 note:** the committee/STAR flow is unchanged. STARs are awarded against the **national** EPAs of the trainee's adopted curriculum version; the entrustment-level picker filters to the sub-speciality's default scale (Paed scale, set in Step 1.7).
 
+> **T131 slice 4 note (2026-09-24): every binding review sits for a period and carries an agenda.** The review is
+> scheduled for an academic period (a semester), and its agenda lists the EPAs due by Annexure B's cadence that route to
+> its panel. At a semester-2 sitting that is all fifteen for a KGK trainee: KGK has no neonatal panel, so PAED-004 and 005
+> fall back to the annual review panel. Twelve lines are **closing**: the six semester EPAs (1, 2, 4, 5, 10, 12) and the
+> six annual ones not decided as opportunity allows (3, 6, 7, 11, 14, 15). EPAs 8, 9 and 13 are optional. A closing line
+> must be **staged or deferred with a reason** before the decision can be recorded, and so before Ratify: the recorded
+> decision fixes the agenda with the staged STARs (T165). A trainee has one open binding review per period
+> before their institution's general panels, and one before each College committee (the neonatal CCC), until it is
+> ratified.
+>
+> The agenda reads each curriculum item's decision cadence (T131 slice 2); an item with none is never on an agenda. The
+> Step 1.10 table predates it. Before Act 4, set it in each item's editor from Annexure B, as the v11.1 catalogue has it:
+> `Each semester` for PAED-001, 002, 004, 005, 010 and 012, `Each academic year` for the other nine; `Decided as rotation
+> or opportunity allows` ticked on 008, 009 and 013; decision body `Neonatal team Clinical Competency Committee` on 004
+> and 005.
+
 **Act 4 goal:**
-1. 5 `CommitteeReview` rows scheduled (one per trainee).
+1. 5 `CommitteeReview` rows scheduled (one per trainee), each for 2026 S2 and each with its agenda.
 2. Evidence bundle assembled per review (activities + STARs-to-date + dashboard snapshot).
 3. Committee meets, records decisions per trainee; majority pre-graduation continues, one borderline case, one referral, Dr Molefe progresses to graduation-track.
 4. STARs staged for one EPA per trainee (where they've reached the year-end target).
@@ -1204,10 +1220,17 @@ Route: `/admin/committee-reviews/new` (or `/committee/reviews/new` — discover 
 Action: For each trainee, create a `CommitteeReview` with:
 - Panel: `Paed Annual Review Panel 2026`
 - Trainee: pick the relevant `TraineeProfile`
+- Period: `2026 S2 · 1 Jul to 31 Dec 2026` (T131). Choosing it fills the evidence window with 2026-01-01 to 2026-12-31:
+  the whole year, because the six annual EPAs close at this sitting. Leave it as filled.
 - Scheduled date: `2027-01-08`
 - Review type: `Annual progression review` (for years 1-3); `Pre-graduation review` (for Dr Molefe).
 Click `Schedule`.
 Expected: 5 reviews appear on the committee dashboard under `Upcoming reviews`. Each is in state `Scheduled` (per the committee workflow per T039).
+Before `Create review`, the form's Agenda preview reads "15 EPAs will be on the agenda for 2026 S2." and names the
+twelve closing EPAs. The list's Period column
+reads `2026 S2`. Scheduling a second binding review of the same trainee for 2026 S2, before this panel or any other
+general panel at KGK, is refused, naming the first ("Review #N already puts this trainee before Paed Annual Review Panel
+2026 for 2026 S2 …").
 Actual:
 Gap:
 
@@ -1241,6 +1264,9 @@ Role: Dr Zulu (Chair)
 Route: per review
 Action: On each review's detail page, click `Start review` (per T045's verification — that's the transition the committee panel uses).
 Expected: State flips from `Scheduled` to `InProgress`. The Decision form panel becomes active (per T045's populated ReviewDetail observation).
+The Review card reads "Sits for 2026 S2". The **Agenda** card, above the staging form, lists fifteen EPAs with window
+`2026 S2` or `2026`. Twelve are `Due` ("Must be decided at this sitting, or deferred with a reason"), and EPAs 8, 9 and 13
+are `As opportunity allows`. Each line shows how many snapshot items are about its EPA.
 Actual:
 Gap:
 
@@ -1267,16 +1293,19 @@ Gap:
 ### Step 4.6 — Stage PendingEntrustmentDecision rows for Dr Molefe
 Role: Dr Zulu (Chair)
 Route: `/committee/reviews/{molefeReviewId}` → STAR stage form (per T029)
-Action: For each of PAED-001, PAED-006, PAED-013 — open the stage-pending-decision form, select EPA + final entrustment level (`Unsupervised (4)` for PAED-001 and PAED-006; `Indirect supervision (3)` for PAED-013). Save.
-Expected: 3 `PendingEntrustmentDecision` rows persist linked to Dr Molefe's review.
+Action: For each of PAED-001, PAED-006, PAED-013, click `Stage` on its Agenda line, which chooses the EPA in the staging form below. Pick the final entrustment level (`Unsupervised (4)` for PAED-001 and PAED-006; `Indirect supervision (3)` for PAED-013), tick the evidence it rests on, and click `Stage pending decision`. Then, for each of the other ten lines still marked `Due`, click `Defer`, type the reason `Not at a decision point this year`, and click `Defer PAED-0nn`.
+Expected: 3 `PendingEntrustmentDecision` rows persist linked to Dr Molefe's review. Their Agenda lines read `Staged`; the ten others read `Deferred` with the reason under the badge.
 Actual:
 Gap:
 
-### Step 4.7 — Other trainees: no STAR staging at this review
+### Step 4.7 — Other trainees: no STAR staging, every closing line deferred
 Role: Dr Zulu
-Route: n/a
-Action: Confirm none of the year 1-3 reviews stage any STARs (they're all below graduation target).
-Expected: 0 PendingEntrustmentDecision rows for the other four reviews.
+Route: per review's `/committee/reviews/{id}`
+Action: Stage no STAR on the year 1-3 reviews (they're all below graduation target). On each, click `Defer` on every Agenda line marked `Due`, with the reason `Not at a decision point this year`.
+Expected: 0 PendingEntrustmentDecision rows for the other four reviews. Every closing line reads `Deferred`.
+`Record decision` is enabled only after the last closing line is deferred; once it is recorded, no line can be deferred
+or reinstated.
+Gap: twelve deferrals per trainee, one at a time. There is no "defer all remaining" action; noted as a follow-up.
 Actual:
 Gap:
 
@@ -1287,6 +1316,10 @@ Role: Dr Thandi Zulu (panel **chair**) — ratification is `DemandChairAccess` (
 Route: `/committee/reviews/{id}` per review — open each and click `Ratify`.
 Action: For each review, click `Ratify`. This transitions the review to its terminal state and locks the decision. For Dr Molefe's review, the 3 PendingEntrustmentDecision rows transition to `EntrustmentDecision` rows (per T029 / T030 — the STAR PDF should become generable).
 Expected: All five reviews in `Ratified` (or equivalent terminal) state. Dr Molefe's profile shows 3 awarded STARs.
+While any closing line is neither staged nor deferred, `Record decision` is disabled and the line under it names the EPAs
+("Record decision: PAED-002 and PAED-003 must be decided at this sitting. …"). `Ratify` says the same only if a STAR
+staged on a closing line was removed after the recording because it no longer fits the curriculum. After ratify, Molefe's Agenda reads `Decided` with the STAR
+number on PAED-001, 006 and 013, `Deferred` on the ten others, and `Not decided` on PAED-008 and 009.
 Actual (2026-06-01): All 5 ratified as chair Zulu (State=4 Ratified). Ratifying Molefe's review **atomically issued 3 `EntrustmentDecision` rows** (PAED-001/006 Unsupervised, PAED-013 Indirect supervision; Status Active, `IssuedByCommitteeReviewId`=1) and consumed the 3 PendingEntrustmentDecision rows (0 remaining). DB-verified.
 Gap: Scenario originally cast Mbatha here; corrected to chair per A1. STAR PDF generation not exercised this pass (Act 5). No batch-ratify action exists — each review ratified individually (acceptable).
 
@@ -1297,6 +1330,9 @@ Role: Dr Nomsa Mahlangu (Trainee)
 Route: `/committee/my-reviews` → `View` on the ratified review → fill `Appeal reason` → `Lodge appeal`.
 Action: Open the review, enter the appeal reason ("Single DOPS reflects start-of-year skill level. Stalled Mini-CEX was an assessor-side scheduling issue, not trainee-side. Request reconsideration; 3 additional Mini-CEX assessments submitted in the last 30 days."), click `Lodge appeal`.
 Expected: Appeal saved. Review state flips from `Ratified` to `UnderAppeal`.
+Before lodging (T131 slice 4): the review detail shows an **Agenda** table of the EPAs the review was there to decide,
+each with its outcome. The deferred ones read `Deferred` with "The committee's reason: Not at a decision point this
+year" under the badge; PAED-008, 009 and 013 read `Not decided`. The table stays in view after the appeal is lodged.
 Actual (2026-06-01): "Appeal lodged" banner; review state → `UnderAppeal`. The open appeal lists on both the trainee view and the chair's review detail. DB-verified (1 CommitteeAppeal row, Open).
 Gap: Trainee surface is `/committee/my-reviews` (not the guessed `/portfolio/reviews/{id}`). No appeal-notification email was observed (not verified this pass).
 

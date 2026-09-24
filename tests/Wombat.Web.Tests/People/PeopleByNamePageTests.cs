@@ -240,6 +240,8 @@ public sealed class PeopleByNamePageTests : TestContext
         null,
         null)
     {
+        AcademicYear = 2026,
+        Semester = 1,
         TraineeName = traineeName
     };
 
@@ -275,7 +277,11 @@ public sealed class PeopleByNamePageTests : TestContext
         null,
         [],
         [],
-        []);
+        [])
+        {
+            AcademicYear = 2026,
+            Semester = 1
+        };
 
     /// <summary>Answers what a test registers, records every request, and refuses anything unregistered.</summary>
     private sealed class RecordingSender : IScopedSender

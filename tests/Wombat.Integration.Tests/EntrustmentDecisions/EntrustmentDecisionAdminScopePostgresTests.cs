@@ -201,6 +201,8 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
     {
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 1,
             PanelId = panelId,
             TraineeUserId = traineeUserId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),

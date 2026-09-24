@@ -158,6 +158,8 @@ public sealed class ProgramDefaultScaleTests
 
         var review = new CommitteeReview
         {
+            AcademicYear = 2026,
+            Semester = 2,
             TraineeUserId = TraineeUserId,
             PanelId = PanelId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -191,7 +193,8 @@ public sealed class ProgramDefaultScaleTests
         db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics", IsActive = true });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = SubSpecialityId, SpecialityId = 1, Name = "Paeds", IsActive = true, DefaultEntrustmentScaleId = defaultScaleId });
         db.Set<Curriculum>().Add(new Curriculum { Id = CurriculumId, SubSpecialityId = SubSpecialityId, Name = "Paed", Version = "2026.1" });
-        db.Set<TraineeProfile>().Add(new TraineeProfile { UserId = TraineeUserId, CurriculumId = CurriculumId, ProgrammeStartDate = new DateOnly(2023, 1, 15), ExpectedCompletionDate = new DateOnly(2029, 12, 31) });
+        // At the panel's institution: the review's panel decides the trainee's EPAs only if it covers them (T131 slice 4).
+        db.Set<TraineeProfile>().Add(new TraineeProfile { UserId = TraineeUserId, InstitutionId = 1, CurriculumId = CurriculumId, ProgrammeStartDate = new DateOnly(2023, 1, 15), ExpectedCompletionDate = new DateOnly(2029, 12, 31) });
         db.Set<Epa>().Add(new Epa { Id = EpaId, SubSpecialityId = SubSpecialityId, Code = "PAED-001", Title = "Acute admission" });
         // Unpinned (T109), so the programme's scale is the ladder a STAR's level must be on (T167).
         db.Set<CurriculumItem>().Add(new CurriculumItem { Id = 50, CurriculumId = CurriculumId, EpaId = EpaId, RequiredCount = 1, MinimumLevelOrder = 3 });

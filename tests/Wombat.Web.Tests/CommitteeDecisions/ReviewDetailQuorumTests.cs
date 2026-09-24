@@ -391,6 +391,8 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
             [],
             evidence ?? [])
         {
+            AcademicYear = 2026,
+            Semester = 1,
             TraineeName = "Lerato Molefe",
             PanelMembers =
             [
