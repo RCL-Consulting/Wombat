@@ -197,6 +197,29 @@ h5 {
   background-color: var(--hover-bg);
 }
 
+/* A table of many narrow columns (T176, nine on the curriculum items page). At the default padding the padding alone
+   was 288px of a 907px container at 1280px, so the table scrolled sideways with nothing in it too wide. A cell that
+   spans the table holds a form, and keeps the default padding. */
+.clinic-table--compact th,
+.clinic-table--compact td {
+  padding: var(--space-sm);
+}
+
+.clinic-table--compact td[colspan] {
+  padding: var(--space-md);
+}
+
+/* A list item open for editing (T176): its read-only row and, below it, the row whose one cell spans the table and
+   holds the edit form. A stripe down the left ties the two together. They take no hover tint: neither is a list row
+   while the edit is open, and tinting a whole form as the pointer crosses it is noise. */
+.clinic-table tbody tr.is-editing > td:first-child {
+  box-shadow: inset 4px 0 0 var(--secondary-color);
+}
+
+.clinic-table tbody tr.is-editing:hover {
+  background-color: transparent;
+}
+
 .actions-cell {
   display: flex;
   flex-wrap: wrap;

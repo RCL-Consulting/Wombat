@@ -50,7 +50,8 @@
     <div class="detail-card">
       <h3>Existing items</h3>
       <div class="table-container shadow">
-        <table class="clinic-table">
+        @* Compact (T176): at the default padding, nine columns need 1018px, and the container has 907px at 1280px. *@
+        <table class="clinic-table clinic-table--compact">
           <thead>
             <tr>
               <th>EPA</th>
@@ -67,132 +68,156 @@
           <tbody>
             @foreach (var item in _curriculum.Items)
             {
-              <tr>
-                @if (_editingItemId == item.Id)
-                {
-                  <td>
-                    <InputSelect class="form-select" TValue="int" @bind-Value="_editModel.EpaId">
-                      @foreach (var epa in AvailableEpas)
+              var editing = _editingItemId == item.Id;
+              var stages = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
+              @* An item open for editing keeps its read-only row, so what is stored stays in view above what is being
+                 changed; only its actions cell changes. *@
+              <tr class="@(editing ? "is-editing" : null)">
+                <td>
+                  @item.EpaCode - @item.EpaTitle
+                  @if (!item.EpaIsActive)
+                  {
+                    <span class="muted">(inactive: not in force)</span>
+                  }
+                </td>
+                <td>@TargetText(item)</td>
+                <td>@(item.ScaleName ?? "Not pinned")</td>
+                <td>@RungText(item.ScaleId, item.MinimumLevelOrder)</td>
+                <td>
+                  @if (stages.Unreadable is not null)
+                  {
+                    <span class="font-mono">@stages.Unreadable</span>
+                  }
+                  else if (stages.Rows.Count == 0 && stages.Kept.Count == 0)
+                  {
+                    <span>—</span>
+                  }
+                  else
+                  {
+                    <ul class="list-unstyled">
+                      @foreach (var row in stages.Rows)
                       {
-                        <option value="@epa.Id">@EpaOptionText(epa)</option>
+                        <li>Year @row.Year: @(row.Level is int level ? RungText(item.ScaleId, level) : "—")</li>
                       }
-                    </InputSelect>
-                  </td>
-                  <td>
-                    <InputNumber class="form-control" @bind-Value="_editModel.RequiredCount" aria-label="Target" />
-                    <InputSelect class="form-select" TValue="QuotaPeriod" @bind-Value="_editModel.QuotaPeriod" aria-label="Per">
-                      <option value="@QuotaPeriod.Semester">per semester</option>
-                      <option value="@QuotaPeriod.AcademicYear">per academic year</option>
-                    </InputSelect>
-                  </td>
-                  <td>
-                    <InputSelect id="edit-scale" class="form-select" TValue="int?" aria-label="Scale"
-                                 @bind-Value="_editModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_editModel)">
-                      <option value="">Not pinned</option>
-                      @foreach (var scale in _scales)
+                      @foreach (var entry in stages.Kept)
                       {
-                        <option value="@scale.Id">@scale.Name</option>
+                        <li class="font-mono">@entry.Name: @entry.RawValue</li>
                       }
-                    </InputSelect>
-                  </td>
-                  <td>
-                    <RungPicker Id="edit-minimum" AriaLabel="Minimum level" Scale="ScaleOf(_editModel.ScaleId)"
-                                @bind-Value="_editModel.MinimumLevelOrder" />
-                  </td>
-                  <td><span class="muted">Set below</span></td>
-                  <td><InputNumber class="form-control" @bind-Value="_editModel.WindowMonths" /></td>
-                  <td><InputNumber class="form-control" @bind-Value="_editModel.Weight" /></td>
-                  <td>@ToolsText(_editModel.PermittedToolKeys)</td>
-                  <td>
-                    <div class="actions-cell">
-                      <button class="btn btn-sm btn-primary" disabled="@(_saving || !MinimaComplete(_editModel))"
-                              aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
-                      <button class="btn btn-sm btn-outline" @onclick="CancelEdit">Cancel</button>
-                    </div>
-                  </td>
-                }
-                else
-                {
-                  var stages = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
-                  <td>
-                    @item.EpaCode - @item.EpaTitle
-                    @if (!item.EpaIsActive)
-                    {
-                      <span class="muted">(inactive: not in force)</span>
-                    }
-                  </td>
-                  <td>@TargetText(item)</td>
-                  <td>@(item.ScaleName ?? "Not pinned")</td>
-                  <td>@RungText(item.ScaleId, item.MinimumLevelOrder)</td>
-                  <td>
-                    @if (stages.Unreadable is not null)
-                    {
-                      <span class="font-mono">@stages.Unreadable</span>
-                    }
-                    else if (stages.Rows.Count == 0 && stages.Kept.Count == 0)
-                    {
-                      <span>—</span>
-                    }
-                    else
-                    {
-                      <ul class="list-unstyled">
-                        @foreach (var row in stages.Rows)
-                        {
-                          <li>Year @row.Year: @(row.Level is int level ? RungText(item.ScaleId, level) : "—")</li>
-                        }
-                        @foreach (var entry in stages.Kept)
-                        {
-                          <li class="font-mono">@entry.Name: @entry.RawValue</li>
-                        }
-                      </ul>
-                    }
-                  </td>
-                  <td>@item.WindowMonths</td>
-                  <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
-                  <td>@ToolsText(item.PermittedToolKeys)</td>
-                  <td>
+                    </ul>
+                  }
+                </td>
+                <td>@item.WindowMonths</td>
+                <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
+                <td>@ToolsText(item.PermittedToolKeys)</td>
+                <td>
+                  @if (editing)
+                  {
+                    <span class="muted">Editing below</span>
+                  }
+                  else
+                  {
                     <div class="actions-cell">
                       <button class="btn btn-sm btn-outline" @onclick="() => BeginEdit(item)">Edit</button>
                       <button class="btn btn-sm btn-danger" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
                     </div>
-                  </td>
-                }
+                  }
+                </td>
               </tr>
-              @if (_editingItemId == item.Id)
+              @if (editing)
               {
-                @* T122. The tool list gets its own row: a dozen checkboxes do not fit a table cell. T125 puts the
-                   year-by-year minima here too, and T136 the refusal of a save, beside the row it is about rather than
-                   only in the alert at the top of the page, which is out of sight on a long curriculum. *@
-                <tr>
+                @* Every control of the edit is in this one row, spanning the table (T176). In the item's own columns a
+                   select was squeezed to a fragment of its label ("CPSA", "Cho…"). This row is as wide as the table, so
+                   Save is only in view if the table fits its container: hence the compact padding above. T122 put the
+                   tool list here, T125 the year-by-year minima, and T136 the refusal of a save, beside the item rather
+                   than in the alert at the top of the page. *@
+                <tr class="is-editing">
                   <td colspan="9">
-                    @if (!string.IsNullOrWhiteSpace(_rowError))
-                    {
-                      <Alert Kind="danger" Role="alert">@_rowError</Alert>
-                    }
-                    @* The live region is always there and only its content comes and goes: a screen reader announces a
-                       change to a region it already knows, not reliably one that arrives already filled. Save points
-                       at it, so the reason it is off is read with it. *@
-                    <div id="edit-minima-status" role="status">
-                      @if (!MinimaComplete(_editModel))
-                      {
-                        <Alert Kind="info">@IncompleteText(_editModel, "Saving")</Alert>
-                      }
-                    </div>
-                    <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
-                    <fieldset class="mt-3">
-                      <legend>Tools</legend>
-                      <p class="muted">Tick the instruments that may be used as evidence for this EPA. None ticked means any instrument.</p>
-                      <div class="check-grid">
-                        @foreach (var tool in ToolOptions(_editModel))
-                        {
-                          <div class="form-check">
-                            <input id="@($"edit-tool-{tool.Key}")" class="form-check-input" type="checkbox"
-                                   checked="@_editModel.PermittedToolKeys.Contains(tool.Key)"
-                                   @onchange="args => ToggleTool(_editModel, tool.Key, args)" />
-                            <label for="@($"edit-tool-{tool.Key}")">@tool.Name</label>
+                    <fieldset>
+                      <legend>Edit @item.EpaCode</legend>
+                      <div class="form-grid form-grid--wide">
+                        <FormField Label="EPA" InputId="edit-epa" Required="true" FullWidth="true">
+                          <InputSelect id="edit-epa" class="form-select" TValue="int" @bind-Value="_editModel.EpaId">
+                            @foreach (var epa in AvailableEpas)
+                            {
+                              <option value="@epa.Id">@EpaOptionText(epa)</option>
+                            }
+                          </InputSelect>
+                        </FormField>
+
+                        <FormField Label="Target" InputId="edit-count">
+                          <InputNumber id="edit-count" class="form-control" @bind-Value="_editModel.RequiredCount" />
+                          <small class="muted">@TargetHelp</small>
+                        </FormField>
+
+                        <FormField Label="Per" InputId="edit-period">
+                          <InputSelect id="edit-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_editModel.QuotaPeriod">
+                            <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
+                            <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
+                          </InputSelect>
+                          <small class="muted">@PeriodHelp</small>
+                        </FormField>
+
+                        <FormField Label="Entrustment scale" InputId="edit-scale">
+                          <InputSelect id="edit-scale" class="form-select" TValue="int?"
+                                       @bind-Value="_editModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_editModel)">
+                            <option value="">Not pinned</option>
+                            @foreach (var scale in _scales)
+                            {
+                              <option value="@scale.Id">@scale.Name</option>
+                            }
+                          </InputSelect>
+                          <small class="muted">@ScaleHelp</small>
+                        </FormField>
+
+                        <FormField Label="Minimum level" InputId="edit-minimum" Required="true">
+                          <RungPicker Id="edit-minimum" Scale="ScaleOf(_editModel.ScaleId)" @bind-Value="_editModel.MinimumLevelOrder" />
+                        </FormField>
+
+                        <div class="full-width">
+                          <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
+                        </div>
+
+                        <FormField Label="Completion window (months)" InputId="edit-window">
+                          <InputNumber id="edit-window" class="form-control" @bind-Value="_editModel.WindowMonths" />
+                          <small class="muted">@WindowHelp</small>
+                        </FormField>
+
+                        <FormField Label="Weight" InputId="edit-weight">
+                          <InputNumber id="edit-weight" class="form-control" @bind-Value="_editModel.Weight" />
+                        </FormField>
+
+                        <fieldset class="full-width">
+                          <legend>Tools</legend>
+                          <p class="muted">@ToolsHelp</p>
+                          <div class="check-grid">
+                            @foreach (var tool in ToolOptions(_editModel))
+                            {
+                              <div class="form-check">
+                                <input id="@($"edit-tool-{tool.Key}")" class="form-check-input" type="checkbox"
+                                       checked="@_editModel.PermittedToolKeys.Contains(tool.Key)"
+                                       @onchange="args => ToggleTool(_editModel, tool.Key, args)" />
+                                <label for="@($"edit-tool-{tool.Key}")">@tool.Name</label>
+                              </div>
+                            }
                           </div>
-                        }
+                        </fieldset>
                       </div>
+
+                      @* The refusal sits just above the button that was pressed, which is where the operator is looking. *@
+                      @if (!string.IsNullOrWhiteSpace(_rowError))
+                      {
+                        <Alert Kind="danger" Role="alert">@_rowError</Alert>
+                      }
+
+                      <FormActions>
+                        @* The live region is always there and only its content comes and goes: a screen reader announces
+                           a change to a region it already knows, not reliably one that arrives already filled. It sits
+                           beside Save, which points at it, so the reason Save is off is read with it and seen with it. *@
+                        <span id="edit-minima-status" class="muted" role="status">@(MinimaComplete(_editModel) ? null : IncompleteText(_editModel, "Saving"))</span>
+                        <button type="button" class="btn btn-outline" @onclick="CancelEdit">Cancel</button>
+                        <button type="button" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_editModel))"
+                                aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
+                      </FormActions>
                     </fieldset>
                   </td>
                 </tr>
@@ -215,7 +240,8 @@
         }
 
         <div class="form-grid form-grid--wide">
-          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true">
+          @* Full width here and in the edit row: v11.1's EPA titles run to over a hundred characters. *@
+          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true">
             <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
               @foreach (var epa in AvailableEpas)
               {
@@ -226,7 +252,7 @@
 
           <FormField Label="Target" InputId="curriculum-item-count">
             <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_addModel.RequiredCount" />
-            <small class="muted">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small>
+            <small class="muted">@TargetHelp</small>
           </FormField>
 
           <FormField Label="Per" InputId="curriculum-item-period">
@@ -234,7 +260,7 @@
               <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
               <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
             </InputSelect>
-            <small class="muted">A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.</small>
+            <small class="muted">@PeriodHelp</small>
           </FormField>
 
           <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
@@ -250,7 +276,7 @@
             {
               <small class="muted">Suggested because @reason.</small>
             }
-            <small class="muted">The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.</small>
+            <small class="muted">@ScaleHelp</small>
           </FormField>
 
           <FormField Label="Minimum level" InputId="curriculum-item-level" Required="true">
@@ -263,7 +289,7 @@
 
           <FormField Label="Completion window (months)" InputId="curriculum-item-window">
             <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_addModel.WindowMonths" />
-            <small class="muted">Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.</small>
+            <small class="muted">@WindowHelp</small>
           </FormField>
 
           <FormField Label="Weight" InputId="curriculum-item-weight">
@@ -273,7 +299,7 @@
           @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
           <fieldset class="full-width">
             <legend>Tools</legend>
-            <p class="muted">The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.</p>
+            <p class="muted">@ToolsHelp</p>
             <div class="check-grid">
               @foreach (var tool in ToolOptions(_addModel))
               {
@@ -322,6 +348,15 @@
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
+
+  // One help text per field, printed by the edit form and the Add form alike (T176): the two are the same fields, in the
+  // same order, with the same help, and CurriculumItemsEditLayoutTests holds them to it. The scale's matters most while
+  // editing, which is when a change of ladder clears the minima already stored.
+  private const string TargetHelp = "Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.";
+  private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
+  private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
+  private const string WindowHelp = "Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.";
+  private const string ToolsHelp = "The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.";
 
   private IEnumerable<EpaDto> AvailableEpas => _epas.Where(entity => entity.SubSpecialityId == _curriculum?.SubSpecialityId);
 

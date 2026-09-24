@@ -1,12 +1,13 @@
 @using System.Globalization
 @* T125. A curriculum minimum is picked as a rung on the item's ladder: the option's value is the Order (what is stored
    and what CreditApplier compares), its text the rung as the College prints it — the WBA picker's shape (T100). With no
-   ladder there are no rungs to offer, so an unpinned item keeps a typed number (T109: unpinned is a meaningful state). *@
+   ladder there are no rungs to offer, so an unpinned item keeps a typed number (T109: unpinned is a meaningful state).
+   Every page names it with a <label for> on its Id; since T176 no use sits in a table cell, so it takes no aria-label. *@
 
 @if (Scale is not null)
 {
   <select id="@Id" class="@($"form-select{InvalidClass}")" required aria-required="true" aria-invalid="@InvalidText"
-          aria-label="@AriaLabel" value="@ValueText" @onchange="OnChangedAsync">
+          value="@ValueText" @onchange="OnChangedAsync">
     <option value="">Choose a rung</option>
     @foreach (var level in Scale.Levels)
     {
@@ -23,7 +24,7 @@
 else
 {
   <input id="@Id" type="number" class="@($"form-control{InvalidClass}")" min="1" max="20" step="1" required
-         aria-required="true" aria-invalid="@InvalidText" aria-label="@AriaLabel" value="@ValueText"
+         aria-required="true" aria-invalid="@InvalidText" value="@ValueText"
          @onchange="OnChangedAsync" />
 }
 
@@ -36,9 +37,6 @@ else
   [Parameter] public int? Value { get; set; }
 
   [Parameter] public EventCallback<int?> ValueChanged { get; set; }
-
-  /// <summary>Only where no <c>label for</c> names the control, such as a table cell.</summary>
-  [Parameter] public string? AriaLabel { get; set; }
 
   /// <summary>
   /// Whether <paramref name="value" /> is a minimum the page may save: a rung on the ladder, or, unpinned, a level

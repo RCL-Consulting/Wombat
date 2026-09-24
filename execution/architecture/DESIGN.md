@@ -235,6 +235,36 @@ PagerControls
 
 `DataTable.razor` wraps this and takes column definitions via a `RenderFragment<TItem>`-per-column pattern. T010 builds the shell; T011 and T019 consume it.
 
+**Editing a row in place** (T176, the curriculum items page). An item of a list, opened for editing, does not put its
+controls in its own row's cells. A select squeezed into a column shows only a fragment of its label ("CPSA", "Cho…").
+Instead:
+
+- The item's row stays read-only, so what is stored stays in view. Its actions cell says "Editing below".
+- Every control goes in a second row whose one cell spans every column (`colspan` = the header count). The cell holds
+  a `<fieldset>` whose `<legend>` names the item ("Edit PAED-001"). Inside it: a `.form-grid` of `<FormField>`s, the
+  same fields in the same order as the page's Add form, each with its `<label for>` and the same help text. Then a
+  refusal `Alert` with `role="alert"`, and a `.form-actions` row holding the status that explains a disabled Save,
+  Cancel, and Save. On the curriculum items page, `CurriculumItemsEditLayoutTests` holds the two forms to each other.
+- Both rows carry `.is-editing`: a `--secondary-color` stripe down the left ties them together. They take no hover
+  tint: neither is a list row while the edit is open, and tinting a whole form as the pointer crosses it is noise.
+- The form row is as wide as the table, so Save sits at the table's right edge. **The read-only table must fit its
+  container**, or Save is off-screen however the form is laid out.
+
+A grid whose every row is always a set of inputs, such as a scale's rungs on `EntrustmentScaleEdit`, is a different
+pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
+give one.
+
+**Many columns.** A table's narrowest width is its columns' longest words plus 2 × `--space-md` of padding per column.
+Nine columns spend 288px on padding alone. The curriculum items table needed 1018px against the 907px its container has
+at 1280px, and nothing in it was too wide. `.clinic-table--compact` halves the cell padding (a spanning cell keeps the
+full padding, because it holds a form). That brings the table to 874px. Reach for it on a table of eight or more
+columns, and measure a table at 1280px against the longest real values before adding a column.
+
+```css
+.clinic-table--compact /* cell padding --space-sm; a td[colspan] keeps --space-md (T176) */
+.is-editing            /* on a clinic-table row: the item open for editing and its form row below (T176) */
+```
+
 ## Form system
 
 ```css
@@ -598,7 +628,7 @@ body, h1..h5, .page-subtitle
 .header-container, .search-container, .search-input, .search-grid, .search-field, .search-hint
 
 /* ── Tables ────────────────────────────────────────── */
-.table-container, .clinic-table, .actions-cell
+.table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .actions-cell
 
 /* ── Buttons ───────────────────────────────────────── */
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline

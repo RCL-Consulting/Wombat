@@ -292,18 +292,25 @@ public sealed class CurriculumItemsMinimaTests : TestContext
     [Fact]
     public void ARefusedSave_ShowsTheRefusalBesideTheEditedRow()
     {
-        // The server's refusal (T109) stays; the pickers are guidance. When it fires, it is shown in the sub-row under
-        // the row being edited, which is where the operator is looking, and the row stays open.
+        // The server's refusal (T109) stays; the pickers are guidance. When it fires, it is shown in the edit form under
+        // the row being edited, just above the Save that was pressed (T176), which is where the operator is looking,
+        // and the form stays open.
         const string refusal = "Minimum level 6 (rung 5) is not a rung on O-R Scale, which has 5 rungs.";
         var cut = RenderPage(Catalogue(new InvalidOperationException(refusal)));
 
         BeginEdit(cut, "PAED-002");
         ClickButton(cut, "Save");
 
-        var editRow = cut.Find("#edit-minimum").Closest("tr")!;
-        var subRow = editRow.NextElementSibling!;
-        subRow.QuerySelector("td[colspan]").Should().NotBeNull("the refusal belongs to the edited item's own sub-row");
-        subRow.QuerySelector("[role=alert]")!.TextContent.Trim().Should().Be(refusal);
+        var formRow = cut.Find("#edit-minimum").Closest("tr")!;
+        formRow.QuerySelector("td[colspan]").Should().NotBeNull("the refusal belongs to the edited item's own form row");
+        formRow.PreviousElementSibling!.QuerySelector("td")!.TextContent.Trim().Should().StartWith("PAED-002",
+            "the form row sits directly under the item it edits");
+
+        var alert = cut.FindAll("[role=alert]").Should().ContainSingle("not also at the top of the page").Subject;
+        alert.Closest("tr").Should().BeSameAs(formRow);
+        alert.TextContent.Trim().Should().Be(refusal);
+        alert.NextElementSibling!.QuerySelectorAll("button").Select(button => button.TextContent.Trim())
+            .Should().Contain("Save", "the refusal is just above the button that was pressed");
     }
 
     // ---- Read mode ----
