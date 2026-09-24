@@ -25,13 +25,13 @@ public sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntr
             .HasMaxLength(450);
 
         builder.Property(e => e.ActorDisplay)
-            .HasMaxLength(200);
+            .HasMaxLength(AuditEntry.MaxActorDisplayLength);
 
         builder.Property(e => e.ActorIpAddress)
             .HasMaxLength(50);
 
         builder.Property(e => e.ActorUserAgent)
-            .HasMaxLength(500);
+            .HasMaxLength(AuditEntry.MaxActorUserAgentLength);
 
         builder.Property(e => e.Category)
             .HasColumnType("integer")

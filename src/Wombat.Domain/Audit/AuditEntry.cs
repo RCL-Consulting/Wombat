@@ -15,12 +15,19 @@ public sealed class AuditEntry
     /// <summary>ASP.NET Core Identity user ID of the actor, or null for system actions.</summary>
     public string? ActorUserId { get; set; }
 
+    /// <summary>The <see cref="ActorDisplay" /> column's width. <see cref="Create" /> truncates to it.</summary>
+    public const int MaxActorDisplayLength = 200;
+
     /// <summary>Denormalized display name at write time; users may be renamed later.</summary>
     public string? ActorDisplay { get; set; }
 
     /// <summary>Truncated after 90 days: /24 for IPv4, /48 for IPv6.</summary>
     public string? ActorIpAddress { get; set; }
 
+    /// <summary>The <see cref="ActorUserAgent" /> column's width. <see cref="Create" /> truncates to it.</summary>
+    public const int MaxActorUserAgentLength = 500;
+
+    /// <summary>The request's User-Agent header, as long as the client chooses to send it.</summary>
     public string? ActorUserAgent { get; set; }
     public AuditCategory Category { get; set; }
 
@@ -63,22 +70,22 @@ public sealed class AuditEntry
         string summaryJson = "{}",
         string? errorMessage = null)
     {
-        // Bounded here, not by the caller (T122). The column is varchar(MaxErrorMessageLength), and the audit pipeline
-        // writes this row from a failed command's catch: an overlong exception message made THAT save fail too, so the
-        // caller saw a DbUpdateException in place of the real refusal, and no audit row was written at all.
-        if (errorMessage is { Length: > MaxErrorMessageLength })
-        {
-            errorMessage = string.Concat(errorMessage.AsSpan(0, MaxErrorMessageLength - 1), "…");
-        }
-
+        // Bounded here, not by the caller (T122, T208). Each column is varchar of its constant's width, and one value
+        // longer than its column fails the whole save the row rides on.
+        //
+        // The audit pipeline writes a failed command's row from its catch: an overlong exception message made THAT save
+        // fail too, so the caller saw a DbUpdateException in place of the real refusal, and nothing was audited (T122).
+        // A User-Agent header or a display name over its column did the same to any row it was on. After a command that
+        // had succeeded, the work had committed, the caller saw EF's error, and there was no row. The header's length is
+        // the client's to choose, and a display name is joined from a user's names or taken from a claim (T208).
         return new AuditEntry
         {
             Id = Guid.CreateVersion7(occurredAt),
             OccurredAt = occurredAt,
             ActorUserId = actorUserId,
-            ActorDisplay = actorDisplay,
+            ActorDisplay = Truncate(actorDisplay, MaxActorDisplayLength),
             ActorIpAddress = actorIpAddress,
-            ActorUserAgent = actorUserAgent,
+            ActorUserAgent = Truncate(actorUserAgent, MaxActorUserAgentLength),
             Category = category,
             Action = action,
             SubjectType = subjectType,
@@ -87,7 +94,31 @@ public sealed class AuditEntry
             SpecialityId = specialityId,
             SummaryJson = summaryJson,
             Success = success,
-            ErrorMessage = errorMessage
+            ErrorMessage = Truncate(errorMessage, MaxErrorMessageLength)
         };
+    }
+
+    /// <summary>
+    /// <paramref name="value" /> as it is when it fits in <paramref name="maxLength" /> characters; otherwise cut, and
+    /// ended with an ellipsis, to fit. The cut never falls inside a surrogate pair: Npgsql cannot encode the lone half it
+    /// would leave as UTF-8, and refuses the save for that instead of the length. A width of one keeps only the ellipsis.
+    /// Internal, not private, so a width no column has today can be tested.
+    /// </summary>
+    internal static string? Truncate(string? value, int maxLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxLength, 1);
+
+        if (value is null || value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        var kept = maxLength - 1;
+        if (kept > 0 && char.IsHighSurrogate(value[kept - 1]))
+        {
+            kept--;
+        }
+
+        return string.Concat(value.AsSpan(0, kept), "…");
     }
 }

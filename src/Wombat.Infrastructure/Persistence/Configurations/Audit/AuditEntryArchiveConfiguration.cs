@@ -23,14 +23,15 @@ public sealed class AuditEntryArchiveConfiguration : IEntityTypeConfiguration<Au
         builder.Property(e => e.ActorUserId)
             .HasMaxLength(450);
 
+        // The widths AuditEntry.Create truncates to, so an archived copy of any row it wrote always fits.
         builder.Property(e => e.ActorDisplay)
-            .HasMaxLength(200);
+            .HasMaxLength(AuditEntry.MaxActorDisplayLength);
 
         builder.Property(e => e.ActorIpAddress)
             .HasMaxLength(50);
 
         builder.Property(e => e.ActorUserAgent)
-            .HasMaxLength(500);
+            .HasMaxLength(AuditEntry.MaxActorUserAgentLength);
 
         builder.Property(e => e.Category)
             .HasColumnType("integer")
@@ -61,7 +62,7 @@ public sealed class AuditEntryArchiveConfiguration : IEntityTypeConfiguration<Au
             .IsRequired();
 
         builder.Property(e => e.ErrorMessage)
-            .HasMaxLength(2000);
+            .HasMaxLength(AuditEntry.MaxErrorMessageLength);
 
         builder.Property(e => e.ArchivedAt)
             .HasColumnType("timestamp with time zone")
