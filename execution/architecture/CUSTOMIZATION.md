@@ -18,7 +18,7 @@ The dividing line: if a feature could be confused with "code", it stays in code.
 
 ## The Activity model
 
-Four entities replace most of the per-feature aggregates:
+Three entities replace most of the per-feature aggregates:
 
 ### `ActivityType`
 
@@ -40,6 +40,16 @@ Admin-defined catalogue entry.
   builder writes it on save, not on publish, and discarding a draft does not undo it. On a seeded type, that save
   parks a draft, and the seed refresher skips a type with a draft in flight until it is published or discarded. See
   "Which instruments may credit an EPA" below.
+- `SystemManaged` — only the system writes this type's activities (T162). `msf_cpsa` is the one such type: a released
+  MSF campaign writes one row per EPA it covers (`ActivityService.StageCompletedAsync`). A system-managed type is **not
+  on the type picker** (`ListActivityTypesQuery`) and **a hand-made create is refused** (`ActivityService.CreateDraftAsync`,
+  before anything is written); the system's own path does not read the flag. It is owned by the seed catalogue, like
+  `WbaToolKey`: declared on the `ActivityTypeSeedEntry` (required, so every seed says), written on create and never
+  refreshed, and stamped on existing databases once by the T162 migration. So a catalogue change to a type an existing
+  database already holds reaches it only through a **new** migration (a new seed needs none: it is created flagged);
+  until then the seeders warn at startup and never repair. T162's migration and its key list are frozen. The builder
+  neither shows nor writes it, so a builder-made type is never system-managed and a builder save keeps the flag a type
+  already has.
 
 ### `Activity`
 
@@ -67,15 +77,13 @@ An audit of every state change on an activity.
 - `Note` — free text.
 - `Snapshot` — jsonb. The Data field at the moment of the transition. Enables "show me what the form looked like when they submitted" queries.
 
-### `ActivityPermissionRule`
+### Who may do what
 
-How the system decides who can do what on which activities. Stored as data, not code.
-
-- `Id`
-- `ActivityTypeId`
-- `TransitionKey` — which transition this rule governs.
-- `ActorRule` — which users may perform it (`subject`, `role:Assessor`, `role:SpecialityAdmin`, `scope:same_speciality`, combinations).
-- `FieldRequirement` — which schema fields must be non-empty to perform this transition.
+There is no permission table. Who may take a transition, who may write a field and who may be named in a field are
+actor rules (`subject`, `creator`, `role:`, `scope:`, `field:`) declared in the type's own workflow and schema JSON, and
+enforced by one matcher (`ActorRuleMatcher`); see "Field ownership" below. The `ActivityPermissionRule` entity planned
+here was mapped but never read, and T162 dropped its table. Whether a person may create the type at all is the one
+flag above, `SystemManaged`.
 
 ## Schema format
 

@@ -44,6 +44,8 @@ public sealed class MsfEvidenceFanOutTests
     private const int SecondEpaOnCurriculum = 5002;
     private const int EpaOffCurriculum = 6000;
 
+    private const int MsfTypeId = 100;
+
     private const string TraineeUserId = "trainee-1";
     private const string CoordinatorUserId = "coord-1";
 
@@ -52,6 +54,9 @@ public sealed class MsfEvidenceFanOutTests
     {
         await using var db = CreateDb();
         var campaign = Seed(db, [EpaOnCurriculum, SecondEpaOnCurriculum]);
+
+        (await db.ActivityTypes.SingleAsync()).SystemManaged.Should().BeTrue(
+            "guard: the release writes a type nobody may create by hand (T162), as the seeder stamps it");
 
         await ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: "Consistently reliable under pressure.");
 
@@ -297,21 +302,66 @@ public sealed class MsfEvidenceFanOutTests
         db.Activities.Should().BeEmpty();
     }
 
-    [Fact]
-    public async Task ATraineeCannotRecordAHandCreatedMsfActivity()
+    /// <summary>
+    /// T162. <c>msf_cpsa</c> is system-managed, so nobody files one by hand, whoever they are: the picker does not offer
+    /// it, and a create that names its id anyway is refused before anything is written.
+    /// </summary>
+    /// <remarks>
+    /// The coordinator matters as much as the trainee. A trainee's stray draft was merely stuck (nobody could write its
+    /// evidence), but a coordinator owns both sections and the <c>record</c> transition, so a hand-made draft of theirs
+    /// could have become MSF evidence that no campaign ever collected.
+    /// </remarks>
+    [Theory]
+    [InlineData(TraineeUserId)]
+    [InlineData(CoordinatorUserId)]
+    public async Task NobodyCanCreateAnMsfRecordByHand_AndTheRefusalWritesNothing(string creatorUserId)
     {
-        // ListActivityTypesQuery offers every published speciality-scoped type to every member of that
-        // speciality, and there is no "system-managed" concept anywhere, so a trainee CAN create a stray
-        // draft. The actor rule on `record` is what stops it ever becoming evidence about themselves.
         await using var db = CreateDb();
         Seed(db, [EpaOnCurriculum]);
+
+        var service = BuildActivityService(db);
+        var principal = creatorUserId == CoordinatorUserId ? Coordinator() : Principal(TraineeUserId);
+
+        var create = () => service.CreateDraftAsync(
+            new CreateActivityInput(
+                MsfTypeId,
+                TraineeUserId,
+                creatorUserId,
+                $$"""{ "epa_id": {{EpaOnCurriculum}}, "campaign_id": 1, "observed_on": "2026-06-01", "respondent_count": 8, "overall_level": 6 }""",
+                principal),
+            CancellationToken.None);
+
+        await create.Should().ThrowAsync<InvalidOperationException>().WithMessage("*written by the system*");
+
+        // The audit trap: AuditPipelineBehavior's catch saves this request's context, so the refusal must leave nothing
+        // for that save to commit. Then read back past the tracker.
+        db.ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Should().BeEmpty();
+        (await db.SaveChangesAsync()).Should().Be(0);
+        db.ChangeTracker.Clear();
+
+        (await db.Activities.CountAsync()).Should().Be(0);
+        (await db.ActivityTransitions.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task EvenWithoutTheFlag_ATraineesStrayDraftCouldNeverBecomeEvidence()
+    {
+        // The second line behind SystemManaged, and what stood alone before T162: the type's own actor rules. With the
+        // flag cleared (a hand-edited database, or a draft filed before T162 that the migration did not reach), a trainee
+        // can create a draft, but owns none of its fields and cannot record it.
+        await using var db = CreateDb();
+        Seed(db, [EpaOnCurriculum]);
+        (await db.ActivityTypes.SingleAsync()).SystemManaged = false;
+        await db.SaveChangesAsync();
 
         var service = BuildActivityService(db);
         var trainee = Principal(TraineeUserId);
 
         var draft = await service.CreateDraftAsync(
             new CreateActivityInput(
-                (await db.ActivityTypes.SingleAsync()).Id,
+                MsfTypeId,
                 TraineeUserId,
                 TraineeUserId,
                 $$"""{ "epa_id": {{EpaOnCurriculum}}, "campaign_id": 1, "observed_on": "2026-06-01", "respondent_count": 8, "overall_level": 6 }""",
@@ -579,7 +629,7 @@ public sealed class MsfEvidenceFanOutTests
 
         var activityType = new ActivityType
         {
-            Id = 100,
+            Id = MsfTypeId,
             Key = "msf_cpsa",
             Name = "Multi-Source Feedback (Paediatrics)",
             Scope = ActivityScope.Speciality,
@@ -590,12 +640,14 @@ public sealed class MsfEvidenceFanOutTests
             CreditRulesJson = creditRulesJson,
             DisplayFieldsJson = "[]",
             OwnerUserId = "seed-system",
-            CreatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow,
+            // As its ActivityTypeSeedEntry declares and the seeder stamps it (T162).
+            SystemManaged = true
         };
 
         activityType.Versions.Add(new ActivityTypeVersion
         {
-            ActivityTypeId = 100,
+            ActivityTypeId = MsfTypeId,
             Version = 1,
             SchemaJson = schemaJson,
             WorkflowJson = workflowJson,

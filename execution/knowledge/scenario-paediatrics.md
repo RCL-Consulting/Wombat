@@ -984,6 +984,10 @@ Gap: **F-3E-1 (T065 ✅ shipped 2026-05-30, `2562c2a`):** in-training is now a f
 ## Phase 3.F — MSF cycle (Dr Molefe, year 4)
 
 ### Step 3.9 — Molefe opens an MSF
+> **Superseded (T121, T162, 2026-09-24).** MSF is run by a Coordinator as a campaign at `/msf/campaigns`; the
+> per-EPA `msf_cpsa` evidence is written by its release, and a trainee can no longer file `msf_cpsa` at
+> `/activities/new`. [T159] retargets this act.
+
 Role: Dr Lerato Molefe (Trainee, year 4)
 Route: `/activities/new` → `Multi-Source Feedback (Paediatrics)`
 Action: Fill the MSF schema (8 invitees: a mix of peers + supervisors + allied staff). Suggested invitees from the existing cast: Naidoo, Botha, Patel, Khumalo, Smit, Zulu, Dlamini (peer), du Plessis (peer). Add self-rating. Click `Open` (workflow: `draft → open, actor: role:Trainee`).

@@ -780,8 +780,8 @@ and each line says where it went. Items 13 and 14 are new. What is still unplann
    question 9.
 5. ~~**A tool-mix rule.**~~ **Moot.** D8 closed as (c): MSF credits nothing, and Annexure A has no per-tool sub-quota,
    so there is nothing to cap.
-6. ~~**A `SystemManaged` flag on `ActivityType`.**~~ **Filed as [T162]**, which also decides the dead
-   `ActivityPermissionRule` table.
+6. ~~**A `SystemManaged` flag on `ActivityType`.**~~ **Done in [T162]** (2026-09-24): `msf_cpsa` is off the picker and
+   refused at a person's create, and the dead `ActivityPermissionRule` table is dropped.
 7. ~~**The MSF feature's own scope defects.**~~ **In [T113]**, widened 2026-09-24 to the coordinator list and to Open,
    Close, Withdraw, AddInvitation and the aggregate report. Create and Release take a principal since [T121].
 8. **The two tool taxonomies are still two.** Moving the classification onto `WbaToolKey` is [T144] (READY, S).

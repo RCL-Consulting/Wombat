@@ -123,7 +123,10 @@ public sealed class PaediatricCatalogueSeeder
                 IsActive = true,
                 // Which instrument this is, so each EPA's tool list binds it (T122). On create only: an existing
                 // database got these from the T122 migration, and a later difference is warned about below.
-                WbaToolKey = seed.WbaToolKey
+                WbaToolKey = seed.WbaToolKey,
+                // Whether only the system writes it (T162): msf_cpsa. On create only; an existing database got it from the
+                // T162 migration, and a later difference is warned about below.
+                SystemManaged = seed.SystemManaged
             };
 
             activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
@@ -133,14 +136,15 @@ public sealed class PaediatricCatalogueSeeder
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        await WarnWhereToolKeysDifferAsync(cancellationToken);
+        await WarnWhereCatalogueColumnsDifferAsync(cancellationToken);
     }
 
     /// <summary>
-    /// Logs, and never writes, every seed-owned CPSA type whose instrument key differs from its catalogue entry
-    /// (T122). See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" />.
+    /// Logs, and never writes, every seed-owned CPSA type whose instrument key (T122) or system-managed flag (T162)
+    /// differs from its catalogue entry. See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" /> and
+    /// <see cref="ActivityTypeSeedCatalogue.FindSystemManagedDrift" />.
     /// </summary>
-    private async Task WarnWhereToolKeysDifferAsync(CancellationToken cancellationToken)
+    private async Task WarnWhereCatalogueColumnsDifferAsync(CancellationToken cancellationToken)
     {
         var keys = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege).Select(entry => entry.Key).ToArray();
         var stored = await _dbContext.ActivityTypes
@@ -155,6 +159,15 @@ public sealed class PaediatricCatalogueSeeder
                 entry.Key,
                 storedKey ?? "(none)",
                 entry.WbaToolKey ?? "(none)");
+        }
+
+        foreach (var (entry, storedSystemManaged) in ActivityTypeSeedCatalogue.FindSystemManagedDrift(stored, ActivityTypeSeedSource.PaediatricCollege))
+        {
+            _logger.LogWarning(
+                "Activity type '{Key}' is recorded as system-managed {StoredSystemManaged}, but its seed entry says {ExpectedSystemManaged}. Not changed: seeders stamp it on create only, and an existing database follows a change only through a migration. A system-written type that is not flagged is offered to every trainee in its scope.",
+                entry.Key,
+                storedSystemManaged,
+                entry.SystemManaged);
         }
     }
 

@@ -34,11 +34,6 @@ public sealed class ActivityTypeConfiguration : IEntityTypeConfiguration<Activit
         builder.HasIndex(entity => entity.Key).IsUnique();
         builder.HasIndex(entity => new { entity.Scope, entity.ScopeId });
 
-        builder.HasMany(entity => entity.PermissionRules)
-            .WithOne(entity => entity.ActivityType)
-            .HasForeignKey(entity => entity.ActivityTypeId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasMany(entity => entity.Activities)
             .WithOne(entity => entity.ActivityType)
             .HasForeignKey(entity => entity.ActivityTypeId)

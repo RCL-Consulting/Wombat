@@ -144,7 +144,9 @@ The post-evaluation pivot introduces a generic `Activity` aggregate that replace
 - `ActivityType` — admin-defined type (Mini-CEX, DOPS, STAR Reflection, Research Output, Teaching Session, QI Project, Journal Club, Course Attendance, …). Stores a form schema, a workflow, and credit rules — all as jsonb.
 - `Activity` — one instance. Has `Data` (jsonb, shaped by the schema), `CurrentState`, `SubjectUserId`, and optional links to EPA / CurriculumItem.
 - `ActivityTransition` — audit row per state change; holds a snapshot of `Data` at the moment of transition.
-- `ActivityPermissionRule` — who can fire which transition on which activity type.
+- ~~`ActivityPermissionRule`~~ — dropped by T162; it was mapped but never read. Who may fire a transition or write a
+  field is an actor rule in the type's own workflow and schema (`ActorRuleMatcher`); whether a person may create the
+  type at all is `ActivityType.SystemManaged`.
 
 The concrete "Assessment" aggregate described earlier in this document is replaced by activity types `mini_cex`, `dops`, `cbd`, `acat` seeded in T020. The "StarReflection" aggregate is replaced by the activity type `reflective_note` (renamed from `star_reflection` in T028 to free the STAR acronym for the formal entrustment artefact). The domain method `Assessment.Complete(...)` becomes a transition named `complete` in the activity type's workflow JSON, executed by the generic `TransitionActivityCommand` handler.
 

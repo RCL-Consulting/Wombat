@@ -57,6 +57,16 @@ public sealed class ActivityService : IActivityService
             .SingleOrDefaultAsync(entity => entity.Id == input.ActivityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
+        // T162. Nobody files a type only the system writes, whoever they are: msf_cpsa's rows come from a released MSF
+        // campaign (StageCompletedAsync, which does not ask this). First, before anything is built, so the refusal leaves
+        // nothing for the audit pipeline's save to commit. The picker does not offer such a type; this is for a caller
+        // that sends its id anyway.
+        if (activityType.SystemManaged)
+        {
+            throw new InvalidOperationException(
+                $"'{activityType.Name}' records are written by the system, not filed by hand, so one cannot be created here.");
+        }
+
         var (schema, workflow) = ParsePublished(activityType);
 
         var subjectUserId = input.SubjectUserId.Trim();
@@ -651,10 +661,10 @@ public sealed class ActivityService : IActivityService
                 activity.SubjectUserId,
                 cancellationToken);
 
-            // The same evaluator the interactive path uses, against the same rule the seed declares.
-            // This is the gate: `msf_cpsa` says `role:Coordinator|role:Administrator`, so a trainee who
-            // has hand-created a stray draft from /activities/new can never complete it, and therefore
-            // never record MSF evidence about themselves.
+            // The same evaluator the interactive path uses, against the same rule the seed declares:
+            // `msf_cpsa` says `role:Coordinator|role:Administrator`, so only staff release MSF evidence. Since
+            // T162 nobody can hand-create an msf_cpsa draft at all (SystemManaged), and this rule is the
+            // second line: a trainee could never complete one about themselves.
             var decision = _workflowEvaluator.Evaluate(workflow, activity, transition.Key, input.Principal);
             if (!decision.Allowed)
             {

@@ -341,7 +341,10 @@ public sealed class EvidenceEpaMigrationPostgresTests : IAsyncLifetime
         activities["mini-cex, leading zeros"] = await InsertActivityAsync(connection, miniCex, $$"""{"epa_id":"0000000000{{wardRound}}"}""");
         activities["mini-cex, a no-break space"] = await InsertActivityAsync(connection, miniCex, $$"""{"epa_id":"\u00a0{{history}}"}""");
         activities["mini-cex, negative"] = await InsertActivityAsync(connection, miniCex, $$"""{"epa_id":"-{{history}}"}""");
-        activities["msf, which credits nothing"] = await InsertActivityAsync(connection, msf, $$"""{"epa_id":{{history}}}""");
+        // As the release writes it: recorded, by the releasing coordinator. An msf_cpsa draft its own subject filed is one
+        // T162's migration deletes, and this schema is migrated through T162.
+        activities["msf, which credits nothing"] = await InsertActivityAsync(
+            connection, msf, $$"""{"epa_id":{{history}}}""", state: "recorded", createdByUserId: "coordinator-1");
         activities["operator type, epa under another key"] = await InsertActivityAsync(connection, otherKey, $$"""{"the_epa":{{history}},"epa_id":"{{history}}"}""");
         activities["operator type, credit reads another epa field"] = await InsertActivityAsync(connection, readsSecond, $$"""{"epa_id":{{history}},"second_epa":{{wardRound}}}""");
         activities["operator type, epa_id is text"] = await InsertActivityAsync(connection, textEpaId, $$"""{"epa_id":"{{history}}"}""");
@@ -405,17 +408,22 @@ public sealed class EvidenceEpaMigrationPostgresTests : IAsyncLifetime
         return typeId;
     }
 
-    private static Task<int> InsertActivityAsync(NpgsqlConnection connection, int activityTypeId, string dataJson)
+    private static Task<int> InsertActivityAsync(
+        NpgsqlConnection connection,
+        int activityTypeId,
+        string dataJson,
+        string state = "draft",
+        string createdByUserId = TraineeId)
         => InsertAsync(connection,
             """
             INSERT INTO "Activities"
                 ("ActivityTypeId", "SchemaVersion", "SubjectUserId", "CreatedByUserId", "CurrentState", "DataJson",
                  "CreatedOn", "UpdatedOn", "ObservedOn", "ObservedOnSource")
-            VALUES ($1, 1, $2, $2, 'draft', $3::jsonb,
+            VALUES ($1, 1, $2, $4, $5, $3::jsonb,
                     TIMESTAMPTZ '2026-03-10 08:00:00+00', TIMESTAMPTZ '2026-03-10 08:00:00+00', DATE '2026-03-10', 0)
             RETURNING "Id"
             """,
-            activityTypeId, TraineeId, dataJson);
+            activityTypeId, TraineeId, dataJson, createdByUserId, state);
 
     private static Task<int> InsertTransitionAsync(NpgsqlConnection connection, int activityId, string key, DateTime occurredOn, int? creditedItemCount)
         => ExecuteAsync(connection,

@@ -57,7 +57,26 @@ public sealed class ActivityType
     /// </remarks>
     public string? WbaToolKey { get; set; }
 
-    public ICollection<ActivityPermissionRule> PermissionRules { get; set; } = [];
+    /// <summary>
+    /// Whether only the system writes activities of this type (T162). <c>msf_cpsa</c> is the one such type: its rows are
+    /// written by a released multi-source feedback campaign, one per EPA the campaign covers, and nobody files one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A system-managed type is left out of the type picker (<c>ListActivityTypesQuery</c>) and refused by
+    /// <c>ActivityService.CreateDraftAsync</c>, the one path a person creates an activity through, before anything is
+    /// written. The system's own path, <c>ActivityService.StageCompletedAsync</c>, does not read it. Before T162 a trainee
+    /// could file an <c>msf_cpsa</c> draft that nobody could ever write or record, so it sat in their list for good.
+    /// </para>
+    /// <para>
+    /// <b>Owned by the seed catalogue, not the builder.</b> The seeders write it from the type's
+    /// <c>ActivityTypeSeedEntry</c> on create, and the T162 migration stamped it on existing databases. The builder
+    /// neither shows nor writes it, so a builder-made type is never system-managed and a save through the builder keeps
+    /// whatever the type already had. Like <see cref="WbaToolKey" />, it is live and unversioned.
+    /// </para>
+    /// </remarks>
+    public bool SystemManaged { get; set; }
+
     public ICollection<Activity> Activities { get; set; } = [];
     public ICollection<ActivityTypeVersion> Versions { get; set; } = [];
 

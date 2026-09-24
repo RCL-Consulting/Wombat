@@ -15,7 +15,8 @@ using Wombat.Domain.Identity;
 namespace Wombat.Application.Features.Activities.Queries.ListActivityTypes;
 
 /// <summary>
-/// The activity types offered to a person creating an activity.
+/// The activity types offered to a person creating an activity: published, active, in the caller's scope, and not
+/// system-managed (T162).
 /// </summary>
 /// <param name="SubjectUserId">
 /// The person the activity will be ABOUT, when that is known. Supplying it narrows the list to types
@@ -45,6 +46,9 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
             .Where(activityType =>
                 activityType.Version > 0 &&
                 activityType.IsActive &&
+                // T162: nobody files a type only the system writes (msf_cpsa), so nobody is offered one. Unlike the
+                // ladder narrowing below, this is backed by a refusal: ActivityService.CreateDraftAsync refuses the type.
+                !activityType.SystemManaged &&
                 (
                     activityType.Scope == ActivityScope.Global ||
                     (activityType.Scope == ActivityScope.Institution && institutionId.HasValue && activityType.ScopeId == institutionId.Value) ||

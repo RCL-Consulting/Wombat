@@ -241,7 +241,9 @@ Three things follow:
 - `Wombat__RefreshSeededActivityTypes=false` disables the republish while still logging what differs.
 - **`WbaToolKey` is not in a seed folder and is never refreshed.** It is declared on the type's
   `ActivityTypeSeedCatalogue` entry (required, so a new seed must say which instrument it is), written on create, and
-  stamped on existing databases once by the T122 migration. The same holds for the catalogue's per-EPA tool lists.
+  stamped on existing databases once by the T122 migration. The same holds for the catalogue's per-EPA tool lists,
+  and for `SystemManaged` (T162: `msf_cpsa` is written only by the MSF release, so it is kept off the type picker and
+  refused at a person's create; stamped once by the T162 migration).
 - **A seeded curriculum item's values are written when a seeder creates the item, and on no later boot.** That is the
   tool list, the target and the scale pin for the v11.1 items (`PaediatricCatalogueSeeder`), and the scale pin for the
   demo IM Core item (`DataSeeder`). So no boot changes what a stored minimum means (T174), and an administrator's

@@ -277,7 +277,9 @@ public sealed class DataSeeder
                 IsActive = true,
                 // On create only (T122). An existing database got its keys from the T122 migration; see
                 // ActivityTypeSeedEntry.WbaToolKey.
-                WbaToolKey = seed.WbaToolKey
+                WbaToolKey = seed.WbaToolKey,
+                // On create only (T162), like the instrument. See ActivityTypeSeedEntry.SystemManaged.
+                SystemManaged = seed.SystemManaged
             };
 
             activityType.SaveDraft(schemaJson, workflowJson, creditJson, displayFieldsJson, ActivityTypeSeedCatalogue.SeedActorUserId);
@@ -287,14 +289,15 @@ public sealed class DataSeeder
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        await WarnWhereToolKeysDifferAsync(cancellationToken);
+        await WarnWhereCatalogueColumnsDifferAsync(cancellationToken);
     }
 
     /// <summary>
-    /// Logs, and never writes, every seed-owned generic type whose instrument key differs from its catalogue entry
-    /// (T122). See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" />.
+    /// Logs, and never writes, every seed-owned generic type whose instrument key (T122) or system-managed flag (T162)
+    /// differs from its catalogue entry. See <see cref="ActivityTypeSeedCatalogue.FindWbaToolKeyDrift" /> and
+    /// <see cref="ActivityTypeSeedCatalogue.FindSystemManagedDrift" />.
     /// </summary>
-    private async Task WarnWhereToolKeysDifferAsync(CancellationToken cancellationToken)
+    private async Task WarnWhereCatalogueColumnsDifferAsync(CancellationToken cancellationToken)
     {
         var keys = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.Generic).Select(entry => entry.Key).ToArray();
         var stored = await _dbContext.ActivityTypes
@@ -309,6 +312,15 @@ public sealed class DataSeeder
                 entry.Key,
                 storedKey ?? "(none)",
                 entry.WbaToolKey ?? "(none)");
+        }
+
+        foreach (var (entry, storedSystemManaged) in ActivityTypeSeedCatalogue.FindSystemManagedDrift(stored, ActivityTypeSeedSource.Generic))
+        {
+            _logger.LogWarning(
+                "Activity type '{Key}' is recorded as system-managed {StoredSystemManaged}, but its seed entry says {ExpectedSystemManaged}. Not changed: seeders stamp it on create only, and an existing database follows a change only through a migration.",
+                entry.Key,
+                storedSystemManaged,
+                entry.SystemManaged);
         }
     }
 

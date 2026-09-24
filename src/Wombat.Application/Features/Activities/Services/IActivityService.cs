@@ -5,6 +5,10 @@ namespace Wombat.Application.Features.Activities.Services;
 
 public interface IActivityService
 {
+    /// <summary>
+    /// Creates an activity a person files. Refuses a system-managed type (<c>ActivityType.SystemManaged</c>, T162)
+    /// before anything is written; the system writes those through <see cref="StageCompletedAsync" />.
+    /// </summary>
     Task<ActivityDto> CreateDraftAsync(CreateActivityInput input, CancellationToken cancellationToken = default);
     Task<ActivityDto> TransitionAsync(TransitionActivityInput input, CancellationToken cancellationToken = default);
 
@@ -45,6 +49,10 @@ public interface IActivityService
     /// Everything else is the ordinary path, deliberately: the same subject-scope stamp (T101), the same
     /// field-permission filter (T070), the same schema validation, the same observation-date stamp
     /// (T119), the same <c>ApplyTransition</c>.
+    /// </para>
+    /// <para>
+    /// It is the one path that writes a system-managed type (T162): it does not read
+    /// <c>ActivityType.SystemManaged</c>, which only <see cref="CreateDraftAsync" /> and the type picker honour.
     /// </para>
     /// </remarks>
     Task<int> StageCompletedAsync(

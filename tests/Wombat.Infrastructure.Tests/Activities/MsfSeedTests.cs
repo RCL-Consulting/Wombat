@@ -33,10 +33,9 @@ public sealed class MsfSeedTests
     [Fact]
     public void TheRecordTransitionIsTheOnlyWayOut_AndOnlyStaffCanTakeIt()
     {
-        // The gate that stops a trainee crediting themselves. ListActivityTypesQuery offers every
-        // published speciality-scoped type to every member of that speciality, and nothing in the
-        // product expresses "system-managed", so a trainee CAN create a stray draft. This rule is what
-        // makes that draft permanently inert.
+        // The gate that stops a trainee recording MSF evidence about themselves. Since T162 the type is
+        // system-managed, so nobody is offered it or may create one by hand; this rule is the second line,
+        // and it stood alone before T162, when a trainee could create a stray draft that it kept inert.
         var workflow = WorkflowParser.Parse(ReadSeedFile("workflow.json"));
 
         var transition = workflow.Transitions.Should().ContainSingle().Subject;

@@ -135,7 +135,6 @@ src/Wombat.Domain/Activities/
     ActivityType.cs                 (aggregate root)
     Activity.cs                     (aggregate root)
     ActivityTransition.cs
-    ActivityPermissionRule.cs
     Schema/
         FormSchema.cs               (record hierarchy representing parsed schema)
         FormSection.cs
