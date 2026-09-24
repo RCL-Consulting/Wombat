@@ -68,7 +68,7 @@ if (ssoOptions?.Providers is { Count: > 0 } providers)
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
-builder.Services.AddScoped<IScopedSender, ScopedSender>();
+builder.Services.AddWombatCircuitServices();
 builder.Services.AddHttpContextAccessor();
 
 // Health: a liveness-only probe reports "Healthy" while PostgreSQL is unreachable, which

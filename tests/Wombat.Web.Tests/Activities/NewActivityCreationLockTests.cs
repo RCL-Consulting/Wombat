@@ -77,6 +77,7 @@ public sealed class NewActivityCreationLockTests : TestContext
         Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
         Services.AddSingleton<IScopedSender>(new FakeSender(SchemaJson, WorkflowJson));
+        Services.AddScoped<ActivityNotices>();
     }
 
     [Fact]

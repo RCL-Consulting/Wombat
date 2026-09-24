@@ -182,7 +182,9 @@ Wombat has:
 Runtime services in Infrastructure:
 - `SchemaValidator` — validates `DataJson` against the form schema. A transition declares how much of it counts
   (`validation`: `all`, the default; `owned`, the mover's writable fields; `draft`, formats only) (T105), so a
-  schema's `required` flags are honest and `requires_fields` only ever adds.
+  schema's `required` flags are honest and `requires_fields` only ever adds. A create that is itself the filing (no
+  move out of the initial state that leads on is the author's: a type born `requested` or terminal) checks the author's
+  required fields as `owned` would (T127).
 - `WorkflowEvaluator` — evaluates available transitions for a `ClaimsPrincipal`.
 - `ActorRuleMatcher` — the one implementation of the actor grammar (`subject`, `creator`, `role:`,
   `scope:`, `field:`, combined with `|` and `+`). Shared by transition authorization and field-write

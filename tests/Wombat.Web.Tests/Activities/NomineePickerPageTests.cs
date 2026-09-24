@@ -82,6 +82,7 @@ public sealed class NomineePickerPageTests : TestContext
         Services.AddSingleton<IActivityReferenceDataService>(_recorder);
         Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
+        Services.AddScoped<ActivityNotices>();
 
         _recorder.Nominees =
         [
@@ -164,6 +165,23 @@ public sealed class NomineePickerPageTests : TestContext
 
         ShowsTheRefusedChoiceAsNotAvailable(cut);
         _recorder.UserLabelRequests.Should().BeEmpty("the refused id is labelled on the page, never looked up");
+    }
+
+    [Fact]
+    public void ActivityView_ADraftWhoseStoredNomineeIsNoLongerListed_ShowsThemAsNotAvailable()
+    {
+        // Where a Submit refused at the transition on /activities/new lands (T127): the draft stores the nominee the
+        // server just refused, and the directory no longer lists them. The select must still show who the next move
+        // would send, so the trainee sees that they have to choose someone else. The stored value is passed to be
+        // labelled by the directory, which is allowed; it is never looked up by id on the page.
+        SignIn("trainee-1");
+        TheRefusedPersonFallsOffTheList();
+
+        var cut = RenderActivityView(new ViewSender(Detail(institutionId: 7, dataJson: """{"assessor_user_id":"assessor-gone"}""")));
+
+        _recorder.NomineeScopes.Should().ContainSingle().Which.StoredValue.Should().Be("assessor-gone");
+        ShowsTheRefusedChoiceAsNotAvailable(cut);
+        _recorder.UserLabelRequests.Should().BeEmpty();
     }
 
     [Fact]
@@ -295,10 +313,14 @@ public sealed class NomineePickerPageTests : TestContext
     }
 
     [Fact]
-    public void NewActivity_ASubmitRefusedAtTheTransition_RemountsTheFormToo()
+    public void NewActivity_ASubmitRefusedAtTheTransition_TakesTheRefusalToTheDraft()
     {
         // Submit on this page is a create followed by the first transition, and either may be the one that refuses
-        // (the transition is the author's hand-on, where an unchanged nominee is judged again).
+        // (the transition is the author's hand-on, where an unchanged nominee is judged again). Until T127 a refusal at
+        // the transition remounted this form, as a refused create does. But the draft exists by then, and a second
+        // press here would create another, so the page leaves for the draft and the refusal goes with it. The draft's
+        // page loads its own form, which asks for the list afresh and shows the stored, refused nominee as not
+        // available (ActivityView_ADraftWhoseStoredNomineeIsNoLongerListed_ShowsThemAsNotAvailable).
         SignIn("trainee-1");
         var sender = new NewSender { TransitionFailure = new InvalidOperationException(Refusal) };
         var cut = SelectTheType(sender);
@@ -306,13 +328,15 @@ public sealed class NomineePickerPageTests : TestContext
         cut.Find("#assessor_user_id").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForAssertion(() => Services.GetRequiredService<FakeNavigationManager>().History.Should().ContainSingle()
+            .Which.Uri.Should().Be("/activities/7"));
 
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().ContainSingle().Which.TransitionKey.Should().Be("submit");
-        _recorder.NomineeScopes.Should().HaveCount(2);
-        _recorder.NomineeScopes[1].StoredValue.Should().BeNull("the page does not hold the created draft's stored data");
-        ShowsTheRefusedChoiceAsNotAvailable(cut);
+        var notice = Services.GetRequiredService<ActivityNotices>().Take(7);
+        notice.Should().NotBeNull();
+        notice!.Kind.Should().Be("warning");
+        notice.Message.Should().Contain("Saved as a draft").And.Contain(Refusal);
         _recorder.UserLabelRequests.Should().BeEmpty();
     }
 
@@ -341,9 +365,12 @@ public sealed class NomineePickerPageTests : TestContext
 
         sender.Creates.Should().ContainSingle("the page carries out one action at a time");
         sender.Transitions.Should().BeEmpty();
-        cut.WaitForAssertion(() =>
-            NewActivityActionButtons(cut).Should().OnlyContain(button => !button.HasAttribute("disabled")));
-        cut.Markup.Should().Contain("Draft created.");
+
+        // Since T127 a successful create leaves for the activity, and the buttons stay disabled until the router
+        // replaces the page: a press in between would create again.
+        Services.GetRequiredService<FakeNavigationManager>().History.Should().ContainSingle()
+            .Which.Uri.Should().Be("/activities/7");
+        NewActivityActionButtons(cut).Should().OnlyContain(button => button.HasAttribute("disabled"));
     }
 
     [Fact]
@@ -433,7 +460,8 @@ public sealed class NomineePickerPageTests : TestContext
     private static ActivityDetailDto Detail(
         int? institutionId,
         IReadOnlyList<string>? editable = null,
-        IReadOnlyList<ActivityActionDto>? actions = null)
+        IReadOnlyList<ActivityActionDto>? actions = null,
+        string dataJson = """{"assessor_user_id":"assessor-1"}""")
     {
         var activity = new ActivityDto(
             7,
@@ -450,7 +478,7 @@ public sealed class NomineePickerPageTests : TestContext
             institutionId,
             "trainee-1",
             "draft",
-            """{"assessor_user_id":"assessor-1"}""",
+            dataJson,
             null,
             null,
             new DateTime(2026, 9, 24, 8, 0, 0, DateTimeKind.Utc),
@@ -570,6 +598,10 @@ public sealed class NomineePickerPageTests : TestContext
                     }
 
                     return Task.FromResult((TResponse)(object)Detail(institutionId: 7).Activity);
+
+                case GetActivityByIdQuery:
+                    // The read-back after a create: the author's moves on the new draft, as the server offers them.
+                    return Task.FromResult((TResponse)(object)Detail(institutionId: 7));
 
                 case TransitionActivityCommand transition:
                     Transitions.Add(transition);

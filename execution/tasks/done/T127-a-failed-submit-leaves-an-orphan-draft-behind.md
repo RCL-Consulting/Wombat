@@ -1,9 +1,11 @@
 ---
 id: T127
 title: "Every failed Submit on /activities/new leaves a half-filled draft behind, and the next attempt makes another"
-status: queued
+status: done
 priority: P2
 created: 2026-09-19
+started: 2026-09-24
+completed: 2026-09-24
 ---
 # T127 — Every failed Submit on /activities/new leaves a half-filled draft behind, and the next attempt makes another
 
@@ -80,7 +82,7 @@ activity exists.
 - Submit with a required field missing, fix it, submit again: **one** activity exists, not two.
 - Click Save draft twice: one draft.
 - The error message says whether anything was saved.
-- A successful first-time submit is unchanged.
+- ~~A successful first-time submit is unchanged.~~ Superseded by the update below: it now lands on the activity.
 
 ## Cleanup owed on dev
 
@@ -133,12 +135,49 @@ Changed since this was filed (observed at `431e69e`):
 
 **Verification, added:**
 
-- [ ] After a successful Submit or Save draft the page is on `/activities/{id}`. bUnit test with a FakeSender that
+- [x] After a successful Submit or Save draft the page is on `/activities/{id}`. bUnit test with a FakeSender that
       records commands.
-- [ ] A refused Submit sends one `CreateActivityCommand`, lands on the draft showing the refusal and the "saved as a
+- [x] A refused Submit sends one `CreateActivityCommand`, lands on the draft showing the refusal and the "saved as a
       draft" message, and nothing on that page can create again. bUnit test.
-- [ ] T148: Submit on a requested-born workflow sends no `TransitionActivityCommand` and reports "Submitted". On a
+- [x] T148: Submit on a requested-born workflow sends no `TransitionActivityCommand` and reports "Filed. It is now Requested." (not "Submitted": nothing moved). On a
       draft-born CPSA workflow it sends `submit`. bUnit tests.
-- [ ] Browser, on dev: a CPSA Mini-CEX with one trainee-owned required field blank leaves one activity. A generic
-      Mini-CEX filed by a trainee on an O-R curriculum stays in `requested` and reaches the assessor's inbox.
-- [ ] Full suite green, no `--no-build`.
+- [x] Browser, on dev: a CPSA Mini-CEX with one trainee-owned required field blank leaves one activity. A generic
+      Mini-CEX filed by a trainee on an O-R curriculum stays in `requested` and reaches the assessor's inbox. *The
+      first half was checked (activity 20). The second was not possible: no dev trainee is offered a generic type (T123
+      d3's ladder filter). It is covered by `NewActivitySubmitFlowTests` and the create-check tests instead.*
+- [x] Full suite green, no `--no-build`.
+
+---
+
+## As built — 2026-09-24 (with [T143] and [T148])
+
+- **`/activities/new` creates at most once, then always moves to the activity** (`NavigateTo("/activities/{id}",
+  replace: true)`, inside the circuit). The outcome travels as a one-shot, per-activity notice held by a scoped
+  `ActivityNotices` service (`src/Wombat.Web/Services/`), never in the query string. `ActivityView` takes it after
+  its load and clears it when the actor moves again.
+  - Save draft: "Draft saved. It has not been submitted."
+  - Submit accepted: "Submitted. It is now <state label>."
+  - Submit refused after the draft saved: a warning, "Saved as a draft, but not submitted: <reason> Fix the fields below
+    and submit again." The retry happens on `ActivityView`, which already sends edits as a patched transition.
+  - The create itself refused: the page stays, says "Nothing was saved. …", and nothing exists.
+  - No move for the author leads on: "Filed. It is now <state label>." This is T148's case. The page does not say
+    "Submitted" when nothing moved.
+- The page stays disabled once a create succeeds: between `NavigateTo` and the router, a second press would otherwise
+  create again. After the create it reads the activity back and sends the first move the server offers that leads on,
+  judged against the **pinned** workflow. Save draft is hidden where creating the type is itself the filing.
+- **Server, found by the review (major):** for a type whose create is the filing (no move out of the initial state that
+  leads on is the author's: the generic `mini_cex`, `dops`, `cbd`, `acat`, and the born-terminal `procedure_log`,
+  `journal_club`), `ActivityService.CreateDraftAsync` checks the author's required fields as an `owned` submit would.
+  Before, a trainee could file a request naming no assessor, which nobody could accept or repair.
+  `Workflow.TransitionsLeadingOn` is the shared test.
+- **Evidence.**
+  - Tests: Web 288 → 319, Domain 356 → 362, Application 895 → 898. 24 mutants, all caught.
+  - Browser on dev (Release build, trainee@wombat.local):
+    - Activity 20: a Mini-CEX with "Presenting problem" blank was refused at submit and landed on `/activities/20`
+      with the warning. One row. Filled on that page, it submitted: history `create`, `submit`.
+    - Activity 21: Save draft landed on the draft with "Draft saved…". Back skips the form (`replace: true`), and a
+      fresh `/activities/new` is empty.
+    - Activity 22: "Submitted. It is now Requested."
+    - A reload shows no notice.
+  - Integration: 22 of 23; the failure is [T140]'s fixture.
+- **Filed:** refusals name fields by key, not label (activity 20 showed `presenting_problem: A value is required`).

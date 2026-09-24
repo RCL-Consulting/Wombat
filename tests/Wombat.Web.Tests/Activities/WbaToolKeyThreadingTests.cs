@@ -81,6 +81,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
         Services.AddSingleton<IActivityReferenceDataService>(_recorder);
         Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
+        Services.AddScoped<ActivityNotices>();
     }
 
     // ---- /activities/new ----

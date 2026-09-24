@@ -10,13 +10,11 @@
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
-| queued | [T127](tasks/queued/T127-a-failed-submit-leaves-an-orphan-draft-behind.md) | P2 | Every failed Submit on /activities/new leaves a half-filled draft behi |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T135](tasks/queued/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
 | queued | [T136](tasks/queued/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | queued | [T137](tasks/queued/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | queued | [T140](tasks/queued/T140-the-integration-suite-s-msf-flow-test-cannot-set-itself-up-on-a-fresh-schema-and-leaks-a-schema-every-time-it-fails.md) | P2 | The integration suite's MSF flow test cannot set itself up on a fresh  | sonnet |
-| queued | [T148](tasks/queued/T148-submit-on-activities-new-cancels-a-requested-born-activity-the-moment-it-is-created.md) | P2 | Submit on /activities/new cancels a requested-born activity the moment | sonnet |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T160](tasks/queued/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
@@ -36,7 +34,6 @@
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
 | queued | [T141](tasks/queued/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
 | queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
-| queued | [T143](tasks/queued/T143-after-a-successful-submit-the-new-activity-form-keeps-every-value-inviting-a-duplicate.md) | P3 | After a successful submit the new-activity form keeps every value, inv | sonnet |
 | queued | [T144](tasks/queued/T144-classify-rated-evidence-sources-by-wbatoolkey-and-retire-the-hard-coded-activity-family-list.md) | P3 | Classify rated evidence sources by WbaToolKey and retire the hard-code | sonnet |
 | queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
 | queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
@@ -57,8 +54,9 @@
 | queued | [T169](tasks/queued/T169-the-portfolio-pdf-has-no-per-epa-progress-and-prints-unrated-and-msf-evidence-as-never-completed.md) | P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF  |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
+| queued | [T172](tasks/queued/T172-a-refusal-names-the-form-s-fields-by-key-presenting-problem-not-by-the-label-the-user-sees.md) | P3 | A refusal names the form's fields by key (presenting_problem), not by  |  |
 
-Done: 105 task(s).
+Done: 108 task(s).
 
 ## From STATE.md
 
@@ -74,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+54c9805 docs(execution): STATE back under its 60-line cap
 47a9aad docs(execution): re-baseline the EPA stream — close T118 and T104 by finding, fold merged tasks, file T158–T171, rewrite EPA-PROGRAMME §2 as the live queue
 431e69e docs(execution): close T099 — the catalogue is reachable on dev and on a fresh database; production never received it, filed as T157
 10834cf fix(identity): the SSO link endpoint reads everything from the external cookie, counts failures and is rate-limited; SSO sign-in refuses deactivated, Administrator and other-institution accounts (T149)
 69fc5d9 feat(activities): four more v11.1 instruments — Clinical Case Analysis, Random Case Analysis, Chart-Stimulated Recall, Reflective Exercise (T120)
-0a767c2 feat(activities): a transition declares how much of the form it checks, so the schema's required flags are honest (T105)
 ```

@@ -29,6 +29,7 @@ public sealed class TransitionValidationTests
     private const int CpsaMiniCexTypeId = 300;
     private const int LegacyMiniCexTypeId = 301;
     private const int DisposalWithRequiredReasonTypeId = 302;
+    private const int LogTypeId = 303;
 
     private static readonly string[] AssessorFields = ["overall_level", "strengths", "improvements", "plan"];
 
@@ -131,10 +132,57 @@ public sealed class TransitionValidationTests
     // ---- the legacy Mini-CEX (requested-born) --------------------------------------------------------------------
 
     [Fact]
-    public async Task TheLegacyMiniCex_AssessorCanAcceptAPartlyFilledRequest_WithNoRatings()
+    public async Task TheLegacyMiniCex_IsFiledByItsCreate_SoACreateMissingAFieldTheTraineeOwes_IsRefused()
+    {
+        // Born in `requested`, the create is the submission: the trainee's one move left is `cancel`, a withdrawal, so no
+        // later move of theirs would ask for what they owe. A request naming no assessor could then be accepted, repaired
+        // or completed by nobody. The create asks, as a submit declaring `owned` would, and stores nothing when refused.
+        var options = await SeededAsync();
+
+        var missingAssessor = await RefusedCreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "assessor_user_id"));
+        var missingComplexity = await RefusedCreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "complexity"));
+
+        missingAssessor.Should().Contain("assessor_user_id");
+        missingComplexity.Should().Contain("complexity");
+        foreach (var assessorField in new[] { "overall", "strengths", "improvements", "plan" })
+        {
+            missingComplexity.Should().NotContain(assessorField, "the ratings are the assessor's to give, after the create");
+        }
+
+        await using var db = new ApplicationDbContext(options);
+        (await db.Activities.CountAsync()).Should().Be(0, "a refused create stores nothing");
+    }
+
+    [Fact]
+    public async Task TheLegacyMiniCex_WithTheRequestComplete_IsFiledInRequested_ThoughNoRatingExistsYet()
     {
         var options = await SeededAsync();
-        var request = await CreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "complexity"));
+
+        var request = await CreateAsync(options, LegacyMiniCexTypeId, LegacyRequest());
+
+        request.CurrentState.Should().Be("requested");
+    }
+
+    [Fact]
+    public async Task ATypeBornTerminal_IsFiledByItsCreate_SoItsRequiredFieldsAreAskedFor()
+    {
+        // procedure_log's shape: the create is the whole record, and nothing after it could ask.
+        var options = await SeededAsync();
+
+        var message = await RefusedCreateAsync(options, LogTypeId, """{ "notes": "Uneventful." }""");
+        var logged = await CreateAsync(options, LogTypeId, """{ "title": "Lumbar puncture" }""");
+
+        message.Should().Contain("title").And.NotContain("notes");
+        logged.CurrentState.Should().Be("logged");
+    }
+
+    [Fact]
+    public async Task TheLegacyMiniCex_AssessorCanAcceptAPartlyFilledRequest_WithNoRatings()
+    {
+        // `accept` validates `draft`. A partly filled request can no longer be filed (above), so it is written straight
+        // to the store, as a request that lost a field after it was filed would be.
+        var options = await SeededAsync();
+        var request = await PartlyFilledLegacyRequestAsync(options);
 
         var accepted = await TransitionAsync(options, request.Id, "accept", AssessorId);
 
@@ -145,8 +193,8 @@ public sealed class TransitionValidationTests
     public async Task TheLegacyMiniCex_AssessorCanDecline_AndTheTraineeCanCancel()
     {
         var options = await SeededAsync();
-        var toDecline = await CreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "complexity"));
-        var toCancel = await CreateAsync(options, LegacyMiniCexTypeId, LegacyRequest(without: "complexity"));
+        var toDecline = await PartlyFilledLegacyRequestAsync(options);
+        var toCancel = await PartlyFilledLegacyRequestAsync(options);
 
         (await TransitionAsync(options, toDecline.Id, "decline", AssessorId, note: "Not my patient."))
             .CurrentState.Should().Be("declined");
@@ -202,6 +250,23 @@ public sealed class TransitionValidationTests
     {
         await using var db = new ApplicationDbContext(options);
         return await Service(db).CreateDraftAsync(new CreateActivityInput(typeId, TraineeId, TraineeId, dataJson, Principal(TraineeId)));
+    }
+
+    private static async Task<string> RefusedCreateAsync(DbContextOptions<ApplicationDbContext> options, int typeId, string dataJson)
+    {
+        var attempt = () => CreateAsync(options, typeId, dataJson);
+        var thrown = await attempt.Should().ThrowAsync<InvalidOperationException>();
+        return thrown.Which.Message;
+    }
+
+    private static async Task<ActivityDto> PartlyFilledLegacyRequestAsync(DbContextOptions<ApplicationDbContext> options)
+    {
+        var request = await CreateAsync(options, LegacyMiniCexTypeId, LegacyRequest());
+        await using var db = new ApplicationDbContext(options);
+        var stored = await db.Activities.SingleAsync(activity => activity.Id == request.Id);
+        stored.DataJson = LegacyRequest(without: "complexity");
+        await db.SaveChangesAsync();
+        return request;
     }
 
     private static async Task<ActivityDto> TransitionAsync(
@@ -311,6 +376,35 @@ public sealed class TransitionValidationTests
                 { "key": "finish", "from": "draft", "to": "done", "actor": "subject", "validation": "all" },
                 { "key": "withdraw", "from": "draft", "to": "withdrawn", "actor": "subject", "requires_fields": ["reason"], "validation": "draft" }
               ]
+            }
+            """,
+            """{ "counts_for": [] }"""));
+        db.ActivityTypes.Add(Type(
+            LogTypeId,
+            "log_under_test",
+            """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "main",
+                  "title": "Main",
+                  "fields": [
+                    { "key": "title", "type": "text", "label": "Title", "required": true },
+                    { "key": "notes", "type": "longtext", "label": "Notes" }
+                  ]
+                }
+              ]
+            }
+            """,
+            """
+            {
+              "version": 1,
+              "initial_state": "logged",
+              "states": [
+                { "key": "logged", "label": "Logged", "terminal": true }
+              ],
+              "transitions": []
             }
             """,
             """{ "counts_for": [] }"""));

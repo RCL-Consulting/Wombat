@@ -18,6 +18,22 @@ public sealed record Workflow(
         => Transitions.Any(transition => transition.From.Contains(stateKey, StringComparer.Ordinal));
 
     /// <summary>
+    /// The moves out of <paramref name="stateKey" /> that lead on towards credit: those whose target can reach a terminal
+    /// state without coming back through this one. In declaration order.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CanReachTerminal" />'s withdrawal test, asked of every move out of a state. A move into a dead end is
+    /// not listed, nor one into a state whose only way on is back through this one (a builder-made <c>cancelled</c> with
+    /// a <c>reopen</c>), nor a self-transition. A move straight into a terminal state is. The author of a new activity
+    /// who may take none of these moves has filed it by creating it: for a type born in <c>requested</c> the create is
+    /// the submission, and <c>/activities/new</c> must not send the author's only other move, the withdrawal (T148).
+    /// </remarks>
+    public IEnumerable<WorkflowTransition> TransitionsLeadingOn(string stateKey)
+        => Transitions.Where(transition =>
+            transition.From.Contains(stateKey, StringComparer.Ordinal) &&
+            CanReachTerminal(transition.To, avoidingState: stateKey));
+
+    /// <summary>
     /// Whether an activity in this state can still reach a terminal state, the only place credit fires, by any
     /// sequence of transitions. Optionally without passing through <paramref name="avoidingState" />, which excludes
     /// that state as a starting point too.

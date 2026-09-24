@@ -1,12 +1,14 @@
 ---
 id: T148
 title: Submit on /activities/new cancels a requested-born activity the moment it is created
-status: queued
+status: done
 priority: P2
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-23
+started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T148 — "Submit" on a legacy-shaped type files the encounter and immediately withdraws it
@@ -48,10 +50,13 @@ the submission ("Submitted.") instead of sending a transition.
 
 ## Verification
 
-- [ ] Submit on a legacy-shaped type leaves the activity in `requested` — `NewActivityCreationLockTests` or a new
-      bUnit test
-- [ ] Submit on a CPSA type still sends `submit` — existing tests
-- [ ] Browser: file a generic Mini-CEX as a trainee who is offered it; the assessor sees it in their inbox
+- [x] Submit on a legacy-shaped type leaves the activity in `requested` — `NewActivitySubmitFlowTests` (no
+      `TransitionActivityCommand`; the notice is "Filed. It is now Requested.", not "Submitted", because nothing moved)
+- [x] Submit on a CPSA type still sends `submit` — `NewActivitySubmitFlowTests`, and in the browser (activity 22)
+- [ ] ~~Browser: file a generic Mini-CEX as a trainee who is offered it; the assessor sees it in their inbox~~ Not
+      possible on dev: the only dev trainee is CPSA-pinned, and T123 d3's ladder filter hides the generic types.
+      Replaced by the page tests above and three `ActivityService` create tests on the generic seed's shape. A generic
+      request with a required field of the author's empty is now refused at create (see T127's as-built).
 
 ## Related
 
@@ -62,3 +67,6 @@ the submission ("Submitted.") instead of sending a transition.
 Lands with [T127], in the same change to `CreateOrTransitionAsync`, and closes with it. Use
 `CanReachTerminal(to, avoidingState: initial state)`, not plain `CanReachTerminal(to)`. Otherwise a builder-made
 "cancelled" state with a reopen transition would count as a submission.
+
+**Closed 2026-09-24 with [T127]**, which records the as-built. One addition beyond this file: `Workflow.TransitionsLeadingOn`
+is the shared test, and the server now checks a create that is itself the filing.

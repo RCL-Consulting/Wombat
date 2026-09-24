@@ -908,7 +908,8 @@ Action: Fill the form:
   - Overall entrustment level: `Indirect supervision (3)`
 - Narrative feedback: `Solid systematic clerking. Differential considered atypical pneumonia. Plan flagged for senior review before lumbar puncture decision. Next step: read up on the British Thoracic Society 2019 paediatric pneumonia guideline.`
 Click `Save draft`.
-Expected: Status banner "Draft saved." URL stable at `/activities/{id}`. The activity row appears on the trainee's dashboard under `My activities → Draft`.
+Expected (since T127, 2026-09-24): the page moves to `/activities/{id}` with a notice "Draft saved. It has not been
+submitted." The activity row appears on the trainee's dashboard under `My activities → Draft`.
 Actual:
 Gap:
 

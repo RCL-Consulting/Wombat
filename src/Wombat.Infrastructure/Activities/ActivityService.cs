@@ -64,6 +64,8 @@ public sealed class ActivityService : IActivityService
             input.Principal,
             DateTime.UtcNow);
 
+        ThrowIfFiledIncomplete(schema, workflow, activity, input.Principal);
+
         // T122. A create always writes the credit target, and for a type whose initial state is already `requested`
         // (the legacy WBA shape) the create IS the author's submission: the next move is the assessor's. Gating here
         // also means a refused Submit on /activities/new fails before the draft exists, so it leaves no orphan behind.
@@ -96,6 +98,48 @@ public sealed class ActivityService : IActivityService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Map(activity);
+    }
+
+    /// <summary>
+    /// Refuses a create that files the activity with a required field of the author's still empty.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A create is the author's filing when no move out of the initial state that leads on is theirs to take
+    /// (<see cref="Workflow.TransitionsLeadingOn" />). For a type born in <c>requested</c> (the generic <c>mini_cex</c>,
+    /// <c>dops</c>, <c>cbd</c> and <c>acat</c>) the create is the submission and the next move is the assessor's; for a
+    /// type born terminal (<c>procedure_log</c>, <c>journal_club</c>) the create is the whole record. Either way no later
+    /// move of the author's will check what they owe, so the create checks it now, as a submit declaring
+    /// <c>validation: owned</c> would (T105): the required fields the author may write. Without it a trainee could file
+    /// a request that names no assessor, which nobody could then accept or repair: edits travel only with a move, and
+    /// the author's one move left is the withdrawal (found in the T127/T148 review).
+    /// </para>
+    /// <para>
+    /// Where the author does have such a move (a draft-born type), the create stays a draft save and checks formats
+    /// only; that move checks the rest. Whose move it is is judged against the activity as built, as the transition gate
+    /// judges it, so <c>scope:</c> and <c>field:</c> rules read the stamped scope and the filtered data. What the author
+    /// owes is read as the create's own filter reads it, against empty data: a field that filter strips is never one the
+    /// author could have filled, so it is never one they are asked for.
+    /// </para>
+    /// </remarks>
+    private void ThrowIfFiledIncomplete(FormSchema schema, Workflow workflow, Activity activity, ClaimsPrincipal principal)
+    {
+        var authorMovesItOn = workflow.TransitionsLeadingOn(workflow.InitialState)
+            .Any(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed);
+        if (authorMovesItOn)
+        {
+            return;
+        }
+
+        var owned = _fieldPermissionEvaluator.GetWritableFieldKeys(
+            schema,
+            workflow,
+            ProbeInState(activity, workflow.InitialState, EmptyObjectJson),
+            principal,
+            ignoreStateGate: true);
+
+        ThrowIfInvalid(_schemaValidator.Validate(
+            schema, activity.DataJson, SchemaValidationMode.Submit, requiredFieldScope: owned));
     }
 
     /// <summary>

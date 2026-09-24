@@ -87,6 +87,49 @@ public sealed class WorkflowReachabilityTests
         Assert.Equal(expected, WorkflowParser.Parse(WorkflowJson).CanReachTerminal(state, avoidingState: "requested"));
     }
 
+    /// <summary>
+    /// T148: the moves out of a state that lead on. Out of <c>requested</c> only <c>complete</c> does: <c>decline</c> and
+    /// <c>stray</c> end nowhere, and <c>recall</c>, <c>withdraw</c> and <c>hold</c> reach credit only back through
+    /// <c>requested</c>. A move straight into a terminal state counts; a withdrawal that can be reopened does not.
+    /// </summary>
+    [Theory]
+    [InlineData("draft", new[] { "submit" })]
+    [InlineData("requested", new[] { "complete" })]
+    [InlineData("withdrawn", new[] { "reopen" })]
+    [InlineData("declined", new string[0])]
+    [InlineData("nowhere", new string[0])]
+    public void TheMovesOutOfAStateThatLeadOn_InDeclarationOrder(string state, string[] expected)
+    {
+        var moves = WorkflowParser.Parse(WorkflowJson).TransitionsLeadingOn(state).Select(transition => transition.Key);
+
+        Assert.Equal(expected, moves);
+    }
+
+    /// <summary>A self-transition leads nowhere new, and a move declared first is listed first.</summary>
+    [Fact]
+    public void ASelfTransitionDoesNotLeadOn_AndTheOrderIsTheWorkflows()
+    {
+        var workflow = WorkflowParser.Parse("""
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [
+                { "key": "draft", "label": "Draft" },
+                { "key": "done", "label": "Done", "terminal": true },
+                { "key": "review", "label": "Review" }
+              ],
+              "transitions": [
+                { "key": "save", "from": "draft", "to": "draft", "actor": "subject" },
+                { "key": "finish", "from": "draft", "to": "done", "actor": "subject" },
+                { "key": "send", "from": "draft", "to": "review", "actor": "subject" },
+                { "key": "approve", "from": "review", "to": "done", "actor": "role:Assessor" }
+              ]
+            }
+            """);
+
+        Assert.Equal(["finish", "send"], workflow.TransitionsLeadingOn("draft").Select(transition => transition.Key));
+    }
+
     /// <summary>A cycle with no exit terminates and reports what it is: a dead end in two states rather than one.</summary>
     [Fact]
     public void ACycleWithNoWayOutIsADeadEnd_AndTheSearchTerminates()

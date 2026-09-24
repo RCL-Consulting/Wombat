@@ -5,12 +5,19 @@
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ActivityNotices Notices
 
 <PageTitle>Activity</PageTitle>
 
 @if (_activity is not null)
 {
   <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentState}")" />
+}
+
+@if (_notice is not null)
+{
+  @* What became of an activity filed moments ago on /activities/new, handed over with the navigation (T127). *@
+  <Alert Kind="@_notice.Kind">@_notice.Message</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_actionError))
@@ -158,6 +165,9 @@
   private string? _loadError;
   private string? _actionError;
 
+  // Shown until the next load or the next action. Taken, so it is shown once: reloading the page does not repeat it.
+  private ActivityNotice? _notice;
+
   /// <summary>
   /// True when a transition on this activity was evaluated for credit and credited nothing (T108).
   /// </summary>
@@ -193,6 +203,7 @@
     _loading = true;
     _loadError = null;
     _actionError = null;
+    _notice = null;
 
     try
     {
@@ -207,6 +218,10 @@
     {
       _loading = false;
     }
+
+    // Taken whatever the load's outcome, so it cannot wait for a later visit; shown only above an activity that loaded.
+    var notice = Notices.Take(ActivityId);
+    _notice = _loadError is null && _activity is not null ? notice : null;
   }
 
   /// <summary>
@@ -276,6 +291,8 @@
 
     _busy = true;
     _actionError = null;
+    // The notice described the activity as it arrived. It must not sit above the outcome of this move.
+    _notice = null;
 
     try
     {

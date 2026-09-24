@@ -81,6 +81,7 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
 
         Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+        Services.AddScoped<ActivityNotices>();
     }
 
     [Fact]

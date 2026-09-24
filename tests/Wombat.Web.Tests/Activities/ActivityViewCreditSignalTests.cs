@@ -52,6 +52,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
 
         Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+        Services.AddScoped<ActivityNotices>();
     }
 
     [Fact]
