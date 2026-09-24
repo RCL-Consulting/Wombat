@@ -256,6 +256,8 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             """{"epa_id":"17"}""",
             null,
             null,
+            new DateOnly(2026, 9, 23),
+            true,
             new DateTime(2026, 9, 23, 8, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 9, 23, 8, 0, 0, DateTimeKind.Utc),
             []);

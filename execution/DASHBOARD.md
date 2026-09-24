@@ -75,9 +75,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+c749799 fix(security): entrustment-decision admin list, revoke and certificate are scoped to the caller's institution; one nested set of trainee-scope predicates (T183)
 8347264 fix(security): a committee review can be scheduled, started and ratified only for a trainee at the panel's institution; every panel has an institution (T182)
 2fe9c5b docs(execution): close T160 — browser-verified on dev (activities 27–30; migration applied out of order cleanly); file T192, T193
 d2d1086 feat(activities): an encounter date may not be in the future, nor (for a type that can credit) before the programme; a crediting filing more than fourteen days late is warned about and recorded, never refused (T160, D15)
 cf7b246 docs(execution): close T175, T180, T172, T177 and T174 — browser-verified on dev (activities 25, 26); file T187–T191; T181's cause found
-f05bde8 fix(catalogue): the seeders pin a curriculum item's scale only when they create it, and warn rather than re-pin; a data migration pins the demo item where it is unpinned (T174)
 ```

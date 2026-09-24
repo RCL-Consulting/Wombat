@@ -60,6 +60,9 @@
       <aside class="detail-card">
         <h3>Summary</h3>
         <p><strong>Type:</strong> @_activity.ActivityTypeName</p>
+        @* The stored encounter date, marked when nobody stated one (T161, D28). It is the date every list, the
+           trajectory and the PDF place this activity on, so the page says what they say. *@
+        <p id="activity-encounter-date"><strong>Encounter date:</strong> <EncounterDateLabel ObservedOn="@_activity.ObservedOn" Declared="@_activity.ObservedOnDeclared" /></p>
         <p><strong>State:</strong> @_activity.CurrentState</p>
         <p><strong>Version:</strong> @_activity.SchemaVersion</p>
         <ActivityWorkflowActions Actions="_actions" Busy="_busy" OnTransitionRequested="HandleTransitionAsync" />

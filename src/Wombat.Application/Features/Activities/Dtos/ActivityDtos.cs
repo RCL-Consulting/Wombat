@@ -102,6 +102,10 @@ public sealed record ActivityDto(
     string DataJson,
     int? EpaId,
     int? CurriculumItemId,
+    // When the encounter happened (Activity.ObservedOn, T119), and whether anyone stated it. False means it is only
+    // the filing day, and the page must say so rather than show it as a clinical date (T161, D28; EncounterDate).
+    DateOnly ObservedOn,
+    bool ObservedOnDeclared,
     DateTime CreatedOn,
     DateTime UpdatedOn,
     IReadOnlyList<ActivityTransitionDto> Transitions);

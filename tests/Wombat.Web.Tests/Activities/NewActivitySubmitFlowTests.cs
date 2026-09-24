@@ -698,6 +698,8 @@ public sealed class NewActivitySubmitFlowTests : TestContext
                 "{}",
                 null,
                 null,
+                new DateOnly(2026, 9, 24),
+                true,
                 new DateTime(2026, 9, 24, 8, 0, 0, DateTimeKind.Utc),
                 new DateTime(2026, 9, 24, 8, 0, 0, DateTimeKind.Utc),
                 []);

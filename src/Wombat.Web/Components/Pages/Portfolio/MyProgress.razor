@@ -135,7 +135,7 @@
               @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
               from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").
             </p>
-            <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+            <TrajectoryChart Points="@TrajectoryChart.PointsOf(trajectory)"
                              Rungs="@BuildRungs(trajectory)"
                              AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
           </section>
@@ -267,11 +267,6 @@
       }
     </section>
   };
-
-  private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
-    => trajectory.Points
-      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source, point.OffLadder))
-      .ToArray();
 
   // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.
   // Empty when nothing is pinned, which draws the numeric axis this chart drew before T123.

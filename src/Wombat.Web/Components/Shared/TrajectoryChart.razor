@@ -43,7 +43,7 @@ else
               cx="@Fmt(cx)"
               cy="@Fmt(cy)"
               r="4">
-        <title>@point.Date.ToString("yyyy-MM-dd") · @RungTextOf(point)@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")@(offLadder ? " · not a rung on this scale" : string.Empty)</title>
+        <title>@EncounterDate.Label(point.Date, point.DateDeclared) · @RungTextOf(point)@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")@(offLadder ? " · not a rung on this scale" : string.Empty)</title>
       </circle>
     }
 
@@ -66,7 +66,7 @@ else
       @foreach (var point in Points.OrderBy(p => p.Date).ThenBy(p => p.Sequence))
       {
         <tr>
-          <td>@point.Date.ToString("yyyy-MM-dd")</td>
+          <td>@EncounterDate.Label(point.Date, point.DateDeclared)</td>
           <td>@RungOf(point)@(IsOffLadder(point) ? " (not a rung on this scale)" : string.Empty)</td>
           <td>@(string.IsNullOrWhiteSpace(point.Label) ? "—" : point.Label)</td>
         </tr>
@@ -301,8 +301,32 @@ else
   /// <summary>
   /// One plotted observation. <c>Label</c> is the EVIDENCE SOURCE ("Direct observation"), which is what
   /// the screen-reader table's third column is headed — it is not, and never was, a rung label.
+  /// <c>DateDeclared</c> is false when nobody stated the encounter date and <c>Date</c> is only the filing
+  /// day; the tooltip and the table then say so (T161, D28).
   /// </summary>
-  public sealed record ChartPoint(DateOnly Date, int Rating, int Sequence = 0, string? Label = null, bool OffLadder = false);
+  public sealed record ChartPoint(
+    DateOnly Date,
+    int Rating,
+    int Sequence = 0,
+    string? Label = null,
+    bool OffLadder = false,
+    bool DateDeclared = true);
+
+  /// <summary>
+  /// One EPA's trajectory as the chart's points, in the order the query returned them. The one mapping both
+  /// pages that draw a trajectory use (MyProgress, ReviewDetail), so neither can drop a field the other
+  /// carries: the evidence source, the off-ladder mark, and whether the date was stated (T161).
+  /// </summary>
+  public static IReadOnlyList<ChartPoint> PointsOf(EpaTrajectoryDto trajectory)
+    => trajectory.Points
+      .Select((point, index) => new ChartPoint(
+        point.ObservedOn,
+        point.Rating,
+        index,
+        point.Source,
+        point.OffLadder,
+        DateDeclared: point.ObservedOnDeclared))
+      .ToArray();
 
   /// <summary>One rung of the ladder the axis is drawn from. Order is the position; Label is the name.</summary>
   public sealed record Rung(int Order, string Label);

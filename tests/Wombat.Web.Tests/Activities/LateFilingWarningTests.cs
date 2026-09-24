@@ -431,6 +431,8 @@ public sealed class LateFilingWarningTests : TestContext
             $$"""{ "observed_on": "{{Iso(observedOn)}}" }""",
             null,
             null,
+            observedOn,
+            true,
             created,
             transitions[^1].OccurredOn,
             transitions);
@@ -527,6 +529,8 @@ public sealed class LateFilingWarningTests : TestContext
             dataJson,
             null,
             null,
+            observedOn ?? DateOnly.FromDateTime(created),
+            observedOn is not null,
             created,
             created.AddHours(1),
             transitions);

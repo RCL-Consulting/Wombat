@@ -68,6 +68,13 @@ public sealed record TrajectoryRungDto(int Order, string Label);
 public sealed record TrajectoryPointDto(
     int ActivityId,
     DateOnly ObservedOn,
+    /// <summary>
+    /// False when nobody stated when the encounter happened and <see cref="ObservedOn" /> is only the filing day
+    /// (<c>ObservedOnSource == CreatedOn</c>). The point still sits there, the same date the window selects on, but the
+    /// chart must not present it as a clinical date (T161, D28; <c>EncounterDate.Label</c>). No default, so a new
+    /// call site cannot silently report every point as dated.
+    /// </summary>
+    bool ObservedOnDeclared,
     int Rating,
     /// <summary>
     /// Rating rendered as a rung on the EPA's pinned scale, or the bare ordinal when it resolves to
@@ -203,14 +210,13 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             // The x-axis is the encounter date the clinician stated, which is what this chart has always
             // claimed to plot and never did — it plotted CreatedOn, the audit clock. (T119)
             //
-            // NOT exposed here: activity.ObservedOnSource. When it is CreatedOn, nobody stated a date and
-            // this point is sitting on the filing date, which the chart presents as though it were a
-            // clinical fact. Marking those as undated evidence is T119 decision D4, deliberately left to a
-            // follow-up so it lands with T100's neighbouring label fixes rather than ahead of them.
+            // Where nobody stated one (ObservedOnSource == CreatedOn) the point still sits on the filing day,
+            // and says so: the chart's tooltip and table mark it as undated evidence (T161, D28, T119 D4).
             var observedOn = activity.ObservedOn;
+            var observedOnDeclared = activity.ObservedOnSource == ObservationDateSource.Declared;
             // RatingLabel is filled in below, once the EPA's pinned ladder is known.
             rawPoints.Add((epaId, new TrajectoryPointDto(
-                activity.Id, observedOn, rating, rating.ToString(), source, assessorUserId)));
+                activity.Id, observedOn, observedOnDeclared, rating, rating.ToString(), source, assessorUserId)));
         }
 
         if (rawPoints.Count == 0)

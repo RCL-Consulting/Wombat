@@ -2,6 +2,7 @@ using System.Text.Json;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
@@ -75,11 +76,11 @@ internal static class ActivitiesSectionComponent
                 // sorted on, so a reader cannot be shown a row whose printed date sits outside the
                 // period on the cover page. (T119)
                 //
-                // Where this came from ObservedOnSource.CreatedOn nobody stated a date and this is the
-                // audit clock printed as though it were clinical. Saying so on the line is T119 decision
-                // D4, left to the follow-up that owns the display pass.
-                row.ConstantItem(100).AlignRight().Text(
-                    activity.ObservedOn.ToString("yyyy-MM-dd")).FontSize(8).FontColor(Colors.Grey.Darken1);
+                // Where nobody stated one (ObservedOnSource.CreatedOn) the date is only the filing day,
+                // and the line says so in the wording every other surface uses (T161, D28). Sized to its
+                // text: the qualified date does not fit the fixed 100pt the bare one did.
+                row.AutoItem().AlignRight().Text(EncounterDateText(activity))
+                    .FontSize(8).FontColor(Colors.Grey.Darken1);
             });
 
             var key = (activity.ActivityTypeId, activity.SchemaVersion);
@@ -93,6 +94,10 @@ internal static class ActivitiesSectionComponent
             }
         });
     }
+
+    /// <summary>The date printed on an activity's header line: its encounter date, marked when undated (T161).</summary>
+    private static string EncounterDateText(Activity activity)
+        => EncounterDate.Label(activity.ObservedOn, activity.ObservedOnSource == ObservationDateSource.Declared);
 
     private static void RenderDataFromSchema(
         ColumnDescriptor column, string schemaJson, string dataJson, EntrustmentRungLookup rungLabels)

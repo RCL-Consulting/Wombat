@@ -332,6 +332,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
             dataJson,
             null,
             null,
+            new DateOnly(2026, 9, 16),
+            true,
             new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc),
             transitions ?? []);

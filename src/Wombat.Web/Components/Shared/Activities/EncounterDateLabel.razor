@@ -1,18 +1,10 @@
-@* When an activity's encounter happened, as a list cell (T137, from T119's ObservedOn). A date nobody stated is only
-   the day the form was filed, and it says so rather than passing the audit clock off as a clinical fact. The
-   explanation is visible text, not a tooltip: a keyboard, touch or screen-reader user never sees a title. *@
-@if (Declared)
-{
-  <span>@Formatted</span>
-}
-else
-{
-  <span class="muted">@Formatted (filed; no encounter date)</span>
-}
+@* When an activity's encounter happened (T137, from T119's ObservedOn): a list cell, and the activity page's summary
+   (T161). A date nobody stated is only the day the form was filed, and it says so rather than passing the audit clock
+   off as a clinical fact. The wording is EncounterDate.Label, shared with the trajectory and the portfolio PDF (D28).
+   It is visible text, not a tooltip: a keyboard, touch or screen-reader user never sees a title. *@
+<span class="@(Declared ? null : "muted")">@EncounterDate.Label(ObservedOn, Declared)</span>
 
 @code {
   [Parameter, EditorRequired] public DateOnly ObservedOn { get; set; }
   [Parameter] public bool Declared { get; set; }
-
-  private string Formatted => ObservedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 }

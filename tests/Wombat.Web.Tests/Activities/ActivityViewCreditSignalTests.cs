@@ -162,6 +162,8 @@ public sealed class ActivityViewCreditSignalTests : TestContext
             """{"epa_id":"17"}""",
             null,
             null,
+            new DateOnly(2026, 9, 17),
+            true,
             new DateTime(2026, 9, 17, 8, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc),
             [transition]);

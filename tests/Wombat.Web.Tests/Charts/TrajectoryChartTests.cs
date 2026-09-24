@@ -368,4 +368,41 @@ public sealed class TrajectoryChartTests : TestContext
         rows[0].TextContent.Should().Contain("2026-01-01").And.Contain("2").And.Contain("Direct observation");
         rows[1].TextContent.Should().Contain("2026-02-01").And.Contain("4").And.Contain("Conversation");
     }
+
+    // ---- T161, D28: a point nobody dated sits on its filing day, and says so ----
+
+    [Fact]
+    public void AnUndatedPoint_IsMarkedAsFiledOnThatDay_InItsTooltipAndInTheTable()
+    {
+        var points = new[]
+        {
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 15), 2, 0, "Direct observation"),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 20), 3, 1, "Direct observation", DateDeclared: false)
+        };
+
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters.Add(p => p.Points, points));
+
+        cut.FindAll("circle.trajectory-chart-dot title")
+            .Select(title => title.TextContent.Split(" · ")[0])
+            .Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+
+        cut.FindAll("table.visually-hidden tbody tr")
+            .Select(row => row.QuerySelector("td")!.TextContent)
+            .Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+    }
+
+    [Fact]
+    public void PointsOf_CarriesWhetherEachDateWasStated()
+    {
+        var trajectory = new Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee.EpaTrajectoryDto(
+            7, "EPA-07", "Emergency triage", null, null, [],
+            [
+                new(1, new DateOnly(2026, 1, 15), ObservedOnDeclared: true, 2, "2", "Direct observation", "assessor-a"),
+                new(2, new DateOnly(2026, 3, 20), ObservedOnDeclared: false, 3, "3", "Direct observation", "assessor-a", OffLadder: true)
+            ]);
+
+        TrajectoryChart.PointsOf(trajectory).Should().Equal(
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 15), 2, 0, "Direct observation", false, DateDeclared: true),
+            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 20), 3, 1, "Direct observation", true, DateDeclared: false));
+    }
 }

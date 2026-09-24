@@ -5,9 +5,11 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Activities;
@@ -33,6 +35,34 @@ public sealed class GetEpaTrajectoryForTraineeTests
         trajectory.EpaId.Should().Be(7);
         trajectory.Points.Select(p => p.Rating).Should().Equal(4, 3, 5);
         trajectory.Points.Select(p => p.ObservedOn).Should().BeInAscendingOrder();
+    }
+
+    /// <summary>
+    /// T161, D28: a rated type that declares no encounter-date field charts its observation on the day it was filed, and
+    /// the point says so. Both undated seeds are unrated, so the type here is a test one; beside it, a type that
+    /// declares the date charts on the date the form states. Each row is stamped as <c>ActivityService</c> stamps it.
+    /// </summary>
+    [Fact]
+    public async Task AnObservationWithNoStatedEncounterDate_IsMarkedAsSittingOnItsFilingDay()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var undatedType = await SeedActivityTypeAsync(dbContext, "ward_review");
+        var datedType = await SeedTypeAsync(dbContext, "mini_cex", DatedRatedSchemaJson);
+
+        var filed = new DateTime(2026, 3, 20, 9, 0, 0, DateTimeKind.Utc);
+        AddRatedActivity(dbContext, undatedType, "trainee-1", "assessor-a", 7, 3, filed);
+        AddRatedActivity(dbContext, datedType, "trainee-1", "assessor-a", 7, 4, filed, observedOn: "2026-01-15");
+        StampEncounterDatesAsTheServiceDoes(dbContext);
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        var points = result.Should().ContainSingle().Which.Points;
+        points.Select(point => (point.Rating, point.ObservedOn, point.ObservedOnDeclared)).Should().Equal(
+            (4, new DateOnly(2026, 1, 15), true),
+            (3, new DateOnly(2026, 3, 20), false));
     }
 
     [Fact]
@@ -939,6 +969,35 @@ public sealed class GetEpaTrajectoryForTraineeTests
         }
         """;
 
+    /// <summary><see cref="RatedSchemaJson" /> that also declares where the encounter date is written (T119).</summary>
+    private const string DatedRatedSchemaJson = """
+        {
+          "version": 1,
+          "observation_date_field": "observed_on",
+          "rated_level_field": "overall",
+          "evidence_epa_field": "epa_id",
+          "sections": [
+            {
+              "key": "request",
+              "title": "Request",
+              "fields": [
+                { "key": "epa_id", "type": "epa", "label": "EPA" },
+                { "key": "observed_on", "type": "date", "label": "Encounter date" },
+                { "key": "assessor_user_id", "type": "user", "label": "Assessor" }
+              ]
+            },
+            {
+              "key": "assessment",
+              "title": "Assessment",
+              "editable_by": "field:assessor_user_id",
+              "fields": [
+                { "key": "overall", "type": "scale", "label": "Overall", "options": ["1", "2"], "scale_key": "O-R Scale" }
+              ]
+            }
+          ]
+        }
+        """;
+
     /// <summary><see cref="RatedSchemaJson" /> about no single EPA: the same <c>epa</c> field, and no pointer at it.</summary>
     private const string NoEvidenceEpaRatedSchemaJson = """
         {
@@ -1159,9 +1218,11 @@ public sealed class GetEpaTrajectoryForTraineeTests
         int overall,
         DateTime createdOn,
         int? specialityId = null,
-        int? institutionId = null)
+        int? institutionId = null,
+        string? observedOn = null)
     {
-        var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\", \"overall\": \"{overall}\"}}";
+        var encounterDate = observedOn is null ? string.Empty : $", \"observed_on\": \"{observedOn}\"";
+        var dataJson = $"{{\"epa_id\": {epaId}, \"assessor_user_id\": \"{assessor}\", \"overall\": \"{overall}\"{encounterDate}}}";
         dbContext.Activities.Add(new Activity
         {
             ActivityTypeId = activityType.Id,
@@ -1181,5 +1242,18 @@ public sealed class GetEpaTrajectoryForTraineeTests
             SpecialityId = specialityId,
             InstitutionId = institutionId
         });
+    }
+
+    /// <summary>
+    /// Stamps each new row's encounter date and its source from its type's schema, with the resolver
+    /// <c>ActivityService</c> uses on every write (T119). The other fixtures here set the date directly, which leaves the
+    /// source at its default, Declared.
+    /// </summary>
+    private static void StampEncounterDatesAsTheServiceDoes(ApplicationDbContext dbContext)
+    {
+        foreach (var activity in dbContext.Activities.Local)
+        {
+            ObservationDateResolver.Stamp(activity, FormSchemaParser.Parse(activity.ActivityType.SchemaJson!), activity.DataJson);
+        }
     }
 }

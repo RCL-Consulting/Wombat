@@ -294,7 +294,7 @@
             <article class="detail-card detail-card--compact">
               <h4>@trajectory.EpaCode — @trajectory.EpaTitle</h4>
               <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
-              <TrajectoryChart Points="@BuildChartPoints(trajectory)"
+              <TrajectoryChart Points="@TrajectoryChart.PointsOf(trajectory)"
                                Rungs="@BuildRungs(trajectory)"
                                AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
             </article>
@@ -486,11 +486,6 @@
       _error = exception.Message;
     }
   }
-
-  private static IReadOnlyList<TrajectoryChart.ChartPoint> BuildChartPoints(EpaTrajectoryDto trajectory)
-    => trajectory.Points
-      .Select((point, index) => new TrajectoryChart.ChartPoint(point.ObservedOn, point.Rating, index, point.Source, point.OffLadder))
-      .ToArray();
 
   // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.
   // Empty when nothing is pinned, which draws the numeric axis this chart drew before T123.

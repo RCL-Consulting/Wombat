@@ -1604,6 +1604,8 @@ public sealed class ActivityService : IActivityService
             activity.DataJson,
             activity.EpaId,
             activity.CurriculumItemId,
+            activity.ObservedOn,
+            activity.ObservedOnSource == ObservationDateSource.Declared,
             activity.CreatedOn,
             activity.UpdatedOn,
             activity.Transitions
