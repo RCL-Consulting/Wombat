@@ -1,10 +1,11 @@
 ---
 id: T125
 title: "An administrator sets a curriculum minimum by typing a bare integer, with no idea what it means on the ladder"
-status: in_progress
+status: done
 priority: P2
 created: 2026-09-19
 started: 2026-09-24
+completed: 2026-09-24
 ---
 # T125 — An administrator sets a curriculum minimum by typing a bare integer, with no idea what it means on the ladder
 
@@ -142,12 +143,43 @@ Left to the implementer: the add form's default scale, either the siblings' shar
 
 **Verification, added (the last four come from T136):**
 
-- [ ] Changing the scale empties the minimum pickers and disables Save until each is re-picked. bUnit test.
-- [ ] A per-stage key the editor does not render survives a save. bUnit or handler test.
-- [ ] Browser, on dev (read DESIGN.md first): a v11.1 item offers 1/2/3a/3b/4/5. Re-pin PAED-001 to the O-R Scale
+- [x] Changing the scale empties the minimum pickers and disables Save until each is re-picked. bUnit test.
+- [x] A per-stage key the editor does not render survives a save. bUnit or handler test.
+- [x] Browser, on dev (read DESIGN.md first): a v11.1 item offers 1/2/3a/3b/4/5. Re-pin PAED-001 to the O-R Scale
       and back.
-- [ ] Update refuses an incompatible scale-and-ordinals combination. Handler test on the Update path; today only Add
+- [x] Update refuses an incompatible scale-and-ordinals combination. Handler test on the Update path; today only Add
       is covered (`CurriculumItemScalePinTests.cs:76-117`).
-- [ ] Update succeeds when scale, flat minimum and stage minima change together. Handler test.
-- [ ] The refusal names the scale and the offending value, next to the row. bUnit test.
-- [ ] Full suite green, no `--no-build`.
+- [x] Update succeeds when scale, flat minimum and stage minima change together. Handler test.
+- [x] The refusal names the scale and the offending value, next to the row. bUnit test.
+- [x] Full suite green, no `--no-build`.
+
+---
+
+## As built — 2026-09-24 (with [T136])
+
+- **Rung pickers** (`RungPicker.razor`) for the flat and the per-year minima, labelled from the pinned scale's levels.
+  They are numeric when the item is unpinned, and a stored value that is not a rung shows as "N (not a rung on X)".
+- **A scale change empties every picker** and disables Save. An always-present `role="status"` region explains why,
+  and Save points at it with `aria-describedby`. Minima picked on a scale come back if the admin returns to that
+  scale within the same edit. Nothing is ever carried to a different scale.
+- **Per-year editor** (`StageMinimaEditor.razor`, `StageMinimaDraft.cs`): one row per stored year, add the lowest
+  missing year, remove a year. Entries that are not a year and a rung are listed verbatim and block Save until removed;
+  of a year spelled twice, the last spelling (the one credit reads) is shown.
+- **The refusal** (`CurriculumMappings.EnsureScaleCanExpressMinimaAsync`) names the scale, the field and the value, and
+  the previous ladder's rung in brackets. It still runs before any mutation (the test now saves and clears the tracker,
+  as `AuditPipelineBehavior` would) and is shown beside the row. Read mode prints rung labels. The add form suggests
+  the siblings' shared scale, else the sub-speciality default, and says why.
+- **Evidence.**
+  - Tests: Application +4, Web +33 (on master: Application 919, Web 355, all five suites green). 29 mutants across
+    the two rounds, all killed.
+  - Browser on dev: all six checks pass.
+    - PAED-001 offers exactly 1/2/3a/3b/4/5.
+    - Re-pinned to O-R, the pickers emptied and Save was off with the reason. Picked and saved; the SQL showed
+      `ScaleId=1` and the chosen minima.
+    - Re-pinned back to v11.1 and re-picked. The row is byte-identical to the before-snapshot, and progress rows are
+      unchanged.
+    - Cancel saves nothing.
+    - Accessibility: labels present, and `aria-describedby` points at the status.
+- **Filed:** [T174] (the seeder re-pins an unpinned seeded item at every boot, the review's M1), [T175] (`app.css`
+  has no version in its URL, seen in this browser run), [T176] (the edit row is cramped, and three inputs have no name).
+

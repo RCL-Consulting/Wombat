@@ -1,11 +1,12 @@
 ---
 id: T136
 title: "Changing a curriculum item's scale fails silently when its ordinals do not fit"
-status: in_progress
+status: done
 priority: P2
 owner: agent
 created: 2026-09-20
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T136 — The save button does nothing, and says nothing
@@ -78,3 +79,6 @@ T109 (ordinals pinned to a scale) is why the refusal exists. Found while verifyi
 
 Folded into [T125], which covers the same page and handler. Its message wording and tests are listed in T125's update,
 and this task closes when T125 lands.
+
+**Closed 2026-09-24 with [T125]**, which records the as-built. The refusal names the scale, the field and the value, and
+shows beside the row; the Update path is covered by handler tests.

@@ -4,8 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T125](tasks/in_progress/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
-| in_progress | [T136](tasks/in_progress/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
@@ -20,6 +18,7 @@
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
 | queued | [T174](tasks/queued/T174-the-catalogue-seeder-re-pins-an-unpinned-seeded-curriculum-item-to-v11-1-at-every-boot-changing-what-its-stored-minima-mean.md) | P2 | The catalogue seeder re-pins an unpinned seeded curriculum item to v11 |  |
+| queued | [T175](tasks/queued/T175-app-css-is-served-without-a-version-in-its-url-so-a-deploy-can-show-a-new-page-with-an-old-stylesheet.md) | P2 | app.css is served without a version in its URL, so a deploy can show a |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -55,8 +54,9 @@
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T172](tasks/queued/T172-a-refusal-names-the-form-s-fields-by-key-presenting-problem-not-by-the-label-the-user-sees.md) | P3 | A refusal names the form's fields by key (presenting_problem), not by  |  |
 | queued | [T173](tasks/queued/T173-a-committee-review-cannot-tell-that-an-msf-campaign-closing-in-its-window-is-still-awaiting-release.md) | P3 | A committee review cannot tell that an MSF campaign closing in its win |  |
+| queued | [T176](tasks/queued/T176-the-curriculum-items-edit-row-is-cramped-at-laptop-widths-and-three-of-its-inputs-have-no-accessible-name.md) | P3 | The curriculum items edit row is cramped at laptop widths, and three o |  |
 
-Done: 110 task(s).
+Done: 112 task(s).
 
 ## From STATE.md
 
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+02b2401 feat(curricula): a curriculum minimum is picked as a rung on the item's ladder; a scale change resets the minima; the refusal names the scale and field beside the row (T125, T136)
 4f3e256 docs(execution): handoff progress
 5f5e097 docs(execution): close T107 — the disabled action and its reason verified in the browser (activity 23); T162 gains the stuck msf_cpsa draft
 6934294 fix(activities): an action the actor may take but cannot complete is shown disabled with the fields it needs, not offered (T107, D33 part 1)
 29aad11 fix(committee): a panel's evidence snapshot holds only released MSF campaigns, windowed by the day each closed so it travels with its per-EPA evidence (T138)
-5fbc8c2 fix(activities): /activities/new creates once and moves to the activity with the outcome; a requested-born type is never withdrawn on Submit; a create that is the filing checks the author's fields (T127, T143, T148)
 ```
