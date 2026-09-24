@@ -1,0 +1,66 @@
+@using System.Globalization
+@* T125. A curriculum minimum is picked as a rung on the item's ladder: the option's value is the Order (what is stored
+   and what CreditApplier compares), its text the rung as the College prints it — the WBA picker's shape (T100). With no
+   ladder there are no rungs to offer, so an unpinned item keeps a typed number (T109: unpinned is a meaningful state). *@
+
+@if (Scale is not null)
+{
+  <select id="@Id" class="@($"form-select{InvalidClass}")" required aria-required="true" aria-invalid="@InvalidText"
+          aria-label="@AriaLabel" value="@ValueText" @onchange="OnChangedAsync">
+    <option value="">Choose a rung</option>
+    @foreach (var level in Scale.Levels)
+    {
+      <option value="@level.Order.ToString(CultureInfo.InvariantCulture)">@level.Label</option>
+    }
+    @if (Value is int stored && Scale.Levels.All(level => level.Order != stored))
+    {
+      @* A stored value that is not a rung on this ladder is shown, not hidden: the operator has to see what is there to
+         replace it. It does not count as picked, so Save stays off until a real rung is chosen. *@
+      <option value="@ValueText">@ValueText (not a rung on @Scale.Name)</option>
+    }
+  </select>
+}
+else
+{
+  <input id="@Id" type="number" class="@($"form-control{InvalidClass}")" min="1" max="20" step="1" required
+         aria-required="true" aria-invalid="@InvalidText" aria-label="@AriaLabel" value="@ValueText"
+         @onchange="OnChangedAsync" />
+}
+
+@code {
+  [Parameter, EditorRequired] public string Id { get; set; } = default!;
+
+  /// <summary>The item's ladder, or null when it is unpinned.</summary>
+  [Parameter] public EntrustmentScaleDto? Scale { get; set; }
+
+  [Parameter] public int? Value { get; set; }
+
+  [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+
+  /// <summary>Only where no <c>label for</c> names the control, such as a table cell.</summary>
+  [Parameter] public string? AriaLabel { get; set; }
+
+  /// <summary>
+  /// Whether <paramref name="value" /> is a minimum the page may save: a rung on the ladder, or, unpinned, a level
+  /// from 1 to 20 (the command validator's range). Nothing, and a stored value off the ladder, are not.
+  /// </summary>
+  public static bool Accepts(EntrustmentScaleDto? scale, int? value)
+    => value is int order && (scale is null
+      ? order is >= 1 and <= 20
+      : scale.Levels.Any(level => level.Order == order));
+
+  private string ValueText => Value?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+  // Invalid is a value that is there and wrong: off the ladder, or out of range. An empty picker is not invalid, only
+  // required (aria-required says so), so a fresh Add form and a newly added year are not announced as errors before
+  // anyone has touched them; the page's status line says why saving is off.
+  private bool IsInvalid => Value is not null && !Accepts(Scale, Value);
+
+  private string InvalidText => IsInvalid ? "true" : "false";
+
+  private string InvalidClass => IsInvalid ? " input-validation-error" : string.Empty;
+
+  private Task OnChangedAsync(ChangeEventArgs args)
+    => ValueChanged.InvokeAsync(
+      int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var order) ? order : null);
+}

@@ -4,14 +4,14 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T125](tasks/in_progress/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
+| in_progress | [T136](tasks/in_progress/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
-| queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T135](tasks/queued/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
-| queued | [T136](tasks/queued/T136-curriculum-scale-change-fails-silently.md) | P2 | Changing a curriculum item's scale fails silently when its ordinals do |  |
 | queued | [T137](tasks/queued/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | queued | [T140](tasks/queued/T140-the-integration-suite-s-msf-flow-test-cannot-set-itself-up-on-a-fresh-schema-and-leaks-a-schema-every-time-it-fails.md) | P2 | The integration suite's MSF flow test cannot set itself up on a fresh  | sonnet |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
@@ -19,6 +19,7 @@
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
+| queued | [T174](tasks/queued/T174-the-catalogue-seeder-re-pins-an-unpinned-seeded-curriculum-item-to-v11-1-at-every-boot-changing-what-its-stored-minima-mean.md) | P2 | The catalogue seeder re-pins an unpinned seeded curriculum item to v11 |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -71,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+4f3e256 docs(execution): handoff progress
+5f5e097 docs(execution): close T107 — the disabled action and its reason verified in the browser (activity 23); T162 gains the stuck msf_cpsa draft
 6934294 fix(activities): an action the actor may take but cannot complete is shown disabled with the fields it needs, not offered (T107, D33 part 1)
 29aad11 fix(committee): a panel's evidence snapshot holds only released MSF campaigns, windowed by the day each closed so it travels with its per-EPA evidence (T138)
 5fbc8c2 fix(activities): /activities/new creates once and moves to the activity with the outcome; a requested-born type is never withdrawn on Submit; a create that is the filing checks the author's fields (T127, T143, T148)
-54c9805 docs(execution): STATE back under its 60-line cap
-47a9aad docs(execution): re-baseline the EPA stream — close T118 and T104 by finding, fold merged tasks, file T158–T171, rewrite EPA-PROGRAMME §2 as the live queue
 ```

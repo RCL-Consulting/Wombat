@@ -1,6 +1,6 @@
 @if (!_dismissed)
 {
-  <div class="alert alert-@Kind">
+  <div class="alert alert-@Kind" role="@Role">
     @if (Dismissible)
     {
       <div class="actions-cell">
@@ -21,6 +21,12 @@
   [Parameter] public string Kind { get; set; } = "info";
   [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
   [Parameter] public bool Dismissible { get; set; }
+
+  /// <summary>
+  /// An ARIA role, when the alert is a message that must be announced as it appears ("alert" for a refusal). Omitted
+  /// by default: most alerts are page content present from the first render, and a role would announce them all.
+  /// </summary>
+  [Parameter] public string? Role { get; set; }
 
   private void Dismiss() => _dismissed = true;
 }

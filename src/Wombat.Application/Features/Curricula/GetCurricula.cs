@@ -73,7 +73,8 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
                 entity.Items
                     .OrderBy(item => item.Epa.Code)
                     .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
-                    .ToList()))
+                    .ToList(),
+                entity.SubSpeciality.DefaultEntrustmentScaleId))
             .ToListAsync(cancellationToken);
     }
 }
@@ -109,7 +110,8 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
                     entity.Items
                         .OrderBy(item => item.Epa.Code)
                         .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
-                        .ToList()),
+                        .ToList(),
+                    entity.SubSpeciality.DefaultEntrustmentScaleId),
                 CollegeId = entity.SubSpeciality.Speciality.CollegeId
             })
             .SingleOrDefaultAsync(cancellationToken);

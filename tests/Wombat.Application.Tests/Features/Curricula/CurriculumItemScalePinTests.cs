@@ -84,8 +84,10 @@ public sealed class CurriculumItemScalePinTests
             new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, null, null, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
+        // T136: the refusal names the field, the value and the ladder, so the operator knows what to change. A new
+        // item has no previous ladder, so there is no "(rung …)" to add.
         (await act.Should().ThrowAsync<InvalidOperationException>())
-            .WithMessage("*requires level 6*");
+            .WithMessage("Minimum level 6 is not a rung on Paed General Entrustment Scale, which has 5 rungs.");
     }
 
     [Fact]
@@ -100,8 +102,66 @@ public sealed class CurriculumItemScalePinTests
             new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"4":6}""", null, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
+        // Only the year that does not fit is named: the flat 4 and year 1's 2 are rungs on the five-rung ladder.
         (await act.Should().ThrowAsync<InvalidOperationException>())
-            .WithMessage("*requires level 6*");
+            .WithMessage("Year 4 minimum 6 is not a rung on Paed General Entrustment Scale, which has 5 rungs.");
+    }
+
+    // ---- T125 / T136: the Update path ----
+
+    [Fact]
+    public async Task UpdateCurriculumItem_RePinnedToAShorterLadderWithTheOldOrdinals_IsRefused_NamingEachField_AndChangesNothing()
+    {
+        // T136's reproduction: PAED-001 on the six-rung v11.1 ladder, minimum 6 and a year curve reaching 6, re-pinned
+        // to a five-rung ladder without touching the ordinals. The pin is refused, and the refusal names the scale,
+        // each field that does not fit, its value, and the rung the operator knew it as on the ladder it is leaving.
+        await using var dbContext = CreateDbContext();
+        await SeedAsync(dbContext);
+        var itemId = await SeedPinnedItemAsync(dbContext, SixRungScaleId, 6, """{"1":3,"2":4,"3":5,"4":6}""");
+
+        var act = () => new UpdateCurriculumItemCommandHandler(dbContext).Handle(
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, """{"1":3,"2":4,"3":5,"4":6}""", null, Administrator(), FiveRungScaleId),
+            CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .WithMessage(
+                "Minimum level 6 (rung 5) and year 4 minimum 6 (rung 5) are not rungs on Paed General Entrustment Scale, which has 5 rungs. " +
+                "The rungs in brackets are as CPSA Paediatric Entrustment Scale v11.1 names them.");
+
+        // Refused before the first mutation. AuditPipelineBehavior saves the request's DbContext from its catch, so a
+        // handler that assigned the item's fields and then threw would commit them. Save as it does, then read back:
+        // re-reading without the save would show the stored row whatever the handler had changed in memory.
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+        var stored = await dbContext.CurriculumItems.AsNoTracking().SingleAsync(item => item.Id == itemId);
+        stored.ScaleId.Should().Be(SixRungScaleId);
+        stored.MinimumLevelOrder.Should().Be(6);
+        CurriculumItem.ParseStageOverrides(stored.MinimumLevelByStageJson).Should().Equal(
+            new Dictionary<int, int> { [1] = 3, [2] = 4, [3] = 5, [4] = 6 });
+    }
+
+    [Fact]
+    public async Task UpdateCurriculumItem_ChangingTheScaleTheFlatMinimumAndTheStageMinimaTogether_Succeeds()
+    {
+        // T136: the path that works, and that nothing guarded. The check is on the REQUESTED values, so re-picking
+        // every minimum on the new ladder in the same save is a valid re-pin, not a refusal about the old values.
+        await using var dbContext = CreateDbContext();
+        await SeedAsync(dbContext);
+        var itemId = await SeedPinnedItemAsync(dbContext, SixRungScaleId, 6, """{"1":3,"2":4,"3":5,"4":6}""");
+
+        var result = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"2":3,"3":3,"4":4}""", null, Administrator(), FiveRungScaleId),
+            CancellationToken.None);
+
+        var dto = result.Items.Single();
+        dto.ScaleId.Should().Be(FiveRungScaleId);
+        dto.MinimumLevelOrder.Should().Be(4);
+
+        var stored = await dbContext.CurriculumItems.AsNoTracking().SingleAsync(item => item.Id == itemId);
+        stored.ScaleId.Should().Be(FiveRungScaleId);
+        stored.MinimumLevelOrder.Should().Be(4);
+        CurriculumItem.ParseStageOverrides(stored.MinimumLevelByStageJson).Should().Equal(
+            new Dictionary<int, int> { [1] = 2, [2] = 3, [3] = 3, [4] = 4 });
     }
 
     [Fact]
@@ -115,6 +175,25 @@ public sealed class CurriculumItemScalePinTests
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    private static async Task<int> SeedPinnedItemAsync(ApplicationDbContext dbContext, int scaleId, int minimum, string stageMinimaJson)
+    {
+        var item = new CurriculumItem
+        {
+            CurriculumId = 3000,
+            EpaId = 5000,
+            RequiredCount = 3,
+            QuotaPeriod = QuotaPeriod.AcademicYear,
+            MinimumLevelOrder = minimum,
+            WindowMonths = 12,
+            MinimumLevelByStageJson = stageMinimaJson,
+            ScaleId = scaleId
+        };
+        dbContext.CurriculumItems.Add(item);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+        return item.Id;
     }
 
     private static ClaimsPrincipal Administrator()
@@ -148,8 +227,9 @@ public sealed class CurriculumItemScalePinTests
             {
                 Id = SixRungScaleId,
                 Name = "CPSA Paediatric Entrustment Scale v11.1",
-                Levels = Enumerable.Range(1, 6)
-                    .Select(order => new EntrustmentLevel { Id = 9100 + order, Order = order, Label = order.ToString() })
+                // The College's labels: v11.1 splits level 3, so Order 6 is rung "5" (T100).
+                Levels = new[] { "1", "2", "3a", "3b", "4", "5" }
+                    .Select((label, index) => new EntrustmentLevel { Id = 9101 + index, Order = index + 1, Label = label })
                     .ToList()
             });
 

@@ -3,6 +3,7 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Globalization
 @using Wombat.Domain.Curricula
 @using Wombat.Application.Features.Curricula.Quota
 
@@ -42,9 +43,9 @@
             <tr>
               <th>EPA</th>
               <th>Target</th>
-              <th>Minimum level</th>
               <th>Scale</th>
-              <th>Per-stage minima</th>
+              <th>Minimum level</th>
+              <th>Minimum by training year</th>
               <th>Completion window (months)</th>
               <th>Weight</th>
               <th>Tools</th>
@@ -72,9 +73,9 @@
                       <option value="@QuotaPeriod.AcademicYear">per academic year</option>
                     </InputSelect>
                   </td>
-                  <td><InputNumber class="form-control" @bind-Value="_editModel.MinimumLevelOrder" /></td>
                   <td>
-                    <InputSelect class="form-select" TValue="int?" @bind-Value="_editModel.ScaleId">
+                    <InputSelect id="edit-scale" class="form-select" TValue="int?" aria-label="Scale"
+                                 @bind-Value="_editModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_editModel)">
                       <option value="">Not pinned</option>
                       @foreach (var scale in _scales)
                       {
@@ -82,24 +83,52 @@
                       }
                     </InputSelect>
                   </td>
-                  <td><InputText class="form-control" @bind-Value="_editModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3}' /></td>
+                  <td>
+                    <RungPicker Id="edit-minimum" AriaLabel="Minimum level" Scale="ScaleOf(_editModel.ScaleId)"
+                                @bind-Value="_editModel.MinimumLevelOrder" />
+                  </td>
+                  <td><span class="muted">Set below</span></td>
                   <td><InputNumber class="form-control" @bind-Value="_editModel.WindowMonths" /></td>
                   <td><InputNumber class="form-control" @bind-Value="_editModel.Weight" /></td>
                   <td>@ToolsText(_editModel.PermittedToolKeys)</td>
                   <td>
                     <div class="actions-cell">
-                      <button class="btn btn-sm btn-primary" @onclick="SaveItemAsync">Save</button>
+                      <button class="btn btn-sm btn-primary" disabled="@(_saving || !MinimaComplete(_editModel))"
+                              aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
                       <button class="btn btn-sm btn-outline" @onclick="CancelEdit">Cancel</button>
                     </div>
                   </td>
                 }
                 else
                 {
+                  var stages = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
                   <td>@item.EpaCode - @item.EpaTitle</td>
                   <td>@TargetText(item)</td>
-                  <td>@item.MinimumLevelOrder</td>
                   <td>@(item.ScaleName ?? "Not pinned")</td>
-                  <td>@(item.MinimumLevelByStageJson ?? "—")</td>
+                  <td>@RungText(item.ScaleId, item.MinimumLevelOrder)</td>
+                  <td>
+                    @if (stages.Unreadable is not null)
+                    {
+                      <span class="font-mono">@stages.Unreadable</span>
+                    }
+                    else if (stages.Rows.Count == 0 && stages.Kept.Count == 0)
+                    {
+                      <span>—</span>
+                    }
+                    else
+                    {
+                      <ul class="list-unstyled">
+                        @foreach (var row in stages.Rows)
+                        {
+                          <li>Year @row.Year: @(row.Level is int level ? RungText(item.ScaleId, level) : "—")</li>
+                        }
+                        @foreach (var entry in stages.Kept)
+                        {
+                          <li class="font-mono">@entry.Name: @entry.RawValue</li>
+                        }
+                      </ul>
+                    }
+                  </td>
                   <td>@item.WindowMonths</td>
                   <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
                   <td>@ToolsText(item.PermittedToolKeys)</td>
@@ -113,10 +142,26 @@
               </tr>
               @if (_editingItemId == item.Id)
               {
-                @* T122. The tool list gets its own row: a dozen checkboxes do not fit a table cell. *@
+                @* T122. The tool list gets its own row: a dozen checkboxes do not fit a table cell. T125 puts the
+                   year-by-year minima here too, and T136 the refusal of a save, beside the row it is about rather than
+                   only in the alert at the top of the page, which is out of sight on a long curriculum. *@
                 <tr>
                   <td colspan="9">
-                    <fieldset>
+                    @if (!string.IsNullOrWhiteSpace(_rowError))
+                    {
+                      <Alert Kind="danger" Role="alert">@_rowError</Alert>
+                    }
+                    @* The live region is always there and only its content comes and goes: a screen reader announces a
+                       change to a region it already knows, not reliably one that arrives already filled. Save points
+                       at it, so the reason it is off is read with it. *@
+                    <div id="edit-minima-status" role="status">
+                      @if (!MinimaComplete(_editModel))
+                      {
+                        <Alert Kind="info">@IncompleteText(_editModel, "Saving")</Alert>
+                      }
+                    </div>
+                    <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
+                    <fieldset class="mt-3">
                       <legend>Tools</legend>
                       <p class="muted">Tick the instruments that may be used as evidence for this EPA. None ticked means any instrument.</p>
                       <div class="check-grid">
@@ -146,6 +191,11 @@
         <DataAnnotationsValidator />
         <ValidationSummary class="validation-summary-errors" />
 
+        @if (!string.IsNullOrWhiteSpace(_addError))
+        {
+          <Alert Kind="danger" Role="alert">@_addError</Alert>
+        }
+
         <div class="form-grid form-grid--wide">
           <FormField Label="EPA" InputId="curriculum-item-epa" Required="true">
             <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
@@ -169,25 +219,29 @@
             <small class="muted">A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.</small>
           </FormField>
 
-          <FormField Label="Minimum level" InputId="curriculum-item-level">
-            <InputNumber id="curriculum-item-level" class="form-control" @bind-Value="_addModel.MinimumLevelOrder" />
-          </FormField>
-
           <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
-            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?" @bind-Value="_addModel.ScaleId">
+            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?"
+                         @bind-Value="_addModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_addModel)">
               <option value="">Not pinned</option>
               @foreach (var scale in _scales)
               {
                 <option value="@scale.Id">@scale.Name</option>
               }
             </InputSelect>
-            <small class="muted">The ladder the minimum level above is expressed on. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.</small>
+            @if (AddScaleReason() is string reason)
+            {
+              <small class="muted">Suggested because @reason.</small>
+            }
+            <small class="muted">The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.</small>
           </FormField>
 
-          <FormField Label="Per-stage minima (JSON)" InputId="curriculum-item-stage-levels" FullWidth="true">
-            <InputText id="curriculum-item-stage-levels" class="form-control" @bind-Value="_addModel.MinimumLevelByStageJson" placeholder='{"1":2,"2":3,"3":4}' />
-            <small class="muted">Optional JSON object keyed by training year. Overrides the flat minimum level when the trainee is at that year.</small>
+          <FormField Label="Minimum level" InputId="curriculum-item-level" Required="true">
+            <RungPicker Id="curriculum-item-level" Scale="ScaleOf(_addModel.ScaleId)" @bind-Value="_addModel.MinimumLevelOrder" />
           </FormField>
+
+          <div class="full-width">
+            <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
+          </div>
 
           <FormField Label="Completion window (months)" InputId="curriculum-item-window">
             <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_addModel.WindowMonths" />
@@ -217,7 +271,10 @@
         </div>
 
         <FormActions>
-          <button type="submit" class="btn btn-primary" disabled="@_saving">Add item</button>
+          @* Always rendered, filled only when adding is off; see the edit row's status for why. *@
+          <span id="add-minima-status" class="muted" role="status">@(MinimaComplete(_addModel) ? null : IncompleteText(_addModel, "Adding"))</span>
+          <button type="submit" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_addModel))"
+                  aria-describedby="add-minima-status">Add item</button>
         </FormActions>
       </EditForm>
     </div>
@@ -239,7 +296,11 @@
   private readonly CurriculumItemFormModel _editModel = new();
   private int? _editingItemId;
   private string? _loadError;
+  // Where a refusal is shown is where the operator is looking (T136): a Remove's at the top, a Save's beside the row
+  // being edited, an Add's inside the Add form at the foot of the page.
   private string? _actionError;
+  private string? _rowError;
+  private string? _addError;
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
@@ -280,8 +341,16 @@
 
   private async Task AddItemAsync()
   {
+    // The button is off until every minimum is picked; this is the same rule for a submit that did not come from it.
+    if (!MinimaComplete(_addModel))
+    {
+      return;
+    }
+
+    _addError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder, _addModel.WindowMonths, _addModel.Weight, EmptyToNull(_addModel.MinimumLevelByStageJson), _addModel.PermittedToolKeys.ToList(), authState.User, _addModel.ScaleId)), "Curriculum item added."))
+    _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), authState.User, _addModel.ScaleId)), "Curriculum item added.");
+    if (_addError is not null)
     {
       return;
     }
@@ -292,14 +361,17 @@
   private void BeginEdit(CurriculumItemDto item)
   {
     _editingItemId = item.Id;
+    _rowError = null;
     _editModel.EpaId = item.EpaId;
     _editModel.RequiredCount = item.RequiredCount;
     _editModel.QuotaPeriod = item.QuotaPeriod;
     _editModel.MinimumLevelOrder = item.MinimumLevelOrder;
     _editModel.WindowMonths = item.WindowMonths;
     _editModel.Weight = item.Weight;
-    _editModel.MinimumLevelByStageJson = item.MinimumLevelByStageJson;
-    _editModel.ScaleId = item.ScaleId;
+    // Parsed into rows, with anything the editor cannot render kept verbatim, so an unchanged save writes back what
+    // is stored (T125).
+    _editModel.StageMinima = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
+    _editModel.StartOn(item.ScaleId);
     // Copied, so saving an item unchanged keeps its list (T122). A key the vocabulary no longer holds is kept too,
     // and shown as its own checkbox by ToolOptions, so it can be seen and unticked.
     _editModel.PermittedToolKeys = item.PermittedToolKeys.ToHashSet(StringComparer.Ordinal);
@@ -308,20 +380,22 @@
   private void CancelEdit()
   {
     _editingItemId = null;
+    _rowError = null;
   }
 
   private async Task SaveItemAsync()
   {
-    if (!_editingItemId.HasValue)
+    if (!_editingItemId.HasValue || !MinimaComplete(_editModel))
     {
       return;
     }
 
+    _rowError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    // Only leave edit mode when the command actually succeeded. A rejected scale pin (T109) is the common
-    // case now, and closing the row on rejection throws away everything the operator typed while showing
-    // them an error about it.
-    if (!await RefreshCurriculumAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder, _editModel.WindowMonths, _editModel.Weight, EmptyToNull(_editModel.MinimumLevelByStageJson), _editModel.PermittedToolKeys.ToList(), authState.User, _editModel.ScaleId)), "Curriculum item saved."))
+    // Only leave edit mode when the command actually succeeded. Closing the row on a refusal would throw away
+    // everything the operator picked while showing them an error about it.
+    _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), authState.User, _editModel.ScaleId)), "Curriculum item saved.");
+    if (_rowError is not null)
     {
       return;
     }
@@ -332,11 +406,11 @@
   private async Task RemoveItemAsync(int itemId)
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    await RefreshCurriculumAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId, authState.User)), "Curriculum item removed.");
+    _actionError = await RunAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId, authState.User)), "Curriculum item removed.");
   }
 
-  /// <summary>Returns false when the command was rejected, so the caller can keep the form as it is.</summary>
-  private async Task<bool> RefreshCurriculumAsync(Func<Task<CurriculumDto>> action, string successMessage)
+  /// <summary>Runs a command and reloads the curriculum from its result. Returns the refusal, or null on success.</summary>
+  private async Task<string?> RunAsync(Func<Task<CurriculumDto>> action, string successMessage)
   {
     _saving = true;
     _actionError = null;
@@ -346,12 +420,11 @@
     {
       _curriculum = await action();
       _statusMessage = successMessage;
-      return true;
+      return null;
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
-      return false;
+      return exception.Message;
     }
     finally
     {
@@ -364,12 +437,110 @@
     _addModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
     _addModel.RequiredCount = 1;
     _addModel.QuotaPeriod = QuotaPeriod.AcademicYear;
-    _addModel.MinimumLevelOrder = 4;
+    // Empty, not a number: "4" was 3b on the v11.1 ladder, and a default is a minimum nobody chose (T125).
+    _addModel.MinimumLevelOrder = null;
     _addModel.WindowMonths = 12;
     _addModel.Weight = null;
-    _addModel.MinimumLevelByStageJson = null;
-    _addModel.ScaleId = null;
+    _addModel.StageMinima = StageMinimaDraft.Parse(null);
+    _addModel.StartOn(SuggestedScale().ScaleId);
     _addModel.PermittedToolKeys = new HashSet<string>(StringComparer.Ordinal);
+  }
+
+  /// <summary>
+  /// Why the Add form is on the ladder it shows, while that is still the suggestion; null once the operator has picked
+  /// another, or once the items have changed so that it no longer is.
+  /// </summary>
+  /// <remarks>Worked out as the page renders, so an Update or a Remove that changes the siblings cannot leave a stale reason.</remarks>
+  private string? AddScaleReason()
+  {
+    if (_addModel.ScaleChanged)
+    {
+      return null;
+    }
+
+    var (scaleId, reason) = SuggestedScale();
+    return scaleId == _addModel.ScaleId ? reason : null;
+  }
+
+  /// <summary>
+  /// The ladder a new item starts on: the one every existing item shares, else the sub-speciality's default, else none.
+  /// </summary>
+  /// <remarks>
+  /// A suggestion the operator sees and can change, never a pin made behind their back: the minima are empty until
+  /// they pick each one as a rung on it, and the page says where the suggestion came from.
+  /// </remarks>
+  private (int? ScaleId, string? Reason) SuggestedScale()
+  {
+    var pins = _curriculum?.Items.Select(item => item.ScaleId).Distinct().ToList() ?? [];
+    if (pins is [int shared] && ScaleOf(shared) is not null)
+    {
+      return (shared, "every item on this curriculum is pinned to it");
+    }
+
+    if (_curriculum?.SubSpecialityDefaultScaleId is int fallback && ScaleOf(fallback) is not null)
+    {
+      return (fallback, $"it is the default scale of {_curriculum.SubSpecialityName}");
+    }
+
+    return (null, null);
+  }
+
+  /// <summary>A scale change: the minima on screen go with the ladder they were picked on (T125). See <see cref="CurriculumItemFormModel.MoveToScale" />.</summary>
+  private static void OnScaleChanged(CurriculumItemFormModel model) => model.MoveToScale();
+
+  private EntrustmentScaleDto? ScaleOf(int? scaleId)
+    => scaleId is int id ? _scales.FirstOrDefault(scale => scale.Id == id) : null;
+
+  /// <summary>
+  /// Whether the item may be sent: every minimum, flat and by year, a rung on its ladder (or, unpinned, a level 1–20),
+  /// and nothing stored under the year-by-year minima that the command validator would refuse.
+  /// </summary>
+  private bool MinimaComplete(CurriculumItemFormModel model)
+    => RungsPicked(model) && !model.StageMinima.HasUnrenderedEntries;
+
+  private bool RungsPicked(CurriculumItemFormModel model)
+  {
+    var scale = ScaleOf(model.ScaleId);
+    return RungPicker.Accepts(scale, model.MinimumLevelOrder)
+      && model.StageMinima.Rows.All(row => RungPicker.Accepts(scale, row.Level));
+  }
+
+  /// <param name="action">What is off, as the button the operator is looking at does it: "Saving", "Adding".</param>
+  private string IncompleteText(CurriculumItemFormModel model, string action)
+  {
+    if (RungsPicked(model))
+    {
+      return $"{action} is off until each stored entry under Minimum by training year that is not a year and a rung is removed.";
+    }
+
+    var scale = ScaleOf(model.ScaleId);
+    if (model.ScaleChanged && model.ClearedByScaleChange)
+    {
+      return scale is null
+        ? "The item is no longer pinned, so the minima picked on the previous ladder have been cleared. Type each one again as a level from 1 to 20."
+        : $"The scale is now {scale.Name}, so the minima picked on the previous ladder have been cleared: the same number is a different rung on another ladder. Choose each one again on {scale.Name}.";
+    }
+
+    return scale is null
+      ? $"{action} is off until every minimum is a level from 1 to 20."
+      : $"{action} is off until every minimum is a rung on {scale.Name}.";
+  }
+
+  /// <summary>
+  /// The rung as the College prints it, resolved from the loaded ladders (T125, T100). The ordinal when the item is
+  /// unpinned; the ordinal, marked, when it is pinned and the value is not a rung on its ladder, as the edit picker
+  /// marks it: on a ladder whose rungs are named "1" to "5", a bare 6 would read as a real rung.
+  /// </summary>
+  private string RungText(int? scaleId, int order)
+  {
+    var ordinal = order.ToString(CultureInfo.InvariantCulture);
+    var scale = ScaleOf(scaleId);
+    if (scale is null)
+    {
+      return ordinal;
+    }
+
+    return scale.Levels.FirstOrDefault(level => level.Order == order)?.Label ?? $"{ordinal} (not a rung on {scale.Name})";
   }
 
   /// <summary>The vocabulary, plus any stored key it no longer holds, shown by its raw key (T122).</summary>
@@ -405,9 +576,6 @@
       ? $"{item.RequiredCount} per semester"
       : $"{item.RequiredCount} per academic year";
 
-  private static string? EmptyToNull(string? value)
-    => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
   private sealed class CurriculumItemFormModel
   {
     [Range(1, int.MaxValue)]
@@ -419,21 +587,83 @@
     /// <summary>The window RequiredCount is a target for (T130). Copied from the item on edit, so saving unchanged keeps it.</summary>
     public QuotaPeriod QuotaPeriod { get; set; }
 
-    [Range(1, 20)]
-    public int MinimumLevelOrder { get; set; }
+    /// <summary>The flat minimum's ordinal; null until one is picked, and again after a scale change (T125).</summary>
+    public int? MinimumLevelOrder { get; set; }
 
     [Range(1, int.MaxValue)]
     public int WindowMonths { get; set; }
 
     public double? Weight { get; set; }
 
-    [StringLength(1000)]
-    public string? MinimumLevelByStageJson { get; set; }
+    /// <summary>The minimum by training year, as rows (T125). Serialised to the JSON the command takes on save.</summary>
+    public StageMinimaDraft StageMinima { get; set; } = StageMinimaDraft.Parse(null);
 
     /// <summary>Null means unpinned, which compares ordinals exactly as Wombat did before T109.</summary>
     public int? ScaleId { get; set; }
 
+    /// <summary>Whether the scale differs from the one this edit (or this Add form) started on.</summary>
+    public bool ScaleChanged => ScaleId != _startingScaleId;
+
+    /// <summary>Whether the latest scale change emptied a minimum that had been picked, so the page can say why.</summary>
+    public bool ClearedByScaleChange { get; private set; }
+
     /// <summary>The instruments ticked. Empty means any instrument (T122, D21), and is sent as such.</summary>
     public HashSet<string> PermittedToolKeys { get; set; } = new(StringComparer.Ordinal);
+
+    private int? _startingScaleId;
+
+    // The ladder the minima on screen were picked on. ScaleId has already moved when MoveToScale runs, so this is how
+    // it knows which ladder it is leaving.
+    private int? _ladder;
+
+    // What was picked on each ladder left during this edit, keyed by scale id (0 for unpinned; ids start at 1).
+    private readonly Dictionary<int, LadderPicks> _picksByLadder = [];
+
+    /// <summary>Starts an edit, or a fresh Add form, on <paramref name="scaleId" />, with the minima already set.</summary>
+    public void StartOn(int? scaleId)
+    {
+      ScaleId = scaleId;
+      _startingScaleId = scaleId;
+      _ladder = scaleId;
+      _picksByLadder.Clear();
+      ClearedByScaleChange = false;
+    }
+
+    /// <summary>
+    /// Called after <see cref="ScaleId" /> changes. Every minimum, flat and by year, is emptied (T125): an ordinal is
+    /// a different rung on each ladder, so carrying one across, or clamping it, would store a minimum nobody chose.
+    /// </summary>
+    /// <remarks>
+    /// What was picked on the ladder being left is put aside and comes back if the operator returns to that ladder, so
+    /// nothing ever crosses ladders but nothing is lost to a round trip either. On Windows each arrow key on a closed
+    /// select is a change, so Down then Up would otherwise wipe an item's whole year curve while landing back on the
+    /// ladder it was picked on.
+    /// </remarks>
+    public void MoveToScale()
+    {
+      if (ScaleId == _ladder)
+      {
+        return;
+      }
+
+      ClearedByScaleChange = MinimumLevelOrder is not null || StageMinima.Rows.Any(row => row.Level is not null);
+      _picksByLadder[_ladder ?? 0] = new LadderPicks(
+        MinimumLevelOrder, StageMinima.Rows.ToDictionary(row => row.Year, row => row.Level));
+
+      MinimumLevelOrder = null;
+      StageMinima.ClearLevels();
+      if (_picksByLadder.TryGetValue(ScaleId ?? 0, out var picks))
+      {
+        MinimumLevelOrder = picks.Minimum;
+        foreach (var row in StageMinima.Rows)
+        {
+          row.Level = picks.Years.GetValueOrDefault(row.Year);
+        }
+      }
+
+      _ladder = ScaleId;
+    }
+
+    private sealed record LadderPicks(int? Minimum, IReadOnlyDictionary<int, int?> Years);
   }
 }

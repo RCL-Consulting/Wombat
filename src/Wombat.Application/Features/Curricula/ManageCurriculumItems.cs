@@ -160,7 +160,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         }
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
-            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, currentScaleId: null, cancellationToken);
         await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
 
         curriculum.Items.Add(new CurriculumItem
@@ -226,8 +226,12 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
             throw new InvalidOperationException("This curriculum already contains the selected EPA.");
         }
 
+        // Before the first mutation (the audit pipeline commits a half-finished one), and judged on the REQUESTED
+        // values: a save that changes the scale, the flat minimum and the stage minima together is re-pinning the
+        // item, and must not be refused for the values it replaces (T136). item.ScaleId is still the stored ladder
+        // here, so the refusal can name each value as the rung the operator knew it by.
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
-            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, cancellationToken);
+            _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, item.ScaleId, cancellationToken);
         await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
 
         item.EpaId = request.EpaId;

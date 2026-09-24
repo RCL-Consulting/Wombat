@@ -13,7 +13,13 @@ public sealed record CurriculumDto(
     DateOnly? EffectiveTo,
     bool IsActive,
     bool CanEditInPlace,
-    IReadOnlyList<CurriculumItemDto> Items);
+    IReadOnlyList<CurriculumItemDto> Items,
+    /// <summary>
+    /// The sub-speciality's default entrustment scale, or null. Read only as the item editor's suggested ladder for
+    /// a new item when the existing items do not already agree on one (T125); it never pins anything by itself, which
+    /// is why <c>CurriculumItem.ScaleId</c> is not inferred from it.
+    /// </summary>
+    int? SubSpecialityDefaultScaleId);
 
 public sealed record CurriculumItemDto(
     int Id,

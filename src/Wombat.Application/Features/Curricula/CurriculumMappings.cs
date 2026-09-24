@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
@@ -36,7 +37,8 @@ internal static class CurriculumMappings
             curriculum.Items
                 .OrderBy(entity => entity.Epa.Code)
                 .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
-                .ToList());
+                .ToList(),
+            curriculum.SubSpeciality.DefaultEntrustmentScaleId);
 
     /// <summary>
     /// Refuses a tool list naming an instrument the vocabulary does not hold (T122). A no-op for none.
@@ -76,21 +78,34 @@ internal static class CurriculumMappings
     }
 
     /// <summary>
-    /// Refuses a pin to an entrustment scale that cannot express the item's minima (T109).
+    /// Refuses a pin to an entrustment scale that cannot express the item's minima (T109), naming the scale, each
+    /// field that does not fit and its value (T136).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A wrong pin is worse than no pin. An unpinned item compares ordinals exactly as it always did, but an
     /// item pinned to the wrong ladder makes <c>CreditApplier</c> refuse credit a trainee legitimately
     /// earned — silently, and for every future completion. Requiring every ordinal the item uses to be a
     /// real rung on the chosen ladder catches the obvious half of that: a five-rung minimum of 5 cannot be
     /// pinned to a four-rung scale. It cannot catch a pin that is wrong but arithmetically plausible, which
     /// is why nothing infers this value and a human chooses it.
+    /// </para>
+    /// <para>
+    /// Both handlers call it before they mutate anything, because the audit pipeline commits a half-finished
+    /// mutation when a handler throws. The message names every field that does not fit ("Minimum level 6",
+    /// "year 4 minimum 6"), not a bare list of ordinals: an operator told only "requires level 6" cannot tell
+    /// which of five values to change. When the item is being moved off another ladder,
+    /// <paramref name="currentScaleId" /> is that ladder, and each value is also given as the rung it was there
+    /// ("Minimum level 6 (rung 5)"), the name the operator knew it by.
+    /// </para>
     /// </remarks>
+    /// <param name="currentScaleId">The ladder the item is pinned to now, or null for a new or unpinned item.</param>
     public static async Task EnsureScaleCanExpressMinimaAsync(
         IApplicationDbContext dbContext,
         int? scaleId,
         int minimumLevelOrder,
         string? minimumLevelByStageJson,
+        int? currentScaleId,
         CancellationToken cancellationToken)
     {
         if (scaleId is null)
@@ -98,26 +113,85 @@ internal static class CurriculumMappings
             return;
         }
 
-        var scaleOrders = await dbContext.Set<EntrustmentLevel>()
-            .Where(level => level.ScaleId == scaleId.Value)
-            .Select(level => level.Order)
+        var scaleIds = currentScaleId is int current && current != scaleId.Value
+            ? new[] { scaleId.Value, current }
+            : new[] { scaleId.Value };
+
+        var scales = await dbContext.Set<EntrustmentScale>()
+            .AsNoTracking()
+            .Where(scale => scaleIds.Contains(scale.Id))
+            .Select(scale => new
+            {
+                scale.Id,
+                scale.Name,
+                Levels = scale.Levels.Select(level => new { level.Order, level.Label }).ToList()
+            })
             .ToListAsync(cancellationToken);
 
-        if (scaleOrders.Count == 0)
+        var target = scales.SingleOrDefault(scale => scale.Id == scaleId.Value);
+        if (target is null || target.Levels.Count == 0)
         {
             throw new InvalidOperationException(
                 $"Entrustment scale {scaleId.Value} was not found, or has no levels to express a minimum on.");
         }
 
-        var required = new List<int> { minimumLevelOrder };
-        required.AddRange(CurriculumItem.ParseStageOverrides(minimumLevelByStageJson).Values);
-
-        var unreachable = required.Where(order => !scaleOrders.Contains(order)).Distinct().Order().ToList();
-        if (unreachable.Count > 0)
+        var rungs = target.Levels.Select(level => level.Order).ToHashSet();
+        var offenders = Minima(minimumLevelOrder, minimumLevelByStageJson)
+            .Where(minimum => !rungs.Contains(minimum.Order))
+            .ToList();
+        if (offenders.Count == 0)
         {
-            throw new InvalidOperationException(
-                $"This curriculum item requires level {string.Join(", ", unreachable)}, which the selected " +
-                $"entrustment scale does not have. The scale has {scaleOrders.Count} levels.");
+            return;
+        }
+
+        var previous = scales.SingleOrDefault(scale => scale.Id != scaleId.Value);
+        var labelled = false;
+        var named = new List<string>(offenders.Count);
+        foreach (var (field, order) in offenders)
+        {
+            var ordinal = order.ToString(CultureInfo.InvariantCulture);
+            var label = previous?.Levels.FirstOrDefault(level => level.Order == order)?.Label?.Trim();
+
+            // A label that is just the ordinal again ("5" for Order 5) says nothing the number did not.
+            if (string.IsNullOrEmpty(label) || string.Equals(label, ordinal, StringComparison.Ordinal))
+            {
+                named.Add($"{field} {ordinal}");
+            }
+            else
+            {
+                labelled = true;
+                named.Add($"{field} {ordinal} (rung {label})");
+            }
+        }
+
+        var list = named.Count == 1
+            ? named[0]
+            : $"{string.Join(", ", named.Take(named.Count - 1))} and {named[^1]}";
+        var rungCount = target.Levels.Count == 1
+            ? "1 rung"
+            : $"{target.Levels.Count.ToString(CultureInfo.InvariantCulture)} rungs";
+
+        var message = $"{char.ToUpperInvariant(list[0])}{list[1..]} {(named.Count == 1 ? "is not a rung" : "are not rungs")} " +
+            $"on {target.Name}, which has {rungCount}.";
+        if (labelled && previous is not null)
+        {
+            message += $" The rungs in brackets are as {previous.Name} names them.";
+        }
+
+        throw new InvalidOperationException(message);
+    }
+
+    /// <summary>
+    /// Every minimum an item uses, named as the item editor names its field: the flat minimum first, then each
+    /// training year in order. Read with <see cref="CurriculumItem.ParseStageOverrides" />, the reader credit uses.
+    /// </summary>
+    private static IEnumerable<(string Field, int Order)> Minima(int minimumLevelOrder, string? minimumLevelByStageJson)
+    {
+        yield return ("minimum level", minimumLevelOrder);
+
+        foreach (var stage in CurriculumItem.ParseStageOverrides(minimumLevelByStageJson).OrderBy(entry => entry.Key))
+        {
+            yield return ($"year {stage.Key.ToString(CultureInfo.InvariantCulture)} minimum", stage.Value);
         }
     }
 }

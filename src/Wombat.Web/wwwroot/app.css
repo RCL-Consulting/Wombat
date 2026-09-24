@@ -362,6 +362,20 @@ h1[tabindex="-1"]:focus {
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
 }
 
+/* Rows of a label, one control and a Remove button, aligned in three columns (T125's minimum by training year). */
+.stage-minima {
+  align-items: center;
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: fit-content(12rem) minmax(10rem, 18rem) max-content;
+  margin-bottom: var(--space-sm);
+}
+
+/* A stored key or value is shown verbatim and may be one long token; let it wrap rather than widen the row. */
+.stage-minima .font-mono {
+  overflow-wrap: anywhere;
+}
+
 .form-actions {
   border-top: 1px solid var(--border-color);
   display: flex;

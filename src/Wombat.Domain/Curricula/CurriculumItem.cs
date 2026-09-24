@@ -63,7 +63,9 @@ public sealed class CurriculumItem
     /// <c>Curriculum.SubSpeciality.DefaultEntrustmentScaleId</c>, which
     /// <c>PaediatricCatalogueSeeder.EnsureDefaultScaleAsync</c> force-overwrites on every boot and which
     /// cannot differ between two versions of one curriculum anyway, <c>CloneAsNewVersion</c> copying
-    /// <c>SubSpecialityId</c>.
+    /// <c>SubSpecialityId</c>. The item editor's Add form may <em>suggest</em> that default as the ladder to start on
+    /// (T125), saying so beside the field; that is not an inference, because the administrator then picks every minimum
+    /// as a rung on it, or unpins it, before anything is stored.
     /// </remarks>
     public int? ScaleId { get; set; }
 

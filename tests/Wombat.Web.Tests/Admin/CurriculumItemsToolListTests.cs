@@ -3,15 +3,13 @@ using AngleSharp.Dom;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
-using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.Curricula;
 using Wombat.Web.Services;
+using FakeSender = Wombat.Web.Tests.Admin.CurriculumItemsFakeSender;
 
 namespace Wombat.Web.Tests.Admin;
 
@@ -32,24 +30,7 @@ namespace Wombat.Web.Tests.Admin;
 /// </remarks>
 public sealed class CurriculumItemsToolListTests : TestContext
 {
-    private const int CurriculumId = 5;
-    private const int SubSpecialityId = 7;
-
-    // Ordered by Name, as GetWbaToolsQuery returns it.
-    private static readonly IReadOnlyList<WbaToolDto> Vocabulary =
-    [
-        new("cbd", "Case-based discussion", null),
-        new("dops", "DOPS", null),
-        new("mini_cex", "Mini-CEX", null),
-        new("msf", "Multi-source feedback", null)
-    ];
-
-    private static readonly IReadOnlyList<EpaDto> Epas =
-    [
-        Epa(1, "PAED-001"),
-        Epa(2, "PAED-002"),
-        Epa(3, "PAED-003")
-    ];
+    private static readonly IReadOnlyList<WbaToolDto> Vocabulary = FakeSender.Vocabulary;
 
     public CurriculumItemsToolListTests()
     {
@@ -95,8 +76,9 @@ public sealed class CurriculumItemsToolListTests : TestContext
 
         BeginEdit(cut, "PAED-001");
 
-        var fieldset = cut.FindAll("tbody fieldset").Should().ContainSingle().Subject;
-        fieldset.QuerySelector("legend")!.TextContent.Trim().Should().Be("Tools");
+        // Two fieldsets share the sub-row since T125 (the minimum by training year is the other); one is Tools.
+        cut.FindAll("tbody fieldset legend").Select(legend => legend.TextContent.Trim())
+            .Should().ContainSingle(legend => legend == "Tools");
 
         EditCheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"edit-tool-{tool.Key}"),
             "one checkbox per instrument, in the vocabulary's order, and nothing else");
@@ -157,8 +139,8 @@ public sealed class CurriculumItemsToolListTests : TestContext
     {
         var cut = RenderPage(new FakeSender());
 
-        var fieldset = cut.FindAll("form fieldset").Should().ContainSingle().Subject;
-        fieldset.QuerySelector("legend")!.TextContent.Trim().Should().Be("Tools");
+        cut.FindAll("form fieldset legend").Select(legend => legend.TextContent.Trim())
+            .Should().ContainSingle(legend => legend == "Tools");
 
         AddCheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"add-tool-{tool.Key}"));
         AddCheckboxIds(cut).Should().OnlyContain(id => !IsChecked(cut, id));
@@ -288,7 +270,7 @@ public sealed class CurriculumItemsToolListTests : TestContext
     [Fact]
     public void ARejectedSave_KeepsTheRowOpen_WithTheOperatorsTicks()
     {
-        // RefreshCurriculumAsync returns false on a refusal so the row stays open. A tool list is the new common
+        // RunAsync returns the refusal instead of null, so the row stays open. A tool list is the new common
         // refusal (an unknown key), and closing the row would throw away the ticks the error is about.
         var sender = new FakeSender { UpdateFailure = new InvalidOperationException("Unknown tool key 'legacy_tool'.") };
         var cut = RenderPage(sender);
@@ -325,6 +307,8 @@ public sealed class CurriculumItemsToolListTests : TestContext
 
         cut.Find("#add-tool-dops").Change(true);
         cut.Find("#add-tool-mini_cex").Change(true);
+        // T125: the minimum starts empty and is required. These items are unpinned, so it is a typed level.
+        cut.Find("#curriculum-item-level").Change("3");
         cut.Find("form").Submit();
 
         sender.Adds.Should().ContainSingle()
@@ -341,6 +325,7 @@ public sealed class CurriculumItemsToolListTests : TestContext
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
+        cut.Find("#curriculum-item-level").Change("3");
         cut.Find("form").Submit();
 
         sender.Adds.Should().ContainSingle()
@@ -353,7 +338,7 @@ public sealed class CurriculumItemsToolListTests : TestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
 
-        var cut = RenderComponent<CurriculumItemsEdit>(parameters => parameters.Add(page => page.Id, CurriculumId));
+        var cut = RenderComponent<CurriculumItemsEdit>(parameters => parameters.Add(page => page.Id, FakeSender.CurriculumId));
         cut.WaitForState(() => cut.FindAll("tbody tr").Count > 0);
 
         return cut;
@@ -397,75 +382,4 @@ public sealed class CurriculumItemsToolListTests : TestContext
 
     private static string LabelFor(IRenderedComponent<CurriculumItemsEdit> cut, string id)
         => cut.Find($"label[for='{id}']").TextContent.Trim();
-
-    private static EpaDto Epa(int id, string code)
-        => new(id, SubSpecialityId, "General Paediatrics", "CMSA", code, $"{code} title", null, null, EpaCategory.Core, true,
-            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-
-    private static CurriculumItemDto Item(int id, int epaId, int requiredCount, QuotaPeriod period, string? permittedToolsJson)
-    {
-        var epa = Epas.Single(candidate => candidate.Id == epaId);
-        return new CurriculumItemDto(id, epaId, epa.Code, epa.Title, requiredCount, period, 3, 12, null, null, permittedToolsJson);
-    }
-
-    private static CurriculumDto Curriculum(IReadOnlyList<CurriculumItemDto> items)
-        => new(CurriculumId, 2, SubSpecialityId, "Paediatrics", "General Paediatrics", "CMSA", "Paediatrics v11.1", "11.1",
-            new DateOnly(2026, 1, 1), null, true, true, items);
-
-    private sealed class FakeSender : IScopedSender
-    {
-        private List<CurriculumItemDto> _items =
-        [
-            Item(11, 1, 3, QuotaPeriod.Semester, """["cbd","mini_cex"]"""),
-            Item(12, 2, 3, QuotaPeriod.AcademicYear, null),
-            Item(13, 3, 2, QuotaPeriod.Semester, """["legacy_tool","mini_cex"]""")
-        ];
-
-        public List<UpdateCurriculumItemCommand> Updates { get; } = [];
-
-        public List<AddCurriculumItemCommand> Adds { get; } = [];
-
-        public Exception? UpdateFailure { get; init; }
-
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            object response = request switch
-            {
-                GetCurriculumByIdQuery => Curriculum(_items),
-                ListEpasForSubSpecialityQuery => Epas,
-                GetEntrustmentScalesListQuery => (IReadOnlyList<EntrustmentScaleDto>)[],
-                GetWbaToolsQuery => Vocabulary,
-                UpdateCurriculumItemCommand update => Update(update),
-                AddCurriculumItemCommand add => Add(add),
-                _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
-            };
-
-            return Task.FromResult((TResponse)response);
-        }
-
-        public Task Send(IRequest request, CancellationToken cancellationToken = default)
-            => throw new NotSupportedException();
-
-        private CurriculumDto Update(UpdateCurriculumItemCommand command)
-        {
-            Updates.Add(command);
-            if (UpdateFailure is not null)
-            {
-                throw UpdateFailure;
-            }
-
-            _items = _items
-                .Select(item => item.Id == command.ItemId
-                    ? item with { PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(command.PermittedToolKeys) }
-                    : item)
-                .ToList();
-            return Curriculum(_items);
-        }
-
-        private CurriculumDto Add(AddCurriculumItemCommand command)
-        {
-            Adds.Add(command);
-            return Curriculum(_items);
-        }
-    }
 }

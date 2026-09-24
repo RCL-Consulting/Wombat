@@ -242,6 +242,7 @@ PagerControls
 
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
 .workflow-action-reasons /* list under a workflow action row: why a disabled action cannot be taken (T107) */
+.stage-minima     /* two-column grid: training year | rung picker, one row per year (T125 curriculum minima) */
 ```
 
 **Rules:**

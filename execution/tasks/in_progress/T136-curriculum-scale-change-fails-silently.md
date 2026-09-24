@@ -1,10 +1,11 @@
 ---
 id: T136
 title: "Changing a curriculum item's scale fails silently when its ordinals do not fit"
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 created: 2026-09-20
+started: 2026-09-24
 ---
 
 # T136 — The save button does nothing, and says nothing

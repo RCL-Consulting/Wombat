@@ -1,0 +1,100 @@
+@* T125. The minimum-by-training-year map, as rows of a year and a rung picker. It replaces a free-text JSON box whose
+   help text had to explain the JSON shape. The rows are the years the item already has, plus Add year; anything
+   stored that is not a year and a rung is listed, never dropped, and the page will not save until it is removed
+   (see StageMinimaDraft). *@
+
+<fieldset>
+  <legend>Minimum by training year</legend>
+  <p class="muted">
+    A trainee in a year listed here is measured against that year's rung instead of the minimum level. A year not
+    listed uses the minimum level.
+  </p>
+
+  @if (Draft.Unreadable is not null)
+  {
+    <div class="stage-minima">
+      <span class="font-mono">@Draft.Unreadable</span>
+      <span class="muted">Stored, but not a set of training years. Saving is off until it is removed.</span>
+      <button type="button" class="btn btn-xs btn-outline" aria-label="Remove the stored value" @onclick="RemoveUnreadableAsync">Remove</button>
+    </div>
+  }
+  else if (Draft.Rows.Count > 0 || Draft.Kept.Count > 0)
+  {
+    <div class="stage-minima">
+      @foreach (var row in Draft.Rows)
+      {
+        <label for="@RowId(row)">Year @row.Year</label>
+        <RungPicker Id="@RowId(row)" Scale="Scale" Value="row.Level" ValueChanged="@((int? level) => SetLevelAsync(row, level))" />
+        <button type="button" class="btn btn-xs btn-outline" aria-label="@($"Remove year {row.Year}")" @onclick="() => RemoveYearAsync(row)">Remove</button>
+      }
+
+      @foreach (var entry in Draft.Kept)
+      {
+        <span class="font-mono">@entry.Name</span>
+        @if (entry.EarlierSpellingOf is int year)
+        {
+          <span class="muted"><span class="font-mono">@entry.RawValue</span> is an earlier spelling of year @year. Credit ignores it and reads the later one, shown above. Saving is off until it is removed.</span>
+        }
+        else
+        {
+          <span class="muted"><span class="font-mono">@entry.RawValue</span> is stored here, but is not a training year and a level from 1 to 20. Saving is off until it is removed.</span>
+        }
+        <button type="button" class="btn btn-xs btn-outline" aria-label="@($"Remove the stored entry {entry.Name}")" @onclick="() => RemoveKeptAsync(entry)">Remove</button>
+      }
+    </div>
+  }
+  else
+  {
+    <p class="muted">No year has its own minimum.</p>
+  }
+
+  @if (Draft.CanAddYear)
+  {
+    <button type="button" class="btn btn-sm btn-outline" @onclick="AddYearAsync">Add year @Draft.NextYear</button>
+  }
+</fieldset>
+
+@code {
+  [Parameter, EditorRequired] public StageMinimaDraft Draft { get; set; } = default!;
+
+  /// <summary>Prefixes every id, so an edit row and the Add form can share the page ("edit" / "add").</summary>
+  [Parameter, EditorRequired] public string IdPrefix { get; set; } = default!;
+
+  /// <summary>The item's ladder, or null when it is unpinned.</summary>
+  [Parameter] public EntrustmentScaleDto? Scale { get; set; }
+
+  /// <summary>Raised after every change, so the page can re-evaluate whether it may save.</summary>
+  [Parameter] public EventCallback OnChanged { get; set; }
+
+  private string RowId(StageMinimumRow row) => $"{IdPrefix}-stage-{row.Year}";
+
+  private Task SetLevelAsync(StageMinimumRow row, int? level)
+  {
+    row.Level = level;
+    return OnChanged.InvokeAsync();
+  }
+
+  private Task AddYearAsync()
+  {
+    Draft.AddYear();
+    return OnChanged.InvokeAsync();
+  }
+
+  private Task RemoveYearAsync(StageMinimumRow row)
+  {
+    Draft.RemoveYear(row.Year);
+    return OnChanged.InvokeAsync();
+  }
+
+  private Task RemoveKeptAsync(KeptStageEntry entry)
+  {
+    Draft.RemoveKept(entry);
+    return OnChanged.InvokeAsync();
+  }
+
+  private Task RemoveUnreadableAsync()
+  {
+    Draft.RemoveUnreadable();
+    return OnChanged.InvokeAsync();
+  }
+}

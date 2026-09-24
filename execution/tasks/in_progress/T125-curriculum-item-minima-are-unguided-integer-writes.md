@@ -1,9 +1,10 @@
 ---
 id: T125
 title: "An administrator sets a curriculum minimum by typing a bare integer, with no idea what it means on the ladder"
-status: queued
+status: in_progress
 priority: P2
 created: 2026-09-19
+started: 2026-09-24
 ---
 # T125 — An administrator sets a curriculum minimum by typing a bare integer, with no idea what it means on the ladder
 
