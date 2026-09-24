@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T172 — A refusal names the form's fields by key (presenting_problem), not by the label the user sees
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

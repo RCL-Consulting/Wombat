@@ -68,9 +68,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+5045041 docs(execution): close T207, T163, T214, T181, T208, T185 and T195 (browser/SQL-verified where reachable; T195's browser check moves to T211); file T217
 150417e docs(execution): CUSTOMIZATION.md's MSF anonymity note follows T207 and T205; file T216
 fbd1525 fix(security): the last principal-less queries take the caller, dashboards conjoin the institution, the profile pick is one rule, and a Trainee with an admin role is a trainee first (T185)
 0cde061 fix(audit): an over-long user agent or display name is truncated, not the reason an audit row is refused (T208)
 705bf2c fix(web): the sign-in pages load without a console error; the Blazor initializers endpoint answers signed out (T181)
-4e61d8a fix(curricula): a curriculum item names only an EPA its owner may use (T195)
 ```

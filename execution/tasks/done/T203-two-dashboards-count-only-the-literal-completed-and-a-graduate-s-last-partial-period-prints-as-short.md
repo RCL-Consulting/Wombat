@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T203 — Two dashboards count only the literal 'completed', and a graduate's last partial period prints as 'short
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

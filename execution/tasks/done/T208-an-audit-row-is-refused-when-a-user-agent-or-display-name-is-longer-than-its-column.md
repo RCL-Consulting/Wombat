@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-25
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T208 — An audit row is refused when a User-Agent or display name is longer than its column
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

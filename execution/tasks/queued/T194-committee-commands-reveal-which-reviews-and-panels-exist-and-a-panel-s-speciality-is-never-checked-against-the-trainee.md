@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T194 — Committee commands reveal which reviews and panels exist, and a panel's speciality is never checked against the trainee
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

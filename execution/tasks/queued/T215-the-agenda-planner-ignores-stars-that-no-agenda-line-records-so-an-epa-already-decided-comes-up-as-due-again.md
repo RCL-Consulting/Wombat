@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T215 — The agenda planner ignores STARs that no agenda line records, so an EPA already decided comes up as due again
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T197 — The undated-date wording names an encounter date and then denies it, and progress shows an unmarked last encounter
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

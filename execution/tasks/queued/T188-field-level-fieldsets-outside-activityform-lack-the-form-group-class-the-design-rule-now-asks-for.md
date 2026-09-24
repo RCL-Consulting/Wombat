@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T188 — Field-level fieldsets outside ActivityForm lack the form-group class the design rule now asks for
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

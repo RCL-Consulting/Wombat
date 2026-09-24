@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T201 — When a handler's own save fails, the audit pipeline re-saves the same changes, loses the audit row and hides the real error
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

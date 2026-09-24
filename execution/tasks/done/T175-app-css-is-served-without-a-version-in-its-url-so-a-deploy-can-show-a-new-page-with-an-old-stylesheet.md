@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T175 — app.css is served without a version in its URL, so a deploy can show a new page with an old stylesheet
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

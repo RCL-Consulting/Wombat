@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T177 — ActivityForm's multi-choice and file fields have a label that points at no control
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

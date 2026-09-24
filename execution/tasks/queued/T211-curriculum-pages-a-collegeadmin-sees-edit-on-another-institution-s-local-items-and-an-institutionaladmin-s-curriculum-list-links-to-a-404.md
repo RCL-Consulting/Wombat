@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-09-24
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T211 — Curriculum pages: a CollegeAdmin sees Edit on another institution's local items, and an InstitutionalAdmin's curriculum list links to a 404
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned

@@ -9,7 +9,7 @@ created: 2026-09-24
 completed: 2026-09-25
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T207 — MSF 'anonymisation' keeps an unsalted hash of each respondent's email, so a response can be re-identified
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
