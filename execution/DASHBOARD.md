@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+d6833ae docs(execution): close T154 — browser-verified on dev (types 20–21, activities 33–34, forged EPAs refused)
 2d0aeb6 feat(activities): the last two v11.1 instruments — Clinical audit (report as a link, D34) and Portfolio and logbook review (a signed review of a period); an instrument that credits nothing is judged by the EPA it is evidence for (T154, D45)
 da4053b docs(execution): close T204 — dev Coordinator seeded; T167's snapshot and T184's MSF checks verified in the browser (review 2, campaign 5); T186's cause found
 02336bc chore(dev): seed a dev Coordinator, so committee scheduling and MSF campaigns can be exercised without the administrator's credential (T204)
 a0a8f11 docs(execution): close T162 (browser-verified, scripted Chrome) and T167 (pickers verified; the new snapshot's browser check moves to T204, which seeds a dev Coordinator)
-5ae1141 fix(activities): the system-written MSF evidence type is not offered to or creatable by a person; the dead permission-rule table is dropped (T162)
 ```

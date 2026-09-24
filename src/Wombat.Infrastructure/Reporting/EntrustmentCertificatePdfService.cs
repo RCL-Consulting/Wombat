@@ -52,7 +52,8 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             });
         }).WithMetadata(DeterministicMetadata);
 
-        var pdfBytes = document.GeneratePdf();
+        // One render at a time in the process, or the fonts can lose their text layer. (T200)
+        var pdfBytes = await QuestPdfRenderer.GeneratePdfAsync(document, cancellationToken);
         var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
         var fileName = $"star-certificate-{data.EpaCode}-{data.DecisionId}-{hash[..8]}.pdf";
 

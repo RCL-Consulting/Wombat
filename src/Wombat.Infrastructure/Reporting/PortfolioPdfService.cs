@@ -65,7 +65,8 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
     {
         var data = await LoadPortfolioDataAsync(request, cancellationToken);
 
-        var pdfBytes = ComposeDocument(data).GeneratePdf();
+        // One render at a time in the process, or the fonts can lose their text layer. (T200)
+        var pdfBytes = await QuestPdfRenderer.GeneratePdfAsync(ComposeDocument(data), cancellationToken);
 
         var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
 
