@@ -1,12 +1,13 @@
 ---
 id: T141
 title: A trainee cannot reach My progress from the navigation
-status: queued
+status: in_progress
 priority: P3
 owner: agent
 model: sonnet
 depends_on: []
 created: 2026-09-23
+started: 2026-09-24
 ---
 
 # T141 — A trainee cannot reach My progress from the navigation

@@ -172,13 +172,19 @@ The nav item list is role-driven. The initial set:
 | Role                        | Items                                                    |
 |-----------------------------|----------------------------------------------------------|
 | Everyone (authenticated)    | Home, My Account, Logout                                 |
-| Trainee / PendingTrainee    | Activities, My Activities, My Curriculum                 |
+| Trainee                     | Activities, My Activities, MSF Reports, Committee Reviews, My Progress |
+| PendingTrainee              | Activities, My Activities                                |
 | Assessor                    | Activity Inbox, Recent Activities                        |
 | Coordinator                 | Invitations, Stalled Activities                          |
 | SpecialityAdmin / SubSpec.  | Programme Trainees, Curriculum, STAR Review Queue        |
 | InstitutionalAdmin          | Institution, Specialities, Users                         |
 | Administrator               | Institutions, Invitations, Users, Activity Types, System |
 | CommitteeMember             | Programme Trainees (read-only)                           |
+
+MSF Reports, Committee Reviews and My Progress sit in their own Trainee-only `AuthorizeView`, outside the block
+shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the shared
+block only if its page admits PendingTrainee; `NavMenuAuthorizationTests` checks every link a trainee or pending
+trainee is offered against its page's `[Authorize]`.
 
 New items go in this table and then in `NavMenu.razor`, not anywhere else.
 

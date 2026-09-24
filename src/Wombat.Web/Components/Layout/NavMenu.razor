@@ -49,6 +49,10 @@
               My Activities
             </NavLink>
           </div>
+        </AuthorizeView>
+
+        @* Trainee only: these pages do not admit a PendingTrainee, who would be refused (T141). *@
+        <AuthorizeView Roles="@WombatRoles.Trainee" Context="traineeOnlyAuth">
           <div class="nav-item px-3">
             <NavLink class="nav-link" href="/msf/my-reports">
               <Icon Name="file-text" />
@@ -62,9 +66,9 @@
             </NavLink>
           </div>
           <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/my-curriculum">
+            <NavLink class="nav-link" href="/portfolio/progress">
               <Icon Name="book" />
-              My Curriculum
+              My Progress
             </NavLink>
           </div>
         </AuthorizeView>
