@@ -11,6 +11,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Infrastructure.Activities;
@@ -20,14 +21,10 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     public const string ProcedureCatalogueKey = "procedure_catalogue";
 
     private readonly ApplicationDbContext _dbContext;
-    private readonly IUserAdministrationService _userAdministrationService;
 
-    public ActivityReferenceDataService(
-        ApplicationDbContext dbContext,
-        IUserAdministrationService userAdministrationService)
+    public ActivityReferenceDataService(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
-        _userAdministrationService = userAdministrationService;
     }
 
     public async Task<IReadOnlyList<ActivityCatalogueOption>> GetCatalogueOptionsAsync(
@@ -362,29 +359,59 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         return await GetEntrustmentScaleLevelOptionsAsync(scaleKey, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(
-        ClaimsPrincipal principal,
+    public async Task<IReadOnlyList<ActivityCatalogueOption>> GetNomineeOptionsAsync(
+        NomineeOptionScope scope,
         CancellationToken cancellationToken = default)
     {
-        var users = await _userAdministrationService.ListUsersInRoleAsync(WombatRoles.Assessor, cancellationToken);
-        var candidates = users.AsEnumerable();
+        ArgumentNullException.ThrowIfNull(scope);
 
-        if (!principal.IsAdministrator())
+        var subjectUserId = scope.SubjectUserId?.Trim();
+        IReadOnlyList<ActivityCatalogueOption> options = [];
+        if (!string.IsNullOrEmpty(subjectUserId))
         {
-            var institutionId = principal.GetInstitutionId();
-            if (!institutionId.HasValue)
-            {
-                return [];
-            }
+            // An existing activity is judged against its stamp, null included; the create page against the stamp the
+            // create is about to write. Either way the same institution the write path will use.
+            var institutionId = scope.ForExistingActivity
+                ? scope.ActivityInstitutionId
+                : (await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken)).InstitutionId;
 
-            candidates = candidates.Where(user => user.InstitutionId == institutionId.Value);
+            options = await NomineeDirectory.ListAsync(
+                _dbContext, institutionId, scope.RequiredRoles, subjectUserId, cancellationToken);
         }
 
-        return candidates
-            .OrderBy(user => user.LastName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(user => user.FirstName, StringComparer.OrdinalIgnoreCase)
-            .Select(user => new ActivityCatalogueOption(user.UserId, FormatUserLabel(user)))
-            .ToArray();
+        var storedValue = scope.StoredValue;
+        if (string.IsNullOrEmpty(storedValue) || options.Any(option => string.Equals(option.Value, storedValue, StringComparison.Ordinal)))
+        {
+            return options;
+        }
+
+        // Selectable on purpose. A non-author's move never re-judges an unchanged nominee, so keeping it is safe, and
+        // the author's hand-on does judge it, with a message that names the person. Dropping it instead would render a
+        // filled field as "Select…" and invite a re-pick nobody asked for. Only a STORED value reaches here, so the
+        // label shows nobody the record does not already show (see NomineeOptionScope.StoredValue).
+        var stored = await GetUserOptionAsync(storedValue, cancellationToken);
+        var label = $"{stored?.Label ?? "Unknown person"} (not on the current list)";
+        return [.. options, new ActivityCatalogueOption(storedValue, label)];
+    }
+
+    public async Task<ActivityCatalogueOption?> GetUserOptionAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return null;
+        }
+
+        var user = await _dbContext.Set<WombatIdentityUser>()
+            .AsNoTracking()
+            .Where(entity => entity.Id == userId)
+            .Select(entity => new { entity.Id, entity.FirstName, entity.LastName, entity.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return user is null
+            ? null
+            : new ActivityCatalogueOption(user.Id, NomineeDirectory.FormatLabel(user.FirstName, user.LastName, user.Email));
     }
 
     public async Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleOptionsAsync(
@@ -421,12 +448,5 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
                 rung.Order.ToString(),
                 rung.Label))
             .ToList();
-    }
-
-    private static string FormatUserLabel(UserIdentityDetails user)
-    {
-        var name = string.Join(" ", new[] { user.FirstName, user.LastName }
-            .Where(part => !string.IsNullOrWhiteSpace(part)));
-        return string.IsNullOrWhiteSpace(name) ? user.Email : $"{name} ({user.Email})";
     }
 }

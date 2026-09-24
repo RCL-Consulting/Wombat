@@ -159,8 +159,8 @@ public sealed class RuntimeRendererTests : TestContext
             => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(
                 [new ActivityCatalogueOption("1", "PAED-001 — Acute admission")]);
 
-        public override Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(
-            System.Security.Claims.ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+        public override Task<IReadOnlyList<ActivityCatalogueOption>> GetNomineeOptionsAsync(
+            NomineeOptionScope scope, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(
                 [new ActivityCatalogueOption("guid-naidoo", "Dr Naidoo (naidoo@kgk)")]);
 

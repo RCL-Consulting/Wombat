@@ -40,35 +40,6 @@ internal static class ActorRuleMatcher
     }
 
     /// <summary>
-    /// Collects the names of every field a <c>field:</c> rule reads, anywhere in the rule tree.
-    /// </summary>
-    /// <remarks>
-    /// These fields decide who may act on an activity, so their values are authorization input
-    /// rather than ordinary form data. <see cref="ActivityService"/> uses this to refuse a value
-    /// that would name the activity's own subject as its assessor.
-    /// </remarks>
-    public static void CollectUserFieldNames(ActorRule? rule, HashSet<string> into)
-    {
-        ArgumentNullException.ThrowIfNull(into);
-
-        switch (rule)
-        {
-            case null:
-                return;
-            case FieldUserActorRule fieldUser:
-                into.Add(fieldUser.Field);
-                return;
-            case CombinedActorRule combined:
-                foreach (var child in combined.Rules)
-                {
-                    CollectUserFieldNames(child, into);
-                }
-
-                return;
-        }
-    }
-
-    /// <summary>
     /// Reads a field as the actor grammar reads it — a JSON string, or empty for anything else.
     /// </summary>
     public static string ReadUserFieldValue(string dataJson, string fieldName)

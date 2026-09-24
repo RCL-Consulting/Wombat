@@ -59,6 +59,28 @@ public sealed class ActivityWorkflowActionsTests : TestContext
         cut.FindAll("#transition-note").Should().BeEmpty("the panel closes once applied");
     }
 
+    [Fact]
+    public void WhileBusy_EveryButtonThatSendsATransition_IsDisabled_UntilThePageIsDone()
+    {
+        // The page sets Busy while it carries out an action (T102): one action at a time.
+        var cut = Render([new ActivityActionDto("complete", false), new ActivityActionDto("decline", true)]);
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Decline").Click();
+
+        cut.SetParametersAndRender(parameters => parameters.Add(component => component.Busy, true));
+
+        SendingButtons(cut).Select(button => button.TextContent.Trim()).Should().Equal("Complete", "Decline", "Apply");
+        SendingButtons(cut).Should().OnlyContain(button => button.HasAttribute("disabled"));
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Cancel")
+            .HasAttribute("disabled").Should().BeFalse("closing the note panel sends nothing");
+
+        cut.SetParametersAndRender(parameters => parameters.Add(component => component.Busy, false));
+
+        SendingButtons(cut).Should().HaveCount(3).And.OnlyContain(button => !button.HasAttribute("disabled"));
+    }
+
+    private static IReadOnlyList<AngleSharp.Dom.IElement> SendingButtons(IRenderedComponent<ActivityWorkflowActions> cut)
+        => cut.FindAll("button").Where(button => button.TextContent.Trim() != "Cancel").ToList();
+
     private IRenderedComponent<ActivityWorkflowActions> Render(
         IReadOnlyList<ActivityActionDto> actions,
         Action<(string TransitionKey, string? Note)>? onRequested = null)

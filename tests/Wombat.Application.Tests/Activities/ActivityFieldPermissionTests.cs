@@ -14,6 +14,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Activities;
 
@@ -191,6 +192,9 @@ public sealed class ActivityFieldPermissionTests
         await using var dbContext = CreateContext();
         var activityService = CreateService(dbContext);
         SeedActivityType(dbContext);
+        // T102: the named assessor must be an eligible nominee at the subject's institution for the create to land.
+        NomineeSeed.AddUser(dbContext, "trainee-1", 10, WombatRoles.Trainee);
+        NomineeSeed.AddUser(dbContext, "assessor-1", 10, WombatRoles.Assessor);
         dbContext.SaveChanges();
 
         IRequestHandler<CreateActivityCommand, ActivityDto> createHandler =
@@ -296,6 +300,10 @@ public sealed class ActivityFieldPermissionTests
         await using var dbContext = CreateContext();
         var activityService = CreateService(dbContext);
         SeedActivityType(dbContext);
+        // T102: a creator may name themself only if they are an eligible nominee, so this coordinator also assesses.
+        // What the test proves is unchanged: naming yourself at create does not unlock the assessor's fields.
+        NomineeSeed.AddUser(dbContext, "trainee-1", 10, WombatRoles.Trainee);
+        NomineeSeed.AddUser(dbContext, "coordinator-1", 10, WombatRoles.Coordinator, WombatRoles.Assessor);
         dbContext.SaveChanges();
 
         var created = await activityService.CreateDraftAsync(new CreateActivityInput(

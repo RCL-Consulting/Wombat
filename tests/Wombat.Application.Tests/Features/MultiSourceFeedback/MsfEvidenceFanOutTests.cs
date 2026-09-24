@@ -284,7 +284,7 @@ public sealed class MsfEvidenceFanOutTests
             db,
             new MsfAggregationService(),
             BuildActivityService(db),
-            new ActivityReferenceDataService(db, new NoUsersAdministrationService()),
+            new ActivityReferenceDataService(db),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         var release = () => handler.Handle(
@@ -343,7 +343,7 @@ public sealed class MsfEvidenceFanOutTests
             db,
             new MsfAggregationService(),
             BuildActivityService(db),
-            new ActivityReferenceDataService(db, new NoUsersAdministrationService()),
+            new ActivityReferenceDataService(db),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         await handler.Handle(
@@ -537,28 +537,4 @@ public sealed class MsfEvidenceFanOutTests
 
     private static ClaimsPrincipal Principal(string userId)
         => new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test", ClaimTypes.Name, ClaimTypes.Role));
-
-    private sealed class NoUsersAdministrationService : IUserAdministrationService
-    {
-        public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>([]);
-        public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<UserIdentityDetails?>(null);
-        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>([]);
-        public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task UpdateScopeAsync(string userId, int institutionId, IReadOnlyCollection<int> specialityIds, IReadOnlyCollection<int> subSpecialityIds, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-    }
 }

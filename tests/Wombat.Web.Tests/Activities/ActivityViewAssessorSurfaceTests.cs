@@ -285,6 +285,7 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
             "[]",
             creditRulesJson,
             "trainee-1",
+            1,
             "trainee-1",
             state,
             dataJson,

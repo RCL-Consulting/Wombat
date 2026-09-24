@@ -3,6 +3,9 @@
               SubjectUserId="@SubjectUserId"
               CreditRulesJson="@CreditRulesJson"
               WbaToolKey="@WbaToolKey"
+              IsExistingActivity="true"
+              ActivityInstitutionId="@ActivityInstitutionId"
+              StoredDataJson="@DataJson"
               ReadOnly="true" />
 
 @code {
@@ -15,4 +18,5 @@
   [Parameter] public string? SubjectUserId { get; set; }
   [Parameter] public string? CreditRulesJson { get; set; }
   [Parameter] public string? WbaToolKey { get; set; }
+  [Parameter] public int? ActivityInstitutionId { get; set; }
 }

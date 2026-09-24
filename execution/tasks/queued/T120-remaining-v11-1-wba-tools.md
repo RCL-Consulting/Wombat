@@ -24,6 +24,12 @@ published is inert data in the repo.
 > unrestricted on every EPA (D21). The seeders write the key on create only, so a seed added after T122 is keyed on
 > every database where it is new, without a migration.
 
+> **Note from [T102], 2026-09-24.** Every `user` field is now a nominee field, judged server-side: its value must be an
+> active user at the trainee's institution holding the field's `role` (default `Assessor`), and not the trainee. A seed
+> may declare `"role"` on a user field. Save and publish refuse `options`/`catalogue` on a user field, a section or
+> field key declared twice, and a `field:` rule naming anything but a User field. The picker is
+> `GetNomineeOptionsAsync`, which replaced `GetAssessorOptionsAsync`.
+
 ## The definitive list
 
 From `execution/tasks/done/T098-data/annexure-a.json`, whose `tools` field is **free text** — an allow-list per
@@ -222,8 +228,8 @@ plain seed with an interesting history.
 **`learner_feedback` cannot be expressed by the actor grammar at all.** The respondents are *"students,
 junior trainees and team members taught by the registrar"* — plural, and not the named assessor. Three
 things break at once: `field:assessor_user_id` resolves to exactly one user id (`ActorRuleMatcher.Matches`
-→ `FieldUserActorRule`); `GetAssessorOptionsAsync` (`ActivityReferenceDataService.cs:252-256`) only ever
-offers users **in role `Assessor` within the caller's institution**, so a medical student would not appear
+→ `FieldUserActorRule`); the picker (then `GetAssessorOptionsAsync`, since T102 `GetNomineeOptionsAsync`) only ever
+offers users **holding the field's role at the trainee's institution**, so a medical student would not appear
 even if they had an account; and students largely do not have accounts. This is MSF's shape — several
 respondents, aggregation, anonymity — so it belongs there.
 

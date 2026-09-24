@@ -585,7 +585,7 @@ public sealed class EpaOptionCreditScopeTests
         => db.CurriculumItems.Local.Single(item => item.Id == itemId).PermittedToolsJson = permittedToolsJson;
 
     private static ActivityReferenceDataService Service(ApplicationDbContext db)
-        => new(db, new NoUsersAdministrationService());
+        => new(db);
 
     private static void SeedCatalogue(ApplicationDbContext db)
     {
@@ -636,29 +636,5 @@ public sealed class EpaOptionCreditScopeTests
             .ToList();
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
-    }
-
-    private sealed class NoUsersAdministrationService : IUserAdministrationService
-    {
-        public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>([]);
-        public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<UserIdentityDetails?>(null);
-        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>([]);
-        public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task UpdateScopeAsync(string userId, int institutionId, IReadOnlyCollection<int> specialityIds, IReadOnlyCollection<int> subSpecialityIds, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
     }
 }

@@ -239,7 +239,7 @@ public sealed class UserAdministrationService : IUserAdministrationService
             await _userManager.SetLockoutEnabledAsync(user, true);
         }
 
-        var lockoutEnd = locked ? DateTimeOffset.MaxValue : (DateTimeOffset?)null;
+        var lockoutEnd = locked ? UserDeactivation.IndefiniteLockoutEnd : (DateTimeOffset?)null;
         var result = await _userManager.SetLockoutEndDateAsync(user, lockoutEnd);
         if (!result.Succeeded)
         {

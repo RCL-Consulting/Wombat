@@ -87,3 +87,9 @@ reproduction.
 
 Compounds with [T105] (whole-schema Submit-mode validation on every transition), which is what makes the
 failing path common. Found while browser-verifying [T100] and [T123]; unrelated to either.
+
+> **Note from T102, 2026-09-24.** There is no update command any more: `UpdateActivityDraftCommand` was deleted. A Submit
+> retry is `TransitionActivityCommand` with the form as `DataPatchJson`, which already runs the writable-key filter, fix 1
+> and both gates, and must not re-create the activity. A second "Save draft" needs either no data write or a guarded one
+> (see T106 item 1). NewActivity now ignores a second click while the first is in flight, which stops the double-click
+> duplicate but not a deliberate second save.

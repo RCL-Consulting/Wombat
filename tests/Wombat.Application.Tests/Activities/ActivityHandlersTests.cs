@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Commands.CreateActivity;
 using Wombat.Application.Features.Activities.Commands.TransitionActivity;
-using Wombat.Application.Features.Activities.Commands.UpdateActivityDraft;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -17,7 +16,7 @@ namespace Wombat.Application.Tests.Activities;
 public sealed class ActivityHandlersTests
 {
     [Fact]
-    public async Task CreateUpdateTransition_FlowPersistsStateTransitionAndProgress()
+    public async Task CreateTransition_FlowPersistsStateTransitionAndProgress()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -35,8 +34,6 @@ public sealed class ActivityHandlersTests
 
         IRequestHandler<CreateActivityCommand, Wombat.Application.Features.Activities.Dtos.ActivityDto> createHandler =
             new CreateActivityCommandHandler(activityService);
-        IRequestHandler<UpdateActivityDraftCommand, Wombat.Application.Features.Activities.Dtos.ActivityDto> updateHandler =
-            new UpdateActivityDraftCommandHandler(activityService);
         IRequestHandler<TransitionActivityCommand, Wombat.Application.Features.Activities.Dtos.ActivityDto> transitionHandler =
             new TransitionActivityCommandHandler(activityService);
 
@@ -48,21 +45,15 @@ public sealed class ActivityHandlersTests
                 200,
                 "trainee-1",
                 "trainee-1",
-                """{ "title": "Initial draft", "epa_id": 5000 }""",
+                """{ "title": "Initial draft", "epa_id": 5000, "score": 4 }""",
                 subjectPrincipal),
             CancellationToken.None);
 
-        var updated = await updateHandler.Handle(
-            new UpdateActivityDraftCommand(
-                created.Id,
-                "trainee-1",
-                """{ "title": "Updated draft", "epa_id": 5000, "score": 4 }""",
-                subjectPrincipal),
-            CancellationToken.None);
-
+        // UpdateActivityDraftCommand was removed by T102: nothing reached it, and it bypassed field ownership and the
+        // nominee gate. A post-creation save goes through a transition.
         var transitioned = await transitionHandler.Handle(
             new TransitionActivityCommand(
-                updated.Id,
+                created.Id,
                 "complete",
                 "assessor-1",
                 assessorPrincipal,

@@ -27,4 +27,9 @@
     <ProjectReference Include="..\..\src\Wombat.Api\Wombat.Api.csproj" />
     <ProjectReference Include="..\..\src\Wombat.Infrastructure\Wombat.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- T102: one seed helper for the Identity rows a nominee is judged against. -->
+    <Compile Include="../Shared/NomineeSeed.cs" Link="TestSupport/NomineeSeed.cs" />
+  </ItemGroup>
 </Project>

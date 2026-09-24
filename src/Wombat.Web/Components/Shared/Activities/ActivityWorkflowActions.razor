@@ -6,7 +6,7 @@
   <div class="form-actions">
     @foreach (var action in Actions)
     {
-      <button type="button" class="btn btn-primary" @onclick="() => RequestTransitionAsync(action)">
+      <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="() => RequestTransitionAsync(action)">
         @ToLabel(action.TransitionKey)
       </button>
     }
@@ -20,7 +20,7 @@
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-outline" @onclick="ClearSelection">Cancel</button>
-      <button type="button" class="btn btn-primary" @onclick="ConfirmSelectedTransitionAsync">Apply</button>
+      <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="ConfirmSelectedTransitionAsync">Apply</button>
     </div>
   }
 }
@@ -38,6 +38,9 @@
   [Parameter, EditorRequired] public IReadOnlyList<ActivityActionDto> Actions { get; set; } = [];
 
   [Parameter] public EventCallback<(string TransitionKey, string? Note)> OnTransitionRequested { get; set; }
+
+  /// <summary>True while the page is carrying out an action; every button is disabled until it finishes.</summary>
+  [Parameter] public bool Busy { get; set; }
 
   private ActivityActionDto? _selectedAction;
   private string? _note;

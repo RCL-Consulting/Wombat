@@ -5,6 +5,15 @@ A time-phased runbook that walks a realistic ZA paediatric training programme th
 1. **Primary — test scenario.** Catch integration gaps that unit tests miss. Every step has an expected outcome and a gap slot; findings are the document's output.
 2. **Secondary — training-material seed.** With a second pass (concept boxes, role-sliced entry points, troubleshooting blocks) it promotes to end-user documentation. The runbook is structured to convert well but does not try to be both at once.
 
+> ## ⚠️ T102 (2026-09-24): a `field:` rule must name a User field, and a User field names only eligible people
+> Act 1.14's replay saved the Mini-CEX with the builder's default title-only schema and then pasted a workflow whose
+> actors are `field:assessor_user_id`. Save draft now refuses that: declare `assessor_user_id` as a User field first
+> (1.14.b's full schema). Duplicate field keys, and options on a User field, are refused too. At runtime a User field
+> offers, and the server accepts, only **active users holding its role (default Assessor) at the trainee's
+> institution**, never the trainee; an assessor who has since lost the role is re-checked when the trainee submits, not
+> when the assessor completes. Every assessor this runbook names (Naidoo, Patel, Botha, Zulu, Khumalo) is a KGK
+> Assessor, so no recorded step changes. History lines below are not rewritten.
+
 > ## ⚠️ T130 (2026-09-23): curriculum targets are per period now — re-author Act 3's expected figures before the next replay
 > A curriculum item's **Required count is a target per semester or per academic year**, not a programme total, and
 > the progress page reads it against the **current period only** ("1 of 3 this semester"), with the previous period

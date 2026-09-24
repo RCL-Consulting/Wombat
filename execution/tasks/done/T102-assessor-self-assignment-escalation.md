@@ -1,9 +1,11 @@
 ---
 id: T102
 title: "A `user`-typed field accepts any user id, unchecked for role or scope"
-status: queued
+status: done
 priority: P1
 created: 2026-09-17
+started: 2026-09-24
+completed: 2026-09-24
 ---
 # T102 — A `user`-typed field accepts any user id, unchecked for role or scope
 
@@ -70,11 +72,23 @@ of them will carry a `user` field.
 
 ## Verification
 
-- A trainee who selects themselves in the assessor picker (or posts their own id directly) is rejected at
-  create with a validation message, not at transition time.
-- After fix 2: posting the id of a user who is not an Assessor, or is outside the caller's institution, is
-  rejected server-side even though the picker never offered them.
-- The legitimate path is unaffected: trainee names a real assessor, assessor completes, credit applies.
+- [x] **A trainee who names themself is rejected at create**, with fix 1's message (T070;
+  `Create_SubjectNamesThemselfAsTheAssessor_IsRejected`, and fix 1 still speaks first — paths-and-regressions tests).
+- [x] **After fix 2, a user the picker never offered is rejected server-side.** Changed from "outside the caller's
+  institution": the institution judged is the **activity's stamped one (the subject's)**, never the caller's, with no
+  Administrator bypass (see As built). Evidence: `NomineeGateTests` (37 cases: each eligibility condition failing alone,
+  mutation-pinned, M01–M16 all killed); in the browser on dev, a forged option value on `/activities/new` was refused at
+  create with "that person cannot be named here" and no draft was left behind.
+- [x] **The legitimate path is unaffected.** Browser, dev, activity 16: the trainee named Demo Assessor, saved; an
+  admin removed his Assessor role; the trainee's unchanged submit was **refused by name** (the hand-on); re-picking Demo
+  Committee passed; Committee then lost the Assessor role too and **still completed it, crediting 1 item** — an unchanged
+  nominee is never re-judged on the assessor's own move. Roles restored afterwards.
+- [x] **Fix 3:** `role` parses, normalises, serialises, round-trips through `SeedRoundTripTests` and the builder
+  (`BuilderNomineeRoleTests`), and is refused on a non-user field or a non-nominable role. The builder's "Names a"
+  select shows for a User field only (browser, Mini-CEX (Paediatrics) Form tab).
+- [x] **Picker = gate.** `NomineePickerGateParityTests`: over a 13-user matrix, every listed id is accepted and every
+  unlisted one refused, on create and on a re-pick. `NomineeDirectoryPostgresTests` (6, real PostgreSQL) pin the SQL,
+  the role conjunction, ordinal ids and the lockout threshold (`DateTimeOffset.MaxValue` round-trips as `infinity`).
 
 ## Related
 
@@ -103,3 +117,48 @@ pre-fix code.
 scope — `SchemaValidator` still routes `FieldType.User` to plain string validation. A trainee can still
 nominate an arbitrary user id that the picker never offered; they simply cannot nominate *themself*.
 Decide this before the remaining ten v11.1 tools are seeded, since every one carries a `user` field.
+
+---
+
+## As built — 2026-09-24: fixes 2 and 3
+
+**The rule.** A *nominee field* is every `user` field plus every field a `field:` rule names (`ActorFieldRules`, the
+one walker of declared actor rules). Its value must be the exact id of a user who holds every role the field requires
+(`role`, default `Assessor`), belongs to the **activity's stamped institution**, is **not deactivated** (an admin lock
+or an erasure; a brute-force lockout does not count — `UserDeactivation`), and is not the subject. A **changed** value
+is judged on every write, whoever makes it, including a withdrawal (a `field:` value grants read, inbox and nudges in
+every state). An **unchanged** value is judged only at the author's hand-on — the D20 clause, factored out of T122's
+`DirectivesToJudge` into `UnchangedFieldsHandedOn` and shared. `NomineeGate` runs after the T122 gate and before the
+first mutation, on create, transition and the staged MSF path.
+
+**Picker = gate.** `NomineeDirectory` is the one query; `GetNomineeOptionsAsync` replaced `GetAssessorOptionsAsync`.
+A writable user field gets the list; a locked one gets only the stored person's label (`GetUserOptionAsync`). Only a
+value **stored** on the activity is ever labelled (`ActivityForm.StoredDataJson`), never the working copy.
+
+**Publish checks** (`ActorFieldRules.EnsurePublishable`, in `SaveDraft` and `PublishDraft`, not the parser): duplicate
+section or field keys, a `field:` rule naming no field or a non-user field, and `options`/`catalogue` on a user field.
+
+**Deleted:** `UpdateActivityDraftCommand`, its input and `IActivityService.UpdateDraftAsync` — no caller, and it skipped
+fix 1, T070's writable filter and the state gate. T106 item 1 and T127 are annotated.
+
+**Also:** the nudge job reads the pinned version; `SubjectScopeResolver` is shared by the stamp and the create-page
+picker; the builder proposes schema-wide unique default keys; busy guards on NewActivity and ActivityView.
+
+**Review history.** Design: a 6-reader map, then a 5-lens critique (24 findings, 21 upheld) that added the hand-on
+clause, "deactivated" instead of "locked out", the publish checks and read-only labels. Implementation review round 1
+(6 lenses, 3 refuters each) found the working-copy label leak, a Release-build break, a remount DbContext race and
+stale docs, all fixed. 274 tests from six worktree agents, each area mutation-checked.
+
+**Filed:** [T149] (P1) SSO link endpoint is an unthrottled password oracle and SSO ignores lockout; [T150] sampling
+counts assessors on drafts and cancels; [T151] nudges reach deactivated and opted-out nominees; [T152] a supervisor from
+another institution cannot be named; [T153] a trainee who has left an institution still files there and sees its staff.
+
+**Round 2** (6 lenses, 3 refuters each; 6 minor upheld, none major): a refused, unlisted pick showed as "Select…"
+while the page kept sending it (now a neutral local option); `SpecialityAdmin`/`SubSpecialityAdmin` as a `role` were
+checked only against the institution (removed from the nominable set); one vacuous test; no tests for the busy guards,
+the per-load scope or the stale-load discard; and [T153].
+
+**Round 3** (3 lenses, 3 refuters each) came back with no code defect: two findings, both the same wording error (the
+nominable roles were called "institution-scoped", false for Assessor and Trainee, whose invitations carry a
+speciality). Reworded in `WombatRoles.Nominable`, CUSTOMIZATION.md and D23: only the institution is matched, never the
+nominee's speciality, so cross-discipline naming within an institution is accepted by design. The review loop is dry.

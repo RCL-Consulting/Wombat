@@ -25,9 +25,13 @@ internal class StubActivityReferenceDataService : IActivityReferenceDataService
         string activityTypeKey, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
 
-    public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(
-        ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetNomineeOptionsAsync(
+        NomineeOptionScope scope, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
+
+    public virtual Task<ActivityCatalogueOption?> GetUserOptionAsync(
+        string userId, CancellationToken cancellationToken = default)
+        => Task.FromResult<ActivityCatalogueOption?>(null);
 
     public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleOptionsAsync(
         CancellationToken cancellationToken = default)

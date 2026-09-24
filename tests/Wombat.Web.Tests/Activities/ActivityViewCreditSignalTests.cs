@@ -154,6 +154,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
             "[]",
             """{ "counts_for": [ { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1 } ] }""",
             "trainee-1",
+            1,
             "trainee-1",
             "completed",
             """{"epa_id":"17"}""",

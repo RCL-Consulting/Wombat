@@ -42,7 +42,9 @@
   @* The creator IS the subject here — this page files an activity about the current user — so the
      EPA picker narrows to what would actually credit for them (T108), and to what this instrument may be
      filed against (T122): the write path refuses anything else. *@
-  <ActivityForm SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
+  @* Keyed on a generation so a refused Save or Submit remounts it with fresh option lists (T102). *@
+  <ActivityForm @key="_formGeneration"
+                SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
                 DataJson="@_dataJson"
                 SubjectUserId="@_currentUserId"
                 CreditRulesJson="@(_selectedEditor.PublishedCreditRulesJson ?? _selectedEditor.DraftCreditRulesJson)"
@@ -51,8 +53,8 @@
                 DataJsonChanged="OnDataChanged" />
 
   <FormActions>
-    <button type="button" class="btn btn-outline" @onclick="SaveDraftAsync">Save draft</button>
-    <button type="button" class="btn btn-primary" @onclick="SubmitAsync">Submit</button>
+    <button type="button" class="btn btn-outline" disabled="@_busy" @onclick="SaveDraftAsync">Save draft</button>
+    <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="SubmitAsync">Submit</button>
   </FormActions>
 }
 
@@ -61,6 +63,11 @@
   private ActivityTypeEditorDto? _selectedEditor;
   private int _selectedActivityTypeId;
   private string _dataJson = "{}";
+  private int _formGeneration;
+
+  // One action at a time: a double-click used to file two drafts, and since T102 two refusals at once would each remount
+  // the form and race their option loads.
+  private bool _busy;
 
   // The subject of anything created here. Held rather than re-read per render because the EPA
   // picker's option list is keyed on it (T108).
@@ -161,12 +168,18 @@
 
   private async Task CreateOrTransitionAsync(bool submit)
   {
+    if (_busy)
+    {
+      return;
+    }
+
     if (_selectedActivityTypeId <= 0)
     {
       _error = "Select an activity type first.";
       return;
     }
 
+    _busy = true;
     _error = null;
     _status = null;
 
@@ -218,6 +231,11 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+      _formGeneration++;
+    }
+    finally
+    {
+      _busy = false;
     }
   }
 

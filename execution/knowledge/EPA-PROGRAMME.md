@@ -65,7 +65,7 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T099] | Speciality-3 scope rows on **production**; nothing provisions them on a fresh database | **READY** | S | production access |
 | [T100] | Entrustment rungs render as `"{Order}. {Label}"` — 6 sites; 8 more print a bare ordinal; 1 PDF site prints a raw `DataJson` integer | **DONE 2026-09-19** | M | premise rewritten (it was wrong twice); admin editor split out as [T125] |
 | [T105] | Every transition validates the whole schema in Submit mode, so a half-filled draft cannot be cancelled | NEEDS A DECISION | M | **D22** |
-| [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | NEEDS A DECISION | M | **D23** |
+| [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | **DONE 2026-09-24** | M | D23 closed as recommended; nominee = active holder of the field's `role` at the activity's institution. Follow-ups [T149]–[T153] |
 | [T110] | `scale_key: "or_scale"` resolves to nothing for four generic seeds; two five-rung ladders are the same ladder duplicated | NEEDS A DECISION | S code, operator data | **D25** |
 | [T107] | Activities pinned to a superseded schema version are uncompletable and the UI still offers the button | NEEDS A DECISION | S | **D33** |
 | [T121] | **MSF is required by 11 or 15 EPAs — the source says both (D37) — and can credit none.** Synthetic activity on release, `MsfCampaignEpa` join, `msf_cpsa` seed | NEEDS A DECISION | L | **D8–D11**. Design is complete and blocked by nothing else |
@@ -541,6 +541,16 @@ caller's scope; `SchemaValidator.cs:77` routes `FieldType.User` to plain string 
 *Options:* fix 2 first · ship the tools and fix 2 after · leave it.
 **Recommendation: fix 2 first.** Every one of the ten new tools carries a `user` field, and the fix
 generalises to any admin-built tool, which is the platform premise.
+**CLOSED 2026-09-24 — fix 2 first, with fix 3.** Recorded with it: the institution judged is the **activity's
+stamped one** (the subject's), not the caller's, so the answer never depends on who is looking and there is no
+Administrator bypass. An unchanged nominee is judged only at the author's hand-on (D20's clause, shared with T122), so an
+assessor's own completion is never refused because they have since lost the role. "Deactivated" means an indefinite
+lock or an erasure, not a brute-force lockout. Only the institution is matched, never the nominee's speciality, so an
+assessor from another discipline at the same institution can be named (rotations); a `role` may therefore name only a
+role whose authority is not bounded by a speciality (not the speciality or sub-speciality admins). A supervisor based at
+another institution cannot be named ([T152]). *Rejected:* caller-scoped eligibility (an Administrator would be offered
+the whole country, and two viewers of one activity would see different lists); re-judging stored nominees on every move
+(strands in-flight work, the T122 lesson).
 
 **D24 — [T104]: what happens to the five trainees on curriculum 2?**
 *Options:* re-pin them to curriculum 3 — needs curriculum 2 pinned to its scale first and a documented

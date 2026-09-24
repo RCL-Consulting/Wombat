@@ -7,6 +7,7 @@ using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Activities;
 
@@ -274,6 +275,8 @@ public sealed class ActivityReadAuthorizationTests
         await using var dbContext = CreateContext();
         SeedActivityType(dbContext);
         SeedSubjectProfile(dbContext);
+        // T102: the assessor named below is judged against the stamp this test checks, so they are seeded eligible there.
+        NomineeSeed.AddUser(dbContext, "assessor-1", InstitutionId, WombatRoles.Assessor);
         dbContext.SaveChanges();
 
         await CreateService(dbContext).CreateDraftAsync(new CreateActivityInput(
@@ -300,11 +303,13 @@ public sealed class ActivityReadAuthorizationTests
         SeedActivityType(dbContext);
         dbContext.SaveChanges();
 
+        // No assessor named: against a null stamp the nominee gate accepts nobody (T102; NomineeGateTests covers it),
+        // so naming one would make this a nominee-gate test. The stamp is what this test is about.
         await CreateService(dbContext).CreateDraftAsync(new CreateActivityInput(
             600,
             "unenrolled-1",
             "unenrolled-1",
-            """{ "epa_id": 5000, "assessor_user_id": "assessor-1" }""",
+            """{ "epa_id": 5000 }""",
             Principal("unenrolled-1")));
 
         var created = await dbContext.Activities.SingleAsync();

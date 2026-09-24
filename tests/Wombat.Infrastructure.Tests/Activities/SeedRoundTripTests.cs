@@ -222,6 +222,106 @@ public sealed class SeedRoundTripTests
     }
 
     /// <summary>
+    /// T102 added <c>role</c> on a <c>user</c> field: the role its nominee must hold. Named explicitly for the
+    /// same reason <c>editable_by</c> is: no seed declares one yet, so the corpus-wide theories above cannot
+    /// see a Serialize that forgets it.
+    /// </summary>
+    /// <remarks>
+    /// This loss would be a silent widening, not a narrowing. A published version that dropped the role reads
+    /// as "absent", which means Assessor, so a field an author restricted to a Coordinator would quietly accept
+    /// any Assessor at the institution — and the picker and the gate would both agree that was right.
+    /// </remarks>
+    [Fact]
+    public void NomineeRole_SurvivesParseSerializeParse()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "request",
+                  "title": "Request",
+                  "fields": [
+                    { "key": "coordinator_user_id", "type": "user", "label": "Coordinator", "required": true, "role": "Coordinator" }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().Contain("\"role\":\"Coordinator\"");
+        FormSchemaParser.Parse(canonical).Sections[0].Fields[0].NomineeRole.Should().Be("Coordinator");
+        FormSchemaParser.Serialize(FormSchemaParser.Parse(canonical)).Should().Be(canonical, "a role must canonicalise to a fixed point");
+        AssertNothingLost(schemaJson, canonical, "role fixture");
+    }
+
+    /// <summary>
+    /// The mirror, and the one that protects the corpus. Eight seeds carry a <c>user</c> field and none says
+    /// <c>role</c>; absent means Assessor. If canonicalisation materialised that default, every one of them would
+    /// canonicalise differently from its stored version and the refresher would republish all eight at the next
+    /// boot. The no-loss theory cannot see that, because canonical is allowed to ADD properties.
+    /// </summary>
+    [Fact]
+    public void NomineeRole_StaysAbsentWhenTheFieldDeclaresNone()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "request",
+                  "title": "Request",
+                  "fields": [
+                    { "key": "assessor_user_id", "type": "user", "label": "Assessor", "required": true }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        canonical.Should().NotContain("\"role\"");
+        FormSchemaParser.Parse(canonical).Sections[0].Fields[0].NomineeRole.Should().BeNull();
+    }
+
+    /// <summary>
+    /// The same guard, corpus-wide: canonicalising a seed adds a <c>role</c> to no field that did not declare one.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void Schema_CanonicalFormInventsNoNomineeRole(string seedKey)
+    {
+        var raw = FormSchemaParser.Parse(ReadSeedFile(seedKey, "schema.json"));
+        var canonical = FormSchemaParser.Parse(FormSchemaParser.Serialize(raw));
+
+        var rawRoles = raw.Sections.SelectMany(section => section.Fields).Select(field => (field.Key, field.NomineeRole));
+        var canonicalRoles = canonical.Sections.SelectMany(section => section.Fields).Select(field => (field.Key, field.NomineeRole));
+
+        canonicalRoles.Should().Equal(rawRoles, "'{0}' must carry exactly the roles its seed file declares", seedKey);
+
+        // A property walk, not a substring test: procedure_log has a FIELD whose key is "role".
+        using var onDisk = JsonDocument.Parse(ReadSeedFile(seedKey, "schema.json"));
+        using var canonicalDocument = JsonDocument.Parse(FormSchemaParser.Serialize(raw));
+        if (!ContainsProperty(onDisk.RootElement, "role"))
+        {
+            ContainsProperty(canonicalDocument.RootElement, "role").Should().BeFalse(
+                "'{0}' declares no role on disk, so its canonical form must not either", seedKey);
+        }
+    }
+
+    private static bool ContainsProperty(JsonElement element, string name)
+        => element.ValueKind switch
+        {
+            JsonValueKind.Object => element.EnumerateObject().Any(property =>
+                property.NameEquals(name) || ContainsProperty(property.Value, name)),
+            JsonValueKind.Array => element.EnumerateArray().Any(item => ContainsProperty(item, name)),
+            _ => false
+        };
+
+    /// <summary>
     /// The no-loss assertion is only worth having if it actually fails when a property is dropped.
     /// </summary>
     [Fact]

@@ -208,7 +208,7 @@ public sealed class ErasureExecutor : IErasureExecutor
             identityUser.PasswordHash = null;
             identityUser.SecurityStamp = Guid.NewGuid().ToString();
             identityUser.ConcurrencyStamp = Guid.NewGuid().ToString();
-            identityUser.LockoutEnd = DateTimeOffset.MaxValue;
+            identityUser.LockoutEnd = UserDeactivation.IndefiniteLockoutEnd;
             identityUser.TwoFactorEnabled = false;
             identityUser.FirstName = string.Empty;
             identityUser.LastName = string.Empty;

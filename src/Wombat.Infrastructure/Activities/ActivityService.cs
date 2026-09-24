@@ -51,7 +51,7 @@ public sealed class ActivityService : IActivityService
         var (schema, workflow) = ParsePublished(activityType);
 
         var subjectUserId = input.SubjectUserId.Trim();
-        var subjectScope = await ResolveSubjectScopeAsync(subjectUserId, cancellationToken);
+        var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
 
         var activity = BuildDraftActivity(
             activityType,
@@ -77,6 +77,19 @@ public sealed class ActivityService : IActivityService
             activity.SubjectUserId,
             activity.ObservedOn,
             activity.DataJson,
+            cancellationToken);
+
+        // T102. Every nominee the create writes is judged: stored is empty, so each non-empty one has changed. Against the
+        // subject's institution as stamped, whoever the creator is. After the T122 gate and before Add, like it.
+        var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
+        await NomineeGate.EnsurePermittedAsync(
+            _dbContext,
+            schema,
+            requiredRolesByField,
+            NomineeGate.ChangedFields(requiredRolesByField.Keys, EmptyObjectJson, activity.DataJson),
+            activity.DataJson,
+            activity.InstitutionId,
+            activity.SubjectUserId,
             cancellationToken);
 
         _dbContext.Set<Activity>().Add(activity);
@@ -187,59 +200,6 @@ public sealed class ActivityService : IActivityService
         return activity;
     }
 
-    public async Task<ActivityDto> UpdateDraftAsync(UpdateActivityDraftInput input, CancellationToken cancellationToken = default)
-    {
-        var activity = await LoadActivityAsync(input.ActivityId, cancellationToken);
-        var version = GetPinnedVersion(activity);
-        var workflow = WorkflowParser.Parse(version.WorkflowJson);
-        var currentState = workflow.States.Single(state => string.Equals(state.Key, activity.CurrentState, StringComparison.Ordinal));
-
-        if (currentState.Terminal)
-        {
-            throw new InvalidOperationException("Terminal activities cannot be edited.");
-        }
-
-        if (!CanEditDraft(activity, input.ActorUserId))
-        {
-            throw new InvalidOperationException("The current actor is not allowed to edit this activity.");
-        }
-
-        var schema = FormSchemaParser.Parse(version.SchemaJson);
-        var normalizedDataJson = NormalizeObjectJson(input.NewDataJson);
-        ThrowIfInvalid(_schemaValidator.Validate(schema, normalizedDataJson, SchemaValidationMode.Draft));
-
-        // T122. This path replaces the whole payload and is not limited to the initial state (T106 item 1), so
-        // without this a trainee could submit against a permitted EPA, switch to a forbidden one while the request
-        // sits with the assessor, and have the assessor's unchanged completion credit it. Checked only when the
-        // credit target actually changes and credit can still follow from where the activity is; before the first
-        // mutation below.
-        var changedDirectives = workflow.CanReachTerminal(activity.CurrentState)
-            ? ChangedDirectives(version.CreditRulesJson, activity.DataJson, normalizedDataJson)
-            : EmptyDirectives;
-        if (changedDirectives.Count > 0)
-        {
-            await ToolPermissionGate.EnsurePermittedAsync(
-                _dbContext,
-                activity.ActivityType.WbaToolKey,
-                version.CreditRulesJson,
-                schema,
-                activity.SubjectUserId,
-                ObservationDateResolver.Resolve(activity, schema, normalizedDataJson).ObservedOn,
-                normalizedDataJson,
-                cancellationToken,
-                changedDirectives.Contains);
-        }
-
-        activity.DataJson = normalizedDataJson;
-        activity.UpdatedOn = DateTime.UtcNow;
-
-        // T119: a trainee correcting the encounter date before submitting must not leave a stale stamp.
-        StampObservedOn(activity, schema, normalizedDataJson);
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return Map(activity);
-    }
-
     public async Task<ActivityDto> TransitionAsync(TransitionActivityInput input, CancellationToken cancellationToken = default)
     {
         var activity = await LoadActivityAsync(input.ActivityId, cancellationToken);
@@ -315,6 +275,19 @@ public sealed class ActivityService : IActivityService
                 cancellationToken,
                 directivesToJudge.Contains);
         }
+
+        // T102. After the T122 gate, so a move both would refuse is refused for the EPA first, and before the first
+        // mutation below. Which nominees are judged is NomineeFieldsToJudge's decision; see its remarks.
+        var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
+        await NomineeGate.EnsurePermittedAsync(
+            _dbContext,
+            schema,
+            requiredRolesByField,
+            NomineeFieldsToJudge(workflow, schema, activity, transition, input.Principal, input.ActorUserId, mergedDataJson, requiredRolesByField),
+            mergedDataJson,
+            activity.InstitutionId,
+            activity.SubjectUserId,
+            cancellationToken);
 
         // Every read credit needs happens HERE, before the first mutation of this request (T130). The audit
         // pipeline's catch saves this request's DbContext, so anything thrown after ApplyTransition commits
@@ -449,11 +422,13 @@ public sealed class ActivityService : IActivityService
                 $"Transition '{input.TransitionKey}' is not available from state '{workflow.InitialState}'.");
 
         var subjectUserId = input.SubjectUserId.Trim();
-        var subjectScope = await ResolveSubjectScopeAsync(subjectUserId, cancellationToken);
+        var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
 
         EnsureSubjectIsInTypeScope(activityType, subjectScope, subjectUserId);
 
         var utcNow = DateTime.UtcNow;
+
+        var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
 
         // No EPA→tool gate here (T122), and the omission is deliberate: a type that declares credit was refused above,
         // and the gate only ever refuses an item credit could land on, so for every type that reaches this line it
@@ -476,6 +451,18 @@ public sealed class ActivityService : IActivityService
                 dataJson,
                 input.Principal,
                 utcNow);
+
+            // T102, as at create: every nominee a system-written record carries is judged, before AddRange. msf_cpsa has
+            // no user field, so today this judges nothing; it is here so no write path is left without it.
+            await NomineeGate.EnsurePermittedAsync(
+                _dbContext,
+                schema,
+                requiredRolesByField,
+                NomineeGate.ChangedFields(requiredRolesByField.Keys, EmptyObjectJson, activity.DataJson),
+                activity.DataJson,
+                activity.InstitutionId,
+                activity.SubjectUserId,
+                cancellationToken);
 
             // The same evaluator the interactive path uses, against the same rule the seed declares.
             // This is the gate: `msf_cpsa` says `role:Coordinator|role:Administrator`, so a trainee who
@@ -761,41 +748,9 @@ public sealed class ActivityService : IActivityService
             return false;
         }
 
-        return DeclaredActorRules(schema, workflow)
+        return ActorFieldRules.DeclaredActorRules(schema, workflow)
             .Select(DropUnqualifiedRoleArms)
             .Any(rule => rule is not null && ActorRuleMatcher.Matches(rule, activity, principal));
-    }
-
-    private static IEnumerable<ActorRule> DeclaredActorRules(FormSchema schema, Workflow workflow)
-    {
-        foreach (var transition in workflow.Transitions)
-        {
-            yield return transition.Actor;
-        }
-
-        foreach (var state in workflow.States)
-        {
-            if (state.EditableBy is not null)
-            {
-                yield return state.EditableBy;
-            }
-        }
-
-        foreach (var section in schema.Sections)
-        {
-            if (section.EditableBy is not null)
-            {
-                yield return section.EditableBy;
-            }
-
-            foreach (var field in section.Fields)
-            {
-                if (field.EditableBy is not null)
-                {
-                    yield return field.EditableBy;
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -868,108 +823,6 @@ public sealed class ActivityService : IActivityService
     /// <summary>Stamps the encounter date from the pinned schema. Safe to call repeatedly. (T119)</summary>
     private static void StampObservedOn(Activity activity, FormSchema schema, string dataJson)
         => ObservationDateResolver.Stamp(activity, schema, dataJson);
-
-    /// <summary>
-    /// Where the subject trains, read once at creation and stamped onto the activity. (T101)
-    /// </summary>
-    /// <remarks>
-    /// Prefers the active profile; a trainee who has graduated or been withdrawn keeps their most
-    /// recent one, so activities logged afterwards still carry a scope. Null for a subject with no
-    /// profile at all, which withholds scoped oversight rather than granting it.
-    /// </remarks>
-    private async Task<(int? InstitutionId, int? SpecialityId, int? SubSpecialityId)> ResolveSubjectScopeAsync(
-        string subjectUserId,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(subjectUserId))
-        {
-            return (null, null, null);
-        }
-
-        // Resolved one level at a time, NOT as a single join through
-        // TraineeProfile -> Curriculum -> SubSpeciality. Those navigations are required, so one query
-        // would be an INNER join: a curriculum row that has gone missing would take the institution
-        // down with it, even though the institution sits on the profile itself. Each level degrades
-        // on its own instead, and the most important stamp — the institution — survives the other two
-        // failing. Three primary-key lookups, once, on a create.
-        var profile = await _dbContext.Set<TraineeProfile>()
-            .Where(entity => entity.UserId == subjectUserId)
-            .OrderByDescending(entity => entity.IsActive)
-            .ThenByDescending(entity => entity.Id)
-            .Select(entity => new { entity.InstitutionId, entity.CurriculumId })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (profile is null)
-        {
-            return await ResolveScopeFromIdentityAsync(subjectUserId, cancellationToken);
-        }
-
-        var subSpecialityId = await _dbContext.Set<Curriculum>()
-            .Where(entity => entity.Id == profile.CurriculumId)
-            .Select(entity => (int?)entity.SubSpecialityId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var specialityId = subSpecialityId is null
-            ? null
-            : await _dbContext.Set<SubSpeciality>()
-                .Where(entity => entity.Id == subSpecialityId.Value)
-                .Select(entity => (int?)entity.SpecialityId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-        return (profile.InstitutionId, specialityId, subSpecialityId);
-    }
-
-    /// <summary>
-    /// The fallback for a subject who is not an admitted trainee: their own identity record. (T101)
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Not every activity is about a trainee. An invited user is given an institution and speciality
-    /// scopes by <c>InvitedUserProvisioner</c> at acceptance, while a <c>TraineeProfile</c> is created
-    /// only later by <c>AdmitTrainee</c> — and nothing stops them filing a reflective note in between.
-    /// </para>
-    /// <para>
-    /// Without this, such an activity was stamped with nothing, and the seeded reflective-note family
-    /// offers only <c>role:SpecialityAdmin+scope:speciality</c> out of <c>submitted</c>. A null stamp
-    /// matches no <c>scope:</c> rule for anybody, and neither <see cref="WorkflowEvaluator" /> nor
-    /// <c>TransitionAsync</c> has an Administrator bypass — so the row was frozen in <c>submitted</c>
-    /// for ever, unreadable by the admin who should have acted on it. Reading the same facts the login
-    /// claims are issued from is not a guess; it is the same answer one step earlier.
-    /// </para>
-    /// <para>
-    /// A user holding several speciality scopes yields null rather than an arbitrary pick: the column
-    /// holds one id, and choosing between them would be inventing an answer. That leaves the residual
-    /// frozen-row case for a subject with no institution at all — see T116.
-    /// </para>
-    /// </remarks>
-    private async Task<(int? InstitutionId, int? SpecialityId, int? SubSpecialityId)> ResolveScopeFromIdentityAsync(
-        string subjectUserId,
-        CancellationToken cancellationToken)
-    {
-        var institutionId = await _dbContext.Set<WombatIdentityUser>()
-            .Where(entity => entity.Id == subjectUserId)
-            .Select(entity => entity.InstitutionId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var specialityIds = await _dbContext.Set<WombatIdentityUserSpecialityScope>()
-            .Where(entity => entity.UserId == subjectUserId)
-            .Select(entity => entity.SpecialityId)
-            .Distinct()
-            .Take(2)
-            .ToListAsync(cancellationToken);
-
-        var subSpecialityIds = await _dbContext.Set<WombatIdentityUserSubSpecialityScope>()
-            .Where(entity => entity.UserId == subjectUserId)
-            .Select(entity => entity.SubSpecialityId)
-            .Distinct()
-            .Take(2)
-            .ToListAsync(cancellationToken);
-
-        return (
-            institutionId,
-            specialityIds.Count == 1 ? specialityIds[0] : null,
-            subSpecialityIds.Count == 1 ? subSpecialityIds[0] : null);
-    }
 
     private static ActivityTypeVersion GetPinnedVersion(Activity activity)
     {
@@ -1054,35 +907,121 @@ public sealed class ActivityService : IActivityService
             }
         }
 
-        if (unchangedFieldTargets.Count == 0 ||
-            !IsTheAuthor(actorUserId, activity) ||
-            !OnlyTheAuthorHasActed(activity))
+        if (unchangedFieldTargets.Count == 0)
         {
             return judge;
         }
 
-        var writableNow = _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, principal);
-        var correctable = unchangedFieldTargets.Where(target => writableNow.Contains(target.SourceField)).ToList();
-        if (correctable.Count == 0)
-        {
-            return judge;
-        }
+        var handedOn = UnchangedFieldsHandedOn(
+            workflow,
+            schema,
+            activity,
+            transition,
+            principal,
+            actorUserId,
+            mergedDataJson,
+            unchangedFieldTargets.Select(target => target.SourceField).ToHashSet(StringComparer.Ordinal));
 
-        var creditCanFollowOnwards = workflow.CanReachTerminal(transition.To, avoidingState: activity.CurrentState);
-        var writableAfter = creditCanFollowOnwards
-            ? null
-            : _fieldPermissionEvaluator.GetWritableFieldKeys(
-                schema, workflow, ProbeInState(activity, transition.To, mergedDataJson), principal);
-
-        foreach (var (index, sourceField) in correctable)
+        foreach (var (index, sourceField) in unchangedFieldTargets)
         {
-            if (creditCanFollowOnwards || !writableAfter!.Contains(sourceField))
+            if (handedOn.Contains(sourceField))
             {
                 judge.Add(index);
             }
         }
 
         return judge;
+    }
+
+    /// <summary>
+    /// Of the fields whose value this move leaves unchanged, the ones the author is handing on while still able to
+    /// correct them: D20's clause, shared by the EPA→tool gate (T122) and the nominee gate (T102).
+    /// </summary>
+    /// <remarks>
+    /// A field qualifies when the move can still reach a terminal state; the mover IS the subject or the creator;
+    /// nobody else has acted yet; the mover can write the field now; and the move hands it on, meaning a terminal state
+    /// can be reached without coming back through the state the move left, or the mover loses write access to the
+    /// field. <see cref="DirectivesToJudge" />'s remarks record why each condition is there: four review rounds
+    /// broke every rule that read actor-rule syntax instead. Each gate asks this about its own fields and nothing
+    /// else, so neither can widen the other.
+    /// </remarks>
+    private IReadOnlySet<string> UnchangedFieldsHandedOn(
+        Workflow workflow,
+        FormSchema schema,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        string actorUserId,
+        string mergedDataJson,
+        IReadOnlySet<string> unchangedFields)
+    {
+        if (unchangedFields.Count == 0 ||
+            !workflow.CanReachTerminal(transition.To) ||
+            !IsTheAuthor(actorUserId, activity) ||
+            !OnlyTheAuthorHasActed(activity))
+        {
+            return EmptyFields;
+        }
+
+        var writableNow = _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, principal);
+        var correctable = unchangedFields.Where(writableNow.Contains).ToHashSet(StringComparer.Ordinal);
+        if (correctable.Count == 0 ||
+            workflow.CanReachTerminal(transition.To, avoidingState: activity.CurrentState))
+        {
+            return correctable;
+        }
+
+        var writableAfter = _fieldPermissionEvaluator.GetWritableFieldKeys(
+            schema, workflow, ProbeInState(activity, transition.To, mergedDataJson), principal);
+
+        return correctable.Where(field => !writableAfter.Contains(field)).ToHashSet(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Which nominee fields a transition must put to <see cref="NomineeGate" /> (T102). Empty means it does not run.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A changed nominee is judged on every move, whoever makes it</b> — including a move into a dead end, unlike the
+    /// EPA→tool gate. A credit target matters only where credit can follow; a <c>field:</c> value grants read of the
+    /// whole record, an inbox row and nudge emails in every state.
+    /// </para>
+    /// <para>
+    /// <b>An unchanged nominee is judged only at the author's hand-on</b> (<see cref="UnchangedFieldsHandedOn" />). So a
+    /// draft saved while its assessor was eligible, or before T102, is judged at the trainee's submit, when the trainee
+    /// can still pick someone else; and an assessor's own completion, a sign-off after assessment, a resubmission after
+    /// a decline and a withdrawal are never refused because the assessor has since lost the role or moved. Re-judging a
+    /// stored nominee on those moves would strand an in-flight encounter on someone who cannot fix it.
+    /// </para>
+    /// <para>
+    /// The boundary, as with D20: if someone other than the author acts first, the create or the last change was the
+    /// last check for that nominee. A nominee who loses eligibility after the hand-on keeps what the rules give them.
+    /// </para>
+    /// </remarks>
+    private IReadOnlySet<string> NomineeFieldsToJudge(
+        Workflow workflow,
+        FormSchema schema,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        string actorUserId,
+        string mergedDataJson,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> requiredRolesByField)
+    {
+        if (requiredRolesByField.Count == 0)
+        {
+            return EmptyFields;
+        }
+
+        var changed = NomineeGate.ChangedFields(requiredRolesByField.Keys, activity.DataJson, mergedDataJson);
+        var unchangedNamingSomeone = requiredRolesByField.Keys
+            .Where(field => !changed.Contains(field) && NomineeGate.NamesSomeone(mergedDataJson, field))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var handedOn = UnchangedFieldsHandedOn(
+            workflow, schema, activity, transition, principal, actorUserId, mergedDataJson, unchangedNamingSomeone);
+
+        return handedOn.Count == 0 ? changed : changed.Union(handedOn, StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -1160,9 +1099,7 @@ public sealed class ActivityService : IActivityService
 
     private static readonly IReadOnlySet<int> EmptyDirectives = new HashSet<int>();
 
-    private static bool CanEditDraft(Activity activity, string actorUserId)
-        => string.Equals(activity.SubjectUserId, actorUserId, StringComparison.Ordinal) ||
-           string.Equals(activity.CreatedByUserId, actorUserId, StringComparison.Ordinal);
+    private static readonly IReadOnlySet<string> EmptyFields = new HashSet<string>(StringComparer.Ordinal);
 
     private static void ThrowIfInvalid(IReadOnlyList<ActivityValidationErrorDto> validationErrors)
     {
@@ -1188,12 +1125,12 @@ public sealed class ActivityService : IActivityService
     /// field names the actor for a transition and, since T070, the owner of the fields that
     /// transition fills in. The subject legitimately owns that field while the request is still
     /// theirs to edit, which is the whole escalation: name yourself, and you may rate yourself and
-    /// take your own <c>complete</c>, awarding your own curriculum credit. Nothing else in the
-    /// pipeline catches it — <c>SchemaValidator</c> treats a <c>user</c> field as a plain string
-    /// and the assessor picker is a UI affordance, not a check.
+    /// take your own <c>complete</c>, awarding your own curriculum credit. <c>SchemaValidator</c> treats a
+    /// <c>user</c> field as a plain string, so before T102 nothing else caught it.
     ///
-    /// This is the narrow guard. The general one — validating a <c>user</c> value against the users
-    /// the caller may legitimately nominate — is T102.
+    /// This is the narrow guard, kept because its message says exactly what is wrong. It checks every <c>field:</c>
+    /// field on every patched move; <see cref="NomineeGate" />, which runs later on the same write, also refuses the
+    /// subject, but only in the fields it judges (T102).
     /// </remarks>
     private static void ThrowIfActorFieldNamesSubject(
         FormSchema schema,
@@ -1206,26 +1143,7 @@ public sealed class ActivityService : IActivityService
             return;
         }
 
-        var actorFieldNames = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var transition in workflow.Transitions)
-        {
-            ActorRuleMatcher.CollectUserFieldNames(transition.Actor, actorFieldNames);
-        }
-
-        foreach (var state in workflow.States)
-        {
-            ActorRuleMatcher.CollectUserFieldNames(state.EditableBy, actorFieldNames);
-        }
-
-        foreach (var section in schema.Sections)
-        {
-            ActorRuleMatcher.CollectUserFieldNames(section.EditableBy, actorFieldNames);
-            foreach (var field in section.Fields)
-            {
-                ActorRuleMatcher.CollectUserFieldNames(field.EditableBy, actorFieldNames);
-            }
-        }
+        var actorFieldNames = ActorFieldRules.ActorFieldNames(schema, workflow);
 
         foreach (var fieldName in actorFieldNames)
         {
@@ -1335,6 +1253,7 @@ public sealed class ActivityService : IActivityService
             pinnedVersion.DisplayFieldsJson,
             pinnedVersion.CreditRulesJson,
             activity.SubjectUserId,
+            activity.InstitutionId,
             activity.CreatedByUserId,
             activity.CurrentState,
             activity.DataJson,

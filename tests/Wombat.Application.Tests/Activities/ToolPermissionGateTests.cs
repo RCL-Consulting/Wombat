@@ -9,6 +9,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Activities;
 
@@ -224,56 +225,9 @@ public sealed class ToolPermissionGateTests
     }
 
     // ---- 6 ----------------------------------------------------------------------------------------------------
-
-    [Fact]
-    public async Task UpdateDraft_SwitchingARequestToAForbiddenEpa_IsRefused_AndLeavesNothingToCommit()
-    {
-        // The bypass UpdateDraftAsync would otherwise open: it replaces the whole payload in any non-terminal state,
-        // so a trainee could submit against a permitted EPA, switch to a forbidden one while the request sits with
-        // the assessor, and have the assessor's unchanged completion credit it.
-        var options = NewDatabase();
-        await SeedAsync(options);
-
-        var request = await CreateAsync(options, MiniCexTypeId, PermittingEpaId);
-        await TransitionAsync(options, request.Id, "submit", TraineeId);
-
-        var message = await ShouldBeRefusedAsync(options, service => service.UpdateDraftAsync(
-            new UpdateActivityDraftInput(request.Id, TraineeId, RequestData(ForbiddingEpaId), Principal(TraineeId))));
-
-        message.Should().Contain(GateRefusal).And.Contain("PAED-005");
-
-        var stored = await StoredAsync(options, request.Id);
-        stored.CurrentState.Should().Be("requested");
-        ReadInt(stored.DataJson, "epa_id").Should().Be(PermittingEpaId);
-    }
-
-    [Fact]
-    public async Task UpdateDraft_ChangingOnlyANonCreditField_Passes_EvenThoughTheStoredEpaIsNowForbidden()
-    {
-        // Only a change of credit target is re-checked. Correcting the presenting problem on a request filed
-        // legitimately must not be refused because the list was edited since.
-        var options = NewDatabase();
-        await SeedAsync(options);
-        await SetPermittedToolsAsync(options, ForbiddingItemId);
-
-        var request = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId);
-        await TransitionAsync(options, request.Id, "submit", TraineeId);
-        await SetPermittedToolsAsync(options, ForbiddingItemId, "cbd", "dops", "msf");
-        await AssertNowForbiddenAsync(options, MiniCexTypeId, ForbiddingEpaId);
-
-        await using (var db = new ApplicationDbContext(options))
-        {
-            await Service(db).UpdateDraftAsync(new UpdateActivityDraftInput(
-                request.Id,
-                TraineeId,
-                RequestData(ForbiddingEpaId, presentingProblem: "Fever and a rash"),
-                Principal(TraineeId)));
-        }
-
-        var stored = await StoredAsync(options, request.Id);
-        ReadString(stored.DataJson, "presenting_problem").Should().Be("Fever and a rash");
-        ReadInt(stored.DataJson, "epa_id").Should().Be(ForbiddingEpaId);
-    }
+    // The two UpdateDraftAsync cases were removed with the method (T102). It had no caller, replaced the whole payload
+    // in any non-terminal state, and skipped field ownership and the self-nomination guard as well as this gate. Any
+    // post-creation save now goes through a transition, which section 7 covers.
 
     // ---- 7 ----------------------------------------------------------------------------------------------------
 
@@ -1475,6 +1429,13 @@ public sealed class ToolPermissionGateTests
             Item(4013, CurriculumId, 13, """["cbd"]"""),
             Item(4014, CurriculumId, 14, """["cbd"]"""),
             Item(4015, CurriculumId, 15, """["cbd"]"""));
+
+        // T102: the assessor every request names is an eligible nominee, so these tests keep proving what they proved
+        // about the tool gate. The unprofiled trainee has an Identity row at the same institution, which is where the
+        // create stamps them from; with no profile they still have no curriculum, which is what D21's case needs.
+        NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
+        NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
+        NomineeSeed.AddUser(db, UnprofiledTraineeId, InstitutionId, WombatRoles.Trainee);
 
         db.TraineeProfiles.Add(new TraineeProfile
         {

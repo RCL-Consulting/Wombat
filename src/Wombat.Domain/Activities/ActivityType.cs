@@ -76,8 +76,14 @@ public sealed class ActivityType
         // Every payload is parsed before any of them is assigned (T122). A save that assigned the schema and then
         // threw on the workflow left a tracked entity half-written, and the audit pipeline's catch saves the
         // request's DbContext, so the half-written draft was COMMITTED under a failed command.
-        var stagingSchemaJson = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
-        var stagingWorkflowJson = WorkflowParser.Serialize(WorkflowParser.Parse(workflowJson));
+        var schema = FormSchemaParser.Parse(schemaJson);
+        var workflow = WorkflowParser.Parse(workflowJson);
+
+        // T102: the nominee fields must be unambiguous before anything is assigned. See ActorFieldRules.
+        ActorFieldRules.EnsurePublishable(schema, workflow);
+
+        var stagingSchemaJson = FormSchemaParser.Serialize(schema);
+        var stagingWorkflowJson = WorkflowParser.Serialize(workflow);
         var stagingCreditRulesJson = CreditRulesParser.Serialize(CreditRulesParser.Parse(creditRulesJson));
         var stagingDisplayFieldsJson = NormalizeDisplayFieldsJson(displayFieldsJson);
 
@@ -97,6 +103,12 @@ public sealed class ActivityType
         {
             throw new InvalidOperationException("A saved draft is required before publishing.");
         }
+
+        // T102: also here, because a draft staged before the rule existed never met it, and a publish is the step that
+        // makes it what new activities pin to. Nothing is assigned until it passes.
+        ActorFieldRules.EnsurePublishable(
+            FormSchemaParser.Parse(StagingSchemaJson!),
+            WorkflowParser.Parse(StagingWorkflowJson!));
 
         SchemaJson = StagingSchemaJson;
         WorkflowJson = StagingWorkflowJson;

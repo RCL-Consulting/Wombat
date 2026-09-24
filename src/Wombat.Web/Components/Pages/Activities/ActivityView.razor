@@ -55,7 +55,7 @@
         <p><strong>Type:</strong> @_activity.ActivityTypeName</p>
         <p><strong>State:</strong> @_activity.CurrentState</p>
         <p><strong>Version:</strong> @_activity.SchemaVersion</p>
-        <ActivityWorkflowActions Actions="_actions" OnTransitionRequested="HandleTransitionAsync" />
+        <ActivityWorkflowActions Actions="_actions" Busy="_busy" OnTransitionRequested="HandleTransitionAsync" />
       </aside>
 
       <section class="detail-card">
@@ -72,7 +72,8 @@
                           DataJson="@_activity.DataJson"
                           SubjectUserId="@_activity.SubjectUserId"
                           CreditRulesJson="@_activity.CreditRulesJson"
-                          WbaToolKey="@_activity.WbaToolKey" />
+                          WbaToolKey="@_activity.WbaToolKey"
+                          ActivityInstitutionId="@_activity.InstitutionId" />
         }
         else
         {
@@ -83,12 +84,18 @@
 
           @* SubjectUserId, not the principal: the actor here is usually the assessor, and the EPAs
              that can be credited are the subject's (T108). *@
-          <ActivityForm SchemaJson="@_activity.SchemaJson"
+          @* Keyed on a generation so a refused move remounts it with fresh option lists (T102): the person the
+             server just refused may have fallen off the list since the page loaded. The working copy survives. *@
+          <ActivityForm @key="_formGeneration"
+                        SchemaJson="@_activity.SchemaJson"
                         DataJson="@_workingDataJson"
                         SubjectUserId="@_activity.SubjectUserId"
                         CreditRulesJson="@_activity.CreditRulesJson"
                         WbaToolKey="@_activity.WbaToolKey"
                         EditableFieldKeys="_editable"
+                        IsExistingActivity="true"
+                        ActivityInstitutionId="@_activity.InstitutionId"
+                        StoredDataJson="@_activity.DataJson"
                         DataJsonChanged="OnDataChanged" />
 
           <FormActions>
@@ -254,13 +261,20 @@
     _hasPendingChanges = false;
   }
 
+  private int _formGeneration;
+
+  // One action at a time. A double-click used to send two transitions; since T102 each refusal also remounts the
+  // form, and two of those at once would race their option loads.
+  private bool _busy;
+
   private async Task HandleTransitionAsync((string TransitionKey, string? Note) request)
   {
-    if (_activity is null)
+    if (_activity is null || _busy)
     {
       return;
     }
 
+    _busy = true;
     _actionError = null;
 
     try
@@ -294,6 +308,11 @@
       // The working copy is deliberately left alone: a rejected transition (a missing required
       // field, say) must not discard what the actor typed.
       _actionError = exception.Message;
+      _formGeneration++;
+    }
+    finally
+    {
+      _busy = false;
     }
   }
 }

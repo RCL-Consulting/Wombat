@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Wombat.Domain.Activities.Workflow;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Domain.Activities.Schema;
 
@@ -100,6 +101,11 @@ public static class FormSchemaParser
                 if (!string.IsNullOrWhiteSpace(field.ScaleKey))
                 {
                     writer.WriteString("scale_key", field.ScaleKey);
+                }
+
+                if (!string.IsNullOrWhiteSpace(field.NomineeRole))
+                {
+                    writer.WriteString("role", field.NomineeRole);
                 }
 
                 if (field.Validation is not null)
@@ -252,21 +258,54 @@ public static class FormSchemaParser
         EnsureObject(element, "Field must be an object.");
         EnsureAllowedProperties(
             element,
-            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "validation", "show_if", "editable_by"],
+            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "role", "validation", "show_if", "editable_by"],
             "field");
 
+        var key = GetRequiredString(element, "key");
+        var type = ParseFieldType(GetRequiredString(element, "type"));
+
         return new FormField(
-            GetRequiredString(element, "key"),
-            ParseFieldType(GetRequiredString(element, "type")),
+            key,
+            type,
             GetRequiredString(element, "label"),
             GetOptionalTrimmedString(element, "help_text"),
             GetBooleanOrDefault(element, "required"),
             ParseOptionalStringArray(element, "options"),
             GetOptionalTrimmedString(element, "catalogue"),
             GetOptionalTrimmedString(element, "scale_key"),
+            ParseOptionalNomineeRole(element, key, type),
             ParseOptionalValidation(element, "validation"),
             ParseOptionalVisibilityCondition(element, "show_if"),
             ParseOptionalActorRule(element, "editable_by"));
+    }
+
+    /// <summary>
+    /// Parses a <c>user</c> field's optional <c>role</c> (T102): the role its nominee must hold.
+    /// </summary>
+    /// <remarks>
+    /// Normalised to the canonical role name, so <c>"assessor"</c> and <c>"Assessor"</c> are one setting and the
+    /// directory query, which matches on the role's stored name, cannot miss on case. Refused on any other field
+    /// type: no stored version carries it there, so refusing costs no pinned version its parse, and a role on a text
+    /// field would read as a restriction nothing enforces.
+    /// </remarks>
+    private static string? ParseOptionalNomineeRole(JsonElement element, string fieldKey, FieldType type)
+    {
+        var value = GetOptionalTrimmedString(element, "role");
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (type != FieldType.User)
+        {
+            throw new SchemaParseException(
+                $"Field '{fieldKey}' declares a role, but only a User field names a person; remove 'role' or make it a User field.");
+        }
+
+        return WombatRoles.Nominable.FirstOrDefault(role => string.Equals(role, value, StringComparison.OrdinalIgnoreCase))
+            ?? throw new SchemaParseException(
+                $"Field '{fieldKey}' declares role '{value}', which is not a role a nominee can hold. " +
+                $"Use one of: {string.Join(", ", WombatRoles.Nominable)}.");
     }
 
     /// <summary>

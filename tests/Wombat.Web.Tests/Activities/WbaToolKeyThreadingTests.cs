@@ -249,6 +249,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             "[]",
             CreditsEpaId,
             "trainee-1",
+            1,
             "trainee-1",
             state,
             """{"epa_id":"17"}""",

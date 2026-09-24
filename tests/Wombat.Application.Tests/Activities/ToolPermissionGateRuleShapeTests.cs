@@ -513,7 +513,7 @@ public sealed class ToolPermissionGateRuleShapeTests
 
     private static async Task<IReadOnlyList<int>> PickerAsync(ApplicationDbContext db, ClaimsPrincipal principal, EpaOptionScope scope)
     {
-        var picker = new ActivityReferenceDataService(db, new Mock<IUserAdministrationService>(MockBehavior.Strict).Object);
+        var picker = new ActivityReferenceDataService(db);
         var options = await picker.GetEpaOptionsAsync(principal, scope, CancellationToken.None);
         return options.Select(option => int.Parse(option.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
     }

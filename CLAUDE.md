@@ -193,6 +193,13 @@ Runtime services in Infrastructure:
   when the author, before anyone else has acted, hands it on while still able to write its field. Never at credit, so a
   refusal never lands on someone who cannot act on it. The EPA picker narrows with the
   same predicate (`ToolPermission.Evaluate`). Null key or null list is unrestricted (D21).
+- `NomineeGate` — a nominee field (every `user` field, plus any field a `field:` rule names) may name only someone
+  `NomineeDirectory` lists: an active holder of the field's `role` (default `Assessor`) at the activity's stamped
+  institution, never the subject, with no Administrator bypass (T102). A changed value is judged on every write; an
+  unchanged one only at the author's hand-on, by the same predicate the tool gate uses (`UnchangedFieldsHandedOn`).
+  The picker is the same query. `ActorFieldRules` (Domain) is the one walker of declared actor rules; save and publish
+  refuse duplicate keys, a `field:` rule naming a non-user field, and options on a user field
+  (`ActorFieldRules.EnsurePublishable`).
 
 ### Editing a seed folder
 

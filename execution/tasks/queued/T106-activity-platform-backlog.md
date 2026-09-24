@@ -20,6 +20,13 @@ is a real gap and several will bite during T098 phases 2c-3.
 
 ## 1. No post-creation edit path exists for anyone
 
+> **T102, 2026-09-24:** `UpdateActivityDraftCommand`, `UpdateActivityDraftInput` and `IActivityService.UpdateDraftAsync`
+> are deleted. They had no caller and skipped fix 1, T070's writable-key filter, the state gate and the nominee gate. A
+> post-creation save must be a transition (a self-transition if the state should not move) through `TransitionAsync`,
+> or a new path that runs, before its first mutation: the actor gate, `MergeWritableKeys` against the pre-move state,
+> `ThrowIfActorFieldNamesSubject`, schema validation, `DirectivesToJudge` → `ToolPermissionGate`, and
+> `NomineeFieldsToJudge` → `NomineeGate`. The text below predates the deletion.
+
 `UpdateActivityDraftCommand` exists (`Features/Activities/Commands/UpdateActivityDraft/`, implemented at
 `ActivityService.cs:78-104`) but has **zero** Razor callers — a grep over `src/Wombat.Web` finds only
 `CreateActivityCommand` and `TransitionActivityCommand`. Once an activity is created, its data can only

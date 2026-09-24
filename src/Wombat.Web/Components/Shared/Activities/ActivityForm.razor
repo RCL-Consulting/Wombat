@@ -2,8 +2,9 @@
 @using System.Text.Json
 @using System.Text.Json.Nodes
 @using Wombat.Application.Features.Activities.Services
+@using Wombat.Domain.Activities
 @using Wombat.Domain.Activities.Schema
-@inject IActivityReferenceDataService ReferenceDataService
+@inject IServiceScopeFactory ScopeFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (!string.IsNullOrWhiteSpace(_loadError))
@@ -122,7 +123,8 @@ else if (_schema is not null)
   /// <summary>
   /// The trainee this activity is ABOUT, when one is known. Credit follows the subject, not the
   /// viewer: on the detail page the principal is usually the assessor, and on the builder preview
-  /// there is no subject at all. Null leaves every picker at its claims-based default (T108).
+  /// there is no subject at all. Null leaves the EPA picker at its claims-based default (T108), and
+  /// offers nobody in a user field (T102): who may be named depends on whom the activity is about.
   /// </summary>
   [Parameter] public string? SubjectUserId { get; set; }
 
@@ -159,6 +161,27 @@ else if (_schema is not null)
   /// </summary>
   [Parameter] public IReadOnlySet<string>? EditableFieldKeys { get; set; }
 
+  /// <summary>
+  /// True when the form renders an activity that exists (T102). Its <c>user</c> fields then offer the people of
+  /// <see cref="ActivityInstitutionId" />, the institution stamped on it; on the create page (false) the institution is
+  /// resolved from <see cref="SubjectUserId" /> the way the create will stamp it. Either way it is the institution the
+  /// write path judges a nominee against.
+  /// </summary>
+  [Parameter] public bool IsExistingActivity { get; set; }
+
+  /// <summary>The existing activity's stamped institution. Null lists nobody, as the write path accepts nobody.</summary>
+  [Parameter] public int? ActivityInstitutionId { get; set; }
+
+  /// <summary>
+  /// The activity's data as STORED, on a page showing one that exists; null on the create page and the builder preview.
+  /// </summary>
+  /// <remarks>
+  /// A <c>user</c> field labels only a value stored on the activity (T102). <see cref="DataJson" /> is the working copy,
+  /// which a caller can fill with anyone's id by editing the page, and looking that id up would hand back the name and
+  /// email of a person the record never named.
+  /// </remarks>
+  [Parameter] public string? StoredDataJson { get; set; }
+
   [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
 
   private FormSchema? _schema;
@@ -171,6 +194,9 @@ else if (_schema is not null)
   private IReadOnlySet<string> _creditedEpaFieldKeys = new HashSet<string>(StringComparer.Ordinal);
 
   private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
+
+  // Which load owns the option lists. A newer load supersedes an older one still awaiting its queries.
+  private int _loadVersion;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -185,7 +211,19 @@ else if (_schema is not null)
       // The reload key is the schema PLUS everything else the option lists now depend on. Keying it
       // on the schema alone would serve one subject's creditable EPAs to the next (T108), and leaving
       // the tool out would serve one instrument's permitted EPAs to another with the same form (T122).
-      var optionsKey = string.Join('\u001f', SchemaJson, SubjectUserId ?? string.Empty, CreditRulesJson ?? string.Empty, WbaToolKey ?? string.Empty);
+      // T102 adds the nominee scope, and which fields are locked: a locked user field loads only its stored person's
+      // label, so a field that becomes editable must reload to get its list.
+      var optionsKey = string.Join(
+        '\u001f',
+        SchemaJson,
+        SubjectUserId ?? string.Empty,
+        CreditRulesJson ?? string.Empty,
+        WbaToolKey ?? string.Empty,
+        IsExistingActivity ? "existing" : "new",
+        ActivityInstitutionId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+        ReadOnly ? "read-only" : "writable",
+        EditableFieldKeys is null ? "*" : string.Join(',', EditableFieldKeys.Order(StringComparer.Ordinal)),
+        StoredDataJson ?? string.Empty);
       if (!string.Equals(_loadedOptionsKey, optionsKey, StringComparison.Ordinal))
       {
         _schema = FormSchemaParser.Parse(SchemaJson);
@@ -245,6 +283,31 @@ else if (_schema is not null)
 
   private IReadOnlyList<ActivityCatalogueOption> GetOptions(Wombat.Domain.Activities.Schema.FormField field)
   {
+    // A user field's people and an EPA field's EPAs come from the server's own lists, which are what the write path
+    // checks against, never from inline options a schema might carry (T102, T122): those would offer values that
+    // submitting refuses, and hide the stored-value fallback.
+    if (field.Type is FieldType.User or FieldType.Epa)
+    {
+      var loaded = _catalogueOptionsByField.TryGetValue(field.Key, out var directoryOptions);
+      IReadOnlyList<ActivityCatalogueOption> listed = loaded ? directoryOptions! : [];
+
+      // A person picked on this page but not on the list (refused, then the list reloaded without them) is still what
+      // the next action would send, so the select must show it, and choosing "Select…" must be a real change. Labelled
+      // here, never looked up: the working copy may hold anyone's id (T102). Only once the list has loaded: before
+      // that, "not listed" means "not known yet", and a valid stored nominee would read as unavailable.
+      var working = GetString(field.Key);
+      if (field.Type == FieldType.User &&
+          loaded &&
+          !IsFieldLocked(field.Key) &&
+          !string.IsNullOrEmpty(working) &&
+          !listed.Any(option => string.Equals(option.Value, working, StringComparison.Ordinal)))
+      {
+        return [.. listed, new ActivityCatalogueOption(working, "Not available (choose someone else)")];
+      }
+
+      return listed;
+    }
+
     if (field.Options.Count > 0)
     {
       return field.Options
@@ -322,38 +385,114 @@ else if (_schema is not null)
 
   private async Task LoadOptionsAsync()
   {
-    _catalogueOptionsByField.Clear();
+    var version = ++_loadVersion;
 
     if (_schema is null)
     {
+      _catalogueOptionsByField.Clear();
       return;
     }
 
+    var schema = _schema;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     var principal = authState.User;
 
-    foreach (var field in _schema.Sections.SelectMany(section => section.Fields))
+    // Each load gets its own scope, and so its own DbContext (T102). The circuit's context is shared by everything on
+    // the page, and a keyed remount after a refused action can start a load while another instance's is still awaiting;
+    // two queries on one context throw. Results are swapped in only if no newer load has started meanwhile.
+    await using var scope = ScopeFactory.CreateAsyncScope();
+    var referenceData = scope.ServiceProvider.GetRequiredService<IActivityReferenceDataService>();
+
+    var loaded = new Dictionary<string, IReadOnlyList<ActivityCatalogueOption>>(StringComparer.Ordinal);
+    foreach (var field in schema.Sections.SelectMany(section => section.Fields))
     {
       IReadOnlyList<ActivityCatalogueOption>? options = field.Type switch
       {
-        FieldType.Epa => await ReferenceDataService.GetEpaOptionsAsync(
+        FieldType.Epa => await referenceData.GetEpaOptionsAsync(
           principal,
           new EpaOptionScope(
             SubjectUserId,
             _creditedEpaFieldKeys.Contains(field.Key),
             GetString(field.Key),
             WbaToolKey)),
-        FieldType.User => await ReferenceDataService.GetAssessorOptionsAsync(principal),
-        FieldType.Scale => await ReferenceDataService.GetEntrustmentScaleLevelOptionsAsync(field.ScaleKey),
+        FieldType.User => await LoadNomineeOptionsAsync(referenceData, schema, field),
+        FieldType.Scale => await referenceData.GetEntrustmentScaleLevelOptionsAsync(field.ScaleKey),
         _ when !string.IsNullOrWhiteSpace(field.CatalogueKey)
-          => await ReferenceDataService.GetCatalogueOptionsAsync(field.CatalogueKey),
+          => await referenceData.GetCatalogueOptionsAsync(field.CatalogueKey),
         _ => null
       };
 
       if (options is not null)
       {
-        _catalogueOptionsByField[field.Key] = options;
+        loaded[field.Key] = options;
       }
+    }
+
+    if (version != _loadVersion)
+    {
+      return;
+    }
+
+    _catalogueOptionsByField.Clear();
+    foreach (var (key, options) in loaded)
+    {
+      _catalogueOptionsByField[key] = options;
+    }
+  }
+
+  /// <summary>
+  /// A <c>user</c> field's options (T102): the nominee directory's list when the field can be written, and only the
+  /// stored person when it cannot. A reader is shown who was named, never everyone who could have been. Only a value
+  /// stored on the activity is ever looked up; see <see cref="StoredDataJson" />.
+  /// </summary>
+  private async Task<IReadOnlyList<ActivityCatalogueOption>> LoadNomineeOptionsAsync(
+    IActivityReferenceDataService referenceData,
+    FormSchema schema,
+    Wombat.Domain.Activities.Schema.FormField field)
+  {
+    var stored = StoredValueOf(field.Key);
+
+    if (IsFieldLocked(field.Key))
+    {
+      if (stored is null)
+      {
+        return [];
+      }
+
+      var option = await referenceData.GetUserOptionAsync(stored);
+      return [option ?? new ActivityCatalogueOption(stored, "Unknown person")];
+    }
+
+    return await referenceData.GetNomineeOptionsAsync(new NomineeOptionScope(
+      SubjectUserId,
+      ActorFieldRules.RequiredRolesForUserField(schema, field.Key),
+      IsExistingActivity,
+      ActivityInstitutionId,
+      stored));
+  }
+
+  /// <summary>The field's value as stored on the activity, or null. A JSON string only, as the actor grammar reads it.</summary>
+  private string? StoredValueOf(string key)
+  {
+    if (string.IsNullOrWhiteSpace(StoredDataJson))
+    {
+      return null;
+    }
+
+    try
+    {
+      var stored = JsonNode.Parse(StoredDataJson) as JsonObject;
+      return stored is not null &&
+             stored.TryGetPropertyValue(key, out var value) &&
+             value is JsonValue jsonValue &&
+             jsonValue.TryGetValue<string>(out var text) &&
+             !string.IsNullOrEmpty(text)
+        ? text
+        : null;
+    }
+    catch (JsonException)
+    {
+      return null;
     }
   }
 

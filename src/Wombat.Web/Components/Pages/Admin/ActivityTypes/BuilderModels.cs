@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Web.Components.Pages.Admin.ActivityTypes;
 
@@ -54,6 +55,7 @@ internal sealed class BuilderSchemaModel
                     OptionsText = string.Join(Environment.NewLine, field.Options),
                     CatalogueKey = field.CatalogueKey,
                     ScaleKey = field.ScaleKey,
+                    NomineeRole = field.NomineeRole,
                     Min = field.Validation?.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Max = field.Validation?.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Regex = field.Validation?.Regex,
@@ -121,15 +123,44 @@ internal sealed class BuilderSchemaModel
                     field.Label.Trim(),
                     NullIfWhiteSpace(field.HelpText),
                     field.Required,
-                    ParseOptions(field.OptionsText),
-                    NullIfWhiteSpace(field.CatalogueKey),
+                    // A User field's people come from the directory (T102); publish refuses inline options on one, so a
+                    // field switched to User drops what it offered as a Choice rather than becoming unsaveable.
+                    field.Type == FieldType.User ? [] : ParseOptions(field.OptionsText),
+                    field.Type == FieldType.User ? null : NullIfWhiteSpace(field.CatalogueKey),
                     NullIfWhiteSpace(field.ScaleKey),
+                    // Only a User field names a person, and the parser refuses a role anywhere else. Kept on the model,
+                    // so switching a field away from User and back restores it, and emitted only while it is a User
+                    // field, like PointerIfStillValid. (T102)
+                    field.Type == FieldType.User ? NullIfWhiteSpace(field.NomineeRole) : null,
                     BuildValidation(field),
                     BuildVisibility(field.ShowIfField, field.ShowIfOperator, field.ShowIfValue),
                     field.EditableBy))
                 .ToList(),
                 section.EditableBy))
             .ToList();
+    }
+
+    /// <summary>
+    /// A default key no field in the schema uses yet (T102). Publish refuses a key declared twice, so the builder must
+    /// not propose one: numbering per section gave every new section's first field the same key.
+    /// </summary>
+    public string NextFieldKey()
+        => NextKey("field", Sections.SelectMany(section => section.Fields).Select(field => field.Key));
+
+    /// <inheritdoc cref="NextFieldKey" />
+    public string NextSectionKey()
+        => NextKey("section", Sections.Select(section => section.Key));
+
+    private static string NextKey(string prefix, IEnumerable<string> taken)
+    {
+        var used = taken.Select(key => key.Trim()).ToHashSet(StringComparer.Ordinal);
+        var number = 1;
+        while (used.Contains($"{prefix}_{number}"))
+        {
+            number++;
+        }
+
+        return $"{prefix}_{number}";
     }
 
     public static IReadOnlyList<string> GetPublishWarnings(string? publishedSchemaJson, string draftSchemaJson)
@@ -169,6 +200,20 @@ internal sealed class BuilderSchemaModel
                 if (!publishedField.Required && draftField.Required)
                 {
                     warnings.Add($"Field '{publishedField.Label}' becomes required.");
+                }
+
+                // Compared as the requirement each declares: an absent role IS Assessor, so spelling the default out
+                // changes nothing and is not warned about.
+                if (publishedField.Type == FieldType.User &&
+                    draftField.Type == FieldType.User &&
+                    !string.Equals(
+                        publishedField.NomineeRole ?? WombatRoles.Assessor,
+                        draftField.NomineeRole ?? WombatRoles.Assessor,
+                        StringComparison.Ordinal))
+                {
+                    warnings.Add(
+                        $"Field '{publishedField.Label}' will name a {draftField.NomineeRole ?? "Assessor"} instead of a " +
+                        $"{publishedField.NomineeRole ?? "Assessor"}. Activities already filed keep the person they named.");
                 }
             }
         }
@@ -314,6 +359,12 @@ internal sealed class BuilderFieldModel
     public string? OptionsText { get; set; }
     public string? CatalogueKey { get; set; }
     public string? ScaleKey { get; set; }
+
+    /// <summary>
+    /// A User field's <c>role</c> (T102): the role its nominee must hold. Null means Assessor.
+    /// </summary>
+    public string? NomineeRole { get; set; }
+
     public string? Min { get; set; }
     public string? Max { get; set; }
     public string? Regex { get; set; }

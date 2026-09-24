@@ -63,11 +63,31 @@ public interface IActivityReferenceDataService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Assessor users the caller may reference (e.g. the named assessor on a Mini-CEX), scoped to
-    /// their institution. A global Administrator sees all assessors. Value is the user id.
+    /// The people a <c>user</c> field may name on an activity (T102): users holding every required role, at the
+    /// activity's institution, not deactivated, and not the subject. Value is the user id.
     /// </summary>
-    Task<IReadOnlyList<ActivityCatalogueOption>> GetAssessorOptionsAsync(
-        ClaimsPrincipal principal,
+    /// <remarks>
+    /// The same query the write path judges a nominee with, so the picker offers exactly who submitting accepts. It
+    /// depends on the activity, never on who is looking: an Administrator is offered the trainee's institution's people,
+    /// not the country's. A <see cref="NomineeOptionScope.StoredValue" /> outside the list is appended, labelled
+    /// "(not on the current list)" without saying why, so a stored nominee never renders as an empty select.
+    /// </remarks>
+    Task<IReadOnlyList<ActivityCatalogueOption>> GetNomineeOptionsAsync(
+        NomineeOptionScope scope,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// One user's display label, or null if the id names nobody. For a <c>user</c> field shown read-only, which needs
+    /// the stored person's name and nothing else: a reader is never sent the list of everyone who could have been
+    /// named (T102).
+    /// </summary>
+    /// <remarks>
+    /// Unscoped by design, so call it only with a value STORED on an activity the caller has been authorised to read,
+    /// never with a value from a form's working copy: that may be any user's id, typed into the page by hand, and this
+    /// would answer with their name and email.
+    /// </remarks>
+    Task<ActivityCatalogueOption?> GetUserOptionAsync(
+        string userId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -123,3 +143,26 @@ public sealed record EpaOptionScope(
     bool NarrowToCreditable,
     string? CurrentValue = null,
     string? WbaToolKey = null);
+
+/// <summary>
+/// Whose nominees a <c>user</c> field's picker lists (T102).
+/// </summary>
+/// <param name="SubjectUserId">The person the activity is about. Never a nominee; null lists nobody.</param>
+/// <param name="RequiredRoles">Every role the nominee must hold, from <c>ActorFieldRules.RequiredRolesForUserField</c>.</param>
+/// <param name="ForExistingActivity">
+/// True on an activity that exists: the institution is then <paramref name="ActivityInstitutionId" /> as stamped, and a
+/// null stamp lists nobody, exactly as the write path judges it. False on the create page: the institution is resolved
+/// from the subject the way the create will stamp it.
+/// </param>
+/// <param name="ActivityInstitutionId">The existing activity's stamped institution.</param>
+/// <param name="StoredValue">
+/// The value stored on the activity for this field, never the form's working copy. If it has fallen off the list it is
+/// appended with its label, because it is already on the record every reader of the activity sees. A value the page
+/// holds but the activity does not is never looked up: it may be anyone's id, typed into the page by hand.
+/// </param>
+public sealed record NomineeOptionScope(
+    string? SubjectUserId,
+    IReadOnlyList<string> RequiredRoles,
+    bool ForExistingActivity,
+    int? ActivityInstitutionId,
+    string? StoredValue);

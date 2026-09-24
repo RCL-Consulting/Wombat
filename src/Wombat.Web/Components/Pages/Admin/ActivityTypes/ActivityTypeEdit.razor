@@ -247,12 +247,29 @@
                   <FormField Label="Help text" InputId="field-help">
                     <input id="field-help" class="form-control" @bind="selectedField.HelpText" />
                   </FormField>
-                  <FormField Label="Options" InputId="field-options" FullWidth="true">
-                    <textarea id="field-options" class="form-control" rows="4" @bind="selectedField.OptionsText"></textarea>
-                  </FormField>
-                  <FormField Label="Catalogue key" InputId="field-catalogue">
-                    <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />
-                  </FormField>
+                  @if (selectedField.Type == FieldType.User)
+                  {
+                    @* A User field offers the people of the trainee's institution who hold this role; the server checks
+                       the same (T102). It has no options of its own. *@
+                    <FormField Label="Names a" InputId="field-role" HelpText="Who this field may name: someone at the trainee's institution holding this role.">
+                      <select id="field-role" class="form-select" @bind="selectedField.NomineeRole">
+                        <option value="">Assessor (default)</option>
+                        @foreach (var role in NomineeRoleChoices(selectedField.NomineeRole))
+                        {
+                          <option value="@role">@role</option>
+                        }
+                      </select>
+                    </FormField>
+                  }
+                  else
+                  {
+                    <FormField Label="Options" InputId="field-options" FullWidth="true">
+                      <textarea id="field-options" class="form-control" rows="4" @bind="selectedField.OptionsText"></textarea>
+                    </FormField>
+                    <FormField Label="Catalogue key" InputId="field-catalogue">
+                      <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />
+                    </FormField>
+                  }
                   @if (selectedField.Type == FieldType.Scale)
                   {
                     <FormField Label="Entrustment scale" InputId="field-scale" HelpText="Levels of the chosen scale render as the rating dropdown at runtime.">
@@ -603,15 +620,16 @@
 
   private void AddSection()
   {
+    var fieldKey = _builderSchema.NextFieldKey();
     _builderSchema.Sections.Add(new BuilderSectionModel
     {
-      Key = $"section_{_builderSchema.Sections.Count + 1}",
+      Key = _builderSchema.NextSectionKey(),
       Title = $"Section {_builderSchema.Sections.Count + 1}",
       Fields =
       [
         new BuilderFieldModel
         {
-          Key = $"field_{_builderSchema.Sections.Count + 1}",
+          Key = fieldKey,
           Label = "New field"
         }
       ]
@@ -632,11 +650,30 @@
     var section = _builderSchema.Sections[sectionIndex];
     section.Fields.Add(new BuilderFieldModel
     {
-      Key = $"field_{section.Fields.Count + 1}",
+      Key = _builderSchema.NextFieldKey(),
       Label = "New field"
     });
     SelectField(sectionIndex, section.Fields.Count - 1);
     RefreshWarnings();
+  }
+
+  /// <summary>
+  /// The roles a User field may name, plus a stored value outside them so the select never shows a different role from
+  /// the one the schema holds (as the tool picker keeps an unknown key, T122). The parser refuses such a value at save.
+  /// </summary>
+  private static IEnumerable<string> NomineeRoleChoices(string? current)
+  {
+    var choices = WombatRoles.Nominable.Where(role => role != WombatRoles.Assessor).ToList();
+    if (!string.IsNullOrWhiteSpace(current) &&
+        !string.Equals(current, WombatRoles.Assessor, StringComparison.Ordinal) &&
+        !choices.Contains(current, StringComparer.Ordinal))
+    {
+      choices.Add(current);
+    }
+
+    return string.Equals(current, WombatRoles.Assessor, StringComparison.Ordinal)
+      ? choices.Prepend(WombatRoles.Assessor)
+      : choices;
   }
 
   private void SelectField(int sectionIndex, int fieldIndex)

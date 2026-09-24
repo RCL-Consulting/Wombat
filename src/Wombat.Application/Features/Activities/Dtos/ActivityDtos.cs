@@ -91,6 +91,9 @@ public sealed record ActivityDto(
     // narrow that field's options to what would be credited (T108).
     string CreditRulesJson,
     string SubjectUserId,
+    // The subject's institution as stamped at creation (T101): the institution a nominee field may name someone from
+    // (T102). The picker reads it from here, off an activity the page has already been authorised to read.
+    int? InstitutionId,
     string CreatedByUserId,
     string CurrentState,
     string DataJson,

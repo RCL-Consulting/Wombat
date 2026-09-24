@@ -9,12 +9,6 @@ public sealed record CreateActivityInput(
     string InitialDataJson,
     ClaimsPrincipal Principal);
 
-public sealed record UpdateActivityDraftInput(
-    int ActivityId,
-    string ActorUserId,
-    string NewDataJson,
-    ClaimsPrincipal Principal);
-
 /// <summary>
 /// A batch of activities to create and drive straight to a terminal state in one unit of work. (T121)
 /// </summary>

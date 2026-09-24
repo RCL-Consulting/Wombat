@@ -129,6 +129,13 @@ Supported field types in v1 (exactly ten — the T019 contract):
 - `file` — upload with mime allowlist and size limit; up to 5 files.
 - `signature` — captures the submitter's name, role, and UTC timestamp at submit time.
 
+Types added since v1 include `epa`, `scale`, `rating`, `markdown`, `datetime`, `checkbox` and `user`. The one with
+rules of its own is **`user`**, which names a person (T102). It offers, and the server accepts, only active users at the
+activity's institution who hold its `role` (default `Assessor`; or InstitutionalAdmin, Coordinator, CommitteeMember or
+Trainee — the roles whose authority is not bounded by a speciality), and never the subject. Only the institution is
+matched, never the nominee's speciality: an assessor from another discipline at the same institution can be named (D23). It takes no `options` or `catalogue`: its people come from the directory. See
+rule 3 under field permissions.
+
 New field types are new tasks, not T019 drive-bys. Every field type is a renderer, a builder editor, a validator, a JSON serialization, and a PDF renderer in T023 — the marginal cost is real.
 
 Conditional visibility (`show_if`) is supported on sections and fields as a **single** condition per element in v1: one field, one operator (`equals` / `not_equals` / `is_set` / `is_not_set` / `greater_than` / `less_than`), one value. Multi-condition visibility with ANDs/ORs is T019-f. Covers roughly 90% of the real cases — "show site when procedure = central line", "show escalation note when complication = yes".
@@ -202,7 +209,7 @@ rule, where a field falls back to its section's rule. Field beats section beats 
 `ActivityTypeVersion` already published keeps its existing behaviour without a republish. Declaring nothing
 changes nothing.
 
-Three rules worth knowing before you author a type:
+Four rules worth knowing before you author a type:
 
 1. **A terminal state, or any state with no outgoing transitions, is writable by nobody.** A transition is
    the only save channel, so a form nobody can submit is a form that loses work.
@@ -210,17 +217,27 @@ Three rules worth knowing before you author a type:
    state and would otherwise be uncreatable), and the field rules are evaluated against **empty** data. A
    `field:` rule reads its answer out of `DataJson`; evaluating it against what the caller just submitted
    would let the caller name themself and unlock the fields the rule protects.
-3. **A field a `field:` rule points at may not name the activity's subject.** Otherwise a trainee names
-   themself as assessor, rates themself and takes their own `complete`. Enforced in `ActivityService`;
-   the general form — validating a `user` value against the users the caller may nominate — is T102.
+3. **A nominee field may name only an eligible person (T102).** A nominee field is every `user` field plus every
+   field a `field:` rule names. Its value must be the exact id of a user who holds every role the field requires
+   (`role`, default `Assessor`), belongs to the activity's stamped institution (the subject's, never the caller's;
+   there is no Administrator bypass), is not deactivated (an administrator's lock or an erasure; a brute-force lockout
+   does not count), and is not the activity's subject. A **changed** value is judged on every write, whoever makes it,
+   including a withdrawal. An **unchanged** one is judged only when the author hands the activity on while still able
+   to change it — the D20 clause the EPA→tool gate uses (T122) — so an assessor's own completion is never refused
+   because they have since lost the role. The picker lists exactly the accepted set (`NomineeDirectory`). Enforced in
+   `ActivityService` by `ThrowIfActorFieldNamesSubject` (the subject case, with its own message) and `NomineeGate`.
+4. **Save and publish refuse an ambiguous nominee** (`ActorFieldRules.EnsurePublishable`): a section or field key
+   declared twice, a `field:` rule naming no field or a field that is not `user`, and `options` or a `catalogue` on a
+   `user` field. The check is not in the parser, so a stored version that predates it still loads.
 
 **There is no hard-coded assessor-note field.** Assessor narrative is an ordinary schema field the admin
 marks assessor-owned (`strengths` / `improvements` / `plan` on the CPSA seeds). That is distinct from
 `ActivityTransition.Note`, which is a workflow annotation: it is what `requires_note` demands, it is shown
 in the activity history, and it is invisible to credit and to reports.
 
-**The builder has no editor for `editable_by` yet.** It round-trips through the visual builder unharmed,
-but an admin must author it in the raw schema/workflow JSON for now.
+**The builder has no editor for `editable_by` yet.** It round-trips through the visual builder unharmed. A state's
+`editable_by` can be written in the Workflow tab's JSON; a section's or field's cannot be written by an operator at
+all today, because the Form tab has no raw editor, so it comes only from a seed.
 
 ## Credit rules
 

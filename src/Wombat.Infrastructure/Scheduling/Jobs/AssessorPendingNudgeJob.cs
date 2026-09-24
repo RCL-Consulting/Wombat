@@ -34,21 +34,24 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
 
         var activities = await dbContext.Set<Activity>()
             .Include(a => a.ActivityType)
+            .ThenInclude(t => t.Versions)
             .Where(a => a.UpdatedOn < cutoff)
-            .Where(a => !a.ActivityType.WorkflowJson!.Contains("\"terminal\":true") || true)
             .ToListAsync(cancellationToken);
 
         var pendingItems = new List<(string AssessorUserId, string ActivityTypeName, string TraineeUserId, int DaysWaiting)>();
 
         foreach (var activity in activities)
         {
-            if (string.IsNullOrWhiteSpace(activity.ActivityType.WorkflowJson))
+            // The version the activity is pinned to, as the inbox reads it (T102): the nominee gate judged the
+            // pinned version's field: rules, so a later version's rules must not decide whom this activity emails.
+            var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(v => v.Version == activity.SchemaVersion);
+            if (pinnedVersion is null || string.IsNullOrWhiteSpace(pinnedVersion.WorkflowJson))
                 continue;
 
             Workflow workflow;
             try
             {
-                workflow = WorkflowParser.Parse(activity.ActivityType.WorkflowJson);
+                workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
             }
             catch
             {
