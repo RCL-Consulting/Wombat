@@ -13,5 +13,11 @@ public sealed class CommitteeDecisionConfiguration : IEntityTypeConfiguration<Co
         builder.Property(entity => entity.Conditions).HasMaxLength(4000);
         builder.Property(entity => entity.DecidedByChairUserId).HasMaxLength(450).IsRequired();
         builder.HasIndex(entity => new { entity.ReviewId, entity.DecidedOn });
+
+        // T165: who was present when this decision was taken. Each decision keeps its own sitting.
+        builder.HasMany(entity => entity.Attendees)
+            .WithOne(entity => entity.Decision)
+            .HasForeignKey(entity => entity.DecisionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

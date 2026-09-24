@@ -9,7 +9,7 @@ namespace Wombat.Infrastructure.Identity;
 
 /// <summary>
 /// Seeds dev-only users so the GUI review (and other local browser verification)
-/// can sign in as a Trainee, CommitteeMember, Assessor or Coordinator without walking the full
+/// can sign in as a Trainee, either of two CommitteeMembers, an Assessor or a Coordinator without walking the full
 /// invitation flow each time. Only invoked from Program.cs when
 /// <c>IHostEnvironment.IsDevelopment()</c> is true. Production deployments
 /// must never run this — the seed credentials are hardcoded by design.
@@ -33,6 +33,11 @@ public sealed class DevUserSeeder
     private const string TraineePassword = "ChangeThisTrainee123!";
     private const string CommitteeMemberEmail = "committee@wombat.local";
     private const string CommitteeMemberPassword = "ChangeThisCommittee123!";
+
+    // A second committee member, so a dev panel can hold the chair and one other. Since T165 a panel needs at least two
+    // members, and a decision two present, so one CommitteeMember could chair no panel that decides anything.
+    private const string SecondCommitteeMemberEmail = "committee2@wombat.local";
+    private const string SecondCommitteeMemberPassword = "ChangeThisCommittee2123!";
     private const string AssessorEmail = "assessor@wombat.local";
     private const string AssessorPassword = "ChangeThisAssessor123!";
 
@@ -98,6 +103,7 @@ public sealed class DevUserSeeder
 
         await EnsureTraineeAsync(traineeCurriculumId, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(CommitteeMemberEmail, CommitteeMemberPassword, "Committee", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
+        await EnsureStaffUserAsync(SecondCommitteeMemberEmail, SecondCommitteeMemberPassword, "Committee Two", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId, scopes, cancellationToken);
     }

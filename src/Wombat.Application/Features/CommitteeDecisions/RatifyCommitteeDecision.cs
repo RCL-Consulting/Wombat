@@ -51,17 +51,23 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
             .Include(entity => entity.Panel)
                 .ThenInclude(panel => panel.Members)
             .Include(entity => entity.Decisions)
+                .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        // Authorise first: an unknown review and one the caller does not chair get the one refusal (T194 item 1).
+        // Authorise first: an unknown review and one the caller does not chair get the one refusal (T194 item 1). The
+        // panel's chair, and no one else: T165 removed the Administrator's bypass from the actions that take a decision
+        // (D46).
         review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
+
+        // The review's state, and (T165) the decision's recorded attendance, which must hold a quorum: the chair and at
+        // least one other. Checked here, before the staged decisions are read and long before review.Ratify, the first
+        // mutation: a refused ratify issues no STAR, even after the audit pipeline's save.
+        review.DemandRatifiable();
         var chairUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
         var utcNow = DateTime.UtcNow;
-
-        review.EnsureRatifiable();
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .Where(p => p.ReviewId == review.Id)

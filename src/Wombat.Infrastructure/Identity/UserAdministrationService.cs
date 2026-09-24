@@ -275,7 +275,8 @@ public sealed class UserAdministrationService : IUserAdministrationService
             user.SpecialityScopes.Select(scope => scope.SpecialityId).Distinct().ToArray(),
             user.SubSpecialityScopes.Select(scope => scope.SubSpecialityId).Distinct().ToArray(),
             roles,
-            IsLockedOut: user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow);
+            IsLockedOut: user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
+            IsDeactivated: UserDeactivation.IsDeactivated(user.LockoutEnd));
 
     private static void SyncScopes<TScope>(
         ICollection<TScope> currentScopes,

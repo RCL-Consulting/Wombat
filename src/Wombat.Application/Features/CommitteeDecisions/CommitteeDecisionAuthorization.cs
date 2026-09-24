@@ -193,7 +193,7 @@ internal static class CommitteeDecisionAuthorization
 
     /// <summary>
     /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs its
-    /// panel or is a global Administrator. An unknown id and a review of another panel get the one refusal. (T131)
+    /// panel. An unknown id and a review of another panel get the one refusal. (T131, T165)
     /// </summary>
     /// <remarks>
     /// <para>
@@ -203,18 +203,14 @@ internal static class CommitteeDecisionAuthorization
     /// has got (T194 item 1). The state checks now come after this one.
     /// </para>
     /// <para>
-    /// A global Administrator may conduct every review, so for them an unknown id is only that. The review's
+    /// There is no Administrator bypass, as there is none on <see cref="DemandChairAccess" /> (T165, D46): a global
+    /// Administrator without a Chair seat on the review's panel gets the same one refusal as anyone else. The review's
     /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
     /// </para>
     /// </remarks>
     public static CommitteeReview DemandChairedReview(ClaimsPrincipal principal, CommitteeReview? review)
     {
         ArgumentNullException.ThrowIfNull(principal);
-
-        if (principal.IsAdministrator())
-        {
-            return review ?? throw new InvalidOperationException("The committee review could not be found.");
-        }
 
         var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (review is null ||
@@ -229,12 +225,34 @@ internal static class CommitteeDecisionAuthorization
         return review;
     }
 
+    /// <summary>The refusal of a chair's action to anyone who is not the panel's chair.</summary>
+    internal const string OnlyTheChair = "Only the panel's chair can do this.";
+
+    /// <summary>
+    /// Refuses anyone who is not a Chair of this panel: the gate for the actions that take a committee decision.
+    /// Recording the decision and closing a formative review call it; ratifying, and staging and removing entrustment
+    /// decisions, hold the same rule through <see cref="DemandChairedReview" />, which also gives an unknown review id the
+    /// one refusal (T131). (T165, D46)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// There is no Administrator bypass. Until T165 a global Administrator who was not on the panel passed this check,
+    /// so one person with no seat on the committee could record, ratify and issue a STAR end to end, and the record
+    /// could not show that anyone else was involved. An Administrator keeps panel administration and read access; one
+    /// who must act joins the panel first, which the panel's own record then shows. Joining takes what any member's seat
+    /// takes (<see cref="PanelSeat" />): the CommitteeMember role, at the panel's institution. So a review stranded by a
+    /// trainee's move is finished by seating an active committee member of the panel's institution as its chair, not by
+    /// an Administrator acting in their own right.
+    /// </para>
+    /// <para>
+    /// There used to be two copies of this check, this one and one in <c>EntrustmentDecisionAuthorization</c>, each
+    /// with the bypass. This is the only one now.
+    /// </para>
+    /// </remarks>
     public static void DemandChairAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {
-        if (principal.IsInRole(WombatRoles.Administrator))
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(panel);
 
         var userId = GetRequiredUserId(principal);
         if (panel.Members.Any(member =>
@@ -244,15 +262,21 @@ internal static class CommitteeDecisionAuthorization
             return;
         }
 
-        throw new UnauthorizedAccessException("Only panel chairs can complete this action.");
+        throw new UnauthorizedAccessException(OnlyTheChair);
     }
 
+    /// <summary>
+    /// Refuses anyone who is not the appeal body: the panel's Chair or one of its External members. (T165, D46)
+    /// </summary>
+    /// <remarks>
+    /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairAccess" />).
+    /// Until T165 an Administrator with no seat on the panel could dismiss a trainee's appeal, or remit it and write the
+    /// replacement decision alone, which every page then showed beside the original sitting's attendance.
+    /// </remarks>
     public static void DemandAppealResolverAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {
-        if (principal.IsInRole(WombatRoles.Administrator))
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(panel);
 
         var userId = GetRequiredUserId(principal);
         if (panel.Members.Any(member =>
@@ -265,12 +289,16 @@ internal static class CommitteeDecisionAuthorization
         throw new UnauthorizedAccessException("Only the appeal body can resolve committee appeals.");
     }
 
+    /// <summary>
+    /// Refuses anyone but the trainee whose review it is: an appeal is the trainee's own. (T165)
+    /// </summary>
+    /// <remarks>
+    /// There is no Administrator bypass. Until T165 an Administrator could lodge an appeal on a trainee's behalf, which
+    /// with the appeal body's own bypass let one person reopen and replace a ratified committee decision end to end.
+    /// </remarks>
     public static void DemandTraineeSelfAccess(ClaimsPrincipal principal, string traineeUserId)
     {
-        if (principal.IsInRole(WombatRoles.Administrator))
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(principal);
 
         if (!principal.IsInRole(WombatRoles.Trainee))
         {

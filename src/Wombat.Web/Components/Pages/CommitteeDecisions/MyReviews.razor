@@ -53,9 +53,19 @@
 
     @if (_selectedReview.Decisions.Count > 0)
     {
+      var current = _selectedReview.Decisions[0];
       <article class="detail-card detail-card--compact">
-        <h4>@_selectedReview.Decisions[0].Category</h4>
-        <p>@_selectedReview.Decisions[0].Rationale</p>
+        <h4>@current.Category</h4>
+        <p>@current.Rationale</p>
+        @* T165: a committee's decision says who took it: this decision's own sitting, which for a decision an appeal
+           remitted is whoever sat for the appeal. *@
+        @if (current.Attendees.Count > 0)
+        {
+          <p id="current-decision-present">
+            <strong>Present when this decision was taken:</strong>
+            @string.Join(", ", current.Attendees.Select(attendee => attendee.Label))
+          </p>
+        }
       </article>
     }
 
@@ -133,7 +143,11 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _selectedReview = await Sender.Send(new LodgeAppealCommand(_selectedReview.Id, _appeal.Reason, authState.User));
+      var updated = await Sender.Send(new LodgeAppealCommand(_selectedReview.Id, _appeal.Reason, authState.User));
+
+      // The command's answer is built by the lookup-free mapper and names nobody; the review's people do not change when
+      // an appeal is lodged, so the names this page loaded with carry over (T142, T165).
+      _selectedReview = updated.WithNamesFrom(_selectedReview);
       _appeal = new();
       _status = "Appeal lodged.";
     }

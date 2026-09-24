@@ -47,6 +47,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<CommitteeDecision> CommitteeDecisions => Set<CommitteeDecision>();
     public DbSet<CommitteeAppeal> CommitteeAppeals => Set<CommitteeAppeal>();
     public DbSet<CommitteeEvidence> CommitteeEvidenceItems => Set<CommitteeEvidence>();
+    public DbSet<CommitteeDecisionAttendee> CommitteeDecisionAttendees => Set<CommitteeDecisionAttendee>();
     public DbSet<EntrustmentDecision> EntrustmentDecisions => Set<EntrustmentDecision>();
     public DbSet<EntrustmentEvidenceLink> EntrustmentEvidenceLinks => Set<EntrustmentEvidenceLink>();
     public DbSet<PendingEntrustmentDecision> PendingEntrustmentDecisions => Set<PendingEntrustmentDecision>();

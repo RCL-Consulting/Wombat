@@ -9,6 +9,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -67,9 +68,9 @@ public sealed class FormativeReviewHandlerTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedAndStartFormativeReviewAsync(dbContext);
 
-        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
+        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext, FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1"));
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => recordHandler.Handle(
-            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Any.", null,
+            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Any.", null, ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None));
 

@@ -312,10 +312,100 @@ public sealed class CommitteeEvidenceSnapshotTests
         line.FrozenBeforeLinesNamedTheirEpa.Should().BeFalse("it was frozen with its encounter date");
     }
 
+    // ---- The assessor, and the chair who rated everything (T165) -------------------------------------------------
+
+    [Fact]
+    public async Task ALine_FreezesTheAssessorItsVersionNames()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var cca = await SeedTypeAsync(db, "cca_cpsa", "cca");
+        var activity = AddActivity(db, cca, "completed", Rated(3), Paed001);
+        await db.SaveChangesAsync();
+
+        (await StartAsync(db)).EvidenceItems.Single(item => item.ActivityId == activity.Id)
+            .AssessorUserId.Should().Be("assessor-a");
+
+        activity.DataJson = Rated(3, assessor: "assessor-b");
+        await db.SaveChangesAsync();
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+
+        refreshed.EvidenceItems.Single(item => item.ActivityId == activity.Id).AssessorUserId
+            .Should().Be("assessor-a", "the snapshot records who the panel was shown, not who the activity names now");
+    }
+
+    [Fact]
+    public async Task AnMsfRecord_NamesNoAssessor()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var msf = await SeedTypeAsync(db, "msf_cpsa", "msf");
+        var activity = AddActivity(db, msf, "recorded",
+            """{ "epa_id": 7, "campaign_id": 50, "observed_on": "2026-02-10", "respondent_count": 8, "overall_level": 4 }""", Paed001);
+        await db.SaveChangesAsync();
+
+        var line = (await StartAsync(db)).EvidenceItems.Single(item => item.ActivityId == activity.Id);
+
+        line.RatingOrder.Should().Be(4);
+        line.AssessorUserId.Should().BeNull("an MSF's version names nobody who writes its rating (D36)");
+    }
+
+    [Fact]
+    public async Task WhenTheChairRatedEveryLine_TheReviewNamesThem()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var cca = await SeedTypeAsync(db, "cca_cpsa", "cca");
+        var reflective = await SeedTypeAsync(db, "reflective_exercise_cpsa", "reflective_exercise");
+        AddActivity(db, cca, "completed", Rated(3, assessor: "chair-1"), Paed001);
+        AddActivity(db, cca, "declined", Rated(2, assessor: "chair-1"), Paed001);
+        // Unrated: no rating in it to be anyone's, so it neither sets the flag nor clears it.
+        AddActivity(db, reflective, "completed", """{ "epa_id": 7, "observed_on": "2026-02-10" }""", Paed001);
+        await db.SaveChangesAsync();
+
+        var review = await StartAsync(db);
+
+        review.ChairRatedEveryLine.Should().NotBeNull();
+        review.ChairRatedEveryLine!.UserId.Should().Be("chair-1");
+    }
+
+    public static TheoryData<string, string> ALineThatIsNotTheChairs => new()
+    {
+        { "another assessor's rating", Rated(3, assessor: "assessor-a") },
+        { "a rating with no assessor named", """{ "epa_id": 7, "observed_on": "2026-02-10", "overall_level": 3 }""" }
+    };
+
+    [Theory]
+    [MemberData(nameof(ALineThatIsNotTheChairs))]
+    public async Task OneRatedLineThatIsNotTheChairs_ClearsTheFlag(string because, string otherLine)
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var cca = await SeedTypeAsync(db, "cca_cpsa", "cca");
+        AddActivity(db, cca, "completed", Rated(3, assessor: "chair-1"), Paed001);
+        AddActivity(db, cca, "completed", otherLine, Paed001);
+        await db.SaveChangesAsync();
+
+        (await StartAsync(db)).ChairRatedEveryLine.Should().BeNull(because);
+    }
+
+    [Fact]
+    public async Task ASnapshotWithNoRatedLine_RaisesNoFlag()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var reflective = await SeedTypeAsync(db, "reflective_exercise_cpsa", "reflective_exercise");
+        AddActivity(db, reflective, "completed", """{ "epa_id": 7, "observed_on": "2026-02-10" }""", Paed001);
+        await db.SaveChangesAsync();
+
+        (await StartAsync(db)).ChairRatedEveryLine.Should().BeNull("the chair rated nothing, so they did not rate everything");
+    }
+
     // ---- Fixture -------------------------------------------------------------------------------------------------
 
-    private static string Rated(int level)
-        => $$"""{ "epa_id": 7, "assessor_user_id": "assessor-a", "observed_on": "2026-02-10", "overall_level": {{level}} }""";
+    private static string Rated(int level, string assessor = "assessor-a")
+        => $$"""{ "epa_id": 7, "assessor_user_id": "{{assessor}}", "observed_on": "2026-02-10", "overall_level": {{level}} }""";
 
     private static async Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext db)
         => await new StartCommitteeReviewCommandHandler(db).Handle(

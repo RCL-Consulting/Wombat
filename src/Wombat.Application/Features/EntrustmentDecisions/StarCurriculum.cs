@@ -49,9 +49,10 @@ public sealed record StarEpaOptionDto(int EpaId, string Code, string Title, int?
 /// </para>
 /// <para>
 /// The picker and the gate call the same <see cref="ListAsync" />, so the picker cannot offer an EPA or a level the
-/// gate refuses, nor hide one it accepts. The gate runs where a STAR is staged, and again at ratification (<see cref="DemandStagedAsync" />), which is when a staged decision becomes a STAR: between staging
-/// and ratifying, the item can be removed, its ladder re-pinned, its EPA deactivated, or the trainee moved to another
-/// curriculum.
+/// gate refuses, nor hide one it accepts. The gate runs where a STAR is staged, and again at ratification
+/// (<see cref="DemandStagedAsync" />), which is when a staged decision becomes a STAR: between staging and ratifying,
+/// the item can be removed, its ladder re-pinned, its EPA deactivated, or the trainee moved to another curriculum.
+/// Ratifying is the only way a STAR is issued (T131, T165).
 /// </para>
 /// </remarks>
 public static class StarCurriculum
@@ -150,11 +151,44 @@ public static class StarCurriculum
     /// Refuses to ratify while any decision staged at the review would no longer be admitted: its EPA has left the
     /// trainee's curriculum or been deactivated, or its level is no longer a rung of the item's ladder. Ratifying issues
     /// every staged decision as a STAR and supersedes the trainee's active one on the same EPA, so it is held to the rule
-    /// staging was. Every stale decision is named, so the chair can remove them and stage again. Reads only: the ratify
-    /// handler runs it before its first mutation.
+    /// staging was. Every stale decision is named, so the chair can remove them. Reads only: the ratify handler runs it
+    /// before its first mutation.
     /// </summary>
+    /// <remarks>
+    /// Since T165 the staged decisions are fixed when the committee's decision is recorded, so the chair cannot stage
+    /// again on a decided review; removing a stale one is the only change left (<see cref="RefusalsForStagedAsync" />),
+    /// and a STAR the committee still means to grant on that EPA waits for a later review.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">At least one staged decision is refused.</exception>
     public static async Task DemandStagedAsync(
+        IApplicationDbContext dbContext,
+        string traineeUserId,
+        IReadOnlyCollection<PendingEntrustmentDecision> staged,
+        CancellationToken cancellationToken)
+    {
+        var refusals = (await RefusalsForStagedAsync(dbContext, traineeUserId, staged, cancellationToken)).Values
+            .OrderBy(judged => judged.Code, StringComparer.Ordinal)
+            .Select(judged => judged.Refusal)
+            .ToArray();
+
+        if (refusals.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"This review cannot be ratified: {refusals.Length} staged entrustment " +
+                $"{(refusals.Length == 1 ? "decision no longer fits" : "decisions no longer fit")} the trainee's curriculum. " +
+                string.Join(" ", refusals) +
+                $" Remove {(refusals.Length == 1 ? "it" : "them")}, then ratify. The staged decisions were fixed when the " +
+                "committee's decision was recorded, so a STAR the committee still means to grant there waits for a later " +
+                "review.");
+        }
+    }
+
+    /// <summary>
+    /// Why each of these staged decisions would be refused now, by its id, with its EPA's code; a decision that still fits
+    /// is absent. The one judgement ratifying refuses by, the page flags by, and a decided review's Remove admits by
+    /// (T165). Reads only.
+    /// </summary>
+    public static async Task<IReadOnlyDictionary<int, (string Code, string Refusal)>> RefusalsForStagedAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
         IReadOnlyCollection<PendingEntrustmentDecision> staged,
@@ -164,7 +198,7 @@ public static class StarCurriculum
 
         if (staged.Count == 0)
         {
-            return;
+            return new Dictionary<int, (string Code, string Refusal)>();
         }
 
         var options = await ListAsync(dbContext, traineeUserId, cancellationToken);
@@ -179,26 +213,15 @@ public static class StarCurriculum
             .Where(level => levelIds.Contains(level.Id))
             .ToDictionaryAsync(level => level.Id, level => level.ScaleId, cancellationToken);
 
-        var refusals = staged
+        return staged
             .Select(decision =>
             {
                 var code = codes.TryGetValue(decision.EpaId, out var found) ? found : $"EPA {decision.EpaId}";
                 int? ladder = ladders.TryGetValue(decision.AuthorisedLevelId, out var scaleId) ? scaleId : null;
-                return (Code: code, Refusal: RefusalFor(options, decision.EpaId, code, ladder));
+                return (decision.Id, Code: code, Refusal: RefusalFor(options, decision.EpaId, code, ladder));
             })
             .Where(judged => judged.Refusal is not null)
-            .OrderBy(judged => judged.Code, StringComparer.Ordinal)
-            .Select(judged => judged.Refusal!)
-            .ToArray();
-
-        if (refusals.Length > 0)
-        {
-            throw new InvalidOperationException(
-                $"This review cannot be ratified: {refusals.Length} staged entrustment " +
-                $"{(refusals.Length == 1 ? "decision no longer fits" : "decisions no longer fit")} the trainee's curriculum. " +
-                string.Join(" ", refusals) +
-                $" Remove {(refusals.Length == 1 ? "it" : "them")} and stage again, then ratify.");
-        }
+            .ToDictionary(judged => judged.Id, judged => (judged.Code, judged.Refusal!));
     }
 
     /// <summary>

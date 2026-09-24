@@ -33,6 +33,7 @@ public sealed class CloseFormativeReviewCommandHandler : IRequestHandler<CloseFo
             .Include(entity => entity.Panel)
                 .ThenInclude(panel => panel.Members)
             .Include(entity => entity.Decisions)
+                .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)

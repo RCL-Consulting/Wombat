@@ -6,6 +6,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -21,11 +22,19 @@ public sealed class PanelScopeGuardTests
     private const int InstitutionB = 2;
     private const int SpecialityInB = 5;
 
+    /// <summary>
+    /// Everyone these tests seat, at either institution: an active committee member there (T165, PanelSeat). Who may sit
+    /// is not what these tests are about.
+    /// </summary>
+    private static readonly FakeUserDirectory Seats = FakeUserDirectory
+        .CommitteeMembersAt(InstitutionA, "u-chair", "chair-b")
+        .WithCommitteeMembers(InstitutionB, "u-chair", "chair-b");
+
     [Fact]
     public async Task Create_InstitutionalAdmin_CanCreatePanelInOwnInstitution()
     {
         await using var db = SeededDb();
-        var handler = new CreateDecisionPanelCommandHandler(db);
+        var handler = new CreateDecisionPanelCommandHandler(db, Seats);
 
         var result = await handler.Handle(
             new CreateDecisionPanelCommand(
@@ -45,7 +54,7 @@ public sealed class PanelScopeGuardTests
     public async Task Create_InstitutionalAdmin_CannotCreatePanelInOtherInstitution()
     {
         await using var db = SeededDb();
-        var handler = new CreateDecisionPanelCommandHandler(db);
+        var handler = new CreateDecisionPanelCommandHandler(db, Seats);
 
         var act = () => handler.Handle(
             new CreateDecisionPanelCommand(
@@ -65,7 +74,7 @@ public sealed class PanelScopeGuardTests
     public async Task Create_InstitutionalAdmin_CannotCreateSpecialityPanelOutsideInstitution()
     {
         await using var db = SeededDb();
-        var handler = new CreateDecisionPanelCommandHandler(db);
+        var handler = new CreateDecisionPanelCommandHandler(db, Seats);
 
         // The panel runs at InstitutionB (covering a national discipline, SpecialityInB); a panel now
         // carries its own institution (T091). An InstitutionA admin cannot create it.
@@ -90,7 +99,7 @@ public sealed class PanelScopeGuardTests
         // ListDecisionPanels (which filters an InstitutionalAdmin by InstitutionId) hides it from its
         // own creator, blocking review scheduling on it.
         await using var db = SeededDb();
-        var handler = new CreateDecisionPanelCommandHandler(db);
+        var handler = new CreateDecisionPanelCommandHandler(db, Seats);
 
         var result = await handler.Handle(
             new CreateDecisionPanelCommand(
@@ -121,7 +130,7 @@ public sealed class PanelScopeGuardTests
         db.Set<DecisionPanel>().Add(panel);
         await db.SaveChangesAsync();
 
-        var handler = new UpdateDecisionPanelCommandHandler(db);
+        var handler = new UpdateDecisionPanelCommandHandler(db, Seats);
         var act = () => handler.Handle(
             new UpdateDecisionPanelCommand(
                 PanelId: panel.Id,
@@ -176,7 +185,7 @@ public sealed class PanelScopeGuardTests
     public async Task Create_Coordinator_IsStillRejectedByPolicy()
     {
         await using var db = SeededDb();
-        var handler = new CreateDecisionPanelCommandHandler(db);
+        var handler = new CreateDecisionPanelCommandHandler(db, Seats);
 
         var identity = new System.Security.Claims.ClaimsIdentity("test");
         identity.AddClaim(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "coord-1"));

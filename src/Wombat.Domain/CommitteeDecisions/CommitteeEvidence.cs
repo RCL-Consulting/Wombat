@@ -68,6 +68,16 @@ public sealed class CommitteeEvidence
     /// </summary>
     public string? RatingLabel { get; set; }
 
+    /// <summary>
+    /// Who the pinned version names as the assessor (<c>RatedEvidenceProfile.AssessorFields</c>, D44), as the activity
+    /// held them when the review started, or null when the version names nobody or the field is empty. (T165)
+    /// </summary>
+    /// <remarks>
+    /// Frozen so the review page can say, from what the panel weighed, when every rated line was rated by the panel's
+    /// own chair. A user id, not a name: a person is named by the query that serves a page (T142).
+    /// </remarks>
+    public string? AssessorUserId { get; set; }
+
     /// <summary>When the encounter happened (<c>Activity.ObservedOn</c>, T119).</summary>
     public DateOnly? ObservedOn { get; set; }
 

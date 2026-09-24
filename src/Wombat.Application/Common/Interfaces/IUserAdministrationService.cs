@@ -33,6 +33,13 @@ public interface IUserAdministrationService
     Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default);
 }
 
+/// <param name="IsLockedOut">Locked out right now, for any reason: an administrator's lock, an erasure, or a brute-force
+/// lockout that lifts itself after minutes.</param>
+/// <param name="IsDeactivated">
+/// Locked indefinitely, as an administrator's lock and an erasure leave an account, and not merely locked out for a few
+/// minutes by failed passwords (<c>UserDeactivation</c>, T102). A deactivated account can sit on no committee panel
+/// (T165).
+/// </param>
 public sealed record UserIdentityDetails(
     string UserId,
     string Email,
@@ -42,4 +49,5 @@ public sealed record UserIdentityDetails(
     IReadOnlyCollection<int> SpecialityIds,
     IReadOnlyCollection<int> SubSpecialityIds,
     IReadOnlyCollection<string> Roles,
-    bool IsLockedOut = false);
+    bool IsLockedOut = false,
+    bool IsDeactivated = false);

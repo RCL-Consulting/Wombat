@@ -41,6 +41,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .Include(entity => entity.Panel)
                 .ThenInclude(panel => panel.Members)
             .Include(entity => entity.Decisions)
+                .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
@@ -278,6 +279,9 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                 IsRatedInstrument = profile.IsRatedInstrument,
                 RatingOrder = rating,
                 RatingLabel = ratingLabel,
+                // T165: who the version names as the assessor, read in every state as the rating is, so the review page
+                // can tell the panel when every rated line was its own chair's.
+                AssessorUserId = profile.ReadAssessor(activity.DataJson),
                 ObservedOn = activity.ObservedOn,
                 ObservedOnSource = activity.ObservedOnSource,
                 SourceState = activity.CurrentState,

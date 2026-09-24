@@ -7,6 +7,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -31,6 +32,14 @@ public sealed class DecisionPanelScopeTests
     private const int InstitutionA = 1;
     private const int InstitutionB = 2;
     private const int Paediatrics = 4;
+
+    /// <summary>
+    /// Everyone these tests seat, at either institution: an active committee member there (T165, PanelSeat). Who may sit
+    /// is not what these tests are about.
+    /// </summary>
+    private static readonly FakeUserDirectory Seats = FakeUserDirectory
+        .CommitteeMembersAt(InstitutionA, "chair", "new-chair")
+        .WithCommitteeMembers(InstitutionB, "chair", "new-chair");
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
@@ -227,7 +236,7 @@ public sealed class DecisionPanelScopeTests
 
     private static async Task<DecisionPanelDetailDto> CreateAsync(
         ApplicationDbContext db, ClaimsPrincipal principal, DecisionPanelScope scope, int? institutionId)
-        => await new CreateDecisionPanelCommandHandler(db).Handle(
+        => await new CreateDecisionPanelCommandHandler(db, Seats).Handle(
             new CreateDecisionPanelCommand(
                 "Annual review panel",
                 scope,
@@ -238,7 +247,7 @@ public sealed class DecisionPanelScopeTests
             CancellationToken.None);
 
     private static async Task UpdateAsync(ApplicationDbContext db, ClaimsPrincipal principal, int panelId, string chair)
-        => await new UpdateDecisionPanelCommandHandler(db).Handle(
+        => await new UpdateDecisionPanelCommandHandler(db, Seats).Handle(
             new UpdateDecisionPanelCommand(panelId, [new DecisionPanelMemberInput(chair, DecisionPanelMemberRole.Chair)], principal),
             CancellationToken.None);
 

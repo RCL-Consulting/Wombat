@@ -354,9 +354,11 @@ public sealed class StagedEvidenceTests
         => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
             Command(evidenceItemIds, pendingId, epaId), CancellationToken.None);
 
+    /// <summary>Records the decision with a quorate sitting: the chair and the panel's other member, both seatable (T165).</summary>
     private static Task RecordDecisionAsync(ApplicationDbContext db)
-        => new RecordCommitteeDecisionCommandHandler(db).Handle(
-            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, Chair()),
+        => new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(Institution, "chair-1", "member-1")).Handle(
+            new RecordCommitteeDecisionCommand(
+                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, ["chair-1", "member-1"], Chair()),
             CancellationToken.None);
 
     private static Task RatifyAsync(ApplicationDbContext db)

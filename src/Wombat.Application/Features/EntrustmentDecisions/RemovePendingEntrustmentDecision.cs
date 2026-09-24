@@ -48,12 +48,23 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
 
         if (review.State is not CommitteeReviewState.InProgress and not CommitteeReviewState.Decided)
         {
-            throw new InvalidOperationException("Pending entrustment decisions may only be removed on an in-progress or decided review.");
+            throw new InvalidOperationException(StagedStars.FixedWhenDecided);
         }
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .SingleOrDefaultAsync(p => p.Id == request.PendingId && p.ReviewId == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The pending entrustment decision could not be found for this review.");
+
+        // T165: once the decision is recorded, the staged STARs are the committee's and fixed with it. The one exception is
+        // a STAR ratifying would refuse because it no longer fits the trainee's curriculum (T167): it can never be issued,
+        // and while it is staged the review cannot be ratified at all. Judged by the rule ratifying refuses by, and before
+        // anything is removed.
+        if (review.State == CommitteeReviewState.Decided &&
+            !(await StarCurriculum.RefusalsForStagedAsync(_dbContext, review.TraineeUserId, [pending], cancellationToken))
+                .ContainsKey(pending.Id))
+        {
+            throw new InvalidOperationException(StagedStars.FixedWhenDecided);
+        }
 
         _dbContext.Set<PendingEntrustmentDecision>().Remove(pending);
 

@@ -23,5 +23,8 @@ public sealed class CommitteeEvidenceConfiguration : IEntityTypeConfiguration<Co
         builder.Property(entity => entity.InstrumentName).HasMaxLength(200);
         builder.Property(entity => entity.RatingLabel).HasMaxLength(200);
         builder.Property(entity => entity.SourceState).HasMaxLength(100);
+
+        // T165: the assessor the line's version names, frozen at Start. A user id, like every other in the schema.
+        builder.Property(entity => entity.AssessorUserId).HasMaxLength(450);
     }
 }

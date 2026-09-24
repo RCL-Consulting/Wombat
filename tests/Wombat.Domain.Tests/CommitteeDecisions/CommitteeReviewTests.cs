@@ -12,7 +12,8 @@ public sealed class CommitteeReviewTests
             "Clear evidence of progress.",
             null,
             "chair-1",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             decision.Amend(CommitteeDecisionCategory.OutcomeDeferred, "Changed", null));
@@ -37,7 +38,8 @@ public sealed class CommitteeReviewTests
             "All 15 EPAs met or exceeded; recommend award and programme completion.",
             null,
             "chair-1",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember);
         review.Ratify("chair-1", DateTime.UtcNow);
 
         Assert.Equal(CommitteeReviewState.Ratified, review.State);
@@ -76,7 +78,8 @@ public sealed class CommitteeReviewTests
             "Borderline but safe progression.",
             "Focus on feedback turnaround.",
             "chair-1",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember);
 
         Assert.Equal(CommitteeReviewState.Decided, review.State);
 
@@ -92,7 +95,8 @@ public sealed class CommitteeReviewTests
             DateTime.UtcNow,
             CommitteeDecisionCategory.SatisfactoryProgress,
             "Appeal upheld in part; remediation removed.",
-            null);
+            null,
+            CommitteeQuorumFixture.ChairAndExternal);
 
         Assert.Equal(CommitteeReviewState.Final, review.State);
         Assert.Equal(2, review.Decisions.Count);
@@ -118,7 +122,8 @@ public sealed class CommitteeReviewTests
             "Insufficient evidence volume.",
             null,
             "chair-1",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember);
         review.Ratify("chair-1", DateTime.UtcNow);
         review.LodgeAppeal("Evidence reflects start-of-year skill.", "trainee-1", DateTime.UtcNow);
 
@@ -140,7 +145,8 @@ public sealed class CommitteeReviewTests
             DateTime.UtcNow,
             CommitteeDecisionCategory.InadequateProgressAdditionalTraining,
             "Referral upheld; re-review window reduced to 3 months.",
-            null);
+            null,
+            CommitteeQuorumFixture.ChairAndExternal);
 
         Assert.Equal(CommitteeReviewState.Final, review.State);
         Assert.Equal(2, review.Decisions.Count);

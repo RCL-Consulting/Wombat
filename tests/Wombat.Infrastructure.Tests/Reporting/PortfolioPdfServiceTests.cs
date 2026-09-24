@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
 using Wombat.Domain.Activities;
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -180,6 +181,121 @@ public sealed class PortfolioPdfServiceTests
         var data = await LoadAsync(db);
 
         data.InstitutionName.Should().Be(HostInstitutionName);
+    }
+
+    /// <summary>
+    /// A ratified committee decision in the portfolio says who took it: the members recorded as present, by name, the
+    /// chair marked. (T165)
+    /// </summary>
+    [Fact]
+    public async Task ARatifiedReview_SaysWhoWasPresent_ByName()
+    {
+        await using var db = SeededDb();
+        SeedRatifiedReview(db);
+
+        var data = await LoadAsync(db);
+
+        var review = data.CommitteeReviews.Should().ContainSingle().Subject;
+        CommitteeSectionComponent.PresentLine(review, data.CommitteeAttendeeNames)
+            .Should().Be("Thandi Zulu (chair), Priya Naidoo, Anna Botha (external)");
+    }
+
+    [Fact]
+    public async Task WhoWasPresent_IsPrinted()
+    {
+        // The rendered bytes change with the attendance, so the line is on the page, not only in the loaded data.
+        await using var db = SeededDb();
+        SeedRatifiedReview(db);
+        var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var withThree = await service.GenerateAsync(request, CancellationToken.None);
+
+        db.Set<CommitteeDecisionAttendee>().RemoveRange(db.Set<CommitteeDecisionAttendee>().Where(attendee => attendee.UserId == "external-1"));
+        await db.SaveChangesAsync();
+        var withTwo = await service.GenerateAsync(request, CancellationToken.None);
+
+        withTwo.ContentHash.Should().NotBe(withThree.ContentHash);
+    }
+
+    [Fact]
+    public void APresentLine_ForAMemberWithNoNameOnRecord_ShowsTheId_AndForNobody_IsAbsent()
+    {
+        var review = new CommitteeReview();
+        CommitteeSectionComponent.PresentLine(review, new Dictionary<string, string>()).Should().BeNull("there is no decision");
+
+        var decision = CommitteeDecision.Create(
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-9", DateTime.UtcNow, []);
+        review.Decisions.Add(decision);
+        CommitteeSectionComponent.PresentLine(review, new Dictionary<string, string>()).Should().BeNull("nobody was recorded");
+
+        decision.Attendees.Add(new CommitteeDecisionAttendee { UserId = "chair-9", Role = DecisionPanelMemberRole.Chair });
+        CommitteeSectionComponent.PresentLine(review, new Dictionary<string, string>()).Should().Be("chair-9 (chair)");
+    }
+
+    /// <summary>
+    /// The portfolio prints the current decision, and so the sitting that took it: a decision an appeal remitted was taken
+    /// by whoever sat for the appeal, not by the review's first sitting. Before T165 attendance was the review's, so the
+    /// PDF credited the replacement to the first sitting. (T165)
+    /// </summary>
+    [Fact]
+    public async Task ARemittedReview_PrintsTheReplacementsOwnSitting()
+    {
+        await using var db = SeededDb();
+        var review = SeedRatifiedReview(db);
+        var appealSitting = new DateTime(2029, 12, 9, 9, 0, 0, DateTimeKind.Utc);
+        review.LodgeAppeal("The conditions are disproportionate.", "trainee-1", appealSitting);
+        review.ResolveAppeal(
+            CommitteeAppealOutcome.Remitted, "external-1", appealSitting, CommitteeDecisionCategory.SatisfactoryProgress,
+            "Conditions lifted on appeal.", null,
+            review.Panel.Members.Where(member => member.UserId != "member-1").ToArray());
+        await db.SaveChangesAsync();
+
+        var data = await LoadAsync(db);
+
+        CommitteeSectionComponent.PresentLine(data.CommitteeReviews.Single(), data.CommitteeAttendeeNames)
+            .Should().Be("Thandi Zulu (chair), Anna Botha (external)");
+    }
+
+    private static CommitteeReview SeedRatifiedReview(ApplicationDbContext db)
+    {
+        db.Set<WombatIdentityUser>().AddRange(
+            new WombatIdentityUser { Id = "chair-1", FirstName = "Thandi", LastName = "Zulu" },
+            new WombatIdentityUser { Id = "member-1", FirstName = "Priya", LastName = "Naidoo" },
+            new WombatIdentityUser { Id = "external-1", FirstName = "Anna", LastName = "Botha" });
+
+        var members = new[]
+        {
+            new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair },
+            new DecisionPanelMember { UserId = "member-1", Role = DecisionPanelMemberRole.Member },
+            new DecisionPanelMember { UserId = "external-1", Role = DecisionPanelMemberRole.External }
+        };
+        var panel = new DecisionPanel
+        {
+            Name = "Paediatrics CCC",
+            Scope = DecisionPanelScope.Institution,
+            InstitutionId = HostInstitutionId,
+            CreatedOn = new DateTime(2029, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            Members = members
+        };
+
+        var sitting = new DateTime(2029, 11, 18, 9, 0, 0, DateTimeKind.Utc);
+        var review = new CommitteeReview
+        {
+            Panel = panel,
+            TraineeUserId = "trainee-1",
+            ReviewPeriodFrom = new DateOnly(2029, 1, 1),
+            ReviewPeriodTo = new DateOnly(2029, 10, 31),
+            ScheduledOn = new DateOnly(2029, 11, 18)
+        };
+        review.Start([], "chair-1", sitting);
+        review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", sitting, members);
+        review.Ratify("chair-1", sitting);
+
+        db.Set<DecisionPanel>().Add(panel);
+        db.Set<CommitteeReview>().Add(review);
+        db.SaveChanges();
+        return review;
     }
 
     private const int HostInstitutionId = 1;

@@ -67,10 +67,13 @@ public sealed class StagePendingEntrustmentDecisionCommandValidator : AbstractVa
 public sealed class StagePendingEntrustmentDecisionCommandHandler
     : IRequestHandler<StagePendingEntrustmentDecisionCommand, PendingEntrustmentDecisionDto>
 {
-    /// <summary>The refusal when the review changed between being read and the save. Nothing is written.</summary>
+    /// <summary>
+    /// The refusal when the review changed between being read and the save. Nothing is written. A committee decision
+    /// recorded meanwhile is caught here too, so the staged set stays fixed from the moment it is recorded (T165).
+    /// </summary>
     public const string ReviewChanged =
         "This review changed while the decision was being staged: a decision was staged, edited or removed, or the " +
-        "review was ratified. Nothing was staged. Reload the review and stage the decision again.";
+        "committee's decision was recorded or ratified. Nothing was staged. Reload the review and stage the decision again.";
 
     /// <summary>PostgreSQL's unique_violation, which the (review, EPA) index raises.</summary>
     private const string UniqueViolation = "23505";
@@ -105,9 +108,12 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
             throw new InvalidOperationException("Formative reviews cannot issue entrustment decisions.");
         }
 
-        if (review.State is not CommitteeReviewState.InProgress and not CommitteeReviewState.Decided)
+        // T165: the STARs staged at a review are part of the decision its panel records, and are fixed with it. Before
+        // T165 they could be staged or changed on a decided review, so the chair alone, after the sitting, could add or
+        // raise a STAR that ratifying then issued as the committee's.
+        if (review.State is not CommitteeReviewState.InProgress)
         {
-            throw new InvalidOperationException("Pending entrustment decisions may only be staged on an in-progress or decided review.");
+            throw new InvalidOperationException(StagedStars.FixedWhenDecided);
         }
 
         // A staged decision keeps the EPA it was staged on (PendingEntrustmentDecision.Update takes none), so an edit is

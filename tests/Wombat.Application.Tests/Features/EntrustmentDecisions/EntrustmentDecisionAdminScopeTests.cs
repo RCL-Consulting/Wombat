@@ -312,7 +312,7 @@ public sealed class EntrustmentDecisionAdminScopeTests
         await using var db = CreateDb();
         var seeded = await SeedAsync(db);
 
-        await new UpdateDecisionPanelCommandHandler(db).Handle(
+        await new UpdateDecisionPanelCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(HostInstitution, "chair-new", "member-new")).Handle(
             new UpdateDecisionPanelCommand(
                 20,
                 [

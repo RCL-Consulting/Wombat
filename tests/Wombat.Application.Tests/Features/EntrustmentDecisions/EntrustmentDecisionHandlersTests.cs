@@ -11,6 +11,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
@@ -26,8 +27,10 @@ public sealed class EntrustmentDecisionHandlersTests
         var review = await SeedReviewInStateAsync(dbContext, startReview: true);
         var prior = await SeedStarAsync(dbContext, review.Id, epaId: 7, levelId: 3, new DateOnly(2026, 1, 10), null);
 
-        await RecordDecisionAsync(dbContext, review.Id);
+        // Staged while the review is in progress: since T165 the staged STARs are part of the decision recorded next, and
+        // are fixed with it.
         await StageAsync(dbContext, review.Id, epaId: 7, levelId: 4, new DateOnly(2026, 4, 1), null, "Level advanced.", EvidenceOnEpa7);
+        await RecordDecisionAsync(dbContext, review.Id);
 
         var ratify = new RatifyCommitteeDecisionCommandHandler(dbContext);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ratify.Handle(
@@ -56,7 +59,8 @@ public sealed class EntrustmentDecisionHandlersTests
 
         var act = () => StageAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null, "Rationale.", EvidenceOnEpa7);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("in-progress or decided");
+        // Since T165 a STAR is staged only while the review is in progress (StagedStars).
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(StagedStars.FixedWhenDecided);
     }
 
     [Fact]
@@ -87,11 +91,14 @@ public sealed class EntrustmentDecisionHandlersTests
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewInStateAsync(dbContext, startReview: true);
 
-        await RecordDecisionAsync(dbContext, review.Id);
+        // Staged while the review is in progress: since T165 the staged STARs are part of the decision recorded next, and
+        // are fixed with it.
         await StageAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1), "EPA 7 rationale.", EvidenceOnEpa7);
         await StageAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), null, "EPA 8 rationale.", EvidenceOnEpa7, EvidenceOnEpa8);
 
         (await dbContext.Set<PendingEntrustmentDecision>().CountAsync()).Should().Be(2);
+
+        await RecordDecisionAsync(dbContext, review.Id);
 
         var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
         await ratifyHandler.Handle(
@@ -170,9 +177,13 @@ public sealed class EntrustmentDecisionHandlersTests
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
+    /// <summary>The panel's two members, each an active committee member at its institution (T165, PanelSeat).</summary>
+    private static FakeUserDirectory Committee => FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1");
+
+    /// <summary>Records the decision with a quorate sitting, the chair and the other member present (T165).</summary>
     private static Task RecordDecisionAsync(ApplicationDbContext dbContext, int reviewId)
-        => new RecordCommitteeDecisionCommandHandler(dbContext).Handle(
-            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
+        => new RecordCommitteeDecisionCommandHandler(dbContext, Committee).Handle(
+            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 

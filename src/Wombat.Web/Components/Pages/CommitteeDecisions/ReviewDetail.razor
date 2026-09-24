@@ -138,15 +138,44 @@
         }
         @if (_review.State == CommitteeReviewState.Decided)
         {
-          <button type="button" class="btn btn-primary" @onclick="RatifyAsync">Ratify</button>
+          if (_review.QuorumShortfall is null)
+          {
+            <button type="button" class="btn btn-primary" @onclick="RatifyAsync">Ratify</button>
+          }
+          else
+          {
+            @* T165. Shown, not hidden, so the chair learns why (T107's pattern). No click handler: the server refuses a
+               decision whose recorded attendance falls short of the quorum. *@
+            <button type="button" class="btn btn-primary" disabled aria-describedby="ratify-reason">Ratify</button>
+          }
         }
       </FormActions>
+      @if (_review.State == CommitteeReviewState.Decided && _review.QuorumShortfall is { } shortfall)
+      {
+        <ul class="workflow-action-reasons">
+          <li id="ratify-reason"><strong>Ratify:</strong> @shortfall</li>
+        </ul>
+      }
     </section>
 
     @if (!_review.IsFormative)
     {
       <section class="detail-card">
         <h3>Decision</h3>
+        @* T165. Not a refusal: in a small programme the chair can be the only assessor who saw the trainee, and the panel
+           should weigh that, not be stopped by it. Read from the frozen snapshot, so it says what the panel weighed. *@
+        @if (_review.ChairRatedEveryLine is { } chairAssessor)
+        {
+          <Alert Kind="warning">
+            <div>
+              <h4>The chair rated all of this evidence</h4>
+              <p>
+                Every rated record in the evidence snapshot was rated by @chairAssessor.DisplayName, who chairs this panel.
+                A committee decision is never a single assessor's: say in the rationale how the other members weighed it.
+              </p>
+            </div>
+          </Alert>
+        }
         <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
           <DataAnnotationsValidator />
           <ValidationSummary class="validation-summary-errors" />
@@ -165,26 +194,70 @@
             <FormField Label="Conditions" InputId="decision-conditions">
               <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
             </FormField>
+            @if (_review.State == CommitteeReviewState.InProgress)
+            {
+              @* T165. Who sat: a group of checkboxes, so a fieldset whose legend names it (DESIGN.md § Form system). The
+                 chair is ticked and cannot be unticked, because the chair records the decision and must be present. *@
+              @PresentFieldset("decision-present", _decision.PresentUserIds, lockedUserId: null)
+            }
           </div>
           <FormActions>
             @if (_review.State == CommitteeReviewState.InProgress)
             {
-              <button type="submit" class="btn btn-primary">Record decision</button>
+              @* The staged STARs below are part of this decision and are fixed with it (T165): said at the button, the
+                 click that fixes them. *@
+              <span id="record-decision-note" class="muted">
+                Recording fixes the entrustment decisions staged below: they cannot be changed afterwards.
+              </span>
+              if (_review.PanelShortfall is null)
+              {
+                <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note">Record decision</button>
+              }
+              else
+              {
+                @* T107's pattern: shown, not hidden, with the reason, which the server would otherwise give only after the
+                   chair had written the rationale. *@
+                <button type="button" class="btn btn-primary" disabled aria-describedby="record-reason">Record decision</button>
+              }
             }
           </FormActions>
+          @if (_review.State == CommitteeReviewState.InProgress && _review.PanelShortfall is { } panelShortfall)
+          {
+            <ul class="workflow-action-reasons">
+              <li id="record-reason"><strong>Record decision:</strong> @panelShortfall</li>
+            </ul>
+          }
         </EditForm>
 
         @if (_review.Decisions.Count > 0)
         {
+          var replaced = _review.Decisions
+            .Select(decision => decision.SupersedesDecisionId)
+            .OfType<int>()
+            .ToHashSet();
           <div class="stack-list">
             @foreach (var decision in _review.Decisions)
             {
-              <article class="detail-card detail-card--compact">
+              @* T165. Each decision says who took it: a decision an appeal remitted was taken by whoever sat for the
+                 appeal, not by the review's first sitting. *@
+              <article class="detail-card detail-card--compact" id="decision-@decision.Id">
                 <h4>@decision.Category</h4>
+                @if (replaced.Contains(decision.Id))
+                {
+                  <p class="muted">Replaced on appeal by the decision above.</p>
+                }
                 <p>@decision.Rationale</p>
                 @if (!string.IsNullOrWhiteSpace(decision.Conditions))
                 {
                   <p><strong>Conditions:</strong> @decision.Conditions</p>
+                }
+                @if (decision.Attendees.Count > 0)
+                {
+                  <p><strong>Present:</strong> @string.Join(", ", decision.Attendees.Select(attendee => attendee.Label))</p>
+                }
+                else
+                {
+                  <p class="muted">Nobody was recorded as present for this decision.</p>
                 }
               </article>
             }
@@ -201,8 +274,17 @@
           Decisions staged here are issued atomically when the committee review is ratified.
           They become formal Statements of Awarded Responsibility (STAR) at that point.
         </p>
+        @if (_review.State == CommitteeReviewState.Decided)
+        {
+          @* T165. The staged set is part of the decision the panel recorded, so it is fixed: said here, where the form
+             used to be. *@
+          <p class="muted">
+            Fixed when the committee's decision was recorded: ratifying issues exactly these. Only a decision that no
+            longer fits the trainee's curriculum can still be removed.
+          </p>
+        }
 
-        @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+        @if (_review.State == CommitteeReviewState.InProgress)
         {
           @* The EPAs are the trainee's curriculum, and each EPA's levels are the rungs of its item's ladder: the same
              list StagePendingEntrustmentDecision enforces (StarCurriculum, T167). Before T167 this listed the EPAs in
@@ -351,7 +433,12 @@
                     @($"Rests on {restsOn.Count} item{(restsOn.Count == 1 ? string.Empty : "s")} of the snapshot: {string.Join("; ", restsOn)}.")
                   }
                 </p>
-                @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+                @if (pending.NoLongerFits is { } noLongerFits)
+                {
+                  <p class="muted"><strong>No longer fits:</strong> @noLongerFits</p>
+                }
+                @if (_review.State == CommitteeReviewState.InProgress ||
+                     (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null))
                 {
                   <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
                 }
@@ -560,14 +647,32 @@
               <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
                 <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
               </FormField>
+              @* T165. The replacement is a committee decision, so it records who sat for it, held to the same quorum. The
+                 chair and whoever resolves are ticked and locked: both must have sat. *@
+              @PresentFieldset("remit-present", _appeal.PresentUserIds, lockedUserId: _currentUserId)
             }
           </div>
           <FormActions>
             @if (_review.State == CommitteeReviewState.UnderAppeal)
             {
-              <button type="submit" class="btn btn-primary">Resolve appeal</button>
+              if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is not null)
+              {
+                <button type="button" class="btn btn-primary" disabled aria-describedby="remit-reason">Resolve appeal</button>
+              }
+              else
+              {
+                <button type="submit" class="btn btn-primary">Resolve appeal</button>
+              }
             }
           </FormActions>
+          @if (_review.State == CommitteeReviewState.UnderAppeal &&
+               _appeal.Outcome == CommitteeAppealOutcome.Remitted &&
+               _review.PanelShortfall is { } remitShortfall)
+          {
+            <ul class="workflow-action-reasons">
+              <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
+            </ul>
+          }
         </EditForm>
 
         @if (_review.Appeals.Count > 0)
@@ -603,6 +708,7 @@
   private string? _standingError;
   private MsfCoverageDto? _msfCoverage;
   private string? _msfCoverageError;
+  private string? _currentUserId;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -614,6 +720,7 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
       _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
@@ -700,9 +807,79 @@
   private async Task RecordDecisionAsync()
   {
     await ExecuteAsync(
-      user => Sender.Send(new RecordCommitteeDecisionCommand(ReviewId, _decision.Category, _decision.Rationale, _decision.Conditions, user)),
+      user => Sender.Send(new RecordCommitteeDecisionCommand(
+        ReviewId, _decision.Category, _decision.Rationale, _decision.Conditions,
+        PresentUserIds(_decision.PresentUserIds, lockedUserId: null), user)),
       "Decision recorded.");
   }
+
+  // T165. Who is sent as present: the members who may sit, in the panel's order, of whom the chair (and, at an appeal,
+  // whoever resolves it) always is, ticked and locked on the form and sent whatever was clicked, and the rest as ticked.
+  private IReadOnlyList<string> PresentUserIds(HashSet<string> ticked, string? lockedUserId)
+    => _review is null
+      ? []
+      : _review.PanelMembers
+        .Where(member => member.MaySit)
+        .Where(member => IsLockedPresent(member, lockedUserId) || ticked.Contains(member.UserId))
+        .Select(member => member.UserId)
+        .ToArray();
+
+  private static bool IsLockedPresent(CommitteePersonDto member, string? lockedUserId)
+    => member.Role == DecisionPanelMemberRole.Chair ||
+       (lockedUserId is not null && string.Equals(member.UserId, lockedUserId, StringComparison.Ordinal));
+
+  private static void TogglePresent(HashSet<string> ticked, string userId, bool present)
+  {
+    if (present)
+    {
+      ticked.Add(userId);
+    }
+    else
+    {
+      ticked.Remove(userId);
+    }
+  }
+
+  /// <summary>
+  /// Who sat, as a group of checkboxes: a fieldset whose legend names it, one checkbox per panel member who may sit
+  /// (<c>PanelSeat</c>), each with its own id under <paramref name="idPrefix" /> (DESIGN.md § Form system). Nobody who
+  /// may not sit is offered, so the form cannot send someone the server refuses. (T165)
+  /// </summary>
+  private RenderFragment PresentFieldset(string idPrefix, HashSet<string> ticked, string? lockedUserId) => __builder =>
+  {
+    var seated = _review?.PanelMembers.Where(member => member.MaySit).ToArray() ?? [];
+    <fieldset class="full-width" aria-describedby="@($"{idPrefix}-help")">
+      <legend>
+        Present
+        <span aria-hidden="true">*</span>
+        <span class="visually-hidden">required</span>
+      </legend>
+      <p id="@($"{idPrefix}-help")" class="muted">
+        Tick every panel member at this sitting. @CommitteeReviewDetailDto.QuorumRule
+      </p>
+      <div class="check-grid">
+        @for (var index = 0; index < seated.Length; index++)
+        {
+          var member = seated[index];
+          // By position, not by user id: an id is any string, and an id attribute must not hold a space.
+          var inputId = $"{idPrefix}-{index}";
+          <div class="form-check">
+            @if (IsLockedPresent(member, lockedUserId))
+            {
+              <input id="@inputId" class="form-check-input" type="checkbox" checked disabled />
+            }
+            else
+            {
+              <input id="@inputId" class="form-check-input" type="checkbox"
+                     checked="@ticked.Contains(member.UserId)"
+                     @onchange="args => TogglePresent(ticked, member.UserId, args.Value is bool isChecked && isChecked)" />
+            }
+            <label for="@inputId">@member.Label</label>
+          </div>
+        }
+      </div>
+    </fieldset>
+  };
 
   private async Task RatifyAsync()
   {
@@ -723,6 +900,8 @@
         _appeal.RemittedCategory,
         _appeal.RemittedRationale,
         _appeal.RemittedConditions,
+        // T165: a remitted appeal's replacement records who sat for it; the other outcomes take no decision.
+        _appeal.Outcome == CommitteeAppealOutcome.Remitted ? PresentUserIds(_appeal.PresentUserIds, _currentUserId) : null,
         user)),
       "Appeal resolved.");
   }
@@ -945,9 +1124,10 @@
       var updated = await action(authState.User);
 
       // The command's answer is the review as it now stands, but it is built by the mapper the commands share, which
-      // names nobody. A review's trainee never changes, so the name the page loaded with carries over. Reading the
-      // review back instead would be a second round trip that can fail after the action has already succeeded. (T142)
-      _review = updated with { TraineeName = _review?.TraineeName };
+      // names nobody. A review's trainee never changes, so the name the page loaded with carries over, and so do the
+      // panel's names, which cover everyone a decision can record as present (T165). Reading the review back instead
+      // would be a second round trip that can fail after the action has already succeeded. (T142)
+      _review = updated.WithNamesFrom(_review);
       _status = status;
 
     }
@@ -985,6 +1165,9 @@
     public string Rationale { get; set; } = string.Empty;
 
     public string? Conditions { get; set; }
+
+    /// <summary>The members ticked as present, other than the chair, who always is (T165).</summary>
+    public HashSet<string> PresentUserIds { get; } = new(StringComparer.Ordinal);
   }
 
   private sealed class AppealResolutionModel
@@ -995,6 +1178,9 @@
     public CommitteeDecisionCategory? RemittedCategory { get; set; }
     public string? RemittedRationale { get; set; }
     public string? RemittedConditions { get; set; }
+
+    /// <summary>The members ticked as present for a remitted replacement, other than those always present (T165).</summary>
+    public HashSet<string> PresentUserIds { get; } = new(StringComparer.Ordinal);
   }
 
   private sealed class PendingDecisionFormModel

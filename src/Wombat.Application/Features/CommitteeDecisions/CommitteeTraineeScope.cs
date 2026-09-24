@@ -35,7 +35,8 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// decision against it. A trainee can move institution after being scheduled, and the panel must not then read their
 /// new institution's evidence or supersede its decisions. Who may act is still the command's own panel ladder (a
 /// member, the chair); this adds only the trainee. A global Administrator is not refused here, so a review stranded by
-/// a move can still be finished or closed.
+/// a move can still be finished or closed, by an Administrator who takes the chair: since T165 the chair's actions
+/// have no Administrator bypass (D46).
 /// </item>
 /// </list>
 /// <para>

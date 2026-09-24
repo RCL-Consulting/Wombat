@@ -30,7 +30,15 @@ internal static class CommitteeDecisionMappings
                     decision.Conditions,
                     decision.DecidedOn,
                     decision.DecidedByChairUserId,
-                    decision.SupersedesDecisionId))
+                    decision.SupersedesDecisionId)
+                {
+                    // T165. Who sat for this decision, ids and roles only: the query that serves the page names them.
+                    Attendees = decision.Attendees
+                        .OrderBy(attendee => attendee.Role)
+                        .ThenBy(attendee => attendee.UserId, StringComparer.Ordinal)
+                        .Select(attendee => new CommitteePersonDto(attendee.UserId, attendee.Role))
+                        .ToArray()
+                })
                 .ToArray(),
             review.Appeals
                 .OrderByDescending(appeal => appeal.LodgedOn)
@@ -68,8 +76,21 @@ internal static class CommitteeDecisionMappings
                     item.ObservedOn,
                     item.ObservedOnSource is null ? null : item.ObservedOnSource == ObservationDateSource.Declared,
                     item.SourceState,
-                    item.SourceFinished))
+                    item.SourceFinished,
+                    item.AssessorUserId))
                 .ToArray(),
             review.IsFormative,
-            review.ReviewType);
+            review.ReviewType)
+        {
+            // T165. Who sits on the panel. Ids and roles only: the query that serves the page names them (T142) and says
+            // who may sit (PanelSeat).
+            PanelMembers = review.Panel.Members
+                .OrderBy(member => member.Role)
+                .ThenBy(member => member.UserId, StringComparer.Ordinal)
+                .Select(member => new CommitteePersonDto(member.UserId, member.Role))
+                .ToArray(),
+            QuorumShortfall = review is { IsFormative: false, State: CommitteeReviewState.Decided }
+                ? review.QuorumShortfall()
+                : null
+        };
 }

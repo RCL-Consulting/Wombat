@@ -62,4 +62,12 @@ public sealed record PendingEntrustmentDecisionDto(
     string Rationale,
     IReadOnlyList<int> EvidenceItemIds,
     DateTime StagedOn,
-    string StagedByUserId);
+    string StagedByUserId)
+{
+    /// <summary>
+    /// Why ratifying would refuse this staged decision now, it no longer fitting the trainee's curriculum (T167), or null
+    /// when it still fits. Filled by <c>ListPendingEntrustmentDecisionsForReviewQuery</c>: on a decided review this is the
+    /// only staged decision the chair may still remove (T165).
+    /// </summary>
+    public string? NoLongerFits { get; init; }
+}

@@ -117,6 +117,20 @@ public sealed class ErasureExecutor : IErasureExecutor
             $"UPDATE \"CommitteeAppeals\" SET \"ResolvedByUserId\" = {pseudonym} WHERE \"ResolvedByUserId\" = {userId}",
             cancellationToken);
 
+        // --- Committee attendance (T165): who sat when a decision was taken ---
+        var attendances = await _dbContext.Set<CommitteeDecisionAttendee>()
+            .Where(attendee => attendee.UserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var attendee in attendances)
+            attendee.UserId = pseudonym;
+
+        // --- Committee evidence snapshot lines naming the user as the assessor (T165) ---
+        var assessedLines = await _dbContext.Set<CommitteeEvidence>()
+            .Where(line => line.AssessorUserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var line in assessedLines)
+            line.AssessorUserId = pseudonym;
+
         // --- Decision panel members ---
         var panelMembers = await _dbContext.Set<DecisionPanelMember>()
             .Where(m => m.UserId == userId)

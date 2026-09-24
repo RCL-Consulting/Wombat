@@ -62,6 +62,12 @@ public sealed class ListPendingEntrustmentDecisionsForReviewQueryHandler
             .ThenBy(p => p.Id)
             .ToListAsync(cancellationToken);
 
-        return pending.Select(p => p.ToDto()).ToArray();
+        // T165: which staged decisions ratifying would refuse (T167's rule), so the page can say so and offer Remove on
+        // them alone once the decision is recorded and the rest are fixed.
+        var refusals = await StarCurriculum.RefusalsForStagedAsync(_dbContext, review.TraineeUserId, pending, cancellationToken);
+
+        return pending
+            .Select(p => p.ToDto() with { NoLongerFits = refusals.TryGetValue(p.Id, out var judged) ? judged.Refusal : null })
+            .ToArray();
     }
 }

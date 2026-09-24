@@ -27,6 +27,7 @@ public sealed class ValidationBehaviorTests
             RemittedCategory: null,
             RemittedRationale: null,
             RemittedConditions: null,
+            PresentUserIds: null,
             Principal: new ClaimsPrincipal(new ClaimsIdentity()));
 
         var act = async () => await behavior.Handle(
@@ -51,6 +52,7 @@ public sealed class ValidationBehaviorTests
             RemittedCategory: null,
             RemittedRationale: null,
             RemittedConditions: null,
+            PresentUserIds: null,
             Principal: new ClaimsPrincipal(new ClaimsIdentity()));
 
         await behavior.Handle(

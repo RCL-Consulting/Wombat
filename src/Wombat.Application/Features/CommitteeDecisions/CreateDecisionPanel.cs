@@ -23,11 +23,9 @@ public sealed class CreateDecisionPanelCommandValidator : AbstractValidator<Crea
     {
         RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
         RuleFor(command => command.Principal).NotNull();
-        RuleFor(command => command.Members).NotEmpty();
-        RuleForEach(command => command.Members).ChildRules(member =>
-        {
-            member.RuleFor(item => item.UserId).NotEmpty();
-        });
+        // T165: each member once, exactly one chair, and the chair plus at least one other, so that no decision the panel
+        // takes can be one person's.
+        RuleFor(command => command.Members).MustBeAPanelsMembers();
         RuleFor(command => command)
             .Must(command => command.Scope != DecisionPanelScope.Institution || command.InstitutionId.HasValue)
             .WithMessage("Institution-scoped panels require an institution.");
@@ -40,10 +38,12 @@ public sealed class CreateDecisionPanelCommandValidator : AbstractValidator<Crea
 public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDecisionPanelCommand, DecisionPanelDetailDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public CreateDecisionPanelCommandHandler(IApplicationDbContext dbContext)
+    public CreateDecisionPanelCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<DecisionPanelDetailDto> Handle(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
@@ -55,6 +55,10 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
         {
             throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
+
+        // T165: each member must be someone who may sit (an active committee member at the panel's institution), the
+        // rule the picker lists by and a decision's attendance is held to. Before the panel is built.
+        await PanelSeat.DemandMembersAsync(_users, institutionId, request.Members, cancellationToken);
 
         var panel = new DecisionPanel
         {

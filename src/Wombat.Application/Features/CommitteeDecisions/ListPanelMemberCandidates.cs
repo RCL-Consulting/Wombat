@@ -2,7 +2,6 @@ using System.Security.Claims;
 using MediatR;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -13,8 +12,21 @@ public sealed record PanelMemberCandidateDto(
     string LastName,
     int? InstitutionId);
 
-public sealed record ListPanelMemberCandidatesQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<PanelMemberCandidateDto>>;
+/// <summary>
+/// The people a panel at <paramref name="InstitutionId" /> may seat: the panel form's picker. (T165)
+/// </summary>
+/// <param name="InstitutionId">
+/// The panel's institution. Anyone but a global Administrator manages panels at their own institution only, so for them
+/// it is their own whatever is asked; an Administrator names it, and is offered nobody until they have.
+/// </param>
+public sealed record ListPanelMemberCandidatesQuery(ClaimsPrincipal Principal, int? InstitutionId = null)
+    : IRequest<IReadOnlyList<PanelMemberCandidateDto>>;
 
+/// <remarks>
+/// Lists by <see cref="PanelSeat" />, the rule panel create and update enforce, so the picker cannot offer someone the
+/// save refuses. Before T165 it listed every CommitteeMember holder, deactivated accounts included, and an
+/// Administrator was offered every institution's.
+/// </remarks>
 public sealed class ListPanelMemberCandidatesQueryHandler : IRequestHandler<ListPanelMemberCandidatesQuery, IReadOnlyList<PanelMemberCandidateDto>>
 {
     private readonly IUserAdministrationService _userAdministrationService;
@@ -26,23 +38,22 @@ public sealed class ListPanelMemberCandidatesQueryHandler : IRequestHandler<List
 
     public async Task<IReadOnlyList<PanelMemberCandidateDto>> Handle(ListPanelMemberCandidatesQuery request, CancellationToken cancellationToken)
     {
-        var users = await _userAdministrationService.ListUsersInRoleAsync(WombatRoles.CommitteeMember, cancellationToken);
-        var query = users.AsEnumerable();
+        var institutionId = request.Principal.IsAdministrator()
+            ? request.InstitutionId
+            : request.Principal.GetInstitutionId();
 
-        if (!request.Principal.IsAdministrator())
+        if (institutionId is not int panelInstitutionId)
         {
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-            if (!scopedInstitutionId.HasValue)
-            {
-                return Array.Empty<PanelMemberCandidateDto>();
-            }
-            query = query.Where(user => user.InstitutionId == scopedInstitutionId.Value);
+            return Array.Empty<PanelMemberCandidateDto>();
         }
 
-        return query
+        var eligible = await PanelSeat.EligibleAsync(_userAdministrationService, panelInstitutionId, cancellationToken);
+
+        return eligible.Values
             .Select(user => new PanelMemberCandidateDto(user.UserId, user.Email, user.FirstName, user.LastName, user.InstitutionId))
             .OrderBy(user => user.LastName)
             .ThenBy(user => user.FirstName)
+            .ThenBy(user => user.UserId, StringComparer.Ordinal)
             .ToArray();
     }
 }

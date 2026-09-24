@@ -22,6 +22,7 @@ using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.DataRights;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.CommitteeDecisions;
 
@@ -45,12 +46,19 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// own context, as a request would, so the refused one's failure row is stored and nothing it tried to write is (T201).
 /// The schema helpers follow <c>CommitteeEvidenceSnapshotPostgresTests</c>.
 /// </para>
+/// <para>
+/// Since T165 the staged decisions are fixed when the committee's decision is recorded: staging and removing act only on a
+/// review in progress (<see cref="StagedStars" />). So a stage or a remove that races a ratify is one that read the review
+/// while it was still in progress, with the decision's recording and the ratify both committing before its save; and a
+/// stage that reaches a decided review is refused by its state, before anything races.
+/// </para>
 /// </remarks>
 public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
 {
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string TraineeUserId = "trainee-t131-race";
     private const string ChairUserId = "chair-t131-race";
+    private const string MemberUserId = "member-t131-race";
 
     private readonly List<string> _schemas = [];
     private string _baseConnectionString = null!;
@@ -68,11 +76,16 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     {
         try
         {
-            var review = await DecidedReviewWithPaed001StagedAsync();
+            var review = await InProgressReviewWithPaed001StagedAsync();
 
-            // The stage reads the review as decided; the ratify then runs from start to commit; then the stage saves.
+            // The stage reads the review while it is in progress; the decision is recorded and the review ratified, each
+            // from start to commit; then the stage saves (T165: a decided review is never staged on).
             var stage = () => StageAsync(review, review.Paed002, review.Rung3a, [review.LineB],
-                beforeSave: () => RatifyAsync(review));
+                beforeSave: async () =>
+                {
+                    await RecordAsync(review);
+                    await RatifyAsync(review);
+                });
 
             var refusal = await stage.Should().ThrowExactlyAsync<InvalidOperationException>();
             refusal.Which.Message.Should().Be(StagePendingEntrustmentDecisionCommandHandler.ReviewChanged);
@@ -95,47 +108,45 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
         }
     }
 
-    public static TheoryData<string> StagesThatCommitFirst => new() { "a new decision", "an edit to the staged one" };
+    public static TheoryData<string> StagesAttemptedMeanwhile => new() { "a new decision", "an edit to the staged one" };
 
+    /// <summary>
+    /// Before T165 a stage could commit on a decided review between a ratify's read and its save, and the ratify was then
+    /// refused whole (ReviewChanged). Since T165 the staged decisions are fixed when the decision is recorded, so that
+    /// stage is refused by the review's state and writes nothing, and the ratify issues exactly what was staged at the
+    /// recording: not the new decision, and the staged one as it stood, not as the refused edit would have left it.
+    /// </summary>
     [Theory]
-    [MemberData(nameof(StagesThatCommitFirst))]
-    public async Task ARatifyThatReadTheReviewBeforeAStageCommitted_IsRefusedWhole_AndIssuesNothing(string stagedMeanwhile)
+    [MemberData(nameof(StagesAttemptedMeanwhile))]
+    public async Task AStageAttemptedWhileARatifyIsInFlight_IsRefusedAsFixed_AndTheRatifyIssuesWhatWasStagedAtTheRecording(string stagedMeanwhile)
     {
         try
         {
             var review = await DecidedReviewWithPaed001StagedAsync();
 
-            // The ratify reads the review and its staged decisions; the stage then runs from start to commit; then the
-            // ratify saves. Unrefused, it would ratify without the new decision (left behind on a ratified review), or
-            // issue the staged one as it stood before the chair's edit.
-            Func<Task> meanwhile = stagedMeanwhile == "a new decision"
+            // The ratify reads the review and its staged decisions; the stage then runs from start to its refusal; then the
+            // ratify saves.
+            Func<Task> attempt = stagedMeanwhile == "a new decision"
                 ? () => StageAsync(review, review.Paed002, review.Rung3a, [review.LineB])
                 : () => StageAsync(review, review.Paed001, review.Rung3b, [review.LineA, review.LineB], review.PendingId);
-            var ratify = () => RatifyAsync(review, beforeSave: meanwhile);
+            var ratify = () => RatifyAsync(review, beforeSave: async () =>
+                (await attempt.Should().ThrowExactlyAsync<InvalidOperationException>())
+                    .Which.Message.Should().Be(StagedStars.FixedWhenDecided));
 
-            var refusal = await ratify.Should().ThrowExactlyAsync<InvalidOperationException>();
-            refusal.Which.Message.Should().Be(RatifyCommitteeDecisionCommandHandler.ReviewChanged);
-            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+            await ratify.Should().NotThrowAsync();
 
             await using var read = NewContext(review.Schema);
             (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
-                .Should().Be(CommitteeReviewState.Decided, "nothing of the refused ratify is written");
-            (await read.EntrustmentDecisions.CountAsync()).Should().Be(0);
-            var staged = await read.PendingEntrustmentDecisions.OrderBy(pending => pending.EpaId).ToListAsync();
-            if (stagedMeanwhile == "a new decision")
-            {
-                staged.Select(pending => pending.EpaId).Should().Equal(review.Paed001, review.Paed002);
-            }
-            else
-            {
-                var edited = staged.Should().ContainSingle().Subject;
-                edited.AuthorisedLevelId.Should().Be(review.Rung3b, "the chair's edit stands, to be ratified as edited");
-                edited.EvidenceItemIds.Should().Equal(review.LineA, review.LineB);
-            }
+                .Should().Be(CommitteeReviewState.Ratified);
+            (await read.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
+            var star = await read.EntrustmentDecisions.Include(decision => decision.EvidenceLinks).SingleAsync();
+            star.EpaId.Should().Be(review.Paed001);
+            star.AuthorisedLevelId.Should().Be(review.Rung3a, "the refused edit changed nothing");
+            star.EvidenceLinks.Select(link => link.CommitteeEvidenceId).Should().Equal(review.LineA);
 
             (await AuditRowsAsync(review.Schema)).Should().BeEquivalentTo(
-                "StagePendingEntrustmentDecisionCommand: succeeded",
-                $"RatifyCommitteeDecisionCommand: {RatifyCommitteeDecisionCommandHandler.ReviewChanged}");
+                $"StagePendingEntrustmentDecisionCommand: {StagedStars.FixedWhenDecided}",
+                "RatifyCommitteeDecisionCommand: succeeded");
         }
         finally
         {
@@ -148,9 +159,15 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     {
         try
         {
-            var review = await DecidedReviewWithPaed001StagedAsync();
+            var review = await InProgressReviewWithPaed001StagedAsync();
 
-            var remove = () => RemoveAsync(review, review.PendingId, beforeSave: () => RatifyAsync(review));
+            // The remove reads the review while it is in progress; the decision is recorded and the review ratified, each
+            // from start to commit; then the remove saves (T165: a decided review's staged decisions are fixed).
+            var remove = () => RemoveAsync(review, review.PendingId, beforeSave: async () =>
+            {
+                await RecordAsync(review);
+                await RatifyAsync(review);
+            });
 
             var refusal = await remove.Should().ThrowExactlyAsync<InvalidOperationException>();
             refusal.Which.Message.Should().Be(RemovePendingEntrustmentDecisionCommandHandler.AlreadyGone);
@@ -176,7 +193,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     {
         try
         {
-            var review = await DecidedReviewWithPaed001StagedAsync();
+            var review = await InProgressReviewWithPaed001StagedAsync();
 
             // Written straight to the table, so the review itself is untouched and only the index stands in the way.
             var stage = () => StageAsync(review, review.Paed002, review.Rung3a, [review.LineB], beforeSave: async () =>
@@ -259,7 +276,13 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
                     ScheduledOn = new DateOnly(2026, 7, 2)
                 };
                 review.Start([], userId, DateTime.UtcNow);
-                review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, userId, DateTime.UtcNow);
+                // A quorate sitting, the chair and one other (T165); the chair is the person erased.
+                review.RecordDecision(
+                    CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, userId, DateTime.UtcNow,
+                    [
+                        new DecisionPanelMember { UserId = userId, Role = DecisionPanelMemberRole.Chair },
+                        new DecisionPanelMember { UserId = "member-erasure", Role = DecisionPanelMemberRole.Member }
+                    ]);
                 review.Ratify(userId, DateTime.UtcNow);
                 db.CommitteeReviews.Add(review);
                 await db.SaveChangesAsync();
@@ -310,6 +333,19 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
         await ThroughTheAuditPipelineAsync(db, command, () => new RatifyCommitteeDecisionCommandHandler(db).Handle(command, CancellationToken.None));
     }
 
+    /// <summary>Records the committee's decision with a quorate sitting, the chair and the other member (T165).</summary>
+    private async Task RecordAsync(SeededReview review, Func<Task>? beforeSave = null)
+    {
+        await using var db = NewContext(review.Schema, beforeSave);
+        var command = new RecordCommitteeDecisionCommand(
+            review.ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair());
+        await ThroughTheAuditPipelineAsync(db, command, () => new RecordCommitteeDecisionCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
+    }
+
+    /// <summary>The panel's two members, each an active committee member at its institution (T165, PanelSeat).</summary>
+    private static FakeUserDirectory Committee(SeededReview review)
+        => FakeUserDirectory.CommitteeMembersAt(review.HostId, ChairUserId, MemberUserId);
+
     private async Task RemoveAsync(SeededReview review, int pendingId, Func<Task>? beforeSave = null)
     {
         await using var db = NewContext(review.Schema, beforeSave);
@@ -350,20 +386,40 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     // ---- The review ---------------------------------------------------------------------------------------------------
 
     private sealed record SeededReview(
-        string Schema, int ReviewId, int PendingId, int Paed001, int Paed002, int Rung3a, int Rung3b, int LineA, int LineB);
+        string Schema, int ReviewId, int PendingId, int Paed001, int Paed002, int Rung3a, int Rung3b, int LineA, int LineB, int HostId);
 
     /// <summary>
-    /// A decided review on the v11.1 catalogue, its snapshot holding one completed CCA on PAED-001 (line A) and one on
-    /// PAED-002 (line B), with a decision on PAED-001 staged on line A.
+    /// <see cref="InProgressReviewWithPaed001StagedAsync" />, with the committee's decision then recorded by a quorum,
+    /// which fixes the staged decision (T165).
     /// </summary>
     private async Task<SeededReview> DecidedReviewWithPaed001StagedAsync()
     {
+        var review = await InProgressReviewWithPaed001StagedAsync();
+
+        await using (var db = NewContext(review.Schema))
+        {
+            await new RecordCommitteeDecisionCommandHandler(db, Committee(review)).Handle(
+                new RecordCommitteeDecisionCommand(
+                    review.ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair()),
+                CancellationToken.None);
+        }
+
+        return review;
+    }
+
+    /// <summary>
+    /// A review in progress on the v11.1 catalogue, its snapshot holding one completed CCA on PAED-001 (line A) and one
+    /// on PAED-002 (line B), with a decision on PAED-001 staged on line A. Its panel is the chair and one member.
+    /// </summary>
+    private async Task<SeededReview> InProgressReviewWithPaed001StagedAsync()
+    {
         var schema = await SeededSchemaAsync();
-        int reviewId, paed001, paed002, rung3a, rung3b, activityA, activityB;
+        int reviewId, paed001, paed002, rung3a, rung3b, activityA, activityB, hostId;
 
         await using (var db = NewContext(schema))
         {
             var host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+            hostId = host;
             var curriculumId = await db.Curricula
                 .Where(entity => entity.Name == "Paediatric EPA Curriculum" && entity.Version == "11.1")
                 .Select(entity => entity.Id)
@@ -395,7 +451,12 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
                     Scope = DecisionPanelScope.Institution,
                     InstitutionId = host,
                     CreatedOn = DateTime.UtcNow,
-                    Members = [new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair }]
+                    // The chair and one other: a committee decision needs a quorum (T165, D46).
+                    Members =
+                    [
+                        new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair },
+                        new DecisionPanelMember { UserId = MemberUserId, Role = DecisionPanelMemberRole.Member }
+                    ]
                 },
                 TraineeUserId = TraineeUserId,
                 ReviewPeriodFrom = new DateOnly(2026, 1, 1),
@@ -431,14 +492,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             pendingId = staged.Id;
         }
 
-        await using (var db = NewContext(schema))
-        {
-            await new RecordCommitteeDecisionCommandHandler(db).Handle(
-                new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, Chair()),
-                CancellationToken.None);
-        }
-
-        return new SeededReview(schema, reviewId, pendingId, paed001, paed002, rung3a, rung3b, lineA, lineB);
+        return new SeededReview(schema, reviewId, pendingId, paed001, paed002, rung3a, rung3b, lineA, lineB, hostId);
     }
 
     private static Task<int> NationalEpaAsync(ApplicationDbContext db, string code)

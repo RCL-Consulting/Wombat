@@ -304,6 +304,55 @@ public sealed class RatedEvidenceProfile
     }
 
     /// <summary>
+    /// The user the version names as the assessor, whatever the row's state, or null when it names nobody. (T165)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="Read" />'s reading of the assessor, without the question of whether the row counts, as
+    /// <see cref="ReadRating" /> is its reading of the rating: the first of <see cref="AssessorFields" />, in schema
+    /// order, that holds a non-empty string. The committee's evidence snapshot freezes it beside the rating, so the review
+    /// page can say when every rated line was rated by the panel's own chair.
+    /// </para>
+    /// <para>
+    /// Null for a version that names no assessor, for fields that are empty or not a string, and for data that does not
+    /// parse. Ids are returned exactly as stored, as <see cref="Read" /> returns them. Total: never throws on bad data.
+    /// </para>
+    /// </remarks>
+    public string? ReadAssessor(string? dataJson)
+    {
+        if (!_readable || AssessorFields.Count == 0 || string.IsNullOrWhiteSpace(dataJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(dataJson);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            foreach (var assessorField in AssessorFields)
+            {
+                if (root.TryGetProperty(assessorField, out var assessorValue) &&
+                    assessorValue.ValueKind == JsonValueKind.String &&
+                    !IsEmpty(assessorValue))
+                {
+                    return assessorValue.GetString();
+                }
+            }
+
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// The profile of one version, from its stored JSON.
     /// </summary>
     /// <param name="schemaJson">The pinned schema.</param>

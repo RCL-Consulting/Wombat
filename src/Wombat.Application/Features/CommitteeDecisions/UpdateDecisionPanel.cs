@@ -19,7 +19,9 @@ public sealed class UpdateDecisionPanelCommandValidator : AbstractValidator<Upda
     public UpdateDecisionPanelCommandValidator()
     {
         RuleFor(command => command.PanelId).GreaterThan(0);
-        RuleFor(command => command.Members).NotEmpty();
+        // T165: the rules a new panel is held to. Before T165 an update checked only that the list was not empty, so a
+        // valid panel could be cut down to its chair alone.
+        RuleFor(command => command.Members).MustBeAPanelsMembers();
         RuleFor(command => command.Principal).NotNull();
     }
 }
@@ -27,10 +29,12 @@ public sealed class UpdateDecisionPanelCommandValidator : AbstractValidator<Upda
 public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDecisionPanelCommand, DecisionPanelDetailDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public UpdateDecisionPanelCommandHandler(IApplicationDbContext dbContext)
+    public UpdateDecisionPanelCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<DecisionPanelDetailDto> Handle(UpdateDecisionPanelCommand request, CancellationToken cancellationToken)
@@ -48,6 +52,10 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
         {
             throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
+
+        // T165: the panel as saved holds only people who may sit on it now, the members it already had included: an
+        // erased, deactivated or departed member is taken off, not carried over. Before the members are touched.
+        await PanelSeat.DemandMembersAsync(_users, panel.InstitutionId, request.Members, cancellationToken);
 
         panel.Members.Clear();
         foreach (var member in request.Members)

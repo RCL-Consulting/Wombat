@@ -138,7 +138,22 @@ public sealed class ProgramDefaultScaleTests
 
     private static async Task<int> AddInProgressReviewAsync(ApplicationDbContext db)
     {
-        var panel = new DecisionPanel { Id = PanelId, Name = "Panel", Scope = DecisionPanelScope.Institution, InstitutionId = 1, CreatedOn = DateTime.UtcNow };
+        // The Administrator stages below, because a panel's institution does not bind one (T182) and this fixture's
+        // trainee has no institution. Since T165 the chair's actions have no Administrator bypass (D46), so the
+        // Administrator chairs the panel.
+        var panel = new DecisionPanel
+        {
+            Id = PanelId,
+            Name = "Panel",
+            Scope = DecisionPanelScope.Institution,
+            InstitutionId = 1,
+            CreatedOn = DateTime.UtcNow,
+            Members =
+            [
+                new DecisionPanelMember { UserId = "admin-user", Role = DecisionPanelMemberRole.Chair },
+                new DecisionPanelMember { UserId = "member-1", Role = DecisionPanelMemberRole.Member }
+            ]
+        };
         db.Set<DecisionPanel>().Add(panel);
 
         var review = new CommitteeReview

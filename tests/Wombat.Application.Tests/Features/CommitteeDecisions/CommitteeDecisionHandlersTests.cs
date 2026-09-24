@@ -280,13 +280,15 @@ public sealed class CommitteeDecisionHandlersTests
         var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
         await startHandler.Handle(new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
-        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
+        var committee = FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1", "external-1");
+        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext, committee);
         await recordHandler.Handle(
             new RecordCommitteeDecisionCommand(
                 review.Id,
                 CommitteeDecisionCategory.SatisfactoryWithObservations,
                 "Reasonable progress with targeted conditions.",
                 "Improve documentation quality.",
+                ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
@@ -308,13 +310,14 @@ public sealed class CommitteeDecisionHandlersTests
             new LodgeAppealCommand(review.Id, "The conditions are too broad.", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
             CancellationToken.None);
 
-        var resolveHandler = new ResolveAppealCommandHandler(dbContext);
+        var resolveHandler = new ResolveAppealCommandHandler(dbContext, committee);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             resolveHandler.Handle(
-                new ResolveAppealCommand(review.Id, CommitteeAppealOutcome.Dismissed, null, null, null, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
+                new ResolveAppealCommand(review.Id, CommitteeAppealOutcome.Dismissed, null, null, null, null, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
                 CancellationToken.None));
 
+        // The external member resolves for independence, with the chair present: the replacement is a committee's (T165).
         var resolved = await resolveHandler.Handle(
             new ResolveAppealCommand(
                 review.Id,
@@ -322,12 +325,15 @@ public sealed class CommitteeDecisionHandlersTests
                 CommitteeDecisionCategory.SatisfactoryProgress,
                 "Appeal body reduced the conditions after review.",
                 null,
+                ["chair-1", "external-1"],
                 CreatePrincipal("external-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
         resolved.State.Should().Be(CommitteeReviewState.Final);
         resolved.Decisions.Should().HaveCount(2);
         resolved.Decisions[0].Category.Should().Be(CommitteeDecisionCategory.SatisfactoryProgress);
+        resolved.Decisions[0].Attendees.Select(person => person.UserId).Should().Equal("chair-1", "external-1");
+        resolved.Decisions[1].Attendees.Select(person => person.UserId).Should().Equal("chair-1", "member-1");
     }
 
     private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext dbContext, CommitteeReview review)

@@ -34,6 +34,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string TraineeUserId = "trainee-t167";
     private const string ChairUserId = "chair-t167";
+    private const string MemberUserId = "member-t167";
 
     private readonly List<string> _schemas = [];
     private string _baseConnectionString = null!;
@@ -52,11 +53,12 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
         try
         {
             var schema = await SeededSchemaAsync();
-            int reviewId, paed001, demoEpa, ladderId, activityId, lineId;
+            int reviewId, paed001, demoEpa, ladderId, activityId, lineId, hostId;
 
             await using (var db = NewContext(schema))
             {
                 var host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                hostId = host;
                 var curriculumId = await db.Curricula
                     .Where(entity => entity.Name == "Paediatric EPA Curriculum" && entity.Version == "11.1")
                     .Select(entity => entity.Id)
@@ -84,7 +86,12 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                     Scope = DecisionPanelScope.Institution,
                     InstitutionId = host,
                     CreatedOn = DateTime.UtcNow,
-                    Members = [new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair }]
+                    // The chair and one other: a committee decision needs a quorum (T165, D46).
+                    Members =
+                    [
+                        new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair },
+                        new DecisionPanelMember { UserId = MemberUserId, Role = DecisionPanelMemberRole.Member }
+                    ]
                 };
                 db.DecisionPanels.Add(panel);
                 var review = new CommitteeReview
@@ -184,8 +191,10 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                await new RecordCommitteeDecisionCommandHandler(db).Handle(
-                    new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, Chair()),
+                // A quorate sitting, the chair and the other member present, each a committee member at the host (T165).
+                await new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(hostId, ChairUserId, MemberUserId)).Handle(
+                    new RecordCommitteeDecisionCommand(
+                        reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair()),
                     CancellationToken.None);
             }
 

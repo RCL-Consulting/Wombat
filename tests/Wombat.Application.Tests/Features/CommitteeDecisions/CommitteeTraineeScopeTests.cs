@@ -12,6 +12,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -212,7 +213,7 @@ public sealed class CommitteeTraineeScopeTests
         // so once a panel reviewed only its own institution's trainees, it reviewed nobody's. It is stamped at create.
         await using var db = await SeededDbAsync();
         var scheduler = Scheduler(role, InstitutionA);
-        var panel = await new CreateDecisionPanelCommandHandler(db).Handle(
+        var panel = await new CreateDecisionPanelCommandHandler(db, Committee).Handle(
             new CreateDecisionPanelCommand(
                 "Paediatrics annual review",
                 DecisionPanelScope.Speciality,
@@ -312,6 +313,7 @@ public sealed class CommitteeTraineeScopeTests
 
     // ─── Acting on a scheduled review ────────────────────────────────────────
 
+    // Not Issue: since T165 a STAR is issued only by ratifying, the command that issued one directly is gone.
     public static TheoryData<string> ReviewCommands => new()
     {
         "Start", "Record", "Ratify", "Close", "ResolveAppeal", "Stage", "Remove"
@@ -368,15 +370,69 @@ public sealed class CommitteeTraineeScopeTests
 
     [Theory]
     [MemberData(nameof(ReviewCommands))]
-    public async Task AnAdministrator_IsNotRefused_AReviewOfATraineeNotAtThePanel(string command)
+    public async Task AnAdministratorWhoChairsThePanel_IsNotRefused_AReviewOfATraineeNotAtThePanel(string command)
     {
+        // Since T165 the chair's actions have no Administrator bypass, so an Administrator finishing a review stranded by a
+        // move takes the chair first, which takes what any seat takes: the CommitteeMember role at the panel's institution
+        // (PanelSeat; the Committee directory holds them so). The trainee check still waives them (CommitteeTraineeScope).
         await using var db = await SeededDbAsync();
+        await SeatAsChairOfAAsync(db, AdministratorId);
         var reviewId = await SeedReviewForAsync(db, command, PaedsAtB);
 
-        var act = () => RunAsync(db, command, reviewId, PaedsAtB, TestPrincipals.Administrator());
+        var act = () => RunAsync(db, command, reviewId, PaedsAtB, TestPrincipals.Administrator(AdministratorId));
 
         await act.Should().NotThrowAsync();
     }
+
+    public static TheoryData<string> ChairsActions => new()
+    {
+        "Record", "Ratify", "Close", "Stage", "Remove"
+    };
+
+    [Theory]
+    [MemberData(nameof(ChairsActions))]
+    public async Task AnAdministratorNotOnThePanel_IsRefusedEveryChairsAction_AndNothingChanges(string command)
+    {
+        // T165 (D46): the Administrator bypass is gone from the one chair gate. A global Administrator keeps panel
+        // administration and read access, but one who does not sit on the panel takes no part in its decision. The trainee
+        // is the panel's own, so the refusal can only be the chair gate's.
+        await using var db = await SeededDbAsync();
+        var reviewId = await SeedReviewForAsync(db, command, PaedsAtA);
+        var before = await SnapshotAsync();
+
+        var act = () => RunAsync(db, command, reviewId, PaedsAtA, TestPrincipals.Administrator(AdministratorId));
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().Be(ChairRefusal(command));
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await SnapshotAsync()).Should().BeEquivalentTo(before);
+    }
+
+    [Theory]
+    [MemberData(nameof(ChairsActions))]
+    public async Task APanelMemberWhoIsNotTheChair_IsRefusedEveryChairsAction_AndNothingChanges(string command)
+    {
+        await using var db = await SeededDbAsync();
+        var reviewId = await SeedReviewForAsync(db, command, PaedsAtA);
+        var before = await SnapshotAsync();
+
+        var act = () => RunAsync(db, command, reviewId, PaedsAtA, Member("member-a", InstitutionA));
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().Be(ChairRefusal(command));
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await SnapshotAsync()).Should().BeEquivalentTo(before);
+    }
+
+    /// <summary>
+    /// The chair gate's refusal for each action. Ratify, Stage and Remove look the review up and authorise first, with the
+    /// one refusal that does not say whether the id names a review (T131, T194 item 1); Record and Close say the action
+    /// is the chair's. Neither has an Administrator bypass (T165, D46).
+    /// </summary>
+    private static string ChairRefusal(string command)
+        => command is "Ratify" or "Stage" or "Remove"
+            ? "The committee review could not be found among the reviews you chair."
+            : "Only the panel's chair can do this.";
 
     [Fact]
     public async Task TheAppealBody_AnswersTheAppealOfATraineeWhoHasMovedAway()
@@ -463,15 +519,18 @@ public sealed class CommitteeTraineeScopeTests
         {
             "Start" => await new StartCommitteeReviewCommandHandler(db).Handle(
                 new StartCommitteeReviewCommand(reviewId, principal), CancellationToken.None),
-            "Record" => await new RecordCommitteeDecisionCommandHandler(db).Handle(
-                new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, principal),
+            "Record" => await new RecordCommitteeDecisionCommandHandler(db, Committee).Handle(
+                new RecordCommitteeDecisionCommand(
+                    reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                    // The actor and one member present (T165): the chair records, and sat.
+                    [principal.FindFirst(ClaimTypes.NameIdentifier)!.Value, "member-a"], principal),
                 CancellationToken.None),
             "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db).Handle(
                 new RatifyCommitteeDecisionCommand(reviewId, principal), CancellationToken.None),
             "Close" => await new CloseFormativeReviewCommandHandler(db).Handle(
                 new CloseFormativeReviewCommand(reviewId, principal), CancellationToken.None),
-            "ResolveAppeal" => await new ResolveAppealCommandHandler(db).Handle(
-                new ResolveAppealCommand(reviewId, CommitteeAppealOutcome.Dismissed, null, null, null, principal),
+            "ResolveAppeal" => await new ResolveAppealCommandHandler(db, Committee).Handle(
+                new ResolveAppealCommand(reviewId, CommitteeAppealOutcome.Dismissed, null, null, null, null, principal),
                 CancellationToken.None),
             "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
                 new StagePendingEntrustmentDecisionCommand(
@@ -503,6 +562,32 @@ public sealed class CommitteeTraineeScopeTests
             .SingleAsync();
 
     // ─── Fixture ─────────────────────────────────────────────────────────────
+
+    private const string AdministratorId = "admin-user";
+
+    /// <summary>
+    /// Who may sit on panel A (T165, PanelSeat): its members, and the Administrator, who the tests that seat them as chair
+    /// have given the CommitteeMember role at A, as D46 requires of an Administrator who must act.
+    /// </summary>
+    private static FakeUserDirectory Committee
+        => FakeUserDirectory.CommitteeMembersAt(InstitutionA, "chair-a", "member-a", "external-a", AdministratorId);
+
+    /// <summary>Panel A's chair and one member, present at the decision the fixture records (T165).</summary>
+    private static IReadOnlyCollection<DecisionPanelMember> PresentAtA =>
+    [
+        new DecisionPanelMember { UserId = "chair-a", Role = DecisionPanelMemberRole.Chair },
+        new DecisionPanelMember { UserId = "member-a", Role = DecisionPanelMemberRole.Member }
+    ];
+
+    /// <summary>Makes this user panel A's chair in chair-a's place.</summary>
+    private static async Task SeatAsChairOfAAsync(ApplicationDbContext db, string userId)
+    {
+        var chair = await db.Set<DecisionPanelMember>()
+            .SingleAsync(member => member.PanelId == PanelA && member.Role == DecisionPanelMemberRole.Chair);
+        chair.UserId = userId;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
 
     /// <summary>A review on panel A in the state the command acts on, with what the command reads.</summary>
     private async Task<int> SeedReviewForAsync(ApplicationDbContext db, string command, string traineeUserId)
@@ -536,7 +621,7 @@ public sealed class CommitteeTraineeScopeTests
 
         if (command is "Ratify" or "ResolveAppeal")
         {
-            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now);
+            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now, PresentAtA);
         }
 
         if (command == "ResolveAppeal")
@@ -702,7 +787,8 @@ public sealed class CommitteeTraineeScopeTests
         IReadOnlyList<string> Decisions,
         IReadOnlyList<string> Appeals,
         IReadOnlyList<string> Pending,
-        IReadOnlyList<string> EntrustmentDecisions);
+        IReadOnlyList<string> EntrustmentDecisions,
+        IReadOnlyList<string> Attendees);
 
     private async Task<StoreSnapshot> SnapshotAsync()
     {
@@ -723,6 +809,9 @@ public sealed class CommitteeTraineeScopeTests
                 .ToListAsync(),
             await read.Set<EntrustmentDecision>().OrderBy(decision => decision.Id)
                 .Select(decision => $"{decision.Id}:{decision.Status}:{decision.SupersededByDecisionId}")
+                .ToListAsync(),
+            await read.Set<CommitteeDecisionAttendee>().OrderBy(attendee => attendee.Id)
+                .Select(attendee => $"{attendee.DecisionId}:{attendee.UserId}:{attendee.Role}")
                 .ToListAsync());
     }
 

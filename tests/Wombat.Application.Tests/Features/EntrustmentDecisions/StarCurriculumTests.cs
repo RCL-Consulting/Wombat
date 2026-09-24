@@ -11,6 +11,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
@@ -156,6 +157,7 @@ public sealed class StarCurriculumTests
 
         (await ListAsync(db, Chair())).Should().BeEmpty();
 
+        await SeatTheAdministratorAsChairAsync(db);
         var act = () => StageAsync(db, PinnedCoreEpa, RungOf(PinnedLadder, 3), principal: TestPrincipals.Administrator());
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not on this trainee's curriculum*");
         await SaveAndClearAsync(db);
@@ -345,6 +347,7 @@ public sealed class StarCurriculumTests
         (await ListAsync(db, TestPrincipals.Administrator())).Select(option => option.Code)
             .Should().Equal("PAED-001", "PAED-002", "PAED-004");
 
+        await SeatTheAdministratorAsChairAsync(db);
         var theHostsExtra = () => StageAsync(db, OwnLocalEpa, RungOf(ProgrammeLadder, 3), principal: TestPrincipals.Administrator());
         await theHostsExtra.Should().ThrowAsync<InvalidOperationException>().WithMessage("*PAED-003*not on this trainee's curriculum*");
         await SaveAndClearAsync(db);
@@ -379,8 +382,8 @@ public sealed class StarCurriculumTests
             CancellationToken.None);
 
     private static Task RecordDecisionAsync(ApplicationDbContext db)
-        => new RecordCommitteeDecisionCommandHandler(db).Handle(
-            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, Chair()),
+        => new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(HostInstitution, "chair-1", "member-1")).Handle(
+            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"], Chair()),
             CancellationToken.None);
 
     private static Task RatifyOnlyAsync(ApplicationDbContext db)
@@ -404,6 +407,17 @@ public sealed class StarCurriculumTests
         await SaveAndClearAsync(db);
     }
 
+    /// <summary>
+    /// The Administrator takes the chair in chair-1's place. A panel's institution does not bind an Administrator (T182),
+    /// so these tests stage as one to have only the curriculum judged; since T165 the chair's actions have no
+    /// Administrator bypass (D46), so the Administrator must chair the panel to stage at all.
+    /// </summary>
+    private static async Task SeatTheAdministratorAsChairAsync(ApplicationDbContext db)
+    {
+        var chair = await db.Set<DecisionPanelMember>().SingleAsync(member => member.Role == DecisionPanelMemberRole.Chair);
+        chair.UserId = "admin-user";
+        await SaveAndClearAsync(db);
+    }
 
     /// <summary>What the audit pipeline does after a refusal, then a fresh read of what is stored.</summary>
     private static async Task SaveAndClearAsync(ApplicationDbContext db)
@@ -478,7 +492,11 @@ public sealed class StarCurriculumTests
             Scope = DecisionPanelScope.Institution,
             InstitutionId = HostInstitution,
             CreatedOn = DateTime.UtcNow,
-            Members = [new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair }]
+            Members =
+            [
+                new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair },
+                new DecisionPanelMember { UserId = "member-1", Role = DecisionPanelMemberRole.Member }
+            ]
         });
         var review = new CommitteeReview
         {

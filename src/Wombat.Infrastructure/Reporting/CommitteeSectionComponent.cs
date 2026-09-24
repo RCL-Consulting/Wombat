@@ -7,7 +7,10 @@ namespace Wombat.Infrastructure.Reporting;
 
 internal static class CommitteeSectionComponent
 {
-    public static void Compose(IContainer container, List<CommitteeReview> reviews)
+    public static void Compose(
+        IContainer container,
+        List<CommitteeReview> reviews,
+        IReadOnlyDictionary<string, string> attendeeNames)
     {
         container.Column(column =>
         {
@@ -18,12 +21,49 @@ internal static class CommitteeSectionComponent
 
             foreach (var review in reviews)
             {
-                column.Item().Element(e => ComposeReview(e, review));
+                column.Item().Element(e => ComposeReview(e, review, attendeeNames));
             }
         });
     }
 
-    private static void ComposeReview(IContainer container, CommitteeReview review)
+    /// <summary>
+    /// Who was recorded as present when the review's current decision was taken, chair first, each by name ("Thandi Zulu
+    /// (chair), Priya Naidoo"), or null when nobody was recorded. (T165)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The current decision's own sitting, printed beside that decision: a decision an appeal remitted was taken by
+    /// whoever sat for the appeal, not by the review's first sitting.
+    /// </para>
+    /// <para>
+    /// A name the map does not hold prints as the id, which is what a reader is shown for a person with no name on record
+    /// elsewhere (T142); a blank would read as nobody.
+    /// </para>
+    /// </remarks>
+    internal static string? PresentLine(CommitteeReview review, IReadOnlyDictionary<string, string> attendeeNames)
+    {
+        var attendees = review.GetCurrentDecision()?.Attendees;
+        if (attendees is null || attendees.Count == 0)
+        {
+            return null;
+        }
+
+        return string.Join(", ", attendees
+            .OrderBy(attendee => attendee.Role)
+            .ThenBy(attendee => attendee.UserId, StringComparer.Ordinal)
+            .Select(attendee =>
+            {
+                var name = attendeeNames.TryGetValue(attendee.UserId, out var found) ? found : attendee.UserId;
+                return attendee.Role switch
+                {
+                    DecisionPanelMemberRole.Chair => $"{name} (chair)",
+                    DecisionPanelMemberRole.External => $"{name} (external)",
+                    _ => name
+                };
+            }));
+    }
+
+    private static void ComposeReview(IContainer container, CommitteeReview review, IReadOnlyDictionary<string, string> attendeeNames)
     {
         container.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(column =>
         {
@@ -76,6 +116,15 @@ internal static class CommitteeSectionComponent
                         text.Span(currentDecision.Conditions).FontSize(9);
                     });
                 }
+            }
+
+            if (PresentLine(review, attendeeNames) is { } present)
+            {
+                column.Item().Text(text =>
+                {
+                    text.Span("Present: ").FontSize(9).Bold();
+                    text.Span(present).FontSize(9);
+                });
             }
 
             if (review.RatifiedOn.HasValue)

@@ -24,6 +24,16 @@
 }
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="" LoadError="@_loadError">
+  @if (_unseatable > 0)
+  {
+    @* T165. A member who can no longer sit (erased, deactivated, moved, or no longer a committee member) is not offered,
+       so saving takes them off; said before the save, not after it. *@
+    <Alert Kind="warning">
+      @_unseatable member@(_unseatable == 1 ? " of this panel is" : "s of this panel are") no longer an active committee
+      member at its institution, so @(_unseatable == 1 ? "is" : "are") not listed below. Saving takes
+      @(_unseatable == 1 ? "that member" : "them") off the panel.
+    </Alert>
+  }
   <div class="details-grid">
     <section class="detail-card">
       <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
@@ -50,7 +60,8 @@
             @if (_model.Scope == DecisionPanelScope.Institution || _isAdministrator)
             {
               <FormField Label="Institution" InputId="panel-institution" Required="true">
-                <InputSelect id="panel-institution" class="form-select" @bind-Value="_model.InstitutionId">
+                <InputSelect id="panel-institution" class="form-select" @bind-Value="_model.InstitutionId"
+                             @bind-Value:after="OnInstitutionChangedAsync">
                   <option value="">Select institution</option>
                   @foreach (var institution in _institutions)
                   {
@@ -75,7 +86,7 @@
             }
           }
 
-          <FormField Label="Chair" InputId="panel-chair" Required="true">
+          <FormField Label="Chair" InputId="panel-chair" Required="true" HelpText="@ChairHelpText">
             <InputSelect id="panel-chair" class="form-select" @bind-Value="_model.ChairUserId">
               <option value="">Select chair</option>
               @foreach (var candidate in _candidates)
@@ -93,7 +104,11 @@
                 <option value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
               }
             </select>
-            <small class="muted">Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically.</small>
+            <small class="muted">
+              Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically. A panel needs at
+              least one member or external member besides the chair: no committee decision is one person's. Only active
+              committee members at the panel's institution are listed.
+            </small>
           </FormField>
 
           <FormField Label="External members" InputId="panel-external" FullWidth="true">
@@ -128,6 +143,7 @@
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<PanelMemberCandidateDto> _candidates = [];
+  private int _unseatable;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -145,7 +161,6 @@
       _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _candidates = await Sender.Send(new ListPanelMemberCandidatesQuery(authState.User));
 
       if (PanelId.HasValue)
       {
@@ -166,6 +181,9 @@
           ExternalUserIds = panel.Members.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.UserId).ToHashSet(StringComparer.Ordinal)
         };
       }
+
+      // T165: the people this panel may seat, by the rule its save enforces, for the panel's institution.
+      await LoadCandidatesAsync(authState.User);
     }
     catch (Exception exception)
     {
@@ -179,6 +197,48 @@
 
   private static string FormatCandidate(PanelMemberCandidateDto candidate)
     => $"{candidate.FirstName} {candidate.LastName} ({candidate.Email})";
+
+  private string? ChairHelpText
+    => _isAdministrator && !PanelId.HasValue && _model.InstitutionId is null
+      ? "Choose the institution first: a panel seats committee members from its own institution."
+      : null;
+
+  /// <summary>
+  /// The people this panel may seat (<c>PanelSeat</c>, T165), for the panel's institution: an Administrator's choice on a
+  /// new panel, the stored one on an existing panel, and anyone else's own. Anyone selected who is not among them is taken
+  /// out of the selection and counted, so the form never sends a member the save refuses.
+  /// </summary>
+  private async Task LoadCandidatesAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    _candidates = await Sender.Send(new ListPanelMemberCandidatesQuery(user, _model.InstitutionId));
+
+    var seatable = _candidates.Select(candidate => candidate.UserId).ToHashSet(StringComparer.Ordinal);
+    var before = (string.IsNullOrWhiteSpace(_model.ChairUserId) ? 0 : 1) + _model.MemberUserIds.Count + _model.ExternalUserIds.Count;
+
+    if (!seatable.Contains(_model.ChairUserId))
+    {
+      _model.ChairUserId = string.Empty;
+    }
+
+    _model.MemberUserIds.IntersectWith(seatable);
+    _model.ExternalUserIds.IntersectWith(seatable);
+
+    var after = (string.IsNullOrWhiteSpace(_model.ChairUserId) ? 0 : 1) + _model.MemberUserIds.Count + _model.ExternalUserIds.Count;
+    _unseatable = PanelId.HasValue ? before - after : 0;
+  }
+
+  private async Task OnInstitutionChangedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await LoadCandidatesAsync(authState.User);
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
 
   private void OnMembersChanged(ChangeEventArgs e)
   {

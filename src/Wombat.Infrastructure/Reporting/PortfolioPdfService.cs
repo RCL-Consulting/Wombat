@@ -114,7 +114,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
             if (data.CommitteeReviews.Count > 0)
             {
-                column.Item().Element(e => CommitteeSectionComponent.Compose(e, data.CommitteeReviews));
+                column.Item().Element(e => CommitteeSectionComponent.Compose(e, data.CommitteeReviews, data.CommitteeAttendeeNames));
             }
 
             if (data.ActivitiesByType.Count > 0)
@@ -275,12 +275,32 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
         var committeeReviews = await _dbContext.Set<CommitteeReview>()
             .AsNoTracking()
+            // T165: each decision says who took it.
             .Include(review => review.Decisions)
+                .ThenInclude(decision => decision.Attendees)
             .Include(review => review.Panel)
             .Where(review => review.TraineeUserId == request.TraineeUserId)
             .Where(review => review.State == CommitteeReviewState.Ratified || review.State == CommitteeReviewState.Final)
             .OrderByDescending(review => review.ScheduledOn)
             .ToListAsync(cancellationToken);
+
+        // The people recorded as present, by name, in one read (T142's rule: a person is named, not shown by id). The
+        // composer has no database, so it is handed the map.
+        var attendeeIds = committeeReviews
+            .SelectMany(review => review.Decisions.SelectMany(decision => decision.Attendees))
+            .Select(attendee => attendee.UserId)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var committeeAttendeeNames = attendeeIds.Length == 0
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : (await _dbContext.Set<Infrastructure.Identity.WombatIdentityUser>()
+                .AsNoTracking()
+                .Where(user => attendeeIds.Contains(user.Id))
+                .Select(user => new { user.Id, user.FirstName, user.LastName })
+                .ToListAsync(cancellationToken))
+                .Select(user => (user.Id, Name: $"{user.FirstName} {user.LastName}".Trim()))
+                .Where(user => user.Name.Length > 0)
+                .ToDictionary(user => user.Id, user => user.Name, StringComparer.Ordinal);
 
         // F-5-2 / T077: the trainee's active STARs (entrustment authorisations). These are current
         // standing authorisations, so they are not constrained by the activity date filter.
@@ -373,6 +393,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             RungLabels: rungLabels,
             EpaProgress: epaProgress,
             CommitteeReviews: committeeReviews,
+            CommitteeAttendeeNames: committeeAttendeeNames,
             EntrustmentDecisions: entrustmentDecisions,
             MsfReports: msfReports,
             AuditEntries: auditEntries);
@@ -472,6 +493,7 @@ internal sealed record PortfolioData(
     EntrustmentRungLookup RungLabels,
     PortfolioEpaProgress EpaProgress,
     List<CommitteeReview> CommitteeReviews,
+    IReadOnlyDictionary<string, string> CommitteeAttendeeNames,
     List<EntrustmentDecision> EntrustmentDecisions,
     List<MsfCampaignAggregateReportDto> MsfReports,
     List<AuditEntry> AuditEntries);

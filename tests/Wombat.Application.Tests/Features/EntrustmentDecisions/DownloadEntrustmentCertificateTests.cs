@@ -11,6 +11,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
@@ -159,7 +160,8 @@ public sealed class DownloadEntrustmentCertificateTests
             CreatedOn = DateTime.UtcNow,
             Members =
             [
-                new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair }
+                new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair },
+                new DecisionPanelMember { UserId = "member-1", Role = DecisionPanelMemberRole.Member }
             ]
         };
 
@@ -209,14 +211,16 @@ public sealed class DownloadEntrustmentCertificateTests
         dbContext.Set<CommitteeEvidence>().Add(line);
         await dbContext.SaveChangesAsync();
 
-        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
-        await recordHandler.Handle(
-            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        // Staged at the sitting and issued by ratifying: since T165 the only way a STAR is issued.
         await new StagePendingEntrustmentDecisionCommandHandler(dbContext).Handle(
             new StagePendingEntrustmentDecisionCommand(review.Id, null, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
                 "Sufficient evidence.", [line.Id], CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+        var recordHandler = new RecordCommitteeDecisionCommandHandler(
+            dbContext, FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1"));
+        await recordHandler.Handle(
+            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"],
+                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
         var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
         await ratifyHandler.Handle(new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
