@@ -44,7 +44,6 @@ public sealed class MsfWithdrawAnonymisationTests
         campaign.Invitations.Should().HaveCount(Respondents.Length);
         campaign.Invitations.Should().OnlyContain(invitation =>
             invitation.RespondentEmail == null &&
-            !string.IsNullOrWhiteSpace(invitation.RespondentEmailHash) &&
             invitation.AnonymizedOn == campaign.WithdrawnOn);
     }
 
@@ -76,7 +75,6 @@ public sealed class MsfWithdrawAnonymisationTests
         campaign.WithdrawnOn.Should().NotBeNull();
         campaign.Invitations.Should().HaveCount(Respondents.Length).And.OnlyContain(invitation =>
             invitation.RespondentEmail == null &&
-            !string.IsNullOrWhiteSpace(invitation.RespondentEmailHash) &&
             invitation.AnonymizedOn == campaign.WithdrawnOn);
     }
 

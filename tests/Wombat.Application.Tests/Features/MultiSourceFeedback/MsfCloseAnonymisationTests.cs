@@ -72,10 +72,6 @@ public sealed class MsfCloseAnonymisationTests
                 invitation.RespondentEmail.Should().BeNull();
                 invitation.AnonymizedOn.Should().Be(campaign.ClosedOn, "a respondent is anonymised at the close");
             }
-
-            campaigns[byJob].Invitations.Single().RespondentEmailHash
-                .Should().NotBeNullOrWhiteSpace()
-                .And.Be(campaigns[byCommand].Invitations.Single().RespondentEmailHash, "one routine, one hash");
         }
     }
 

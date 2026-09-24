@@ -27,8 +27,7 @@ public sealed class MsfCampaignAnonymityTests
         var report = await handler.Handle(new CloseMsfCampaignCommand(campaign.Id, TestPrincipals.Administrator()), CancellationToken.None);
 
         var invitations = await dbContext.MsfInvitations.OrderBy(invitation => invitation.Id).ToListAsync();
-        invitations.Should().OnlyContain(invitation => invitation.RespondentEmail == null);
-        invitations.Should().OnlyContain(invitation => !string.IsNullOrWhiteSpace(invitation.RespondentEmailHash));
+        invitations.Should().OnlyContain(invitation => invitation.RespondentEmail == null && invitation.AnonymizedOn != null);
 
         report.TotalResponses.Should().Be(3);
         report.Categories.Should().ContainSingle(category => category.Category == MsfRespondentCategory.Consultant && category.IsSuppressed);

@@ -23,23 +23,27 @@ public sealed class MsfCampaignOpenCloseTests
         Assert.All(campaign.Invitations, invitation =>
         {
             Assert.Null(invitation.RespondentEmail);
-            Assert.Equal(64, invitation.RespondentEmailHash?.Length);
             Assert.Equal(ClosedAt, invitation.AnonymizedOn);
         });
-        Assert.Equal(2, campaign.Invitations.Select(invitation => invitation.RespondentEmailHash).Distinct().Count());
     }
 
-    [Fact]
-    public void Close_HashesAnAddress_WhateverItsCaseAndSpacing()
+    /// <summary>
+    /// Closing keeps nothing anyone could compute from a respondent's address: not the address, and not an unsalted
+    /// hash of it, whatever its case and spacing. Until T207 it kept a SHA-256 of the upper-cased address. (T207)
+    /// </summary>
+    [Theory]
+    [InlineData("nurse-1@example.test")]
+    [InlineData("Nurse-1@Example.test")]
+    [InlineData("  nurse-1@example.TEST ")]
+    public void Close_KeepsNoUnsaltedHashOfTheAddress(string address)
     {
-        var first = OpenCampaign(Invitation("Nurse-1@Example.test"));
-        var second = OpenCampaign(Invitation("  nurse-1@example.TEST "));
+        var campaign = OpenCampaign(Invitation(address));
 
-        first.Close(ClosedAt);
-        second.Close(ClosedAt);
+        campaign.Close(ClosedAt);
 
-        Assert.NotNull(first.Invitations.Single().RespondentEmailHash);
-        Assert.Equal(first.Invitations.Single().RespondentEmailHash, second.Invitations.Single().RespondentEmailHash);
+        var invitation = campaign.Invitations.Single();
+        Assert.Equal(ClosedAt, invitation.AnonymizedOn);
+        RespondentAddressTraces.AssertNoneKept(invitation, address);
     }
 
     [Fact]
@@ -47,13 +51,12 @@ public sealed class MsfCampaignOpenCloseTests
     {
         // Close is legal from UnderReview too, so a second close must not re-stamp the first anonymising.
         var anonymised = Invitation(email: null);
-        anonymised.RespondentEmailHash = "EARLIER";
         anonymised.AnonymizedOn = Earlier;
         var campaign = OpenCampaign(anonymised);
 
         campaign.Close(ClosedAt);
 
-        Assert.Equal("EARLIER", anonymised.RespondentEmailHash);
+        Assert.Null(anonymised.RespondentEmail);
         Assert.Equal(Earlier, anonymised.AnonymizedOn);
     }
 

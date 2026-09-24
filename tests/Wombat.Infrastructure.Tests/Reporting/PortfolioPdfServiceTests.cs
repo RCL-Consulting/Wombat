@@ -447,7 +447,6 @@ public sealed class PortfolioPdfServiceTests
             {
                 RespondentCategory = category,
                 TeachingContext = teachingContext,
-                RespondentEmailHash = "hash",
                 TokenHash = Guid.NewGuid().ToString("N"),
                 IssuedOn = new DateTime(2029, 1, 2, 0, 0, 0, DateTimeKind.Utc),
                 ExpiresOn = new DateOnly(2029, 6, 30),

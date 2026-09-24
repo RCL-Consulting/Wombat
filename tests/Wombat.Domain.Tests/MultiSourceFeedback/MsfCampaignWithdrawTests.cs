@@ -35,24 +35,26 @@ public sealed class MsfCampaignWithdrawTests
         Assert.All(campaign.Invitations, invitation =>
         {
             Assert.Null(invitation.RespondentEmail);
-            Assert.Equal(64, invitation.RespondentEmailHash?.Length);
             Assert.Equal(WithdrawnAt, invitation.AnonymizedOn);
         });
-        Assert.Equal(2, campaign.Invitations.Select(invitation => invitation.RespondentEmailHash).Distinct().Count());
     }
 
-    [Fact]
-    public void Withdraw_HashesAnAddressAsCloseDoes()
+    /// <summary>
+    /// Withdrawing keeps nothing anyone could compute from a respondent's address, from every state a campaign can be
+    /// withdrawn from. Until T207 it kept a SHA-256 of the upper-cased address, as closing did. (T207)
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(WithdrawableStates))]
+    public void Withdraw_KeepsNoUnsaltedHashOfTheAddress(MsfCampaignState state)
     {
-        // One routine: the hash a withdrawal leaves is the hash a close would have left for the same address.
-        var withdrawn = Campaign(MsfCampaignState.Open, Invitation("Nurse-1@Example.test"));
-        var closed = Campaign(MsfCampaignState.Open, Invitation("  nurse-1@example.TEST "));
+        const string address = "  Nurse-1@Example.TEST ";
+        var campaign = Campaign(state, Invitation(address));
 
-        withdrawn.Withdraw(WithdrawnAt);
-        closed.Close(WithdrawnAt);
+        campaign.Withdraw(WithdrawnAt);
 
-        Assert.NotNull(withdrawn.Invitations.Single().RespondentEmailHash);
-        Assert.Equal(closed.Invitations.Single().RespondentEmailHash, withdrawn.Invitations.Single().RespondentEmailHash);
+        var invitation = campaign.Invitations.Single();
+        Assert.Equal(WithdrawnAt, invitation.AnonymizedOn);
+        RespondentAddressTraces.AssertNoneKept(invitation, address);
     }
 
     [Fact]
@@ -60,13 +62,12 @@ public sealed class MsfCampaignWithdrawTests
     {
         // Withdraw is legal from UnderReview, which a close reaches having anonymised everyone already.
         var anonymised = Invitation(email: null);
-        anonymised.RespondentEmailHash = "EARLIER";
         anonymised.AnonymizedOn = Earlier;
         var campaign = Campaign(MsfCampaignState.UnderReview, anonymised);
 
         campaign.Withdraw(WithdrawnAt);
 
-        Assert.Equal("EARLIER", anonymised.RespondentEmailHash);
+        Assert.Null(anonymised.RespondentEmail);
         Assert.Equal(Earlier, anonymised.AnonymizedOn);
     }
 

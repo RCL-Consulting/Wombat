@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Wombat.Domain.MultiSourceFeedback;
 
 public sealed class MsfInvitation
@@ -8,7 +5,6 @@ public sealed class MsfInvitation
     public int Id { get; set; }
     public int CampaignId { get; set; }
     public string? RespondentEmail { get; set; }
-    public string? RespondentEmailHash { get; set; }
     public MsfRespondentCategory RespondentCategory { get; set; }
 
     /// <summary>
@@ -25,7 +21,7 @@ public sealed class MsfInvitation
     /// <para>
     /// On the invitation rather than asked of the respondent. The coordinator knows where the teaching happened and
     /// types it the same way for each learner of one group, which is what makes the count mean something; a free-text
-    /// answer from each learner would count spellings. It is kept when the campaign closes and the address is hashed:
+    /// answer from each learner would count spellings. It is kept when the campaign closes and the address is erased:
     /// it names a teaching session, not a person, and no report breaks answers down by it.
     /// </para>
     /// </remarks>
@@ -148,14 +144,23 @@ public sealed class MsfInvitation
     }
 
     /// <summary>
-    /// Replaces the respondent's address with a one-way hash of it. An invitation already anonymised is left as it
-    /// was, so its first <see cref="AnonymizedOn" /> stands.
+    /// Erases the respondent's address, keeping nothing derived from it. An invitation already anonymised is left as
+    /// it was, so its first <see cref="AnonymizedOn" /> stands.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The one place a respondent is anonymised. <see cref="MsfCampaign.Close" /> calls it for every invitation, and
     /// both ways a campaign closes (the coordinator's close command and the hourly auto-close job) go through that, so
     /// the two cannot drift apart. Until T184 the job carried its own copy of this routine. <see cref="MsfCampaign.Withdraw" />
     /// calls it too (T202).
+    /// </para>
+    /// <para>
+    /// Until T207 it kept an unsalted SHA-256 of the upper-cased address in its place. Nothing ever read it, and anyone
+    /// holding the list of invited addresses could hash each one and match it to its row, and so to the answers given
+    /// on that invitation: a pseudonym, not anonymity. Nothing needs to recognise a respondent after the campaign
+    /// closes, so the address goes and nothing stands in for it. A respondent pseudonym, should one ever be needed,
+    /// is an HMAC-SHA256 keyed with <c>Wombat__PseudonymSalt</c>, never a bare hash of the address.
+    /// </para>
     /// </remarks>
     public void Anonymize(DateTime utcNow)
     {
@@ -164,8 +169,6 @@ public sealed class MsfInvitation
             return;
         }
 
-        RespondentEmailHash = Convert.ToHexString(
-            SHA256.HashData(Encoding.UTF8.GetBytes(RespondentEmail.Trim().ToUpperInvariant())));
         RespondentEmail = null;
         AnonymizedOn = utcNow;
     }

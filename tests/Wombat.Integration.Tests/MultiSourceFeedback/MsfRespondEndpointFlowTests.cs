@@ -19,12 +19,15 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Application.Features.Scheduling.Commands.RunScheduledJobNow;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Domain.Scheduling;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Scheduling;
+using Wombat.Infrastructure.Scheduling.Jobs;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -371,8 +374,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var invitations = await dbContext.MsfInvitations.OrderBy(invitation => invitation.Id).ToListAsync();
-            invitations.Should().OnlyContain(invitation => invitation.RespondentEmail == null);
-            invitations.Should().OnlyContain(invitation => !string.IsNullOrWhiteSpace(invitation.RespondentEmailHash));
+            invitations.Should().OnlyContain(invitation => invitation.RespondentEmail == null && invitation.AnonymizedOn != null);
 
             // A coordinator reviews between close and release, so the two are normally days apart. Here they run
             // seconds apart, on one UTC day, and evidence dated from the release would pass the ObservedOn check
@@ -561,10 +563,151 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         activity.Transitions.Single(entity => entity.TransitionKey == "record").CreditedItemCount.Should().BeNull();
         (await dbContext.CurriculumItemProgresses.CountAsync()).Should().Be(0);
 
-        // Kept through the close that hashed every address: a teaching session, not a person.
+        // Kept through the close that anonymised every address: a teaching session, not a person.
         (await dbContext.MsfInvitations.Where(invitation => invitation.CampaignId == campaign.Id)
                 .Select(invitation => invitation.TeachingContext).ToListAsync())
             .Should().BeEquivalentTo(["Ward round", "ward round", "Student tutorial"]);
+    }
+
+    /// <summary>
+    /// T207, end to end on PostgreSQL through the Api host: a campaign closed by hand, one closed by the auto-close job and
+    /// one withdrawn leave nothing in any table of the schema that anyone could compute from a respondent's address alone.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every step goes through <see cref="ISender" />, so <c>AuditPipelineBehavior</c> writes a row for each command, and
+    /// the search covers the audit trail, the log kept longest (T184), as well as the invitations. The job runs as "Run
+    /// now" runs it, through the dispatcher, which writes the job's run row. One respondent is invited to all three
+    /// campaigns and answers each through the live endpoint, so the responses and the anonymous submits' audit rows are
+    /// searched too.
+    /// </para>
+    /// <para>
+    /// Until T207 each closed invitation kept an unsalted SHA-256 of its upper-cased address. The search looks for that
+    /// and every other unkeyed digest of the address, and for the address itself (<see cref="RespondentTraceSearch" />).
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public async Task ClosingByHand_AutoClosing_AndWithdrawing_ThroughTheApp_LeaveNoTraceOfARespondentsAddress()
+    {
+        const string InvitedToEvery = "Peer.Everywhere@Example.test";
+        const string ClosedByHand = "nurse.closed-by-hand@example.test";
+        const string ClosedByTheJob = "Consultant.Auto-Closed@EXAMPLE.test";
+        const string Withdrawn = "nurse.withdrawn@example.TEST";
+        string[] addresses = [InvitedToEvery, ClosedByHand, ClosedByTheJob, Withdrawn];
+
+        var template = await SendAsync(new CreateMsfTemplateCommand(
+            "Annual MSF",
+            null,
+            false,
+            [
+                new CreateMsfTemplateQuestionItem("Rates the trainee's overall professional performance.", MsfQuestionType.Scale, null, true),
+                new CreateMsfTemplateQuestionItem("What should the trainee keep doing or improve?", MsfQuestionType.LongText, null, false)
+            ]));
+
+        async Task<int> OpenCampaignAsync(string respondent, MsfRespondentCategory category)
+        {
+            var campaign = await SendAsync(new CreateMsfCampaignCommand(
+                "trainee-1",
+                template.Id,
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                1,
+                1,
+                1,
+                [_coveredEpaId],
+                "coordinator-1",
+                _coordinator));
+
+            await SendAsync(new AddMsfInvitationCommand(campaign.Id, respondent, category, _coordinator));
+            await SendAsync(new AddMsfInvitationCommand(campaign.Id, InvitedToEvery, MsfRespondentCategory.PeerDoctor, _coordinator));
+            await SendAsync(new OpenMsfCampaignCommand(campaign.Id, _coordinator));
+            return campaign.Id;
+        }
+
+        var closedByHand = await OpenCampaignAsync(ClosedByHand, MsfRespondentCategory.Nurse);
+        var closedByTheJob = await OpenCampaignAsync(ClosedByTheJob, MsfRespondentCategory.Consultant);
+        var withdrawn = await OpenCampaignAsync(Withdrawn, MsfRespondentCategory.Nurse);
+
+        var answeredOnEvery = Factory.EmailSender.Messages.Where(message => message.To == InvitedToEvery).ToList();
+        answeredOnEvery.Should().HaveCount(3, "guard: the respondent on every campaign is sent a link to each");
+        foreach (var message in answeredOnEvery)
+        {
+            var link = $"/msf/respond?token={Uri.EscapeDataString(ExtractToken(message.TextBody))}";
+            var form = await Client.GetFromJsonAsync<MsfResponseFormDto>(link);
+            (await Client.PostAsJsonAsync(link, new MsfRespondSubmission
+            {
+                Answers = form!.Questions.Select(question => question.Type == MsfQuestionType.Scale
+                        ? new MsfRespondAnswerRequest { QuestionId = question.QuestionId, ScaleValue = 4 }
+                        : new MsfRespondAnswerRequest { QuestionId = question.QuestionId, LongText = "Steady under pressure." })
+                    .ToList()
+            })).StatusCode.Should().Be(HttpStatusCode.OK, "guard: the respondent answers on each campaign");
+        }
+
+        foreach (var address in addresses)
+        {
+            (await RespondentTraceSearch.TracesAsync(SchemaConnectionString, address))
+                .Should().NotBeEmpty($"guard: the search finds {address} while it is stored");
+        }
+
+        await SendAsync(new CloseMsfCampaignCommand(closedByHand, _coordinator));
+
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            // Its window shut two days ago, so the job's next run closes it.
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await dbContext.MsfCampaigns
+                    .Where(entity => entity.Id == closedByTheJob)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(
+                        entity => entity.ClosesOn, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2)))))
+                .Should().Be(1);
+        }
+
+        var autoClose = Factory.Services.GetRequiredService<MsfCampaignAutoCloseJob>().Key;
+        await SendAsync(new RunScheduledJobNowCommand(autoClose, "admin-1"));
+
+        await SendAsync(new WithdrawMsfCampaignCommand(withdrawn, _coordinator));
+
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            (await dbContext.MsfCampaigns.AsNoTracking().ToDictionaryAsync(entity => entity.Id, entity => entity.State))
+                .Should().Equal(new Dictionary<int, MsfCampaignState>
+                {
+                    [closedByHand] = MsfCampaignState.UnderReview,
+                    [closedByTheJob] = MsfCampaignState.UnderReview,
+                    [withdrawn] = MsfCampaignState.Withdrawn
+                }, "guard: each campaign went the way it was sent");
+
+            (await dbContext.MsfInvitations.AsNoTracking().ToListAsync())
+                .Should().HaveCount(6).And.OnlyContain(invitation =>
+                    invitation.RespondentEmail == null && invitation.AnonymizedOn != null);
+            (await dbContext.MsfResponses.CountAsync()).Should().Be(3, "guard: the answers are kept, and searched");
+
+            // The rows the search must reach for it to mean anything: the job's run, and an audit row for every step.
+            (await dbContext.ScheduledJobRuns.AsNoTracking().ToListAsync()).Should().ContainSingle(run =>
+                run.Key == autoClose && run.Status == ScheduledJobRunStatus.Succeeded,
+                "guard: the job ran through the dispatcher, and its run row is searched");
+            var audited = await dbContext.AuditEntries.AsNoTracking()
+                .GroupBy(entry => entry.Action)
+                .Select(group => new { Action = group.Key, Count = group.Count() })
+                .ToDictionaryAsync(group => group.Action, group => group.Count);
+            audited.Should().Contain(new Dictionary<string, int>
+            {
+                [nameof(AddMsfInvitationCommand)] = 6,
+                [nameof(OpenMsfCampaignCommand)] = 3,
+                [nameof(SubmitMsfResponseCommand)] = 3,
+                [nameof(CloseMsfCampaignCommand)] = 1,
+                [nameof(RunScheduledJobNowCommand)] = 1,
+                [nameof(WithdrawMsfCampaignCommand)] = 1
+            }, "guard: every step went through the audit pipeline, and its rows are searched");
+        }
+
+        foreach (var address in addresses)
+        {
+            (await RespondentTraceSearch.TracesAsync(SchemaConnectionString, address))
+                .Should().BeEmpty($"nothing computable from {address} alone may outlive its anonymising");
+        }
     }
 
     private async Task<int> EpaIdAsync(string code)
@@ -708,7 +851,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             .ToListAsync();
         invitations.Should().HaveCount(2);
         invitations.Should().OnlyContain(invitation =>
-            invitation.RespondentEmail == null && invitation.RespondentEmailHash != null && invitation.AnonymizedOn != null);
+            invitation.RespondentEmail == null && invitation.AnonymizedOn != null);
     }
 
     /// <summary>

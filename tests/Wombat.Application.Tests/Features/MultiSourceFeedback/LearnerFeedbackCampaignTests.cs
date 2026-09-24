@@ -593,7 +593,6 @@ public sealed class LearnerFeedbackCampaignTests
         {
             RespondentCategory = category,
             TeachingContext = teachingContext,
-            RespondentEmailHash = "hash",
             TokenHash = Guid.NewGuid().ToString("N"),
             IssuedOn = DateTime.UtcNow.AddDays(-20),
             ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2),

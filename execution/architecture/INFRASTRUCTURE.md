@@ -138,6 +138,28 @@ ConnectionStrings__DefaultConnection=Host=127.0.0.1;Database=wombat;Username=wom
 > would fall through to whatever `appsettings.json` provides and silently target the wrong
 > database. (T097 removed the committed dev fallback, so it now fails fast instead.)
 
+### After a migration that removes personal data
+
+A migration that drops or nulls a column does not take the old values off the disk. `DROP COLUMN`
+only hides the column: each value stays in its row until the row is next written. An `UPDATE`
+leaves the old row version behind as a dead row, and a plain `VACUUM` frees that space without
+overwriting it. Only a table rewrite removes the old bytes, so run one after the deploy that applies
+the migration:
+
+```bash
+sudo -u postgres psql -d wombat -c 'VACUUM FULL "MsfInvitations";'   # T207
+```
+
+`VACUUM FULL` locks the table while it runs; these tables are small. Two copies are out of its reach:
+
+- **The WAL.** Old segments are recycled after the next checkpoints.
+- **Dumps taken before the deploy.** They age out with the backup rotation (§ Backups), which keeps
+  them up to six months.
+
+| Migration | Table | What it removed |
+|---|---|---|
+| T207 (`T207_DropMsfRespondentEmailHash`) | `MsfInvitations` | The unsalted SHA-256 of each anonymised MSF respondent's address. The migration rewrites every row that held one, then drops the column. |
+
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):
