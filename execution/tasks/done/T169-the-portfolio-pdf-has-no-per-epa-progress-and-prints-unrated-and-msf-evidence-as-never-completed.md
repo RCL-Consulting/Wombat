@@ -1,11 +1,12 @@
 ---
 id: T169
 title: The portfolio PDF has no per-EPA progress, and prints unrated and MSF evidence as never completed
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T169 — The portfolio PDF has no per-EPA progress and counts only the literal state 'completed'
@@ -43,14 +44,45 @@ Observed at `431e69e`:
 
 ## Verification
 
-- [ ] A trainee with one discussed reflective exercise, one recorded MSF row and one logged procedure shows each as
+- [x] A trainee with one discussed reflective exercise, one recorded MSF row and one logged procedure shows each as
       completed in the summary. PDF component test.
-- [ ] The export has a per-EPA section whose counts match the progress page for the same trainee and period. Test, and a
+- [x] The export has a per-EPA section whose counts match the progress page for the same trainee and period. Test, and a
       check of a dev export against `/portfolio/progress`.
-- [ ] The existing determinism test stays green.
-- [ ] Full suite green, no `--no-build`.
+- [x] The existing determinism test stays green.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 [T023] (portfolio export), [T077]-[T080], [T130], [T135] (the terminal-state predicate), [T161] (undated lines in the
 same PDF), [T166], [T168].
+
+---
+
+## As built — 2026-09-24
+
+- **"Progress per EPA" section** (`PortfolioEpaProgress`, `EpaProgressSectionComponent`). It reads the same
+  per-period targets as the progress page (`TraineeQuotaProgressReader.ReadForProfileAsync`) for the profile the cover
+  names (`PreferredProfiles`, active or not), plus the trajectory's attributed ratings.
+  - The read day is the earliest of today, the export's last day, and a completed programme's completion day.
+  - A running period reads "N of M so far; K more by …". "Met" and "short" appear only once a period has ended.
+  - A row with no target says why: no programme, not in the curriculum, or deactivated (T158).
+- **Summary completeness** counts an activity as complete in any terminal state of its pinned workflow (D44).
+- **Test determinism.** The determinism test found that concurrent QuestPDF renders can wipe the text layer; the three
+  PDF test classes now share a non-parallel collection. The production side is filed as [T200].
+
+**Browser on dev (trainee, 2026-09-24):**
+- The open-ended export's section matches `/portfolio/progress` for PAED-001 (5 of 3 so far, met; 2 of 3 in S1, 1
+  short; 7 ratings from 2 assessors, latest 3a), PAED-006, PAED-011 and PAED-002.
+- Every current-period line reads "so far".
+- The summary counts the reflective exercise (activity 32, `discussed`), the journal club (`logged`) and 6 recorded MSF
+  rows as complete.
+- Undated lines are marked.
+- An export from 2027-02-01 prints "Periods: none within this export's dates".
+- PyMuPDF extracts 3,334 words from 17 pages: the text layer is intact.
+
+**Filed from the review:**
+- [T200] the PDF render race;
+- [T203] the literal-`completed` dashboards, and the partial-end rule;
+- [T185] the profile picks.
+
+The operator should know that an open-ended export's bytes change daily, because the read day is today.

@@ -12,7 +12,6 @@
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
-| queued | [T184](tasks/queued/T184-msf-respondent-emails-are-written-to-the-audit-log-and-opening-a-campaign-sends-mail-after-the-mutation.md) | P2 | MSF: respondent emails are written to the audit log, and opening a cam |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T200](tasks/queued/T200-pdfs-rendered-at-the-same-time-can-lose-their-text-layer-questpdf-so-an-export-may-be-unsearchable-and-unreadable-to-a-screen-reader.md) | P2 | PDFs rendered at the same time can lose their text layer (QuestPDF), s |  |
@@ -41,7 +40,6 @@
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
 | queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
 | queued | [T168](tasks/queued/T168-no-surface-shows-per-epa-and-period-whether-an-msf-covered-it.md) | P3 | No surface shows, per EPA and period, whether an MSF covered it |  |
-| queued | [T169](tasks/queued/T169-the-portfolio-pdf-has-no-per-epa-progress-and-prints-unrated-and-msf-evidence-as-never-completed.md) | P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF  |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
@@ -62,7 +60,7 @@
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
 
-Done: 133 task(s).
+Done: 135 task(s).
 
 ## From STATE.md
 
@@ -78,9 +76,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+45e7ed7 docs(execution): file T200–T203 from the T169 and T184 reviews (PDF render race, audit on a failed save, MSF withdraw/respondent path, terminal-state dashboards)
 d640787 fix(msf): respondent emails are redacted from the audit log, a failed invitation send leaves the campaign unopened, and one routine anonymises (T184)
 3c31fe5 feat(reporting): the portfolio PDF shows per-EPA progress against the period targets, and counts finished unrated and MSF evidence as complete (T169)
 21096e4 docs(execution): T131's design — judged from three proposals; six build slices; operator questions O1–O8 each with a default
 c4fa3be docs(execution): handoff progress
-6652c6d docs(execution): close T142, T173, T161, T158, T176, T182 and T183 — browser-verified on dev (activity 31, campaign 4, PAED-014 deactivated and restored); file T199
 ```
