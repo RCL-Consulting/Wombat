@@ -293,6 +293,30 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
                 others.Should().NotBeEmpty("guard: DataSeeder's demo curriculum item is the control");
                 others.Should().OnlyContain(item => item.PermittedToolsJson == null, "no tool list is declared for the demo curriculum");
 
+                // The create path is the only path that pins (T174), so a fresh database must come out of it pinned.
+                var ladderId = await db.EntrustmentScales.AsNoTracking()
+                    .Where(scale => scale.Name == "CPSA Paediatric Entrustment Scale v11.1")
+                    .Select(scale => scale.Id)
+                    .SingleAsync();
+                (await db.CurriculumItems.AsNoTracking()
+                        .Where(item => item.Curriculum.Name == PaediatricCurriculumName
+                                       && item.Curriculum.Version == CatalogueVersion
+                                       && item.OwningInstitutionId == null)
+                        .Select(item => item.ScaleId)
+                        .ToListAsync())
+                    .Should().HaveCount(15).And.OnlyContain(scaleId => scaleId == ladderId, "the seeder pins each item it creates to the v11.1 ladder");
+
+                // And DataSeeder's demo item to the O-R Scale, by the same rule.
+                var orScaleId = await db.EntrustmentScales.AsNoTracking()
+                    .Where(scale => scale.Name == DataSeeder.OrScaleName)
+                    .Select(scale => scale.Id)
+                    .SingleAsync();
+                (await db.CurriculumItems.AsNoTracking()
+                        .Where(item => item.Curriculum.Name == "IM Core Curriculum" && item.Epa.Code == "EPA-001")
+                        .Select(item => item.ScaleId)
+                        .SingleAsync())
+                    .Should().Be(orScaleId, "DataSeeder pins the demo item it creates to the O-R Scale");
+
                 var tools = await db.WbaTools.AsNoTracking().Select(tool => new { tool.Key, tool.Name, tool.Description }).ToListAsync();
 
                 // Ordered here, not in SQL: the database collation does not sort "chart_stimulated_recall" ordinally.
@@ -579,7 +603,8 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
     /// <summary>
     /// A database as T122 found dev: stopped at T130 and filled by raw SQL in that shape. The demo tree
     /// <see cref="DataSeeder" /> expects is there, the CPSA discipline with its v11.1 curriculum at the Annexure B
-    /// targets, every seeded activity type with its real published payloads, and the decoys.
+    /// targets and pinned to the v11.1 ladder, every seeded activity type with its real published payloads, and the
+    /// decoys.
     /// </summary>
     private async Task<PreT122Fixture> ArrangePopulatedPreT122DatabaseAsync()
     {
@@ -655,6 +680,25 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
             {
                 catalogueItems[code] = await InsertCurriculumItemAsync(connection, catalogueCurriculum, epaIds[code], period, target, owningInstitutionId: null);
             }
+
+            // The v11.1 ladder, with the fifteen items pinned to it, as the seeder created them (T109). Since T174 no boot
+            // pins an existing item, so without this the fixture would be a database whose items an administrator had
+            // unpinned, and the seeder would rightly announce all fifteen. The decoys stay unpinned: none is the
+            // catalogue's item, so the pin check does not reach them.
+            var ladderId = await InsertAsync(connection,
+                """INSERT INTO "EntrustmentScales" ("Name") VALUES ('CPSA Paediatric Entrustment Scale v11.1') RETURNING "Id" """);
+            string[] rungs = ["1", "2", "3a", "3b", "4", "5"];
+            for (var order = 1; order <= rungs.Length; order++)
+            {
+                await ExecuteAsync(connection,
+                    """INSERT INTO "EntrustmentLevels" ("ScaleId", "Order", "Label") VALUES ($1, $2, $3)""",
+                    ladderId, order, rungs[order - 1]);
+            }
+
+            (await ExecuteAsync(connection,
+                    """UPDATE "CurriculumItems" SET "ScaleId" = $1 WHERE "Id" = ANY($2)""",
+                    ladderId, catalogueItems.Values.ToArray()))
+                .Should().Be(15, "guard: exactly the fifteen catalogue items are pinned");
 
             // Pins the two "OwningInstitutionId" IS NULL clauses together: an institution's local EPA may reuse a
             // national code. The item-side clause cannot be pinned alone here, because every catalogue EPA already

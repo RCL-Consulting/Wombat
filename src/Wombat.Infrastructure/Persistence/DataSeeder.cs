@@ -212,17 +212,10 @@ public sealed class DataSeeder
 
         // Provenance pin (T109). MinimumLevelOrder = 4 above means "Independent" on the O-R Scale this
         // method seeds, and this seeder is the only author of that number, so it is the one place that
-        // can state the ladder without guessing. Applied to rows seeded before T109 too — pinning is
-        // idempotent and nothing else may infer it.
-        //
-        // Scoped to the single EPA this seeder authors. An admin who adds their own item to the demo
-        // curriculum chose their own minima, on a ladder this seeder has no way to know.
-        foreach (var item in curriculum.Items.Where(entity => entity.EpaId == epa.Id && entity.ScaleId is null))
-        {
-            item.ScaleId = scale.Id;
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        // can state the ladder without guessing. It is stamped on the two create paths above and on no
+        // later boot (T174): an existing item that differs is announced, never written. A database whose
+        // item predates T109 was pinned once by the T174 migration.
+        await WarnWhereTheDemoItemScalePinDiffersAsync(curriculum, epa, scale, cancellationToken);
 
         return new DemoSeedContext(institution.Id, specialityId, subSpecialityId, epa.Id);
     }
@@ -317,6 +310,59 @@ public sealed class DataSeeder
                 storedKey ?? "(none)",
                 entry.WbaToolKey ?? "(none)");
         }
+    }
+
+    /// <summary>
+    /// Logs, and never writes, when the demo curriculum's own item is not pinned to the <see cref="OrScaleName" />
+    /// ladder its seeded minimum is written on (T174).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Before T174 every boot pinned this item whenever its <c>ScaleId</c> was null, keeping its minima and skipping
+    /// the check the item editor runs (<c>CurriculumMappings.EnsureScaleCanExpressMinimaAsync</c>). An administrator
+    /// who had chosen "Not pinned" (T125) and entered 8 found the item on the O-R Scale after a restart, where 8 is no
+    /// rung, so it could never be credited. Null is a deliberate, permanent state as well as a gap, and a boot cannot
+    /// tell the two apart, so the pin is stamped on create only. <c>PaediatricCatalogueSeeder</c> keeps the same
+    /// contract for the v11.1 items.
+    /// </para>
+    /// <para>
+    /// Scoped, as the stamp is, to the one item on the EPA this seeder authors. An administrator's own item in the
+    /// demo curriculum was written on a ladder this seeder cannot know, so there is nothing for it to differ from.
+    /// </para>
+    /// </remarks>
+    private async Task WarnWhereTheDemoItemScalePinDiffersAsync(
+        Curriculum curriculum,
+        Epa epa,
+        EntrustmentScale scale,
+        CancellationToken cancellationToken)
+    {
+        var item = curriculum.Items.FirstOrDefault(entity => entity.EpaId == epa.Id);
+        if (item is null || item.ScaleId == scale.Id)
+        {
+            return;
+        }
+
+        var storedScale = "not pinned to any scale";
+        if (item.ScaleId is int storedScaleId)
+        {
+            // Named, not only numbered, so the line says which ladder without a second query by whoever reads it.
+            var storedName = await _dbContext.EntrustmentScales
+                .AsNoTracking()
+                .Where(entity => entity.Id == storedScaleId)
+                .Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+            storedScale = storedName is null
+                ? $"pinned to scale {storedScaleId}"
+                : $"pinned to '{storedName}' (scale {storedScaleId})";
+        }
+
+        _logger.LogWarning(
+            "Curriculum item {CurriculumItemId} ({EpaCode}) in '{CurriculumName}' is {StoredScale}, but its seeded minimum is written on {ExpectedScale}. Not changed: this seeder pins an item's scale only when it creates the item, because re-pinning an existing item changes what its stored minima mean.",
+            item.Id,
+            epa.Code,
+            curriculum.Name,
+            storedScale,
+            $"'{scale.Name}' (scale {scale.Id})");
     }
 
     private sealed record DemoSeedContext(

@@ -376,39 +376,91 @@ public sealed class PaediatricCatalogueSeeder
                 continue;
             }
 
+            // The provenance pin (T109) is stamped here, on create, and nowhere else (T174).
             curriculum.Items.Add(BuildCurriculumItem(epaId, scaleId, seed));
-        }
-
-        // Provenance pin (T109). Every minimum in this curriculum is read straight out of EPA v11.1, whose
-        // rungs ARE the six-rung ladder EnsureScaleAsync seeds, so this seeder knows the ladder for certain
-        // — which nothing downstream does.
-        //
-        // Scoped to the EPAs THIS CATALOGUE declares, not to `OwningInstitutionId is null`. National core
-        // is not a synonym for seeded: a CollegeAdmin may add their own national item to this curriculum
-        // through the admin UI, and its minima were authored against a ladder this seeder cannot know.
-        // Pinning those would assert something untrue, and a wrong pin refuses credit for ever.
-        //
-        // Deliberately NOT derived from SubSpeciality.DefaultEntrustmentScaleId, even though
-        // EnsureDefaultScaleAsync has just set it to this very scale. That field is a committee-picker
-        // default an admin may change at any time, and reading it back would silently re-pin a whole
-        // curriculum the next time someone did.
-        var seededEpaIds = catalogue.Epas
-            .Select(seed => epaIdsByCode.TryGetValue(seed.Code, out var id) ? id : 0)
-            .Where(id => id > 0)
-            .ToHashSet();
-
-        foreach (var item in curriculum.Items.Where(entity =>
-                     entity.OwningInstitutionId is null &&
-                     entity.ScaleId is null &&
-                     seededEpaIds.Contains(entity.EpaId)))
-        {
-            item.ScaleId = scaleId;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         WarnWhereTargetsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
         WarnWhereToolListsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
+        await WarnWhereScalePinsDifferFromTheCatalogueAsync(curriculum, catalogue, epaIdsByCode, scaleId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Logs, and never writes, every seeded item that is not pinned to the ladder EPA v11.1's minima are written on
+    /// (T174).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The pin (T109) says which ladder an item's stored minima are ordinals on. It is stamped when this seeder creates
+    /// the item (<see cref="BuildCurriculumItem" />), and on no later boot. Before T174 every boot pinned any seeded
+    /// item whose <c>ScaleId</c> was null, without resetting its minima and without the check the item editor runs
+    /// (<c>CurriculumMappings.EnsureScaleCanExpressMinimaAsync</c>). An administrator who had chosen "Not pinned" and
+    /// entered 4 and 8 (both valid unpinned) found the item pinned again after a restart: 4 now meant 3b, and 8 was no
+    /// rung at all, so the item could never be credited. Null is also a deliberate, permanent state (unpinned items
+    /// compare ordinals as before T109), so a boot-time <c>is null</c> backfill cannot tell a choice from a gap. The
+    /// same contract as the target and tool-list passes: seeds stamp on create, and a later change reaches an existing
+    /// database only through a migration.
+    /// </para>
+    /// <para>
+    /// Scoped to the EPAs this catalogue declares, as those passes are. National core is not a synonym for seeded: a
+    /// CollegeAdmin may add their own national item to this curriculum, on a ladder this seeder cannot know, and there
+    /// is nothing for it to differ from. The expected ladder is the one <see cref="EnsureScaleAsync" /> returned, and
+    /// deliberately NOT <c>SubSpeciality.DefaultEntrustmentScaleId</c>: that is a committee-picker default an
+    /// administrator may change at any time.
+    /// </para>
+    /// </remarks>
+    private async Task WarnWhereScalePinsDifferFromTheCatalogueAsync(
+        Curriculum curriculum,
+        CatalogueSeed catalogue,
+        IReadOnlyDictionary<string, int> epaIdsByCode,
+        int scaleId,
+        CancellationToken cancellationToken)
+    {
+        var differing = new List<(string Code, CurriculumItem Item)>();
+        foreach (var seed in catalogue.Epas)
+        {
+            if (!epaIdsByCode.TryGetValue(seed.Code, out var epaId))
+            {
+                continue;
+            }
+
+            var item = curriculum.Items.FirstOrDefault(entity => entity.EpaId == epaId && entity.OwningInstitutionId is null);
+            if (item is not null && item.ScaleId != scaleId)
+            {
+                differing.Add((seed.Code, item));
+            }
+        }
+
+        if (differing.Count == 0)
+        {
+            return;
+        }
+
+        // Named, not only numbered, so the line says which ladder without a second query by whoever reads it.
+        var scaleIds = differing
+            .Select(entry => entry.Item.ScaleId)
+            .OfType<int>()
+            .Append(scaleId)
+            .Distinct()
+            .ToArray();
+        var scaleNames = await _dbContext.EntrustmentScales
+            .AsNoTracking()
+            .Where(entity => scaleIds.Contains(entity.Id))
+            .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
+
+        string Describe(int id) => scaleNames.TryGetValue(id, out var name) ? $"'{name}' (scale {id})" : $"scale {id}";
+
+        foreach (var (code, item) in differing)
+        {
+            _logger.LogWarning(
+                "Curriculum item {CurriculumItemId} ({EpaCode}) is {StoredScale}, but EPA v11.1's minima are written on {ExpectedScale}. Not changed: this seeder pins an item's scale only when it creates the item, because re-pinning an existing item changes what its stored minima mean.",
+                item.Id,
+                code,
+                item.ScaleId is int stored ? $"pinned to {Describe(stored)}" : "not pinned to any scale",
+                Describe(scaleId));
+        }
     }
 
     /// <summary>
@@ -531,7 +583,10 @@ public sealed class PaediatricCatalogueSeeder
         {
             EpaId = epaId,
             OwningInstitutionId = null,
-            // The ladder v11.1's minima are expressed on (T109).
+            // The ladder v11.1's minima are expressed on (T109). Pinned here, on create, and never by a later boot:
+            // re-pinning an existing item would change what its stored minima mean (T174). Every minimum below is
+            // read straight out of EPA v11.1, whose rungs ARE the ladder EnsureScaleAsync seeds, so this seeder knows
+            // the ladder for certain, which nothing downstream does.
             ScaleId = scaleId,
             // The published target PER WINDOW (T130, D18): three per semester for PAED-001, one per academic
             // year for PAED-008. Before T130 this was the annual figure multiplied by four programme years,
