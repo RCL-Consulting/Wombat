@@ -6,7 +6,6 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -154,70 +153,29 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             query = query.Where(activity => activity.ObservedOn <= to);
         }
 
-        // Gated on what the type DECLARES, not on whether its key is one this list has heard of.
-        // That retires the hard-coded family list as a gate: an institution's own rated tool
-        // charts the moment it declares `rated_level_field`, which is the KNOWN LIMITATION above.
-        // Its source is classified by the instrument it declares (WbaToolKey, T144), which
-        // RatedActivityTypes.LoadAsync reads. Classified once per type, not once per row.
-        var typeIds = await query
-            .Select(activity => activity.ActivityTypeId)
-            .Distinct()
-            .ToArrayAsync(cancellationToken);
+        // What a rating is, and which rows hold one, is AttributedRatings' answer, shared with the entrustment
+        // standing (T166): a terminal state of the pinned workflow (D44), the pinned schema's declared rated field, the
+        // stamped EPA (T137), and the assessor RatedEvidenceProfile names (T135, T150). The rows it reads are the ones
+        // this handler confined above, so the read rule is applied here, where the boundary test can see it.
+        var ratings = await AttributedRatings.ReadAsync(_dbContext, query, cancellationToken);
 
-        var verdicts = await RatedActivityTypes.LoadAsync(_dbContext, typeIds, cancellationToken);
-        var ratedTypeIds = verdicts
-            .Where(entry => entry.Value.IsRated)
-            .Select(entry => entry.Key)
-            .ToArray();
-
-        var activities = await query
-            .Where(activity => ratedTypeIds.Contains(activity.ActivityTypeId))
-            .ToListAsync(cancellationToken);
-
-        // The same reading the committee sampling report makes, from the same profiles (T135, T150, T106 item 9):
-        // only a terminal state of the pinned workflow is an observation (D44), so a draft, a request, and a rating
-        // an assessor wrote and then declined are not plotted; the rating is the pinned schema's declared field, not
-        // the literal `overall`/`overall_level`; the EPA is the one stamped on the activity (EpaId, T137), not a key
-        // read out of its data; and the assessor is the one RatedEvidenceProfile names (whoever may write that field,
-        // else whoever finishes the record). A row that names no assessor (an MSF, D36, or a rating the trainee wrote
-        // themselves) or whose rating is empty is not an observation by an assessor and is not drawn; one stamped with
-        // no EPA is about no EPA, and has no trajectory to be drawn on.
-        var profiles = await RatedEvidenceProfiles.LoadAsync(
-            _dbContext,
-            activities.Select(activity => (activity.ActivityTypeId, activity.SchemaVersion)),
-            cancellationToken);
-
-        var rawPoints = new List<(int EpaId, TrajectoryPointDto Point)>();
-        foreach (var activity in activities)
-        {
-            var profile = profiles[(activity.ActivityTypeId, activity.SchemaVersion)];
-            if (!profile.IsEvidence(activity.CurrentState))
-            {
-                continue;
-            }
-
-            var reading = profile.Read(activity.CurrentState, activity.EpaId, activity.DataJson);
-            if (reading.Outcome != RatedEvidenceOutcome.Attributed)
-            {
-                continue;
-            }
-
-            var source = verdicts[activity.ActivityTypeId].SourceBucket;
-            var epaId = reading.EpaId;
-            var rating = reading.Rating;
-            var assessorUserId = reading.AssessorUserId;
-
-            // The x-axis is the encounter date the clinician stated, which is what this chart has always
-            // claimed to plot and never did — it plotted CreatedOn, the audit clock. (T119)
-            //
-            // Where nobody stated one (ObservedOnSource == CreatedOn) the point still sits on the filing day,
-            // and says so: the chart's tooltip and table mark it as undated evidence (T161, D28, T119 D4).
-            var observedOn = activity.ObservedOn;
-            var observedOnDeclared = activity.ObservedOnSource == ObservationDateSource.Declared;
-            // RatingLabel is filled in below, once the EPA's pinned ladder is known.
-            rawPoints.Add((epaId, new TrajectoryPointDto(
-                activity.Id, observedOn, observedOnDeclared, rating, rating.ToString(), source, assessorUserId)));
-        }
+        // The x-axis is the encounter date the clinician stated, which is what this chart has always claimed to plot
+        // and never did: it plotted CreatedOn, the audit clock. (T119) Where nobody stated one (ObservedOnSource ==
+        // CreatedOn) the point still sits on the filing day, and says so: the chart's tooltip and table mark it as
+        // undated evidence (T161, D28, T119 D4). RatingLabel is filled in below, once the EPA's pinned ladder is known.
+        var rawPoints = ratings
+            .Select(rating => (rating.EpaId, Point: new TrajectoryPointDto(
+                rating.ActivityId,
+                rating.ObservedOn,
+                rating.ObservedOnDeclared,
+                rating.Rating,
+                rating.Rating.ToString(),
+                rating.Source,
+                rating.AssessorUserId)))
+            .ToList();
+        var ratedScaleIdByActivity = ratings
+            .Where(rating => rating.RatedScaleId.HasValue)
+            .ToDictionary(rating => rating.ActivityId, rating => rating.RatedScaleId!.Value);
 
         if (rawPoints.Count == 0)
         {
@@ -231,7 +189,6 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
             .ToDictionaryAsync(epa => epa.Id, cancellationToken);
 
         var ladders = await ResolvePinnedLaddersAsync(traineeUserId, epaIds, cancellationToken);
-        var ratedScaleIdByActivity = await ResolveRatedScaleIdsAsync(activities, cancellationToken);
 
         return rawPoints
             .GroupBy(entry => entry.EpaId)
@@ -312,7 +269,7 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     /// <para>
     /// What this does NOT do is resolve the ladder each plotted ACTIVITY was recorded against, which is
     /// what lets a point on a different scale be drawn as such. That is
-    /// <see cref="ResolveRatedScaleIdsAsync" /> (T126), from the pinned version's declared rated field, the
+    /// <see cref="AttributedRating.RatedScaleId" /> (T126), from the pinned version's declared rated field, the
     /// same field the rating itself is read from (<see cref="RatedEvidenceProfile" />, T135).
     /// </para>
     /// </remarks>
@@ -378,96 +335,5 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                 .ToDictionaryAsync(scale => scale.Id, scale => scale.Name, cancellationToken);
 
         return new PinnedLadders(scaleIdByEpa, scaleNameById, rungs);
-    }
-
-    /// <summary>
-    /// The entrustment ladder each activity's rating was actually recorded against, by activity id.
-    /// Absent means "not knowable", never "the same as the axis". (T126)
-    /// </summary>
-    /// <remarks>
-    /// Resolved from the activity's PINNED <c>ActivityTypeVersion</c>, not the live one: an activity
-    /// rated on version 1 keeps version 1's meaning even after the type is republished, which is the
-    /// whole point of pinning. There is deliberately no foreign key to navigate —
-    /// <c>ActivityConfiguration</c> records that Activity's snapshot columns carry none, so a later
-    /// restructure cannot cascade into historical assessments — so the pair is matched in memory over a
-    /// set already bounded by this trainee's activities.
-    /// <para>
-    /// The pinned schema, and only the pinned schema, is the source. The credit rules'
-    /// <c>minimum_level_field</c> names the field a PARTICULAR directive gates on, which is a different
-    /// question that merely had the same answer in the seed corpus; treating it as a fallback here would
-    /// resolve confidently to a component scale for any type crediting on one of the five or six that
-    /// <c>dops</c>, <c>acat</c>, <c>mini_cex</c> and <c>cbd</c> each declare.
-    /// </para>
-    /// </remarks>
-    private async Task<IReadOnlyDictionary<int, int>> ResolveRatedScaleIdsAsync(
-        IReadOnlyCollection<Activity> activities,
-        CancellationToken cancellationToken)
-    {
-        var empty = (IReadOnlyDictionary<int, int>)new Dictionary<int, int>();
-
-        var typeIds = activities.Select(activity => activity.ActivityTypeId).Distinct().ToArray();
-        if (typeIds.Length == 0)
-        {
-            return empty;
-        }
-
-        var versions = await _dbContext.Set<ActivityTypeVersion>()
-            .AsNoTracking()
-            .Where(version => typeIds.Contains(version.ActivityTypeId))
-            .Select(version => new { version.ActivityTypeId, version.Version, version.SchemaJson })
-            .ToListAsync(cancellationToken);
-
-        var scaleKeyByPin = new Dictionary<(int TypeId, int Version), string?>(versions.Count);
-        foreach (var version in versions)
-        {
-            scaleKeyByPin[(version.ActivityTypeId, version.Version)] = TryReadRatedScaleKey(version.SchemaJson);
-        }
-
-        var lookup = await EntrustmentRungLabels.LoadForScaleKeysAsync(
-            _dbContext, scaleKeyByPin.Values, cancellationToken);
-
-        var resolved = new Dictionary<int, int>();
-        foreach (var activity in activities)
-        {
-            if (!scaleKeyByPin.TryGetValue((activity.ActivityTypeId, activity.SchemaVersion), out var scaleKey))
-            {
-                continue;
-            }
-
-            if (lookup.ResolveScaleKey(scaleKey) is { } scaleId)
-            {
-                resolved[activity.Id] = scaleId;
-            }
-        }
-
-        return resolved;
-    }
-
-    /// <summary>
-    /// The <c>scale_key</c> of the field a schema declares as its entrustment rating, or null when it
-    /// declares none, names a field that carries no ladder, or does not parse. (T126)
-    /// </summary>
-    private static string? TryReadRatedScaleKey(string schemaJson)
-    {
-        try
-        {
-            var schema = FormSchemaParser.Parse(schemaJson);
-            if (schema.RatedLevelField is null)
-            {
-                return null;
-            }
-
-            return schema.Sections
-                .SelectMany(section => section.Fields)
-                .FirstOrDefault(field => string.Equals(field.Key, schema.RatedLevelField, StringComparison.Ordinal))
-                ?.ScaleKey;
-        }
-        catch (SchemaParseException)
-        {
-            // A stored version that no longer parses is a defect, but it is not this chart's to raise:
-            // the trajectory degrades to the numeric axis it drew before T126 rather than failing a
-            // trainee's progress page over one bad row.
-            return null;
-        }
     }
 }

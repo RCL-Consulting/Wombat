@@ -254,6 +254,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
                 GetSamplingConcentrationWarningsQuery => null,
                 CountMsfCampaignsOutsideSnapshotQuery => _outsideSnapshot,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
+                GetEntrustmentStandingForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => Array.Empty<StarEpaOptionDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")

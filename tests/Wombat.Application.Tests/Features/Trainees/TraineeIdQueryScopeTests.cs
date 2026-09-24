@@ -94,7 +94,13 @@ public sealed class TraineeIdQueryScopeTests
 
         ["ListMsfCampaignsForTrainee"] = async (db, principal) =>
             (await new ListMsfCampaignsForTraineeQueryHandler(db).Handle(
-                new ListMsfCampaignsForTraineeQuery(TraineeUserId, principal), CancellationToken.None)).Count > 0
+                new ListMsfCampaignsForTraineeQuery(TraineeUserId, principal), CancellationToken.None)).Count > 0,
+
+        // T166: the standing against Annexure A, which carries the active decision seeded below.
+        ["GetEntrustmentStandingForTrainee"] = async (db, principal) =>
+            await new GetEntrustmentStandingForTraineeQueryHandler(db).Handle(
+                new GetEntrustmentStandingForTraineeQuery(TraineeUserId, principal, new DateOnly(2026, 9, 23)),
+                CancellationToken.None) is not null
     };
 
     private static ClaimsPrincipal Principal(string caller) => caller switch

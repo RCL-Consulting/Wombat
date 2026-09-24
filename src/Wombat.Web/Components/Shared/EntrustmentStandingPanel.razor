@@ -1,0 +1,261 @@
+@* Where a trainee stands on each EPA of their curriculum (T166): the active STAR decision against Annexure A's target
+   for their training year and against the exit level, beside the latest rating a named assessor gave. Shared by the
+   committee review page and the trainee's own progress page, so the two read the same table.
+
+   Every status is words in the cell, never only a colour. Nothing here gates anything: the exit rule is shown for
+   information, and the sentence under it says so, because a panel reading "4 of 15" beside a Graduate option would
+   otherwise reasonably assume the product checks it. *@
+@using Wombat.Application.Features.Curricula.Quota
+
+@if (!string.IsNullOrWhiteSpace(LoadError))
+{
+  <Alert Kind="warning">The entrustment standing could not be loaded: @LoadError</Alert>
+}
+else if (Standing is null)
+{
+  @* For someone else, null is also the answer when the trainee is outside what the caller may read (T113): a panel
+     member need not oversee the trainee, and the trainee may have moved since the review was scheduled. So it is not
+     said to be "no curriculum". *@
+  <p class="muted">@(Self ? "You have no curriculum on record yet, so there are no targets to compare against." : "No standing to show: this trainee has no curriculum on record, or your account does not oversee their programme.")</p>
+}
+else if (Standing.Epas.Count == 0)
+{
+  <p class="muted">No EPA on @(Self ? "your" : "this trainee's") curriculum is in use at the moment, so there is nothing to compare.</p>
+}
+else
+{
+  var year = Standing.TargetYear;
+  <p class="muted">
+    @if (Standing.ProgrammeNotStarted)
+    {
+      <text>@(Self ? "Your" : "The") programme starts on @QuotaText.LongDate(Standing.ProgrammeStartDate), so the targets shown are for training year 1.</text>
+    }
+    else if (ReviewPeriodTo is { } periodEnd && periodEnd == Standing.AsOf)
+    {
+      <text>The review period's last day, @QuotaText.LongDate(periodEnd), falls in training year @year, so the targets shown are that year's. STAR decisions and ratings are shown as they stand today.</text>
+    }
+    else
+    {
+      <text>@(Self ? "You are in" : "In") training year @year on @QuotaText.LongDate(Standing.AsOf).</text>
+    }
+    @if (Standing.YearTargetsFromExitLevel == Standing.Epas.Count)
+    {
+      <text> The curriculum sets no level for training year @year, so each EPA's exit level stands in as its target.</text>
+    }
+    else
+    {
+      <text> Each target is the level the curriculum sets for training year @year: Annexure A's, for the College's EPAs.</text>
+      @if (Standing.YearTargetsFromExitLevel > 0)
+      {
+        <text> Where it sets none, the EPA's exit level stands in, and the row says so.</text>
+      }
+    }
+    The exit level is the level each EPA must reach to finish the programme. A level is compared only on the ladder the
+    curriculum sets for that EPA.
+  </p>
+
+  <dl class="details-list">
+    <div>
+      <dt>STAR decisions against training year @year targets</dt>
+      <dd>@YearLine(Standing)</dd>
+    </div>
+    <div>
+      <dt>Exit rule</dt>
+      <dd>@ExitLine(Standing, Self)</dd>
+    </div>
+  </dl>
+  <p class="progress-row-meta">
+    For information only. Recording a Graduate decision or completing the programme does not check the exit rule.
+  </p>
+
+  <div class="table-container mt-3">
+    <table class="clinic-table clinic-table--compact">
+      <caption>Each EPA's STAR decision against the training year @year target and the exit level, with the latest rating.</caption>
+      <thead>
+        <tr>
+          <th scope="col">EPA</th>
+          <th scope="col">Year @year target</th>
+          <th scope="col">STAR decision</th>
+          <th scope="col">Against target</th>
+          <th scope="col">Exit level</th>
+          <th scope="col">Latest rating</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var epa in Standing.Epas)
+        {
+          <tr>
+            <td>
+              <strong>@epa.EpaCode</strong>
+              <div class="muted text-sm">@epa.EpaTitle</div>
+              @if (epa.IsLocal)
+              {
+                <div class="muted text-sm">The institution's own EPA; not in the exit rule</div>
+              }
+            </td>
+            <td>
+              @epa.YearTargetLabel
+              @if (epa.YearTargetIsExitLevel)
+              {
+                <div class="muted text-sm">Exit level; no year @year level set</div>
+              }
+            </td>
+            <td>
+              @if (epa.Decision is { } decision)
+              {
+                <strong>@decision.LevelLabel</strong>
+                @if (decision.OtherLadderName is { } ladder)
+                {
+                  <span class="muted"> on @ladder</span>
+                }
+                <div class="muted text-sm">
+                  Issued @QuotaText.ShortDate(decision.IssuedOn)@(decision.ExpiresOn is { } expires ? $", expires {QuotaText.ShortDate(expires)}" : string.Empty)
+                </div>
+              }
+              else
+              {
+                <span class="muted">None</span>
+              }
+            </td>
+            <td>
+              <span class="badge @BadgeClass(epa.YearStatus)">@StatusWords(epa.YearStatus)</span>
+              @if (epa.YearStatus == EntrustmentStandingStatus.NotComparable)
+              {
+                <div class="muted text-sm">@NotComparableReason(epa, epa.Decision?.OtherLadderName)</div>
+              }
+            </td>
+            <td>
+              @epa.ExitLevelLabel
+              <div class="muted text-sm">@ExitWords(epa.ExitStatus)</div>
+            </td>
+            <td>
+              @if (epa.LatestRating is { } rating)
+              {
+                <a href="@($"/activities/{rating.ActivityId}")">@rating.RatingLabel<span class="visually-hidden"> — open this @epa.EpaCode rating</span></a>
+                @if (rating.OtherLadderName is { } ladder)
+                {
+                  <span class="muted"> on @ladder</span>
+                }
+                <div class="text-sm"><EncounterDateLabel ObservedOn="@rating.ObservedOn" Declared="@rating.ObservedOnDeclared" /></div>
+                <div class="muted text-sm">@RatingWords(epa, rating)</div>
+              }
+              else
+              {
+                <span class="muted">None</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@code {
+  /// <summary>The standing, or null when there is nothing on record (or nothing the caller may read).</summary>
+  [Parameter] public EntrustmentStandingDto? Standing { get; set; }
+
+  /// <summary>Why the standing could not be loaded. The rest of the page stands without it.</summary>
+  [Parameter] public string? LoadError { get; set; }
+
+  /// <summary>The trainee's own view: the sentences speak to "you".</summary>
+  [Parameter] public bool Self { get; set; }
+
+  /// <summary>
+  /// The last day of the review period, on the committee review page. When the standing was read for that day (the
+  /// period has passed), the panel says the targets are that year's and the decisions today's.
+  /// </summary>
+  [Parameter] public DateOnly? ReviewPeriodTo { get; set; }
+
+  private static string YearLine(EntrustmentStandingDto standing)
+  {
+    var parts = new List<string>
+    {
+      $"{standing.AtYearTarget} at or above",
+      $"{standing.BelowYearTarget} below",
+      $"{standing.WithoutDecision} with no decision"
+    };
+
+    if (standing.NotComparable > 0)
+    {
+      parts.Add($"{standing.NotComparable} not comparable");
+    }
+
+    return $"{string.Join(" · ", parts)}, of {standing.Epas.Count} EPAs";
+  }
+
+  /// <summary>
+  /// The exit rule in sentences, built as one string: Razor drops a space that stands alone before an expression, which
+  /// ran the sentences together.
+  /// </summary>
+  private static string ExitLine(EntrustmentStandingDto standing, bool self)
+  {
+    var exit = standing.Exit;
+    var sentences = new List<string>();
+
+    if (exit.EpaCount == 0)
+    {
+      sentences.Add($"The College's exit rule counts only its own EPAs, and none of them is in use on {(self ? "your" : "this")} curriculum.");
+    }
+    else
+    {
+      var groups = exit.Groups.Count > 1 ? $" ({GroupsLine(exit)})" : string.Empty;
+      sentences.Add($"{exit.AtExitLevel} of {exit.EpaCount} EPAs at their exit level by STAR decision{groups}.");
+      sentences.Add(exit.Met
+        ? standing.LocalEpas > 0 ? "Every EPA the rule counts is at its exit level." : "Every EPA is at its exit level."
+        : $"Not yet: {string.Join(", ", exit.NotYetEpaCodes)}.");
+    }
+
+    // The College's rule is over its own EPAs; an institution's additions are rows of the table, not terms of the rule.
+    if (standing.LocalEpas > 0)
+    {
+      sentences.Add(standing.LocalEpas == 1
+        ? "The institution's own EPA is not part of the College's rule, so it is not counted."
+        : $"The institution's own {standing.LocalEpas} EPAs are not part of the College's rule, so they are not counted.");
+    }
+
+    return string.Join(" ", sentences);
+  }
+
+  private static string GroupsLine(ExitRuleReadinessDto exit)
+    => string.Join(" · ", exit.Groups.Select(group => $"level {group.LevelLabel}: {group.AtLevel} of {group.EpaCount}"));
+
+  private static string StatusWords(EntrustmentStandingStatus status) => status switch
+  {
+    EntrustmentStandingStatus.AtOrAbove => "At or above",
+    EntrustmentStandingStatus.Below => "Below",
+    EntrustmentStandingStatus.NoDecision => "No decision",
+    _ => "Not comparable"
+  };
+
+  private static string BadgeClass(EntrustmentStandingStatus status) => status switch
+  {
+    EntrustmentStandingStatus.AtOrAbove => "badge-standing-met",
+    EntrustmentStandingStatus.Below => "badge-standing-below",
+    _ => "badge-standing-none"
+  };
+
+  private static string ExitWords(EntrustmentStandingStatus status) => status switch
+  {
+    EntrustmentStandingStatus.AtOrAbove => "Reached",
+    EntrustmentStandingStatus.NotComparable => "Not comparable",
+    _ => "Not yet"
+  };
+
+  private static string NotComparableReason(EpaStandingDto epa, string? otherLadder)
+    => epa.ScaleName is null
+      ? "The curriculum sets no ladder for this EPA."
+      : otherLadder is not null
+        ? $"Decided on {otherLadder}, not {epa.ScaleName}."
+        : $"Not on {epa.ScaleName}.";
+
+  private static string RatingWords(EpaStandingDto epa, StandingRatingDto rating)
+    => rating.AgainstYearTarget switch
+    {
+      EntrustmentStandingStatus.AtOrAbove => $"{rating.Source}; at or above the target",
+      EntrustmentStandingStatus.Below => $"{rating.Source}; below the target",
+      _ => epa.ScaleName is null || rating.OtherLadderName is not null
+        ? $"{rating.Source}; not comparable with the target"
+        : $"{rating.Source}; its ladder is not known, so not compared"
+    };
+}

@@ -293,6 +293,7 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
                 GetSamplingConcentrationWarningsQuery => null,
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
+                GetEntrustmentStandingForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => _starEpas,
                 GetEntrustmentScalesListQuery => Scales,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")

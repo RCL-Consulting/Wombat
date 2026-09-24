@@ -446,6 +446,36 @@ T019 introduces a small builder-specific extension to the shared system:
 
 Used on activity state indicators in dashboard list cards and activity tables.
 
+```css
+.badge-standing-met    /* --success-bg ground, --success-color border, body text (T166) */
+.badge-standing-below  /* --warning-bg ground, --warning-color border, body text */
+.badge-standing-none   /* --hover-bg ground, --border-color border, body text: no decision, or not comparable */
+```
+
+A verdict of a level against a target: `EntrustmentStandingPanel`'s "At or above", "Below", "No decision" and "Not
+comparable" (T166). The words are the verdict and the tint repeats it. The text is body colour, not the semantic
+colour on its own tint, which falls short of 4.5:1 at 0.75rem. Every badge above is a state; these are the only ones
+that are a comparison.
+
+**Entrustment standing** (T166). `Components/Shared/EntrustmentStandingPanel.razor` is the one rendering of
+`GetEntrustmentStandingForTraineeQuery`. The committee review page shows it as a full-width card (`.detail-card
+.full-width`) after its first pair of cards. The trainee's My progress page shows it as a section with its own `<h2>`,
+and says it to "you" (`Self`). It opens with a sentence naming the training year and a `details-list` of two lines:
+the year-target counts, and the exit rule counted by exit level with the EPAs short of it named. Then a
+`.clinic-table--compact` of six columns: EPA, year target, STAR decision, against target, exit level, latest rating.
+A level on another ladder, or on an unpinned item, is "Not comparable" with the reason under it, never a verdict. The
+panel says the exit rule gates nothing, directly under the rule. Each page loads the panel in its own `try`, so a
+failure shows in the panel and never replaces the page.
+
+What the panel must not claim. On the review page the year is read for the review period's last day once that has
+passed (`ReviewPeriodTo`), and the opening sentence says so and that decisions are today's: a review held after its
+period judges that period's year, not the next one. A target the curriculum sets no level for (no per-stage map, or a
+year past the ones it names) is the exit level standing in, and its cell says "Exit level; no year N level set" rather
+than passing it off as Annexure A's. An institution's own EPA is a row, marked under its title, but the exit rule is
+the College's and counts only the College's EPAs. For someone else, "nothing to show" does not say "no curriculum":
+the same null is what a caller outside the trainee's oversight gets. The exit rule is one sentence built in C#, because
+Razor drops a space standing alone before an expression and ran the sentences together.
+
 ## Status dots
 
 ```css

@@ -125,6 +125,7 @@ public sealed class ReviewDetailEvidenceEmptyStateTests : TestContext
                 GetSamplingConcentrationWarningsQuery => null,
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
+                GetEntrustmentStandingForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => Array.Empty<StarEpaOptionDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")

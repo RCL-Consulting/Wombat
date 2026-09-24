@@ -199,6 +199,7 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
                 GetSamplingConcentrationWarningsQuery => _report,
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
+                GetEntrustmentStandingForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => Array.Empty<StarEpaOptionDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")

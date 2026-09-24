@@ -13,6 +13,7 @@ using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Trainee;
+using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.CurriculumProgress;
@@ -334,7 +335,8 @@ public sealed class QuotaProgressRenderingTests : TestContext
         // freeze its period.
         var sender = new FakeSender()
             .On<GetCurriculumProgressForTraineeQuery>(_ => BoundaryStarter())
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>());
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null);
         RenderMyProgressWith(sender);
 
         var query = sender.Received.OfType<GetCurriculumProgressForTraineeQuery>().Should().ContainSingle().Which;
@@ -876,7 +878,8 @@ public sealed class QuotaProgressRenderingTests : TestContext
     private IRenderedComponent<MyProgress> RenderMyProgress(TraineeCurriculumProgressSummaryDto? summary)
         => RenderMyProgressWith(new FakeSender()
             .On<GetCurriculumProgressForTraineeQuery>(_ => summary)
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>()));
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null));
 
     private IRenderedComponent<MyProgress> RenderMyProgressWith(FakeSender sender)
     {

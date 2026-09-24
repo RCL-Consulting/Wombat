@@ -801,6 +801,31 @@ h1[tabindex="-1"]:focus {
   color: var(--danger-color);
 }
 
+/* Entrustment standing (T166): a STAR decision against a target level. The words carry the verdict ("At or above",
+   "Below", "No decision", "Not comparable"); the tint only repeats it. Body text on a tinted ground with a semantic
+   border, because the semantic colours as text on their own tints fall short of 4.5:1 at this size. */
+.badge-standing-met,
+.badge-standing-below,
+.badge-standing-none {
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.badge-standing-met {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+}
+
+.badge-standing-below {
+  background: var(--warning-bg);
+  border-color: var(--warning-color);
+}
+
+.badge-standing-none {
+  background: var(--hover-bg);
+}
+
 /* ── Status dots ──────────────────────────────────── */
 .status-dot {
   border-radius: 50%;

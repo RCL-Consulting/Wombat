@@ -66,7 +66,8 @@ public sealed class UndatedEncounterDateTests : TestContext
         Services.AddSingleton<IScopedSender>(new FakeSender(new Dictionary<Type, object?>
         {
             [typeof(GetCurriculumProgressForTraineeQuery)] = null,
-            [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()]
+            [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
+            [typeof(GetEntrustmentStandingForTraineeQuery)] = null
         }));
 
         var cut = RenderComponent<MyProgress>();
@@ -105,6 +106,7 @@ public sealed class UndatedEncounterDateTests : TestContext
             [typeof(GetSamplingConcentrationWarningsQuery)] = null,
             [typeof(CountMsfCampaignsOutsideSnapshotQuery)] = MsfCampaignsOutsideSnapshotDto.None,
             [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
+            [typeof(GetEntrustmentStandingForTraineeQuery)] = null,
             [typeof(ListStarEpaOptionsForReviewQuery)] = (IReadOnlyList<StarEpaOptionDto>)[],
             [typeof(GetEntrustmentScalesListQuery)] = (IReadOnlyList<EntrustmentScaleDto>)[]
         }));

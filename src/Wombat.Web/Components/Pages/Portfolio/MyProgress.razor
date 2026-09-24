@@ -127,6 +127,17 @@
     }
   </section>
 
+  @* T166: the committee's STAR decisions against Annexure A's target for this training year, and the exit rule. The
+     same panel the committee review page shows, in the trainee's own words. Nothing on record is already said by the
+     targets section above, so it is not said twice. *@
+  @if (_standing is not null || _standingError is not null)
+  {
+    <section class="progress-group-title">
+      <h2>Entrustment against Annexure A</h2>
+      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" Self="true" />
+    </section>
+  }
+
   @if (_trajectories is { Count: > 0 })
   {
     <section class="progress-group-title">
@@ -153,6 +164,8 @@
 @code {
   private TraineeCurriculumProgressSummaryDto? _summary;
   private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
+  private EntrustmentStandingDto? _standing;
+  private string? _standingError;
   private bool _loaded;
   private string? _error;
 
@@ -173,6 +186,21 @@
     catch (Exception exception)
     {
       _error = exception.Message;
+      return;
+    }
+
+    // Apart from the rest (T166): the standing is one section of the page, and a failure in it says so there rather
+    // than replacing the targets the trainee came for.
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("Current user identifier missing.");
+      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _standingError = exception.Message;
     }
   }
 
