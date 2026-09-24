@@ -74,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+9369920 fix(activities): a refusal names each field by the label the user sees, with its section where the label repeats (T172)
 6f10a8f fix(web): app.css and the other first-party assets are linked through fingerprinted URLs, and the tab title follows in-app navigation (T175, T180)
 f2545db docs(execution): handoff progress
 a0897a3 docs(execution): close T135, T150 and T113 — browser-verified on dev (sampling 9/2 with 6 MSF not attributed; a second-institution Coordinator sees and changes nothing); file T186
 7bfe443 docs(execution): file T182–T185 from the T113 review (two P1 cross-institution holes in committee scheduling and entrustment admin); note T153
-073a89b fix(security): trainee-id queries and the MSF commands and report check that the caller may see that trainee or campaign (T113)
 ```

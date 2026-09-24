@@ -32,6 +32,63 @@ else if (_schema is not null)
               continue;
             }
 
+            if (!IsSingleControl(field.Type))
+            {
+              // A multi-choice field is several controls, and a file field (not wired yet, T154) or an unsupported type
+              // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
+              // instead (DESIGN.md § Form system, T177), its help text announced with the group.
+              var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : $"{field.Key}-help";
+
+              <fieldset class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@helpId">
+                <legend>
+                  @field.Label
+                  @if (field.Required)
+                  {
+                    <span aria-hidden="true">*</span>
+                    <span class="visually-hidden">required</span>
+                  }
+                </legend>
+
+                @if (field.Type == FieldType.MultiChoice)
+                {
+                  <div class="check-grid">
+                    @foreach (var option in GetOptions(field))
+                    {
+                      <div class="form-check">
+                        <input
+                          id="@($"{field.Key}-{option.Value}")"
+                          class="form-check-input"
+                          type="checkbox"
+                          checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
+                          disabled="@IsFieldLocked(field.Key)"
+                          @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
+                        <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
+                      </div>
+                    }
+                  </div>
+                }
+                else if (field.Type == FieldType.File)
+                {
+                  <div class="detail-card detail-card--empty-compact">
+                    File uploads are represented in the schema, but storage wiring lands in a later pass.
+                  </div>
+                }
+                else
+                {
+                  <div class="detail-card detail-card--empty-compact">
+                    Unsupported field type: @field.Type
+                  </div>
+                }
+
+                @if (helpId is not null)
+                {
+                  <small id="@helpId" class="page-subtitle">@field.HelpText</small>
+                }
+              </fieldset>
+
+              continue;
+            }
+
             <FormField Label="@field.Label" InputId="@field.Key" HelpText="@field.HelpText" Required="@field.Required">
               @switch (field.Type)
               {
@@ -78,33 +135,6 @@ else if (_schema is not null)
                   {
                     <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   }
-                  break;
-                case FieldType.MultiChoice:
-                  <div class="full-width">
-                    @foreach (var option in GetOptions(field))
-                    {
-                      <div class="form-check">
-                        <input
-                          id="@($"{field.Key}-{option.Value}")"
-                          class="form-check-input"
-                          type="checkbox"
-                          checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
-                          disabled="@IsFieldLocked(field.Key)"
-                          @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
-                        <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
-                      </div>
-                    }
-                  </div>
-                  break;
-                case FieldType.File:
-                  <div class="detail-card detail-card--empty-compact">
-                    File uploads are represented in the schema, but storage wiring lands in a later pass.
-                  </div>
-                  break;
-                default:
-                  <div class="detail-card detail-card--empty-compact">
-                    Unsupported field type: @field.Type
-                  </div>
                   break;
               }
             </FormField>
@@ -253,6 +283,22 @@ else if (_schema is not null)
   /// </summary>
   private bool IsFieldLocked(string key)
     => ReadOnly || (EditableFieldKeys is not null && !EditableFieldKeys.Contains(key));
+
+  /// <summary>
+  /// The field types rendered as exactly one control with the field's key as its id, which is what
+  /// <c>FormField</c>'s <c>&lt;label for&gt;</c> names. Every other type renders as a fieldset named by its
+  /// legend (T177). The list and the markup's switch must agree both ways. A type listed here with no case leaves
+  /// a label naming nothing, and a type with a case left off the list shows "Unsupported field type" in its place.
+  /// <c>ActivityFormLabelTests</c> renders every <see cref="FieldType" /> and pins which ones are groups, so either
+  /// drift fails it.
+  /// </summary>
+  private static bool IsSingleControl(FieldType type)
+    => type is FieldType.Text or FieldType.Signature or FieldType.ProcedureRef
+      or FieldType.LongText
+      or FieldType.Number or FieldType.Likert or FieldType.Rating
+      or FieldType.Date
+      or FieldType.Choice or FieldType.Epa or FieldType.User
+      or FieldType.Scale;
 
   private string GetString(string key)
   {

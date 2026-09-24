@@ -1033,6 +1033,13 @@ fieldset legend {
   padding: 0;
 }
 
+/* A fieldset that is one field among others (an activity form's multi-choice, T177): its legend is that field's
+   label, so it reads like the labels beside it, not like the section title above it. */
+fieldset.form-group > legend {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
 /* ── Trajectory chart ─────────────────────────────── */
 .trajectory-chart {
   display: block;

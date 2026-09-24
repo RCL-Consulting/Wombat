@@ -265,6 +265,11 @@ PagerControls
   `.form-check`), every checkbox with its own unique id. **Not** a `<FormField>`: its `<label for>` would point at
   no single input. When two groups share a page (an inline edit row and an Add form), prefix their ids differently
   (`edit-tool-{key}` / `add-tool-{key}`, T122's curriculum tool list).
+- In `ActivityForm`, a field that is not one control is a `fieldset.form-group` among the section's `<FormField>`s:
+  a multi-choice field, and a field with no control to name (the file placeholder, an unsupported type) (T177).
+  `.form-group` makes its legend read as that field's label, not as the section title. Help text goes inside the
+  fieldset, which names it with `aria-describedby`. The checkbox groups on the MSF campaign form (T147) and the
+  curriculum item forms (T122) are plain fieldsets with a section-size legend.
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
 - A workflow action the actor may take but cannot complete (T107) is a **disabled** button, never a hidden one. Its
   reason is visible text in a `.workflow-action-reasons` list below the row, starting with the action's name, and the
