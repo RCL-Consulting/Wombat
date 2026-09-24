@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 
 namespace Wombat.Application.Features.Dashboards.Assessor;
@@ -45,23 +46,37 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
             .Distinct()
             .CountAsync(cancellationToken);
 
-        // Simpler approach: get activities where this assessor has participated
+        // Simpler approach: get activities where this assessor has participated.
+        // Never the caller's own portfolio: a user who is also a Trainee created, and made the "create" move on, every
+        // activity of their own, and a nominee is never the subject (NomineeGate), so none of those is assessor work.
+        // Without this a logged procedure, which is born in its terminal state, would read as the caller's decision (T203).
         var assessorActivities = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(a => a.ActivityType)
             .Include(a => a.Transitions)
-            .Where(a => a.Transitions.Any(t => t.ActorUserId == userId) ||
-                        a.CreatedByUserId == userId)
+            .Where(a => a.SubjectUserId != userId &&
+                        (a.Transitions.Any(t => t.ActorUserId == userId) ||
+                         a.CreatedByUserId == userId))
             .OrderByDescending(a => a.UpdatedOn)
             .Take(50)
             .ToListAsync(cancellationToken);
 
+        // T203: "done" is a terminal state of the activity's PINNED workflow (D44, ActivityCompletion), not the literal
+        // "completed". A discussed reflective exercise, a recorded MSF row and a logged procedure are finished, so they
+        // are decisions; and a teaching session finishes in "accepted", so a finished one is not work needing action.
+        var finishedStates = await ActivityCompletion.LoadFinishedStatesAsync(
+            _dbContext,
+            assessorActivities.Select(a => (a.ActivityTypeId, a.SchemaVersion)),
+            cancellationToken);
+        bool IsFinished(Activity activity)
+            => finishedStates[(activity.ActivityTypeId, activity.SchemaVersion)].Contains(activity.CurrentState);
+
         var pendingRequests = assessorActivities
-            .Where(a => a.CurrentState == "requested")
+            .Where(a => a.CurrentState == "requested" && !IsFinished(a))
             .ToList();
 
         var accepted = assessorActivities
-            .Where(a => a.CurrentState == "accepted")
+            .Where(a => a.CurrentState == "accepted" && !IsFinished(a))
             .Select(a => new AcceptedActivityItem(
                 a.Id,
                 a.ActivityType.Name,
@@ -71,7 +86,7 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
             .ToList();
 
         var recentDecisions = assessorActivities
-            .Where(a => a.CurrentState is "completed" or "declined" or "cancelled")
+            .Where(a => IsFinished(a) || a.CurrentState is "declined" or "cancelled")
             .Take(10)
             .Select(a => new RecentDecisionItem(
                 a.Id,

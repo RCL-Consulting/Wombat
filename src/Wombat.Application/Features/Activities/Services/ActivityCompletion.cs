@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Application.Features.Activities.Services;
@@ -5,7 +8,8 @@ namespace Wombat.Application.Features.Activities.Services;
 /// <summary>
 /// Whether an activity is finished: its state is a terminal state of its PINNED workflow, the point where credit fires
 /// (<c>ActivityService.PlanCreditIfTerminalAsync</c>, D44). The one answer the committee sampling report, the
-/// entrustment trajectory (<see cref="RatedEvidenceProfile" />, T135) and the portfolio export's summary (T169) share.
+/// entrustment trajectory (<see cref="RatedEvidenceProfile" />, T135), the portfolio export's summary (T169) and the
+/// assessor and trainee dashboards (T203) share.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -43,6 +47,60 @@ public static class ActivityCompletion
     /// <summary>The states in which an activity pinned to this stored workflow is finished. Total: never throws.</summary>
     public static IReadOnlySet<string> FinishedStates(string? workflowJson)
         => FinishedStates(TryParseWorkflow(workflowJson));
+
+    /// <summary>
+    /// The finished states of every pin asked for, one entry per pin, always: the workflow of the pinned
+    /// <see cref="ActivityTypeVersion" /> when that row exists, else the type's own columns (a type whose version rows
+    /// were never written), as <see cref="RatedEvidenceProfiles" /> and the portfolio export resolve a pin. A pin whose
+    /// type is gone reads as a type with no workflow. Each distinct pin is parsed once.
+    /// </summary>
+    /// <remarks>
+    /// Matched in memory over a set already bounded by the caller's activities, because <c>Activity</c> carries no
+    /// foreign key to its version (<c>ActivityConfiguration</c>).
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>> LoadFinishedStatesAsync(
+        IApplicationDbContext dbContext,
+        IEnumerable<(int ActivityTypeId, int Version)> pins,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(pins);
+
+        var wanted = pins.Distinct().ToArray();
+        var finished = new Dictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>(wanted.Length);
+        if (wanted.Length == 0)
+        {
+            return finished;
+        }
+
+        var typeIds = wanted.Select(pin => pin.ActivityTypeId).Distinct().ToArray();
+        var versionNumbers = wanted.Select(pin => pin.Version).Distinct().ToArray();
+
+        var typeWorkflows = await dbContext.Set<ActivityType>()
+            .AsNoTracking()
+            .Where(type => typeIds.Contains(type.Id))
+            .Select(type => new { type.Id, type.WorkflowJson })
+            .ToDictionaryAsync(type => type.Id, type => type.WorkflowJson, cancellationToken);
+
+        var versions = await dbContext.Set<ActivityTypeVersion>()
+            .AsNoTracking()
+            .Where(version => typeIds.Contains(version.ActivityTypeId) && versionNumbers.Contains(version.Version))
+            .Select(version => new { version.ActivityTypeId, version.Version, version.WorkflowJson })
+            .ToListAsync(cancellationToken);
+
+        var versionWorkflowByPin = versions
+            .GroupBy(version => (version.ActivityTypeId, version.Version))
+            .ToDictionary(group => group.Key, group => group.First().WorkflowJson);
+
+        foreach (var pin in wanted)
+        {
+            finished[pin] = versionWorkflowByPin.TryGetValue(pin, out var versionWorkflow)
+                ? FinishedStates(versionWorkflow)
+                : FinishedStates(typeWorkflows.GetValueOrDefault(pin.ActivityTypeId));
+        }
+
+        return finished;
+    }
 
     /// <summary>
     /// A stored workflow, parsed, or null when there is none or it no longer parses. Total: a stored workflow that no

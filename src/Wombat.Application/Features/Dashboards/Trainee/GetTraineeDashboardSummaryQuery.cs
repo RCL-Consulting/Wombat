@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
@@ -40,17 +41,38 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
         var curriculumTargets = await TraineeQuotaProgressReader.ReadAsync(
             _dbContext, userId, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
-        var inbox = await _dbContext.Set<Activity>()
+        // T203: an activity is finished in a terminal state of its PINNED workflow (D44, ActivityCompletion), not in the
+        // literal "completed". A discussed reflective exercise, a recorded MSF row, a logged procedure and an accepted
+        // teaching session are all done, so none of them is waiting in the inbox or has a deadline still to meet. Read
+        // once, from the pins and states alone.
+        var activityStates = await _dbContext.Set<Activity>()
             .AsNoTracking()
-            .Include(a => a.ActivityType)
-            .Where(a => a.SubjectUserId == userId &&
-                        (a.CurrentState == "requested" || a.CurrentState == "accepted" ||
-                         a.CurrentState == "declined" || a.CurrentState == "draft"))
+            .Where(a => a.SubjectUserId == userId)
+            .Select(a => new
+            {
+                a.Id,
+                a.ActivityTypeId,
+                a.SchemaVersion,
+                a.CurrentState,
+                a.UpdatedOn,
+                TypeName = a.ActivityType.Name
+            })
+            .ToListAsync(cancellationToken);
+
+        var finishedStates = await ActivityCompletion.LoadFinishedStatesAsync(
+            _dbContext,
+            activityStates.Select(a => (a.ActivityTypeId, a.SchemaVersion)),
+            cancellationToken);
+        var unfinished = activityStates
+            .Where(a => !finishedStates[(a.ActivityTypeId, a.SchemaVersion)].Contains(a.CurrentState))
+            .ToList();
+
+        var inbox = unfinished
+            .Where(a => a.CurrentState is "requested" or "accepted" or "declined" or "draft")
             .OrderByDescending(a => a.UpdatedOn)
             .Take(5)
-            .Select(a => new ActivityInboxItem(
-                a.Id, a.ActivityType.Name, a.CurrentState, a.UpdatedOn))
-            .ToListAsync(cancellationToken);
+            .Select(a => new ActivityInboxItem(a.Id, a.TypeName, a.CurrentState, a.UpdatedOn))
+            .ToList();
 
         var recentActivities = await _dbContext.Set<Activity>()
             .AsNoTracking()
@@ -67,11 +89,13 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         // Upcoming deadlines: scan DataJson for fields with a "due_date" key
         // This is done client-side since jsonb path queries vary by provider
+        var deadlineCandidateIds = unfinished
+            .Where(a => a.CurrentState != "cancelled")
+            .Select(a => a.Id)
+            .ToList();
         var candidateActivities = await _dbContext.Set<Activity>()
             .AsNoTracking()
-            .Include(a => a.ActivityType)
-            .Where(a => a.SubjectUserId == userId &&
-                        a.CurrentState != "completed" && a.CurrentState != "cancelled")
+            .Where(a => a.SubjectUserId == userId && deadlineCandidateIds.Contains(a.Id))
             .Select(a => new { a.Id, TypeName = a.ActivityType.Name, a.DataJson })
             .ToListAsync(cancellationToken);
 
