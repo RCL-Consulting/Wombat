@@ -176,6 +176,38 @@ public sealed class CurriculumCloneTests
     }
 
     /// <summary>
+    /// T131: the decision cadence, the deciding body and the opportunistic flag are the entrustment-decision cells of the
+    /// same published row. Three items, so each cell is carried per item: a semester neonatal item, an opportunistic annual
+    /// item, and one with no published cadence, which must stay null and not become the enum's zero value.
+    /// </summary>
+    [Fact]
+    public void CloneAsNewVersion_CarriesEachItemsDecisionCells()
+    {
+        var curriculum = new Curriculum
+        {
+            Id = 10,
+            SubSpecialityId = 3,
+            Name = "Paediatric EPA Curriculum",
+            Version = "11.1",
+            EffectiveFrom = new DateOnly(2026, 1, 1),
+            Items =
+            [
+                new CurriculumItem { Id = 21, EpaId = 104, RequiredCount = 3, MinimumLevelOrder = 6, WindowMonths = 12, DecisionCadence = QuotaPeriod.Semester, DecisionBodyKey = "neonatal" },
+                new CurriculumItem { Id = 22, EpaId = 108, RequiredCount = 1, MinimumLevelOrder = 5, WindowMonths = 12, DecisionCadence = QuotaPeriod.AcademicYear, DecisionIsOpportunistic = true },
+                new CurriculumItem { Id = 23, EpaId = 199, RequiredCount = 1, MinimumLevelOrder = 5, WindowMonths = 12, DecisionCadence = null }
+            ]
+        };
+
+        var clone = curriculum.CloneAsNewVersion("11.2", new DateOnly(2027, 1, 1), null);
+
+        clone.Items.Select(item => (item.EpaId, item.DecisionCadence, item.DecisionBodyKey, item.DecisionIsOpportunistic))
+            .Should().Equal(
+                (104, (QuotaPeriod?)QuotaPeriod.Semester, (string?)"neonatal", false),
+                (108, QuotaPeriod.AcademicYear, null, true),
+                (199, null, null, false));
+    }
+
+    /// <summary>
     /// T091 still holds with the new column: institution-local items belong to the institution, not to the College's
     /// published version, so they are not cloned, and their tool lists do not ride along or bleed into a national item.
     /// </summary>

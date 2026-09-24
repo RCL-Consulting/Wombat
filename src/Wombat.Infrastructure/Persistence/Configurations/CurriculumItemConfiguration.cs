@@ -12,7 +12,15 @@ public sealed class CurriculumItemConfiguration : IEntityTypeConfiguration<Curri
         // QuotaPeriod is stored as its integer value (T130). A value outside the enum would read as an academic
         // year (QuotaWindow treats anything but Semester that way), but a write must never produce one.
         builder.ToTable("CurriculumItems", table =>
-            table.HasCheckConstraint("CK_CurriculumItems_QuotaPeriod", "\"QuotaPeriod\" IN (0, 1)"));
+        {
+            table.HasCheckConstraint("CK_CurriculumItems_QuotaPeriod", "\"QuotaPeriod\" IN (0, 1)");
+
+            // The decision cadence reuses QuotaPeriod's integers (T131). Null is a meaningful "no published cadence";
+            // any other value outside the enum would read as something nobody chose.
+            table.HasCheckConstraint(
+                "CK_CurriculumItems_DecisionCadence",
+                "\"DecisionCadence\" IS NULL OR \"DecisionCadence\" IN (0, 1)");
+        });
         // One item per EPA per curriculum, whether it is a national core item or an institution-local
         // addition (T091 phase 3) — an institution can't re-add an EPA already in the national core.
         builder.HasIndex(entity => new { entity.CurriculumId, entity.EpaId }).IsUnique();
@@ -42,5 +50,12 @@ public sealed class CurriculumItemConfiguration : IEntityTypeConfiguration<Curri
         // written, so compare it only through CurriculumItem.ParsePermittedTools. No foreign key can reach inside
         // it; both writers validate the keys against WbaTools instead.
         builder.Property(entity => entity.PermittedToolsJson).HasColumnType("jsonb");
+
+        // T131. Restrict, like the scale pin: deleting a body must not silently send an EPA back to the general panel.
+        builder.Property(entity => entity.DecisionBodyKey).HasMaxLength(DecisionBody.KeyMaxLength);
+        builder.HasOne(entity => entity.DecisionBody)
+            .WithMany()
+            .HasForeignKey(entity => entity.DecisionBodyKey)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

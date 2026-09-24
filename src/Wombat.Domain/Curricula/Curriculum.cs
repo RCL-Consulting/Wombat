@@ -49,7 +49,15 @@ public sealed class Curriculum
                     // Carried deliberately (T122): the tool list is the fourth cell of the same published row. A
                     // clone that dropped it would silently let every instrument credit every EPA again, one
                     // curriculum version at a time.
-                    PermittedToolsJson = item.PermittedToolsJson
+                    PermittedToolsJson = item.PermittedToolsJson,
+                    // Carried deliberately (T131): the decision cadence, the body that decides and the opportunistic flag
+                    // are the entrustment-decision cells of the same published row. A clone that dropped the cadence would
+                    // leave every EPA of the new version never due; one that defaulted it would make every EPA due each
+                    // academic year, the enum's zero value; one that dropped the body would route EPAs 4 and 5 to the
+                    // general panel.
+                    DecisionCadence = item.DecisionCadence,
+                    DecisionBodyKey = item.DecisionBodyKey,
+                    DecisionIsOpportunistic = item.DecisionIsOpportunistic
                 })
                 .ToList()
         };

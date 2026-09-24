@@ -46,6 +46,18 @@ public sealed record CurriculumItemDto(
     /// projection that forgot it would show a retired item as in force.
     /// </summary>
     bool EpaIsActive,
+    /// <summary>
+    /// How often a committee decides this EPA, or null for no published cadence (T131). Nullable and not defaulted:
+    /// <c>AcademicYear</c> is the enum's zero value, so a projection that filled it in by default would make the EPA due
+    /// every year, and an editor that re-saved the DTO would store it.
+    /// </summary>
+    Wombat.Domain.Curricula.QuotaPeriod? DecisionCadence,
+    /// <summary>The key of the body that decides this EPA, or null for the general panel (T131).</summary>
+    string? DecisionBodyKey,
+    /// <summary>That body's name, for display; null with the key.</summary>
+    string? DecisionBodyName,
+    /// <summary>Whether the EPA is decided as opportunity allows, so its decision is never overdue (T131, O7).</summary>
+    bool DecisionIsOpportunistic,
     /// <summary>The entrustment scale the minima above are expressed on, or null when unpinned (T109).</summary>
     int? ScaleId = null,
     string? ScaleName = null)

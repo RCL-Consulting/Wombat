@@ -55,7 +55,9 @@
           <thead>
             <tr>
               <th>EPA</th>
-              <th>Target</th>
+              @* T131: the decision cadence and body share the target's cell, as they share Annexure B's row. A tenth column
+                 would widen a table that has 33px to spare at 1280px (T176). *@
+              <th>Target and decision</th>
               <th>Scale</th>
               <th>Minimum level</th>
               <th>Minimum by training year</th>
@@ -80,7 +82,10 @@
                     <span class="muted">(inactive: not in force)</span>
                   }
                 </td>
-                <td>@TargetText(item)</td>
+                <td>
+                  @TargetText(item)
+                  <div class="muted text-sm">@DecisionText(item)</div>
+                </td>
                 <td>@(item.ScaleName ?? "Not pinned")</td>
                 <td>@RungText(item.ScaleId, item.MinimumLevelOrder)</td>
                 <td>
@@ -155,6 +160,37 @@
                             <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
                           </InputSelect>
                           <small class="muted">@PeriodHelp</small>
+                        </FormField>
+
+                        <FormField Label="Decision cadence" InputId="edit-decision-cadence">
+                          <InputSelect id="edit-decision-cadence" class="form-select" TValue="QuotaPeriod?"
+                                       @bind-Value="_editModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_editModel)">
+                            <option value="">No published cadence</option>
+                            <option value="@QuotaPeriod.Semester">Each semester</option>
+                            <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
+                          </InputSelect>
+                          <small class="muted">@DecisionCadenceHelp</small>
+                        </FormField>
+
+                        <FormField Label="Decided by" InputId="edit-decision-body">
+                          <InputSelect id="edit-decision-body" class="form-select" TValue="string" @bind-Value="_editModel.DecisionBodyKey">
+                            <option value="">The trainee's general panel</option>
+                            @foreach (var body in _decisionBodies)
+                            {
+                              <option value="@body.Key">@body.Name</option>
+                            }
+                          </InputSelect>
+                          <small class="muted">@DecisionBodyHelp</small>
+                        </FormField>
+
+                        <FormField Label="Opportunistic" InputId="edit-decision-opportunistic">
+                          <div class="form-check">
+                            <input id="edit-decision-opportunistic" class="form-check-input" type="checkbox"
+                                   checked="@_editModel.DecisionIsOpportunistic" disabled="@(_editModel.DecisionCadence is null)"
+                                   @onchange="args => _editModel.DecisionIsOpportunistic = args.Value is true" />
+                            <label for="edit-decision-opportunistic">Decided as rotation or opportunity allows</label>
+                          </div>
+                          <small class="muted">@DecisionOpportunisticHelp</small>
                         </FormField>
 
                         <FormField Label="Entrustment scale" InputId="edit-scale">
@@ -263,6 +299,37 @@
             <small class="muted">@PeriodHelp</small>
           </FormField>
 
+          <FormField Label="Decision cadence" InputId="curriculum-item-decision-cadence">
+            <InputSelect id="curriculum-item-decision-cadence" class="form-select" TValue="QuotaPeriod?"
+                         @bind-Value="_addModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_addModel)">
+              <option value="">No published cadence</option>
+              <option value="@QuotaPeriod.Semester">Each semester</option>
+              <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
+            </InputSelect>
+            <small class="muted">@DecisionCadenceHelp</small>
+          </FormField>
+
+          <FormField Label="Decided by" InputId="curriculum-item-decision-body">
+            <InputSelect id="curriculum-item-decision-body" class="form-select" TValue="string" @bind-Value="_addModel.DecisionBodyKey">
+              <option value="">The trainee's general panel</option>
+              @foreach (var body in _decisionBodies)
+              {
+                <option value="@body.Key">@body.Name</option>
+              }
+            </InputSelect>
+            <small class="muted">@DecisionBodyHelp</small>
+          </FormField>
+
+          <FormField Label="Opportunistic" InputId="curriculum-item-decision-opportunistic">
+            <div class="form-check">
+              <input id="curriculum-item-decision-opportunistic" class="form-check-input" type="checkbox"
+                     checked="@_addModel.DecisionIsOpportunistic" disabled="@(_addModel.DecisionCadence is null)"
+                     @onchange="args => _addModel.DecisionIsOpportunistic = args.Value is true" />
+              <label for="curriculum-item-decision-opportunistic">Decided as rotation or opportunity allows</label>
+            </div>
+            <small class="muted">@DecisionOpportunisticHelp</small>
+          </FormField>
+
           <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
             <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?"
                          @bind-Value="_addModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_addModel)">
@@ -333,6 +400,7 @@
   private IReadOnlyList<EpaDto> _epas = [];
   private IReadOnlyList<EntrustmentScaleDto> _scales = [];
   private IReadOnlyList<WbaToolDto> _tools = [];
+  private IReadOnlyList<DecisionBodyDto> _decisionBodies = [];
   // Two models, not one (T122). The inline edit row and the Add form used to bind the same instance, so opening a row
   // for editing silently filled the Add form with that row's values; with a tool list in both, the two checkbox
   // groups would also have toggled each other.
@@ -356,6 +424,9 @@
   private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
   private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
   private const string WindowHelp = "Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.";
+  private const string DecisionCadenceHelp = "How often a committee takes the entrustment decision on this EPA (Annexure B). Separate from the target: an EPA observed each semester may be decided once a year. With no cadence the EPA is never due, but a committee can still decide it.";
+  private const string DecisionBodyHelp = "The committee the College names to decide this EPA instead of the trainee's general panel, such as the neonatal CCC for paediatric EPAs 4 and 5.";
+  private const string DecisionOpportunisticHelp = "For an EPA the College has decided as rotation or opportunity allows, such as paediatric EPAs 8, 9 and 13: its decision is never overdue. Needs a decision cadence.";
   private const string ToolsHelp = "The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.";
 
   private IEnumerable<EpaDto> AvailableEpas => _epas.Where(entity => entity.SubSpecialityId == _curriculum?.SubSpecialityId);
@@ -380,6 +451,7 @@
       _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId, authState.User));
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
       _tools = await Sender.Send(new GetWbaToolsQuery());
+      _decisionBodies = await Sender.Send(new GetDecisionBodiesQuery());
       ResetItemModel();
     }
     catch (Exception exception)
@@ -402,7 +474,7 @@
 
     _addError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), authState.User, _addModel.ScaleId)), "Curriculum item added.");
+    _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), _addModel.DecisionCadence, NullIfBlank(_addModel.DecisionBodyKey), _addModel.DecisionIsOpportunistic, authState.User, _addModel.ScaleId)), "Curriculum item added.");
     if (_addError is not null)
     {
       return;
@@ -418,6 +490,11 @@
     _editModel.EpaId = item.EpaId;
     _editModel.RequiredCount = item.RequiredCount;
     _editModel.QuotaPeriod = item.QuotaPeriod;
+    // Copied as they are, null included, so saving an item unchanged keeps its decision (T131). A null cadence is not
+    // the zero value: it stays "no published cadence".
+    _editModel.DecisionCadence = item.DecisionCadence;
+    _editModel.DecisionBodyKey = item.DecisionBodyKey;
+    _editModel.DecisionIsOpportunistic = item.DecisionIsOpportunistic;
     _editModel.MinimumLevelOrder = item.MinimumLevelOrder;
     _editModel.WindowMonths = item.WindowMonths;
     _editModel.Weight = item.Weight;
@@ -447,7 +524,7 @@
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     // Only leave edit mode when the command actually succeeded. Closing the row on a refusal would throw away
     // everything the operator picked while showing them an error about it.
-    _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), authState.User, _editModel.ScaleId)), "Curriculum item saved.");
+    _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), _editModel.DecisionCadence, NullIfBlank(_editModel.DecisionBodyKey), _editModel.DecisionIsOpportunistic, authState.User, _editModel.ScaleId)), "Curriculum item saved.");
     if (_rowError is not null)
     {
       return;
@@ -490,6 +567,10 @@
     _addModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
     _addModel.RequiredCount = 1;
     _addModel.QuotaPeriod = QuotaPeriod.AcademicYear;
+    // No decision cadence until one is chosen (T131): every EPA due each academic year is not a default anybody chose.
+    _addModel.DecisionCadence = null;
+    _addModel.DecisionBodyKey = null;
+    _addModel.DecisionIsOpportunistic = false;
     // Empty, not a number: "4" was 3b on the v11.1 ladder, and a default is a minimum nobody chose (T125).
     _addModel.MinimumLevelOrder = null;
     _addModel.WindowMonths = 12;
@@ -537,6 +618,20 @@
 
     return (null, null);
   }
+
+  /// <summary>
+  /// With no cadence an EPA is never due, so "as opportunity allows" says nothing; the box is cleared and disabled rather
+  /// than left ticked for the command validator to refuse (T131).
+  /// </summary>
+  private static void OnDecisionCadenceChanged(CurriculumItemFormModel model)
+  {
+    if (model.DecisionCadence is null)
+    {
+      model.DecisionIsOpportunistic = false;
+    }
+  }
+
+  private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
   /// <summary>A scale change: the minima on screen go with the ladder they were picked on (T125). See <see cref="CurriculumItemFormModel.MoveToScale" />.</summary>
   private static void OnScaleChanged(CurriculumItemFormModel model) => model.MoveToScale();
@@ -633,6 +728,20 @@
   private static string EpaOptionText(EpaDto epa)
     => epa.IsActive ? $"{epa.Code} - {epa.Title}" : $"{epa.Code} - {epa.Title} (inactive)";
 
+  /// <summary>The item's entrustment decision, as the target's second line (T131).</summary>
+  private static string DecisionText(CurriculumItemDto item)
+  {
+    var cadence = item.DecisionCadence switch
+    {
+      QuotaPeriod.Semester => "Decided each semester",
+      QuotaPeriod.AcademicYear => "Decided each academic year",
+      _ => "No decision cadence"
+    };
+    var opportunity = item.DecisionIsOpportunistic ? ", as opportunity allows" : string.Empty;
+    var body = item.DecisionBodyName is { } name ? $", by the {name}" : string.Empty;
+    return $"{cadence}{opportunity}{body}";
+  }
+
   private static string TargetText(CurriculumItemDto item)
     => item.QuotaPeriod == QuotaPeriod.Semester
       ? $"{item.RequiredCount} per semester"
@@ -648,6 +757,15 @@
 
     /// <summary>The window RequiredCount is a target for (T130). Copied from the item on edit, so saving unchanged keeps it.</summary>
     public QuotaPeriod QuotaPeriod { get; set; }
+
+    /// <summary>How often the EPA is decided, or null for no published cadence (T131). Nullable, so nothing defaults it.</summary>
+    public QuotaPeriod? DecisionCadence { get; set; }
+
+    /// <summary>The deciding body's key; null or blank for the general panel (T131).</summary>
+    public string? DecisionBodyKey { get; set; }
+
+    /// <summary>Whether the EPA is decided as opportunity allows (T131). Only with a cadence.</summary>
+    public bool DecisionIsOpportunistic { get; set; }
 
     /// <summary>The flat minimum's ordinal; null until one is picked, and again after a scale change (T125).</summary>
     public int? MinimumLevelOrder { get; set; }

@@ -35,7 +35,7 @@ public sealed class CurriculumItemQuotaPeriodTests
             await SeedAsync(dbContext);
 
             var result = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, null, null, null, TestPrincipals.Administrator()),
+                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
             result.Items.Single().QuotaPeriod.Should().Be(QuotaPeriod.Semester);
@@ -58,7 +58,7 @@ public sealed class CurriculumItemQuotaPeriodTests
         {
             await SeedAsync(dbContext);
             var added = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, null, null, null, TestPrincipals.Administrator()),
+                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator()),
                 CancellationToken.None);
             itemId = added.Items.Single().Id;
         }
@@ -66,7 +66,7 @@ public sealed class CurriculumItemQuotaPeriodTests
         await using (var dbContext = CreateDbContext(databaseName))
         {
             var updated = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-                new UpdateCurriculumItemCommand(CurriculumId, itemId, FirstEpaId, 6, QuotaPeriod.AcademicYear, 4, 12, null, null, null, TestPrincipals.Administrator()),
+                new UpdateCurriculumItemCommand(CurriculumId, itemId, FirstEpaId, 6, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
             updated.Items.Single().QuotaPeriod.Should().Be(QuotaPeriod.AcademicYear);
@@ -89,7 +89,7 @@ public sealed class CurriculumItemQuotaPeriodTests
         {
             await SeedAsync(dbContext);
             await new AddCurriculumItemCommandHandler(dbContext).Handle(
-                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, 1.5, """{"1":2,"2":3}""", null, TestPrincipals.Administrator()),
+                new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, QuotaPeriod.Semester, 4, 12, 1.5, """{"1":2,"2":3}""", null, null, null, false, TestPrincipals.Administrator()),
                 CancellationToken.None);
         }
 
@@ -116,6 +116,9 @@ public sealed class CurriculumItemQuotaPeriodTests
                     loaded.Weight,
                     loaded.MinimumLevelByStageJson,
                     loaded.PermittedToolKeys,
+                    loaded.DecisionCadence,
+                    loaded.DecisionBodyKey,
+                    loaded.DecisionIsOpportunistic,
                     TestPrincipals.Administrator(),
                     loaded.ScaleId),
                 CancellationToken.None);
@@ -136,7 +139,7 @@ public sealed class CurriculumItemQuotaPeriodTests
     {
         // The read side tolerates an undeclared value (QuotaWindow reads anything but Semester as a year), so
         // the write side is the only place a stray integer from a form or an API call can be stopped.
-        var command = new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, (QuotaPeriod)99, 4, 12, null, null, null, TestPrincipals.Administrator());
+        var command = new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, (QuotaPeriod)99, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator());
 
         var result = new AddCurriculumItemCommandValidator().Validate(command);
 
@@ -148,7 +151,7 @@ public sealed class CurriculumItemQuotaPeriodTests
     [Fact]
     public void UpdateCurriculumItemValidator_RefusesAQuotaPeriodTheEnumDoesNotDeclare()
     {
-        var command = new UpdateCurriculumItemCommand(CurriculumId, 7000, FirstEpaId, 3, (QuotaPeriod)99, 4, 12, null, null, null, TestPrincipals.Administrator());
+        var command = new UpdateCurriculumItemCommand(CurriculumId, 7000, FirstEpaId, 3, (QuotaPeriod)99, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator());
 
         var result = new UpdateCurriculumItemCommandValidator().Validate(command);
 
@@ -164,8 +167,8 @@ public sealed class CurriculumItemQuotaPeriodTests
     {
         // The control for the two refusals above: the same commands with a declared value are valid, so the
         // refusal is the enum rule and not some other rule these fixtures happen to trip.
-        var add = new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, quotaPeriod, 4, 12, null, null, null, TestPrincipals.Administrator());
-        var update = new UpdateCurriculumItemCommand(CurriculumId, 7000, FirstEpaId, 3, quotaPeriod, 4, 12, null, null, null, TestPrincipals.Administrator());
+        var add = new AddCurriculumItemCommand(CurriculumId, FirstEpaId, 3, quotaPeriod, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator());
+        var update = new UpdateCurriculumItemCommand(CurriculumId, 7000, FirstEpaId, 3, quotaPeriod, 4, 12, null, null, null, null, null, false, TestPrincipals.Administrator());
 
         new AddCurriculumItemCommandValidator().Validate(add).IsValid.Should().BeTrue();
         new UpdateCurriculumItemCommandValidator().Validate(update).IsValid.Should().BeTrue();

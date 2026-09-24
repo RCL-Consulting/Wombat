@@ -142,6 +142,13 @@
       ]
     }
   ],
+  "decisionBodyVocabulary": [
+    {
+      "key": "neonatal",
+      "name": "Neonatal team Clinical Competency Committee",
+      "note": "Annexure B: \"For EPAs 4 and 5 the decision is taken by the neonatal team Clinical Competency Committee.\""
+    }
+  ],
   "epas": [
     {
       "code": "PAED-001",
@@ -187,6 +194,9 @@
         "rca",
         "reflective_exercise"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -238,6 +248,9 @@
         "msf",
         "rca"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -285,6 +298,9 @@
         "rca",
         "reflective_exercise"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — annually (12 months)"
     },
     {
@@ -330,6 +346,9 @@
         "mini_cex",
         "msf"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": "neonatal",
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -368,6 +387,9 @@
         "dops",
         "msf"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": "neonatal",
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -407,6 +429,9 @@
         "mini_cex",
         "msf"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — annually (12 months)"
     },
     {
@@ -445,6 +470,9 @@
         "msf"
       ],
       "wbaToolsNote": "direct_observation is not in Annexure A's cell for this EPA. The College added it on 2026-09-20: EPA 7 does not exclude general Direct observation (D12).",
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — annually (each year for progression)"
     },
     {
@@ -483,6 +511,9 @@
         "msf",
         "reflective_exercise"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": true,
       "currency": "Essential — annually (as rotation allows)"
     },
     {
@@ -517,6 +548,9 @@
         "direct_observation",
         "msf"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": true,
       "currency": "Required — opportunity with adolescents with LTHCs"
     },
     {
@@ -553,6 +587,9 @@
         "direct_observation",
         "msf"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -587,6 +624,9 @@
         "direct_observation",
         "msf"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — annually (12 months)"
     },
     {
@@ -627,6 +667,9 @@
         "mini_cex",
         "msf"
       ],
+      "decisionCadence": "semester",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — each semester (six months)"
     },
     {
@@ -663,6 +706,9 @@
         "mini_cex",
         "msf"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": true,
       "currency": "Essential — annually (as opportunity allows)"
     },
     {
@@ -698,6 +744,9 @@
         "msf",
         "reflective_exercise"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Required — annually (12 months)"
     },
     {
@@ -739,6 +788,9 @@
         "msf",
         "portfolio_review"
       ],
+      "decisionCadence": "annual",
+      "decisionBody": null,
+      "decisionOpportunistic": false,
       "currency": "Essential — observed each semester; annual entrustment decision"
     }
   ]

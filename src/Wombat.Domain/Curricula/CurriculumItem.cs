@@ -94,9 +94,51 @@ public sealed class CurriculumItem
     /// </remarks>
     public string? PermittedToolsJson { get; set; }
 
+    /// <summary>
+    /// How often a committee takes this EPA's entrustment decision: each <see cref="Curricula.QuotaPeriod.Semester" /> or
+    /// each <see cref="Curricula.QuotaPeriod.AcademicYear" /> (T131, Decision 1). Null means the item has no published
+    /// cadence: it is never due, but a committee can still decide it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// For the CPSA paediatric catalogue it is Annexure B's <c>entrustment_decision</c> column: EPAs 1, 2, 4, 5, 10 and 12
+    /// each semester, the other nine annually, 21 decisions a year. It reuses <see cref="Curricula.QuotaPeriod" />, the
+    /// window a target is counted over, so that cadence and quota speak one calendar and no second one is invented. It is
+    /// independent of <see cref="QuotaPeriod" />: EPA 3 is observed three times a semester and decided once a year.
+    /// </para>
+    /// <para>
+    /// Never read from the catalogue's <c>currency</c> string, which may be an expiry rather than a cadence (§ 3F
+    /// question 10, T139). And never defaulted: <see cref="Curricula.QuotaPeriod.AcademicYear" /> is the enum's zero
+    /// value, so a seed record, a DTO, a select binding or a clone that filled it in by default would silently make an
+    /// EPA due every year. Nullable everywhere, for that reason.
+    /// </para>
+    /// </remarks>
+    public QuotaPeriod? DecisionCadence { get; set; }
+
+    /// <summary>
+    /// The <see cref="Curricula.DecisionBody" /> that decides this EPA, by key, or null for the trainee's general panel
+    /// (T131, Decision 2). <c>neonatal</c> on the catalogue's EPAs 4 and 5, from Annexure B.
+    /// </summary>
+    /// <remarks>
+    /// On the item, not on the EPA, for the reason <see cref="ScaleId" /> is: an EPA row is shared by every curriculum
+    /// version that uses it. A restricting foreign key: a body in use cannot be deleted.
+    /// </remarks>
+    public string? DecisionBodyKey { get; set; }
+
+    /// <summary>
+    /// Whether the College has this EPA decided as opportunity allows (T131, open question O7). EPAs 8, 9 and 13 in the
+    /// catalogue: Annexure A's "as rotation allows", "opportunity with adolescents" and "as opportunity allows".
+    /// </summary>
+    /// <remarks>
+    /// Such a decision is still on the cadence, but it is never a closing line: a sitting can be ratified without it, and
+    /// it never reads as missed. Meaningless without a <see cref="DecisionCadence" />, so the item editor refuses it there.
+    /// </remarks>
+    public bool DecisionIsOpportunistic { get; set; }
+
     public Curriculum Curriculum { get; set; } = null!;
     public Wombat.Domain.Epas.Epa Epa { get; set; } = null!;
     public Wombat.Domain.Epas.EntrustmentScale? Scale { get; set; }
+    public DecisionBody? DecisionBody { get; set; }
 
     public int GetMinimumLevelForStage(int? traineeStage)
     {

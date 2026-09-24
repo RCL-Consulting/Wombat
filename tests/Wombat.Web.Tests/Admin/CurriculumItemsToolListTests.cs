@@ -371,8 +371,10 @@ public sealed class CurriculumItemsToolListTests : TestContext
             .First(button => string.Equals(button.TextContent.Trim(), label, StringComparison.Ordinal))
             .Click();
 
+    // The Tools group is the fieldset nested in the edit row's own fieldset. The edit fieldset itself also holds the
+    // "decided as opportunity allows" checkbox (T131), which is not an instrument.
     private static IReadOnlyList<string> EditCheckboxIds(IRenderedComponent<CurriculumItemsEdit> cut)
-        => cut.FindAll("tbody fieldset input[type=checkbox]").Select(input => input.Id!).ToList();
+        => cut.FindAll("tbody fieldset fieldset input[type=checkbox]").Select(input => input.Id!).ToList();
 
     private static IReadOnlyList<string> AddCheckboxIds(IRenderedComponent<CurriculumItemsEdit> cut)
         => cut.FindAll("form fieldset input[type=checkbox]").Select(input => input.Id!).ToList();

@@ -56,7 +56,7 @@ public sealed class CurriculumItemEpaIsActiveTests
 
         var curriculum = await new UpdateCurriculumItemCommandHandler(db).Handle(
             new UpdateCurriculumItemCommand(
-                CurriculumId, ActiveItemId, ActiveEpaId, 3, QuotaPeriod.Semester, 3, 12, null, null, null,
+                CurriculumId, ActiveItemId, ActiveEpaId, 3, QuotaPeriod.Semester, 3, 12, null, null, null, null, null, false,
                 TestPrincipals.Administrator()),
             CancellationToken.None);
 

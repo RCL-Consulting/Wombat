@@ -17,6 +17,8 @@ internal static class CurriculumMappings
             .ThenInclude(entity => entity.Epa)
             .Include(entity => entity.Items)
             .ThenInclude(entity => entity.Scale)
+            .Include(entity => entity.Items)
+            .ThenInclude(entity => entity.DecisionBody)
             .SingleOrDefaultAsync(entity => entity.Id == curriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The requested curriculum was not found.");
 
@@ -36,9 +38,34 @@ internal static class CurriculumMappings
             canEditInPlace,
             curriculum.Items
                 .OrderBy(entity => entity.Epa.Code)
-                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.Epa.IsActive, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
+                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.Epa.IsActive, entity.DecisionCadence, entity.DecisionBodyKey, entity.DecisionBody == null ? null : entity.DecisionBody.Name, entity.DecisionIsOpportunistic, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
                 .ToList(),
             curriculum.SubSpeciality.DefaultEntrustmentScaleId);
+
+    /// <summary>
+    /// Refuses a decision body the vocabulary does not hold (T131). A no-op for none.
+    /// </summary>
+    /// <remarks>
+    /// Runs before either handler mutates anything, because the audit pipeline commits a half-finished mutation when a
+    /// handler throws. On PostgreSQL the foreign key would refuse the key anyway, but at SaveChanges, as a database error
+    /// naming a constraint rather than the body.
+    /// </remarks>
+    public static async Task EnsureDecisionBodyExistsAsync(
+        IApplicationDbContext dbContext,
+        string? decisionBodyKey,
+        CancellationToken cancellationToken)
+    {
+        var key = DecisionBody.NormalizeKey(decisionBodyKey);
+        if (key is null)
+        {
+            return;
+        }
+
+        if (!await dbContext.Set<DecisionBody>().AnyAsync(body => body.Key == key, cancellationToken))
+        {
+            throw new InvalidOperationException($"'{key}' is not a decision body Wombat knows.");
+        }
+    }
 
     /// <summary>
     /// Refuses a tool list naming an instrument the vocabulary does not hold (T122). A no-op for none.

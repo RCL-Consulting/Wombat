@@ -40,6 +40,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<Curriculum> Curricula => Set<Curriculum>();
     public DbSet<CurriculumItem> CurriculumItems => Set<CurriculumItem>();
     public DbSet<CurriculumItemProgress> CurriculumItemProgresses => Set<CurriculumItemProgress>();
+    public DbSet<DecisionBody> DecisionBodies => Set<DecisionBody>();
     public DbSet<DecisionPanel> DecisionPanels => Set<DecisionPanel>();
     public DbSet<DecisionPanelMember> DecisionPanelMembers => Set<DecisionPanelMember>();
     public DbSet<CommitteeReview> CommitteeReviews => Set<CommitteeReview>();

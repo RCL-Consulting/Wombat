@@ -192,7 +192,9 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         checks.Should().BeEquivalentTo(
             "CK_CurriculumItemProgresses_AcademicYear",
             "CK_CurriculumItemProgresses_Semester",
-            "CK_CurriculumItems_QuotaPeriod");
+            "CK_CurriculumItems_QuotaPeriod",
+            // Not T130's: T131 slice 2 checks the decision cadence the same way (DecisionCadenceMigrationPostgresTests).
+            "CK_CurriculumItems_DecisionCadence");
     }
 
     [Fact]

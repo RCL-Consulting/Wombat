@@ -25,6 +25,12 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         new("msf", "Multi-source feedback", null)
     ];
 
+    /// <summary>What <see cref="GetDecisionBodiesQuery" /> answers: the one body the catalogue names (T131).</summary>
+    public static readonly IReadOnlyList<DecisionBodyDto> DecisionBodies =
+    [
+        new("neonatal", "Neonatal team Clinical Competency Committee")
+    ];
+
     public static readonly IReadOnlyList<EpaDto> Epas =
     [
         Epa(1, "PAED-001"),
@@ -74,12 +80,19 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         int minimumLevelOrder = 3,
         string? stageMinimaJson = null,
         EntrustmentScaleDto? scale = null,
-        bool epaIsActive = true)
+        bool epaIsActive = true,
+        QuotaPeriod? decisionCadence = null,
+        string? decisionBodyKey = null,
+        bool decisionIsOpportunistic = false)
     {
         var epa = Epas.Single(candidate => candidate.Id == epaId);
         return new CurriculumItemDto(id, epaId, epa.Code, epa.Title, requiredCount, period, minimumLevelOrder, 12, null,
-            stageMinimaJson, permittedToolsJson, epaIsActive, scale?.Id, scale?.Name);
+            stageMinimaJson, permittedToolsJson, epaIsActive, decisionCadence, decisionBodyKey, BodyName(decisionBodyKey),
+            decisionIsOpportunistic, scale?.Id, scale?.Name);
     }
+
+    private static string? BodyName(string? key)
+        => key is null ? null : DecisionBodies.FirstOrDefault(body => body.Key == key)?.Name ?? key;
 
     /// <summary>What <see cref="ListEpasForSubSpecialityQuery" /> answers; <see cref="Epas" />, all active, when not set.</summary>
     public IReadOnlyList<EpaDto> EpaList { get; init; } = Epas;
@@ -96,6 +109,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
             ListEpasForSubSpecialityQuery => EpaList,
             GetEntrustmentScalesListQuery => Scales,
             GetWbaToolsQuery => Vocabulary,
+            GetDecisionBodiesQuery => DecisionBodies,
             UpdateCurriculumItemCommand update => Update(update),
             AddCurriculumItemCommand add => Add(add),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
@@ -128,7 +142,11 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
                     MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(command.MinimumLevelByStageJson),
                     ScaleId = command.ScaleId,
                     ScaleName = Scales.FirstOrDefault(scale => scale.Id == command.ScaleId)?.Name,
-                    PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(command.PermittedToolKeys)
+                    PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(command.PermittedToolKeys),
+                    DecisionCadence = command.DecisionCadence,
+                    DecisionBodyKey = DecisionBody.NormalizeKey(command.DecisionBodyKey),
+                    DecisionBodyName = BodyName(DecisionBody.NormalizeKey(command.DecisionBodyKey)),
+                    DecisionIsOpportunistic = command.DecisionIsOpportunistic
                 }
                 : item)
             .ToList();

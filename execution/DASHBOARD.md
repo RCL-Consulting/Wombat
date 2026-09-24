@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+bfc5d58 feat(committee): every staged entrustment decision names the frozen evidence it rests on, and ratify issues nothing without it (T131 slice 1, D38)
 26bc740 fix(msf): coverage is read from the released campaign's finished evidence rows everywhere — committee snapshot, coverage card, campaign report and portfolio PDF — so a campaign released before the per-EPA stamp is not reported as covering nothing (T186)
 455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
 55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
 4db504b feat(committee): the review and the trainee see each EPA's entrustment against Annexure A's target for the year, and exit-rule readiness — informational, no graduation gate (T166)
-2352a16 docs(execution): handoff progress
 ```

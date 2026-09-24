@@ -138,8 +138,12 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
 
         edit.Should().Equal(add);
         edit.Select(field => field.Name).Should().Equal(
-            "EPA required", "Target", "Per", "Entrustment scale", "Minimum level required",
+            "EPA required", "Target", "Per",
+            // T131: Annexure B's decision cells follow its observation cells.
+            "Decision cadence", "Decided by", "Opportunistic Decided as rotation or opportunity allows",
+            "Entrustment scale", "Minimum level required",
             "Minimum by training year", "Completion window (months)", "Weight", "Tools");
+        edit.Single(field => field.Name == "Decision cadence").Help.Should().StartWith("How often a committee takes the entrustment decision");
         edit.Single(field => field.Name == "Entrustment scale").Help.Should().StartWith("The ladder the minima are picked on.");
         edit.Single(field => field.Name == "Completion window (months)").Help.Should().StartWith("Only used to suggest");
     }

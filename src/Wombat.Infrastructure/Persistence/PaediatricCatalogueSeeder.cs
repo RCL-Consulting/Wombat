@@ -59,6 +59,9 @@ public sealed class PaediatricCatalogueSeeder
         // First, so the vocabulary exists before anything that names it: an allow-list or a type's instrument.
         await EnsureWbaToolsAsync(catalogue.WbaToolVocabulary, cancellationToken);
 
+        // Before the curriculum too, and for a harder reason: an item's DecisionBodyKey is a foreign key (T131).
+        await EnsureDecisionBodiesAsync(catalogue.DecisionBodyVocabulary, cancellationToken);
+
         var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(cancellationToken);
         var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
         await EnsureDefaultScaleAsync(subSpecialityId, scale.Id, cancellationToken);
@@ -200,6 +203,37 @@ public sealed class PaediatricCatalogueSeeder
 
             tool.Name = seed.Name;
             tool.Description = seed.Description;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Inserts the College's decision bodies and keeps each row's name equal to the catalogue (T131, Decision 2).
+    /// </summary>
+    /// <remarks>
+    /// A reconcile, like <see cref="EnsureWbaToolsAsync" />, and safe for the same reason: there is no admin command for
+    /// DecisionBodies, so the catalogue is the only author a row can have. On a database the T131 migration stamped, the
+    /// row it inserted is found here and left as it is. A key the catalogue no longer lists is left in place: an item may
+    /// still name it, and the foreign key would refuse the delete anyway.
+    /// </remarks>
+    private async Task EnsureDecisionBodiesAsync(IReadOnlyList<DecisionBodySeed> vocabulary, CancellationToken cancellationToken)
+    {
+        var existing = await _dbContext.DecisionBodies.ToDictionaryAsync(body => body.Key, StringComparer.Ordinal, cancellationToken);
+
+        foreach (var seed in vocabulary)
+        {
+            var key = DecisionBody.NormalizeKey(seed.Key)
+                ?? throw new InvalidOperationException("The paediatric EPA catalogue names a decision body with a blank key.");
+
+            if (!existing.TryGetValue(key, out var body))
+            {
+                body = new DecisionBody { Key = key };
+                _dbContext.DecisionBodies.Add(body);
+                existing[key] = body;
+            }
+
+            body.Name = seed.Name;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -390,7 +424,7 @@ public sealed class PaediatricCatalogueSeeder
             }
 
             // The provenance pin (T109) is stamped here, on create, and nowhere else (T174).
-            curriculum.Items.Add(BuildCurriculumItem(epaId, scaleId, seed));
+            curriculum.Items.Add(BuildCurriculumItem(epaId, scaleId, seed, catalogue.DecisionBodyVocabulary));
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -398,6 +432,107 @@ public sealed class PaediatricCatalogueSeeder
         WarnWhereTargetsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
         WarnWhereToolListsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
         await WarnWhereScalePinsDifferFromTheCatalogueAsync(curriculum, catalogue, epaIdsByCode, scaleId, cancellationToken);
+        WarnWhereDecisionsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
+    }
+
+    /// <summary>
+    /// Logs, and never writes, every seeded item whose decision cadence, decision body or opportunistic flag no longer
+    /// matches the catalogue (T131).
+    /// </summary>
+    /// <remarks>
+    /// The same contract as the target, tool-list and scale-pin passes, for the same reason. Null is a meaningful cadence
+    /// ("no published cadence") and a meaningful body ("the general panel"), and both are what an administrator saves when
+    /// they clear the field on purpose, so a boot-time <c>is null</c> backfill could not tell a choice from a gap. Existing
+    /// databases were stamped once by the T131 migration; a later change reaches them only through a new migration.
+    /// </remarks>
+    private void WarnWhereDecisionsDifferFromTheCatalogue(
+        Curriculum curriculum,
+        CatalogueSeed catalogue,
+        IReadOnlyDictionary<string, int> epaIdsByCode)
+    {
+        foreach (var seed in catalogue.Epas)
+        {
+            if (!epaIdsByCode.TryGetValue(seed.Code, out var epaId))
+            {
+                continue;
+            }
+
+            var item = curriculum.Items.FirstOrDefault(entity => entity.EpaId == epaId && entity.OwningInstitutionId is null);
+            if (item is null)
+            {
+                continue;
+            }
+
+            var expected = DecisionFor(seed, catalogue.DecisionBodyVocabulary);
+            if (item.DecisionCadence != expected.Cadence
+                || !string.Equals(item.DecisionBodyKey, expected.BodyKey, StringComparison.Ordinal)
+                || item.DecisionIsOpportunistic != expected.Opportunistic)
+            {
+                _logger.LogWarning(
+                    "Curriculum item {CurriculumItemId} ({EpaCode}) is decided {DecisionCadence} by {DecisionBody}{Opportunistic}, but EPA v11.1 has it decided {ExpectedCadence} by {ExpectedBody}{ExpectedOpportunistic}. Not changed: this seeder never overwrites an existing item.",
+                    item.Id,
+                    seed.Code,
+                    DescribeCadence(item.DecisionCadence),
+                    item.DecisionBodyKey ?? "the general panel",
+                    item.DecisionIsOpportunistic ? ", as opportunity allows" : string.Empty,
+                    DescribeCadence(expected.Cadence),
+                    expected.BodyKey ?? "the general panel",
+                    expected.Opportunistic ? ", as opportunity allows" : string.Empty);
+            }
+        }
+
+        static string DescribeCadence(QuotaPeriod? cadence) => cadence switch
+        {
+            QuotaPeriod.Semester => "each semester",
+            QuotaPeriod.AcademicYear => "each academic year",
+            null => "on no published cadence",
+            _ => $"on cadence {(int)cadence}"
+        };
+    }
+
+    /// <summary>
+    /// The entrustment decision a catalogue EPA publishes, as (cadence, body key, opportunistic) (T131, Decisions 1–2).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The cadence is Annexure B's <c>entrustment_decision</c> column as an explicit key, <c>semester</c> or
+    /// <c>annual</c>, never parsed out of <c>currency</c>, which may be an expiry (§ 3F question 10). Null in the file is
+    /// null here: no published cadence, never due. Nothing defaults to <see cref="QuotaPeriod.AcademicYear" />, the zero
+    /// value.
+    /// </para>
+    /// <para>
+    /// Throws on a cadence it does not know, on a body the vocabulary does not list, and on an opportunistic EPA with no
+    /// cadence. Each is a defect in the shipped file, and on PostgreSQL the second would otherwise surface as a foreign-key
+    /// violation naming no EPA.
+    /// </para>
+    /// </remarks>
+    internal static (QuotaPeriod? Cadence, string? BodyKey, bool Opportunistic) DecisionFor(
+        EpaSeed seed,
+        IReadOnlyList<DecisionBodySeed> vocabulary)
+    {
+        QuotaPeriod? cadence = seed.DecisionCadence switch
+        {
+            null => null,
+            "semester" => QuotaPeriod.Semester,
+            "annual" => QuotaPeriod.AcademicYear,
+            var other => throw new InvalidOperationException(
+                $"The paediatric EPA catalogue gives {seed.Code} the decision cadence '{other}'. Expected 'semester', 'annual' or null.")
+        };
+
+        var bodyKey = DecisionBody.NormalizeKey(seed.DecisionBody);
+        if (bodyKey is not null && !vocabulary.Any(body => DecisionBody.NormalizeKey(body.Key) == bodyKey))
+        {
+            throw new InvalidOperationException(
+                $"The paediatric EPA catalogue has {seed.Code} decided by '{bodyKey}', which its decisionBodyVocabulary does not list.");
+        }
+
+        if (seed.DecisionOpportunistic && cadence is null)
+        {
+            throw new InvalidOperationException(
+                $"The paediatric EPA catalogue has {seed.Code} decided as opportunity allows, but gives it no decision cadence.");
+        }
+
+        return (cadence, bodyKey, seed.DecisionOpportunistic);
     }
 
     /// <summary>
@@ -588,9 +723,10 @@ public sealed class PaediatricCatalogueSeeder
             ? (QuotaPeriod.Semester, perSemester)
             : (QuotaPeriod.AcademicYear, seed.ObservationsPerYear);
 
-    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed)
+    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed, IReadOnlyList<DecisionBodySeed> decisionBodies)
     {
         var (quotaPeriod, requiredCount) = QuotaFor(seed);
+        var decision = DecisionFor(seed, decisionBodies);
 
         return new CurriculumItem
         {
@@ -615,7 +751,12 @@ public sealed class PaediatricCatalogueSeeder
             WindowMonths = 12,
             // Annexure A's tools cell, as instrument keys with the College's aliases applied (T122, D4, D12). Checked
             // when an activity is filed and submitted, never at credit (D20).
-            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(seed.WbaTools)
+            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(seed.WbaTools),
+            // Annexure B's decision cadence and, for EPAs 4 and 5, the neonatal CCC (T131). On create only, like every
+            // value above; an existing database got them from the T131 migration.
+            DecisionCadence = decision.Cadence,
+            DecisionBodyKey = decision.BodyKey,
+            DecisionIsOpportunistic = decision.Opportunistic
         };
     }
 
@@ -640,7 +781,16 @@ public sealed class PaediatricCatalogueSeeder
         [property: JsonPropertyName("catalogueVersion")] string CatalogueVersion,
         [property: JsonPropertyName("scale")] ScaleSeed Scale,
         [property: JsonPropertyName("wbaToolVocabulary")] IReadOnlyList<WbaToolSeed> WbaToolVocabulary,
+        [property: JsonPropertyName("decisionBodyVocabulary")] IReadOnlyList<DecisionBodySeed> DecisionBodyVocabulary,
         [property: JsonPropertyName("epas")] IReadOnlyList<EpaSeed> Epas);
+
+    /// <summary>
+    /// One committee the College names as deciding an EPA (T131). The catalogue also carries a <c>note</c> quoting the
+    /// Annexure the entry comes from, deliberately not read: provenance for a reader.
+    /// </summary>
+    internal sealed record DecisionBodySeed(
+        [property: JsonPropertyName("key")] string Key,
+        [property: JsonPropertyName("name")] string Name);
 
     /// <summary>
     /// One instrument of the College's vocabulary (T122). The catalogue also carries <c>annexureNames</c>, the
@@ -673,6 +823,12 @@ public sealed class PaediatricCatalogueSeeder
     /// as <c>annexureTools</c>, deliberately unread, with the College's two aliases (D4, D12) resolved in the
     /// vocabulary and EPA 7's addition of Direct observation (D12) noted as <c>wbaToolsNote</c>.
     /// </param>
+    /// <param name="DecisionCadence">
+    /// Annexure B's entrustment-decision cadence, <c>semester</c> or <c>annual</c>, or null for none (T131). An explicit
+    /// key, like <paramref name="ObservationsPerSemester" />, so nothing parses <c>currency</c>; see <see cref="DecisionFor" />.
+    /// </param>
+    /// <param name="DecisionBody">A <c>decisionBodyVocabulary</c> key, or null for the general panel (T131).</param>
+    /// <param name="DecisionOpportunistic">Whether Annexure A has the EPA decided as opportunity allows (T131, O7).</param>
     internal sealed record EpaSeed(
         [property: JsonPropertyName("code")] string Code,
         [property: JsonPropertyName("title")] string Title,
@@ -683,7 +839,10 @@ public sealed class PaediatricCatalogueSeeder
         [property: JsonPropertyName("observationsPerSemester")] int? ObservationsPerSemester,
         [property: JsonPropertyName("stageLevels")] IReadOnlyDictionary<string, int> StageLevels,
         [property: JsonPropertyName("minimumLevelOrder")] int MinimumLevelOrder,
-        [property: JsonPropertyName("wbaTools")] IReadOnlyList<string> WbaTools);
+        [property: JsonPropertyName("wbaTools")] IReadOnlyList<string> WbaTools,
+        [property: JsonPropertyName("decisionCadence")] string? DecisionCadence,
+        [property: JsonPropertyName("decisionBody")] string? DecisionBody,
+        [property: JsonPropertyName("decisionOpportunistic")] bool DecisionOpportunistic);
 
     /// <summary>Reads the catalogue file exactly as <see cref="SeedAsync" /> does. For tests.</summary>
     internal static Task<CatalogueSeed> ReadCatalogueForTestsAsync(CancellationToken cancellationToken = default)

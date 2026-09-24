@@ -65,9 +65,12 @@ public sealed class PaediatricCatalogueQuotaSeedTests
     /// </summary>
     private static readonly string[] DeliberatelyUnreadEpaKeys =
     [
-        // The source's "expiry period if not practised", which Annexure B relabels as the entrustment-DECISION
-        // cadence. It is not the quota window (D39): it reads "annually" for EPAs 3, 6 and 7, which Annexure B
-        // observes three, two and one per semester. Phase 4 (T131) is where the decision cadence is used.
+        // Annexure A's "Currency / status": the source's "expiry period if not practised", which Annexure B relabels as
+        // the entrustment-DECISION cadence. It is not the quota window (D39): it reads "annually" for EPAs 3, 6 and 7,
+        // which Annexure B observes three, two and one per semester. Nor is it read as the decision cadence: T131 seeds
+        // that from Annexure B as the explicit `decisionCadence` key, which the seeder reads. Whether this column is an
+        // expiry, so that an entrustment lapses when an EPA is not practised, is § 3F question 10 to the College, and
+        // any use of it belongs to T139.
         "currency",
 
         // Annexure A's tools cell, verbatim (T122). The seeder reads `wbaTools`, the same list as vocabulary keys with

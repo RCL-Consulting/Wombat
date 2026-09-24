@@ -30,7 +30,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var result = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         var item = result.Items.Single();
@@ -45,7 +45,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var result = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator()),
             CancellationToken.None);
 
         result.Items.Single().ScaleId.Should().BeNull("unpinned is the safe default, not an error state");
@@ -58,17 +58,17 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var added = await new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator()),
             CancellationToken.None);
         var itemId = added.Items.Single().Id;
 
         var pinned = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), SixRungScaleId),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator(), SixRungScaleId),
             CancellationToken.None);
         pinned.Items.Single().ScaleId.Should().Be(SixRungScaleId);
 
         var unpinned = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator()),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator()),
             CancellationToken.None);
         unpinned.Items.Single().ScaleId.Should().BeNull("an administrator must be able to withdraw a pin they are unsure of");
     }
@@ -81,7 +81,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, null, null, Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, null, null, null, null, false, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         // T136: the refusal names the field, the value and the ladder, so the operator knows what to change. A new
@@ -99,7 +99,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"4":6}""", null, Administrator(), FiveRungScaleId),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"4":6}""", null, null, null, false, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         // Only the year that does not fit is named: the flat 4 and year 1's 2 are rungs on the five-rung ladder.
@@ -120,7 +120,7 @@ public sealed class CurriculumItemScalePinTests
         var itemId = await SeedPinnedItemAsync(dbContext, SixRungScaleId, 6, """{"1":3,"2":4,"3":5,"4":6}""");
 
         var act = () => new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, """{"1":3,"2":4,"3":5,"4":6}""", null, Administrator(), FiveRungScaleId),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 6, 12, null, """{"1":3,"2":4,"3":5,"4":6}""", null, null, null, false, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         (await act.Should().ThrowAsync<InvalidOperationException>())
@@ -150,7 +150,7 @@ public sealed class CurriculumItemScalePinTests
         var itemId = await SeedPinnedItemAsync(dbContext, SixRungScaleId, 6, """{"1":3,"2":4,"3":5,"4":6}""");
 
         var result = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
-            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"2":3,"3":3,"4":4}""", null, Administrator(), FiveRungScaleId),
+            new UpdateCurriculumItemCommand(3000, itemId, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, """{"1":2,"2":3,"3":3,"4":4}""", null, null, null, false, Administrator(), FiveRungScaleId),
             CancellationToken.None);
 
         var dto = result.Items.Single();
@@ -171,7 +171,7 @@ public sealed class CurriculumItemScalePinTests
         await SeedAsync(dbContext);
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, Administrator(), 4242),
+            new AddCurriculumItemCommand(3000, 5000, 3, QuotaPeriod.AcademicYear, 4, 12, null, null, null, null, null, false, Administrator(), 4242),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();

@@ -232,6 +232,9 @@ public sealed class CurriculumItemPermittedToolsTests
                     loaded.Weight,
                     loaded.MinimumLevelByStageJson,
                     loaded.PermittedToolKeys,
+                    loaded.DecisionCadence,
+                    loaded.DecisionBodyKey,
+                    loaded.DecisionIsOpportunistic,
                     TestPrincipals.Administrator(),
                     loaded.ScaleId),
                 CancellationToken.None);
@@ -281,6 +284,9 @@ public sealed class CurriculumItemPermittedToolsTests
                     loaded.Weight,
                     loaded.MinimumLevelByStageJson,
                     loaded.PermittedToolKeys,
+                    loaded.DecisionCadence,
+                    loaded.DecisionBodyKey,
+                    loaded.DecisionIsOpportunistic,
                     TestPrincipals.Administrator(),
                     loaded.ScaleId),
                 CancellationToken.None);
@@ -423,7 +429,7 @@ public sealed class CurriculumItemPermittedToolsTests
     }
 
     private static AddCurriculumItemCommand AddCommand(int epaId, IReadOnlyList<string>? permittedToolKeys, System.Security.Claims.ClaimsPrincipal principal)
-        => new(CurriculumId, epaId, 3, QuotaPeriod.Semester, 4, 12, null, null, permittedToolKeys, principal);
+        => new(CurriculumId, epaId, 3, QuotaPeriod.Semester, 4, 12, null, null, permittedToolKeys, null, null, false, principal);
 
     private static UpdateCurriculumItemCommand UpdateCommand(
         int itemId,
@@ -431,7 +437,7 @@ public sealed class CurriculumItemPermittedToolsTests
         IReadOnlyList<string>? permittedToolKeys,
         System.Security.Claims.ClaimsPrincipal principal,
         int requiredCount = 3)
-        => new(CurriculumId, itemId, epaId, requiredCount, QuotaPeriod.Semester, 4, 12, null, """{"1":3,"4":5}""", permittedToolKeys, principal);
+        => new(CurriculumId, itemId, epaId, requiredCount, QuotaPeriod.Semester, 4, 12, null, """{"1":3,"4":5}""", permittedToolKeys, null, null, false, principal);
 
     private static ApplicationDbContext CreateDbContext(string databaseName)
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()

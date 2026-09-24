@@ -17,6 +17,13 @@ namespace Wombat.Application.Features.Curricula;
 /// not defaulted, for <paramref name="QuotaPeriod" />'s reason: an edit that dropped it would clear the list, and a
 /// cleared list is permissive, so nothing would ever say it had happened.
 /// </param>
+/// <param name="DecisionCadence">
+/// How often a committee decides this EPA, or null for no published cadence (T131). Required, not defaulted, and
+/// nullable: <see cref="QuotaPeriod.AcademicYear" /> is the zero value, so a defaulted or non-nullable argument would make
+/// an EPA due every year without anyone choosing it.
+/// </param>
+/// <param name="DecisionBodyKey">The body that decides this EPA, by key, or null for the general panel (T131). Required, not defaulted, for the same reason.</param>
+/// <param name="DecisionIsOpportunistic">Whether the EPA is decided as opportunity allows (T131, O7). Needs a cadence.</param>
 public sealed record AddCurriculumItemCommand(
     int CurriculumId,
     int EpaId,
@@ -27,11 +34,17 @@ public sealed record AddCurriculumItemCommand(
     double? Weight,
     string? MinimumLevelByStageJson,
     IReadOnlyList<string>? PermittedToolKeys,
+    QuotaPeriod? DecisionCadence,
+    string? DecisionBodyKey,
+    bool DecisionIsOpportunistic,
     ClaimsPrincipal Principal,
     int? ScaleId = null) : IRequest<CurriculumDto>;
 
 /// <param name="QuotaPeriod">Required, not defaulted: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would reset a semester item to a yearly one.</param>
 /// <param name="PermittedToolKeys">Required, not defaulted: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would let every instrument credit this EPA.</param>
+/// <param name="DecisionCadence">Required, not defaulted, null allowed: see <see cref="AddCurriculumItemCommand" />. An edit that omitted it would clear the cadence, or make the EPA due every year.</param>
+/// <param name="DecisionBodyKey">Required, not defaulted, null allowed. An edit that omitted it would send EPAs 4 and 5 back to the general panel.</param>
+/// <param name="DecisionIsOpportunistic">Required, not defaulted. An edit that omitted it would make EPAs 8, 9 and 13 closing lines.</param>
 public sealed record UpdateCurriculumItemCommand(
     int CurriculumId,
     int ItemId,
@@ -43,6 +56,9 @@ public sealed record UpdateCurriculumItemCommand(
     double? Weight,
     string? MinimumLevelByStageJson,
     IReadOnlyList<string>? PermittedToolKeys,
+    QuotaPeriod? DecisionCadence,
+    string? DecisionBodyKey,
+    bool DecisionIsOpportunistic,
     ClaimsPrincipal Principal,
     int? ScaleId = null) : IRequest<CurriculumDto>;
 
@@ -62,6 +78,12 @@ public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCur
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
         RuleForEach(command => command.PermittedToolKeys).NotEmpty().MaximumLength(64);
+        RuleFor(command => command.DecisionCadence).IsInEnum();
+        RuleFor(command => command.DecisionBodyKey).MaximumLength(DecisionBody.KeyMaxLength);
+        RuleFor(command => command.DecisionIsOpportunistic)
+            .Equal(false)
+            .When(command => command.DecisionCadence is null)
+            .WithMessage(DecisionValidation.OpportunisticNeedsACadence);
     }
 }
 
@@ -80,6 +102,12 @@ public sealed class UpdateCurriculumItemCommandValidator : AbstractValidator<Upd
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
         RuleForEach(command => command.PermittedToolKeys).NotEmpty().MaximumLength(64);
+        RuleFor(command => command.DecisionCadence).IsInEnum();
+        RuleFor(command => command.DecisionBodyKey).MaximumLength(DecisionBody.KeyMaxLength);
+        RuleFor(command => command.DecisionIsOpportunistic)
+            .Equal(false)
+            .When(command => command.DecisionCadence is null)
+            .WithMessage(DecisionValidation.OpportunisticNeedsACadence);
     }
 }
 
@@ -90,6 +118,16 @@ public sealed class RemoveCurriculumItemCommandValidator : AbstractValidator<Rem
         RuleFor(command => command.CurriculumId).GreaterThan(0);
         RuleFor(command => command.ItemId).GreaterThan(0);
     }
+}
+
+internal static class DecisionValidation
+{
+    /// <summary>
+    /// An opportunistic decision is one that is never overdue within its cadence (T131, O7); with no cadence it is never
+    /// due at all, so the flag would say nothing and a later cadence would inherit a choice nobody made for it.
+    /// </summary>
+    public const string OpportunisticNeedsACadence =
+        "An EPA can be decided as opportunity allows only if it has a decision cadence.";
 }
 
 internal static class StageOverridesValidation
@@ -162,6 +200,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, currentScaleId: null, cancellationToken);
         await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
+        await CurriculumMappings.EnsureDecisionBodyExistsAsync(_dbContext, request.DecisionBodyKey, cancellationToken);
 
         curriculum.Items.Add(new CurriculumItem
         {
@@ -174,7 +213,10 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             Weight = request.Weight,
             MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson),
             ScaleId = request.ScaleId,
-            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(request.PermittedToolKeys)
+            PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(request.PermittedToolKeys),
+            DecisionCadence = request.DecisionCadence,
+            DecisionBodyKey = DecisionBody.NormalizeKey(request.DecisionBodyKey),
+            DecisionIsOpportunistic = request.DecisionIsOpportunistic
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -233,6 +275,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, item.ScaleId, cancellationToken);
         await CurriculumMappings.EnsurePermittedToolsExistAsync(_dbContext, request.PermittedToolKeys, cancellationToken);
+        await CurriculumMappings.EnsureDecisionBodyExistsAsync(_dbContext, request.DecisionBodyKey, cancellationToken);
 
         item.EpaId = request.EpaId;
         item.RequiredCount = request.RequiredCount;
@@ -243,6 +286,9 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         item.MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(request.MinimumLevelByStageJson);
         item.ScaleId = request.ScaleId;
         item.PermittedToolsJson = CurriculumItem.NormalizePermittedToolsJson(request.PermittedToolKeys);
+        item.DecisionCadence = request.DecisionCadence;
+        item.DecisionBodyKey = DecisionBody.NormalizeKey(request.DecisionBodyKey);
+        item.DecisionIsOpportunistic = request.DecisionIsOpportunistic;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
