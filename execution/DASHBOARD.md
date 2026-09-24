@@ -10,8 +10,6 @@
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
-| queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
-| queued | [T207](tasks/queued/T207-msf-anonymisation-keeps-an-unsalted-hash-of-each-respondent-s-email-so-a-response-can-be-re-identified.md) | P2 | MSF 'anonymisation' keeps an unsalted hash of each respondent's email, |  |
 | queued | [T213](tasks/queued/T213-committee-races-and-wording-left-by-the-t131-t165-merge-remove-can-race-record-record-has-no-friendly-concurrency-refusal.md) | P2 | Committee races and wording left by the T131/T165 merge: Remove can ra |  |
 | queued | [T215](tasks/queued/T215-the-agenda-planner-ignores-stars-that-no-agenda-line-records-so-an-epa-already-decided-comes-up-as-due-again.md) | P2 | The agenda planner ignores STARs that no agenda line records, so an EP |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
@@ -32,13 +30,10 @@
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
 | queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
-| queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
-| queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
-| queued | [T185](tasks/queued/T185-leftover-principal-less-queries-national-speciality-counts-and-three-shapes-of-the-overseer-rule.md) | P3 | Leftover principal-less queries, national speciality counts, and three |  |
 | queued | [T187](tasks/queued/T187-a-sub-speciality-s-default-entrustment-scale-is-reset-by-the-catalogue-seeder-on-every-boot.md) | P3 | A sub-speciality's default entrustment scale is reset by the catalogue |  |
 | queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
 | queued | [T189](tasks/queued/T189-refusal-texts-errors-joined-with-after-full-stops-and-transitionasync-s-remaining-key-named-refusals.md) | P3 | Refusal texts: errors joined with '; ' after full stops, and Transitio |  |
@@ -50,15 +45,14 @@
 | queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
-| queued | [T208](tasks/queued/T208-an-audit-row-is-refused-when-a-user-agent-or-display-name-is-longer-than-its-column.md) | P3 | An audit row is refused when a User-Agent or display name is longer th |  |
 | queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
 | queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
 | queued | [T211](tasks/queued/T211-curriculum-pages-a-collegeadmin-sees-edit-on-another-institution-s-local-items-and-an-institutionaladmin-s-curriculum-list-links-to-a-404.md) | P3 | Curriculum pages: a CollegeAdmin sees Edit on another institution's lo |  |
 | queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
-| queued | [T214](tasks/queued/T214-a-reminder-that-replaces-an-msf-link-can-lose-the-answers-of-someone-typing-into-the-old-one.md) | P3 | A reminder that replaces an MSF link can lose the answers of someone t |  |
 | queued | [T216](tasks/queued/T216-a-user-who-is-both-trainee-and-coordinator-can-schedule-and-preview-a-peer-s-committee-review.md) | P3 | A user who is both Trainee and Coordinator can schedule and preview a  |  |
+| queued | [T217](tasks/queued/T217-the-msf-campaign-page-does-not-change-after-the-campaign-opens-it-still-offers-open-and-shows-no-invitees.md) | P3 | The MSF campaign page does not change after the campaign opens: it sti |  |
 
-Done: 150 task(s).
+Done: 157 task(s).
 
 ## From STATE.md
 
@@ -74,9 +68,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+150417e docs(execution): CUSTOMIZATION.md's MSF anonymity note follows T207 and T205; file T216
 fbd1525 fix(security): the last principal-less queries take the caller, dashboards conjoin the institution, the profile pick is one rule, and a Trainee with an admin role is a trainee first (T185)
 0cde061 fix(audit): an over-long user agent or display name is truncated, not the reason an audit row is refused (T208)
 705bf2c fix(web): the sign-in pages load without a console error; the Blazor initializers endpoint answers signed out (T181)
 4e61d8a fix(curricula): a curriculum item names only an EPA its owner may use (T195)
-389a57c fix(msf): a link replaced by a reminder keeps working until the last day to respond, and never comes back on an answered or closed invitation (T214)
 ```

@@ -1,11 +1,12 @@
 ---
 id: T214
 title: A reminder that replaces an MSF link can lose the answers of someone typing into the old one
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -28,9 +29,21 @@ last day to respond. Clear it when the respondent answers, the link is revoked o
 
 ## Verification
 
-- [ ] A response through the previous link, submitted after a reminder, is accepted once, and the new link is then
+- [x] A response through the previous link, submitted after a reminder, is accepted once, and the new link is then
       used. Postgres test.
 
 ## Related
 
 T206, T205, T163.
+
+---
+
+## As built — 2026-09-25 (`389a57c`)
+
+A reminder that replaces a link keeps the previous link working until the last day to respond (`PreviousTokenHash` and
+`PreviousTokenSelector`). The link is cleared on answer, revoke or anonymise. Check constraints stop a previous link
+being stored on an answered invitation. The job's save touches the campaign's concurrency token, so an answer, close or
+withdraw racing it is refused whole, in either order, and the job re-reads and moves on.
+
+Verified by Postgres race tests. It cannot be driven from the browser without a day-old link and a reminder run;
+`CK_MsfInvitations_PreviousLink*` are present on dev.

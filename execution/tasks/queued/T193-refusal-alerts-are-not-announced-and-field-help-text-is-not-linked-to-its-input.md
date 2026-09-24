@@ -46,3 +46,4 @@ The root of the help-text half: `FormField.razor:13-16` renders `HelpText` with 
 Give `FormField` an id for its help, and have `FormField` set the input's `aria-describedby` itself where it can. T158
 fixed EpaEdit only locally.
 
+Note, 2026-09-25: the sign-in password input lacks `autocomplete="current-password"`.

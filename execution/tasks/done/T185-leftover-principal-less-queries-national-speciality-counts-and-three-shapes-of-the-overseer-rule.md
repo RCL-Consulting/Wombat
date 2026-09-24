@@ -1,11 +1,12 @@
 ---
 id: T185
 title: Leftover principal-less queries, national speciality counts, and three shapes of the overseer rule
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -35,7 +36,7 @@ uniform.
 
 ## Verification
 
-- [ ] Each item fixed has a test, or a line here saying why it was left.
+- [x] Each item fixed has a test, or a line here saying why it was left.
 
 ## Related
 
@@ -62,3 +63,16 @@ The profile picks still disagree three ways:
 With two active profiles (the database forbids that, but past profiles tie), credit can land on one curriculum while
 the export reads another. Make it one pick.
 
+---
+
+## As built — 2026-09-25 (`fbd1525`)
+
+- **Principal-less queries:** the last ones take the caller, and `ListExpiringDecisionsQuery` is handled.
+- **Dashboards:** the speciality and sub-speciality counts conjoin the institution.
+- **Profile pick:** it is one rule, `PreferredProfiles`.
+- **Trainee first:** `TraineeScopeResolver.ActsAsTrainee` makes a Trainee who also holds an admin role a trainee first
+  on the entrustment admin list, revoke and the committee card. An Administrator who is also a Trainee no longer learns
+  which decision ids exist.
+
+Handler tests throughout (dev has no user holding both roles). Filed [T216]: committee scheduling and the agenda
+preview do not ask the trainee-first rule yet.

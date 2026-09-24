@@ -1,11 +1,12 @@
 ---
 id: T208
 title: An audit row is refused when a User-Agent or display name is longer than its column
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -31,8 +32,15 @@ Truncate both in `AuditEntry.Create`, as `errorMessage` is.
 
 ## Verification
 
-- [ ] A 2,000-character User-Agent leaves a (truncated) audit row. Test.
+- [x] A 2,000-character User-Agent leaves a (truncated) audit row. Test.
 
 ## Related
 
 T201, T122 (errorMessage truncation).
+
+---
+
+## As built — 2026-09-25 (`0cde061`)
+
+`AuditEntry.Create` truncates `ActorUserAgent` (500) and `ActorDisplay` (200) as it does `errorMessage`, keeping
+surrogate pairs whole, and refuses a width below 1. Tests cover a 2,000-character user agent and a width of one. No UI.

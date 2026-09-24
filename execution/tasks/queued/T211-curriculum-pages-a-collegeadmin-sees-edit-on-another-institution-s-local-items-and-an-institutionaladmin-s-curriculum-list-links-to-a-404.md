@@ -35,6 +35,9 @@ or leave it off their list.
 
 ## Verification
 
+- [ ] Browser (moved from T195): an InstitutionalAdmin edits a curriculum item. The EPA picker offers PAED-001 to 015
+      for a national item, and the institution's own local EPAs for a local item.
+
 - [ ] A CollegeAdmin sees no Edit on another institution's local item. bUnit.
 - [ ] An InstitutionalAdmin's list links only to pages they can open. Test.
 

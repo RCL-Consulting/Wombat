@@ -1,11 +1,12 @@
 ---
 id: T207
 title: MSF 'anonymisation' keeps an unsalted hash of each respondent's email, so a response can be re-identified
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -30,9 +31,21 @@ keyed. Write a migration that clears existing hashes, W-007.
 
 ## Verification
 
-- [ ] No unsalted respondent hash is stored after close, withdraw or auto-close. Tests plus a read-only SQL check on
+- [x] No unsalted respondent hash is stored after close, withdraw or auto-close. Tests plus a read-only SQL check on
       dev.
 
 ## Related
 
 T184, T202, T026 (the pseudonym salt).
+
+---
+
+## As built — 2026-09-25 (`f816096`)
+
+`RespondentEmailHash` is dropped. Nothing read it, so there was nothing to re-key. `MsfInvitation.Anonymize` nulls the
+address and keeps nothing derived from it. The migration `T207_DropMsfRespondentEmailHash` nulls every stored hash
+before the drop. A no-trace test runs close, auto-close and withdraw through the app and searches every table
+(including audit and job-run rows) for the address or any of its digests.
+
+Browser/SQL on dev (scripted Chrome, `150417e`):  `MsfInvitations` has no hash column (no `%EmailHash%` column anywhere), and 0 anonymised rows keep an address.
+CUSTOMIZATION.md updated.

@@ -1,11 +1,12 @@
 ---
 id: T181
 title: The sign-in page logs a JSON parse error on every load
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -32,7 +33,7 @@ suspects are the auth layout, a manifest, or a Blazor boot resource under the CS
 
 ## Verification
 
-- [ ] The sign-in page loads with a clean console. Browser.
+- [x] The sign-in page loads with a clean console. Browser.
 
 ## Related
 
@@ -47,3 +48,13 @@ policy covers that endpoint, so the script parses the login page's HTML as JSON.
 fallback policy (as `MapWombatStaticAssets()` does for assets, T175), or to map them `AllowAnonymous`. Check that no
 circuit endpoint becomes reachable unauthenticated beyond what Blazor needs.
 
+---
+
+## As built — 2026-09-25 (`705bf2c`)
+
+The Blazor initializers endpoint answers signed out (`[]`, 200 JSON), so the sign-in pages no longer parse the login
+page as JSON. The circuit (`/_blazor/negotiate`) still refuses a signed-out visitor, and opens for a signed-in one
+(tested). DESIGN.md: a self-posting anonymous page must also carry `[ExcludeFromInteractiveRouting]`.
+
+Browser/SQL on dev (scripted Chrome, `150417e`):  `/account/login` signed out logs no error, and initializers answers 200 `[]` with no redirect. Negotiate answers
+401 signed out, and after sign-in the WebSocket connects with no console error.

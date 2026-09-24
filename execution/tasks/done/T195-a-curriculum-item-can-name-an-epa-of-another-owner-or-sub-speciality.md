@@ -1,11 +1,12 @@
 ---
 id: T195
 title: A curriculum item can name an EPA of another owner or sub-speciality
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -31,9 +32,23 @@ or the caller's own institution's local EPA. Refuse before any mutation, and mak
 
 ## Verification
 
-- [ ] Each disallowed combination is refused, and nothing is written. Handler tests.
-- [ ] The picker offers only allowed EPAs. bUnit.
+- [x] Each disallowed combination is refused, and nothing is written. Handler tests.
+- [x] The picker offers only allowed EPAs. bUnit.
 
 ## Related
 
 T158, T056, the catalogue memory (EPAs are national; curriculum rows are shared).
+
+---
+
+## As built — 2026-09-25 (`4e61d8a`)
+
+A national curriculum item names only a national EPA of the curriculum's sub-speciality, and a local item a national
+EPA or the caller's institution's own. Add and Update refuse otherwise before any write, and the pickers use the same
+predicate. The edit row says when its stored EPA is not one it can name.
+
+**Browser:** not reachable with a permitted dev account. An InstitutionalAdmin cannot load the curriculum editor
+(`GetCurriculumByIdQuery` requires `CanAccessCollege`), which predates T195 and is [T211], and dev has no seeded
+CollegeAdmin. Covered by the handler matrix and `CurriculumItemsEpaPicker` bUnit (6/6). SQL confirms curriculum 2's
+national EPAs are exactly PAED-001 to 015. **The browser check moves to [T211]**, which must make the local-item path
+reachable.

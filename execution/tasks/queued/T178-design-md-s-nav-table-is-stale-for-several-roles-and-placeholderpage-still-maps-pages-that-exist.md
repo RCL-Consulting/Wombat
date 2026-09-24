@@ -40,3 +40,5 @@ only Trainee and PendingTrainee.
 ## Related
 
 T141.
+
+Note, 2026-09-25: the Coordinator's nav lists "Data Rights" twice.

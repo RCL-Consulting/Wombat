@@ -1,11 +1,12 @@
 ---
 id: T163
 title: Every MSF response scans every invitation ever issued
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T163 — Every MSF response loads and hashes every invitation in the database
@@ -39,13 +40,27 @@ since [T132].
 
 ## Verification
 
-- [ ] The token lookup issues one indexed query, not a full-table load. Test on the Postgres fixture, or a read of the
+- [x] The token lookup issues one indexed query, not a full-table load. Test on the Postgres fixture, or a read of the
       generated SQL recorded here.
-- [ ] A valid link still opens the form; a wrong token with a valid selector is refused; a used or revoked invitation is
+- [x] A valid link still opens the form; a wrong token with a valid selector is refused; a used or revoked invitation is
       refused. Application tests.
-- [ ] The expiry reminder's re-issued link works ([T132]'s tests stay green).
-- [ ] Full suite green, no `--no-build`.
+- [x] The expiry reminder's re-issued link works ([T132]'s tests stay green).
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 [T121], [T132] (the respond URL and token re-issue).
+
+---
+
+## As built — 2026-09-25 (`a982372`)
+
+A link is a 16-character base64url selector followed by a 43-character secret. The selector is stored in the clear
+(`TokenSelector`, unique index), the hash covers the whole token, and the verify stays constant-time. A lookup is one
+indexed row. Links issued before T163 no longer resolve (documented; W-007).
+
+Browser/SQL on dev (scripted Chrome, `150417e`): 
+- Campaign 9's email link has the selector shape.
+- Signed out, it renders the questionnaire, and the submit is recorded.
+- Tampering with the secret or the selector answers 404 "Feedback link not recognised"; once used, 410.
+- The old `TokenHash` index is replaced by the selector indexes.
