@@ -84,6 +84,15 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
         {
             var campaign = invitation.Campaign;
 
+            // Asked again before each reminder (T214 review). A store refused below refreshes the campaign, and a campaign
+            // closed or withdrawn while this run was sending is neither mailed about nor stored onto any further. Stored
+            // onto it would be: the refreshed xmin lets the store through, while its other invitations are still held as
+            // they were read, before the close anonymised them.
+            if (!invitation.IsReminderDue(campaign, context.UtcNow))
+            {
+                continue;
+            }
+
             // Skipped rather than sent unnamed: a feedback request that does not say whom it is about cannot be
             // answered (T202). The link the invitation carried is left working, and nothing is re-issued.
             if (!names.TryGetValue(campaign.SubjectUserId, out var traineeName) || string.IsNullOrWhiteSpace(traineeName))
@@ -97,14 +106,13 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
             // The token this invitation was opened with cannot be recovered: only its selector and a
             // one-way hash of it are stored (InvitationTokenService.GenerateSelectorToken). So the
             // reminder RE-ISSUES — exactly as OpenMsfCampaign does — rather than trying to reconstruct
-            // the original. The new selector replaces the old, so the old link finds no row (T163).
+            // the original. Before T132 the job mailed `invitation.TokenHash` itself as a relative URL,
+            // so every reminder was both unclickable and unusable, and the job still logged success.
             //
-            // This invalidates the link mailed when the campaign opened. That is the accepted cost
-            // (T132): a respondent holding both emails and clicking the older one gets an invalid
-            // token, so MsfExpiryReminderEmail says in as many words that the new link replaces any
-            // earlier one. Before this, the job mailed `invitation.TokenHash` itself as a relative
-            // URL, so every reminder was both unclickable and unusable, and the job still logged
-            // success.
+            // The link mailed when the campaign opened is kept as the previous link, and still takes
+            // the respondent's one response until their last day to respond (T214). Until T214 the
+            // reminder retired it outright, so a respondent part-way through the questionnaire on it
+            // lost what they had typed when they submitted.
             var token = tokenService.GenerateSelectorToken();
             var responseUrl = $"{respondUrl}?token={Uri.EscapeDataString(token.Token)}";
 
@@ -123,11 +131,47 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
 
             // Stored after the send, and one respondent at a time (T206). A send that throws leaves this respondent's
             // original link working and still due, for the next run; the reminders already sent are stored, so their
-            // links work. The other order, store then send, would retire a link and mail nothing to replace it. Not
-            // cancellable: the mail has been handed over.
-            invitation.IssueLink(token.Selector, token.Hash, context.UtcNow);
-            await dbContext.SaveChangesAsync(CancellationToken.None);
-            sentCount++;
+            // links work. The other order, store then send, would store a link nobody was mailed, and since a link is
+            // replaced once, the respondent would never be reminded. Not cancellable: the mail has been handed over.
+            invitation.ReplaceLink(token.Selector, token.Hash, context.UtcNow);
+
+            // Only onto the invitation as it was read (T214 review). The send takes seconds, and in them the respondent
+            // may answer, or the coordinator close or withdraw the campaign, which anonymises it. The store would then
+            // put the replaced link back on a row that has retired it: EF writes only the columns this job changed. So
+            // the campaign row is written too, unchanged, under its xmin token (MsfCampaignConfiguration), which a close
+            // or withdrawal moves; and an answer is refused by the server (CK_MsfInvitations_PreviousLinkUnanswered).
+            // A close or withdrawal that read the campaign before this store commits is refused at its own save, by the
+            // same token, and closing again retires the link kept here (MsfLinkSelectorPostgresTests).
+            var invitationEntry = dbContext.Set<MsfInvitation>().Entry(invitation);
+            var campaignEntry = dbContext.Set<MsfCampaign>().Entry(campaign);
+            campaignEntry.Property(candidate => candidate.State).IsModified = true;
+
+            try
+            {
+                await dbContext.SaveChangesAsync(CancellationToken.None);
+                sentCount++;
+            }
+            catch (DbUpdateException)
+            {
+                // Both read again, which also puts back what this attempt changed, so the next respondent's save does
+                // not carry it. The link just mailed is then stored nowhere and opens nothing: its respondent has
+                // answered, or their campaign has been closed or withdrawn, and their first link says which.
+                await invitationEntry.ReloadAsync(CancellationToken.None);
+                await campaignEntry.ReloadAsync(CancellationToken.None);
+
+                // A refusal the respondent is still due a reminder after is not one of those, and is a fault: the run
+                // stops, as any failed store did before T214, since a later respondent's link must not be mailed if it may
+                // not be stored.
+                if (invitation.IsReminderDue(campaign, context.UtcNow))
+                {
+                    throw;
+                }
+
+                context.Logger.LogWarning(
+                    "MsfInvitationExpiryReminderJob: invitation {InvitationId} was answered, or campaign {CampaignId} was closed or withdrawn, while its reminder was being sent, so the reminder's link was not stored.",
+                    invitation.Id,
+                    campaign.Id);
+            }
         }
 
         context.Logger.LogInformation("MsfInvitationExpiryReminderJob: sent {Count} reminders.", sentCount);

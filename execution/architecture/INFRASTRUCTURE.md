@@ -193,6 +193,31 @@ SQL
 so every link mailed after the deploy dies too. Restoring the pre-deploy `pg_dump` (the planned rollback) does the same
 to those links, and brings back the ones mailed before.
 
+### After T214: a link a reminder replaced keeps working until the last day to respond
+
+Since T214 the reminder keeps the link it replaces (`MsfInvitations.PreviousTokenSelector`, under a unique index, and
+`PreviousTokenHash`), and that link takes the respondent's one response until their last day to respond. Answering
+through either link, and closing or withdrawing the campaign, retires it.
+
+A second check, `CK_MsfInvitations_PreviousLinkUnanswered`, keeps a previous link off an answered invitation. The reminder
+job stores a new link only after it has mailed it, so an answer, a close or a withdrawal can commit in between. The
+job's store is then refused, by that check or by the campaign's `xmin`. It logs a warning, `…while its reminder was being
+sent, so the reminder's link was not stored`, and goes on to the next respondent. That respondent's mail carries a link
+that opens nothing. They have answered, or their campaign has been closed or withdrawn. The job mails nobody else of a
+campaign it finds closed or withdrawn. Any other refused store stops the run, as before T214. A close or withdrawal that
+read the campaign before a reminder was stored is refused the same way, and says the campaign changed; close or withdraw
+it again.
+
+- **Nothing to do at deploy.** Every invitation already stored gets no previous link, so a link a reminder replaced
+  before the deploy stays retired. Nor does T214 revive a link mailed before T163: the reminder keeps only a link that
+  carries a selector.
+- **One wrong sentence, for campaigns opened before T163 only.** The reminder tells every respondent that their original
+  link "also works until" the last day. For an invitation mailed before T163 it does not: that link has no selector, and
+  § After T163 says the reminder's link is their only one. Nothing is live (W-007), so the email is not written around
+  those rows. Close or withdraw such a campaign, or accept the sentence until it closes.
+- **Rolling back** (`Down`, or restoring the pre-deploy dump) retires every previous link again. `Down` leaves the
+  current links as they are.
+
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):

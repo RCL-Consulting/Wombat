@@ -75,7 +75,17 @@ public sealed class SubmitMsfResponseCommandHandler : IRequestHandler<SubmitMsfR
                 .ToList()
         };
 
-        invitation.RespondedOn = response.SubmittedOn;
+        // Through either link: the answer retires the link a reminder replaced, and the current one is then used (T214).
+        invitation.RecordResponse(response.SubmittedOn);
+
+        // Written even when this request read no previous link, so the retirement reaches the row whatever it holds now.
+        // The reminder job may replace the link between the read above and this save, keeping the one it replaced; a
+        // null written over a null read is no change to EF and would not be sent, and the row would be answered with a
+        // live previous link, which the server refuses (CK_MsfInvitations_PreviousLinkUnanswered, T214 review).
+        var entry = _dbContext.Set<MsfInvitation>().Entry(invitation);
+        entry.Property(candidate => candidate.PreviousTokenSelector).IsModified = true;
+        entry.Property(candidate => candidate.PreviousTokenHash).IsModified = true;
+
         _dbContext.Set<MsfResponse>().Add(response);
 
         try

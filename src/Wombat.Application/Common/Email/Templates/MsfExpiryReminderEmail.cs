@@ -16,9 +16,9 @@ namespace Wombat.Application.Common.Email.Templates;
 /// stopped taking responses.
 /// </para>
 /// <para>
-/// The link is freshly issued, which retires the one the invitation carried (T132: the original token cannot be
-/// recovered from its hash). It says so, or a respondent who kept the first email would click a dead link and conclude
-/// the system is broken.
+/// The link is freshly issued (T132: the original token cannot be recovered from its hash). The one the invitation
+/// carried keeps working until the last day to respond (T214), so a respondent who started on it can finish there. It
+/// says both, and that the two take one response between them.
 /// </para>
 /// <para>
 /// A learner (<see cref="MsfTemplateKind.LearnerFeedback" />, T164) is reminded, as they were invited, to give feedback
@@ -46,7 +46,7 @@ public static class MsfExpiryReminderEmail
             <p>The last day to respond is <strong>{lastDay}</strong>.</p>
             <p><a class="btn" href="{Encode(content.ResponseUrl)}">Give feedback</a></p>
             <p>Or copy this link into your browser:<br><code>{Encode(content.ResponseUrl)}</code></p>
-            <p>This link replaces the one in your original invitation, which no longer works. Please use this one. It is yours alone and can be used once.</p>
+            <p>{Encode(LinksSentence(lastDay))}</p>
             <p>{Encode(MsfInvitationEmail.Anonymity(trainee, content.Kind))}</p>
             """);
 
@@ -61,7 +61,7 @@ public static class MsfExpiryReminderEmail
             Give feedback:
             {content.ResponseUrl}
 
-            This link replaces the one in your original invitation, which no longer works. Please use this one. It is yours alone and can be used once.
+            {LinksSentence(lastDay)}
 
             {MsfInvitationEmail.Anonymity(trainee, content.Kind)}
             """;
@@ -73,6 +73,11 @@ public static class MsfExpiryReminderEmail
             TextBody: text,
             Tags: ["nudge", "msf-expiry", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"]);
     }
+
+    /// <summary>What the reminder's link is to the invitation's, which still works until the last day (T214).</summary>
+    private static string LinksSentence(string lastDay)
+        => "Please use this link. If you have already started with the link in your original invitation, that one also " +
+           $"works until {lastDay}. Both links are yours alone, and between them take one response.";
 
     private static string Encode(string value) => MsfInvitationEmail.Encode(value);
 }

@@ -37,7 +37,6 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
 
     private const string ThisMigration = "20260924210830_T131_PanelBodies";
-    private const string LastMigrationBeforeThis = "20260924195753_T164_LearnerFeedbackKind";
 
     private readonly List<string> _schemas = [];
     private string _baseConnectionString = null!;
@@ -58,7 +57,11 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
             var schema = await CreateSchemaAsync();
             await using (var db = NewContext(schema))
             {
-                await db.GetService<IMigrator>().MigrateAsync(LastMigrationBeforeThis);
+                // The migration just before this one in the assembly, found rather than named: a migration merged in
+                // from another lane can fall between the two by its timestamp.
+                var migrations = db.Database.GetMigrations().ToList();
+                migrations.Should().Contain(ThisMigration);
+                await db.GetService<IMigrator>().MigrateAsync(migrations[migrations.IndexOf(ThisMigration) - 1]);
                 (await db.Database.GetPendingMigrationsAsync()).First().Should().Be(ThisMigration);
             }
 

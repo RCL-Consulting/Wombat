@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
 
@@ -34,10 +35,30 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
 
         // Closing anonymises every respondent (MsfCampaign.Close), the same routine the auto-close job reaches. (T184)
         campaign.Close(DateTime.UtcNow);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // The campaign's xmin token (MsfCampaignConfiguration) refused the save: it was withdrawn or closed elsewhere,
+            // or the reminder job stored a respondent's new link, which writes the campaign row so that a close cannot
+            // leave that link on an anonymised invitation (T214 review). Carried as the inner exception, so the audit
+            // pipeline still sees a refused save and writes its row alone (T201); EF's own message names row counts.
+            throw new InvalidOperationException(CampaignChanged, exception);
+        }
 
         // Closed, not released: nothing has been recorded yet. For the coordinator who closed it, who typed the teaching
         // contexts and is told them (T164).
         return _aggregationService.BuildReport(campaign, [], nameTeachingContexts: true);
     }
+
+    /// <summary>
+    /// The refusal when the campaign changed between being read and the save: it was closed or withdrawn elsewhere, or a
+    /// respondent was sent a reminder. Nothing is stored. (T214 review)
+    /// </summary>
+    public const string CampaignChanged =
+        "The campaign changed while it was being closed: it was closed or withdrawn elsewhere, or a respondent was sent " +
+        "a reminder. It has not been closed. If the campaigns list still shows it as open, close it again.";
 }

@@ -265,6 +265,13 @@ public static class MsfCampaignRules
     /// The invitation a respondent's link names, when it can still take a response; otherwise a refusal written for
     /// the respondent (<see cref="MsfResponseRefusedException" />, T202).
     /// </summary>
+    /// <remarks>
+    /// A link names its invitation as the current link (<see cref="MsfInvitation.TokenSelector" />) or as the one a
+    /// reminder replaced (<see cref="MsfInvitation.PreviousTokenSelector" />, T214). The previous link takes a response
+    /// until the respondent's last day to respond and is refused as expired after it; otherwise both are judged alike.
+    /// Either way the invitation takes one response: the first answer retires the previous link, and the current one is
+    /// then refused as used (<see cref="LinkUsedMessage" />), as is the loser of two answers racing through both.
+    /// </remarks>
     public static async Task<MsfInvitation> GetActiveInvitationByTokenAsync(
         IApplicationDbContext dbContext,
         string rawToken,
@@ -275,27 +282,45 @@ public static class MsfCampaignRules
         // carries no selector.
         var selector = tokenService.SelectorOf(rawToken) ?? throw LinkNotRecognised();
 
-        // One row, by the selector's unique index; then the whole token against that row's hash, in constant time. Until
-        // T163 the hash was the only key, so every invitation there was, with its campaign and questionnaire, was loaded
-        // and hashed against the token, on a public page, for every load and every submit (T163).
-        var invitation = await dbContext.Set<MsfInvitation>()
+        // The row by the selector, as the current link or as the one a reminder replaced (T214), each column under a
+        // unique index of its own; then the whole token against that link's hash, in constant time. Until T163 the hash
+        // was the only key, so every invitation there was, with its campaign and questionnaire, was loaded and hashed
+        // against the token, on a public page, for every load and every submit (T163). At most two rows, one per column;
+        // a selector is 96 random bits, so in practice one.
+        var candidates = await dbContext.Set<MsfInvitation>()
             .Include(candidate => candidate.Campaign)
                 .ThenInclude(campaign => campaign.Template)
                     .ThenInclude(template => template.Questions)
-            .SingleOrDefaultAsync(candidate => candidate.TokenSelector == selector, cancellationToken);
+            .Where(candidate => candidate.TokenSelector == selector || candidate.PreviousTokenSelector == selector)
+            .ToListAsync(cancellationToken);
 
         // A selector alone opens nothing: it is not a secret, and a token whose secret half is wrong is refused as a link
         // that names no invitation, in the same words as a selector that matched no row. The time taken can differ (a
         // match costs a joined read and a hash), which tells a guesser nothing usable: a selector is 96 random bits, and
-        // whoever holds a real one holds the link it came in.
-        if (invitation is null || !tokenService.VerifyToken(rawToken, invitation.TokenHash))
+        // whoever holds a real one holds the link it came in. Each link is checked against its own hash, never the other.
+        var invitation = candidates.FirstOrDefault(candidate =>
+            candidate.TokenSelector == selector && tokenService.VerifyToken(rawToken, candidate.TokenHash));
+        var throughPreviousLink = false;
+        if (invitation is null)
+        {
+            invitation = candidates.FirstOrDefault(candidate =>
+                candidate.PreviousTokenSelector == selector &&
+                candidate.PreviousTokenHash is { } previousHash &&
+                tokenService.VerifyToken(rawToken, previousHash));
+            throughPreviousLink = invitation is not null;
+        }
+
+        if (invitation is null)
         {
             throw LinkNotRecognised();
         }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        if (invitation.ExpiresOn < today)
+        // The link a reminder replaced lasts until the last day to respond, the one deadline the respondent was given,
+        // and not a day past it while the campaign waits for the auto-close job (T214).
+        if (invitation.ExpiresOn < today ||
+            (throughPreviousLink && MsfInvitation.LastDayToRespond(invitation.Campaign.ClosesOn, invitation.ExpiresOn) < today))
         {
             throw new MsfResponseRefusedException(
                 MsfResponseRefusal.LinkExpired,
@@ -324,16 +349,26 @@ public static class MsfCampaignRules
         return invitation;
     }
 
-    /// <summary>The refusal of a link that names no invitation: malformed, mistyped, or replaced.</summary>
+    /// <summary>The refusal of a link that names no invitation: malformed, mistyped, or retired.</summary>
     /// <remarks>
-    /// The link that opened a campaign stops working when a reminder re-issues it (T132), which is the likeliest way for a
-    /// respondent to arrive with a link nobody recognises.
+    /// <para>
+    /// The link that opened a campaign is replaced when a reminder re-issues it (T132), and since T214 it keeps working
+    /// until the last day to respond, unless the respondent answers first or the campaign closes, either of which retires
+    /// it. So a first link nobody recognises most likely belongs to a respondent who has answered, or to a campaign that
+    /// has stopped taking responses, and the most recent email's link says which.
+    /// </para>
+    /// <para>
+    /// So it says what that link will tell them (T214 review). A respondent who answered through their invitation's link
+    /// and opens it again, as the thank-you and fault pages invite them to, is sent here, not to "already used": the
+    /// answer retired the link they hold. Until then this page only told them to use another link, never that it would
+    /// say whether their feedback had been recorded.
+    /// </para>
     /// </remarks>
     private static MsfResponseRefusedException LinkNotRecognised()
         => new(
             MsfResponseRefusal.LinkNotRecognised,
-            "This feedback link is not recognised. If you were sent a reminder about this request, its link " +
-            "replaces the first one: please use the link in the most recent email.");
+            "This feedback link is not recognised. If you were sent a reminder about this request, use the link in the " +
+            "most recent email: it opens the questionnaire, or says whether your feedback has already been recorded.");
 
     /// <summary>
     /// Refuses answers that do not complete the questionnaire, as a refusal the respondent is shown

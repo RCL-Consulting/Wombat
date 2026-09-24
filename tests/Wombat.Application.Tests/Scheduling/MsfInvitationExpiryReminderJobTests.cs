@@ -115,7 +115,7 @@ public sealed class MsfInvitationExpiryReminderJobTests
     }
 
     [Fact]
-    public async Task TheReminder_NamesTheTrainee_TheQuestionnaire_AndTheLastDay_AndItsLinkReplacesTheInvitations()
+    public async Task TheReminder_NamesTheTrainee_TheQuestionnaire_AndTheLastDay_AndItsLinkReplacesTheInvitations_WhichStillWorks()
     {
         // Four days out, so the first reminder day is at least a day after the open, whatever the time of day the test
         // runs at (MsfInvitation.ReminderMinimumLinkAge).
@@ -135,7 +135,10 @@ public sealed class MsfInvitationExpiryReminderJobTests
             .And.Contain($"Questionnaire: {TemplateName}")
             .And.Contain($"Feedback window: {Date(Today)} to {lastDay}")
             .And.Contain($"The last day to respond is {lastDay}.")
-            .And.Contain("This link replaces the one in your original invitation, which no longer works.")
+            .And.Contain(
+                "Please use this link. If you have already started with the link in your original invitation, that one " +
+                $"also works until {lastDay}. Both links are yours alone, and between them take one response.")
+            .And.NotContain("no longer works")
             .And.Contain($"never shown to {TraineeName}")
             .And.NotContain("colleague");
         message.HtmlBody.Should().Contain($"<strong>{TraineeName}</strong>")
@@ -151,18 +154,29 @@ public sealed class MsfInvitationExpiryReminderJobTests
         reminderLink.Should().StartWith(RespondUrl + "?token=");
         await RespondAsync(provider, reminderLink);
 
-        // The invitation's link was replaced: it names no invitation now, and the page says so. The reminder's link opens
-        // the questionnaire: it carries the selector the reminder stored (T163).
-        var original = () => OpenFormAsync(provider, campaign.Links["nurse-1@example.test"]);
-        (await original.Should().ThrowAsync<MsfResponseRefusedException>()).Which.Reason.Should().Be(MsfResponseRefusal.LinkNotRecognised);
-        (await OpenFormAsync(provider, LinkIn(reminders.Sent.Single(sent => sent.Message.To == "nurse-1@example.test").Message)))
-            .TemplateName.Should().Be(TemplateName);
+        // The invitation's link was replaced, and is kept as the previous link: it still opens the questionnaire, so a
+        // respondent part-way through it on that link does not lose their answers (T214). The reminder's link opens it
+        // too: it carries the selector the reminder stored (T163).
+        var reminderLinkToNurse = LinkIn(reminders.Sent.Single(sent => sent.Message.To == "nurse-1@example.test").Message);
+        (await OpenFormAsync(provider, campaign.Links["nurse-1@example.test"])).TemplateName.Should().Be(TemplateName);
+        (await OpenFormAsync(provider, reminderLinkToNurse)).TemplateName.Should().Be(TemplateName);
 
         var stored = (await ReadInvitationsAsync(provider)).Single(invitation => invitation.RespondentEmail == "nurse-1@example.test");
         _tokens.VerifyToken(TokenIn(campaign.Links["nurse-1@example.test"]), stored.TokenHash)
-            .Should().BeFalse("the reminder retires the invitation's link (T132)");
-        _tokens.VerifyToken(TokenIn(LinkIn(reminders.Sent.Single(sent => sent.Message.To == "nurse-1@example.test").Message)), stored.TokenHash)
-            .Should().BeTrue();
+            .Should().BeFalse("the reminder's link is the current one (T132)");
+        _tokens.VerifyToken(TokenIn(reminderLinkToNurse), stored.TokenHash).Should().BeTrue();
+        stored.PreviousTokenSelector.Should().Be(_tokens.SelectorOf(TokenIn(campaign.Links["nurse-1@example.test"])));
+        _tokens.VerifyToken(TokenIn(campaign.Links["nurse-1@example.test"]), stored.PreviousTokenHash!)
+            .Should().BeTrue("the invitation's link is kept as the previous one (T214)");
+
+        // The respondent who answered through the reminder's link: nothing is left for the invitation's link to take, so
+        // it is retired, and the page no longer recognises it.
+        var answered = (await ReadInvitationsAsync(provider)).Single(invitation => invitation.RespondentEmail == "consultant-1@example.test");
+        answered.RespondedOn.Should().NotBeNull();
+        answered.PreviousTokenSelector.Should().BeNull();
+        answered.PreviousTokenHash.Should().BeNull();
+        var spent = () => OpenFormAsync(provider, campaign.Links["consultant-1@example.test"]);
+        (await spent.Should().ThrowAsync<MsfResponseRefusedException>()).Which.Reason.Should().Be(MsfResponseRefusal.LinkNotRecognised);
     }
 
     [Fact]

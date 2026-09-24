@@ -41,13 +41,45 @@ public sealed class MsfInvitation
     public string TokenHash { get; set; } = string.Empty;
 
     /// <summary>
+    /// The selector of the link a reminder replaced, which still takes the respondent's one response until their last day
+    /// to respond (<see cref="LastDayToRespond" />); null when no reminder has replaced a link, and once the link is
+    /// retired. Under a unique index of its own, as <see cref="TokenSelector" /> is. (T214)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Until T214 a reminder retired the link it replaced outright, and the page cannot tell a replaced link from a
+    /// mistyped one. So a respondent who opened the questionnaire from their invitation and was still typing when the
+    /// reminder job ran lost every answer on submit, told only that the link was "not recognised" (T206 review).
+    /// </para>
+    /// <para>
+    /// Retired (<see cref="RetirePreviousLink" />) when the respondent answers through either link
+    /// (<see cref="RecordResponse" />) and when the invitation is anonymised (<see cref="Anonymize" />), which closing and
+    /// withdrawing the campaign both do. Nothing revokes an MSF invitation today; a revoked one is refused through
+    /// either link, since the refusal is the invitation's, not the link's.
+    /// </para>
+    /// <para>
+    /// The reminder job stores a previous link seconds after it read the invitation, once the mail is sent, and an answer
+    /// or a close can commit in between. The database keeps it off an answered row
+    /// (<c>CK_MsfInvitations_PreviousLinkUnanswered</c>), and the job's store is checked against the campaign's xmin
+    /// token, which closing and withdrawing move (T214 review).
+    /// </para>
+    /// </remarks>
+    public string? PreviousTokenSelector { get; set; }
+
+    /// <summary>
+    /// The hash of the link <see cref="PreviousTokenSelector" /> names, checked as <see cref="TokenHash" /> is; null
+    /// exactly when that is. (T214)
+    /// </summary>
+    public string? PreviousTokenHash { get; set; }
+
+    /// <summary>
     /// When the link <see cref="TokenHash" /> verifies was issued: when the invitation was added, then when the campaign
-    /// opened and mailed it, then when a reminder replaced it (<see cref="IssueLink" />, T206).
+    /// opened and mailed it, then when a reminder replaced it (<see cref="IssueLink" />, <see cref="ReplaceLink" />, T206).
     /// </summary>
     /// <remarks>
     /// The reminder is sent once per link, and this is what says so (<see cref="IsReminderDue" />). A link issued on or
     /// after the first reminder day is not replaced by a reminder: its email already named the same last day, and a
-    /// reminder would only retire it.
+    /// reminder would only repeat it.
     /// </remarks>
     public DateTime IssuedOn { get; set; }
 
@@ -86,11 +118,11 @@ public sealed class MsfInvitation
     /// How long a link must have been out before a reminder may replace it. (T206 review)
     /// </summary>
     /// <remarks>
-    /// A reminder retires the link it replaces, and a respondent part-way through the questionnaire on that link loses
-    /// what they typed when they submit (the page cannot tell a replaced link from a mistyped one). That is likeliest
-    /// just after the invitation arrives, so a link mailed less than a day before the job runs is left alone: a campaign
-    /// opened the evening before the first reminder day is reminded a day later, not the next morning. A day is the job's
-    /// own cadence, so the reminder comes at most one run later than it otherwise would.
+    /// A campaign opened the evening before the first reminder day is reminded a day later, not the next morning: a
+    /// reminder hours after the invitation it repeats is noise. A day is the job's own cadence, so the reminder comes at
+    /// most one run later than it otherwise would. Until T214 it also shielded a respondent answering through a link that
+    /// had only just arrived, because a reminder retired the link it replaced and what was typed into it was lost on
+    /// submit. Since T214 the replaced link keeps working until the last day to respond (<see cref="PreviousTokenSelector" />).
     /// </remarks>
     public static readonly TimeSpan ReminderMinimumLinkAge = TimeSpan.FromDays(1);
 
@@ -143,8 +175,10 @@ public sealed class MsfInvitation
     }
 
     /// <summary>
-    /// Stores the selector and hash of a newly issued link, which retires the one before it, and when it was issued.
-    /// Opening the campaign issues the first link a respondent is sent, and a reminder replaces it. (T206, T163)
+    /// Stores the selector and hash of the first link a respondent is sent, and when it was issued: opening the campaign
+    /// issues it. Whatever links the invitation held before are dropped, the previous link too (T214 review): a draft's
+    /// placeholder hash was never mailed, and the link just issued is the only one this invitation now answers to.
+    /// (T206, T163)
     /// </summary>
     public void IssueLink(string tokenSelector, string tokenHash, DateTime utcNow)
     {
@@ -154,6 +188,46 @@ public sealed class MsfInvitation
         TokenSelector = tokenSelector;
         TokenHash = tokenHash;
         IssuedOn = utcNow;
+        RetirePreviousLink();
+    }
+
+    /// <summary>
+    /// Stores a reminder's new link in place of the one the respondent was sent, and keeps that one as the previous link
+    /// (<see cref="PreviousTokenSelector" />), which still takes their response until their last day to respond. (T214)
+    /// </summary>
+    /// <remarks>
+    /// Only a link a token can find is kept: one with a selector. An invitation holding none, as every invitation stored
+    /// before T163 does, is found by no link, and keeping its hash would revive nothing. A reminder replaces
+    /// a link at most once (<see cref="IsReminderDue" />), so one previous link is all there ever is; were a second
+    /// replacement to come, the older of the two would be retired.
+    /// </remarks>
+    public void ReplaceLink(string tokenSelector, string tokenHash, DateTime utcNow)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenSelector);
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+
+        var replacedSelector = TokenSelector;
+        var replacedHash = TokenSelector is null ? null : TokenHash;
+        IssueLink(tokenSelector, tokenHash, utcNow);
+        PreviousTokenSelector = replacedSelector;
+        PreviousTokenHash = replacedHash;
+    }
+
+    /// <summary>
+    /// Records the respondent's one response, through either link, and retires the previous link: nothing is left for it
+    /// to take. (T214)
+    /// </summary>
+    public void RecordResponse(DateTime submittedOn)
+    {
+        RespondedOn = submittedOn;
+        RetirePreviousLink();
+    }
+
+    /// <summary>Retires the link a reminder replaced, so no link but the current one names this invitation. (T214)</summary>
+    public void RetirePreviousLink()
+    {
+        PreviousTokenSelector = null;
+        PreviousTokenHash = null;
     }
 
     /// <summary>
@@ -177,6 +251,10 @@ public sealed class MsfInvitation
     /// </remarks>
     public void Anonymize(DateTime utcNow)
     {
+        // The campaign takes no more responses, so the link a reminder replaced has nothing left to take (T214). Retired
+        // whether or not the address is still here to erase.
+        RetirePreviousLink();
+
         if (string.IsNullOrWhiteSpace(RespondentEmail))
         {
             return;
