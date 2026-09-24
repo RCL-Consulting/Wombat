@@ -80,10 +80,10 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
 
     public async Task Handle(ReleaseMsfCampaignCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
+        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
+            _dbContext, request.Principal, request.CampaignId, cancellationToken);
 
-        await MsfCampaignRules.EnsureSubjectIsInScopeAsync(
-            _dbContext, request.Principal, campaign.SubjectUserId, cancellationToken);
+        var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
         var report = _aggregationService.BuildReport(campaign);
         if (!report.ReadyForRelease)

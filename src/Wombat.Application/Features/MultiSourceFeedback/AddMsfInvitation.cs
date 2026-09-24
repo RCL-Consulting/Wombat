@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 public sealed record AddMsfInvitationCommand(
     int CampaignId,
     string RespondentEmail,
-    MsfRespondentCategory RespondentCategory) : IRequest<int>;
+    MsfRespondentCategory RespondentCategory,
+    ClaimsPrincipal Principal) : IRequest<int>;
 
 public sealed class AddMsfInvitationCommandValidator : AbstractValidator<AddMsfInvitationCommand>
 {
@@ -18,6 +20,7 @@ public sealed class AddMsfInvitationCommandValidator : AbstractValidator<AddMsfI
     {
         RuleFor(command => command.CampaignId).GreaterThan(0);
         RuleFor(command => command.RespondentEmail).NotEmpty().EmailAddress().MaximumLength(320);
+        RuleFor(command => command.Principal).NotNull();
     }
 }
 
@@ -34,6 +37,11 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
 
     public async Task<int> Handle(AddMsfInvitationCommand request, CancellationToken cancellationToken)
     {
+        // Before anything is loaded to be touched, and before the state checks, whose messages would describe another
+        // institution's campaign to someone who may not see it. (T113)
+        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
+            _dbContext, request.Principal, request.CampaignId, cancellationToken);
+
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .SingleOrDefaultAsync(candidate => candidate.Id == request.CampaignId, cancellationToken)

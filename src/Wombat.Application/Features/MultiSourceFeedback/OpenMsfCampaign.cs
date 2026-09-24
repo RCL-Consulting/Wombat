@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -11,9 +12,12 @@ using Wombat.Application.Common;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-/// <summary>No validator: carries a single non-nullable int ID; handler validates campaign state transitions.</summary>
+/// <summary>
+/// No validator: carries a non-nullable int ID and the caller; the handler authorises the caller against the
+/// campaign's subject (T113) and validates the state transition.
+/// </summary>
 [NoValidator]
-public sealed record OpenMsfCampaignCommand(int CampaignId) : IRequest;
+public sealed record OpenMsfCampaignCommand(int CampaignId, ClaimsPrincipal Principal) : IRequest;
 
 public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampaignCommand>
 {
@@ -37,6 +41,12 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
     public async Task Handle(OpenMsfCampaignCommand request, CancellationToken cancellationToken)
     {
         var respondUrl = _options.RequireMsfRespondUrl();
+
+        // Before anything is loaded to be touched: opening rotates every invitation token and mails each respondent.
+        // (T113)
+        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
+            _dbContext, request.Principal, request.CampaignId, cancellationToken);
+
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .Include(candidate => candidate.Invitations)

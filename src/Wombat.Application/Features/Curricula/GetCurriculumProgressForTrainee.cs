@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Trainee;
 
@@ -13,8 +15,17 @@ namespace Wombat.Application.Features.Curricula;
 /// credit yet are included. The trainee dashboard shows a summary of the same read model via
 /// <see cref="GetTraineeDashboardSummaryQuery"/>.
 /// </summary>
+/// <param name="Principal">
+/// The caller. Null comes back for anyone who may not read about this trainee
+/// (<see cref="TraineeScopeResolver.MayReadAsync" />), exactly as it does for a trainee with no active profile, so the
+/// answer never confirms that the id names somebody. Until T113 this query answered on the caller-supplied id alone.
+/// It sits before <paramref name="AsOf" /> because the date must keep its default and the caller must not have one.
+/// </param>
 /// <param name="AsOf">The day to read progress for. Defaults to today in South Africa; tests pin it.</param>
-public sealed record GetCurriculumProgressForTraineeQuery(string TraineeUserId, DateOnly? AsOf = null)
+public sealed record GetCurriculumProgressForTraineeQuery(
+    string TraineeUserId,
+    ClaimsPrincipal Principal,
+    DateOnly? AsOf = null)
     : IRequest<TraineeCurriculumProgressSummaryDto?>;
 
 public sealed class GetCurriculumProgressForTraineeQueryValidator
@@ -23,6 +34,7 @@ public sealed class GetCurriculumProgressForTraineeQueryValidator
     public GetCurriculumProgressForTraineeQueryValidator()
     {
         RuleFor(query => query.TraineeUserId).NotEmpty();
+        RuleFor(query => query.Principal).NotNull();
     }
 }
 
@@ -36,11 +48,21 @@ public sealed class GetCurriculumProgressForTraineeQueryHandler
         _dbContext = dbContext;
     }
 
-    public Task<TraineeCurriculumProgressSummaryDto?> Handle(
+    public async Task<TraineeCurriculumProgressSummaryDto?> Handle(
         GetCurriculumProgressForTraineeQuery request, CancellationToken cancellationToken)
-        => TraineeQuotaProgressReader.ReadAsync(
+    {
+        // Trimmed once, so the id that is authorised is the id that is read.
+        var traineeUserId = request.TraineeUserId.Trim();
+
+        if (!await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, traineeUserId, cancellationToken))
+        {
+            return null;
+        }
+
+        return await TraineeQuotaProgressReader.ReadAsync(
             _dbContext,
-            request.TraineeUserId.Trim(),
+            traineeUserId,
             request.AsOf ?? QuotaCalendar.Today(),
             cancellationToken);
+    }
 }

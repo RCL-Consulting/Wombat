@@ -287,10 +287,10 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         var invitees = CreateInvitees(campaign.Id);
         foreach (var invitee in invitees)
         {
-            await SendAsync(new AddMsfInvitationCommand(campaign.Id, invitee.Email, invitee.Category));
+            await SendAsync(new AddMsfInvitationCommand(campaign.Id, invitee.Email, invitee.Category, _coordinator));
         }
 
-        await SendAsync(new OpenMsfCampaignCommand(campaign.Id));
+        await SendAsync(new OpenMsfCampaignCommand(campaign.Id, _coordinator));
 
         Factory.EmailSender.Messages.Should().HaveCount(8);
         Factory.EmailSender.Messages.Should().OnlyContain(message => message.TextBody.Contains("http://localhost/msf/respond?token=", StringComparison.Ordinal));
@@ -338,7 +338,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             (await dbContext.MsfInvitations.CountAsync(invitation => invitation.RespondedOn != null)).Should().Be(4);
         }
 
-        var closedReport = await SendAsync(new CloseMsfCampaignCommand(campaign.Id));
+        var closedReport = await SendAsync(new CloseMsfCampaignCommand(campaign.Id, _coordinator));
         closedReport.TotalResponses.Should().Be(4);
         closedReport.State.Should().Be(MsfCampaignState.UnderReview);
         closedReport.Categories.Should().Contain(category => !category.IsSuppressed);
@@ -373,10 +373,19 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         await SendAsync(new ReleaseMsfCampaignCommand(
             campaign.Id, "coordinator-1", "Released after coordinator review.", 4, _coordinator));
 
-        var traineeReports = await SendAsync(new ListMsfCampaignsForTraineeQuery("trainee-1"));
+        // T113: the coordinator list is confined in SQL through the preferred-profile set, so this is where the
+        // NOT EXISTS it translates to is exercised against PostgreSQL rather than the in-memory provider.
+        (await SendAsync(new ListMsfCampaignsForCoordinatorQuery(_coordinator)))
+            .Should().ContainSingle(summary => summary.Id == campaign.Id);
+        (await SendAsync(new ListMsfCampaignsForCoordinatorQuery(CoordinatorElsewhere())))
+            .Should().NotContain(summary => summary.Id == campaign.Id);
+        (await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id, CoordinatorElsewhere())))
+            .Should().BeNull();
+
+        var traineeReports = await SendAsync(new ListMsfCampaignsForTraineeQuery("trainee-1", Trainee()));
         traineeReports.Should().ContainSingle(report => report.Id == campaign.Id && report.ResponseCount == 4);
 
-        var releasedReport = await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id));
+        var releasedReport = (await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id, Trainee())))!;
         releasedReport.State.Should().Be(MsfCampaignState.Released);
         releasedReport.CoordinatorNarrative.Should().Be("Released after coordinator review.");
         releasedReport.ReadyForRelease.Should().BeTrue();
@@ -451,6 +460,30 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             ($"other-3-{campaignId}@example.test", MsfRespondentCategory.Other),
             ($"peer-1-{campaignId}@example.test", MsfRespondentCategory.PeerDoctor)
         };
+
+    /// <summary>The campaign's subject, signed in, with the claims the app issues.</summary>
+    private ClaimsPrincipal Trainee()
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "trainee-1"),
+                new Claim(ClaimTypes.Role, WombatRoles.Trainee),
+                new Claim(WombatClaimTypes.InstitutionId, _institutionId.ToString(CultureInfo.InvariantCulture))
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
+
+    /// <summary>A coordinator at an institution the subject does not train at.</summary>
+    private ClaimsPrincipal CoordinatorElsewhere()
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "coordinator-elsewhere"),
+                new Claim(ClaimTypes.Role, WombatRoles.Coordinator),
+                new Claim(WombatClaimTypes.InstitutionId, (_institutionId + 10_000).ToString(CultureInfo.InvariantCulture))
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
 
     private static string ExtractToken(string body)
     {

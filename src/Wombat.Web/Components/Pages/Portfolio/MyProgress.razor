@@ -161,7 +161,7 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
-      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId));
+      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId, authState.User));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId, authState.User));
       _loaded = true;
     }

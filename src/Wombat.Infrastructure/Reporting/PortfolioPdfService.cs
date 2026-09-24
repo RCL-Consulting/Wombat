@@ -5,6 +5,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
 using Wombat.Application.Features.Epas;
@@ -108,20 +109,19 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
         });
     }
 
-    private async Task<PortfolioData> LoadPortfolioDataAsync(PortfolioExportRequest request, CancellationToken cancellationToken)
+    // Internal so the tests can see WHICH profile headed the portfolio, which the rendered bytes do not show. (T113)
+    internal async Task<PortfolioData> LoadPortfolioDataAsync(PortfolioExportRequest request, CancellationToken cancellationToken)
     {
-        var traineeProfile = await _dbContext.Set<Domain.Identity.TraineeProfile>()
+        // The profile TraineeScopeResolver resolves, which is the one ExportPortfolio authorised the export
+        // against and the one each activity's scope stamp was read from. Unordered, this picked an arbitrary
+        // profile, so a trainee with two could get a PDF branded and headed by the institution that did NOT
+        // grant the access. (T101; one definition since T113)
+        var traineeProfile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Include(profile => profile.Curriculum)
                 .ThenInclude(curriculum => curriculum.SubSpeciality)
                     .ThenInclude(sub => sub.Speciality)
             .Where(profile => profile.UserId == request.TraineeUserId)
-            // Same tie-break as ExportPortfolio.ResolveTraineeScopeAsync and
-            // ActivityService.ResolveSubjectScopeAsync. Unordered, this picked an arbitrary profile, so
-            // a trainee with two could get a PDF branded and headed by the institution that did NOT
-            // grant the access. (T101)
-            .OrderByDescending(profile => profile.IsActive)
-            .ThenByDescending(profile => profile.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
         // The curriculum is national now (T091); the trainee's institution is held directly on the profile.

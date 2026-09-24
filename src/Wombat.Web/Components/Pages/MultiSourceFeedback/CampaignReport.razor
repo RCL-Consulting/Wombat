@@ -199,9 +199,13 @@
 
     try
     {
-      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId));
-      _review.Narrative = _report.CoordinatorNarrative;
-      _review.EntrustmentLevel = _report.ReviewerEntrustmentLevel;
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+      // Null for a campaign that does not exist and for one about a trainee the caller does not run campaigns
+      // for, alike (T113); the panel renders both as "Report unavailable".
+      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, authState.User));
+      _review.Narrative = _report?.CoordinatorNarrative;
+      _review.EntrustmentLevel = _report?.ReviewerEntrustmentLevel;
     }
     catch (Exception exception)
     {
@@ -217,7 +221,8 @@
   {
     try
     {
-      _report = await Sender.Send(new CloseMsfCampaignCommand(CampaignId));
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _report = await Sender.Send(new CloseMsfCampaignCommand(CampaignId, authState.User));
       _status = "Campaign closed and anonymised for review.";
     }
     catch (Exception exception)

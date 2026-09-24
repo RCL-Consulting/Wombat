@@ -1,18 +1,26 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
-public sealed record GetActiveDecisionsForTraineeQuery(string TraineeUserId) : IRequest<IReadOnlyList<EntrustmentDecisionDto>>;
+/// <summary>
+/// One trainee's active entrustment decisions, for the trainee themselves or anyone who may read about them
+/// (<see cref="TraineeScopeResolver.MayReadAsync" />); empty for anyone else, never a refusal. (T113)
+/// </summary>
+public sealed record GetActiveDecisionsForTraineeQuery(string TraineeUserId, ClaimsPrincipal Principal)
+    : IRequest<IReadOnlyList<EntrustmentDecisionDto>>;
 
 public sealed class GetActiveDecisionsForTraineeQueryValidator : AbstractValidator<GetActiveDecisionsForTraineeQuery>
 {
     public GetActiveDecisionsForTraineeQueryValidator()
     {
         RuleFor(query => query.TraineeUserId).NotEmpty();
+        RuleFor(query => query.Principal).NotNull();
     }
 }
 
@@ -28,6 +36,11 @@ public sealed class GetActiveDecisionsForTraineeQueryHandler
 
     public async Task<IReadOnlyList<EntrustmentDecisionDto>> Handle(GetActiveDecisionsForTraineeQuery request, CancellationToken cancellationToken)
     {
+        if (!await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, request.TraineeUserId, cancellationToken))
+        {
+            return [];
+        }
+
         var decisions = await _dbContext.Set<EntrustmentDecision>()
             .AsNoTracking()
             .Include(d => d.Epa)

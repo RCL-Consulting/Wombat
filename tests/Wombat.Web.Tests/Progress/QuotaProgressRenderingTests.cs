@@ -328,6 +328,9 @@ public sealed class QuotaProgressRenderingTests : TestContext
         var query = sender.Received.OfType<GetCurriculumProgressForTraineeQuery>().Should().ContainSingle().Which;
         query.TraineeUserId.Should().Be("trainee-1");
         query.AsOf.Should().BeNull();
+
+        // T113: the handler authorises against the caller, so the page must pass the signed-in principal itself.
+        query.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be("trainee-1");
     }
 
     // ---------------------------------------------------------------------------------------------

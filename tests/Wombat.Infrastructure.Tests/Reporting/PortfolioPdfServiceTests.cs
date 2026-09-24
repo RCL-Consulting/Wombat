@@ -2,8 +2,11 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -83,6 +86,77 @@ public sealed class PortfolioPdfServiceTests
         var export = await service.GenerateAsync(request, CancellationToken.None);
 
         export.PdfBytes.Should().NotBeEmpty();
+    }
+
+    /// <summary>
+    /// The portfolio is headed by the profile <c>TraineeScopeResolver</c> prefers: the active one, else the most recent
+    /// (highest id). (T101, T113)
+    /// </summary>
+    /// <remarks>
+    /// That is the profile <c>ExportPortfolio</c> authorised the export against and the one every activity's scope
+    /// stamp was read from. Unordered, the load picked an arbitrary profile, so a trainee with two could get a PDF
+    /// headed by the institution that did NOT grant the export. The rendered bytes do not show which profile was
+    /// used, so these read the loaded data.
+    /// </remarks>
+    [Fact]
+    public async Task ThePortfolio_IsHeadedByTheMostRecentProfile_WhenTheTraineeHasOnlyPastOnes()
+    {
+        await using var db = SeededDb();
+        SeedProgramme(db);
+        AddProfile(db, id: 10, HostInstitutionId, isActive: false);
+        AddProfile(db, id: 20, OtherInstitutionId, isActive: false);
+
+        var data = await LoadAsync(db);
+
+        data.InstitutionName.Should().Be(OtherInstitutionName);
+    }
+
+    [Fact]
+    public async Task ThePortfolio_IsHeadedByTheActiveProfile_OverAMoreRecentPastOne()
+    {
+        await using var db = SeededDb();
+        SeedProgramme(db);
+        AddProfile(db, id: 10, HostInstitutionId, isActive: true);
+        AddProfile(db, id: 20, OtherInstitutionId, isActive: false);
+
+        var data = await LoadAsync(db);
+
+        data.InstitutionName.Should().Be(HostInstitutionName);
+    }
+
+    private const int HostInstitutionId = 1;
+    private const int OtherInstitutionId = 2;
+    private const string HostInstitutionName = "Host Academic Hospital";
+    private const string OtherInstitutionName = "Other Academic Hospital";
+
+    private static Task<PortfolioData> LoadAsync(ApplicationDbContext db)
+        => new PortfolioPdfService(db, new ThrowingMsfAggregationService()).LoadPortfolioDataAsync(
+            new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1")),
+            CancellationToken.None);
+
+    private static void SeedProgramme(ApplicationDbContext db)
+    {
+        db.Set<Institution>().Add(new Institution { Id = HostInstitutionId, Name = HostInstitutionName, ShortCode = "HOST" });
+        db.Set<Institution>().Add(new Institution { Id = OtherInstitutionId, Name = OtherInstitutionName, ShortCode = "OTHR" });
+        db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics" });
+        db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "General Paediatrics" });
+        db.Set<Curriculum>().Add(new Curriculum { Id = 1, SubSpecialityId = 1, Name = "CPSA Paediatrics", Version = "11.1" });
+        db.SaveChanges();
+    }
+
+    private static void AddProfile(ApplicationDbContext db, int id, int institutionId, bool isActive)
+    {
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = id,
+            UserId = "trainee-1",
+            InstitutionId = institutionId,
+            CurriculumId = 1,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1),
+            ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+            IsActive = isActive
+        });
+        db.SaveChanges();
     }
 
     private static void SeedReleasedCampaign(ApplicationDbContext db)

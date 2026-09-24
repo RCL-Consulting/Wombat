@@ -283,9 +283,9 @@ public sealed class MsfEvidenceFanOutTests
     [Fact]
     public async Task Release_RefusesACampaignAboutAnotherInstitutionsTrainee()
     {
-        // Release is where the consequence is, so release is where the check has to be: neither
-        // ListMsfCampaignsForCoordinatorQuery nor GetCampaignAggregateReportQuery filters by principal,
-        // so a coordinator can reach any campaign's report page by id.
+        // Release is where the consequence is, so release has to check for itself rather than trust that the
+        // caller reached it through a list and a report that are scoped (since T113) - the command is reachable
+        // by campaign id alone.
         await using var db = CreateDb();
         var campaign = Seed(db, [EpaOnCurriculum]);
 

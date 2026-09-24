@@ -1,12 +1,16 @@
+using System.Security.Claims;
 using MediatR;
 using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-/// <summary>No validator: carries a single non-nullable int ID; EF lookup enforces existence.</summary>
+/// <summary>
+/// No validator: carries a non-nullable int ID and the caller; the handler authorises the caller against the
+/// campaign's subject (T113) and the aggregate validates the state transition.
+/// </summary>
 [NoValidator]
-public sealed record CloseMsfCampaignCommand(int CampaignId) : IRequest<MsfCampaignAggregateReportDto>;
+public sealed record CloseMsfCampaignCommand(int CampaignId, ClaimsPrincipal Principal) : IRequest<MsfCampaignAggregateReportDto>;
 
 public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCampaignCommand, MsfCampaignAggregateReportDto>
 {
@@ -21,7 +25,13 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
 
     public async Task<MsfCampaignAggregateReportDto> Handle(CloseMsfCampaignCommand request, CancellationToken cancellationToken)
     {
+        // Before anything is loaded to be touched: a close anonymises every respondent for good, and the report it
+        // returns is the unreleased one. (T113)
+        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
+            _dbContext, request.Principal, request.CampaignId, cancellationToken);
+
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
+
         campaign.Close(DateTime.UtcNow);
         MsfCampaignRules.AnonymizeInvitations(campaign.Invitations);
         await _dbContext.SaveChangesAsync(cancellationToken);

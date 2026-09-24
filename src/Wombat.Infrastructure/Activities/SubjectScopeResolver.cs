@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Domain.Curricula;
-using Wombat.Domain.Identity;
-using Wombat.Domain.Institutions;
+using Wombat.Application.Common.Security;
 using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Activities;
@@ -18,9 +16,17 @@ internal static class SubjectScopeResolver
     /// Where the subject trains, read once at creation and stamped onto the activity. (T101)
     /// </summary>
     /// <remarks>
-    /// Prefers the active profile; a trainee who has graduated or been withdrawn keeps their most
-    /// recent one, so activities logged afterwards still carry a scope. Null for a subject with no
-    /// profile at all, which withholds scoped oversight rather than granting it.
+    /// <para>
+    /// The profile half is <see cref="TraineeScopeResolver.ResolveAsync" /> in Application, the one resolver every
+    /// trainee-scoped read and the MSF rules also use (T113): the active profile, else the most recent, each level of
+    /// profile -> curriculum -> sub-speciality -> speciality degrading on its own. A trainee who has graduated or been
+    /// withdrawn keeps their most recent profile, so activities logged afterwards still carry a scope.
+    /// </para>
+    /// <para>
+    /// What is added here is the identity-row fallback for a subject with no profile at all, which only an activity
+    /// needs: an activity can be about someone who is not (yet) an admitted trainee. Null throughout for a subject with
+    /// neither, which withholds scoped oversight rather than granting it.
+    /// </para>
     /// </remarks>
     public static async Task<(int? InstitutionId, int? SpecialityId, int? SubSpecialityId)> ResolveAsync(
         IApplicationDbContext dbContext,
@@ -32,37 +38,11 @@ internal static class SubjectScopeResolver
             return (null, null, null);
         }
 
-        // Resolved one level at a time, NOT as a single join through
-        // TraineeProfile -> Curriculum -> SubSpeciality. Those navigations are required, so one query
-        // would be an INNER join: a curriculum row that has gone missing would take the institution
-        // down with it, even though the institution sits on the profile itself. Each level degrades
-        // on its own instead, and the most important stamp — the institution — survives the other two
-        // failing. Three primary-key lookups, once, on a create.
-        var profile = await dbContext.Set<TraineeProfile>()
-            .Where(entity => entity.UserId == subjectUserId)
-            .OrderByDescending(entity => entity.IsActive)
-            .ThenByDescending(entity => entity.Id)
-            .Select(entity => new { entity.InstitutionId, entity.CurriculumId })
-            .FirstOrDefaultAsync(cancellationToken);
+        var scope = await TraineeScopeResolver.ResolveAsync(dbContext, subjectUserId, cancellationToken);
 
-        if (profile is null)
-        {
-            return await ResolveScopeFromIdentityAsync(dbContext, subjectUserId, cancellationToken);
-        }
-
-        var subSpecialityId = await dbContext.Set<Curriculum>()
-            .Where(entity => entity.Id == profile.CurriculumId)
-            .Select(entity => (int?)entity.SubSpecialityId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var specialityId = subSpecialityId is null
-            ? null
-            : await dbContext.Set<SubSpeciality>()
-                .Where(entity => entity.Id == subSpecialityId.Value)
-                .Select(entity => (int?)entity.SpecialityId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-        return (profile.InstitutionId, specialityId, subSpecialityId);
+        return scope is null
+            ? await ResolveScopeFromIdentityAsync(dbContext, subjectUserId, cancellationToken)
+            : (scope.InstitutionId, scope.SpecialityId, scope.SubSpecialityId);
     }
 
     /// <summary>

@@ -184,7 +184,7 @@ public sealed class EntrustmentDecisionHandlersTests
             CancellationToken.None);
 
         var queryHandler = new GetActiveDecisionsForTraineeQueryHandler(dbContext);
-        var active = await queryHandler.Handle(new GetActiveDecisionsForTraineeQuery("trainee-1"), CancellationToken.None);
+        var active = await queryHandler.Handle(new GetActiveDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])), CancellationToken.None);
 
         active.Should().HaveCount(1);
         active[0].EpaId.Should().Be(8);

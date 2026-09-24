@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
@@ -5,7 +6,16 @@ using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-public sealed record ListMsfCampaignsForCoordinatorQuery() : IRequest<IReadOnlyList<MsfCampaignSummaryDto>>;
+/// <summary>
+/// The campaigns this caller runs: every campaign for an Administrator, the campaigns about trainees at their own
+/// institution for a Coordinator, and none for anyone else. (T113)
+/// </summary>
+/// <remarks>
+/// This took no parameters at all until T113, and every coordinator in the country saw every campaign in every
+/// institution: who was being assessed, how many had responded, and whether it had been released.
+/// </remarks>
+public sealed record ListMsfCampaignsForCoordinatorQuery(ClaimsPrincipal Principal)
+    : IRequest<IReadOnlyList<MsfCampaignSummaryDto>>;
 
 public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler<ListMsfCampaignsForCoordinatorQuery, IReadOnlyList<MsfCampaignSummaryDto>>
 {
@@ -18,11 +28,11 @@ public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler
 
     public async Task<IReadOnlyList<MsfCampaignSummaryDto>> Handle(ListMsfCampaignsForCoordinatorQuery request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request.Principal);
+
         return await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
-            .Include(campaign => campaign.Template)
-            .Include(campaign => campaign.Invitations)
-            .Include(campaign => campaign.Responses)
+            .WhereRunBy(_dbContext, request.Principal)
             .OrderByDescending(campaign => campaign.CreatedOn)
             .Select(campaign => new MsfCampaignSummaryDto(
                 campaign.Id,

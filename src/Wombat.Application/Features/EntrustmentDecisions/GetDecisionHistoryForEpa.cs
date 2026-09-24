@@ -1,12 +1,19 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
-public sealed record GetDecisionHistoryForEpaQuery(string TraineeUserId, int EpaId) : IRequest<IReadOnlyList<EntrustmentDecisionDto>>;
+/// <summary>
+/// Every entrustment decision on one EPA for one trainee, newest first, for the trainee themselves or anyone who may
+/// read about them (<see cref="TraineeScopeResolver.MayReadAsync" />); empty for anyone else, never a refusal. (T113)
+/// </summary>
+public sealed record GetDecisionHistoryForEpaQuery(string TraineeUserId, int EpaId, ClaimsPrincipal Principal)
+    : IRequest<IReadOnlyList<EntrustmentDecisionDto>>;
 
 public sealed class GetDecisionHistoryForEpaQueryValidator : AbstractValidator<GetDecisionHistoryForEpaQuery>
 {
@@ -14,6 +21,7 @@ public sealed class GetDecisionHistoryForEpaQueryValidator : AbstractValidator<G
     {
         RuleFor(query => query.TraineeUserId).NotEmpty();
         RuleFor(query => query.EpaId).GreaterThan(0);
+        RuleFor(query => query.Principal).NotNull();
     }
 }
 
@@ -29,6 +37,11 @@ public sealed class GetDecisionHistoryForEpaQueryHandler
 
     public async Task<IReadOnlyList<EntrustmentDecisionDto>> Handle(GetDecisionHistoryForEpaQuery request, CancellationToken cancellationToken)
     {
+        if (!await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, request.TraineeUserId, cancellationToken))
+        {
+            return [];
+        }
+
         var decisions = await _dbContext.Set<EntrustmentDecision>()
             .AsNoTracking()
             .Include(d => d.Epa)

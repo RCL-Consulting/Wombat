@@ -4,11 +4,11 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T113](tasks/in_progress/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | in_progress | [T135](tasks/in_progress/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
 | in_progress | [T150](tasks/in_progress/T150-sampling-and-trajectory-count-assessors-from-drafts-and-cancelled-requests-by-a-hard-coded-field-key.md) | P3 | Sampling and trajectory count assessors from drafts and cancelled requ |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
-| queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+a73c5aa fix(committee): sampling and the trajectory count only terminal rated evidence, read the stamped EPA and the declared rating and assessor, and report unreadable and unattributed rows separately (T135, T150, D44)
 eb459b6 docs(execution): close T137 — browser-verified on dev (migration applied, 21/21 stamped, activity 24 stamped at create); file T181
 c30df9c docs(execution): close T141 and T147 — browser-verified on dev; file T180 (tab title does not follow in-app navigation)
 7aab72a feat(activities): an activity knows its EPA — stamped from a schema pointer that agrees with credit; activity lists show the EPA, the encounter date and what it credited (T137, T106 item 14)
 d0f8a90 docs(execution): close T144 and T140 (integration 23/23, no leaked schemas); file T177, T178, T179
-e2f4858 test(integration): the MSF respond-flow fixture seeds as startup does, cleans up on a failed setup, runs no scheduler, and asserts the ClosedOn date (T140)
 ```

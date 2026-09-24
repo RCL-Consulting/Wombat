@@ -1,9 +1,10 @@
 ---
 id: T113
 title: "Two more queries trust a caller-supplied trainee id"
-status: queued
+status: in_progress
 priority: P2
 created: 2026-09-19
+started: 2026-09-24
 ---
 # T113 — Two more queries trust a caller-supplied trainee id
 

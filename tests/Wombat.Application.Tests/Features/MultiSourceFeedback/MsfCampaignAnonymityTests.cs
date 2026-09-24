@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
 
@@ -23,7 +24,7 @@ public sealed class MsfCampaignAnonymityTests
         await AddResponseAsync(dbContext, campaign, campaign.Invitations.Single(invitation => invitation.RespondentEmail == "nurse-2@example.test"), 4, "Reliable.");
 
         var handler = new CloseMsfCampaignCommandHandler(dbContext, _aggregationService);
-        var report = await handler.Handle(new CloseMsfCampaignCommand(campaign.Id), CancellationToken.None);
+        var report = await handler.Handle(new CloseMsfCampaignCommand(campaign.Id, TestPrincipals.Administrator()), CancellationToken.None);
 
         var invitations = await dbContext.MsfInvitations.OrderBy(invitation => invitation.Id).ToListAsync();
         invitations.Should().OnlyContain(invitation => invitation.RespondentEmail == null);
@@ -44,7 +45,7 @@ public sealed class MsfCampaignAnonymityTests
         await AddResponseAsync(dbContext, campaign, campaign.Invitations.Single(invitation => invitation.RespondentEmail == "nurse-2@example.test"), 3, "Needs pacing.");
 
         var report = await new CloseMsfCampaignCommandHandler(dbContext, _aggregationService)
-            .Handle(new CloseMsfCampaignCommand(campaign.Id), CancellationToken.None);
+            .Handle(new CloseMsfCampaignCommand(campaign.Id, TestPrincipals.Administrator()), CancellationToken.None);
 
         var nurseCategory = report.Categories.Single(category => category.Category == MsfRespondentCategory.Nurse);
         nurseCategory.IsSuppressed.Should().BeFalse();

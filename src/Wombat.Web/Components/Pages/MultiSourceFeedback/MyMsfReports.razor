@@ -93,13 +93,17 @@
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
       _reports.Clear();
-      _reports.AddRange(await Sender.Send(new ListMsfCampaignsForTraineeQuery(userId)));
+      _reports.AddRange(await Sender.Send(new ListMsfCampaignsForTraineeQuery(userId, authState.User)));
 
       if (CampaignId.HasValue)
       {
-        _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId.Value));
-        if (_report.State != MsfCampaignState.Released || _report.SubjectUserId != userId)
+        // The handler decides who may read it and returns null otherwise (T113): the subject, once released.
+        // The check below is not that gate; it keeps an Administrator, who may read any report, on a page that
+        // is about their OWN reports.
+        _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId.Value, authState.User));
+        if (_report is null || _report.State != MsfCampaignState.Released || _report.SubjectUserId != userId)
         {
+          _report = null;
           throw new InvalidOperationException("The selected report is not available to the current trainee.");
         }
       }

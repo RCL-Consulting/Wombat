@@ -1,6 +1,7 @@
 @page "/msf/campaigns"
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
 @inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>MSF Campaigns</PageTitle>
 
@@ -49,7 +50,9 @@
   {
     try
     {
-      _items.AddRange(await Sender.Send(new ListMsfCampaignsForCoordinatorQuery()));
+      // Scoped by the handler to the campaigns this caller runs: their own institution's trainees (T113).
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _items.AddRange(await Sender.Send(new ListMsfCampaignsForCoordinatorQuery(authState.User)));
     }
     catch (Exception exception)
     {

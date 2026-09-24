@@ -1,11 +1,18 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-public sealed record ListMsfCampaignsForTraineeQuery(string SubjectUserId) : IRequest<IReadOnlyList<MsfCampaignSummaryDto>>;
+/// <summary>
+/// One trainee's released feedback campaigns, for the trainee themselves or anyone who may read about them
+/// (<see cref="TraineeScopeResolver.MayReadAsync" />); empty for anyone else, never a refusal. (T113)
+/// </summary>
+public sealed record ListMsfCampaignsForTraineeQuery(string SubjectUserId, ClaimsPrincipal Principal)
+    : IRequest<IReadOnlyList<MsfCampaignSummaryDto>>;
 
 public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<ListMsfCampaignsForTraineeQuery, IReadOnlyList<MsfCampaignSummaryDto>>
 {
@@ -18,11 +25,13 @@ public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<Lis
 
     public async Task<IReadOnlyList<MsfCampaignSummaryDto>> Handle(ListMsfCampaignsForTraineeQuery request, CancellationToken cancellationToken)
     {
+        if (!await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, request.SubjectUserId, cancellationToken))
+        {
+            return [];
+        }
+
         return await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
-            .Include(campaign => campaign.Template)
-            .Include(campaign => campaign.Invitations)
-            .Include(campaign => campaign.Responses)
             .Where(campaign => campaign.SubjectUserId == request.SubjectUserId && campaign.State == MsfCampaignState.Released)
             .OrderByDescending(campaign => campaign.ReleasedOn)
             .Select(campaign => new MsfCampaignSummaryDto(

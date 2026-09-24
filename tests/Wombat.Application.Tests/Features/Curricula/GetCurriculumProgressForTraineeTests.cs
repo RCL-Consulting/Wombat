@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Curricula;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -254,7 +255,7 @@ public sealed class GetCurriculumProgressForTraineeTests
 
         var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
         var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-without-profile", AsOf), CancellationToken.None);
+            new GetCurriculumProgressForTraineeQuery("trainee-without-profile", TestPrincipals.Administrator(), AsOf), CancellationToken.None);
 
         result.Should().BeNull();
     }
@@ -298,7 +299,7 @@ public sealed class GetCurriculumProgressForTraineeTests
     {
         var handler = new GetCurriculumProgressForTraineeQueryHandler(db);
         var result = await handler.Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1", asOf ?? AsOf), CancellationToken.None);
+            new GetCurriculumProgressForTraineeQuery("trainee-1", TestPrincipals.Trainee("trainee-1"), asOf ?? AsOf), CancellationToken.None);
         return result.Should().NotBeNull().And.Subject.As<TraineeCurriculumProgressSummaryDto>();
     }
 

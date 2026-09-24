@@ -528,7 +528,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             (await db.CurriculumItemProgresses.CountAsync()).Should().Be(3, "guard: PAED-001 in two semesters, PAED-008 in one");
 
             var summary = await new GetCurriculumProgressForTraineeQueryHandler(db)
-                .Handle(new GetCurriculumProgressForTraineeQuery(TraineeUserId, AsOf), CancellationToken.None);
+                .Handle(new GetCurriculumProgressForTraineeQuery(TraineeUserId, TraineePrincipal(TraineeUserId), AsOf), CancellationToken.None);
 
             summary.Should().NotBeNull();
             summary!.CurrentSemesterName.Should().Be("Semester 2, 2026");
@@ -570,7 +570,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             paed008.EffectiveMinimumLevelLabel.Should().Be("2");
 
             var late = await new GetCurriculumProgressForTraineeQueryHandler(db)
-                .Handle(new GetCurriculumProgressForTraineeQuery(LateStarterUserId, AsOf), CancellationToken.None);
+                .Handle(new GetCurriculumProgressForTraineeQuery(LateStarterUserId, TraineePrincipal(LateStarterUserId), AsOf), CancellationToken.None);
 
             late.Should().NotBeNull();
             (late!.SemesterTargetsApplying, late.YearTargetsApplying).Should().Be((0, 0));

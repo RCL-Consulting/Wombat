@@ -197,12 +197,18 @@
   /// coordinator's own scope: release re-applies exactly this predicate, so an EPA offered here that
   /// release would silently drop would be a picker that lies.
   /// </summary>
+  /// <remarks>
+  /// Only for a trainee the picker offered. The select's value arrives from the browser, and the reference
+  /// service answers any id it is given, so a value edited in the page would otherwise read another institution's
+  /// trainee's curriculum, and confirm that the id names someone. (T113)
+  /// </remarks>
   private async Task LoadEpaOptionsAsync()
   {
     _epaOptions.Clear();
     _campaign.EpaIds.Clear();
 
-    if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
+    if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId) ||
+        !_trainees.Any(trainee => string.Equals(trainee.UserId, _campaign.SubjectUserId, StringComparison.Ordinal)))
     {
       return;
     }
@@ -313,7 +319,7 @@
 
     try
     {
-      await Sender.Send(new AddMsfInvitationCommand(CampaignId.Value, _invitee.Email, _invitee.Category));
+      await Sender.Send(new AddMsfInvitationCommand(CampaignId.Value, _invitee.Email, _invitee.Category, await GetPrincipalAsync()));
       _invitee = new();
       _status = "Invitee added.";
     }
@@ -335,7 +341,7 @@
 
     try
     {
-      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value));
+      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, await GetPrincipalAsync()));
       _status = "Campaign opened and respondent links issued to the logging email sender.";
     }
     catch (Exception exception)
