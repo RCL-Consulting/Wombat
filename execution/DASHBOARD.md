@@ -5,11 +5,7 @@
 | lane | id | pri | title | model |
 |---|---|---|---|---|
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
-| queued | [T099](tasks/queued/T099-paediatric-catalogue-unreachable.md) | P1 | The CPSA paediatric catalogue is seeded but unreachable by every non-a |  |
-| queued | [T120](tasks/queued/T120-remaining-v11-1-wba-tools.md) | P1 | Author the ten remaining v11.1 WBA tools, and separate the five an eng |  |
-| queued | [T149](tasks/queued/T149-the-sso-link-endpoint-is-an-unthrottled-password-oracle-that-binds-any-external-identity-and-sso-sign-in-ignores-lockout.md) | P1 | The SSO link endpoint is an unthrottled password oracle that binds any |  |
-| queued | [T104](tasks/queued/T104-retire-legacy-paediatric-data.md) | P2 | Retire the legacy FCPaed paediatric world alongside the national CPSA  |  |
-| queued | [T105](tasks/queued/T105-transition-validation-scope.md) | P2 | Every transition validates the whole schema in Submit mode, so a half- |  |
+| queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
@@ -21,6 +17,11 @@
 | queued | [T137](tasks/queued/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | queued | [T140](tasks/queued/T140-the-integration-suite-s-msf-flow-test-cannot-set-itself-up-on-a-fresh-schema-and-leaks-a-schema-every-time-it-fails.md) | P2 | The integration suite's MSF flow test cannot set itself up on a fresh  | sonnet |
 | queued | [T148](tasks/queued/T148-submit-on-activities-new-cancels-a-requested-born-activity-the-moment-it-is-created.md) | P2 | Submit on /activities/new cancels a requested-born activity the moment | sonnet |
+| queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
+| queued | [T160](tasks/queued/T160-the-encounter-date-is-unbounded-a-future-or-pre-programme-date-is-accepted-and-nothing-warns-past-d15-s-fourteen-days.md) | P2 | The encounter date is unbounded: a future or pre-programme date is acc |  |
+| queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
+| queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
+| queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -31,7 +32,6 @@
 | queued | [T114](tasks/queued/T114-audit-log-hygiene.md) | P3 | Audit log hygiene: an unenforced size bound, an unstamped speciality,  |  |
 | queued | [T115](tasks/queued/T115-isinrole-extension-is-dead-code.md) | P3 | `ClaimsPrincipalExtensions.IsInRole` never executes, and every `role:` |  |
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
-| queued | [T118](tasks/queued/T118-v11-1-evidence-run-findings.md) | P3 | What the first real v11.1 assessment showed |  |
 | queued | [T138](tasks/queued/T138-the-committee-evidence-snapshot-includes-draft-open-and-withdrawn-msf-campaigns.md) | P3 | The committee evidence snapshot includes draft, open and withdrawn MSF | sonnet |
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
 | queued | [T141](tasks/queued/T141-a-trainee-cannot-reach-my-progress-from-the-navigation.md) | P3 | A trainee cannot reach My progress from the navigation | sonnet |
@@ -45,8 +45,20 @@
 | queued | [T151](tasks/queued/T151-the-assessor-nudge-job-emails-deactivated-and-opted-out-nominees.md) | P3 | The assessor nudge job emails deactivated and opted-out nominees |  |
 | queued | [T152](tasks/queued/T152-a-supervisor-based-at-another-institution-cannot-be-named-on-a-trainee-s-assessment.md) | P3 | A supervisor based at another institution cannot be named on a trainee |  |
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
+| queued | [T154](tasks/queued/T154-clinical-audit-and-portfolio-review-cannot-be-filed-one-needs-an-attached-report-the-other-a-design.md) | P3 | Clinical audit and portfolio review cannot be filed: one needs an atta |  |
+| queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
+| queued | [T158](tasks/queued/T158-deactivating-an-epa-does-not-hide-it-from-progress-and-credit-still-applies-to-it.md) | P3 | Deactivating an EPA does not hide it from progress, and credit still a |  |
+| queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
+| queued | [T161](tasks/queued/T161-an-undated-activity-s-filing-timestamp-is-presented-as-its-encounter-date.md) | P3 | An undated activity's filing timestamp is presented as its encounter d |  |
+| queued | [T162](tasks/queued/T162-the-type-picker-offers-the-system-written-msf-cpsa-to-trainees.md) | P3 | The type picker offers the system-written msf_cpsa to trainees |  |
+| queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
+| queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
+| queued | [T168](tasks/queued/T168-no-surface-shows-per-epa-and-period-whether-an-msf-covered-it.md) | P3 | No surface shows, per EPA and period, whether an MSF covered it |  |
+| queued | [T169](tasks/queued/T169-the-portfolio-pdf-has-no-per-epa-progress-and-prints-unrated-and-msf-evidence-as-never-completed.md) | P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF  |  |
+| queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
+| queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 
-Done: 99 task(s).
+Done: 105 task(s).
 
 ## From STATE.md
 
@@ -57,14 +69,14 @@ This is a reset point, not a diary.
 Wombat is **deployed but not in service** — scenario data only, no real trainees. The live
 workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operational hardening.
 ## Now
-- Nothing in `in_progress/`. 40 queued, 1 blocked. **Three P1s remain:** T099, T120, and the new **T149** (SSO
+- Nothing in `in_progress/`. 40 queued, 1 blocked. **One P1:** T157 — production runs the 16 September build (last
 
 ## Recent commits
 
 ```
-db0929c fix(t102): show an unlisted pick neutrally once the list has loaded; institution-scoped roles only; round-2 tests
-7133491 fix(t102): label only stored nominees, one scope per option load, busy guards; docs and follow-up tasks
-ff4006d Merge branch 'worktree-wf_8c171d32-88b-6' into t102-user-field-validation
-c2b9aed Merge branch 'worktree-wf_8c171d32-88b-5' into t102-user-field-validation
-5533eb4 Merge branch 'worktree-wf_8c171d32-88b-4' into t102-user-field-validation
+47a9aad docs(execution): re-baseline the EPA stream — close T118 and T104 by finding, fold merged tasks, file T158–T171, rewrite EPA-PROGRAMME §2 as the live queue
+431e69e docs(execution): close T099 — the catalogue is reachable on dev and on a fresh database; production never received it, filed as T157
+10834cf fix(identity): the SSO link endpoint reads everything from the external cookie, counts failures and is rate-limited; SSO sign-in refuses deactivated, Administrator and other-institution accounts (T149)
+69fc5d9 feat(activities): four more v11.1 instruments — Clinical Case Analysis, Random Case Analysis, Chart-Stimulated Recall, Reflective Exercise (T120)
+0a767c2 feat(activities): a transition declares how much of the form it checks, so the schema's required flags are honest (T105)
 ```

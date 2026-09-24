@@ -58,4 +58,3 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 - 2026-09-24: **T102 shipped.** Browser-verified on dev (forged ids refused, stale nominee refused at submit and
   repaired, D20-style completion by a de-roled assessor credits). Design critique + 3 review rounds (a label leak caught
   in round 1). Filed T149–T153. Suites: 1980, up from 1555.
-- 2026-09-23: **T122 shipped** — the EPA→tool allow-list (see the T122 handoff in `log/`).
