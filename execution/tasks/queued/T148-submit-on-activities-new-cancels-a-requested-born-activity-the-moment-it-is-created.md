@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T148 — "Submit" on a legacy-shaped type files the encounter and immediately withdraws it
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Medium. The trainee is told "Activity submitted." while the activity lands in `cancelled`. Nothing
 errors and the encounter silently never reaches the assessor. Pre-existing at 256de22, not introduced by [T122].
 **Surfaced:** 2026-09-23, by [T122]'s third review round.

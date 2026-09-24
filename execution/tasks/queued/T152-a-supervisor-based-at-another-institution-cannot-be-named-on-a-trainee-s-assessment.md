@@ -10,6 +10,11 @@ created: 2026-09-24
 
 # T152 — A supervisor based at another institution cannot be named on a trainee's assessment
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low today (no corpus step needs it); a real gap once rotations are recorded.
 **Surfaced:** 2026-09-24, T102 design critique (upheld 3/3).
 

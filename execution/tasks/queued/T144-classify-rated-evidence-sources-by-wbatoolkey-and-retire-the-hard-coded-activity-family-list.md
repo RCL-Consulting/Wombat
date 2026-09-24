@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T144 — Rated evidence is still categorised by guessing from its key, although types now say which instrument they are
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low. It only changes labels: the trajectory's source label and the committee sampling report's
 `DistinctSourceCount` / `SingleSource`. What is rated and what credits are unaffected.
 **Surfaced:** 2026-09-23, closing [T122], whose design promised this retirement and deliberately did not do it.

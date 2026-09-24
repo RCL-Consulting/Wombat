@@ -156,6 +156,54 @@ public sealed class SeedRoundTripTests
     }
 
     /// <summary>
+    /// T105 added a transition's <c>validation</c>. Named explicitly: a Serialize that forgot it would turn every
+    /// <c>draft</c> and <c>owned</c> transition back into <c>all</c> at publish, and a half-filled draft could not be
+    /// cancelled again, with nothing failing but the cancel.
+    /// </summary>
+    [Fact]
+    public void TransitionValidation_SurvivesParseSerializeParse()
+    {
+        const string workflowJson = """
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [
+                { "key": "draft", "label": "Draft" },
+                { "key": "requested", "label": "Requested" },
+                { "key": "completed", "label": "Completed", "terminal": true },
+                { "key": "cancelled", "label": "Cancelled" }
+              ],
+              "transitions": [
+                { "key": "submit", "from": "draft", "to": "requested", "actor": "subject", "validation": "owned" },
+                { "key": "complete", "from": "requested", "to": "completed", "actor": "role:Assessor", "validation": "all" },
+                { "key": "cancel", "from": ["draft", "requested"], "to": "cancelled", "actor": "subject", "validation": "draft" }
+              ]
+            }
+            """;
+
+        var canonical = WorkflowParser.Serialize(WorkflowParser.Parse(workflowJson));
+
+        AssertNothingLost(workflowJson, canonical, "validation workflow fixture");
+        WorkflowParser.Parse(canonical).Transitions.Select(transition => transition.Validation)
+            .Should().Equal(TransitionValidation.Owned, TransitionValidation.All, TransitionValidation.Draft);
+    }
+
+    /// <summary>
+    /// Every seed's transitions keep exactly the validation their file declares. A seed that says nothing gets
+    /// <c>all</c>, the strict default, and its canonical form says so.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(SeedDirectories))]
+    public void EverySeedsTransitionValidation_SurvivesTheRoundTrip(string seedKey)
+    {
+        var raw = WorkflowParser.Parse(ReadSeedFile(seedKey, "workflow.json"));
+        var canonical = WorkflowParser.Parse(WorkflowParser.Serialize(raw));
+
+        canonical.Transitions.Select(transition => (transition.Key, transition.Validation))
+            .Should().Equal(raw.Transitions.Select(transition => (transition.Key, transition.Validation)));
+    }
+
+    /// <summary>
     /// T119 added a root <c>observation_date_field</c> pointer at the field that records when the
     /// encounter happened. Named explicitly for the same reason <c>editable_by</c> is: a Serialize
     /// that forgets it fails here by name rather than as an opaque corpus-wide diff.

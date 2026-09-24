@@ -7,6 +7,11 @@ created: 2026-09-17
 ---
 # T106 — Activity platform backlog: smaller gaps found while mapping the transition pipeline
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 > **This is a holding file, not a task.** It is a container for findings that have not been
 > split out yet. **Do not "do" T106** — pick an item from the list below, file it with
 > `harness.py task new`, and strike it through here. T106 closes when the list is empty.

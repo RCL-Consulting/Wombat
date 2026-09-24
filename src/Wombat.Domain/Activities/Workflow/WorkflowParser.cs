@@ -95,6 +95,9 @@ public static class WorkflowParser
                 writer.WriteEndArray();
             }
 
+            // Always written, the default included, so a stored workflow says how each move is checked (T105).
+            writer.WriteString("validation", ToJsonValue(transition.Validation));
+
             writer.WriteEndObject();
         }
 
@@ -204,17 +207,53 @@ public static class WorkflowParser
         EnsureObject(element, "Transition must be an object.");
         EnsureAllowedProperties(
             element,
-            ["key", "from", "to", "actor", "requires_note", "requires_fields"],
+            ["key", "from", "to", "actor", "requires_note", "requires_fields", "validation"],
             "transition");
 
+        var key = GetRequiredString(element, "key");
+
         return new WorkflowTransition(
-            GetRequiredString(element, "key"),
+            key,
             ParseFromStates(GetRequiredProperty(element, "from")),
             GetRequiredString(element, "to"),
             ActorRuleParser.Parse(GetRequiredString(element, "actor")),
             GetBooleanOrDefault(element, "requires_note"),
-            ParseOptionalStringArray(element, "requires_fields"));
+            ParseOptionalStringArray(element, "requires_fields"),
+            ParseValidation(element, key));
     }
+
+    /// <summary>
+    /// A transition's optional <c>validation</c> (T105): <c>all</c> (the default), <c>owned</c> or <c>draft</c>.
+    /// </summary>
+    private static TransitionValidation ParseValidation(JsonElement element, string transitionKey)
+    {
+        if (!element.TryGetProperty("validation", out var property) || property.ValueKind == JsonValueKind.Null)
+        {
+            return TransitionValidation.All;
+        }
+
+        if (property.ValueKind != JsonValueKind.String)
+        {
+            throw new WorkflowParseException($"Transition '{transitionKey}': 'validation' must be \"all\", \"owned\" or \"draft\".");
+        }
+
+        return property.GetString()?.Trim() switch
+        {
+            "all" => TransitionValidation.All,
+            "owned" => TransitionValidation.Owned,
+            "draft" => TransitionValidation.Draft,
+            var other => throw new WorkflowParseException(
+                $"Transition '{transitionKey}': validation '{other}' is not one of \"all\", \"owned\" or \"draft\".")
+        };
+    }
+
+    private static string ToJsonValue(TransitionValidation validation) => validation switch
+    {
+        TransitionValidation.All => "all",
+        TransitionValidation.Owned => "owned",
+        TransitionValidation.Draft => "draft",
+        _ => throw new ArgumentOutOfRangeException(nameof(validation), validation, null)
+    };
 
     private static IReadOnlyList<string> ParseFromStates(JsonElement element)
     {

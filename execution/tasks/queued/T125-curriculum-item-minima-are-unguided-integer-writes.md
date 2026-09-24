@@ -7,6 +7,11 @@ created: 2026-09-19
 ---
 # T125 — An administrator sets a curriculum minimum by typing a bare integer, with no idea what it means on the ladder
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open
 **Surfaced:** 2026-09-19, while fixing [T100]. Filed separately because it is not the defect [T100]
 describes.

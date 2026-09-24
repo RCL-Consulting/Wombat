@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T142 — Activity pages print raw user ids where people's names belong
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low. Cosmetic, but it is on the activity pages clinicians read and it looks broken.
 **Surfaced:** 2026-09-23, observed by the [T130] staging run (OBSERVED on dev).
 

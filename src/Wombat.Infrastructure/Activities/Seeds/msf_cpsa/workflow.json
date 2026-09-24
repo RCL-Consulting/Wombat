@@ -17,7 +17,8 @@
       "key": "record",
       "from": "draft",
       "to": "recorded",
-      "actor": "role:Coordinator|role:Administrator"
+      "actor": "role:Coordinator|role:Administrator",
+      "validation": "all"
     }
   ]
 }

@@ -64,7 +64,7 @@ Verdict: **READY** = an implementer can start today · **NEEDS A DECISION** = on
 | [T111] | `/activities/new?type=mini_cex` is silently ignored | **DONE 2026-09-19** | S | — |
 | [T099] | Speciality-3 scope rows on **production**; nothing provisions them on a fresh database | **READY** | S | production access |
 | [T100] | Entrustment rungs render as `"{Order}. {Label}"` — 6 sites; 8 more print a bare ordinal; 1 PDF site prints a raw `DataJson` integer | **DONE 2026-09-19** | M | premise rewritten (it was wrong twice); admin editor split out as [T125] |
-| [T105] | Every transition validates the whole schema in Submit mode, so a half-filled draft cannot be cancelled | NEEDS A DECISION | M | **D22** |
+| [T105] | Every transition validates the whole schema in Submit mode, so a half-filled draft cannot be cancelled | **DONE 2026-09-24** | M | D22 closed: an explicit `validation` per transition (`all` / `owned` / `draft`) |
 | [T102] fixes 2–3 | Server-side validation of `user`-typed field values (fix 1 shipped with T070) | **DONE 2026-09-24** | M | D23 closed as recommended; nominee = active holder of the field's `role` at the activity's institution. Follow-ups [T149]–[T153] |
 | [T110] | `scale_key: "or_scale"` resolves to nothing for four generic seeds; two five-rung ladders are the same ladder duplicated | NEEDS A DECISION | S code, operator data | **D25** |
 | [T107] | Activities pinned to a superseded schema version are uncompletable and the UI still offers the button | NEEDS A DECISION | S | **D33** |
@@ -533,6 +533,13 @@ dropped at publish with no error.
 **Why it gates a wave:** write five more seeds first and the workaround is baked into **nine of fourteen**
 types, each then needing its schema re-authored, its test inverted, and a republish that strands every
 in-flight activity ([T107]).
+**CLOSED 2026-09-24 — the explicit property, with three values, not two.** `all` (the default, and strict),
+`owned` (only the `required` fields the mover may write in the state they leave) and `draft` (formats only).
+`owned` was the addition: with honest `required` flags on the assessor's fields, a whole-schema check at the
+trainee's submit would refuse every submit, so "submit" alone could not deliver the point of the change. All 12 seeds
+with transitions were re-authored (no compatibility constraint, W-007) and republished once; a second boot republishes
+nothing. *Rejected:* inferring the scope from the target state (the convention family every T122 review round broke);
+`none` as a value (a withdrawal carrying a malformed patch would store it).
 
 **D23 — Does [T102] fix 2 land before the ten tools?**
 Fix 1 shipped with T070 — a trainee can no longer name *themself* as their own assessor. Nothing yet

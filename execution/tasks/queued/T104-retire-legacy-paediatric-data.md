@@ -7,6 +7,11 @@ created: 2026-09-16
 ---
 # T104 — Retire the legacy FCPaed paediatric world alongside the national CPSA catalogue
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open — **do this LAST of the T098 catalogue work**
 **Surfaced:** 2026-09-16 (T098 gap 8); scoped against the dev database 2026-09-17.
 **Severity:** Medium, but **hazardous**: this is a live-data migration, not a code change, and it carries a

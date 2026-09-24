@@ -10,6 +10,11 @@ created: 2026-09-24
 
 # T149 — The SSO link endpoint is an unthrottled password oracle that binds any external identity, and SSO sign-in ignores lockout
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** High. Account takeover by password guessing, around every control the local login has. Found while
 designing T102, whose nominee rule trusts the stored role rows, `InstitutionId` and `LockoutEnd` — all three of
 which this path can get past.

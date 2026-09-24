@@ -7,7 +7,7 @@
     { "key": "accepted", "label": "Accepted", "terminal": true }
   ],
   "transitions": [
-    { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "requires_fields": ["topic", "audience_type", "audience_count", "duration_minutes", "format", "self_evaluation"] },
-    { "key": "accept", "from": "submitted", "to": "accepted", "actor": "role:SpecialityAdmin+scope:speciality" }
+    { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "validation": "all" },
+    { "key": "accept", "from": "submitted", "to": "accepted", "actor": "role:SpecialityAdmin+scope:speciality", "validation": "all" }
   ]
 }

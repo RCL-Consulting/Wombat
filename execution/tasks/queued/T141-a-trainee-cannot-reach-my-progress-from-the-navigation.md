@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T141 — A trainee cannot reach My progress from the navigation
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low. The page exists and works; nothing in the navigation leads to it.
 **Surfaced:** 2026-09-23, during [T130]'s browser verification.
 

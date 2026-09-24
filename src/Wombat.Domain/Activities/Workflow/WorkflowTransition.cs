@@ -6,4 +6,5 @@ public sealed record WorkflowTransition(
     string To,
     ActorRule Actor,
     bool RequiresNote,
-    IReadOnlyList<string> RequiresFields);
+    IReadOnlyList<string> RequiresFields,
+    TransitionValidation Validation);

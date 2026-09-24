@@ -22,7 +22,7 @@
         { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
         { "key": "management", "type": "scale", "label": "Management planning", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
         { "key": "ethics", "type": "scale", "label": "Professional and ethical judgment", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
       ]
     },
     {
@@ -30,8 +30,8 @@
       "title": "Feedback",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "feedback", "type": "longtext", "label": "Feedback" },
-        { "key": "action_plan", "type": "longtext", "label": "Action plan" }
+        { "key": "feedback", "type": "longtext", "label": "Feedback", "required": true },
+        { "key": "action_plan", "type": "longtext", "label": "Action plan", "required": true }
       ]
     }
   ]

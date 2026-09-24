@@ -62,7 +62,8 @@
             "min": 1,
             "max": 6
           },
-          "help_text": "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth."
+          "help_text": "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.",
+          "required": true
         }
       ]
     },
@@ -74,17 +75,20 @@
         {
           "key": "strengths",
           "type": "longtext",
-          "label": "What was done well"
+          "label": "What was done well",
+          "required": true
         },
         {
           "key": "improvements",
           "type": "longtext",
-          "label": "Areas for development"
+          "label": "Areas for development",
+          "required": true
         },
         {
           "key": "plan",
           "type": "longtext",
-          "label": "Agreed plan"
+          "label": "Agreed plan",
+          "required": true
         }
       ]
     }

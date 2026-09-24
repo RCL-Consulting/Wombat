@@ -10,6 +10,11 @@ created: 2026-09-20
 
 # T131 — Entrustment decisions have no routing, no cadence, and no agenda
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Medium, and deliberately below [T130]. Governance describes how the College's
 committee structure is meant to work; the quota describes what a trainee is measured against.
 The second is visible to every user daily, the first to a committee twice a year.

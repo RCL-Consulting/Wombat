@@ -8,6 +8,11 @@ blocked_on: operator decision: off-host destination + who holds the age private 
 ---
 # T128 — The nightly backup is encrypted-capable but has nowhere to go, so it stays on one disk
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Filed:** 2026-09-20
 **Depends on:** an operator decision (destination + who holds the age private key)
 **Blocks:** nothing in code — but it is the top operational risk in `execution/knowledge/HANDOVER.md`

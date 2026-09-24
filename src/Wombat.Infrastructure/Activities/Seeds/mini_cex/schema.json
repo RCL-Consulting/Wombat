@@ -25,7 +25,7 @@
         { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
         { "key": "communication", "type": "scale", "label": "Communication", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
         { "key": "professionalism", "type": "scale", "label": "Professionalism", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
       ]
     },
     {
@@ -33,9 +33,9 @@
       "title": "Feedback",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "strengths", "type": "longtext", "label": "Strengths" },
-        { "key": "improvements", "type": "longtext", "label": "Areas for improvement" },
-        { "key": "plan", "type": "longtext", "label": "Agreed plan" }
+        { "key": "strengths", "type": "longtext", "label": "Strengths", "required": true },
+        { "key": "improvements", "type": "longtext", "label": "Areas for improvement", "required": true },
+        { "key": "plan", "type": "longtext", "label": "Agreed plan", "required": true }
       ]
     }
   ]

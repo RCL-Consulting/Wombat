@@ -7,6 +7,11 @@ created: 2026-09-17
 ---
 # T099 — The CPSA paediatric catalogue is seeded but unreachable by every non-admin user
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open — **dev done 2026-09-17** (10 users scoped, see Progress at the foot). Production
 outstanding, and nothing provisions these rows on a fresh database.
 **Surfaced:** 2026-09-17, verifying the T098 phase-2a handoff against the dev database.

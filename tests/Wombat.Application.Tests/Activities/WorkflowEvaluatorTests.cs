@@ -121,7 +121,7 @@ public sealed class WorkflowEvaluatorTests
             1,
             "draft",
             [new WorkflowState("draft", "Draft", false, null), new WorkflowState("done", "Done", true, null)],
-            [new WorkflowTransition("act", ["draft"], "done", ActorRuleParser.Parse(actorRule), false, [])]);
+            [new WorkflowTransition("act", ["draft"], "done", ActorRuleParser.Parse(actorRule), false, [], TransitionValidation.All)]);
 
     /// <summary>
     /// <paramref name="typeScope" />/<paramref name="typeScopeId" /> are the ACTIVITY TYPE's scope —

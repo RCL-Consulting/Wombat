@@ -44,8 +44,8 @@ internal static class ActivityTestData
             { "key": "completed", "label": "Completed", "terminal": true }
           ],
           "transitions": [
-            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject" },
-            { "key": "complete", "from": "submitted", "to": "completed", "actor": "role:Assessor", "requires_note": true, "requires_fields": ["title"] }
+            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "validation": "owned" },
+            { "key": "complete", "from": "submitted", "to": "completed", "actor": "role:Assessor", "requires_note": true, "requires_fields": ["title"], "validation": "all" }
           ]
         }
         """;

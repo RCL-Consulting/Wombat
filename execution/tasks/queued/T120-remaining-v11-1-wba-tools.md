@@ -7,6 +7,11 @@ created: 2026-09-19
 ---
 # T120 — Author the ten remaining v11.1 WBA tools, and separate the five an engineer can write from the five only the College can
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open
 **Surfaced:** 2026-09-19, planning the remaining EPA work after the Wave-0 evidence run ([T118]).
 **Severity:** Medium. Nothing is broken and nothing is unreachable — every one of the 15 EPAs already has
@@ -23,6 +28,11 @@ published is inert data in the repo.
 > **"Directly observed clinical examination" is not a seed** (D12: an alias of `mini_cex`). A seed left unkeyed would be
 > unrestricted on every EPA (D21). The seeders write the key on create only, so a seed added after T122 is keyed on
 > every database where it is new, without a migration.
+
+> **Note from [T105], 2026-09-24.** Transitions declare `validation` (`all` / `owned` / `draft`), so checklist step 8
+> is settled: assessor fields carry honest `required: true`, `complete` has no `requires_fields` for them, and the CPSA
+> shape is `submit: owned`, `complete: all`, `decline: draft`, `cancel: draft` (copy `mini_cex_cpsa`).
+> `CpsaWbaSeedTests.AssessorFieldsAreSchemaRequired_AndEachTransitionDeclaresHowMuchItChecks` asserts it.
 
 > **Note from [T102], 2026-09-24.** Every `user` field is now a nominee field, judged server-side: its value must be an
 > active user at the trainee's institution holding the field's `role` (default `Assessor`), and not the trainee. A seed
@@ -171,9 +181,9 @@ The deltas from `src/Wombat.Infrastructure/Activities/Seeds/mini_cex_cpsa/schema
 7. `completed` is the **only** terminal state. Credit fires on any transition into a terminal state, so
    marking `declined` or `cancelled` terminal would count refused and withdrawn requests toward the
    trainee's observation volume (`OnlyCompletionIsTerminal`).
-8. Until [T105] lands, assessor fields carry **no** `required: true`; they are gated by `requires_fields`
-   on `complete`. After T105 they carry honest `required` flags. Pick whichever is true at the time and
-   match `CpsaWbaSeedTests.AssessorFieldsAreNotSchemaRequired` to it.
+8. **T105 has landed:** assessor fields carry honest `required: true`, and each transition declares its
+   `validation` (`submit: owned`, `complete: all`, `decline`/`cancel: draft`).
+   `CpsaWbaSeedTests.AssessorFieldsAreSchemaRequired_AndEachTransitionDeclaresHowMuchItChecks` asserts it.
 9. `credit.json` is one directive: `curriculum_item_match.epa_field = "epa_id"`, `amount: 1`,
    `minimum_level_field: "overall_level"`. That last property is what puts the comparison on the pinned
    scale (T109); omitting it silently makes the tool credit volume with no supervision gate at all.
@@ -252,7 +262,10 @@ Flag it there (**D8**).
 
 ## Prerequisites
 
-### [T105] should land first, but it is a preference, not a hard block
+### [T105] should land first, but it is a preference, not a hard block — **LANDED 2026-09-24**
+
+> The workaround described below is gone: the four CPSA seeds now carry honest `required` flags and each transition
+> declares its `validation`. Kept as the record of why the order mattered.
 
 Today the four CPSA seeds encode a workaround: `overall_level`, `strengths`, `improvements` and `plan`
 carry **no** `required: true`, because `src/Wombat.Infrastructure/Activities/ActivityService.cs:203-207` validates the **whole schema in

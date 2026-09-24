@@ -11,6 +11,11 @@ created: 2026-09-21
 
 # T137 — Eight identical rows, one per EPA, and nothing on the page says which is which
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Medium. Nothing is wrong in the data; the page simply cannot express it. It is the
 trainee's own portfolio surface, and a campaign covering eight EPAs makes it unreadable in one act.
 **Surfaced:** 2026-09-21, browser-verifying [T121]. The task file predicted "the clutter is cosmetic";

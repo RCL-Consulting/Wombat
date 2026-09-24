@@ -10,6 +10,11 @@ created: 2026-09-24
 
 # T150 — Sampling and trajectory count assessors from drafts and cancelled requests, by a hard-coded field key
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low-Medium. The committee's sampling signal can be padded without any assessment happening.
 **Surfaced:** 2026-09-24, T102 mapping (consumers lens). Not fixed by T102, which judges who may be named, not
 what a named assessor counts for.

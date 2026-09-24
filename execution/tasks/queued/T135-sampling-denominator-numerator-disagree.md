@@ -10,6 +10,11 @@ created: 2026-09-20
 
 # T135 — Two ways `TotalRatedActivities` can be wrong while `EvidenceComplete` says it is not
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Medium. Neither is visible on the seed corpus today, and both are the same shape as the
 defect [T134] just removed: a number a committee reads, wrong in a way the report asserts it is not.
 **Surfaced:** 2026-09-20, in T134's design pass. Filed as one task rather than two because they are

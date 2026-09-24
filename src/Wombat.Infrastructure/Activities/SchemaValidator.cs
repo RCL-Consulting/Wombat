@@ -13,7 +13,8 @@ public sealed class SchemaValidator : ISchemaValidator
         FormSchema schema,
         string dataJson,
         SchemaValidationMode mode,
-        IReadOnlyCollection<string>? additionallyRequiredFieldKeys = null)
+        IReadOnlyCollection<string>? additionallyRequiredFieldKeys = null,
+        IReadOnlySet<string>? requiredFieldScope = null)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentException.ThrowIfNullOrWhiteSpace(dataJson);
@@ -36,7 +37,7 @@ public sealed class SchemaValidator : ISchemaValidator
 
             foreach (var field in section.Fields)
             {
-                ValidateField(field, document.RootElement, mode, requiredFieldKeys, errors);
+                ValidateField(field, document.RootElement, mode, requiredFieldKeys, requiredFieldScope, errors);
             }
         }
 
@@ -48,6 +49,7 @@ public sealed class SchemaValidator : ISchemaValidator
         JsonElement root,
         SchemaValidationMode mode,
         IReadOnlyCollection<string> additionallyRequiredFieldKeys,
+        IReadOnlySet<string>? requiredFieldScope,
         ICollection<ActivityValidationErrorDto> errors)
     {
         if (!IsVisible(field.ShowIf, root))
@@ -55,7 +57,9 @@ public sealed class SchemaValidator : ISchemaValidator
             return;
         }
 
-        var isRequired = (mode == SchemaValidationMode.Submit && field.Required) ||
+        var isRequired = (mode == SchemaValidationMode.Submit &&
+                          field.Required &&
+                          (requiredFieldScope is null || requiredFieldScope.Contains(field.Key))) ||
                          additionallyRequiredFieldKeys.Contains(field.Key, StringComparer.Ordinal);
 
         var hasValue = root.TryGetProperty(field.Key, out var value) && value.ValueKind != JsonValueKind.Null;

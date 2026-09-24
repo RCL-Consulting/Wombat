@@ -30,26 +30,23 @@
       "key": "submit",
       "from": "draft",
       "to": "requested",
-      "actor": "subject|creator"
+      "actor": "subject|creator",
+      "validation": "owned"
     },
     {
       "key": "complete",
       "from": "requested",
       "to": "completed",
       "actor": "field:assessor_user_id",
-      "requires_fields": [
-        "overall_level",
-        "strengths",
-        "improvements",
-        "plan"
-      ]
+      "validation": "all"
     },
     {
       "key": "decline",
       "from": "requested",
       "to": "declined",
       "actor": "field:assessor_user_id",
-      "requires_note": true
+      "requires_note": true,
+      "validation": "draft"
     },
     {
       "key": "cancel",
@@ -58,7 +55,8 @@
         "requested"
       ],
       "to": "cancelled",
-      "actor": "subject|creator"
+      "actor": "subject|creator",
+      "validation": "draft"
     }
   ]
 }

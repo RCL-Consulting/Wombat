@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T147 — The MSF campaign's "Evidence for these EPAs" label is for an id nothing has
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low. It is an accessibility defect. A screen reader announces the group without its label, and
 clicking the label does nothing.
 **Surfaced:** 2026-09-23, by [T122]'s design critique, while choosing the pattern for the curriculum tool list.

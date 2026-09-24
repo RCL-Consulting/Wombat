@@ -7,6 +7,11 @@ created: 2026-09-19
 ---
 # T127 — Every failed Submit on /activities/new leaves a half-filled draft behind, and the next attempt makes another
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open
 **Surfaced:** 2026-09-19, browser-verifying [T100] / [T123] on dev. Hit by accident on the first attempt,
 which is the point.
@@ -93,3 +98,6 @@ failing path common. Found while browser-verifying [T100] and [T123]; unrelated 
 > and both gates, and must not re-create the activity. A second "Save draft" needs either no data write or a guarded one
 > (see T106 item 1). NewActivity now ignores a second click while the first is in flight, which stops the double-click
 > duplicate but not a deliberate second save.
+
+> **Note from T105, 2026-09-24.** A half-filled draft can now be cancelled (`cancel` validates `draft`), so an orphan
+> left by a refused Submit is at least disposable by its author. The duplicate itself is still this task's.

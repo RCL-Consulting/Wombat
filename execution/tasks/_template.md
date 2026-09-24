@@ -10,6 +10,11 @@ created:
 
 # <id> — <one line that states the defect or the goal, not the solution>
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** _High / Medium / Low, and why — this is what `priority` above is derived from._
 **Surfaced:** _When and how it was found. "While fixing T100" is worth more than a date alone._
 

@@ -248,16 +248,13 @@ public sealed class ActivityService : IActivityService
             ThrowIfActorFieldNamesSubject(schema, workflow, mergedDataJson, activity.SubjectUserId);
         }
 
-        ThrowIfInvalid(_schemaValidator.Validate(
-            schema,
-            mergedDataJson,
-            SchemaValidationMode.Submit,
-            transition.RequiresFields));
+        // T105: the transition says how much of the form it insists on. Against the pre-move state and the merged data.
+        ThrowIfInvalid(ValidateForTransition(schema, workflow, activity, transition, input.Principal, mergedDataJson));
 
         // T122, D20: a changed credit target is checked on any move that can still lead to credit; an unchanged one is
         // re-checked only when the author, before anyone else has acted, hands it on while still able to correct it
         // (see DirectivesToJudge). So an assessor's `complete` or `decline`, a sign-off after assessment, or a
-        // resubmission after a decline never strands an encounter the trainee filed legitimately. The check runs after Submit-mode validation, so a
+        // resubmission after a decline never strands an encounter the trainee filed legitimately. The check runs after the transition's own validation, so a
         // missing EPA fails with the schema's own message first, and before the first mutation below. It reads the
         // MERGED data, because a trainee repairing an in-flight draft sends the new EPA in the same patch as the submit.
         var directivesToJudge = DirectivesToJudge(
@@ -475,11 +472,7 @@ public sealed class ActivityService : IActivityService
                     decision.Reason ?? "The current actor is not allowed to perform this transition.");
             }
 
-            ThrowIfInvalid(_schemaValidator.Validate(
-                schema,
-                activity.DataJson,
-                SchemaValidationMode.Submit,
-                transition.RequiresFields));
+            ThrowIfInvalid(ValidateForTransition(schema, workflow, activity, transition, input.Principal, activity.DataJson));
 
             // T119, and the ordering note from TransitionAsync applies unchanged: stamping before
             // ApplyTransition keeps the column and the transition's SnapshotJson in agreement.
@@ -1100,6 +1093,35 @@ public sealed class ActivityService : IActivityService
     private static readonly IReadOnlySet<int> EmptyDirectives = new HashSet<int>();
 
     private static readonly IReadOnlySet<string> EmptyFields = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The validation a transition declares (T105), run against the data the move is about to write.
+    /// </summary>
+    /// <remarks>
+    /// <c>owned</c> counts the <c>required</c> flags of only the fields the mover may write in the state they are moving
+    /// FROM, so it must be asked before the move, against the stored data that decides <c>field:</c> ownership. A
+    /// transition's <c>requires_fields</c> apply under every value.
+    /// </remarks>
+    private IReadOnlyList<ActivityValidationErrorDto> ValidateForTransition(
+        FormSchema schema,
+        Workflow workflow,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        string dataJson)
+        => transition.Validation switch
+        {
+            TransitionValidation.Draft => _schemaValidator.Validate(
+                schema, dataJson, SchemaValidationMode.Draft, transition.RequiresFields),
+            TransitionValidation.Owned => _schemaValidator.Validate(
+                schema,
+                dataJson,
+                SchemaValidationMode.Submit,
+                transition.RequiresFields,
+                _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, principal)),
+            _ => _schemaValidator.Validate(
+                schema, dataJson, SchemaValidationMode.Submit, transition.RequiresFields)
+        };
 
     private static void ThrowIfInvalid(IReadOnlyList<ActivityValidationErrorDto> validationErrors)
     {

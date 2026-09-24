@@ -177,7 +177,9 @@ Wombat has:
   plus a state driven by the workflow engine.
 
 Runtime services in Infrastructure:
-- `SchemaValidator` — validates `DataJson` against the form schema.
+- `SchemaValidator` — validates `DataJson` against the form schema. A transition declares how much of it counts
+  (`validation`: `all`, the default; `owned`, the mover's writable fields; `draft`, formats only) (T105), so a
+  schema's `required` flags are honest and `requires_fields` only ever adds.
 - `WorkflowEvaluator` — evaluates available transitions for a `ClaimsPrincipal`.
 - `ActorRuleMatcher` — the one implementation of the actor grammar (`subject`, `creator`, `role:`,
   `scope:`, `field:`, combined with `|` and `+`). Shared by transition authorization and field-write
@@ -353,7 +355,9 @@ migration-safe one:
 - This licenses *changing* the scenario data, not skipping verification against it. It remains the
   test corpus, and a change still has to be shown working end to end.
 
-Delete this section the day Wombat takes on real users — every decision above flips.
+Every open task file carries this rule as a preamble under its title, from `execution/tasks/_template.md` (W-007).
+Delete this section, and that preamble from the template and every open task, the day Wombat takes on real users —
+every decision above flips.
 
 ## Task management
 

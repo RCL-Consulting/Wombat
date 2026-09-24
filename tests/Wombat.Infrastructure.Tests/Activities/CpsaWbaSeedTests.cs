@@ -164,19 +164,27 @@ public sealed class CpsaWbaSeedTests
 
     [Theory]
     [MemberData(nameof(SeedKeys))]
-    public void AssessorFieldsAreNotSchemaRequired(string key)
+    public void AssessorFieldsAreSchemaRequired_AndEachTransitionDeclaresHowMuchItChecks(string key)
     {
-        // Every transition validates the whole schema in Submit mode, so a required assessor field
-        // would also block decline and cancel. They are gated by requires_fields on 'complete'.
+        // T105. The schema says what is mandatory and each transition says how much of it counts. Before T105 every
+        // transition validated the whole schema, so these four could not be required without also blocking decline and
+        // cancel; they hid in requires_fields on 'complete' instead. requires_fields is back to meaning "additionally".
         var schema = Schema(key);
         var assessorEntered = new[] { "overall_level", "strengths", "improvements", "plan" };
 
         schema.Sections.SelectMany(section => section.Fields)
             .Where(field => assessorEntered.Contains(field.Key))
-            .Should().OnlyContain(field => !field.Required);
+            .Should().HaveCount(4).And.OnlyContain(field => field.Required);
 
-        Workflow(key).Transitions.Single(transition => transition.Key == "complete")
-            .RequiresFields.Should().Contain(assessorEntered);
+        var transitions = Workflow(key).Transitions.ToDictionary(transition => transition.Key, StringComparer.Ordinal);
+        transitions["complete"].RequiresFields.Should().BeEmpty("the schema now says it");
+
+        // The trainee's submit checks what is theirs to fill; completion checks everything; the two ways out check
+        // formats only, so a half-filled draft can be withdrawn and a decline needs no ratings.
+        transitions["submit"].Validation.Should().Be(TransitionValidation.Owned);
+        transitions["complete"].Validation.Should().Be(TransitionValidation.All);
+        transitions["decline"].Validation.Should().Be(TransitionValidation.Draft);
+        transitions["cancel"].Validation.Should().Be(TransitionValidation.Draft);
     }
 
     [Theory]
@@ -211,13 +219,12 @@ public sealed class CpsaWbaSeedTests
 
     [Theory]
     [MemberData(nameof(LegacySeedKeys))]
-    public void LegacyAssessorSectionsAreAssessorOwnedAndNotSchemaRequired(string key)
+    public void LegacyAssessorSectionsAreAssessorOwned_AndOnlyCompletionAsksForTheirRequiredFields(string key)
     {
-        // The legacy seeds shipped with every field required, including all of the assessor's own.
-        // Because every transition validates the whole schema in Submit mode, that made 'accept' and
-        // 'cancel' unsatisfiable: the assessor cannot fill the ratings before accepting, and the
-        // schema refuses to let them accept without. Dropping 'required' moves the gate onto
-        // requires_fields on 'complete', where it belongs.
+        // The legacy seeds route the assessor through 'accept' before they can write anything. Before T105 every
+        // transition validated the whole schema, so a required rating made 'accept', 'decline' and 'cancel'
+        // unsatisfiable; the ratings hid in requires_fields on 'complete'. Now the schema marks them required and only
+        // 'complete' checks the whole form.
         ActorRule assessor = new FieldUserActorRule("assessor_user_id");
         var schema = Schema(key);
         var assessorSections = schema.Sections
@@ -227,18 +234,19 @@ public sealed class CpsaWbaSeedTests
         assessorSections.Should().HaveCount(2);
         assessorSections.Should().OnlyContain(section => section.EditableBy == assessor);
         assessorSections.SelectMany(section => section.Fields)
-            .Should().NotBeEmpty().And.OnlyContain(field => !field.Required);
+            .Where(field => field.Required)
+            .Select(field => field.Key)
+            .Should().Contain("overall", "the overall rating is what completion is for");
 
-        // The post-acceptance state, not 'requested' — the legacy workflows route the assessor
-        // through accept first, and 'accept' carries no requires_fields.
         Workflow(key).States.Single(state => state.Key == "accepted")
             .EditableBy.Should().Be(assessor);
 
-        // Whatever 'complete' demands must be a field the assessor is actually allowed to write,
-        // or completion is unreachable for every legacy type.
-        Workflow(key).Transitions.Single(transition => transition.Key == "complete")
-            .RequiresFields.Should().NotBeEmpty()
-            .And.BeSubsetOf(assessorSections.SelectMany(section => section.Fields).Select(field => field.Key));
+        var transitions = Workflow(key).Transitions.ToDictionary(transition => transition.Key, StringComparer.Ordinal);
+        transitions["complete"].Validation.Should().Be(TransitionValidation.All);
+        transitions["complete"].RequiresFields.Should().BeEmpty("the schema now says it");
+        transitions["accept"].Validation.Should().Be(TransitionValidation.Draft);
+        transitions["decline"].Validation.Should().Be(TransitionValidation.Draft);
+        transitions["cancel"].Validation.Should().Be(TransitionValidation.Draft);
     }
 
     [Theory]

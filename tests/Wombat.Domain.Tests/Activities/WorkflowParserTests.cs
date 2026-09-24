@@ -89,6 +89,57 @@ public sealed class WorkflowParserTests
     }
 
     [Fact]
+    public void Parse_Validation_ReadsEachValue_AndDefaultsToAll()
+    {
+        var workflow = WorkflowParser.Parse(ValidationWorkflowJson);
+
+        Assert.Equal(
+            [
+                ("submit", TransitionValidation.Owned),
+                ("complete", TransitionValidation.All),
+                ("cancel", TransitionValidation.Draft),
+                ("reopen", TransitionValidation.All)
+            ],
+            workflow.Transitions.Select(transition => (transition.Key, transition.Validation)).ToArray());
+    }
+
+    [Fact]
+    public void Serialize_Validation_IsAlwaysWritten_TheDefaultIncluded()
+    {
+        // A stored workflow says how each move is checked, so nobody has to know the default to read it (T105).
+        var serialized = WorkflowParser.Serialize(WorkflowParser.Parse(ValidationWorkflowJson));
+
+        using var document = System.Text.Json.JsonDocument.Parse(serialized);
+        Assert.Equal(
+            new[] { "owned", "all", "draft", "all" },
+            document.RootElement.GetProperty("transitions").EnumerateArray()
+                .Select(transition => transition.GetProperty("validation").GetString() ?? string.Empty)
+                .ToArray());
+    }
+
+    [Theory]
+    [InlineData("\"none\"")]
+    [InlineData("\"Draft\"")]
+    [InlineData("\"submit\"")]
+    [InlineData("true")]
+    [InlineData("1")]
+    public void Parse_AValidationThatIsNotOneOfTheThree_Throws(string value)
+    {
+        var json = $$"""
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [ { "key": "draft", "label": "Draft" }, { "key": "done", "label": "Done", "terminal": true } ],
+              "transitions": [ { "key": "finish", "from": "draft", "to": "done", "actor": "subject", "validation": {{value}} } ]
+            }
+            """;
+
+        var exception = Assert.Throws<WorkflowParseException>(() => WorkflowParser.Parse(json));
+
+        Assert.Contains("finish", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Parse_EditableBy_OnState_ReturnsActorRule()
     {
         var workflow = WorkflowParser.Parse(EditableByWorkflowJson);
@@ -140,6 +191,25 @@ public sealed class WorkflowParserTests
         Assert.Contains("Actor rule grammar", exception.Message, StringComparison.Ordinal);
     }
 
+    private const string ValidationWorkflowJson = """
+        {
+          "version": 1,
+          "initial_state": "draft",
+          "states": [
+            { "key": "draft", "label": "Draft" },
+            { "key": "requested", "label": "Requested" },
+            { "key": "completed", "label": "Completed", "terminal": true },
+            { "key": "cancelled", "label": "Cancelled" }
+          ],
+          "transitions": [
+            { "key": "submit", "from": "draft", "to": "requested", "actor": "subject", "validation": "owned" },
+            { "key": "complete", "from": "requested", "to": "completed", "actor": "role:Assessor", "validation": "all" },
+            { "key": "cancel", "from": ["draft", "requested"], "to": "cancelled", "actor": "subject", "validation": "draft" },
+            { "key": "reopen", "from": "cancelled", "to": "draft", "actor": "subject" }
+          ]
+        }
+        """;
+
     private const string EditableByWorkflowJson = """
         {
           "version": 1,
@@ -150,8 +220,8 @@ public sealed class WorkflowParserTests
             { "key": "completed", "label": "Completed", "terminal": true }
           ],
           "transitions": [
-            { "key": "request", "from": "draft", "to": "requested", "actor": "subject" },
-            { "key": "complete", "from": "requested", "to": "completed", "actor": "field:assessor_user_id" }
+            { "key": "request", "from": "draft", "to": "requested", "actor": "subject", "validation": "draft" },
+            { "key": "complete", "from": "requested", "to": "completed", "actor": "field:assessor_user_id", "validation": "all" }
           ]
         }
         """;

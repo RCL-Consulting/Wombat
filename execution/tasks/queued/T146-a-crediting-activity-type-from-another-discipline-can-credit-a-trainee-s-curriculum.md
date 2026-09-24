@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T146 — A type scoped to one discipline credits whatever curriculum its subject is on
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low today, and a design question rather than a live leak. The type menu hides the case that matters on
 the seeded data. Nothing on the write path refuses it.
 **Surfaced:** 2026-09-23, by [T122]'s design critique; its premise was then corrected on the dev database.

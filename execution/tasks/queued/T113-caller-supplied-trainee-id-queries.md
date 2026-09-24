@@ -7,6 +7,11 @@ created: 2026-09-19
 ---
 # T113 — Two more queries trust a caller-supplied trainee id
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Status:** open
 **Surfaced:** 2026-09-19, closing the read boundary for T101.
 **Severity:** Medium — progress and committee history about a named trainee, readable by anyone who can

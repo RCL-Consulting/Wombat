@@ -42,7 +42,7 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
             { "key": "submitted", "label": "Submitted", "terminal": true }
           ],
           "transitions": [
-            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "requires_fields": ["title"] }
+            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject", "validation": "all" }
           ]
         }
         """;

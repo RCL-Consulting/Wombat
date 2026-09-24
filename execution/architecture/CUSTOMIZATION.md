@@ -158,15 +158,32 @@ A workflow is a state machine defined as data. Minimum viable shape:
     { "key": "completed", "label": "Completed", "terminal": true }
   ],
   "transitions": [
-    { "key": "accept",   "from": "requested", "to": "accepted",  "actor": "role:Assessor+subject_assessor" },
-    { "key": "decline",  "from": "requested", "to": "declined",  "actor": "role:Assessor+subject_assessor", "requires_note": true },
-    { "key": "cancel",   "from": ["requested","accepted"], "to": "cancelled", "actor": "subject_or_assessor" },
-    { "key": "complete", "from": "accepted",  "to": "completed", "actor": "role:Assessor+subject_assessor", "requires_fields": ["history","exam","reasoning","strengths","improvements"] }
+    { "key": "accept",   "from": "requested", "to": "accepted",  "actor": "field:assessor_user_id", "validation": "draft" },
+    { "key": "decline",  "from": "requested", "to": "declined",  "actor": "field:assessor_user_id", "requires_note": true, "validation": "draft" },
+    { "key": "cancel",   "from": ["requested","accepted"], "to": "cancelled", "actor": "subject|field:assessor_user_id", "validation": "draft" },
+    { "key": "complete", "from": "accepted",  "to": "completed", "actor": "field:assessor_user_id", "validation": "all" }
   ]
 }
 ```
 
 Workflows can also be simpler — a Research Output might just be `draft → submitted → approved` with the subject trainee submitting and a SpecialityAdmin approving. Each activity type picks its own shape.
+
+### `validation` — how much of the form a move insists on (T105)
+
+Every transition checks formats. Which `required` fields count is the transition's `validation`:
+
+| Value | Counts | Use it for |
+|---|---|---|
+| `all` (default) | every visible `required` field in the schema | a move into a terminal state: completion must find the whole form |
+| `owned` | only the `required` fields the mover may write in the state they are leaving | a hand-on: the trainee's submit must not wait for fields only the assessor can write |
+| `draft` | none | a way out or back: cancel, decline, recall. A half-filled draft must be disposable |
+
+`requires_fields` adds fields under every value; it means "additionally required for this step", never "the only
+place requiredness lives". So the schema says what is mandatory — the CPSA seeds mark the assessor's rating and three
+feedback fields `required` — and the workflow says when each move checks. The default is the strict value, so a
+transition that declares nothing is checked more, never less; the serialiser always writes the value out. Before T105
+every transition validated the whole schema, which made cancel and decline unusable on a half-filled form and forced
+the seeds to hide the assessor's fields from the validator.
 
 ### `terminal` means "credit fires here"
 

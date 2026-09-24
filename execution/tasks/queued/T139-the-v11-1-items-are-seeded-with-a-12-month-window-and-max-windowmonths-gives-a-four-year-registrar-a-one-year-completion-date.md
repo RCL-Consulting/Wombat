@@ -11,6 +11,11 @@ created: 2026-09-23
 
 # T139 — The v11.1 items are seeded with a 12-month window, and max(WindowMonths) gives a four-year registrar a one-year completion date
 
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
 **Severity:** Low. Nothing enforces `WindowMonths` (D19), so no figure is wrong today; but the one place that reads
 it produces a wrong date, and the seed misstates the College's expiry period.
 **Surfaced:** 2026-09-23, during [T130]. Found by the domain critic of the design; not fixed because D19 keeps T130 off

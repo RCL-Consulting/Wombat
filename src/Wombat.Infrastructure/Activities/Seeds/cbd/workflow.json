@@ -9,9 +9,9 @@
     { "key": "cancelled", "label": "Cancelled" }
   ],
   "transitions": [
-    { "key": "accept", "from": "requested", "to": "accepted", "actor": "field:assessor_user_id" },
-    { "key": "decline", "from": "requested", "to": "declined", "actor": "field:assessor_user_id", "requires_note": true },
-    { "key": "cancel", "from": ["requested", "accepted"], "to": "cancelled", "actor": "subject|field:assessor_user_id" },
-    { "key": "complete", "from": "accepted", "to": "completed", "actor": "field:assessor_user_id", "requires_fields": ["overall", "feedback", "action_plan"] }
+    { "key": "accept", "from": "requested", "to": "accepted", "actor": "field:assessor_user_id", "validation": "draft" },
+    { "key": "decline", "from": "requested", "to": "declined", "actor": "field:assessor_user_id", "requires_note": true, "validation": "draft" },
+    { "key": "cancel", "from": ["requested", "accepted"], "to": "cancelled", "actor": "subject|field:assessor_user_id", "validation": "draft" },
+    { "key": "complete", "from": "accepted", "to": "completed", "actor": "field:assessor_user_id", "validation": "all" }
   ]
 }
