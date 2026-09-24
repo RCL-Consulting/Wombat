@@ -223,6 +223,13 @@ public sealed class ErasureExecutor : IErasureExecutor
             if (roles.Count > 0)
                 await _userManager.RemoveFromRolesAsync(identityUser, roles);
 
+            // Remove every external login (T149). A linked provider subject is an identifier of the person, and a live
+            // one is a way back in: SSO sign-in finds the account by it.
+            foreach (var login in await _userManager.GetLoginsAsync(identityUser))
+            {
+                await _userManager.RemoveLoginAsync(identityUser, login.LoginProvider, login.ProviderKey);
+            }
+
             // Remove institution scope associations
             var specialityScopes = await _dbContext.Set<WombatIdentityUserSpecialityScope>()
                 .Where(s => s.UserId == userId)

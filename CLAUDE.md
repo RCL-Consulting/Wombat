@@ -145,7 +145,10 @@ Wombat has 9 roles, checked via ASP.NET Core Identity:
 Users can hold multiple roles. Onboarding is admin-controlled via invitations or SSO
 provisioning. SSO-provisioned users get roles from group-to-role mappings; if no groups
 match, they land as PendingTrainee. The Administrator role **cannot** be assigned via SSO —
-it always requires explicit manual assignment.
+it always requires explicit manual assignment — and an Administrator account can neither be linked to nor sign in
+through SSO (T149). SSO sign-in also refuses a deactivated account (an admin's lock or an erasure, not a brute-force
+lockout) and an account outside the provider's institution; linking reads everything from the external cookie, checks
+the password with lockout, and is rate-limited. Moving a user to another institution drops their external logins.
 
 ### InstitutionalAdmin scope-aware powers (T056)
 

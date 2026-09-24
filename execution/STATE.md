@@ -10,12 +10,12 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Now
 
-- Nothing in `in_progress/`. 39 queued, 1 blocked. **Two P1s remain:** T099 and **T149** (SSO link endpoint: an
-  unthrottled password oracle that binds any external identity; SSO ignores lockout).
-- **2026-09-24 shipped T102, T105, T120.** A `user` field names only an eligible nominee (role + the activity's
+- Nothing in `in_progress/`. 40 queued, 1 blocked. **One P1 remains:** T099 (production scope rows). Security:
+  **T155** (P2) — SSO rewrites an account's email from an unverified claim.
+- **2026-09-24 shipped T102, T105, T120, T149.** A `user` field names only an eligible nominee (role + the activity's
   institution; picker = gate). A transition declares `validation` (`all`/`owned`/`draft`), so `required` flags are
   honest. Four more v11.1 instruments: CCA, RCA, chart-stimulated recall (rated), reflective exercise (unrated).
-  Clinical audit and portfolio review are [T154].
+  Clinical audit and portfolio review are [T154]. The SSO link endpoint and SSO sign-in are hardened (T149).
 - **Five one-line College questions** are listed in `EPA-PROGRAMME.md` § 3F: June's side, December, whether the
   per-semester figures are hard targets, late starters, and the new one: **does "clinical observed interaction"
   merge Mini-CEX with Direct observation?** None blocks anything; the last is a catalogue edit plus a migration.
@@ -27,8 +27,8 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Next
 
-- **T149** (security), then **T099**. **T148** is small and user-visible.
-- **Before deploying T130 + T122 + T102 + T105 + T120 to production:** take a `pg_dump`. T130's migration empties the
+- **T099**, then **T155** (security). EPA track: **T125**, then **T135**.
+- **Before deploying T130 + T122 + T102 + T105 + T120 + T149 to production:** take a `pg_dump`. T130's migration empties the
   progress table (the bootstrapper refills it); T122's stamps the v11.1 lists and seeded keys once. Rollback = restore.
 - Send the College the § 3F questions; decide T128's destination.
 
@@ -50,11 +50,11 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 
 ## Recent
 
+- 2026-09-24: **T149 shipped** — SSO link hardened (cookie, lockout, rate limit); SSO refuses deactivated, admin and
+  other-institution accounts. Filed T155, T156.
 - 2026-09-24: **T105 + T120 shipped.** Transition validation scope; four instruments seeded, a CCA credited at 3a
   in the browser and charted as Case analysis. W-007: the compatibility preamble on every open task.
 - 2026-09-24: **T102 shipped.** Browser-verified on dev (forged ids refused, stale nominee refused at submit and
   repaired, D20-style completion by a de-roled assessor credits). Design critique + 3 review rounds (a label leak caught
   in round 1). Filed T149–T153. Suites: 1980, up from 1555.
-- 2026-09-23: **T122 shipped.** Browser-verified on dev (refusal, repair, cancel, D20 credit after a list edit,
-  admin tool lists, builder picker, three clean boots). Design critique, five adversarial review rounds (rounds 2–4
-  reshaped the gate rule), 8 test agents, mutation checks. Filed T144–T148. Suites: 1555, up from 1195.
+- 2026-09-23: **T122 shipped** — the EPA→tool allow-list (see the T122 handoff in `log/`).

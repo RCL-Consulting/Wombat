@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
@@ -336,6 +338,13 @@ app.MapGet("/account/sso-callback", async (
 
     var result = await externalLoginHandler.HandleCallbackAsync(loginInfo, ip, ua);
 
+    // The external cookie is only needed while a link is pending. On every final outcome it goes, so a refused or
+    // finished sign-in cannot be replayed from it (T149).
+    if (!result.RequiresLinking)
+    {
+        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+    }
+
     if (result.Succeeded)
     {
         return Results.LocalRedirect(GetSafeLocalUrl(returnUrl));
@@ -343,11 +352,9 @@ app.MapGet("/account/sso-callback", async (
 
     if (result.RequiresLinking)
     {
-        var linkUrl = $"/account/link-external?email={Uri.EscapeDataString(result.Email ?? "")}" +
-                      $"&provider={Uri.EscapeDataString(result.ProviderKey ?? "")}" +
-                      $"&externalId={Uri.EscapeDataString(result.ExternalSubjectId ?? "")}" +
-                      $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}";
-        return Results.LocalRedirect(linkUrl);
+        // Only what the page shows and where to go next. What gets linked is read back from the external cookie at
+        // submit, never from the page (T149).
+        return Results.LocalRedirect(BuildLinkUrl(returnUrl, error: null));
     }
 
     return Results.LocalRedirect(BuildLoginUrl(returnUrl, result.ErrorMessage ?? "SSO login failed."));
@@ -361,40 +368,36 @@ app.MapPost("/account/link-external/submit", async (
     HttpContext httpContext,
     [FromForm] LinkExternalRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-    {
-        return Results.LocalRedirect(
-            $"/account/link-external?email={Uri.EscapeDataString(request.Email ?? "")}" +
-            $"&provider={Uri.EscapeDataString(request.ProviderKey ?? "")}" +
-            $"&externalId={Uri.EscapeDataString(request.ExternalSubjectId ?? "")}" +
-            $"&error={Uri.EscapeDataString("Email and password are required.")}");
-    }
-
+    // The external login is the whole identity of the request: the provider, the subject and the account's email are
+    // read from it, never from the form (T149).
     var loginInfo = await signInManager.GetExternalLoginInfoAsync();
     if (loginInfo is null)
     {
         return Results.LocalRedirect(BuildLoginUrl(null, "External login session expired. Please try again."));
     }
 
+    if (string.IsNullOrWhiteSpace(request.Password))
+    {
+        return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, "Your password is required."));
+    }
+
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
 
-    var result = await externalLoginHandler.LinkAndSignInAsync(
-        request.Email, request.Password, request.ProviderKey ?? "", request.ExternalSubjectId ?? "",
-        loginInfo, ip, ua);
+    var result = await externalLoginHandler.LinkAndSignInAsync(loginInfo, request.Password, ip, ua);
 
     if (result.Succeeded)
     {
+        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
     }
 
-    return Results.LocalRedirect(
-        $"/account/link-external?email={Uri.EscapeDataString(request.Email ?? "")}" +
-        $"&provider={Uri.EscapeDataString(request.ProviderKey ?? "")}" +
-        $"&externalId={Uri.EscapeDataString(request.ExternalSubjectId ?? "")}" +
-        $"&error={Uri.EscapeDataString(result.ErrorMessage ?? "Linking failed.")}");
+    return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, result.ErrorMessage ?? "Linking failed."));
 })
 .AllowAnonymous()
+// A password check, so the local login's throttle applies: per-IP, 10 per five minutes. The per-account lockout is the
+// handler's (lockoutOnFailure). Before T149 this endpoint had neither. (T149)
+.RequireRateLimiting(LoginRateLimitPolicy)
 ;
 
 app.MapPost("/account/logout", async (
@@ -517,6 +520,12 @@ static string GetSafeLocalUrl(string? url)
     return url;
 }
 
+// No email in the URL: the page reads it from the sign-in in progress, so a crafted link cannot show one address while
+// another is linked, and the address stays out of the proxy's access log (T149).
+static string BuildLinkUrl(string? returnUrl, string? error)
+    => $"/account/link-external?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}" +
+       (string.IsNullOrWhiteSpace(error) ? string.Empty : $"&error={Uri.EscapeDataString(error)}");
+
 static string BuildLoginUrl(string? returnUrl, string error)
 {
     var query = $"error={Uri.EscapeDataString(error)}";
@@ -574,11 +583,12 @@ internal sealed class RegisterRequest
     public string? ConfirmPassword { get; init; }
 }
 
+/// <summary>
+/// The link form. Only the password and where to go next: which login is linked to which account is read from the
+/// external cookie (T149).
+/// </summary>
 internal sealed class LinkExternalRequest
 {
-    public string? Email { get; init; }
     public string? Password { get; init; }
-    public string? ProviderKey { get; init; }
-    public string? ExternalSubjectId { get; init; }
     public string? ReturnUrl { get; init; }
 }

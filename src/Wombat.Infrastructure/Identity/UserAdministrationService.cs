@@ -120,6 +120,16 @@ public sealed class UserAdministrationService : IUserAdministrationService
             .SingleOrDefaultAsync(entity => entity.Id == userId, cancellationToken)
             ?? throw new InvalidOperationException("The user could not be found.");
 
+        // An external login belongs to an institution's identity provider, and SSO refuses an account that is not in
+        // the provider's institution (T149). So a move drops the old links, in this one save: otherwise the stale link
+        // is found first at every sign-in and the moved user is refused for ever, and an SSO-only user could not link
+        // at the new institution either.
+        if (user.InstitutionId != institutionId)
+        {
+            var logins = await _dbContext.UserLogins.Where(login => login.UserId == userId).ToListAsync(cancellationToken);
+            _dbContext.UserLogins.RemoveRange(logins);
+        }
+
         user.InstitutionId = institutionId;
 
         var desiredSpecialityIds = specialityIds.Distinct().OrderBy(id => id).ToArray();
