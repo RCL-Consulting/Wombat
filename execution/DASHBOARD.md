@@ -11,7 +11,6 @@
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
-| queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
 | queued | [T206](tasks/queued/T206-msf-the-invitation-expiry-reminder-can-never-send-and-no-product-action-withdraws-a-campaign.md) | P2 | MSF: the invitation expiry reminder can never send, and no product act |  |
@@ -36,7 +35,6 @@
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
 | queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
-| queued | [T168](tasks/queued/T168-no-surface-shows-per-epa-and-period-whether-an-msf-covered-it.md) | P3 | No surface shows, per EPA and period, whether an MSF covered it |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
@@ -57,8 +55,9 @@
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T208](tasks/queued/T208-an-audit-row-is-refused-when-a-user-agent-or-display-name-is-longer-than-its-column.md) | P3 | An audit row is refused when a User-Agent or display name is longer th |  |
 | queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
+| queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
 
-Done: 143 task(s).
+Done: 145 task(s).
 
 ## From STATE.md
 
@@ -74,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
+4db504b feat(committee): the review and the trainee see each EPA's entrustment against Annexure A's target for the year, and exit-rule readiness — informational, no graduation gate (T166)
+2352a16 docs(execution): handoff progress
+89ac84e test(integration): T201's audit test supplies the trainee's name T202 now requires; docs(execution): close T200–T203, file T205–T209 (P1: MSF respondents have no page)
 ea54fe1 fix(dashboards): an activity counts as finished in any terminal state of its pinned workflow; an assessor's dashboard leaves out their own portfolio (T203 item 1)
-45f38c0 fix(msf): a withdrawn campaign is anonymised, an invitation names its campaign and one true deadline, a dead or used link answers a readable 4xx, and Open cannot be sent twice from the page (T202)
-badeba0 fix(audit): a handler whose own save is refused leaves its audit row and surfaces its own error; a refused success-row write is not recorded as a failed command (T201)
-aee5db8 fix(reporting): PDF rendering is serialised process-wide, so concurrent exports keep their text layer (T200)
-d6833ae docs(execution): close T154 — browser-verified on dev (types 20–21, activities 33–34, forged EPAs refused)
 ```

@@ -1,11 +1,12 @@
 ---
 id: T168
 title: No surface shows, per EPA and period, whether an MSF covered it
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T168 — Nothing shows whether an EPA was covered by an MSF this period
@@ -49,14 +50,39 @@ coverage, not a shortfall.
 
 ## Verification
 
-- [ ] A released campaign covering PAED-001 and PAED-007 in semester 1 shows both as covered in semester 1 and neither in
+- [x] A released campaign covering PAED-001 and PAED-007 in semester 1 shows both as covered in semester 1 and neither in
       semester 2; a withdrawn campaign covers nothing. Query tests.
-- [ ] The progress page shows the coverage line in D9's wording. bUnit test, and in the browser on dev with a released
+- [x] The progress page shows the coverage line in D9's wording. bUnit test, and in the browser on dev with a released
       campaign.
-- [ ] The query is scoped like the progress reader ([T113]'s ladder). Test.
-- [ ] Full suite green, no `--no-build`.
+- [x] The query is scoped like the progress reader ([T113]'s ladder). Test.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 D8, D9, D37, [T121] (MSF evidence rows), [T130] (periods), [T137], [T138], [T167], [T164] (learner feedback reuses
 MSF).
+
+---
+
+## As built — 2026-09-24
+
+`GetMsfCoverageForTraineeQuery` works per EPA and per semester (T130's calendar). An EPA counts as covered in a
+semester when a **released** campaign covering it closed in that semester (by `ClosedOn`, T138).
+- MSF counts toward no target (D8).
+- An ended semester's gap is not worded as final: "no campaign covering this EPA that closed in the semester has been
+  released".
+- The review card's "Read live" sentence follows the review's state.
+
+**Recorded readings:**
+- Coverage is its own card, not lines inside the evidence groups.
+- A campaign's semester is set by the day it closed, where D9's text says "released this period".
+
+**Browser on dev (scripted Chrome):**
+- **Wording.** It is right for covered, running and ended semesters, and unreleased campaigns 4 and 5 are excluded.
+  PAED-007 reads "covered by a released campaign that closed on 21 September 2026".
+- **Coverage is wrong on dev:** PAED-001, 002, 005, 010 and 012 read uncovered, although recorded `msf_cpsa` evidence
+  exists for them. The query reads `MsfCampaignEpas.RecordedOn`, which campaigns 1 and 2 lack because they predate the
+  T121 stamp. [T186] fixes both readers by deriving coverage from the evidence rows.
+
+**Filed:** [T210] (the staff "n of m trainees covered" view, the T168 review's finding 5).
+

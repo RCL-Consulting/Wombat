@@ -48,3 +48,10 @@ T121, T137, T138.
 the per-EPA stamp, so it is most likely scenario data. But the sentence gives a reason it cannot know. Derive coverage
 from the released campaign's `msf_cpsa` rows and their `EpaId`, and say "not recorded" rather than guess why.
 
+## Widened 2026-09-24 (the T168 browser check)
+
+T168's `GetMsfCoverageForTraineeQuery` has the same dependency on `MsfCampaignEpas.RecordedOn`. On dev it under-counts
+PAED-001, 002, 005, 010 and 012, whose recorded `msf_cpsa` evidence (activities 1–5) exists. Fix both readers the
+same way: a campaign covers an EPA when the released campaign's `msf_cpsa` rows carry that `EpaId` (T137 stamps it).
+Then retire or backfill `RecordedOn`, W-007. Also re-check T166's 390px layout fix in the browser here.
+
