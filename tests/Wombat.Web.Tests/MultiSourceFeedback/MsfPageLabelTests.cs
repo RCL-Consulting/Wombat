@@ -137,7 +137,7 @@ public sealed class MsfPageLabelTests : TestContext
     private sealed class ReferenceData : StubActivityReferenceDataService
     {
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
-            string subjectUserId, CancellationToken cancellationToken = default)
+            string subjectUserId, string? permittedToolKey = null, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(subjectUserId == TraineeUserId ? TraineeEpas : []);
 
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetRatedLevelOptionsForActivityTypeAsync(
@@ -154,6 +154,9 @@ public sealed class MsfPageLabelTests : TestContext
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[Trainee()],
                 GetCampaignAggregateReportQuery => Report(),
+                GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
+                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
+                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

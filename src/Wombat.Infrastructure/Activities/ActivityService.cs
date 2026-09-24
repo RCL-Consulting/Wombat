@@ -613,11 +613,13 @@ public sealed class ActivityService : IActivityService
         var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
 
         // No EPA→tool gate here (T122), and the omission is deliberate. A type that declares credit was refused above.
-        // What is left is an unrated type, whose evidence EPA the gate judges on the interactive path (T154), and the one
-        // system-written type is msf_cpsa: an MSF release covers every EPA the campaign declared, whatever its list says
-        // (T121), and must not start dropping declared EPAs because of one. Every v11.1 list names MSF, so nothing is lost
-        // today. If a crediting system-written type is ever allowed through, the gate must be awaited inside this loop,
-        // before AddRange, while the caller has still not mutated anything.
+        // What is left is an unrated type, whose evidence EPA the gate judges on the interactive path (T154), and the two
+        // system-written types. msf_cpsa: an MSF release covers every EPA the campaign declared, whatever its list says
+        // (T121), and must not start dropping declared EPAs because of one; every v11.1 list names MSF, so nothing is lost
+        // today. learner_feedback_cpsa (T164): its campaign's EPAs were narrowed to the lists naming learner feedback at
+        // create and again by the release that calls this (MsfCampaignRules.CoverableEpaIdsAsync), so the list has been
+        // read before anything reaches here. If a crediting system-written type is ever allowed through, the gate must be
+        // awaited inside this loop, before AddRange, while the caller has still not mutated anything.
 
         // Built and validated in full BEFORE anything is added to the context. Nothing below this loop
         // may throw, because by then the caller's own mutation is pending and an exception would be

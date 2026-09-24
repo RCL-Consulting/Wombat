@@ -156,6 +156,40 @@ public sealed class MsfInvitationEmailTests
             .Should().NotBeEmpty().And.OnlyContain(date => date <= ClosesOn);
     }
 
+    /// <summary>
+    /// T164: a learner is asked about the trainee's teaching, not to give multi-source feedback on a colleague, and is
+    /// told their answers are pooled with the other learners' rather than grouped by role.
+    /// </summary>
+    [Fact]
+    public void ALearnerFeedbackInvitation_AsksAboutTheTraineesTeaching()
+    {
+        var message = MsfInvitationEmail.Build(new MsfInvitationEmailContent(
+            7, "learner-1@example.test", "Thandi Nkosi", "Learner feedback (interim questionnaire)", OpensOn, ClosesOn, ClosesOn,
+            RespondUrl + "?token=t", MsfTemplateKind.LearnerFeedback));
+
+        message.TextBody.Should().Contain("give feedback on the teaching of Thandi Nkosi, a trainee who has taught you.")
+            .And.Contain("together with the other learners' feedback")
+            .And.NotContain("multi-source");
+        message.HtmlBody.Should().Contain("Learner feedback request")
+            .And.Contain("the teaching of <strong>Thandi Nkosi</strong>")
+            .And.NotContain("multi-source");
+    }
+
+    /// <summary>T164: a learner's reminder, like their invitation, asks about the trainee's teaching.</summary>
+    [Fact]
+    public void ALearnersExpiryReminder_AsksAboutTheTeaching_NotForMultiSourceFeedback()
+    {
+        var learner = MsfExpiryReminderEmail.Build("learner-1@example.test", RespondUrl + "?token=t", ClosesOn, MsfTemplateKind.LearnerFeedback);
+        var colleague = MsfExpiryReminderEmail.Build("nurse-1@example.test", RespondUrl + "?token=t", ClosesOn);
+
+        learner.Subject.Should().Be("Your learner feedback link expires soon", "a learner was never asked for MSF");
+        learner.TextBody.Should().Contain("feedback on the teaching of a trainee who has taught you").And.NotContain("multi-source");
+        learner.HtmlBody.Should().Contain("feedback on the teaching of a trainee who has taught you").And.NotContain("multi-source")
+            .And.NotContain("MSF");
+        colleague.Subject.Should().Be("Your MSF feedback link expires soon");
+        colleague.TextBody.Should().Contain("multi-source feedback on a colleague");
+    }
+
     /// <summary>An invitation whose own expiry comes first names that expiry as its deadline. (T202 review)</summary>
     [Fact]
     public void AnInvitationThatExpiresBeforeTheWindowCloses_NamesItsExpiryAsTheDeadline()

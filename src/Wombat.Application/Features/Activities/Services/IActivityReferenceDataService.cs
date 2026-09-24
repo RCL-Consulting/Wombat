@@ -42,8 +42,16 @@ public interface IActivityReferenceDataService
     /// Empty means empty, and the caller must say so rather than substitute something else.
     /// </para>
     /// </remarks>
+    /// <param name="permittedToolKey">
+    /// Null for MSF: the tool lists are not consulted. An instrument key (<c>learner_feedback</c>, T164) keeps only the
+    /// items whose list does not refuse it (<see cref="ToolPermission.Evaluate" />: an item with no list is unrestricted,
+    /// D21), with none of the picker's fallbacks: when no item permits it the answer is empty. A learner-feedback
+    /// campaign's form, its create command and its release all ask with the same key
+    /// (<c>MsfEvidenceKinds.CoverageToolKeyFor</c>), so the three agree on which EPAs it may cover.
+    /// </param>
     Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
         string subjectUserId,
+        string? permittedToolKey = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

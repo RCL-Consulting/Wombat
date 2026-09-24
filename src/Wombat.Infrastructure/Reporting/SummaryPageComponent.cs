@@ -1,6 +1,8 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Infrastructure.Reporting;
 
@@ -52,16 +54,31 @@ internal static class SummaryPageComponent
                 });
             }
 
-            if (data.MsfReports.Count > 0)
+            foreach (var (label, count) in FeedbackReportCounts(data.MsfReports))
             {
                 column.Item().PaddingTop(4).Text(text =>
                 {
-                    text.Span("MSF reports: ").FontSize(10);
-                    text.Span(data.MsfReports.Count.ToString()).FontSize(10).Bold();
+                    text.Span($"{label}: ").FontSize(10);
+                    text.Span(count.ToString(System.Globalization.CultureInfo.InvariantCulture)).FontSize(10).Bold();
                 });
             }
 
             column.Item().Height(10);
         });
+    }
+
+    /// <summary>
+    /// The released feedback reports, counted per kind: multi-source feedback and learner feedback run on one aggregate
+    /// but are two instruments, and a learner-feedback report is not an MSF report (T164). A kind with none is left out.
+    /// </summary>
+    internal static IReadOnlyList<(string Label, int Count)> FeedbackReportCounts(
+        IReadOnlyCollection<MsfCampaignAggregateReportDto> reports)
+    {
+        var msf = reports.Count(report => report.Kind == MsfTemplateKind.Msf);
+        var learnerFeedback = reports.Count(report => report.Kind == MsfTemplateKind.LearnerFeedback);
+
+        return new[] { ("MSF reports", msf), ("Learner feedback reports", learnerFeedback) }
+            .Where(entry => entry.Item2 > 0)
+            .ToArray();
     }
 }

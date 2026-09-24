@@ -41,6 +41,7 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
 
         var expiringInvitations = await dbContext.Set<MsfInvitation>()
             .Include(i => i.Campaign)
+                .ThenInclude(campaign => campaign.Template)
             .Where(i =>
                 i.ExpiresOn <= expiryWindow &&
                 i.ExpiresOn >= today &&
@@ -77,7 +78,7 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
             invitation.TokenHash = tokenService.HashToken(token);
 
             var responseUrl = $"{respondUrl}?token={Uri.EscapeDataString(token)}";
-            var email = MsfExpiryReminderEmail.Build(invitation.RespondentEmail, responseUrl, invitation.ExpiresOn);
+            var email = MsfExpiryReminderEmail.Build(invitation.RespondentEmail, responseUrl, invitation.ExpiresOn, invitation.Campaign.Template.Kind);
             await emailSender.SendAsync(email, cancellationToken);
             sentCount++;
         }

@@ -23,15 +23,16 @@ namespace Wombat.Infrastructure.Tests.Persistence;
 public sealed class SystemManagedSeedTests
 {
     [Fact]
-    public void TheCatalogue_MarksExactlyMsfCpsaSystemManaged()
+    public void TheCatalogue_MarksExactlyTheTwoFeedbackRecordsSystemManaged()
     {
-        // msf_cpsa's rows are written by a released campaign (T121); every other seed is filed by a person. A new
-        // system-written seed changes this list on purpose. The seeders stamp a NEW type on create, so that needs no
-        // migration; flipping a type existing databases already hold does, and it is a new one: T162's is frozen.
+        // msf_cpsa's rows are written by a released campaign (T121), and learner_feedback_cpsa's by a released
+        // learner-feedback campaign (T164); every other seed is filed by a person. A new system-written seed changes this
+        // list on purpose. The seeders stamp a NEW type on create, so learner_feedback_cpsa needed no migration; flipping
+        // a type existing databases already hold does, and it is a new one: T162's is frozen.
         ActivityTypeSeedCatalogue.Entries
             .Where(entry => entry.SystemManaged)
             .Select(entry => entry.Key)
-            .Should().Equal("msf_cpsa");
+            .Should().Equal("msf_cpsa", "learner_feedback_cpsa");
     }
 
     /// <summary>

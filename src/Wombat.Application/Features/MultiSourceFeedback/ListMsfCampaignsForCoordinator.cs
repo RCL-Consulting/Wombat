@@ -48,7 +48,10 @@ public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler
                 campaign.State,
                 campaign.Invitations.Count,
                 campaign.Responses.Count,
-                campaign.ReleasedOn))
+                campaign.ReleasedOn)
+            {
+                Kind = campaign.Template.Kind
+            })
             .ToListAsync(cancellationToken);
 
         // T142. The Subject column by name, in one lookup for the campaigns this caller runs.

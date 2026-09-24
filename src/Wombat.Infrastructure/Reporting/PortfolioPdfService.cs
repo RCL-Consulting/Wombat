@@ -339,12 +339,12 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .ToListAsync(cancellationToken);
 
         // Which declared EPAs each campaign recorded, from its evidence rows, as every other reader of coverage has it
-        // (T186). Not the per-EPA stamp, which a campaign released before it existed does not carry.
+        // (T186). Not the per-EPA stamp, which a campaign released before it existed does not carry. Each campaign is read
+        // from the type its own kind's release writes, so learner feedback from its learner_feedback_cpsa rows (T164).
         var recordedMsfEpas = await MsfCampaignCoverage.RecordedEpasAsync(
             _dbContext,
             request.TraineeUserId,
-            msfCampaigns.Select(campaign => (campaign.Id, campaign.State)),
-            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            msfCampaigns.Select(campaign => (campaign.Id, campaign.State, campaign.Template.Kind)),
             cancellationToken);
 
         var msfReports = msfCampaigns

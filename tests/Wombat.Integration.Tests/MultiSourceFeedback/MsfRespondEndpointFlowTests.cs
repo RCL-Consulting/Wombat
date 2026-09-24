@@ -470,6 +470,113 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// T164, D35, end to end on PostgreSQL against the booted v11.1 catalogue: a learner-feedback campaign covers PAED-015
+    /// (the one EPA whose list names learner feedback) and is refused PAED-001, is answered by Learner respondents through
+    /// the live endpoint, and its release records <c>learner_feedback_cpsa</c> evidence carrying how many teaching
+    /// contexts answered, crediting nothing.
+    /// </summary>
+    [Fact]
+    public async Task ALearnerFeedbackCampaign_AnsweredByLearners_RecordsLearnerFeedbackUnderPaed015()
+    {
+        var paed015 = await EpaIdAsync("PAED-015");
+        var template = await SendAsync(new CreateMsfTemplateCommand(
+            "Learner feedback (interim questionnaire)",
+            null,
+            false,
+            [
+                new CreateMsfTemplateQuestionItem("Rates the trainee's teaching overall.", MsfQuestionType.Scale, null, true),
+                new CreateMsfTemplateQuestionItem("What should the trainee keep doing or change in their teaching?", MsfQuestionType.LongText, null, false)
+            ],
+            MsfTemplateKind.LearnerFeedback));
+
+        var refused = () => SendAsync(new CreateMsfCampaignCommand(
+            "trainee-1", template.Id, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            3, 3, 1, [_coveredEpaId], "coordinator-1", _coordinator));
+        (await refused.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Contain("does not name learner feedback", "PAED-001's list names MSF, not learner feedback");
+
+        var campaign = await SendAsync(new CreateMsfCampaignCommand(
+            "trainee-1", template.Id, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            3, 3, 1, [paed015], "coordinator-1", _coordinator));
+
+        var learners = new[] { ("student-1@example.test", "Ward round"), ("student-2@example.test", "ward  round"), ("student-3@example.test", "Student tutorial") };
+        foreach (var (email, context) in learners)
+        {
+            await SendAsync(new AddMsfInvitationCommand(campaign.Id, email, MsfRespondentCategory.Learner, _coordinator, context));
+        }
+
+        await SendAsync(new OpenMsfCampaignCommand(campaign.Id, _coordinator));
+        Factory.EmailSender.Messages.Should().HaveCount(3).And.OnlyContain(message =>
+            message.TextBody.Contains($"feedback on the teaching of {SubjectFirstName} {SubjectLastName}", StringComparison.Ordinal));
+
+        foreach (var message in Factory.EmailSender.Messages.ToList())
+        {
+            var token = ExtractToken(message.TextBody);
+            var form = await (await Client.GetAsync($"/msf/respond?token={Uri.EscapeDataString(token)}")).Content.ReadFromJsonAsync<MsfResponseFormDto>();
+            form!.RespondentCategory.Should().Be(MsfRespondentCategory.Learner);
+
+            var submit = await Client.PostAsJsonAsync(
+                $"/msf/respond?token={Uri.EscapeDataString(token)}",
+                new MsfRespondSubmission
+                {
+                    Answers = form.Questions.Select(question => question.Type == MsfQuestionType.Scale
+                        ? new MsfRespondAnswerRequest { QuestionId = question.QuestionId, ScaleValue = 4, LongText = null }
+                        : new MsfRespondAnswerRequest { QuestionId = question.QuestionId, ScaleValue = null, LongText = "Explained it twice, kindly." })
+                        .ToList()
+                });
+            submit.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        var closed = await SendAsync(new CloseMsfCampaignCommand(campaign.Id, _coordinator));
+        closed.Kind.Should().Be(MsfTemplateKind.LearnerFeedback);
+        closed.TeachingContextsResponded.Should().Equal("Student tutorial", "Ward round");
+        closed.TeachingContextCount.Should().Be(2);
+        closed.ReadyForRelease.Should().BeTrue("three learners clear the three-response threshold, and learners are the one group");
+
+        await SendAsync(new ReleaseMsfCampaignCommand(campaign.Id, "coordinator-1", "Clear and well paced.", null, _coordinator));
+
+        var activities = await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator));
+        var evidence = activities.Should().ContainSingle().Subject;
+        evidence.ActivityTypeKey.Should().Be("learner_feedback_cpsa");
+
+        // T164 review, after T186: the report reads which EPAs were recorded from the evidence rows, and finds PAED-015
+        // in the learner_feedback_cpsa row the release just wrote (jsonb data, on PostgreSQL), not in MSF's type.
+        var released = await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id, _coordinator));
+        released!.CoveredEpas.Should().ContainSingle().Which.Should().Match<MsfCoveredEpaDto>(
+            covered => covered.EpaId == paed015 && covered.Recorded);
+        released.TeachingContextCount.Should().Be(2);
+        evidence.CurrentState.Should().Be("recorded");
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var activity = await dbContext.Activities.Include(entity => entity.Transitions).SingleAsync(entity => entity.Id == evidence.Id);
+        activity.EpaId.Should().Be(paed015);
+
+        using var data = JsonDocument.Parse(activity.DataJson);
+        data.RootElement.GetProperty("teaching_context_count").GetInt32().Should().Be(2);
+        data.RootElement.GetProperty("respondent_count").GetInt32().Should().Be(3);
+        data.RootElement.TryGetProperty("overall_level", out _).Should().BeFalse();
+        activity.DataJson.Should().NotContain("Ward round", "the contexts' names stay on the campaign's report");
+        activity.Transitions.Single(entity => entity.TransitionKey == "record").CreditedItemCount.Should().BeNull();
+        (await dbContext.CurriculumItemProgresses.CountAsync()).Should().Be(0);
+
+        // Kept through the close that hashed every address: a teaching session, not a person.
+        (await dbContext.MsfInvitations.Where(invitation => invitation.CampaignId == campaign.Id)
+                .Select(invitation => invitation.TeachingContext).ToListAsync())
+            .Should().BeEquivalentTo(["Ward round", "ward round", "Student tutorial"]);
+    }
+
+    private async Task<int> EpaIdAsync(string code)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return await dbContext.CurriculumItems
+            .Where(item => item.Curriculum.Name == PaediatricCurriculumName && item.OwningInstitutionId == null && item.Epa.Code == code)
+            .Select(item => item.EpaId)
+            .SingleAsync();
+    }
+
+    /// <summary>
     /// A link that can no longer take a response answers with a status and a body that say so, never a bare 500. (T202)
     /// </summary>
     /// <remarks>

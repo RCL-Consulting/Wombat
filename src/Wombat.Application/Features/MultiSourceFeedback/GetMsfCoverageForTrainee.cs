@@ -26,7 +26,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// coverage and says nothing about what is missing.
 /// </para>
 /// <para>
-/// <b>Which campaigns.</b> Released ones only, the cut [T138] makes for the committee snapshot and
+/// <b>Which campaigns.</b> Multi-source feedback ones (<see cref="MsfTemplateKind.Msf" />): a learner-feedback campaign
+/// is run on the same aggregate but is another instrument, and covers nothing here (T164). Released ones only, the cut [T138] makes for the committee snapshot and
 /// <see cref="ListMsfCampaignsForTraineeQuery" /> makes for the trainee: before release the trainee has not seen the
 /// report and the coordinator may still withdraw it, and a withdrawn campaign was retracted. And of a released campaign,
 /// only the EPAs its evidence rows carry: the <c>msf_cpsa</c> activities its release wrote, one per EPA it could honour,
@@ -174,6 +175,11 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
             : await _dbContext.Set<MsfCampaign>()
                 .AsNoTracking()
                 .Where(campaign => campaign.SubjectUserId == traineeUserId &&
+                                   // Multi-source feedback only. A learner-feedback campaign is run on the same aggregate
+                                   // but is another instrument (T164, D35): counting it here would tell a committee that
+                                   // MSF covered PAED-015 when only learners answered. Its evidence rows are another type
+                                   // too, so the reader below would find none; this says so rather than relying on it.
+                                   campaign.Template.Kind == MsfTemplateKind.Msf &&
                                    campaign.State == MsfCampaignState.Released &&
                                    campaign.ClosedOn >= closedFrom &&
                                    campaign.ClosedOn < closedBefore)
@@ -191,7 +197,7 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
             _dbContext,
             traineeUserId,
             releasedCampaigns.Select(campaign => (campaign.Id, campaign.State)),
-            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            MsfEvidenceKinds.MsfActivityTypeKey,
             cancellationToken);
 
         var onCurriculum = epaIds.ToHashSet();

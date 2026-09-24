@@ -36,7 +36,8 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
         campaign.Close(DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // Closed, not released: nothing has been recorded yet.
-        return _aggregationService.BuildReport(campaign, []);
+        // Closed, not released: nothing has been recorded yet. For the coordinator who closed it, who typed the teaching
+        // contexts and is told them (T164).
+        return _aggregationService.BuildReport(campaign, [], nameTeachingContexts: true);
     }
 }

@@ -217,11 +217,18 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
         string subjectUserId,
+        string? permittedToolKey = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subjectUserId);
 
+        // Strict, unlike ResolveCreditableEpaIdsAsync: no fallback to the whole curriculum when no item permits the
+        // instrument. A campaign offered an EPA its release would then refuse would be a picker that lies. (T164)
+        var toolKey = WbaTool.NormalizeKey(permittedToolKey);
         var epaIds = (await ResolveSubjectCurriculumItemsAsync(subjectUserId.Trim(), cancellationToken))
+            .Where(item => toolKey is null ||
+                ToolPermission.Evaluate(CurriculumItem.ParsePermittedTools(item.PermittedToolsJson), toolKey)
+                    != ToolPermissionVerdict.NotPermitted)
             .Select(item => item.EpaId)
             .ToList();
         if (epaIds.Count == 0)
@@ -246,7 +253,8 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     /// </summary>
     /// <remarks>
     /// One query for both readings, so the tool list is judged on exactly the rows the caller renders. The MSF
-    /// reading ignores the lists; the narrowing arm applies them.
+    /// reading ignores the lists, the learner-feedback reading applies them strictly (T164), and the narrowing arm
+    /// applies them with its fallback.
     /// </remarks>
     private async Task<IReadOnlyList<SubjectCurriculumItem>> ResolveSubjectCurriculumItemsAsync(
         string subjectUserId,

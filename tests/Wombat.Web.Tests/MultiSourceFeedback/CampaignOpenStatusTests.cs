@@ -8,6 +8,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Identity;
+using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Activities;
@@ -81,6 +82,9 @@ public sealed class CampaignOpenStatusTests : TestContext
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
+                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
+                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

@@ -126,7 +126,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
     ];
 
     /// <summary>
-    /// The seeded types that ARE College instruments, ordinal by type key: the eleven CPSA seeds and the generic
+    /// The seeded types that ARE College instruments, ordinal by type key: the twelve CPSA seeds and the generic
     /// Mini-CEX, DOPS and CBD. ACAT and the other generics are not instruments the College names, so D21 leaves them
     /// unkeyed.
     /// </summary>
@@ -140,6 +140,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
         ("direct_observation_cpsa", "direct_observation"),
         ("dops", "dops"),
         ("dops_cpsa", "dops"),
+        ("learner_feedback_cpsa", "learner_feedback"),
         ("mini_cex", "mini_cex"),
         ("mini_cex_cpsa", "mini_cex"),
         ("msf_cpsa", "msf"),
@@ -149,7 +150,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
     ];
 
     /// <summary>
-    /// The instruments seeded after T122 shipped: T120's four and T154's two. A seed added after T122 is keyed where it
+    /// The instruments seeded after T122 shipped: T120's four, T154's two and T164's learner feedback. A seed added after T122 is keyed where it
     /// is new, by the seeder on create, with no migration: on an upgraded database they are the only types a boot
     /// creates.
     /// </summary>
@@ -161,6 +162,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
         ("reflective_exercise_cpsa", "reflective_exercise"),
         ("clinical_audit_cpsa", "clinical_audit"),
         ("portfolio_review_cpsa", "portfolio_review"),
+        ("learner_feedback_cpsa", "learner_feedback"),
     ];
 
     /// <summary>Every activity type the two seeders had created when T122 shipped.</summary>
@@ -334,7 +336,7 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
 
                 types.Select(type => type.Key).Should().BeEquivalentTo(
                     TypesSeededBeforeT122.Concat(TypesAddedAfterT122.Select(added => added.TypeKey)),
-                    "the ten generic seeds and the eleven CPSA seeds");
+                    "the ten generic seeds and the twelve CPSA seeds");
                 types.Should().OnlyContain(type => type.OwnerUserId == SeedOwnerUserId);
                 types.Where(type => type.WbaToolKey != null)
                     .OrderBy(type => type.Key, StringComparer.Ordinal)

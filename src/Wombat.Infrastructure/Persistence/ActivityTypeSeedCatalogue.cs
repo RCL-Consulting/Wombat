@@ -172,7 +172,15 @@ public static class ActivityTypeSeedCatalogue
         // `record` transition carries the same rule, so even a stray draft could never become evidence.
         new("msf_cpsa", "Multi-Source Feedback (Paediatrics)",
             "The per-EPA evidence record a released multi-source feedback campaign leaves behind.",
-            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "msf", SystemManaged: true)
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None, WbaToolKey: "msf", SystemManaged: true),
+
+        // T164, D35. The same system-written shape, left by a released LEARNER-feedback campaign: an MSF template of
+        // kind LearnerFeedback, answered only by Learner invitees. Unrated, and it credits nothing, as MSF does (D8).
+        // Its key is what PAED-015's list names, and what tells it apart from MSF to the committee and the tool lists.
+        new("learner_feedback_cpsa", "Learner Feedback (Paediatrics)",
+            "The per-EPA evidence record a released learner-feedback campaign leaves behind: feedback on the trainee's teaching from the people they taught.",
+            ActivityScope.Speciality, ActivityTypeSeedSource.PaediatricCollege, DisplayFieldsRule.None,
+            WbaToolKey: "learner_feedback", SystemManaged: true)
     ];
 
     /// <summary>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 
@@ -24,6 +25,29 @@ public static class MsfCampaignRules
                 .ThenInclude(response => response.Answers)
             .SingleOrDefaultAsync(campaign => campaign.Id == campaignId, cancellationToken)
             ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+    }
+
+    /// <summary>
+    /// The EPAs a campaign of this kind about this trainee may be declared evidence for, as ids. (T121, T164)
+    /// </summary>
+    /// <remarks>
+    /// The one predicate the create command and the release apply, and the campaign form's picker asks the same service
+    /// with the same key: the EPAs on the trainee's own curriculum, and for learner feedback only those whose tool list
+    /// names it (<see cref="MsfEvidenceKinds.CoverageToolKeyFor" />). Create refuses an EPA outside it; release drops one
+    /// that has left it since, with a log line.
+    /// </remarks>
+    public static async Task<HashSet<int>> CoverableEpaIdsAsync(
+        IActivityReferenceDataService referenceDataService,
+        string subjectUserId,
+        MsfTemplateKind kind,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(referenceDataService);
+
+        return (await referenceDataService
+                .GetSubjectCurriculumEpaOptionsAsync(subjectUserId, MsfEvidenceKinds.CoverageToolKeyFor(kind), cancellationToken))
+            .Select(option => int.Parse(option.Value, System.Globalization.CultureInfo.InvariantCulture))
+            .ToHashSet();
     }
 
     /// <summary>

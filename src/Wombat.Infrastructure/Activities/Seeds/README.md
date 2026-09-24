@@ -42,6 +42,13 @@ speciality rather than the demo one. The `_cpsa` suffix is not decoration — se
   `role:Coordinator|role:Administrator`, so a trainee who creates a stray draft from `/activities/new`
   can neither fill it nor complete it. It ships `"counts_for": []` because College decision D8 says
   MSF consumes none of Annexure A's 55 encounters; its value is the evidence link, not a count.
+- `learner_feedback_cpsa` (T164, D35): **system-written, the same shape as `msf_cpsa`.** One row per EPA a
+  released *learner-feedback* campaign (an MSF template of kind `LearnerFeedback`, answered only by `Learner`
+  invitees) declared itself evidence for. Unrated: learners judge the teaching, and nobody states a supervision
+  level for it, so it has no `rated_level_field`. It carries `teaching_context_count`, how many distinct
+  teaching contexts the returned questionnaires came from, which EPA 15's "two teaching contexts" is about; it
+  is reported and gates nothing (§ 3F question 9). A campaign may cover only an EPA whose list names
+  `learner_feedback`, which on v11.1 is PAED-015.
 
 ## Which instrument a seed is (T122)
 
@@ -53,7 +60,7 @@ instrument it is, or say `null`.
 
 - `mini_cex_cpsa` → `mini_cex`, `dops_cpsa` → `dops`, `cbd_cpsa` → `cbd`, `direct_observation_cpsa` →
   `direct_observation`, `msf_cpsa` → `msf`, and each later `<family>_cpsa` seed → `<family>` (`cca`, `rca`,
-  `chart_stimulated_recall`, `reflective_exercise`, `clinical_audit`, `portfolio_review`); the generic `mini_cex`,
+  `chart_stimulated_recall`, `reflective_exercise`, `clinical_audit`, `portfolio_review`, `learner_feedback`); the generic `mini_cex`,
   `dops` and `cbd` carry the same keys, because they are the same instruments. Everything else is `null`:
   unrestricted (D21).
 - The lists bind every instrument, crediting or not. An unrated one (`"counts_for": []`) is judged, and its EPA picker

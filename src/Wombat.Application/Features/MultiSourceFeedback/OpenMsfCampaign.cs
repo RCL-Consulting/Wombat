@@ -107,7 +107,8 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
                         campaign.OpensOn,
                         campaign.ClosesOn,
                         link.Invitation.ExpiresOn,
-                        submitUrl)),
+                        submitUrl,
+                        campaign.Template.Kind)),
                     cancellationToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)

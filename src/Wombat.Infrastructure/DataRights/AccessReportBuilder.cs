@@ -101,6 +101,8 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
             {
                 Id = c.Id,
                 TemplateId = c.TemplateId,
+                // Which questionnaire it was: multi-source feedback or learner feedback, one aggregate for both (T164).
+                Kind = c.Template.Kind.ToString(),
                 State = c.State.ToString(),
                 OpensOn = c.OpensOn,
                 ClosesOn = c.ClosesOn
@@ -257,6 +259,7 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
     {
         public int Id { get; set; }
         public int TemplateId { get; set; }
+        public string Kind { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public DateOnly OpensOn { get; set; }
         public DateOnly ClosesOn { get; set; }

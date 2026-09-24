@@ -65,21 +65,32 @@ public sealed class CreateMsfCampaignCommandHandler : IRequestHandler<CreateMsfC
         await MsfCampaignRules.EnsureSubjectIsInScopeAsync(
             _dbContext, request.Principal, subjectUserId, cancellationToken);
 
-        // Narrowed here as well as in the picker, because the picker is an affordance and this is the
-        // gate. The same predicate is applied a third time at release, against the curriculum as it
-        // stands then — a trainee may be moved between curricula while the window is open.
-        var coverableEpaIds = (await _referenceDataService
-                .GetSubjectCurriculumEpaOptionsAsync(subjectUserId, cancellationToken))
-            .Select(option => int.Parse(option.Value, System.Globalization.CultureInfo.InvariantCulture))
-            .ToHashSet();
-
-        var requestedEpaIds = request.EpaIds.Distinct().ToArray();
-        var offCurriculum = requestedEpaIds.Where(epaId => !coverableEpaIds.Contains(epaId)).ToArray();
-        if (offCurriculum.Length > 0)
+        // A learner-feedback campaign invites learners only (MsfTemplate.Accepts), so one respondent group is all it can
+        // ever have. Asking for two would leave it unreleasable whatever came back. (T164)
+        if (template.Kind == MsfTemplateKind.LearnerFeedback && request.MinimumRespondentCategories > 1)
         {
             throw new InvalidOperationException(
-                "These EPAs are not on the trainee's curriculum and cannot be covered by this campaign: " +
-                string.Join(", ", offCurriculum));
+                "A learner-feedback campaign has one respondent group, learners, so it can require only one reporting " +
+                "category.");
+        }
+
+        // Narrowed here as well as in the picker, because the picker is an affordance and this is the
+        // gate. The same predicate is applied a third time at release, against the curriculum as it
+        // stands then — a trainee may be moved between curricula while the window is open. For learner
+        // feedback it is also the EPA's tool list: only an EPA whose list names learner feedback. (T164)
+        var coverableEpaIds = await MsfCampaignRules.CoverableEpaIdsAsync(
+            _referenceDataService, subjectUserId, template.Kind, cancellationToken);
+
+        var requestedEpaIds = request.EpaIds.Distinct().ToArray();
+        var notCoverable = requestedEpaIds.Where(epaId => !coverableEpaIds.Contains(epaId)).ToArray();
+        if (notCoverable.Length > 0)
+        {
+            throw new InvalidOperationException(
+                (template.Kind == MsfTemplateKind.LearnerFeedback
+                    ? "These EPAs are not on the trainee's curriculum, or their College list does not name learner " +
+                      "feedback, and cannot be covered by this campaign: "
+                    : "These EPAs are not on the trainee's curriculum and cannot be covered by this campaign: ") +
+                string.Join(", ", notCoverable));
         }
 
         var campaign = new MsfCampaign

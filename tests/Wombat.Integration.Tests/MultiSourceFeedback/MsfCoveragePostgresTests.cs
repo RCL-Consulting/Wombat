@@ -98,7 +98,7 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
                 // The type the release records its evidence as. DataSeeder seeds only the generic types.
                 db.ActivityTypes.Add(new ActivityType
                 {
-                    Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+                    Key = MsfEvidenceKinds.MsfActivityTypeKey,
                     Name = "Multi-Source Feedback (Paediatrics)",
                     Scope = ActivityScope.Institution,
                     ScopeId = host,
@@ -250,7 +250,7 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
 
     private static Task<int> MsfTypeIdAsync(ApplicationDbContext db)
         => db.ActivityTypes
-            .Where(type => type.Key == MsfCampaignCoverage.MsfEvidenceTypeKey)
+            .Where(type => type.Key == MsfEvidenceKinds.MsfActivityTypeKey)
             .Select(type => type.Id)
             .SingleAsync();
 

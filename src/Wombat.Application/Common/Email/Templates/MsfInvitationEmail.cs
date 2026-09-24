@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Common.Email.Templates;
 
@@ -38,17 +39,29 @@ public static class MsfInvitationEmail
         var lastDay = Date(LastDayToRespond(content));
         var subject = $"Feedback request: {trainee} ({content.TemplateName}, {window})";
 
-        var html = EmailTemplateBase.WrapHtml("Multi-source feedback request", $"""
-            <p>You have been asked to give multi-source feedback on <strong>{Encode(trainee)}</strong>, a trainee you have worked with.</p>
+        // T164: a learner is asked about the trainee's teaching, not as a colleague, and is grouped with the other
+        // learners rather than by role.
+        var learner = content.Kind == MsfTemplateKind.LearnerFeedback;
+        var heading = learner ? "Learner feedback request" : "Multi-source feedback request";
+        var askedHtml = learner
+            ? $"You have been asked to give feedback on the teaching of <strong>{Encode(trainee)}</strong>, a trainee who has taught you."
+            : $"You have been asked to give multi-source feedback on <strong>{Encode(trainee)}</strong>, a trainee you have worked with.";
+        var askedText = learner
+            ? $"You have been asked to give feedback on the teaching of {trainee}, a trainee who has taught you."
+            : $"You have been asked to give multi-source feedback on {trainee}, a trainee you have worked with.";
+        var grouping = learner ? "together with the other learners' feedback" : "grouped by respondent role";
+
+        var html = EmailTemplateBase.WrapHtml(heading, $"""
+            <p>{askedHtml}</p>
             <p>Questionnaire: <strong>{Encode(content.TemplateName)}</strong><br>Feedback window: <strong>{window}</strong></p>
             <p><a class="btn" href="{Encode(content.ResponseUrl)}">Give feedback</a></p>
             <p>Or copy this link into your browser:<br><code>{Encode(content.ResponseUrl)}</code></p>
             <p>The link is yours alone and can be used once. The last day to respond is <strong>{lastDay}</strong>.</p>
-            <p>Your name and email address are never shown to {Encode(trainee)}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, grouped by respondent role.</p>
+            <p>Your name and email address are never shown to {Encode(trainee)}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, {grouping}.</p>
             """);
 
         var text = $"""
-            You have been asked to give multi-source feedback on {trainee}, a trainee you have worked with.
+            {askedText}
 
             Questionnaire: {content.TemplateName}
             Feedback window: {window}
@@ -58,7 +71,7 @@ public static class MsfInvitationEmail
 
             The link is yours alone and can be used once. The last day to respond is {lastDay}.
 
-            Your name and email address are never shown to {trainee}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, grouped by respondent role.
+            Your name and email address are never shown to {trainee}. They see the feedback only after the campaign has closed and a coordinator has reviewed and released it, {grouping}.
             """;
 
         return new EmailMessage(
@@ -86,6 +99,7 @@ public static class MsfInvitationEmail
 }
 
 /// <summary>What one respondent's invitation says. (T202)</summary>
+/// <param name="Kind">What the questionnaire collects (T164): a learner is asked about the trainee's teaching.</param>
 public sealed record MsfInvitationEmailContent(
     int CampaignId,
     string RespondentEmail,
@@ -94,4 +108,5 @@ public sealed record MsfInvitationEmailContent(
     DateOnly OpensOn,
     DateOnly ClosesOn,
     DateOnly ExpiresOn,
-    string ResponseUrl);
+    string ResponseUrl,
+    MsfTemplateKind Kind = MsfTemplateKind.Msf);

@@ -78,6 +78,29 @@ public sealed class GetMsfCoverageForTraineeTests
         Covered(coverage!, "PAED-001").Should().BeEmpty("before release the coordinator may still withdraw it, and a withdrawn one was retracted");
     }
 
+    /// <summary>
+    /// A released learner-feedback campaign is run on the same aggregate, but it is another instrument (T164, D35): it
+    /// must not tell a committee that MSF covered the EPA when only learners answered.
+    /// </summary>
+    [Fact]
+    public async Task AReleasedLearnerFeedbackCampaign_CoversNothing_BecauseItIsNotMultiSourceFeedback()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001"), Item(15, "PAED-015")]);
+        db.MsfTemplates.Add(new MsfTemplate { Id = TemplateId + 1, Name = "Learner feedback", Kind = MsfTemplateKind.LearnerFeedback });
+        // Campaign 60 is given an msf_cpsa row naming it, which no learner-feedback release writes (it writes
+        // learner_feedback_cpsa), so that only the campaign's kind can be what leaves it out.
+        var learnerFeedback = AddCampaign(db, 60, MsfCampaignState.Released, Utc(2026, 3, 10, 9), (15, true));
+        learnerFeedback.TemplateId = TemplateId + 1;
+        AddCampaign(db, 61, MsfCampaignState.Released, Utc(2026, 4, 10, 9), (1, true));
+        await db.SaveChangesAsync();
+
+        var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To);
+
+        Covered(coverage!, "PAED-015").Should().BeEmpty("only learners answered campaign 60, which is not MSF");
+        Covered(coverage!, "PAED-001").Should().Equal((2026, 1, 61));
+    }
+
     [Fact]
     public async Task ADeclaredEpaTheReleaseRecordedNoEvidenceFor_IsNotCovered()
     {
@@ -574,7 +597,7 @@ public sealed class GetMsfCoverageForTraineeTests
         db.ActivityTypes.Add(new ActivityType
         {
             Id = MsfTypeId,
-            Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+            Key = MsfEvidenceKinds.MsfActivityTypeKey,
             Name = "Multi-Source Feedback (Paediatrics)",
             Version = 1,
             // The shipped workflow, whose terminal state is the rows' `recorded`: evidence is a finished activity (D44).

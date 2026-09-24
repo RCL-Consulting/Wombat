@@ -10,6 +10,27 @@ public sealed class MsfInvitation
     public string? RespondentEmail { get; set; }
     public string? RespondentEmailHash { get; set; }
     public MsfRespondentCategory RespondentCategory { get; set; }
+
+    /// <summary>
+    /// Where a <see cref="MsfRespondentCategory.Learner" /> was taught by the trainee, as the coordinator typed it; null
+    /// for every other category. (T164)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// EPA 15 asks for "feedback from at least two assessors across at least two teaching contexts" before entrustment.
+    /// A response carries its invitation's context, so a campaign can say how many distinct contexts answered
+    /// (<see cref="MsfCampaign.RespondedTeachingContexts" />). Nothing is gated on it: how the College counts "two
+    /// teaching contexts" is its open question 9 (§ 3F), so it is reported and never enforced.
+    /// </para>
+    /// <para>
+    /// On the invitation rather than asked of the respondent. The coordinator knows where the teaching happened and
+    /// types it the same way for each learner of one group, which is what makes the count mean something; a free-text
+    /// answer from each learner would count spellings. It is kept when the campaign closes and the address is hashed:
+    /// it names a teaching session, not a person, and no report breaks answers down by it.
+    /// </para>
+    /// </remarks>
+    public string? TeachingContext { get; set; }
+
     public string TokenHash { get; set; } = string.Empty;
     public DateTime IssuedOn { get; set; }
     public DateOnly ExpiresOn { get; set; }

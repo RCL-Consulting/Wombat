@@ -27,7 +27,7 @@
     <Row Context="item">
       <tr>
         <td>@item.SubjectName</td>
-        <td>@item.TemplateName</td>
+        <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
         <td>@item.State</td>
         <td>@item.InvitationCount</td>
         <td>@item.ResponseCount</td>

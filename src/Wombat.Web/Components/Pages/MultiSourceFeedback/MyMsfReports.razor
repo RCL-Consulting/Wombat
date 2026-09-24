@@ -28,7 +28,7 @@
         </HeaderRow>
         <Row Context="item">
           <tr>
-            <td>@item.TemplateName</td>
+            <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
             <td>@item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
             <td>@item.ResponseCount</td>
             <td class="actions-cell">
@@ -44,7 +44,13 @@
   {
     <section class="detail-card">
       <h3>Selected report</h3>
-      <p><strong>Template:</strong> @_report.TemplateName</p>
+      <p><strong>Template:</strong> @_report.TemplateName (@MsfEvidenceKinds.Describe(_report.Kind))</p>
+      @* T164: the count, never the names. A context is a finer breakdown than the group the suppression threshold
+         protects, and a name beside a handful of answers can say which learner wrote which. *@
+      @if (_report.TeachingContextCount is int contextCount)
+      {
+        <p><strong>Teaching contexts that responded:</strong> @contextCount</p>
+      }
       <p><strong>Narrative:</strong> @_report.CoordinatorNarrative</p>
       @foreach (var category in _report.Categories.Where(category => !category.IsSuppressed))
       {

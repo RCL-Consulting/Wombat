@@ -14,7 +14,7 @@ internal static class MsfSectionComponent
         {
             column.Spacing(8);
 
-            column.Item().Text("Multi-Source Feedback").Bold().FontSize(14).FontColor(Colors.Blue.Darken3);
+            column.Item().Text(SectionTitle(reports)).Bold().FontSize(14).FontColor(Colors.Blue.Darken3);
             column.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
 
             column.Item().PaddingBottom(4).Text(
@@ -26,6 +26,20 @@ internal static class MsfSectionComponent
                 column.Item().Element(e => ComposeReport(e, report));
             }
         });
+    }
+
+    /// <summary>What the section holds: multi-source feedback, learner feedback (T164), or both.</summary>
+    private static string SectionTitle(IReadOnlyCollection<MsfCampaignAggregateReportDto> reports)
+    {
+        var hasMsf = reports.Any(report => report.Kind == MsfTemplateKind.Msf);
+        var hasLearnerFeedback = reports.Any(report => report.Kind == MsfTemplateKind.LearnerFeedback);
+
+        return (hasMsf, hasLearnerFeedback) switch
+        {
+            (true, true) => "Multi-Source and Learner Feedback",
+            (false, true) => "Learner Feedback",
+            _ => "Multi-Source Feedback"
+        };
     }
 
     /// <summary>
@@ -47,11 +61,26 @@ internal static class MsfSectionComponent
                 text.Span($"  (Campaign #{report.CampaignId})").FontSize(8).FontColor(Colors.Grey.Darken1);
             });
 
+            // T164: learner feedback is run on the same aggregate but is another instrument, and the section prints both.
+            column.Item().Text(MsfEvidenceKinds.Describe(report.Kind)).FontSize(8).FontColor(Colors.Grey.Darken1);
+
             column.Item().Text(text =>
             {
                 text.Span("Total responses: ").FontSize(9);
                 text.Span(report.TotalResponses.ToString()).FontSize(9).Bold();
             });
+
+            // T164: EPA 15's "at least two teaching contexts" is counted here, and reported rather than judged. The count
+            // only: the portfolio is the trainee's, and a context's name beside a handful of answers can say which learner
+            // wrote which. The evidence records printed with it carry the count alone for the same reason.
+            if (report.TeachingContextCount is int contextCount)
+            {
+                column.Item().Text(text =>
+                {
+                    text.Span("Teaching contexts that responded: ").FontSize(9);
+                    text.Span(contextCount.ToString(System.Globalization.CultureInfo.InvariantCulture)).FontSize(9).Bold();
+                });
+            }
 
             // T121: what the campaign was declared evidence for. Printed here as well as on the
             // per-EPA activity records in the activities section, because those are separate entries

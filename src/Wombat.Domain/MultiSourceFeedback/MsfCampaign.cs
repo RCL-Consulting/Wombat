@@ -82,6 +82,21 @@ public sealed class MsfCampaign
     /// <inheritdoc cref="MsfCampaignEpa" />
     public ICollection<MsfCampaignEpa> CoveredEpas { get; set; } = [];
 
+    /// <summary>
+    /// The distinct teaching contexts whose learners answered (<see cref="MsfInvitation.TeachingContext" />,
+    /// <see cref="MsfTeachingContexts.Distinct" />). Empty for an MSF, whose invitations carry none. (T164)
+    /// </summary>
+    /// <remarks>
+    /// Read from the responses, not the invitations: a context whose learners were all invited and none answered is
+    /// not a context the feedback came from. The caller must have loaded <see cref="Responses" /> and each response's
+    /// <see cref="MsfResponse.Invitation" />; an unloaded invitation is refused rather than counted as no context,
+    /// because "no context answered" would then be printed for a campaign whose learners did.
+    /// </remarks>
+    public IReadOnlyList<string> RespondedTeachingContexts()
+        => MsfTeachingContexts.Distinct(Responses.Select(response =>
+            (response.Invitation ?? throw new InvalidOperationException(
+                "A response's invitation must be loaded to read the teaching context it was given in.")).TeachingContext));
+
     public void Open(DateTime utcNow)
     {
         EnsureCanOpen();

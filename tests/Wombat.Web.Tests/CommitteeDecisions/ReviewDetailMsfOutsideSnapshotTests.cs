@@ -17,7 +17,7 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
-/// A review says how many MSF campaigns closed in its window and are not in its snapshot, whether still awaiting
+/// A review says how many feedback campaigns closed in its window and are not in its snapshot, whether still awaiting
 /// release or released after it started, and says nothing when there are none. (T173)
 /// </summary>
 /// <remarks>
@@ -48,7 +48,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (cut, text) = Render(state, MsfCampaignsOutsideSnapshotDto.None);
 
         text.Should().NotContain(NotYetReleased);
-        text.Should().NotContain("MSF campaign");
+        text.Should().NotContain("feedback campaign");
         cut.FindAll($"#{StartNoteId}").Should().BeEmpty();
     }
 
@@ -57,7 +57,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     {
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(1, 0));
 
-        text.Should().Contain("1 MSF campaign that closed in this window is not yet released.");
+        text.Should().Contain("1 feedback campaign that closed in this window is not yet released.");
         text.Should().Contain("The snapshot holds only the campaigns released before the review started, so it is not in it.");
     }
 
@@ -66,7 +66,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     {
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(2, 0));
 
-        text.Should().Contain("2 MSF campaigns that closed in this window are not yet released.");
+        text.Should().Contain("2 feedback campaigns that closed in this window are not yet released.");
         text.Should().Contain("The snapshot holds only the campaigns released before the review started, so they are not in it.");
     }
 
@@ -75,7 +75,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     {
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(0, 1));
 
-        text.Should().Contain("1 MSF campaign that closed in this window was released after this review started.");
+        text.Should().Contain("1 feedback campaign that closed in this window was released after this review started.");
         text.Should().Contain("so it is not in it.");
         text.Should().NotContain(NotYetReleased);
     }
@@ -85,8 +85,8 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     {
         var (cut, text) = Render(CommitteeReviewState.Decided, new MsfCampaignsOutsideSnapshotDto(1, 2));
 
-        text.Should().Contain("1 MSF campaign that closed in this window is not yet released.");
-        text.Should().Contain("2 MSF campaigns that closed in this window were released after this review started.");
+        text.Should().Contain("1 feedback campaign that closed in this window is not yet released.");
+        text.Should().Contain("2 feedback campaigns that closed in this window were released after this review started.");
         text.Should().Contain("so they are not in it.", "three campaigns are missing, not one");
         cut.FindAll(".alert").Should().ContainSingle(alert => alert.TextContent.Contains(ReleasedAfterStart));
     }
@@ -96,7 +96,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     {
         var (_, text) = Render(CommitteeReviewState.Scheduled, new MsfCampaignsOutsideSnapshotDto(2, 0));
 
-        text.Should().Contain("2 MSF campaigns that closed in this window are not yet released.");
+        text.Should().Contain("2 feedback campaigns that closed in this window are not yet released.");
         text.Should().Contain("Starting the review now leaves them out of the snapshot.");
         text.Should().NotContain("released before the review started", "there is no snapshot before Start");
     }
@@ -106,8 +106,8 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     /// at the button, which names it as its description.
     /// </summary>
     [Theory]
-    [InlineData(1, "Starting now leaves out 1 MSF campaign that closed in this window and is not yet released.")]
-    [InlineData(3, "Starting now leaves out 3 MSF campaigns that closed in this window and are not yet released.")]
+    [InlineData(1, "Starting now leaves out 1 feedback campaign that closed in this window and is not yet released.")]
+    [InlineData(3, "Starting now leaves out 3 feedback campaigns that closed in this window and are not yet released.")]
     public void BeforeStart_TheStartButtonCarriesTheWarning(int awaiting, string expected)
     {
         var (cut, _) = Render(CommitteeReviewState.Scheduled, new MsfCampaignsOutsideSnapshotDto(awaiting, 0));
@@ -176,7 +176,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
 
         sender.CountQueries.Should().HaveCount(2);
         cut.Markup.Should().NotContain(NotYetReleased);
-        cut.FindAll(".alert").Should().NotContain(alert => alert.TextContent.Contains("MSF campaign"));
+        cut.FindAll(".alert").Should().NotContain(alert => alert.TextContent.Contains("feedback campaign"));
     }
 
     private (IRenderedComponent<ReviewDetail> Cut, string Text) Render(

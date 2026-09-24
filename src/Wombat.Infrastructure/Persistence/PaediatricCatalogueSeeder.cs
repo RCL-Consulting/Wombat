@@ -127,7 +127,7 @@ public sealed class PaediatricCatalogueSeeder
                 // Which instrument this is, so each EPA's tool list binds it (T122). On create only: an existing
                 // database got these from the T122 migration, and a later difference is warned about below.
                 WbaToolKey = seed.WbaToolKey,
-                // Whether only the system writes it (T162): msf_cpsa. On create only; an existing database got it from the
+                // Whether only the system writes it (T162): msf_cpsa and learner_feedback_cpsa (T164). On create only; an existing database got it from the
                 // T162 migration, and a later difference is warned about below.
                 SystemManaged = seed.SystemManaged
             };

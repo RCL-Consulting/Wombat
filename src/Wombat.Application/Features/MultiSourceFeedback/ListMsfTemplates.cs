@@ -30,7 +30,8 @@ public sealed class ListMsfTemplatesQueryHandler : IRequestHandler<ListMsfTempla
                 template.Questions
                     .OrderBy(question => question.Order)
                     .Select(question => new MsfQuestionDto(question.Id, question.Order, question.Prompt, question.Type, question.ScaleId, question.Required))
-                    .ToList()))
+                    .ToList(),
+                template.Kind))
             .ToListAsync(cancellationToken);
     }
 }

@@ -51,12 +51,11 @@ public sealed class ReleaseMsfCampaignCommandValidator : AbstractValidator<Relea
 public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMsfCampaignCommand>
 {
     /// <summary>
-    /// The seeded activity type that carries a released campaign's evidence, one row per covered EPA. The one key
-    /// <see cref="MsfCampaignCoverage" /> reads coverage back from, so the writer and its readers cannot name two types.
+    /// The single transition out of the evidence type's draft state, into its terminal one: <c>record</c>, on both
+    /// <c>msf_cpsa</c> and <c>learner_feedback_cpsa</c>. Which of the two a release writes is
+    /// <see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />, the one mapping <see cref="MsfCampaignCoverage" /> reads
+    /// coverage back by, so the writer and its readers cannot name two types (T186, T164).
     /// </summary>
-    private const string MsfActivityTypeKey = MsfCampaignCoverage.MsfEvidenceTypeKey;
-
-    /// <summary>The single transition out of that type's draft state, into its terminal one.</summary>
     private const string RecordTransitionKey = "record";
 
     private readonly IApplicationDbContext _dbContext;
@@ -85,6 +84,16 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
             _dbContext, request.Principal, request.CampaignId, cancellationToken);
 
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
+
+        // Learner feedback asserts no supervision level: its evidence type is unrated, because the learners judged the
+        // teaching and nobody states what supervision it supports. Refused rather than dropped, so a level typed by
+        // mistake is not silently lost, and before anything is touched (the audit pipeline commits a failed handler's
+        // pending change). (T164)
+        if (campaign.Template.Kind == MsfTemplateKind.LearnerFeedback && request.EntrustmentLevel is not null)
+        {
+            throw new InvalidOperationException(
+                "Learner feedback records no supervision level. Release it without one.");
+        }
 
         // Only the release gates are read from this report, before the release has written any evidence.
         var report = _aggregationService.BuildReport(campaign, []);
@@ -118,8 +127,9 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
     }
 
     /// <summary>
-    /// Stages one terminal <c>msf_cpsa</c> activity per covered EPA that is still on the subject's
-    /// curriculum, without saving. Returns how many. (T121)
+    /// Stages one terminal evidence activity per covered EPA that the campaign may still cover, without saving:
+    /// <c>msf_cpsa</c> for multi-source feedback, <c>learner_feedback_cpsa</c> for learner feedback. Returns how many.
+    /// (T121, T164)
     /// </summary>
     /// <remarks>
     /// <para>
@@ -159,21 +169,23 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         // Re-validated rather than trusted from creation: a trainee may have been moved between curricula
         // while the response window was open. An EPA that has left the curriculum is DROPPED with a log
         // line, not thrown on - a release must not fail because an administrator moved someone, and the
-        // feedback is still released to the trainee either way.
-        var onCurriculum = (await _referenceDataService
-                .GetSubjectCurriculumEpaOptionsAsync(campaign.SubjectUserId, cancellationToken))
-            .Select(option => int.Parse(option.Value, CultureInfo.InvariantCulture))
-            .ToHashSet();
+        // feedback is still released to the trainee either way. The predicate is the one create applied
+        // (MsfCampaignRules.CoverableEpaIdsAsync), so for learner feedback an EPA whose list has stopped
+        // naming it since is dropped the same way. (T164)
+        var kind = campaign.Template.Kind;
+        var coverable = await MsfCampaignRules.CoverableEpaIdsAsync(
+            _referenceDataService, campaign.SubjectUserId, kind, cancellationToken);
 
         var declared = campaign.CoveredEpas.Select(covered => covered.EpaId).Distinct().OrderBy(id => id).ToArray();
-        var covered = declared.Where(onCurriculum.Contains).ToArray();
+        var covered = declared.Where(coverable.Contains).ToArray();
 
         foreach (var dropped in declared.Except(covered))
         {
             _logger.LogWarning(
-                "MSF campaign {CampaignId} declared EPA {EpaId} but it is no longer on the curriculum of " +
+                "MSF campaign {CampaignId} ({Kind}) declared EPA {EpaId} but it may no longer cover it for " +
                 "{SubjectUserId}; no evidence recorded for it.",
                 campaign.Id,
+                kind,
                 dropped,
                 campaign.SubjectUserId);
         }
@@ -192,7 +204,7 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
 
         var staged = await _activityService.StageCompletedAsync(
             new RecordCompletedActivitiesInput(
-                MsfActivityTypeKey,
+                MsfEvidenceKinds.ActivityTypeKeyFor(kind),
                 campaign.SubjectUserId,
                 request.ReviewerUserId,
                 RecordTransitionKey,
@@ -237,7 +249,13 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
             ["respondent_count"] = campaign.Responses.Count
         };
 
-        if (request.EntrustmentLevel is int level)
+        if (campaign.Template.Kind == MsfTemplateKind.LearnerFeedback)
+        {
+            // A count, never the contexts' names: the record is printed in the portfolio and handed over in an access
+            // report, and the names stay on the campaign's report beside the feedback they describe. (T164)
+            data["teaching_context_count"] = campaign.RespondedTeachingContexts().Count;
+        }
+        else if (request.EntrustmentLevel is int level)
         {
             data["overall_level"] = level;
         }

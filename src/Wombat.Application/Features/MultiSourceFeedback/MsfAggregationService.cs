@@ -10,12 +10,23 @@ public interface IMsfAggregationService
     /// for it: the one source of whether a declared EPA was recorded (T186). Empty for a campaign that is not released,
     /// which has no evidence rows; the release gates are computed before the release writes any.
     /// </param>
-    MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas);
+    /// <param name="nameTeachingContexts">
+    /// Whether the report names the teaching contexts a learner-feedback campaign's learners answered from, or only counts
+    /// them (<see cref="MsfCampaignAggregateReportDto.TeachingContextsResponded" />). True only for the campaign's own
+    /// report to whoever runs it; never for the trainee, the portfolio PDF or a committee snapshot. (T164)
+    /// </param>
+    MsfCampaignAggregateReportDto BuildReport(
+        MsfCampaign campaign,
+        IEnumerable<MsfRecordedEpa> recordedEpas,
+        bool nameTeachingContexts = false);
 }
 
 public sealed class MsfAggregationService : IMsfAggregationService
 {
-    public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas)
+    public MsfCampaignAggregateReportDto BuildReport(
+        MsfCampaign campaign,
+        IEnumerable<MsfRecordedEpa> recordedEpas,
+        bool nameTeachingContexts = false)
     {
         ArgumentNullException.ThrowIfNull(campaign);
         ArgumentNullException.ThrowIfNull(recordedEpas);
@@ -87,6 +98,11 @@ public sealed class MsfAggregationService : IMsfAggregationService
         // so the release handler and the disabled button cannot disagree about which applies. (T121)
         var survivingCategoryCount = categoryReports.Count(category => !category.IsSuppressed);
 
+        // Learner feedback's teaching contexts: counted for every reader, named only for the campaign's runner (T164).
+        var teachingContexts = campaign.Template.Kind == MsfTemplateKind.LearnerFeedback
+            ? campaign.RespondedTeachingContexts()
+            : null;
+
         return new MsfCampaignAggregateReportDto(
             campaign.Id,
             campaign.SubjectUserId,
@@ -111,6 +127,9 @@ public sealed class MsfAggregationService : IMsfAggregationService
                 .OrderBy(covered => covered.Code, StringComparer.Ordinal)
                 .ToList(),
             campaign.ReviewerEntrustmentLevel,
-            campaign.EvidenceRecordedOn);
+            campaign.EvidenceRecordedOn,
+            campaign.Template.Kind,
+            nameTeachingContexts ? teachingContexts : null,
+            teachingContexts?.Count);
     }
 }

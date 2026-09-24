@@ -127,7 +127,7 @@ public sealed class PaediatricCatalogueToolSeedTests
     private static readonly string[] UndefinedOnPage8 = ["chart_stimulated_recall", "learner_feedback", "portfolio_review"];
 
     /// <summary>
-    /// Which instrument every seeded activity type is. The eleven CPSA seeds, the generic Mini-CEX, DOPS and CBD (the
+    /// Which instrument every seeded activity type is. The twelve CPSA seeds, the generic Mini-CEX, DOPS and CBD (the
     /// same instruments: unkeyed, they would be unrestricted on every EPA with a list), and null for the seven generic
     /// types that are not College-named instruments (D21). Every seed entry is listed, so a new seed forces a decision
     /// here.
@@ -145,6 +145,8 @@ public sealed class PaediatricCatalogueToolSeedTests
         ("reflective_exercise_cpsa", "reflective_exercise"),
         ("clinical_audit_cpsa", "clinical_audit"),
         ("portfolio_review_cpsa", "portfolio_review"),
+        // T164: the system-written learner-feedback record. Its key is what PAED-015's list names.
+        ("learner_feedback_cpsa", "learner_feedback"),
         ("mini_cex", "mini_cex"),
         ("dops", "dops"),
         ("cbd", "cbd"),
@@ -757,7 +759,8 @@ public sealed class PaediatricCatalogueToolSeedTests
 
             results.Where(result => ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege)
                     .Any(entry => entry.Key == result.Key))
-                .Should().HaveCount(11)
+                // Twelve since T164 seeded learner_feedback_cpsa.
+                .Should().HaveCount(12)
                 .And.OnlyContain(result => result.Outcome == ActivityTypeSeedRefreshOutcome.Unchanged, "boot {0}", boot);
         }
 
@@ -782,18 +785,18 @@ public sealed class PaediatricCatalogueToolSeedTests
     }
 
     /// <summary>
-    /// T154 seeded the last two instruments an activity type can be, so of the College's twelve only learner feedback
-    /// has no seed: it is MSF-shaped, and belongs to [T164] (D35). A new instrument in the vocabulary, or a seed
-    /// withdrawn, changes this list deliberately.
+    /// Every one of the College's twelve instruments has a CPSA seed. T154 seeded the last two a person files, and T164
+    /// the last of all, learner feedback, which is system-written like MSF (D35). A new instrument in the vocabulary, or a
+    /// seed withdrawn, changes this deliberately.
     /// </summary>
     [Fact]
-    public void EveryInstrumentButLearnerFeedback_HasACpsaSeed()
+    public void EveryInstrument_HasACpsaSeed()
     {
         var seeded = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege)
             .Select(entry => entry.WbaToolKey)
             .ToHashSet(StringComparer.Ordinal);
 
-        VocabularyKeys.Where(key => !seeded.Contains(key)).Should().Equal("learner_feedback");
+        VocabularyKeys.Where(key => !seeded.Contains(key)).Should().BeEmpty();
     }
 
     /// <summary>
@@ -807,7 +810,7 @@ public sealed class PaediatricCatalogueToolSeedTests
         var vocabulary = catalogue.WbaToolVocabulary.Select(tool => tool.Key).ToHashSet(StringComparer.Ordinal);
 
         var entries = ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege).ToArray();
-        entries.Should().HaveCount(11);
+        entries.Should().HaveCount(12);
 
         using var scope = new AssertionScope();
         foreach (var entry in entries)

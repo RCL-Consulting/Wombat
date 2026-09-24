@@ -14,6 +14,10 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// campaign id in the address bar be incremented into a census of other institutions' campaigns. Who may read it is
 /// <see cref="MsfCampaignRules.CanReadReportAsync" />: the trainee it is about once it is released, and whoever runs
 /// campaigns for that trainee.
+/// <para>
+/// The trainee's copy counts a learner-feedback campaign's teaching contexts and does not name them; whoever runs the
+/// campaign typed them and is told them (<see cref="MsfCampaignAggregateReportDto.TeachingContextsResponded" />, T164).
+/// </para>
 /// </remarks>
 public sealed record GetCampaignAggregateReportQuery(int CampaignId, ClaimsPrincipal Principal)
     : IRequest<MsfCampaignAggregateReportDto?>;
@@ -52,14 +56,18 @@ public sealed class GetCampaignAggregateReportQueryHandler
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
         // Which declared EPAs were recorded, from the evidence rows, as the committee snapshot and the coverage grid
-        // read it (T186). Nothing is read for a campaign that is not released.
+        // read it (T186), from the type this campaign's kind writes (T164). Nothing is read for a campaign that is not
+        // released.
         var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
             _dbContext,
             campaign.SubjectUserId,
-            [(campaign.Id, campaign.State)],
-            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            [(campaign.Id, campaign.State, campaign.Template.Kind)],
             cancellationToken);
 
-        return _aggregationService.BuildReport(campaign, recorded[campaign.Id]);
+        // Only the trainee reads the report about themselves; anyone else CanReadReportAsync admitted runs the campaign.
+        var callerIsSubject = string.Equals(
+            request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, campaign.SubjectUserId, StringComparison.Ordinal);
+
+        return _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject);
     }
 }

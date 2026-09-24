@@ -264,7 +264,7 @@ public sealed class MsfEvidenceFanOutTests
             db,
             TraineeUserId,
             [(released.Id, released.State)],
-            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            MsfEvidenceKinds.MsfActivityTypeKey,
             CancellationToken.None);
         recorded[released.Id].Select(epa => epa.EpaId).Should().Equal(EpaOnCurriculum);
 

@@ -37,9 +37,12 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// same, so that the rule is this class's and not each caller's.
 /// </para>
 /// <para>
-/// <b>The evidence type is a parameter</b>, <see cref="MsfEvidenceTypeKey" /> for the College's MSF. Another instrument
-/// that records a released campaign's per-EPA evidence the same way (learner feedback, T164) reads its coverage by passing
-/// its own key; nothing else here is MSF's.
+/// <b>The evidence type follows the campaign's kind.</b> A multi-source feedback release writes <c>msf_cpsa</c> and a
+/// learner-feedback release writes <c>learner_feedback_cpsa</c> (T164), and <see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />
+/// is the one mapping, which the release writes by. A reader that holds campaigns of either kind passes each campaign's
+/// kind and is answered from that kind's rows, so a learner-feedback campaign is recorded exactly when a
+/// <c>learner_feedback_cpsa</c> row names it and never by an <c>msf_cpsa</c> row, and the other way round. A reader that
+/// wants one instrument only (the MSF coverage grid) passes that instrument's key.
 /// </para>
 /// <para>
 /// <b>Finished rows only</b>, by the one definition of finished (<see cref="ActivityCompletion" />, D44): the row's state
@@ -62,11 +65,40 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// </remarks>
 public static class MsfCampaignCoverage
 {
-    /// <summary>The seeded type a released MSF campaign's per-EPA evidence is recorded as (T121).</summary>
-    public const string MsfEvidenceTypeKey = "msf_cpsa";
-
     /// <summary>The field of an evidence row's data that names the campaign whose release wrote it.</summary>
     public const string CampaignIdField = "campaign_id";
+
+    /// <summary>
+    /// For each released campaign of <paramref name="campaigns" />, the EPAs its finished evidence rows carry, each
+    /// campaign read from the evidence type its own kind's release writes (<see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />,
+    /// T164). One read per kind present, so at most two.
+    /// </summary>
+    /// <param name="subjectUserId">The trainee the campaigns are about. Only their evidence rows are read.</param>
+    /// <param name="campaigns">The campaigns to read, each with its state and its template's kind.</param>
+    public static async Task<ILookup<int, MsfRecordedEpa>> RecordedEpasAsync(
+        IApplicationDbContext dbContext,
+        string subjectUserId,
+        IEnumerable<(int CampaignId, MsfCampaignState State, MsfTemplateKind Kind)> campaigns,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(campaigns);
+
+        var recorded = new List<(int CampaignId, MsfRecordedEpa Epa)>();
+        foreach (var kind in campaigns.GroupBy(campaign => campaign.Kind))
+        {
+            var lookup = await RecordedEpasAsync(
+                dbContext,
+                subjectUserId,
+                kind.Select(campaign => (campaign.CampaignId, campaign.State)),
+                MsfEvidenceKinds.ActivityTypeKeyFor(kind.Key),
+                cancellationToken);
+
+            recorded.AddRange(lookup.SelectMany(group => group.Select(epa => (group.Key, epa))));
+        }
+
+        // A campaign has one kind, so each campaign's EPAs come from one read, already in EPA code order.
+        return recorded.ToLookup(entry => entry.CampaignId, entry => entry.Epa);
+    }
 
     /// <summary>
     /// For each released campaign of <paramref name="campaigns" />, the EPAs its finished evidence rows of

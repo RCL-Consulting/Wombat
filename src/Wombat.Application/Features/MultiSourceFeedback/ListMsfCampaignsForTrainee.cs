@@ -45,7 +45,10 @@ public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<Lis
                 campaign.State,
                 campaign.Invitations.Count,
                 campaign.Responses.Count,
-                campaign.ReleasedOn))
+                campaign.ReleasedOn)
+            {
+                Kind = campaign.Template.Kind
+            })
             .ToListAsync(cancellationToken);
     }
 }

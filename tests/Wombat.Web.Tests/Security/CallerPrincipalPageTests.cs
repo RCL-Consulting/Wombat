@@ -279,6 +279,9 @@ public sealed class CallerPrincipalPageTests : TestContext
         var open = _sender.Single<OpenMsfCampaignCommand>();
         open.CampaignId.Should().Be(CampaignId);
         CallerOf(open.Principal).Should().Be(CoordinatorUserId);
+
+        // T164: whom the campaign may invite is asked as the signed-in coordinator too, and scoped by the handler.
+        CallerOf(_sender.Single<GetMsfCampaignSetupQuery>().Principal).Should().Be(CoordinatorUserId);
     }
 
     [Fact]
@@ -314,7 +317,10 @@ public sealed class CallerPrincipalPageTests : TestContext
     private void StubTheEditorsLists()
         => _sender
             .On<ListMsfTemplatesQuery>(_ => new[] { new MsfTemplateDto(1, "Default MSF", null, false, true, []) })
-            .On<ListTraineesForSpecialityQuery>(_ => new[] { Trainee() });
+            .On<ListTraineesForSpecialityQuery>(_ => new[] { Trainee() })
+            .On<GetMsfCampaignSetupQuery>(query => new MsfCampaignSetupDto(
+                query.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
+                [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse]));
 
     private static string? CallerOf(ClaimsPrincipal principal)
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -341,7 +347,7 @@ public sealed class CallerPrincipalPageTests : TestContext
         public List<string> CurriculumAskedFor { get; } = [];
 
         public override Task<IReadOnlyList<ActivityCatalogueOption>> GetSubjectCurriculumEpaOptionsAsync(
-            string subjectUserId, CancellationToken cancellationToken = default)
+            string subjectUserId, string? permittedToolKey = null, CancellationToken cancellationToken = default)
         {
             CurriculumAskedFor.Add(subjectUserId);
             return Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([new("101", "PAED-001 Resuscitate a critically ill child")]);

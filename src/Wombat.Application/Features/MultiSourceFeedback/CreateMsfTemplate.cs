@@ -7,11 +7,16 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 public sealed record CreateMsfTemplateQuestionItem(string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
 
+/// <param name="Kind">
+/// What the questionnaire collects (T164, D35): multi-source feedback, or learner feedback, which only learners answer and
+/// whose release records <c>learner_feedback_cpsa</c> evidence. Fixed for the template's life.
+/// </param>
 public sealed record CreateMsfTemplateCommand(
     string Name,
     int? SpecialityId,
     bool AllowPatientResponses,
-    IReadOnlyList<CreateMsfTemplateQuestionItem> Questions) : IRequest<MsfTemplateDto>;
+    IReadOnlyList<CreateMsfTemplateQuestionItem> Questions,
+    MsfTemplateKind Kind = MsfTemplateKind.Msf) : IRequest<MsfTemplateDto>;
 
 public sealed class CreateMsfTemplateCommandValidator : AbstractValidator<CreateMsfTemplateCommand>
 {
@@ -19,6 +24,12 @@ public sealed class CreateMsfTemplateCommandValidator : AbstractValidator<Create
     {
         RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
         RuleFor(command => command.Questions).NotEmpty();
+        RuleFor(command => command.Kind).IsInEnum();
+
+        // Only learners answer learner feedback (MsfTemplate.Accepts), so a patient never could. (T164)
+        RuleFor(command => command.AllowPatientResponses).Equal(false)
+            .When(command => command.Kind == MsfTemplateKind.LearnerFeedback)
+            .WithMessage("A learner-feedback template is answered by learners only, so it cannot allow patient responses.");
         RuleForEach(command => command.Questions).ChildRules(question =>
         {
             question.RuleFor(item => item.Prompt).NotEmpty().MaximumLength(1000);
@@ -43,6 +54,7 @@ public sealed class CreateMsfTemplateCommandHandler : IRequestHandler<CreateMsfT
             SpecialityId = request.SpecialityId,
             AllowPatientResponses = request.AllowPatientResponses,
             IsActive = true,
+            Kind = request.Kind,
             Questions = request.Questions
                 .Select((question, index) => new MsfQuestion
                 {
@@ -67,6 +79,7 @@ public sealed class CreateMsfTemplateCommandHandler : IRequestHandler<CreateMsfT
             template.Questions
                 .OrderBy(question => question.Order)
                 .Select(question => new MsfQuestionDto(question.Id, question.Order, question.Prompt, question.Type, question.ScaleId, question.Required))
-                .ToList());
+                .ToList(),
+            template.Kind);
     }
 }

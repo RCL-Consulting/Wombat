@@ -11,6 +11,7 @@ public sealed class MsfInvitationConfiguration : IEntityTypeConfiguration<MsfInv
         builder.ToTable("MsfInvitations");
         builder.Property(entity => entity.RespondentEmail).HasMaxLength(320);
         builder.Property(entity => entity.RespondentEmailHash).HasMaxLength(64);
+        builder.Property(entity => entity.TeachingContext).HasMaxLength(MsfTeachingContexts.MaximumLength);
         builder.Property(entity => entity.TokenHash).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.ExpiresOn).HasColumnType("date");
 

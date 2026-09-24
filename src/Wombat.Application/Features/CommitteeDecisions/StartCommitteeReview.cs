@@ -99,7 +99,10 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         var msfCampaigns = await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .Include(campaign => campaign.Template)
+            // T164: each response's invitation, which carries the teaching context a learner was taught in, so a
+            // learner-feedback campaign can say how many contexts answered.
             .Include(campaign => campaign.Responses)
+                .ThenInclude(response => response.Invitation)
             // T121: so the campaign row can say what its evidence activities are FOR. A released
             // campaign now contributes both this row and one Activity row per covered EPA, and without
             // the coverage on the parent a panel sees one campaign and N unexplained siblings dated the
@@ -125,12 +128,12 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         var describe = await ActivityDescriber.LoadAsync(_dbContext, activities, cancellationToken);
         var activityEvidence = activities.Select(describe.Describe);
 
-        // Which EPAs each campaign's evidence rows carry: the reader T168's coverage grid shares (T186).
+        // Which EPAs each campaign's evidence rows carry: the reader T168's coverage grid shares (T186). Each campaign is
+        // read from the type its own kind's release writes, learner_feedback_cpsa for learner feedback (T164).
         var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
             _dbContext,
             review.TraineeUserId,
-            msfCampaigns.Select(campaign => (campaign.Id, campaign.State)),
-            MsfCampaignCoverage.MsfEvidenceTypeKey,
+            msfCampaigns.Select(campaign => (campaign.Id, campaign.State, campaign.Template.Kind)),
             cancellationToken);
 
         var msfEvidence = msfCampaigns.Select(campaign => new CommitteeEvidence
@@ -138,7 +141,8 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             SourceType = CommitteeEvidenceSourceType.MsfCampaign,
             MsfCampaignId = campaign.Id,
             SourceLabel = $"{campaign.Template.Name} #{campaign.Id}",
-            Summary = $"State: {campaign.State}; responses {campaign.Responses.Count}; " +
+            Summary = $"{MsfEvidenceKinds.Describe(campaign.Template.Kind)}. State: {campaign.State}; " +
+                      $"responses {campaign.Responses.Count}{DescribeTeachingContexts(campaign)}; " +
                       $"closed {campaign.ClosedOn:yyyy-MM-dd}.{DescribeCoverage(campaign, recorded[campaign.Id])}",
             SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn,
             // A campaign is a report across the EPAs it covers, not evidence for one: it has no EPA, instrument, rating
@@ -296,12 +300,42 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     }
 
     /// <summary>
+    /// For learner feedback, how many distinct teaching contexts the responses came from; nothing for multi-source
+    /// feedback. (T164)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// EPA 15 asks for feedback "across at least two teaching contexts" before entrustment. The panel is told the count and
+    /// judges it: how the College counts two contexts is its open question 9 (§ 3F), so nothing here says met or unmet.
+    /// </para>
+    /// <para>
+    /// Counted, never named. A context is a finer breakdown than the respondent group the suppression threshold protects,
+    /// its name is the coordinator's free text, and this line is frozen and copied onto any STAR that rests on it, whose
+    /// certificate the trainee holds. The campaign's own report names them for the coordinator who typed them.
+    /// </para>
+    /// </remarks>
+    private static string DescribeTeachingContexts(MsfCampaign campaign)
+    {
+        if (campaign.Template.Kind != MsfTemplateKind.LearnerFeedback)
+        {
+            return string.Empty;
+        }
+
+        return campaign.RespondedTeachingContexts().Count switch
+        {
+            0 => " from no recorded teaching context",
+            1 => " from 1 teaching context",
+            var count => $" from {count} teaching contexts"
+        };
+    }
+
+    /// <summary>
     /// What a campaign declared itself evidence for, and which of that reached the portfolio. (T121, T186)
     /// </summary>
     /// <remarks>
     /// <para>
     /// A released campaign appears in this snapshot twice over: once here, and once per covered EPA as
-    /// an ordinary <c>msf_cpsa</c> activity. That is deliberate — the panel wants both the report and
+    /// an ordinary <c>msf_cpsa</c> (or, for learner feedback, <c>learner_feedback_cpsa</c>) activity. That is deliberate — the panel wants both the report and
     /// the per-EPA claims — but it is only readable if the parent names the children, which is what this
     /// sentence does. An empty coverage set is worth printing too: it is the one case where a released
     /// campaign left no evidence at all. Only released campaigns reach the snapshot (T138), so there is

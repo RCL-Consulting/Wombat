@@ -96,6 +96,80 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// T164: a released learner-feedback campaign prints in the feedback section as learner feedback, with how many
+    /// teaching contexts its learners answered from; the load reads each response's invitation, which carries the context.
+    /// The count and never the names (T164 review): the portfolio is the trainee's, and a context's name beside a handful
+    /// of answers can say which learner wrote which. The summary page counts it as learner feedback, not as MSF.
+    /// </summary>
+    [Fact]
+    public async Task Generate_SucceedsForATraineeWithAReleasedLearnerFeedbackCampaign_AndCountsItsTeachingContexts()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(db, MsfTemplateKind.LearnerFeedback);
+
+        var service = new PortfolioPdfService(db, new MsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var data = await service.LoadPortfolioDataAsync(request, CancellationToken.None);
+        var report = data.MsfReports.Should().ContainSingle().Subject;
+        report.Kind.Should().Be(MsfTemplateKind.LearnerFeedback);
+        report.TeachingContextCount.Should().Be(2);
+        report.TeachingContextsResponded.Should().BeNull("the portfolio names no teaching context");
+
+        var text = string.Join("\f", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes));
+        text.Should().Contain("Teaching contexts that responded:")
+            .And.Contain("Learner feedback reports:")
+            .And.NotContain("MSF reports:")
+            .And.NotContain("Student tutorial")
+            .And.NotContain("Ward round");
+    }
+
+    /// <summary>
+    /// T164 review, after T186: the PDF reads a learner-feedback campaign's recorded EPAs from the rows of the type its
+    /// release writes. A <c>learner_feedback_cpsa</c> row naming it records PAED-001; an <c>msf_cpsa</c> row naming it,
+    /// which no learner-feedback release writes, records PAED-002 for nothing.
+    /// </summary>
+    [Fact]
+    public async Task TheFeedbackSection_ReadsALearnerFeedbackCampaignsRecordedEpas_FromItsOwnTypesRows()
+    {
+        await using var db = SeededDb();
+        db.Set<Epa>().Add(new Epa { Id = 2, SubSpecialityId = 1, Code = "PAED-002", Title = "Chronic care", IsActive = true });
+        var campaign = SeedReleasedCampaign(db, MsfTemplateKind.LearnerFeedback, coveredEpaIds: [1, 2]);
+        AddEvidenceRow(db, 31, "learner_feedback_cpsa", campaign, epaId: 1);
+        AddEvidenceRow(db, 30, MsfEvidenceKinds.MsfActivityTypeKey, campaign, epaId: 2);
+        await db.SaveChangesAsync();
+
+        var data = await new PortfolioPdfService(db, new MsfAggregationService()).LoadPortfolioDataAsync(
+            new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1")),
+            CancellationToken.None);
+
+        data.MsfReports.Should().ContainSingle().Which.CoveredEpas
+            .Select(covered => (covered.Code, covered.Recorded))
+            .Should().Equal(("PAED-001", true), ("PAED-002", false));
+    }
+
+    /// <summary>
+    /// The data-subject access report says which questionnaire each campaign about the subject was, since multi-source
+    /// feedback and learner feedback run on one aggregate (T164 review).
+    /// </summary>
+    [Fact]
+    public async Task TheAccessReport_NamesEachCampaignsKind()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(db, MsfTemplateKind.LearnerFeedback);
+
+        var export = await new Wombat.Infrastructure.DataRights.AccessReportBuilder(db, new PortfolioPdfService(db, new MsfAggregationService()))
+            .BuildAsync("trainee-1", CancellationToken.None);
+
+        using var zip = new System.IO.Compression.ZipArchive(new MemoryStream(export.ZipBytes), System.IO.Compression.ZipArchiveMode.Read);
+        await using var json = zip.GetEntry("data-export.json")!.Open();
+        using var document = await System.Text.Json.JsonDocument.ParseAsync(json);
+        document.RootElement.GetProperty("msfCampaigns").EnumerateArray()
+            .Select(campaign => campaign.GetProperty("kind").GetString())
+            .Should().Equal("LearnerFeedback");
+    }
+
+    /// <summary>
     /// The MSF section says which declared EPAs the campaign recorded from its evidence rows, as the committee snapshot,
     /// the coverage grid and the campaign report have it, not from the per-EPA stamp. A campaign released before the
     /// stamp existed has its rows and a null stamp, and printed every EPA "(not recorded)" beside the activities section
@@ -114,7 +188,7 @@ public sealed class PortfolioPdfServiceTests
         db.Set<ActivityType>().Add(new ActivityType
         {
             Id = 30,
-            Key = MsfCampaignCoverage.MsfEvidenceTypeKey,
+            Key = MsfEvidenceKinds.MsfActivityTypeKey,
             Name = "Multi-Source Feedback (Paediatrics)",
             Version = 1,
             WorkflowJson = File.ReadAllText(
@@ -333,11 +407,14 @@ public sealed class PortfolioPdfServiceTests
         db.SaveChanges();
     }
 
-    private static MsfCampaign SeedReleasedCampaign(ApplicationDbContext db, int[]? coveredEpaIds = null)
+    private static MsfCampaign SeedReleasedCampaign(
+        ApplicationDbContext db, MsfTemplateKind kind = MsfTemplateKind.Msf, int[]? coveredEpaIds = null)
     {
+        var learnerFeedback = kind == MsfTemplateKind.LearnerFeedback;
         var template = new MsfTemplate
         {
-            Name = "Annual MSF",
+            Name = learnerFeedback ? "Learner feedback" : "Annual MSF",
+            Kind = kind,
             Questions = [new MsfQuestion { Id = 1, Order = 1, Prompt = "Professional performance", Type = MsfQuestionType.Scale, Required = true }]
         };
 
@@ -350,7 +427,7 @@ public sealed class PortfolioPdfServiceTests
             ClosesOn = new DateOnly(2029, 6, 30),
             MinimumResponses = 2,
             MinimumCategoryResponses = 2,
-            MinimumRespondentCategories = 2,
+            MinimumRespondentCategories = learnerFeedback ? 1 : 2,
             State = MsfCampaignState.Released,
             ReleasedOn = new DateTime(2029, 7, 1, 0, 0, 0, DateTimeKind.Utc),
             ReviewedByUserId = "coord-1",
@@ -358,11 +435,16 @@ public sealed class PortfolioPdfServiceTests
             CoveredEpas = (coveredEpaIds ?? [1]).Select(epaId => new MsfCampaignEpa { EpaId = epaId }).ToList()
         };
 
-        foreach (var category in new[] { MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse })
+        var respondents = learnerFeedback
+            ? new[] { (MsfRespondentCategory.Learner, (string?)"Ward round"), (MsfRespondentCategory.Learner, "Student tutorial") }
+            : [(MsfRespondentCategory.Consultant, null), (MsfRespondentCategory.Nurse, null)];
+
+        foreach (var (category, teachingContext) in respondents)
         {
             var invitation = new MsfInvitation
             {
                 RespondentCategory = category,
+                TeachingContext = teachingContext,
                 RespondentEmailHash = "hash",
                 TokenHash = Guid.NewGuid().ToString("N"),
                 IssuedOn = new DateTime(2029, 1, 2, 0, 0, 0, DateTimeKind.Utc),
@@ -389,6 +471,42 @@ public sealed class PortfolioPdfServiceTests
         return campaign;
     }
 
+    /// <summary>
+    /// One evidence row naming <paramref name="campaign" />, as a release writes it, of the type keyed
+    /// <paramref name="key" /> read from its shipped seed workflow (both write <c>recorded</c>, terminal).
+    /// </summary>
+    private static void AddEvidenceRow(ApplicationDbContext db, int typeId, string key, MsfCampaign campaign, int epaId)
+    {
+        if (db.Set<ActivityType>().Local.All(type => type.Id != typeId))
+        {
+            db.Set<ActivityType>().Add(new ActivityType
+            {
+                Id = typeId,
+                Key = key,
+                Name = key,
+                Version = 1,
+                WorkflowJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, "workflow.json")),
+                OwnerUserId = "seed-system",
+                CreatedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            });
+        }
+
+        db.Set<Activity>().Add(new Activity
+        {
+            ActivityTypeId = typeId,
+            SchemaVersion = 1,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "coord-1",
+            CurrentState = "recorded",
+            DataJson = "{ \"epa_id\": " + epaId + ", \"" + MsfCampaignCoverage.CampaignIdField + "\": " + campaign.Id + ", \"respondent_count\": 2 }",
+            EpaId = epaId,
+            CreatedOn = campaign.ReleasedOn!.Value,
+            UpdatedOn = campaign.ReleasedOn!.Value,
+            ObservedOn = campaign.ClosesOn,
+            ObservedOnSource = ObservationDateSource.Declared
+        });
+    }
+
     private static ApplicationDbContext SeededDb()
     {
         var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -410,7 +528,7 @@ public sealed class PortfolioPdfServiceTests
     private sealed class ThrowingMsfAggregationService : IMsfAggregationService
     {
         // Never reached: the seeded data has no released MSF campaigns.
-        public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas)
+        public MsfCampaignAggregateReportDto BuildReport(MsfCampaign campaign, IEnumerable<MsfRecordedEpa> recordedEpas, bool nameTeachingContexts = false)
             => throw new NotSupportedException();
     }
 

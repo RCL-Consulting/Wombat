@@ -71,6 +71,44 @@ public sealed class MsfCampaignCoverageTests
         asLearnerFeedback[50].Select(epa => epa.EpaId).Should().Equal(Paed002);
     }
 
+    /// <summary>
+    /// A reader holding campaigns of both kinds passes each one's kind, and each campaign is read from the rows of the type
+    /// its own release writes (<see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />): a learner-feedback campaign is not
+    /// recorded by an <c>msf_cpsa</c> row naming it, nor an MSF campaign by a learner-feedback row. (T164)
+    /// </summary>
+    [Fact]
+    public async Task ByKind_EachCampaignIsReadFromTheTypeItsOwnReleaseWrites()
+    {
+        await using var db = await SeedAsync();
+        AddRow(db, MsfTypeId, Evidence(50, Paed001), Paed001);
+        AddRow(db, LearnerFeedbackTypeId, Evidence(50, Paed002), Paed002, state: "acknowledged");
+        AddRow(db, LearnerFeedbackTypeId, Evidence(51, Paed010), Paed010, state: "acknowledged");
+        AddRow(db, MsfTypeId, Evidence(51, Paed002), Paed002);
+        await db.SaveChangesAsync();
+
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            db,
+            Trainee,
+            [(50, MsfCampaignState.Released, MsfTemplateKind.Msf), (51, MsfCampaignState.Released, MsfTemplateKind.LearnerFeedback)],
+            CancellationToken.None);
+
+        recorded[50].Select(epa => epa.EpaId).Should().Equal([Paed001], "campaign 50 is MSF, recorded by its msf_cpsa row alone");
+        recorded[51].Select(epa => epa.EpaId).Should().Equal([Paed010], "campaign 51 is learner feedback, recorded by its own type's row alone");
+    }
+
+    [Fact]
+    public async Task ByKind_NoReleasedCampaign_ReadsNothing()
+    {
+        await using var db = await SeedAsync();
+        AddRow(db, LearnerFeedbackTypeId, Evidence(51, Paed010), Paed010, state: "acknowledged");
+        await db.SaveChangesAsync();
+
+        (await MsfCampaignCoverage.RecordedEpasAsync(db, Trainee, [], CancellationToken.None)).Should().BeEmpty();
+        (await MsfCampaignCoverage.RecordedEpasAsync(
+            db, Trainee, [(51, MsfCampaignState.UnderReview, MsfTemplateKind.LearnerFeedback)], CancellationToken.None))
+            .Should().BeEmpty();
+    }
+
     [Fact]
     public async Task ARowCountsOnlyForTheCampaignItsDataNames_AboutTheSubject_WithAStampedEpa()
     {
@@ -134,7 +172,7 @@ public sealed class MsfCampaignCoverageTests
     private static Task<ILookup<int, MsfRecordedEpa>> ReadAsync(
         ApplicationDbContext db,
         (int CampaignId, MsfCampaignState State)[] campaigns,
-        string evidenceTypeKey = MsfCampaignCoverage.MsfEvidenceTypeKey)
+        string evidenceTypeKey = MsfEvidenceKinds.MsfActivityTypeKey)
         => MsfCampaignCoverage.RecordedEpasAsync(db, Trainee, campaigns, evidenceTypeKey, CancellationToken.None);
 
     private static string Evidence(int campaignId, int epaId)
@@ -173,7 +211,7 @@ public sealed class MsfCampaignCoverageTests
             new Epa { Id = Paed002, SubSpecialityId = 1, Code = "PAED-002", Title = "PAED-002", IsActive = true },
             new Epa { Id = Paed010, SubSpecialityId = 1, Code = "PAED-010", Title = "PAED-010", IsActive = true });
         db.ActivityTypes.AddRange(
-            Type(MsfTypeId, MsfCampaignCoverage.MsfEvidenceTypeKey, MsfSeedWorkflow()),
+            Type(MsfTypeId, MsfEvidenceKinds.MsfActivityTypeKey, MsfSeedWorkflow()),
             Type(LearnerFeedbackTypeId, LearnerFeedbackKey, LearnerFeedbackWorkflow));
         await db.SaveChangesAsync();
         return db;
@@ -196,8 +234,9 @@ public sealed class MsfCampaignCoverageTests
         => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json"));
 
     /// <summary>
-    /// A stand-in for a type whose rows are not system-written into their finish (T164 is not built): the subject
-    /// acknowledges the feedback, terminal, or declines it, a dead end as every seed's <c>declined</c> is.
+    /// A stand-in for a type whose rows are not system-written into their finish (the shipped <c>learner_feedback_cpsa</c>
+    /// is written straight into <c>recorded</c>, as <c>msf_cpsa</c> is; this one keeps the finished-rows rule tested): the
+    /// subject acknowledges the feedback, terminal, or declines it, a dead end as every seed's <c>declined</c> is.
     /// </summary>
     private const string LearnerFeedbackWorkflow = """
         {

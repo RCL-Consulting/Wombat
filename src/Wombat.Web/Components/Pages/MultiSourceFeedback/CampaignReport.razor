@@ -27,11 +27,20 @@
       <section class="detail-card">
         <h3>Summary</h3>
         <p><strong>Template:</strong> @_report.TemplateName</p>
+        <p><strong>Kind:</strong> @MsfEvidenceKinds.Describe(_report.Kind)</p>
         <p><strong>State:</strong> @_report.State</p>
         <p><strong>Total responses:</strong> @_report.TotalResponses</p>
         <p><strong>Minimum responses:</strong> @_report.MinimumResponses</p>
         <p><strong>Minimum category responses:</strong> @_report.MinimumCategoryResponses</p>
         <p><strong>Reporting categories:</strong> @_report.SurvivingCategoryCount of @_report.MinimumRespondentCategories required</p>
+        @if (_report.TeachingContextCount is int contextCount)
+        {
+          @* T164: EPA 15 asks for feedback across at least two teaching contexts. Reported, never enforced: how the
+             College counts two contexts is its open question (EPA-PROGRAMME § 3F question 9). Named only here, for
+             whoever runs the campaign: the trainee, the portfolio and the committee snapshot are given the count. *@
+          <p><strong>Teaching contexts that responded:</strong> @TeachingContextsText(contextCount, _report.TeachingContextsResponded)</p>
+          <p class="muted">EPA 15 asks for feedback from learners in at least two teaching contexts before entrustment. This count is for the committee to weigh; it does not hold the release. The trainee and the committee are told how many contexts responded, never their names.</p>
+        }
       </section>
 
       <section class="detail-card">
@@ -157,20 +166,27 @@
 
   protected override async Task OnParametersSetAsync()
   {
-    await LoadLevelOptionsAsync();
     await LoadAsync();
+    await LoadLevelOptionsAsync();
   }
 
+  /// <summary>
+  /// The rungs of the type this campaign's release writes (<see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />).
+  /// <c>learner_feedback_cpsa</c> rates nothing, so a learner-feedback release offers no level, and its command refuses
+  /// one (T164).
+  /// </summary>
   private async Task LoadLevelOptionsAsync()
   {
-    if (_levelOptions.Count > 0)
+    _levelOptions.Clear();
+    if (_report is null)
     {
       return;
     }
 
     try
     {
-      _levelOptions.AddRange(await ReferenceData.GetRatedLevelOptionsForActivityTypeAsync(MsfEvidenceActivityTypeKey));
+      _levelOptions.AddRange(await ReferenceData.GetRatedLevelOptionsForActivityTypeAsync(
+        MsfEvidenceKinds.ActivityTypeKeyFor(_report.Kind)));
     }
     catch (Exception exception)
     {
@@ -178,8 +194,8 @@
     }
   }
 
-  /// <summary>The seeded type the release writes its per-EPA evidence as, and coverage is read back from.</summary>
-  private const string MsfEvidenceActivityTypeKey = MsfCampaignCoverage.MsfEvidenceTypeKey;
+  private static string TeachingContextsText(int count, IReadOnlyList<string>? names)
+    => names is { Count: > 0 } ? $"{count} ({string.Join(", ", names)})" : $"{count}";
 
   /// <summary>
   /// Which of the two release gates is closed. Both are computed in one place — the aggregation
@@ -190,7 +206,9 @@
       ? $"Release needs {report.MinimumResponses} responses; {report.TotalResponses} have come back."
       : $"Release needs {report.MinimumRespondentCategories} respondent groups to report; " +
         $"{report.SurvivingCategoryCount} cleared the {report.MinimumCategoryResponses}-response threshold. " +
-        "Feedback that survives from too few groups is not multi-source feedback.";
+        (report.Kind == MsfTemplateKind.LearnerFeedback
+          ? "Below the threshold, the learners' answers are suppressed to keep them anonymous."
+          : "Feedback that survives from too few groups is not multi-source feedback.");
 
   private async Task LoadAsync()
   {

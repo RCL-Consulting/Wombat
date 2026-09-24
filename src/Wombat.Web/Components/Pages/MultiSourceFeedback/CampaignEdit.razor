@@ -30,6 +30,15 @@
       <DataAnnotationsValidator />
       <ValidationSummary class="validation-summary-errors" />
       <div class="form-grid">
+        @* T164, D35: learner feedback is a template of its own kind. Only learners answer it, and its release records
+           learner-feedback evidence, not multi-source feedback. *@
+        <FormField Label="Kind" InputId="msf-template-kind" Required="true"
+                   HelpText="Learner feedback is answered only by people the trainee taught, and is recorded as learner feedback, not as multi-source feedback.">
+          <InputSelect id="msf-template-kind" class="form-select" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
+            <option value="@MsfTemplateKind.Msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</option>
+            <option value="@MsfTemplateKind.LearnerFeedback">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</option>
+          </InputSelect>
+        </FormField>
         <FormField Label="Template name" InputId="msf-template-name" Required="true">
           <InputText id="msf-template-name" class="form-control" @bind-Value="_template.Name" />
         </FormField>
@@ -64,11 +73,11 @@
             </InputSelect>
           </FormField>
           <FormField Label="Template" InputId="msf-template-id" Required="true">
-            <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId">
+            <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId" @bind-Value:after="OnCampaignTemplateChangedAsync">
               <option value="">Select template</option>
               @foreach (var template in _templates)
               {
-                <option value="@template.Id">@template.Name</option>
+                <option value="@template.Id">@TemplateLabel(template)</option>
               }
             </InputSelect>
           </FormField>
@@ -85,8 +94,8 @@
             <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
           </FormField>
           <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
-                     HelpText="How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.">
-            <InputNumber id="msf-min-category-count" class="form-control" @bind-Value="_campaign.MinimumRespondentCategories" />
+                     HelpText="@MinimumCategoriesHelp">
+            <InputNumber id="msf-min-category-count" class="form-control" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
           </FormField>
           @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
              names the group (DESIGN.md § Form system, T147). *@
@@ -96,14 +105,14 @@
               <span aria-hidden="true">*</span>
               <span class="visually-hidden">required</span>
             </legend>
-            <p id="msf-epas-help" class="muted">One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.</p>
+            <p id="msf-epas-help" class="muted">@EpasHelp</p>
             @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
             {
               <p class="page-subtitle">Select a trainee first.</p>
             }
             else if (_epaOptions.Count == 0)
             {
-              <p class="page-subtitle">This trainee's curriculum lists no EPAs, so a campaign cannot be recorded as evidence for anything.</p>
+              <p class="page-subtitle">@NoEpasText</p>
             }
             else
             {
@@ -131,7 +140,11 @@
     }
     else
     {
-      <p>Add invitees, then open the campaign to send anonymous response links.</p>
+      @if (_setup is not null)
+      {
+        <p><strong>Template:</strong> @_setup.TemplateName (@MsfEvidenceKinds.Describe(_setup.Kind))</p>
+      }
+      <p>@InviteesIntro</p>
       <EditForm Model="_invitee" OnValidSubmit="AddInviteeAsync" FormName="msf-invitee">
         <DataAnnotationsValidator />
         <ValidationSummary class="validation-summary-errors" />
@@ -139,14 +152,22 @@
           <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
             <InputText id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
           </FormField>
+          @* Only the categories this campaign's questionnaire accepts, which the invite command holds it to (T164). *@
           <FormField Label="Category" InputId="msf-respondent-category" Required="true">
             <InputSelect id="msf-respondent-category" class="form-select" @bind-Value="_invitee.Category">
-              @foreach (var category in Enum.GetValues<MsfRespondentCategory>())
+              @foreach (var category in AcceptedCategories)
               {
                 <option value="@category">@category</option>
               }
             </InputSelect>
           </FormField>
+          @if (_invitee.Category == MsfRespondentCategory.Learner)
+          {
+            <FormField Label="Teaching context" InputId="msf-teaching-context" Required="true"
+                       HelpText="Where this learner was taught, for example a ward round or a student tutorial. Describe the session, never a person. Type it the same way for each learner of one group: the report counts how many distinct contexts responded. Only this campaign's report names them; the trainee and the committee see the count.">
+              <InputText id="msf-teaching-context" class="form-control" maxlength="200" @bind-Value="_invitee.TeachingContext" />
+            </FormField>
+          }
         </div>
         @* Both are disabled while an open is in flight (T202). A second open would mail every respondent a second link,
            and an invitee added mid-open would be left out of the mailing yet stored on a campaign that is now open. *@
@@ -167,6 +188,9 @@
   private readonly List<MsfTemplateDto> _templates = [];
   private readonly List<TraineeProfileDto> _trainees = [];
   private readonly List<ActivityCatalogueOption> _epaOptions = [];
+
+  /// <summary>The campaign being edited: its questionnaire's kind and whom it may invite (T164). Null on create.</summary>
+  private MsfCampaignSetupDto? _setup;
   private string? _status;
   private string? _error;
 
@@ -186,6 +210,121 @@
   protected override async Task OnParametersSetAsync()
   {
     await LoadTemplatesAsync();
+    await LoadSetupAsync();
+  }
+
+  /// <summary>
+  /// The edited campaign's kind and accepted categories, so the invitee form offers only whom the invite command
+  /// accepts (T164). Null for a campaign this caller does not run, as the report page answers; the command refuses those.
+  /// </summary>
+  private async Task LoadSetupAsync()
+  {
+    _setup = null;
+    if (!CampaignId.HasValue)
+    {
+      return;
+    }
+
+    try
+    {
+      _setup = await Sender.Send(new GetMsfCampaignSetupQuery(CampaignId.Value, await GetPrincipalAsync()));
+      if (_setup is { AcceptedCategories.Count: > 0 } && !_setup.AcceptedCategories.Contains(_invitee.Category))
+      {
+        _invitee.Category = _setup.AcceptedCategories[0];
+      }
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  /// <summary>
+  /// The categories the invitee picker offers: the edited campaign's, or, until it has loaded, every category a
+  /// multi-source feedback campaign accepts.
+  /// </summary>
+  private IReadOnlyList<MsfRespondentCategory> AcceptedCategories
+    => _setup?.AcceptedCategories
+       ?? Enum.GetValues<MsfRespondentCategory>().Where(category => category != MsfRespondentCategory.Learner).ToArray();
+
+  /// <summary>The template chosen on the create form, or null.</summary>
+  private MsfTemplateDto? SelectedTemplate
+    => _templates.FirstOrDefault(template => template.Id == _campaign.TemplateId);
+
+  /// <summary>Whether the create form's chosen template is learner feedback (T164).</summary>
+  private bool IsLearnerFeedback => SelectedTemplate?.Kind == MsfTemplateKind.LearnerFeedback;
+
+  private string MinimumCategoriesHelp => IsLearnerFeedback
+    ? "Learner feedback has one respondent group, learners, so it is always one."
+    : "How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.";
+
+  private string EpasHelp => IsLearnerFeedback
+    ? "Learner feedback is evidence only for an EPA whose College list names it (on v11.1, PAED-015). Each one selected here becomes a separate learner-feedback record on the trainee's portfolio when the report is released."
+    : "One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.";
+
+  private string NoEpasText => IsLearnerFeedback
+    ? "No EPA on this trainee's curriculum names learner feedback as an instrument, so a learner-feedback campaign cannot be recorded as evidence for anything."
+    : "This trainee's curriculum lists no EPAs, so a campaign cannot be recorded as evidence for anything.";
+
+  private string InviteesIntro => _setup?.Kind == MsfTemplateKind.LearnerFeedback
+    ? "Add the learners the trainee taught, each with where they were taught, then open the campaign to send anonymous response links."
+    : "Add invitees, then open the campaign to send anonymous response links.";
+
+  private static string TemplateLabel(MsfTemplateDto template)
+    => template.Kind == MsfTemplateKind.LearnerFeedback
+      ? $"{template.Name} ({MsfEvidenceKinds.Describe(template.Kind)})"
+      : template.Name;
+
+  /// <summary>
+  /// A new template choice can change which EPAs the campaign may cover, and learner feedback has one respondent group,
+  /// so both follow the template. So does the response minimum while it is still the other kind's default: eight is
+  /// multi-source feedback's, and a learner-feedback campaign left at it could not be released with fewer than eight
+  /// learners. A minimum the coordinator typed is kept. (T164)
+  /// </summary>
+  private async Task OnCampaignTemplateChangedAsync()
+  {
+    var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
+    if (kind != _campaignKind)
+    {
+      if (_campaign.MinimumResponses == CampaignFormModel.DefaultMinimumResponsesFor(_campaignKind))
+      {
+        _campaign.MinimumResponses = CampaignFormModel.DefaultMinimumResponsesFor(kind);
+      }
+
+      _campaignKind = kind;
+    }
+
+    _campaign.MinimumRespondentCategories = IsLearnerFeedback ? 1 : CampaignFormModel.DefaultMinimumRespondentCategories;
+    await LoadEpaOptionsAsync();
+  }
+
+  /// <summary>The kind of the template the create form's defaults were last set for.</summary>
+  private MsfTemplateKind _campaignKind = MsfTemplateKind.Msf;
+
+  /// <summary>
+  /// Swaps the quick template's wording for the other kind's, unless the coordinator has already changed it. Learner
+  /// feedback has no College questionnaire yet, so its wording is labelled interim. (T164)
+  /// </summary>
+  private void OnTemplateKindChanged()
+  {
+    var other = _template.Kind == MsfTemplateKind.LearnerFeedback ? MsfTemplateKind.Msf : MsfTemplateKind.LearnerFeedback;
+    var from = TemplateFormModel.DefaultsFor(other);
+    var to = TemplateFormModel.DefaultsFor(_template.Kind);
+
+    if (_template.Name == from.Name)
+    {
+      _template.Name = to.Name;
+    }
+
+    if (_template.ScalePrompt == from.ScalePrompt)
+    {
+      _template.ScalePrompt = to.ScalePrompt;
+    }
+
+    if (_template.CommentPrompt == from.CommentPrompt)
+    {
+      _template.CommentPrompt = to.CommentPrompt;
+    }
   }
 
   private async Task LoadTemplatesAsync()
@@ -223,7 +362,11 @@
 
     try
     {
-      _epaOptions.AddRange(await ReferenceData.GetSubjectCurriculumEpaOptionsAsync(_campaign.SubjectUserId));
+      // With the template's instrument, so learner feedback is offered only the EPAs whose list names it: the same
+      // question the create command and the release ask (MsfCampaignRules.CoverableEpaIdsAsync, T164).
+      var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
+      _epaOptions.AddRange(await ReferenceData.GetSubjectCurriculumEpaOptionsAsync(
+        _campaign.SubjectUserId, MsfEvidenceKinds.CoverageToolKeyFor(kind)));
     }
     catch (Exception exception)
     {
@@ -275,7 +418,8 @@
         [
           new CreateMsfTemplateQuestionItem(_template.ScalePrompt, MsfQuestionType.Scale, null, true),
           new CreateMsfTemplateQuestionItem(_template.CommentPrompt, MsfQuestionType.LongText, null, false)
-        ]));
+        ],
+        _template.Kind));
 
       _template = new();
       await LoadTemplatesAsync();
@@ -327,8 +471,15 @@
 
     try
     {
-      await Sender.Send(new AddMsfInvitationCommand(CampaignId.Value, _invitee.Email, _invitee.Category, await GetPrincipalAsync()));
-      _invitee = new();
+      await Sender.Send(new AddMsfInvitationCommand(
+        CampaignId.Value,
+        _invitee.Email,
+        _invitee.Category,
+        await GetPrincipalAsync(),
+        _invitee.Category == MsfRespondentCategory.Learner ? _invitee.TeachingContext : null));
+
+      // The next learner is usually from the same group, so the category and the context are kept for them.
+      _invitee = new() { Category = _invitee.Category, TeachingContext = _invitee.TeachingContext };
       _status = "Invitee added.";
     }
     catch (Exception exception)
@@ -374,19 +525,34 @@
 
   private sealed class TemplateFormModel
   {
+    public MsfTemplateKind Kind { get; set; } = MsfTemplateKind.Msf;
+
     [Required]
     [MaxLength(200)]
-    public string Name { get; set; } = "Default MSF";
+    public string Name { get; set; } = DefaultsFor(MsfTemplateKind.Msf).Name;
 
     [Required]
     [MaxLength(1000)]
-    public string ScalePrompt { get; set; } = "Rates the trainee's overall professional performance.";
+    public string ScalePrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).ScalePrompt;
 
     [Required]
     [MaxLength(1000)]
-    public string CommentPrompt { get; set; } = "What should the trainee keep doing or improve?";
+    public string CommentPrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).CommentPrompt;
 
     public bool AllowPatientResponses { get; set; }
+
+    /// <summary>
+    /// The wording a new template starts with. Learner feedback's is labelled interim: the College has supplied no
+    /// questionnaire for it (T164).
+    /// </summary>
+    public static (string Name, string ScalePrompt, string CommentPrompt) DefaultsFor(MsfTemplateKind kind)
+      => kind == MsfTemplateKind.LearnerFeedback
+        ? ("Learner feedback (interim questionnaire)",
+           "Rates the trainee's teaching overall.",
+           "What should the trainee keep doing or change in their teaching?")
+        : ("Default MSF",
+           "Rates the trainee's overall professional performance.",
+           "What should the trainee keep doing or improve?");
   }
 
   private sealed class CampaignFormModel
@@ -404,13 +570,23 @@
     public DateOnly ClosesOn { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(14));
 
     [Range(1, 100)]
-    public int MinimumResponses { get; set; } = 8;
+    public int MinimumResponses { get; set; } = DefaultMinimumResponsesFor(MsfTemplateKind.Msf);
+
+    /// <summary>
+    /// The response minimum a campaign of this kind starts with: eight for multi-source feedback; for learner feedback,
+    /// three, the default category threshold below, which its one group must clear to report anything (T164).
+    /// </summary>
+    public static int DefaultMinimumResponsesFor(MsfTemplateKind kind)
+      => kind == MsfTemplateKind.LearnerFeedback ? 3 : 8;
 
     [Range(1, 100)]
     public int MinimumCategoryResponses { get; set; } = 3;
 
+    /// <summary>College decision D11's two groups, for multi-source feedback; learner feedback has one (T164).</summary>
+    public const int DefaultMinimumRespondentCategories = 2;
+
     [Range(1, 6)]
-    public int MinimumRespondentCategories { get; set; } = 2;
+    public int MinimumRespondentCategories { get; set; } = DefaultMinimumRespondentCategories;
 
     [MinLength(1, ErrorMessage = "Select at least one EPA this campaign is evidence for.")]
     public List<int> EpaIds { get; } = [];
@@ -424,6 +600,10 @@
 
     [Required]
     public MsfRespondentCategory Category { get; set; } = MsfRespondentCategory.PeerDoctor;
+
+    /// <summary>Where a learner was taught; sent only for a Learner (T164).</summary>
+    [MaxLength(200)]
+    public string? TeachingContext { get; set; }
   }
 
   private async Task<ClaimsPrincipal> GetPrincipalAsync()

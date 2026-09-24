@@ -125,7 +125,7 @@
           if (awaitingAtStart > 0)
           {
             <span id="start-review-msf-note" class="muted">
-              Starting now leaves out @awaitingAtStart MSF campaign@(awaitingAtStart == 1 ? string.Empty : "s")
+              Starting now leaves out @awaitingAtStart feedback campaign@(awaitingAtStart == 1 ? string.Empty : "s")
               that closed in this window and @(awaitingAtStart == 1 ? "is" : "are") not yet released.
             </span>
           }
@@ -462,11 +462,12 @@
         <Alert Kind="info">
           @if (awaiting > 0)
           {
-            <p>@awaiting MSF @(awaiting == 1 ? "campaign that closed in this window is" : "campaigns that closed in this window are") not yet released.</p>
+            @* "Feedback campaign": the count includes learner-feedback campaigns, which run on the same aggregate (T164). *@
+            <p>@awaiting feedback @(awaiting == 1 ? "campaign that closed in this window is" : "campaigns that closed in this window are") not yet released.</p>
           }
           @if (releasedLate > 0)
           {
-            <p>@releasedLate MSF @(releasedLate == 1 ? "campaign that closed in this window was" : "campaigns that closed in this window were") released after this review started.</p>
+            <p>@releasedLate feedback @(releasedLate == 1 ? "campaign that closed in this window was" : "campaigns that closed in this window were") released after this review started.</p>
           }
           @if (_review.State == CommitteeReviewState.Scheduled)
           {
@@ -552,8 +553,8 @@
               @if (snapshot.AcrossEpasHoldsACampaignReport)
               {
                 <p class="muted">@(snapshot.FrozenBeforeLinesNamedTheirEpa.Count == 0
-                  ? "A multi-source feedback report covers several EPAs; its per-EPA records are listed under each EPA above."
-                  : "A multi-source feedback report covers several EPAs; its per-EPA records are among the lines below, " +
+                  ? "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are listed under each EPA above."
+                  : "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are among the lines below, " +
                     "frozen before lines named their EPA.")</p>
               }
               @if (snapshot.AcrossEpasHoldsAnActivity)

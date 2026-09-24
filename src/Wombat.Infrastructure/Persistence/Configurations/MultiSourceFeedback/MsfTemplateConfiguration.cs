@@ -11,5 +11,8 @@ public sealed class MsfTemplateConfiguration : IEntityTypeConfiguration<MsfTempl
         builder.ToTable("MsfTemplates");
         builder.Property(entity => entity.Name).HasMaxLength(200).IsRequired();
         builder.HasIndex(entity => entity.Name);
+
+        // Stored as its number, like every enum on the MSF tables; MsfTemplateKind is append-only. (T164)
+        builder.Property(entity => entity.Kind);
     }
 }

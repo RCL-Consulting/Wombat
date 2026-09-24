@@ -239,6 +239,69 @@ public sealed class CommitteeEvidenceSnapshotTests
     }
 
     /// <summary>
+    /// T164: a released learner-feedback campaign's record is a line under its EPA named as learner feedback, not MSF, and
+    /// the campaign's own line says it is learner feedback and how many teaching contexts its learners answered from:
+    /// EPA 15's "at least two teaching contexts", for the panel to weigh. Counted, never named: the line is frozen and
+    /// copied onto any STAR resting on it, whose certificate the trainee holds (T164 review).
+    /// </summary>
+    /// <remarks>
+    /// An MSF campaign sits in the same snapshot, so the one read of both campaigns' coverage must take each from the rows
+    /// of its own kind's type: PAED-001 from the learner-feedback record, PAED-002 from the MSF one (T186, T164 review).
+    /// </remarks>
+    [Fact]
+    public async Task ALearnerFeedbackRecord_IsUnderItsEpaAsLearnerFeedback_AndTheCampaignLineCountsTheTeachingContexts()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        db.WbaTools.Add(new WbaTool { Id = 5, Key = "learner_feedback", Name = "Learner feedback" });
+        var learnerFeedback = await SeedTypeAsync(db, "learner_feedback_cpsa", "learner_feedback");
+        var msf = await SeedTypeAsync(db, "msf_cpsa", "msf");
+        var record = AddActivity(db, learnerFeedback, "recorded",
+            """{ "epa_id": 7, "campaign_id": 51, "observed_on": "2026-02-10", "respondent_count": 3, "teaching_context_count": 2 }""", Paed001);
+        AddActivity(db, msf, "recorded",
+            """{ "epa_id": 8, "campaign_id": 50, "observed_on": "2026-02-10", "respondent_count": 8 }""", Paed002);
+        db.MsfTemplates.Add(new MsfTemplate { Id = 40, Name = "Annual MSF" });
+        db.MsfCampaigns.Add(ReleasedCampaign(50, templateId: 40, Paed002));
+        AddLearnerFeedbackCampaign(db, 51, Paed001);
+        await db.SaveChangesAsync();
+
+        var lines = (await StartAsync(db)).EvidenceItems;
+
+        lines.Single(item => item.ActivityId == record.Id).Should().Match<CommitteeEvidenceDto>(line =>
+            line.EpaCode == "PAED-001" && line.InstrumentName == "Learner feedback" && line.RatingLabel == null);
+
+        var campaignLine = lines.Should().ContainSingle(item => item.MsfCampaignId == 51).Subject;
+        campaignLine.Summary.Should().StartWith("Learner feedback.")
+            .And.Contain("responses 3 from 2 teaching contexts;")
+            .And.Contain("Evidence recorded for PAED-001, one activity each.")
+            .And.NotContain("Ward round").And.NotContain("Student tutorial");
+
+        lines.Should().ContainSingle(item => item.MsfCampaignId == 50).Which.Summary.Should()
+            .StartWith("Multi-source feedback.")
+            .And.Contain("Evidence recorded for PAED-002, one activity each.")
+            .And.NotContain("teaching context");
+    }
+
+    /// <summary>
+    /// The other direction: an <c>msf_cpsa</c> row naming a learner-feedback campaign, which no release writes, does not
+    /// make its declared EPA recorded. (T164 review)
+    /// </summary>
+    [Fact]
+    public async Task ALearnerFeedbackCampaignLine_IsNotRecordedByAnMsfRecordNamingIt()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var msf = await SeedTypeAsync(db, "msf_cpsa", "msf");
+        AddActivity(db, msf, "recorded",
+            """{ "epa_id": 7, "campaign_id": 51, "observed_on": "2026-02-10", "respondent_count": 3 }""", Paed001);
+        AddLearnerFeedbackCampaign(db, 51, Paed001);
+        await db.SaveChangesAsync();
+
+        var campaignLine = (await StartAsync(db)).EvidenceItems.Should().ContainSingle(item => item.MsfCampaignId == 51).Subject;
+
+        campaignLine.Summary.Should().Contain("Declared but not recorded: PAED-001.").And.NotContain("Evidence recorded for");
+    }
+    /// <summary>
     /// The rating is read by the profile of the version the activity is PINNED to (T135's reader), not the type's
     /// current one: a v1 row's rating lives in v1's rated field, and the key the current version rates on is a decoy.
     /// </summary>
@@ -521,6 +584,49 @@ public sealed class CommitteeEvidenceSnapshotTests
 
     private static string ReadSeedFile(string key, string fileName)
         => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, fileName));
+
+    /// <summary>A campaign released in the review window, declared evidence for <paramref name="coveredEpaIds" />.</summary>
+    private static MsfCampaign ReleasedCampaign(int id, int templateId, params int[] coveredEpaIds)
+        => new()
+        {
+            Id = id,
+            SubjectUserId = "trainee-1",
+            TemplateId = templateId,
+            CreatedByUserId = "coord-1",
+            CreatedOn = new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc),
+            OpensOn = new DateOnly(2026, 2, 1),
+            ClosesOn = new DateOnly(2026, 2, 9),
+            State = MsfCampaignState.Released,
+            OpenedOn = new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc),
+            ClosedOn = new DateTime(2026, 2, 10, 1, 0, 0, DateTimeKind.Utc),
+            ReleasedOn = new DateTime(2026, 2, 12, 8, 0, 0, DateTimeKind.Utc),
+            CoveredEpas = coveredEpaIds.Select(epaId => new MsfCampaignEpa { EpaId = epaId }).ToList()
+        };
+
+    /// <summary>
+    /// A released learner-feedback campaign, declared evidence for <paramref name="coveredEpaId" />, answered by three
+    /// learners from two teaching contexts ("Ward round" typed two ways, and "Student tutorial").
+    /// </summary>
+    private static void AddLearnerFeedbackCampaign(ApplicationDbContext db, int id, int coveredEpaId)
+    {
+        db.MsfTemplates.Add(new MsfTemplate { Id = 41, Name = "Learner feedback (interim questionnaire)", Kind = MsfTemplateKind.LearnerFeedback });
+
+        var campaign = ReleasedCampaign(id, templateId: 41, coveredEpaId);
+        foreach (var context in new[] { "Ward round", "ward round", "Student tutorial" })
+        {
+            var invitation = new MsfInvitation
+            {
+                RespondentCategory = MsfRespondentCategory.Learner,
+                TeachingContext = context,
+                TokenHash = Guid.NewGuid().ToString("N"),
+                RespondedOn = new DateTime(2026, 2, 5, 8, 0, 0, DateTimeKind.Utc)
+            };
+            invitation.Responses.Add(new MsfResponse { Campaign = campaign, SubmittedOn = new DateTime(2026, 2, 5, 8, 0, 0, DateTimeKind.Utc) });
+            campaign.Invitations.Add(invitation);
+        }
+
+        db.MsfCampaigns.Add(campaign);
+    }
 
     /// <summary>
     /// A row as <c>ActivityService</c> leaves it. The EPA is set as the stamp (T137) the snapshot reads; the data's

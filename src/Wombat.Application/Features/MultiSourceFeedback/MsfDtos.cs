@@ -4,7 +4,15 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 public sealed record MsfQuestionDto(int Id, int Order, string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
 
-public sealed record MsfTemplateDto(int Id, string Name, int? SpecialityId, bool AllowPatientResponses, bool IsActive, IReadOnlyList<MsfQuestionDto> Questions);
+/// <param name="Kind">What the questionnaire collects (T164): multi-source feedback or learner feedback.</param>
+public sealed record MsfTemplateDto(
+    int Id,
+    string Name,
+    int? SpecialityId,
+    bool AllowPatientResponses,
+    bool IsActive,
+    IReadOnlyList<MsfQuestionDto> Questions,
+    MsfTemplateKind Kind = MsfTemplateKind.Msf);
 
 public sealed record MsfCampaignSummaryDto(
     int Id,
@@ -25,6 +33,9 @@ public sealed record MsfCampaignSummaryDto(
     /// page. Null from the trainee's own list and from create, which do not show it.
     /// </summary>
     public string? SubjectName { get; init; }
+
+    /// <summary>What the campaign's questionnaire collects (T164). Filled by both campaign lists.</summary>
+    public MsfTemplateKind Kind { get; init; } = MsfTemplateKind.Msf;
 }
 
 public sealed record MsfScaleAggregateDto(double Average, int ResponseCount, IReadOnlyDictionary<int, int> Distribution);
@@ -64,6 +75,21 @@ public sealed record MsfCoveredEpaDto(int EpaId, string Code, string Title, bool
 /// What the released report will become evidence for. Empty is legal and means the release will record
 /// no evidence at all.
 /// </param>
+/// <param name="Kind">What the campaign's questionnaire collects (T164): multi-source feedback or learner feedback.</param>
+/// <param name="TeachingContextsResponded">
+/// For learner feedback, the names of the distinct teaching contexts whose learners answered
+/// (<c>MsfCampaign.RespondedTeachingContexts</c>), in reading order; and only for a report built for whoever runs the
+/// campaign (<see cref="IMsfAggregationService.BuildReport" />'s <c>nameTeachingContexts</c>). Null for multi-source
+/// feedback, and null in every report the trainee reads or that is printed or frozen, because a context is a finer
+/// breakdown than the respondent group the suppression threshold protects: "Neonatal night teaching" beside four answers
+/// tells the trainee that the one intern taught there answered, and the name is the coordinator's free text. (T164)
+/// </param>
+/// <param name="TeachingContextCount">
+/// For learner feedback, how many distinct teaching contexts the learners who answered were taught in: what EPA 15's
+/// "at least two teaching contexts" is about. Reported, never enforced (§ 3F question 9), and carried in every report of
+/// a learner-feedback campaign, whoever reads it. Null for multi-source feedback, whose respondents are counted by group
+/// instead.
+/// </param>
 public sealed record MsfCampaignAggregateReportDto(
     int CampaignId,
     string SubjectUserId,
@@ -79,7 +105,10 @@ public sealed record MsfCampaignAggregateReportDto(
     int SurvivingCategoryCount,
     IReadOnlyList<MsfCoveredEpaDto> CoveredEpas,
     int? ReviewerEntrustmentLevel,
-    DateTime? EvidenceRecordedOn);
+    DateTime? EvidenceRecordedOn,
+    MsfTemplateKind Kind = MsfTemplateKind.Msf,
+    IReadOnlyList<string>? TeachingContextsResponded = null,
+    int? TeachingContextCount = null);
 
 public sealed record MsfResponsePromptDto(int QuestionId, string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
 

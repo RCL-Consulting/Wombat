@@ -171,6 +171,8 @@ public sealed class SeedScaleKeyTests
             ["dops"] = "Direct observation",
             ["dops_cpsa"] = "Direct observation",
             ["journal_club"] = "journal_club",
+            // T164. Unrated like the T154 pair, and a system-written record like msf_cpsa: its own source.
+            ["learner_feedback_cpsa"] = "learner_feedback_cpsa",
             ["mini_cex"] = "Direct observation",
             ["mini_cex_cpsa"] = "Direct observation",
             ["msf_cpsa"] = "msf_cpsa",
@@ -267,7 +269,8 @@ public sealed class SeedScaleKeyTests
 
         // T120 added three rated instruments. reflective_exercise_cpsa is deliberately absent: D6 makes it unrated
         // evidence, so it declares no rated_level_field and nothing charts it as entrustment. So are T154's
-        // clinical_audit_cpsa and portfolio_review_cpsa, for the same reason.
+        // clinical_audit_cpsa and portfolio_review_cpsa, for the same reason, and T164's learner_feedback_cpsa: the
+        // learners judge the teaching, and nobody states a supervision level from it.
         rated.Should().Equal(
             "acat", "cbd", "cbd_cpsa", "cca_cpsa", "chart_stimulated_recall_cpsa", "direct_observation_cpsa",
             "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa", "rca_cpsa");
