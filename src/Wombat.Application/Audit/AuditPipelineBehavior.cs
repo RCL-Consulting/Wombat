@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Domain.Audit;
 
 namespace Wombat.Application.Audit;
@@ -46,46 +47,116 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
         // anonymous declares the scope itself (IAuditContextProvider.DeclareInstitution), and a
         // handler that throws — a revoked invitation token being retried, say — has usually declared
         // before it threw, which is the row the issuing admin most needs to see.
+        TResponse response;
         try
         {
-            var response = await next();
-
-            await _auditWriter.WriteAsync(AuditEntry.Create(
-                occurredAt: occurredAt,
-                category: AuditCategory.Command,
-                action: action,
-                success: true,
-                actorUserId: _contextProvider.UserId,
-                actorDisplay: _contextProvider.UserDisplay,
-                actorIpAddress: _contextProvider.IpAddress,
-                actorUserAgent: _contextProvider.UserAgent,
-                institutionId: _contextProvider.InstitutionId,
-                summaryJson: AuditPayloadSerializer.Serialize(request)),
-                cancellationToken);
-
-            return response;
+            response = await next();
         }
         catch (Exception ex)
         {
-            await _auditWriter.WriteAsync(AuditEntry.Create(
-                occurredAt: occurredAt,
-                category: AuditCategory.Command,
-                action: action,
-                success: false,
-                actorUserId: _contextProvider.UserId,
-                actorDisplay: _contextProvider.UserDisplay,
-                actorIpAddress: _contextProvider.IpAddress,
-                actorUserAgent: _contextProvider.UserAgent,
-                institutionId: _contextProvider.InstitutionId,
-                summaryJson: AuditPayloadSerializer.Serialize(request),
-                errorMessage: ex.Message),
-                cancellationToken);
-
+            await WriteFailureAsync(request, action, occurredAt, ex, cancellationToken);
             throw;
+        }
+
+        // Outside the try: only the handler's own exception makes a failure row. Were this write refused, the
+        // command's work has committed, and a Success=false row under its name would record a lock, a grant or an
+        // admission that did happen as one that did not. Its exception reaches the caller untouched. (T201)
+        await _auditWriter.WriteAsync(AuditEntry.Create(
+            occurredAt: occurredAt,
+            category: AuditCategory.Command,
+            action: action,
+            success: true,
+            actorUserId: _contextProvider.UserId,
+            actorDisplay: _contextProvider.UserDisplay,
+            actorIpAddress: _contextProvider.IpAddress,
+            actorUserAgent: _contextProvider.UserAgent,
+            institutionId: _contextProvider.InstitutionId,
+            summaryJson: AuditPayloadSerializer.Serialize(request)),
+            cancellationToken);
+
+        return response;
+    }
+
+    /// <summary>
+    /// Writes the failed command's row without re-sending anything the database has refused, so the row is stored and
+    /// the handler's exception, which the caller rethrows afterwards, is not replaced by one from this write.
+    /// </summary>
+    private async Task WriteFailureAsync(
+        TRequest request,
+        string action,
+        DateTime occurredAt,
+        Exception ex,
+        CancellationToken cancellationToken)
+    {
+        var entry = AuditEntry.Create(
+            occurredAt: occurredAt,
+            category: AuditCategory.Command,
+            action: action,
+            success: false,
+            actorUserId: _contextProvider.UserId,
+            actorDisplay: _contextProvider.UserDisplay,
+            actorIpAddress: _contextProvider.IpAddress,
+            actorUserAgent: _contextProvider.UserAgent,
+            institutionId: _contextProvider.InstitutionId,
+            summaryJson: AuditPayloadSerializer.Serialize(request),
+            errorMessage: ex.Message);
+
+        // The writer saves through the handler's own DbContext, and that save flushes everything still tracked.
+        //
+        // When the handler's own save was refused (T201), the refused changes are still tracked: EF keeps them so a
+        // caller could retry. Written the ordinary way, this row would send them again, be refused again, and be
+        // lost, and EF's second exception would replace the handler's error (a translated "already exists" as much
+        // as a concurrency conflict). So they are discarded and the row is written alone.
+        //
+        // Discarded here, not left to the fallback below: a refusal need not repeat. An insert whose clash has gone by
+        // the time of this write would be accepted when re-sent, and committed under the row recording its failure.
+        if (IsRefusedSave(ex))
+        {
+            await _auditWriter.WriteDiscardingPendingChangesAsync(entry, cancellationToken);
+            return;
+        }
+
+        // Any other exception keeps the ordinary write, and with it the known trap: a handler that mutated a tracked
+        // entity and then threw has that mutation committed here. Handlers are written against it (every check
+        // before the first mutation; RebuildCurriculumProgress restores its context before rethrowing). Discarding
+        // on every failure would retire the trap, but it changes what every handler's failure commits at once, and
+        // that wants its own sweep of the handlers rather than riding on this fix.
+        //
+        // Unless the database refuses what the ordinary write carries. A refused save can arrive without a
+        // DbUpdateException to show for it: ASP.NET Identity's user store catches a concurrency conflict itself and
+        // returns a failed result, which UserAdministrationService throws as a plain InvalidOperationException. The
+        // refused user update is still tracked, so the write sends it again. A refused write commits nothing, so
+        // discarding what it carried and writing the row alone loses nothing the trap would have committed: only the
+        // row is stored, and the handler's exception stays the one the caller sees.
+        try
+        {
+            await _auditWriter.WriteAsync(entry, cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            await _auditWriter.WriteDiscardingPendingChangesAsync(entry, cancellationToken);
         }
     }
 
     private static bool IsCommand(TRequest request)
         => typeof(TRequest).Name.EndsWith("Command", StringComparison.Ordinal)
         || request is IAuditedCommand;
+
+    /// <summary>
+    /// A save the database refused: <see cref="DbUpdateException" /> (a concurrency conflict is one), thrown as is or
+    /// inside the exception a handler translated it to. A dozen handlers turn a unique-index violation into an
+    /// <see cref="InvalidOperationException" /> that carries it.
+    /// </summary>
+    private static bool IsRefusedSave(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is DbUpdateException)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

@@ -109,9 +109,9 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         // The save itself can still fail, and then the links this request sent are dead. Two opens that race (a
         // double-click can) both pass EnsureCanOpen() and both mail. The hashes and the open go in this one save, under
         // the campaign's xmin token, so the second save is refused whole: the first open's links are the stored ones,
-        // and a racing open cannot overwrite them (MsfOpenCampaignRacePostgresTests). The refused request's audit row
-        // is lost, because the audit pipeline's catch saves the same refused changes again. That fault is the audit
-        // writer's, shared by every handler whose own save fails, and is not mended here.
+        // and a racing open cannot overwrite them (MsfOpenCampaignRacePostgresTests). The refused request keeps its
+        // failure audit row and its own concurrency error: the audit pipeline discards refused changes before writing
+        // (T201, AuditOnRefusedSavePostgresTests).
         foreach (var link in links)
         {
             link.Invitation.TokenHash = link.TokenHash;

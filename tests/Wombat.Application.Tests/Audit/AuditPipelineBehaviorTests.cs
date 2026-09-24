@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Wombat.Application.Audit;
 using Wombat.Domain.Audit;
@@ -70,6 +71,126 @@ public sealed class AuditPipelineBehaviorTests
         capturedEntry.Should().NotBeNull();
         capturedEntry!.Success.Should().BeFalse();
         capturedEntry.ErrorMessage.Should().Be("Boom!");
+
+        // Not a refused save, so the ordinary write, which also commits whatever the handler left pending: the known
+        // trap, kept on purpose (T201). Handlers avoid it by checking before they mutate.
+        _writerMock.Verify(
+            w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    /// T201. The handler's own save was refused, so its changes are still tracked on the context the writer shares.
+    /// The row must be written without them, and the handler's exception, not a second one, must reach the caller.
+    /// </summary>
+    [Fact]
+    public async Task Handle_HandlersOwnSaveRefused_WritesFailureEntryAloneAndRethrowsTheSameException()
+    {
+        var refused = new DbUpdateConcurrencyException("The campaign changed under this request.");
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, _contextMock.Object);
+
+        var act = async () => await behavior.Handle(new TestCommand("save"), Throwing<string>(refused), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<DbUpdateConcurrencyException>()).Which.Should().BeSameAs(refused);
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.Success.Should().BeFalse();
+        capturedEntry.ErrorMessage.Should().Be("The campaign changed under this request.");
+        _writerMock.Verify(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// T201. Create/Update handlers translate a unique-index violation into an InvalidOperationException carrying the
+    /// DbUpdateException. The refused insert is still tracked, so it is a refused save all the same.
+    /// </summary>
+    [Fact]
+    public async Task Handle_HandlerTranslatedARefusedSave_WritesFailureEntryAloneAndRethrowsTheTranslation()
+    {
+        var translated = new InvalidOperationException(
+            "An institution with the same name or short code already exists.",
+            new DbUpdateException("duplicate key value violates unique constraint"));
+        AuditEntry? capturedEntry = null;
+        _writerMock
+            .Setup(w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => capturedEntry = e)
+            .Returns(Task.CompletedTask);
+
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, _contextMock.Object);
+
+        var act = async () => await behavior.Handle(new TestCommand("save"), Throwing<string>(translated), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Should().BeSameAs(translated);
+
+        capturedEntry.Should().NotBeNull();
+        capturedEntry!.Success.Should().BeFalse();
+        capturedEntry.ErrorMessage.Should().Be("An institution with the same name or short code already exists.");
+        _writerMock.Verify(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// T201. ASP.NET Identity catches a concurrency conflict itself, and UserAdministrationService throws the failed
+    /// result as a plain InvalidOperationException, so nothing says a save was refused. The refused user update is
+    /// still tracked, and the ordinary write that re-sends it is refused in turn. The row must then be written alone,
+    /// and the handler's exception, not the write's, must reach the caller.
+    /// </summary>
+    [Fact]
+    public async Task Handle_OrdinaryFailureWriteRefused_WritesTheEntryAloneAndRethrowsTheHandlersException()
+    {
+        var handlers = new InvalidOperationException("Optimistic concurrency failure, object has been modified.");
+        var writesRefusal = new DbUpdateConcurrencyException("The user changed under this request.");
+        AuditEntry? attempted = null;
+        AuditEntry? written = null;
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => attempted = e)
+            .ThrowsAsync(writesRefusal);
+        _writerMock
+            .Setup(w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => written = e)
+            .Returns(Task.CompletedTask);
+
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, _contextMock.Object);
+
+        var act = async () => await behavior.Handle(new TestCommand("lock"), Throwing<string>(handlers), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Should().BeSameAs(handlers);
+
+        attempted.Should().NotBeNull("an exception that is not a refused save is written the ordinary way first");
+        written.Should().BeSameAs(attempted, "the refused write's own entry is the one written alone");
+        written!.Success.Should().BeFalse();
+        written.ErrorMessage.Should().Be("Optimistic concurrency failure, object has been modified.");
+    }
+
+    /// <summary>
+    /// T201. Only the handler's exception makes a failure row. When the success row's own write is refused the command's
+    /// work has already committed, and a Success=false row would record a change that happened as one that did not.
+    /// </summary>
+    [Fact]
+    public async Task Handle_SuccessWriteRefused_WritesNoFailureEntryAndSurfacesTheWritesException()
+    {
+        var writesRefusal = new DbUpdateException("value too long for type character varying(500)");
+        var attempts = new List<AuditEntry>();
+        _writerMock
+            .Setup(w => w.WriteAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditEntry, CancellationToken>((e, _) => attempts.Add(e))
+            .ThrowsAsync(writesRefusal);
+
+        var behavior = new AuditPipelineBehavior<TestCommand, string>(_writerMock.Object, _contextMock.Object);
+
+        var act = async () => await behavior.Handle(new TestCommand("lock"), Next("ok"), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<DbUpdateException>()).Which.Should().BeSameAs(writesRefusal);
+
+        attempts.Should().ContainSingle().Which.Success.Should().BeTrue();
+        _writerMock.Verify(
+            w => w.WriteDiscardingPendingChangesAsync(It.IsAny<AuditEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -190,6 +311,9 @@ public sealed class AuditPipelineBehaviorTests
 
     private static RequestHandlerDelegate<T> FailingNext<T>()
         => () => throw new InvalidOperationException("Boom!");
+
+    private static RequestHandlerDelegate<T> Throwing<T>(Exception exception)
+        => () => throw exception;
 
     private sealed record TestCommand(string Payload) : IRequest<string>;
     private sealed record TestQuery : IRequest<string>;

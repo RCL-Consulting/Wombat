@@ -374,5 +374,8 @@ public sealed class SsoLinkAndSignInTests : IDisposable
             Actions.Add(entry.Action);
             return Task.CompletedTask;
         }
+
+        public Task WriteDiscardingPendingChangesAsync(AuditEntry entry, CancellationToken cancellationToken = default)
+            => WriteAsync(entry, cancellationToken);
     }
 }
