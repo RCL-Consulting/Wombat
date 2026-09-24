@@ -5,6 +5,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -131,6 +132,9 @@ public sealed class FormativeReviewHandlerTests
         dbContext.Institutions.Add(institution);
         dbContext.Specialities.Add(speciality);
         dbContext.SubSpecialities.Add(subSpec);
+        // The trainee's programme is in the speciality the panel covers: a Speciality-scoped panel reviews only its own
+        // speciality's trainees (T131, T194 item 2).
+        dbContext.Curricula.Add(new Curriculum { Id = 1, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
         dbContext.EntrustmentScales.Add(scale);
         dbContext.EntrustmentLevels.Add(level);
         dbContext.Epas.Add(epa);

@@ -9,21 +9,29 @@ public sealed record DecisionPanelMemberDto(
     string UserId,
     DecisionPanelMemberRole Role);
 
+/// <param name="DecisionBodyKey">The College committee the panel sits as (T131), or null for a general panel.</param>
+/// <param name="DecisionBodyName">That committee's name, or null for a general panel.</param>
 public sealed record DecisionPanelSummaryDto(
     int Id,
     string Name,
     DecisionPanelScope Scope,
     int? InstitutionId,
     int? SpecialityId,
-    int MemberCount);
+    int MemberCount,
+    string? DecisionBodyKey = null,
+    string? DecisionBodyName = null);
 
+/// <param name="DecisionBodyKey">The College committee the panel sits as (T131), or null for a general panel.</param>
+/// <param name="DecisionBodyName">That committee's name, or null for a general panel.</param>
 public sealed record DecisionPanelDetailDto(
     int Id,
     string Name,
     DecisionPanelScope Scope,
     int? InstitutionId,
     int? SpecialityId,
-    IReadOnlyList<DecisionPanelMemberDto> Members);
+    IReadOnlyList<DecisionPanelMemberDto> Members,
+    string? DecisionBodyKey = null,
+    string? DecisionBodyName = null);
 
 public sealed record CommitteeReviewListItemDto(
     int Id,

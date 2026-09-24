@@ -1,7 +1,11 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
+using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -28,13 +32,15 @@ internal static class CommitteeDecisionAuthorization
     internal const string PanelOutOfScope = "You can only manage panels in your institution.";
 
     /// <summary>
-    /// Whether this caller may create, change or open a panel of this scope at this institution. (T182)
+    /// Whether this caller may create, change or open a panel of this scope, covering this speciality, at this
+    /// institution. (T182; the speciality since T131 slice 3)
     /// </summary>
     /// <remarks>
     /// <para>
     /// A global Administrator may manage any panel. Everyone else manages only panels at their own institution, and
-    /// only through a panel-administration role: an InstitutionalAdmin any of them, a SpecialityAdmin or
-    /// SubSpecialityAdmin only a Speciality-scoped one, never the institution-wide panel.
+    /// only through a panel-administration role: an InstitutionalAdmin any of them; a SpecialityAdmin only a
+    /// Speciality-scoped panel covering their own speciality; a SubSpecialityAdmin only a Speciality-scoped panel
+    /// covering the speciality one of their sub-specialities belongs to. Neither manages the institution-wide panel.
     /// </para>
     /// <para>
     /// Before T182 the panel's institution was stamped only when an InstitutionalAdmin created it, and the checks
@@ -44,12 +50,25 @@ internal static class CommitteeDecisionAuthorization
     /// panel now carries its institution, and this is the one rule that reads it for administration.
     /// </para>
     /// <para>
-    /// Which speciality a SpecialityAdmin's panel covers is not checked here: a panel's speciality is not enforced
-    /// against its trainees either, and the two are one question for later.
+    /// Until T131 slice 3 the speciality was not read either, so a Surgery SpecialityAdmin could open and rewrite the
+    /// members of the Paediatrics panel at their hospital, and create panels for any speciality. Once a panel may sit as
+    /// a decision body that is a hijack: a speciality panel sitting as the neonatal CCC decides EPAs 4 and 5 for that
+    /// speciality's trainees ahead of every other panel (<see cref="DecisionRouting" />), so whoever names its chair
+    /// decides them. The speciality is a national id (T091), so it counts only together with the institution, which is
+    /// checked first. The role and its own scope claim are asked together, as <see cref="TraineeScopeResolver" /> does:
+    /// a SpecialityAdmin's reach is never lent to another role's claim. Which decision body a panel sits as is a
+    /// stricter right, <see cref="MaySetDecisionBody" />.
     /// </para>
     /// </remarks>
-    public static bool MayAdministerPanel(ClaimsPrincipal principal, int institutionId, DecisionPanelScope scope)
+    public static async Task<bool> MayAdministerPanelAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        int institutionId,
+        DecisionPanelScope scope,
+        int? specialityId,
+        CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(principal);
 
         if (principal.IsAdministrator())
@@ -67,9 +86,58 @@ internal static class CommitteeDecisionAuthorization
             return true;
         }
 
-        return scope == DecisionPanelScope.Speciality &&
-               (principal.IsInRole(WombatRoles.SpecialityAdmin) || principal.IsInRole(WombatRoles.SubSpecialityAdmin));
+        if (scope != DecisionPanelScope.Speciality || specialityId is not int speciality)
+        {
+            return false;
+        }
+
+        if (principal.IsInRole(WombatRoles.SpecialityAdmin) && principal.IsInSpeciality(speciality))
+        {
+            return true;
+        }
+
+        if (!principal.IsInRole(WombatRoles.SubSpecialityAdmin))
+        {
+            return false;
+        }
+
+        var subSpecialityIds = principal.GetSubSpecialityIds().ToArray();
+        return subSpecialityIds.Length > 0 &&
+               await dbContext.Set<SubSpeciality>()
+                   .AsNoTracking()
+                   .AnyAsync(
+                       subSpeciality => subSpecialityIds.Contains(subSpeciality.Id) && subSpeciality.SpecialityId == speciality,
+                       cancellationToken);
     }
+
+    /// <summary>
+    /// The one refusal to say which decision body a panel sits as, for anyone but an InstitutionalAdmin or a global
+    /// Administrator. It is given before any panel is looked up, so it confirms nothing about an id. (T131)
+    /// </summary>
+    internal const string DecisionBodyNeedsInstitutionalAdmin =
+        "Only an institutional administrator can say which College committee a panel sits as.";
+
+    /// <summary>
+    /// Whether this caller may say which College decision body a panel at this institution sits as: a global
+    /// Administrator, or an InstitutionalAdmin of that institution. (T131, Decision 3)
+    /// </summary>
+    /// <remarks>
+    /// Stricter than <see cref="MayAdministerPanelAsync" />, which lets a SpecialityAdmin manage their own speciality's
+    /// panel. A body tag takes that body's EPAs away from every other panel covering the trainee: a panel carrying
+    /// <c>neonatal</c> that covers the trainee's speciality comes before the institution's own. Which committee decides an
+    /// EPA is the institution's arrangement, so it is the institution's administrator's to make.
+    /// </remarks>
+    public static bool MaySetDecisionBody(ClaimsPrincipal principal, int institutionId)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        return principal.IsAdministrator() ||
+               (principal.IsInstitutionalAdmin() && principal.GetInstitutionId() == institutionId);
+    }
+
+    /// <summary>Whether this caller holds a role that could set a panel's decision body anywhere: the pre-lookup check.</summary>
+    public static bool HoldsDecisionBodyRole(ClaimsPrincipal principal)
+        => principal.IsAdministrator() || principal.IsInstitutionalAdmin();
 
     public static void DemandReviewScheduling(ClaimsPrincipal principal)
     {

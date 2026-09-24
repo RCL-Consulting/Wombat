@@ -5,6 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Institutions;
 using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
 using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
@@ -39,6 +40,8 @@ public sealed class PanelEditSeatTests : TestContext
                 new InstitutionDto(InstitutionB, "Other Hospital", "OTH", null, true, DateTime.UtcNow)
             })
             .On<GetSpecialitiesListQuery>(_ => Array.Empty<SpecialityDto>())
+            // An Administrator may say which College committee a panel sits as (T131 slice 3), so the form reads the list.
+            .On<GetDecisionBodiesQuery>(_ => new[] { new DecisionBodyDto("neonatal", "Neonatal team Clinical Competency Committee") })
             .On<ListPanelMemberCandidatesQuery>(query => query.InstitutionId == InstitutionA || query.InstitutionId is null
                 ? new[]
                 {
@@ -71,7 +74,8 @@ public sealed class PanelEditSeatTests : TestContext
             .Should().Be("1 member of this panel is no longer an active committee member at its institution, so is not " +
                          "listed below. Saving takes that member off the panel.");
 
-        cut.Find("form").Submit();
+        // The members' own form: an Administrator also sees the College committee form above it (T131 slice 3).
+        cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null).Submit();
 
         _sender.Received.OfType<UpdateDecisionPanelCommand>().Should().ContainSingle().Which.Members
             .Select(member => $"{member.UserId}:{member.Role}")

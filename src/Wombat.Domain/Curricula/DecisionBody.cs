@@ -10,14 +10,15 @@ namespace Wombat.Domain.Curricula;
 /// <remarks>
 /// <para>
 /// A national vocabulary, like <see cref="Epas.WbaTool" />. A curriculum item names the body that decides its EPA
-/// (<see cref="CurriculumItem.DecisionBodyKey" />); a decision panel will say which body it sits as (T131 slice 3), so
-/// that committee structure stays a per-institution arrangement while the tag on the EPA is national. If the College
+/// (<see cref="CurriculumItem.DecisionBodyKey" />); a decision panel says which body it sits as
+/// (<see cref="CommitteeDecisions.DecisionPanel.DecisionBodyKey" />, T131 slice 3), so that committee structure stays a
+/// per-institution arrangement while the tag on the EPA is national. If the College
 /// answers that the structure is national (§ 3F question 6), only the panel-to-body mapping moves.
 /// </para>
 /// <para>
 /// Keyed by <see cref="Key" />, which is the primary key and what every reference stores, because the catalogue seed file
 /// is national data that boots every deployment and an identity sequence is not. Items point at it with a restricting
-/// foreign key, so a body in use cannot be deleted from under them.
+/// foreign key, and so do panels, so a body in use cannot be deleted from under them.
 /// </para>
 /// <para>
 /// Seed-owned. <c>PaediatricCatalogueSeeder</c> inserts these rows from the catalogue's <c>decisionBodyVocabulary</c> and

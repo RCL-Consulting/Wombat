@@ -5,6 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Institutions;
 using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
 using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
@@ -46,6 +47,8 @@ public sealed class PanelEditInstitutionTests : TestContext
             {
                 new PanelMemberCandidateDto("zulu", "zulu@test", "Thandi", "Zulu", InstitutionA)
             })
+            // An InstitutionalAdmin and an Administrator are offered the College committee a panel sits as (T131).
+            .On<GetDecisionBodiesQuery>(_ => new[] { new DecisionBodyDto("neonatal", "Neonatal team Clinical Competency Committee") })
             .On<CreateDecisionPanelCommand>(command => new DecisionPanelDetailDto(
                 5, command.Name, command.Scope, command.InstitutionId ?? InstitutionA, command.SpecialityId, []));
     }

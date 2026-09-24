@@ -47,6 +47,9 @@ public sealed class CommitteeTraineeScopeTests
     private const int PanelA = 10;
     private const int PanelB = 20;
 
+    /// <summary>A's Paediatrics panel: it covers one speciality, so it reviews only that speciality's trainees (T131).</summary>
+    private const int PaediatricsPanelA = 30;
+
     private const int EpaId = 7;
     private const int LevelId = 3;
 
@@ -237,6 +240,51 @@ public sealed class CommitteeTraineeScopeTests
         await using var db = await SeededDbAsync();
 
         (await AcceptsAsync(db, Member("member-a", InstitutionA), PanelA, PaedsAtA)).Should().BeFalse();
+    }
+
+    // ─── A panel that covers one speciality (T131 slice 3, T194 item 2) ──────
+
+    [Theory]
+    [MemberData(nameof(SchedulersOfA))]
+    public async Task ASpecialityPanel_RefusesATraineeOfAnotherSpeciality_AndNothingIsWritten(string role)
+    {
+        // Before T131 a Paediatrics panel took a Surgery trainee at the same hospital: only the institution was checked.
+        await using var db = await SeededDbAsync();
+        var scheduler = Scheduler(role, InstitutionA);
+
+        var act = () => ScheduleAsync(db, scheduler, PaediatricsPanelA, SurgeryAtA);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await ReviewCountAsync()).Should().Be(0);
+
+        (await AcceptsAsync(db, scheduler, PaediatricsPanelA, PaedsAtA)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AnAdministrator_IsToldThatTheSpecialityPanelCoversAnotherSpeciality()
+    {
+        await using var db = await SeededDbAsync();
+        var administrator = TestPrincipals.Administrator();
+
+        var refusal = await RefusalAsync(() => ScheduleAsync(db, administrator, PaediatricsPanelA, SurgeryAtA));
+
+        refusal.Should().BeOfType<UnauthorizedAccessException>()
+            .Which.Message.Should().Be("This panel covers one speciality, and this trainee's programme is in another.");
+        (await AcceptsAsync(db, administrator, PaediatricsPanelA, NeonatologyAtA))
+            .Should().BeTrue("neonatology is a paediatric sub-speciality, and the panel covers the speciality");
+        (await AcceptsAsync(db, administrator, PaediatricsPanelA, PaedsAtB))
+            .Should().BeFalse("a speciality id is national: the panel is still A's");
+    }
+
+    [Fact]
+    public async Task ThePicker_ForASpecialityPanel_OffersOnlyThatSpecialitysTrainees()
+    {
+        await using var db = await SeededDbAsync();
+
+        var offered = await PickerAsync(db, TestPrincipals.Coordinator(InstitutionA), PaediatricsPanelA);
+
+        offered.Select(trainee => trainee.UserId).Should().BeEquivalentTo([PaedsAtA, NeonatologyAtA, LeftA]);
     }
 
     // ─── The picker is the gate ──────────────────────────────────────────────
@@ -683,9 +731,13 @@ public sealed class CommitteeTraineeScopeTests
         AddProfile(db, 6, MovedFromAToB, InstitutionB, 100, isActive: true);
         AddProfile(db, 7, LeftA, InstitutionA, 100, isActive: false);
 
+        var paediatricsPanel = Panel(PaediatricsPanelA, InstitutionA, "chair-a", "member-a", "external-a");
+        paediatricsPanel.Scope = DecisionPanelScope.Speciality;
+        paediatricsPanel.SpecialityId = Paediatrics;
         db.DecisionPanels.AddRange(
             Panel(PanelA, InstitutionA, "chair-a", "member-a", "external-a"),
-            Panel(PanelB, InstitutionB, "chair-b", "member-b", "external-b"));
+            Panel(PanelB, InstitutionB, "chair-b", "member-b", "external-b"),
+            paediatricsPanel);
 
         db.EntrustmentScales.Add(new EntrustmentScale { Id = 1, Name = "v11.1 rungs" });
         db.EntrustmentLevels.AddRange(

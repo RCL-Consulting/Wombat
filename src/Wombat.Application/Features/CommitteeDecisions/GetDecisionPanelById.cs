@@ -24,6 +24,7 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
         var panel = await _dbContext.Set<DecisionPanel>()
             .AsNoTracking()
             .Include(entity => entity.Members)
+            .Include(entity => entity.DecisionBody)
             .SingleOrDefaultAsync(entity => entity.Id == request.PanelId, cancellationToken);
 
         if (panel is null)
@@ -33,22 +34,14 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
 
         // The panel form's read: the panels the caller may change (T063, T182). Out of scope is null (404, not 403),
         // so the id's existence is not confirmed. Only an InstitutionalAdmin used to be checked; a SpecialityAdmin
-        // could open any panel in the country and read its members.
-        if (!CommitteeDecisionAuthorization.MayAdministerPanel(request.Principal, panel.InstitutionId, panel.Scope))
+        // could open any panel in the country and read its members, and until T131 slice 3 any speciality's at their
+        // own hospital.
+        if (!await CommitteeDecisionAuthorization.MayAdministerPanelAsync(
+                _dbContext, request.Principal, panel.InstitutionId, panel.Scope, panel.SpecialityId, cancellationToken))
         {
             return null;
         }
 
-        return new DecisionPanelDetailDto(
-            panel.Id,
-            panel.Name,
-            panel.Scope,
-            panel.InstitutionId,
-            panel.SpecialityId,
-            panel.Members
-                .OrderBy(member => member.Role)
-                .ThenBy(member => member.UserId)
-                .Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role))
-                .ToArray());
+        return DecisionPanelBodies.ToDetailDto(panel, panel.DecisionBody?.Name);
     }
 }

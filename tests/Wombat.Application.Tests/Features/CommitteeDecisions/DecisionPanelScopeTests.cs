@@ -32,6 +32,9 @@ public sealed class DecisionPanelScopeTests
     private const int InstitutionA = 1;
     private const int InstitutionB = 2;
     private const int Paediatrics = 4;
+    private const int Surgery = 5;
+    private const int GeneralPaediatrics = 11;
+    private const int GeneralSurgery = 12;
 
     /// <summary>
     /// Everyone these tests seat, at either institution: an active committee member there (T165, PanelSeat). Who may sit
@@ -105,7 +108,11 @@ public sealed class DecisionPanelScopeTests
         { "SpecialityAdmin", DecisionPanelScope.Institution, InstitutionA },
         { "SubSpecialityAdmin", DecisionPanelScope.Institution, InstitutionA },
         // No institution claim and none named: there is nowhere to put the panel.
-        { "SpecialityAdmin with no institution", DecisionPanelScope.Speciality, null }
+        { "SpecialityAdmin with no institution", DecisionPanelScope.Speciality, null },
+        // Another speciality's panel at their own institution (T131 slice 3; the panel covers Paediatrics).
+        { "SpecialityAdmin of Surgery", DecisionPanelScope.Speciality, InstitutionA },
+        { "SubSpecialityAdmin of General Surgery", DecisionPanelScope.Speciality, InstitutionA },
+        { "SpecialityAdmin of Surgery with a Paediatrics sub-speciality", DecisionPanelScope.Speciality, InstitutionA }
     };
 
     [Theory]
@@ -147,7 +154,13 @@ public sealed class DecisionPanelScopeTests
         { "SpecialityAdmin", DecisionPanelScope.Speciality, InstitutionB },
         { "SubSpecialityAdmin", DecisionPanelScope.Speciality, InstitutionB },
         { "SpecialityAdmin", DecisionPanelScope.Institution, InstitutionA },
-        { "SubSpecialityAdmin", DecisionPanelScope.Institution, InstitutionA }
+        { "SubSpecialityAdmin", DecisionPanelScope.Institution, InstitutionA },
+        // The Paediatrics panel at their own institution, for another speciality's administrator (T131 slice 3). Its
+        // chair decides for every paediatric trainee there, and for EPAs 4 and 5 ahead of every other panel once it
+        // sits as the neonatal CCC.
+        { "SpecialityAdmin of Surgery", DecisionPanelScope.Speciality, InstitutionA },
+        { "SubSpecialityAdmin of General Surgery", DecisionPanelScope.Speciality, InstitutionA },
+        { "SpecialityAdmin of Surgery with a Paediatrics sub-speciality", DecisionPanelScope.Speciality, InstitutionA }
     };
 
     [Theory]
@@ -184,6 +197,24 @@ public sealed class DecisionPanelScopeTests
         (await GetAsync(db, TestPrincipals.InstitutionalAdmin(InstitutionA), institutionAtA)).Should().NotBeNull();
         (await GetAsync(db, TestPrincipals.Coordinator(InstitutionA), specialityAtA)).Should().BeNull();
         (await GetAsync(db, TestPrincipals.Administrator(), specialityAtB)).Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData("SpecialityAdmin", true)]
+    [InlineData("SubSpecialityAdmin", true)]
+    [InlineData("SpecialityAdmin of Surgery", false)]
+    [InlineData("SubSpecialityAdmin of General Surgery", false)]
+    [InlineData("SpecialityAdmin of Surgery with a Paediatrics sub-speciality", false)]
+    public async Task ThePanelForm_OpensASpecialityPanel_OnlyForThatSpecialitysAdministrators(string role, bool opens)
+    {
+        // The form's read is the panels the caller may change (T131 slice 3): the Paediatrics panel at A is not a Surgery
+        // administrator's to open, and its members are not theirs to read.
+        await using var db = await SeededDbAsync();
+        var paediatricsAtA = await AddPanelAsync(db, DecisionPanelScope.Speciality, InstitutionA);
+
+        var read = await GetAsync(db, PanelAdministrator(role, InstitutionA), paediatricsAtA);
+
+        (read is not null).Should().Be(opens);
     }
 
     // ─── List ────────────────────────────────────────────────────────────────
@@ -264,7 +295,16 @@ public sealed class DecisionPanelScopeTests
     {
         "InstitutionalAdmin" => TestPrincipals.InstitutionalAdmin(institutionId),
         "SpecialityAdmin" => TestPrincipals.InRole(WombatRoles.SpecialityAdmin, "spec-admin", institutionId, specialityId: Paediatrics),
-        "SubSpecialityAdmin" => TestPrincipals.InRole(WombatRoles.SubSpecialityAdmin, "sub-admin", institutionId, subSpecialityId: 11),
+        "SubSpecialityAdmin" => TestPrincipals.InRole(
+            WombatRoles.SubSpecialityAdmin, "sub-admin", institutionId, subSpecialityId: GeneralPaediatrics),
+        // T131 slice 3: a panel's speciality is read, so these administer only their own speciality's panels.
+        "SpecialityAdmin of Surgery" => TestPrincipals.InRole(WombatRoles.SpecialityAdmin, "surgery-admin", institutionId, specialityId: Surgery),
+        "SubSpecialityAdmin of General Surgery" => TestPrincipals.InRole(
+            WombatRoles.SubSpecialityAdmin, "surgery-sub-admin", institutionId, subSpecialityId: GeneralSurgery),
+        // The role and its own claim are asked together: a Paediatrics sub-speciality claim reaches a panel only through
+        // the SubSpecialityAdmin role, never through a SpecialityAdmin role scoped to Surgery.
+        "SpecialityAdmin of Surgery with a Paediatrics sub-speciality" => TestPrincipals.InRole(
+            WombatRoles.SpecialityAdmin, "mixed-admin", institutionId, specialityId: Surgery, subSpecialityId: GeneralPaediatrics),
         "SpecialityAdmin with no institution" => TestPrincipals.InRole(
             WombatRoles.SpecialityAdmin, "spec-admin", institutionId: null, specialityId: Paediatrics),
         _ => throw new ArgumentOutOfRangeException(nameof(role), role, null)
@@ -307,7 +347,12 @@ public sealed class DecisionPanelScopeTests
         db.Institutions.AddRange(
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
-        db.Specialities.Add(new Speciality { Id = Paediatrics, CollegeId = 1, Name = "Paediatrics", IsActive = true });
+        db.Specialities.AddRange(
+            new Speciality { Id = Paediatrics, CollegeId = 1, Name = "Paediatrics", IsActive = true },
+            new Speciality { Id = Surgery, CollegeId = 1, Name = "Surgery", IsActive = true });
+        db.SubSpecialities.AddRange(
+            new SubSpeciality { Id = GeneralPaediatrics, SpecialityId = Paediatrics, Name = "General Paediatrics", IsActive = true },
+            new SubSpeciality { Id = GeneralSurgery, SpecialityId = Surgery, Name = "General Surgery", IsActive = true });
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
         return db;

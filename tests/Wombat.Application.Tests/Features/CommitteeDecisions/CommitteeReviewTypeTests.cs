@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -63,6 +64,10 @@ public sealed class CommitteeReviewTypeTests
     {
         dbContext.Institutions.Add(new Institution { Id = 1, Name = "Test Hospital", IsActive = true, CreatedOn = DateTime.UtcNow });
         dbContext.Specialities.Add(new Speciality { Id = 5, CollegeId = 1, Name = "General Medicine", IsActive = true });
+        // The trainee's programme is in the speciality the panel covers: a Speciality-scoped panel reviews only its own
+        // speciality's trainees (T131, T194 item 2).
+        dbContext.SubSpecialities.Add(new SubSpeciality { Id = 9, SpecialityId = 5, Name = "Acute Care", IsActive = true });
+        dbContext.Curricula.Add(new Curriculum { Id = 1, SubSpecialityId = 9, Name = "Acute Care", Version = "1" });
         dbContext.DecisionPanels.Add(new DecisionPanel
         {
             Id = 20,

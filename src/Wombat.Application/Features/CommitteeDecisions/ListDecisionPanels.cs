@@ -54,7 +54,9 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
                 panel.Scope,
                 panel.InstitutionId,
                 panel.SpecialityId,
-                panel.Members.Count))
+                panel.Members.Count,
+                panel.DecisionBodyKey,
+                panel.DecisionBody == null ? null : panel.DecisionBody.Name))
             .ToListAsync(cancellationToken);
     }
 }

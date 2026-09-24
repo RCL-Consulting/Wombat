@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -177,6 +178,10 @@ public sealed class ReviewSchedulingScopeGuardTests
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
         db.Set<Speciality>().Add(new Speciality { Id = SpecialityInA, CollegeId = InstitutionA, Name = "SpecA", IsActive = true });
+        // trainee-1's programme is in SpecA, which the Speciality-scoped panels here cover: such a panel reviews only its
+        // own speciality's trainees (T131, T194 item 2).
+        db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 40, SpecialityId = SpecialityInA, Name = "SubSpecA", IsActive = true });
+        db.Set<Curriculum>().Add(new Curriculum { Id = 1, SubSpecialityId = 40, Name = "SpecA programme", Version = "1" });
         db.Set<TraineeProfile>().Add(new TraineeProfile
         {
             UserId = "trainee-1", InstitutionId = InstitutionA, CurriculumId = 1, IsActive = true,
