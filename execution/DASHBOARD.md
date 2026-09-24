@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+c3e6a18 feat(committee): a review carries its period and an agenda of the EPAs due by cadence; a closing line must be staged or deferred before ratify; one open binding review per period per seat (T131 slice 4)
+870fc1e feat(committee): a panel may sit as a decision body, EPAs 4–5 route to the neonatal panel where one exists, and a speciality panel reviews only its own speciality (T131 slice 3)
+48fcf3c docs(execution): close T165, T164, T205 and T206 — browser-verified on dev with a local SMTP sink (review 3 ratified by a quorate sitting; respondent pages for MSF and learner feedback; withdraw)
 2d78d5c docs(execution): D35 closed (learner feedback, T164), D46 (quorum, T165) and D47 (interim MSF scale, T205) recorded; file T213, T214
 5f9db98 chore(dev): seed a dev InstitutionalAdmin, so panel membership can be edited without the administrator's credential
-3a17890 fix(msf): the expiry reminder fires before the campaign closes, a Coordinator can withdraw a draft or open campaign, an invitee added during an open is not lost, and a job never runs twice at once (T206)
-e48a2a6 feat(msf): respondents answer on an anonymous page in the web app, reached from their invitation link; a respondent is never named on the audit row (T205)
-b9eea1c feat(msf): learner feedback is an MSF template kind with a Learner category; its release records learner_feedback evidence for PAED-015 and counts the teaching contexts that responded (T164, D35)
 ```

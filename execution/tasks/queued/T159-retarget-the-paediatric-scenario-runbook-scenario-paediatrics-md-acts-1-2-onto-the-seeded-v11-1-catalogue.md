@@ -79,3 +79,15 @@ legacy types.
 
 [T104] (closed 2026-09-24; this is the corpus half it never scoped), [T118] findings 6-7, W-006, W-007, the [T130]
 banner, D31 and [T123] d2 (moot once the runbook stops building the duplicate).
+
+## Note, 2026-09-24 (the T131 slices 3–4 merge)
+
+Act 4 of `scenario-paediatrics.md` records the committee decision (Step 4.5) before staging STARs (Step 4.6). Under
+T165 and T131 the order is now:
+1. Start the review; its agenda is planned.
+2. Stage a STAR (naming snapshot evidence), or defer each closing agenda line with a reason.
+3. Record the decision with a quorate attendance (the chair plus one).
+4. Ratify.
+
+Reorder Act 4 when the runbook is retargeted.
+
