@@ -1,12 +1,13 @@
 ---
 id: T183
 title: The entrustment-decision admin pages are national: any admin role can list, revoke and download certificates for every trainee
-status: in_progress
+status: done
 priority: P1
 owner: agent
 depends_on: []
 created: 2026-09-24
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -39,10 +40,31 @@ The subject may always download their own certificate. T113's architecture test
 
 ## Verification
 
-- [ ] An admin role at institution A cannot list, revoke or download for a trainee at B. Handler tests; a revoke changes
+- [x] An admin role at institution A cannot list, revoke or download for a trainee at B. Handler tests; a revoke changes
       nothing.
-- [ ] Administrator and the subject still can. Handler tests.
+- [x] Administrator and the subject still can. Handler tests.
 
 ## Related
 
 T113, T056, T101.
+
+---
+
+## As built — 2026-09-24
+
+`TraineeScopeResolver` has three nested predicates, each needing the trainee's institution:
+- `IsAdministeredBy`: an InstitutionalAdmin, or a Speciality or SubSpecialityAdmin at the trainee's level.
+- `IsAdministeredOrCoordinatedBy`: the above, plus a Coordinator.
+- `IsOverseenBy`: the above, plus a CommitteeMember.
+
+How each surface uses them:
+- The admin list filters by `IsAdministeredBy`.
+- Revoke needs Administrator, `IsAdministeredBy`, or the decision's **issuing** chair (`IssuedByChairUserId`, not
+  current panel membership).
+- The certificate needs the issuer or `MayReadAsync`.
+
+At the merge with T182, Git's automatic resolution would have dropped T182's committee-member exclusion. The named
+predicate fixes that, and a mutation test pins it.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check):  `/admin/entrustment-decisions` loads for the Administrator and filters by name. Dev holds 0 decisions, so
+revoke and the certificate are covered by the handler matrix and Postgres tests, not the browser.

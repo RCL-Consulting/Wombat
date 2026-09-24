@@ -1,12 +1,13 @@
 ---
 id: T182
 title: Scheduling a committee review accepts any trainee id, so a panel can review, and ratify decisions about, another institution's trainee
-status: in_progress
+status: done
 priority: P1
 owner: agent
 depends_on: []
 created: 2026-09-24
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -39,11 +40,33 @@ the fix must not be the way in.
 
 ## Verification
 
-- [ ] A Coordinator, a SpecialityAdmin and an InstitutionalAdmin of institution A cannot schedule a review of B's
+- [x] A Coordinator, a SpecialityAdmin and an InstitutionalAdmin of institution A cannot schedule a review of B's
       trainee. Handler tests; nothing is written (save, then clear the tracker, as `AuditPipelineBehavior` does).
-- [ ] Start and Ratify refuse a review whose trainee is outside the panel's institution. Handler tests.
-- [ ] The scheduling page's picker offers only in-scope trainees. bUnit test.
+- [x] Start and Ratify refuse a review whose trainee is outside the panel's institution. Handler tests.
+- [x] The scheduling page's picker offers only in-scope trainees. bUnit test.
 
 ## Related
 
 T113 (the same shape, for queries and MSF), T101, T056, T131 (committee governance), T165.
+
+---
+
+## As built — 2026-09-24
+
+- `CommitteeTraineeScope`: scheduling needs the trainee's preferred profile at the panel's institution, and a caller
+  for whom `TraineeScopeResolver.IsAdministeredOrCoordinatedBy` holds. That is T183's nested predicate, which leaves
+  out the CommitteeMember arm, so a SpecialityAdmin who sits on the committee schedules only their own speciality's
+  trainees.
+- An Administrator must still match the panel's institution, but is exempt from the oversight half.
+- Start and Ratify re-check, and the scheduling picker uses the same predicate.
+- `DecisionPanel.InstitutionId` is required. The migration `20260924145621_T182_DecisionPanelInstitutionRequired`
+  stops, naming the panel, if any panel has none.
+- One `MayAdministerPanel` rule covers create, update, get and list.
+- Resolving an appeal does not re-judge where the trainee now trains.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check): 
+- The migration applied, and `InstitutionId` is NOT NULL (panel 1 = institution 1).
+- Creating a panel as the Administrator without an institution is refused, for both scopes, and nothing is created.
+- The scheduling picker offers "Demo Trainee" on panel 1.
+
+**Filed:** [T194] (existence leaks in committee commands, the panel speciality, the External member's panel list).

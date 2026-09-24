@@ -1,11 +1,12 @@
 ---
 id: T161
 title: An undated activity's filing timestamp is presented as its encounter date
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T161 — An undated activity's filing timestamp is shown as though it were the encounter date
@@ -43,14 +44,32 @@ encounter date in any case) and the portfolio PDF's activity lines. If [T137] la
 
 ## Verification
 
-- [ ] An activity of a type with no date pointer shows "date not recorded" with its filing date on the activity view
+- [x] An activity of a type with no date pointer shows "date not recorded" with its filing date on the activity view
       and in the PDF. bUnit test and a PDF section test.
-- [ ] A rated test type with no date pointer is marked the same way on the trajectory. The seeds cannot show this,
+- [x] A rated test type with no date pointer is marked the same way on the trajectory. The seeds cannot show this,
       because both undated seeds are unrated. Query test.
-- [ ] An activity with a declared date is unchanged on all three. Tests.
-- [ ] Browser: file a `reflective_note` on dev and read it back on the activity view.
-- [ ] Full suite green, no `--no-build`.
+- [x] An activity with a declared date is unchanged on all three. Tests.
+- [x] Browser: file a `reflective_note` on dev and read it back on the activity view.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 D28, [T119] D4, [T100], [T137] (the list DTO), [T169] (the PDF's other gaps).
+
+---
+
+## As built — 2026-09-24
+
+One helper (`EncounterDate.Label`, shared with T137's lists) marks an undated activity's date wherever it is shown as
+an encounter date:
+- the trajectory's tooltip and screen-reader table, on My progress and on the review page;
+- ActivityView's summary;
+- the portfolio PDF.
+
+The wording follows T137, "(filed; no encounter date)". [T197] reconsiders it (for a draft it is the created day) and
+covers the unmarked "Last encounter", which needs a migration.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check): 
+- Reflective Note 31 reads "Encounter date: 2026-09-24 (filed; no encounter date)".
+- The exported portfolio PDF (13 pages) prints "2026-09-24 (filed; no encounter date)" on activity 31's line.
+- The trajectory marking cannot be shown with the seeds, because both undated seeds are unrated. The page tests cover it.

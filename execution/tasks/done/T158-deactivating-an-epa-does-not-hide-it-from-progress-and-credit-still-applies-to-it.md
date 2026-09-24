@@ -1,11 +1,12 @@
 ---
 id: T158
 title: Deactivating an EPA does not hide it from progress, and credit still applies to it
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T158 — Deactivating an EPA takes it out of the picker, but not off the progress page, and not out of credit
@@ -56,16 +57,37 @@ Decide what deactivating an EPA means, record it in this file, then make every r
 
 ## Verification
 
-- [ ] An item whose EPA is inactive is absent from the trainee's progress summary and from staff coverage. Handler
+- [x] An item whose EPA is inactive is absent from the trainee's progress summary and from staff coverage. Handler
       tests on both readers; they would fail today.
-- [ ] The credit rule is recorded here and tested. Completing an activity against a now-inactive EPA either credits
+- [x] The credit rule is recorded here and tested. Completing an activity against a now-inactive EPA either credits
       nothing and stamps `CreditedItemCount = 0`, or credits, as decided. Application test.
-- [ ] Reactivating the EPA restores the item on both readers. Test.
-- [ ] Browser, on dev: deactivate a PAED EPA as Administrator; the dev trainee's progress page no longer lists it;
+- [x] Reactivating the EPA restores the item on both readers. Test.
+- [x] Browser, on dev: deactivate a PAED EPA as Administrator; the dev trainee's progress page no longer lists it;
       reactivate it and it returns.
-- [ ] Full suite green, no `--no-build`.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 [T104] (closed 2026-09-24; this is its step 2), [T108] (the zero-credit stamp), [T130] (`TraineeQuotaProgress`),
 [T122] (`CreditTargetResolver`).
+
+---
+
+## As built — 2026-09-24
+
+**Decision:** a deactivated EPA leaves progress and takes no new credit, as it already leaves the pickers. Progress
+readers and `CreditTargetResolver` skip items whose EPA is inactive.
+- `CurriculumItemDto.EpaIsActive` feeds the curriculum editor. It shows "(inactive: not in force)" on the row, a notice,
+  and "(inactive)" in the pickers.
+- EpaEdit says what deactivation does, and confirms it.
+- The rebuild page warns that a rebuild while an EPA is inactive removes that EPA's progress.
+
+Known boundary, pinned by a test: an EPA reactivated after submission is not re-checked by the tool gate.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check): 
+- PAED-014 (no evidence on it) was deactivated with the confirmation. The trainee's PAED-014 card disappeared, and the
+  CBD picker went from 12 EPAs to 11. The admin row read "(inactive: not in force)" with the notice.
+- Reactivated: the card and the picker came back, and `IsActive = t`.
+
+**Filed:** [T195] (a curriculum item can name another owner's or sub-speciality's EPA) and [T196] (re-credit on
+reactivation, a time-aware rebuild, the hand-on question, EpaEdit's leftovers).

@@ -1,11 +1,12 @@
 ---
 id: T173
 title: A committee review cannot tell that an MSF campaign closing in its window is still awaiting release
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -34,9 +35,31 @@ at Start.
 
 ## Verification
 
-- [ ] A review whose window holds an `UnderReview` campaign shows the count; one without shows nothing. bUnit or
+- [x] A review whose window holds an `UnderReview` campaign shows the count; one without shows nothing. bUnit or
       handler test.
 
 ## Related
 
 [T138], [T121], [T131] (the agenda may subsume this).
+
+---
+
+## As built — 2026-09-24
+
+`CountMsfCampaignsOutsideSnapshotQuery` returns two counts, both scoped as the snapshot is:
+- **AwaitingRelease:** campaigns that closed in the window (the `ClosedOn` UTC date, as T138 windows them) and are
+  still UnderReview.
+- **ReleasedAfterStart:** after Start, window campaigns released but not named by this review's own evidence items.
+
+`ReviewDetail` states each count in its own sentence and reloads the counts after every action. That reload has its
+own error handling (`b0cb335`), so a failed count never sits beside the action's success. While the review is
+Scheduled, a note beside Start review says why. Postgres tests cover the UTC edges and the single GROUP BY query.
+
+**Recorded decision:** an External panel member from another institution learns the two counts, because the count is
+scoped as the snapshot is. Counts only, no respondent data.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check): 
+- Review 1 showed no notice while every campaign was released before Start.
+- After campaign 4 was opened and closed (left UnderReview), the page reads "1 MSF campaign that closed in this window
+  is not yet released." and "The snapshot holds only the campaigns released before the review started, so it is not in
+  it."

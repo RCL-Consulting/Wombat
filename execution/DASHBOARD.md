@@ -4,8 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T182](tasks/in_progress/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
-| in_progress | [T183](tasks/in_progress/T183-the-entrustment-decision-admin-pages-are-national-any-admin-role-can-list-revoke-and-download-certificates-for-every-trainee.md) | P1 | The entrustment-decision admin pages are national: any admin role can  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
@@ -28,7 +26,6 @@
 | queued | [T115](tasks/queued/T115-isinrole-extension-is-dead-code.md) | P3 | `ClaimsPrincipalExtensions.IsInRole` never executes, and every `role:` |  |
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
-| queued | [T142](tasks/queued/T142-activity-pages-print-raw-user-ids-where-people-s-names-belong.md) | P3 | Activity pages print raw user ids where people's names belong | sonnet |
 | queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
 | queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
 | queued | [T151](tasks/queued/T151-the-assessor-nudge-job-emails-deactivated-and-opted-out-nominees.md) | P3 | The assessor nudge job emails deactivated and opted-out nominees |  |
@@ -36,9 +33,7 @@
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
 | queued | [T154](tasks/queued/T154-clinical-audit-and-portfolio-review-cannot-be-filed-one-needs-an-attached-report-the-other-a-design.md) | P3 | Clinical audit and portfolio review cannot be filed: one needs an atta |  |
 | queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
-| queued | [T158](tasks/queued/T158-deactivating-an-epa-does-not-hide-it-from-progress-and-credit-still-applies-to-it.md) | P3 | Deactivating an EPA does not hide it from progress, and credit still a |  |
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
-| queued | [T161](tasks/queued/T161-an-undated-activity-s-filing-timestamp-is-presented-as-its-encounter-date.md) | P3 | An undated activity's filing timestamp is presented as its encounter d |  |
 | queued | [T162](tasks/queued/T162-the-type-picker-offers-the-system-written-msf-cpsa-to-trainees.md) | P3 | The type picker offers the system-written msf_cpsa to trainees |  |
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
 | queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
@@ -46,8 +41,6 @@
 | queued | [T169](tasks/queued/T169-the-portfolio-pdf-has-no-per-epa-progress-and-prints-unrated-and-msf-evidence-as-never-completed.md) | P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF  |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
-| queued | [T173](tasks/queued/T173-a-committee-review-cannot-tell-that-an-msf-campaign-closing-in-its-window-is-still-awaiting-release.md) | P3 | A committee review cannot tell that an MSF campaign closing in its win |  |
-| queued | [T176](tasks/queued/T176-the-curriculum-items-edit-row-is-cramped-at-laptop-widths-and-three-of-its-inputs-have-no-accessible-name.md) | P3 | The curriculum items edit row is cramped at laptop widths, and three o |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
 | queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
@@ -63,8 +56,9 @@
 | queued | [T196](tasks/queued/T196-reactivating-an-epa-does-not-re-credit-what-was-filed-while-it-was-inactive-and-a-rebuild-while-inactive-drops-earned-credit.md) | P3 | Reactivating an EPA does not re-credit what was filed while it was ina |  |
 | queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
+| queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 
-Done: 126 task(s).
+Done: 133 task(s).
 
 ## From STATE.md
 
@@ -80,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+b0cb335 fix(committee): refreshing the MSF count after a review action cannot put an error beside the action's success; DESIGN.md: no input takes a raw user id since T182; file T194–T198
 fd1d1ec fix(curricula): the curriculum item edit form reads in full at laptop widths and every input has a name (T176)
 c702d5c feat(committee): a review says how many MSF campaigns closed in its window are awaiting release or were released after it started (T173)
 d67f0a8 fix(web): people are shown by name, not id, on the inbox, the activity history and the committee, entrustment and MSF pages (T142)
 382d483 fix(curricula): a deactivated EPA leaves progress and takes no new credit, as it already leaves the pickers; the editor marks items not in force (T158)
-bf7d8f9 fix(activities): an undated activity's date is marked as the filing date on the trajectory, the activity page and the portfolio PDF (T161, D28)
 ```

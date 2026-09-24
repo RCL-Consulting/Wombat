@@ -1,11 +1,12 @@
 ---
 id: T176
 title: The curriculum items edit row is cramped at laptop widths, and three of its inputs have no accessible name
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -36,9 +37,26 @@ horizontal scrolling at 1280px. Give every input a label (`<label for>` or `aria
 
 ## Verification
 
-- [ ] At 1280×800 the edit row's controls read in full and Save is visible without scrolling. Browser.
-- [ ] Every input in the edit row and the Add form has an accessible name. bUnit test over the rendered markup.
+- [x] At 1280×800 the edit row's controls read in full and Save is visible without scrolling. Browser.
+- [x] Every input in the edit row and the Add form has an accessible name. bUnit test over the rendered markup.
 
 ## Related
 
 T125, T139 (edits the same page; sequence with it).
+
+---
+
+## As built — 2026-09-24
+
+The edit row keeps its read-only cells, and its controls move into a full-width form row with the Add form's fields,
+in the same order with the same help (shared constants, pinned by a parity test). Every input has an accessible name.
+DESIGN.md's rule: an item of a list opened for editing does not put its controls in its own row's cells.
+
+Browser on dev, 2026-09-24 (master `b0cb335`, the batch-C check): 
+- At 1280×800, editing PAED-001 on `/admin/curricula/2/items` gives no horizontal scroll: the document and the table
+  container are both at `scrollWidth == clientWidth`.
+- Save and Cancel sit inside the viewport, and every select is wider than its text.
+- Every control has a name: EPA, Target, Per, Entrustment scale, Minimum level, Year 1–4, Remove year, Completion
+  window, Weight, the 12 Tools checkboxes.
+
+**Filed:** [T198] (the scale editor's rung inputs, and the table's thin width margin).
