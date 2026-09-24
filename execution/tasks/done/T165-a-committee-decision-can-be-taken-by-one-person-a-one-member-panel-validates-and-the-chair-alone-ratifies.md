@@ -1,11 +1,12 @@
 ---
 id: T165
 title: A committee decision can be taken by one person: a one-member panel validates, and the chair alone ratifies
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T165 — One person can take a committee entrustment decision end to end
@@ -59,17 +60,46 @@ Every new check runs before the first mutation (the audit trap). A refused ratif
 
 ## Verification
 
-- [ ] A panel with one member, with two entries for the same user, or with no Chair is refused on create and on update.
+- [x] A panel with one member, with two entries for the same user, or with no Chair is refused on create and on update.
       Validator tests.
-- [ ] Ratify is refused unless recorded attendance includes the chair and meets the quorum, and a refused ratify issues
+- [x] Ratify is refused unless recorded attendance includes the chair and meets the quorum, and a refused ratify issues
       no STAR. Application tests.
-- [ ] A ratified review shows who attended, on the review page and in the portfolio export. Test, and in the browser.
-- [ ] The Administrator-bypass decision is recorded here and tested on the consolidated `DemandChairAccess`.
-- [ ] Browser, on dev: stage a STAR, ratify with two attendees, and see both named.
-- [ ] Full suite green, no `--no-build`.
+- [x] A ratified review shows who attended, on the review page and in the portfolio export. Test, and in the browser.
+- [x] The Administrator-bypass decision is recorded here and tested on the consolidated `DemandChairAccess`.
+- [x] Browser, on dev: stage a STAR, ratify with two attendees, and see both named.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
 [T131] (routing, cadence and agenda; this task is its sibling, not its scope), [T166] (year-target view), [T167]
 (evidence snapshot), D38 (evidence basis), [T063], [T094] (earlier panel authorization work). The scenario runbook's
 Act 4 panel must follow: re-seed it under W-007 rather than design around it.
+
+---
+
+## As built — 2026-09-24 (D46)
+
+A panel holds each member once, exactly one Chair, and at least two members, each an active CommitteeMember at the
+panel's institution (`DecisionPanelMemberRules`).
+- **Recording** records who was present, on the decision itself: at least two, the recording chair among them. A
+  remitted appeal records its own quorate sitting.
+- **Ratifying** needs that quorum, and only the Chair ratifies.
+- **One chair check, no Administrator bypass**, also on appeals.
+- **Staged STARs are fixed once the decision is recorded.** A STAR that no longer fits can still be removed.
+- **The chair as only assessor** is warned about on the review, from the snapshot's frozen assessor ids.
+- **Erasure** replaces a member's id in attendance and in the snapshot's assessor lines.
+
+Merged with T131 slices 1–2 as `02a60db`. The migration was regenerated as `20260924194915_T165_CommitteeDecisionQuorum`.
+
+Browser on dev (scripted Chrome, `5f9db98`, a local SMTP sink capturing the mail): 
+- A panel with only a chair is refused, for both an edit and a new panel. As the InstitutionalAdmin, committee2 was
+  added to panel 1.
+- Review 3: scheduled by the Coordinator and started by the chair, with PAED-001 staged on two snapshot lines. In the
+  "Present" group the chair is ticked and locked.
+  - The chair alone was refused: "A committee decision needs at least two panel members present …".
+  - With committee2, the decision recorded ("Present: Demo Committee (chair), Demo Committee Two") and was ratified.
+    STAR 3 issued.
+- committee2 is refused Record ("Only the panel's chair can do this.") and Ratify.
+
+**Filed ([T213]):** the races and wording left by the merge. Also added there: two refusals show the raw validator
+format, and a non-chair is shown controls that then refuse.

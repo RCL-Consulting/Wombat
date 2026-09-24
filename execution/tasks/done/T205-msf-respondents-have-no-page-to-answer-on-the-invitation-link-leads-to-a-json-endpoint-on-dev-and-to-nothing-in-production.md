@@ -1,11 +1,12 @@
 ---
 id: T205
 title: MSF respondents have no page to answer on: the invitation link leads to a JSON endpoint on dev and to nothing in production
-status: queued
+status: done
 priority: P1
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -45,13 +46,37 @@ INFRASTRUCTURE.md and the deploy docs. Check the anonymity rules (the respondent
 
 ## Verification
 
-- [ ] Browser: from a campaign opened on dev, take the invitation link from the dev email log (or the admin link) and
+- [x] Browser: from a campaign opened on dev, take the invitation link from the dev email log (or the admin link) and
       open it signed out. The questionnaire renders, a response submits, the campaign's response count goes up, and the
       same link then says it has been used.
-- [ ] An expired, used or revoked link gets its plain message, and no 500. Tests.
-- [ ] The response path is anonymous, rate-limited and CSP-clean. Tests and a browser check.
-- [ ] T202's fourth verification item (email link to a submitted response) is ticked here.
+- [x] An expired, used or revoked link gets its plain message, and no 500. Tests.
+- [x] The response path is anonymous, rate-limited and CSP-clean. Tests and a browser check.
+- [x] T202's fourth verification item (email link to a submitted response) is ticked here.
 
 ## Related
 
 T121 (MSF), T132 (the respond URL setting), T202, T184, INFRASTRUCTURE.md.
+
+---
+
+## As built — 2026-09-24
+
+`/msf/respond?token=…` is an anonymous, **server-rendered** page, not interactive, so the submit passes through the rate
+limit and needs no Blazor circuit.
+- It uses the Api endpoint's query and command. The Api stays as the integration endpoint, with one refusal-to-status
+  mapping (404 not recognised; 410 used, expired, revoked or closed; 400 incomplete; a 500 names nothing).
+- **Rate limits:** 10 a minute per link per address, and 60 a minute per address.
+- A malformed token is refused before any database read.
+- `IAnonymousAuditedCommand`: the respondent is never named on the audit row, even when signed in.
+- `MsfRespondUrl` defaults to `{BaseUrl}/msf/respond` and is validated.
+- A question with no scale uses the interim 5-point default (D47). Ratings outside the scale, and comments over 4000
+  characters, are refused.
+
+Browser on dev (scripted Chrome, `5f9db98`, a local SMTP sink capturing the mail): 
+- Campaign 6's email reads "Feedback request: Demo Trainee (Default MSF, 2026-09-24 to 2026-10-08)", with a
+  `localhost:5080/msf/respond?token=` link and "The last day to respond is 2026-10-08."
+- Signed out, the page renders "Feedback on Demo Trainee" with the five labels. The submit gives "Thank you".
+- The same link again answers 410 "Feedback link already used", and a mangled token 404.
+- The audit row has no actor, display name or user agent, and a redacted token and answers.
+
+T202's fourth verification item (email link to a submitted response) is met here.

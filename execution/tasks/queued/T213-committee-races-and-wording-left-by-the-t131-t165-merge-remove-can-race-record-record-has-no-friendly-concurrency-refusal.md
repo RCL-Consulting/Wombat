@@ -31,6 +31,11 @@ created: 2026-09-24
 4. **The remit form's comment** says the chair and the resolver are ticked and locked, but the code locks the chair plus
    the current user. Make the comment and the code agree.
 
+5. **Two refusals show the raw validator format**, "Validation failed: -- PresentUserIds: … Severity: Error" (record
+   decision) and "Validation failed: -- Members: …" (panel). Surface the message only.
+6. **A non-chair is offered Record and Ratify**, which then refuse. Offer the chair's controls to the chair only
+   (picker = gate).
+
 ## Verification
 
 - [ ] A Remove racing a Record is refused whole. Postgres race test.

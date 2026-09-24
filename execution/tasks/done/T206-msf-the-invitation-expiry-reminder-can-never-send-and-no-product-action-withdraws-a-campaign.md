@@ -1,11 +1,12 @@
 ---
 id: T206
 title: MSF: the invitation expiry reminder can never send, and no product action withdraws a campaign
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -38,10 +39,30 @@ or have Open re-check the invitation set at save.
 
 ## Verification
 
-- [ ] The reminder fires two days before ClosesOn on an open campaign. Job test with product-shaped data.
-- [ ] A Coordinator can withdraw a campaign from the page, and its invitations are anonymised. bUnit and handler test.
-- [ ] An invitee added during an open is either mailed or refused. Test.
+- [x] The reminder fires two days before ClosesOn on an open campaign. Job test with product-shaped data.
+- [x] A Coordinator can withdraw a campaign from the page, and its invitations are anonymised. bUnit and handler test.
+- [x] An invitee added during an open is either mailed or refused. Test.
 
 ## Related
 
 T202, T132, T184.
+
+---
+
+## As built — 2026-09-24
+
+- **The reminder** fires before the campaign closes, never on a link mailed less than a day ago, never before the window
+  opens, and only on an open campaign. It is worded like the invitation.
+- **Withdraw:** a Coordinator or Administrator can withdraw a draft or open campaign, after a ConfirmDialog. It
+  anonymises, and the result is announced and focused.
+- **A race:** an invitee added during an open bumps the campaign's token, so it is either mailed or refused.
+- **Jobs:** `ScheduledJobLocks`: a job never runs twice at once, and "Run now" while it runs is refused.
+
+Merged as `3a17890`.
+
+Browser on dev (scripted Chrome, `5f9db98`, a local SMTP sink capturing the mail):  Draft campaign 8 was withdrawn from `/msf/campaigns` through the dialog: "… has been withdrawn. Its respondents'
+links no longer work, and their email addresses have been removed." Its state is Withdrawn, and invitation 17 is
+anonymised.
+
+**Filed ([T214]):** a reminder that replaces a link can lose an answer being typed into the old one (needs a
+`PreviousTokenHash` migration).

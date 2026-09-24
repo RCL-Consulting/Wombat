@@ -7,13 +7,10 @@
 | in_progress | [T131](tasks/in_progress/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
-| queued | [T205](tasks/queued/T205-msf-respondents-have-no-page-to-answer-on-the-invitation-link-leads-to-a-json-endpoint-on-dev-and-to-nothing-in-production.md) | P1 | MSF respondents have no page to answer on: the invitation link leads t |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
-| queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
-| queued | [T206](tasks/queued/T206-msf-the-invitation-expiry-reminder-can-never-send-and-no-product-action-withdraws-a-campaign.md) | P2 | MSF: the invitation expiry reminder can never send, and no product act |  |
 | queued | [T207](tasks/queued/T207-msf-anonymisation-keeps-an-unsalted-hash-of-each-respondent-s-email-so-a-response-can-be-re-identified.md) | P2 | MSF 'anonymisation' keeps an unsalted hash of each respondent's email, |  |
 | queued | [T213](tasks/queued/T213-committee-races-and-wording-left-by-the-t131-t165-merge-remove-can-race-record-record-has-no-friendly-concurrency-refusal.md) | P2 | Committee races and wording left by the T131/T165 merge: Remove can ra |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
@@ -35,7 +32,6 @@
 | queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
-| queued | [T164](tasks/queued/T164-learner-feedback-paed-015-cannot-be-recorded.md) | P3 | Learner feedback (PAED-015) cannot be recorded |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
@@ -60,7 +56,7 @@
 | queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
 | queued | [T214](tasks/queued/T214-a-reminder-that-replaces-an-msf-link-can-lose-the-answers-of-someone-typing-into-the-old-one.md) | P3 | A reminder that replaces an MSF link can lose the answers of someone t |  |
 
-Done: 146 task(s).
+Done: 150 task(s).
 
 ## From STATE.md
 
@@ -76,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+2d78d5c docs(execution): D35 closed (learner feedback, T164), D46 (quorum, T165) and D47 (interim MSF scale, T205) recorded; file T213, T214
 5f9db98 chore(dev): seed a dev InstitutionalAdmin, so panel membership can be edited without the administrator's credential
 3a17890 fix(msf): the expiry reminder fires before the campaign closes, a Coordinator can withdraw a draft or open campaign, an invitee added during an open is not lost, and a job never runs twice at once (T206)
 e48a2a6 feat(msf): respondents answer on an anonymous page in the web app, reached from their invitation link; a respondent is never named on the audit row (T205)
 b9eea1c feat(msf): learner feedback is an MSF template kind with a Learner category; its release records learner_feedback evidence for PAED-015 and counts the teaching contexts that responded (T164, D35)
-02a60db feat(committee): a committee decision needs a quorum — at least two committee members at the panel's institution, the chair plus one, recorded as present on each decision — only the chair ratifies, with no Administrator bypass (T165, D46)
 ```

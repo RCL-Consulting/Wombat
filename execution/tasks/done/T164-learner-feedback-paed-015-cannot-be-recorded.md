@@ -1,11 +1,12 @@
 ---
 id: T164
 title: Learner feedback (PAED-015) cannot be recorded
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T164 — Learner feedback, EPA 15's twelfth instrument, has no way to be recorded
@@ -55,13 +56,13 @@ After D35, and assuming its recommendation:
 
 ## Verification
 
-- [ ] D35 is recorded as decided in `EPA-PROGRAMME.md` § 3D, with the choice made.
-- [ ] A learner-feedback campaign can be created, answered by a Learner respondent and released, and its evidence row
+- [x] D35 is recorded as decided in `EPA-PROGRAMME.md` § 3D, with the choice made.
+- [x] A learner-feedback campaign can be created, answered by a Learner respondent and released, and its evidence row
       carries `learner_feedback`. Application tests and a browser run on dev.
-- [ ] PAED-015's evidence surfaces (the committee snapshot and the activity list) show it as learner feedback, not MSF.
+- [x] PAED-015's evidence surfaces (the committee snapshot and the activity list) show it as learner feedback, not MSF.
       Browser check.
-- [ ] The teaching-context count is shown, or the task records why it is deferred. Test, or a note here.
-- [ ] Full suite green, no `--no-build`.
+- [x] The teaching-context count is shown, or the task records why it is deferred. Test, or a note here.
+- [x] Full suite green, no `--no-build`.
 
 ## Related
 
@@ -69,3 +70,21 @@ D35, D8 (MSF credits nothing), D11 (category minimum), [T120], [T121], [T122], [
 instruments), [T168] (MSF coverage per EPA).
 
 **Merged 2026-09-24** as `b9eea1c`, with T165 as `02a60db`. Browser check pending; see the handoff.
+
+---
+
+## As built — 2026-09-24 (D35 closed)
+
+- `MsfTemplate.Kind` (Msf or LearnerFeedback) and a `Learner` respondent category. A learner-feedback campaign takes
+  Learners only, and an MSF refuses one.
+- A teaching context is recorded per learner invitation. It is named only in the coordinator's own report, and counted
+  elsewhere.
+- A learner-feedback campaign covers only EPAs whose list names learner feedback (PAED-015). Its release writes
+  system-written `learner_feedback_cpsa` evidence that credits nothing.
+- It is kept out of T168's MSF coverage. The emails, the respondent page (T205) and the PDF use learner wording.
+
+Merged as `b9eea1c`; the migration was regenerated as `20260924195753_T164_LearnerFeedbackKind`.
+
+Browser on dev (scripted Chrome, `5f9db98`, a local SMTP sink capturing the mail):  The template "Learner feedback (interim questionnaire)" was created, and its campaign form offered only PAED-015.
+Campaign 7 had a Learner invitee with a teaching context. The email and the respondent page both say "Feedback on the
+teaching of Demo Trainee", and neither shows or asks the context. The submit was accepted with an anonymous audit row.
