@@ -38,3 +38,9 @@ Add the declared flag to the progress row, and mark "Last encounter".
 ## Related
 
 T161, T137, D28.
+
+## Note, 2026-09-24 (T154 browser check)
+
+The date refusal names the date as "the encounter date" whatever the field is: "Review period to: The encounter date
+cannot be after today". Word it by the field's own label, or neutrally ("cannot be after today").
+

@@ -32,7 +32,6 @@
 | queued | [T151](tasks/queued/T151-the-assessor-nudge-job-emails-deactivated-and-opted-out-nominees.md) | P3 | The assessor nudge job emails deactivated and opted-out nominees |  |
 | queued | [T152](tasks/queued/T152-a-supervisor-based-at-another-institution-cannot-be-named-on-a-trainee-s-assessment.md) | P3 | A supervisor based at another institution cannot be named on a trainee |  |
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
-| queued | [T154](tasks/queued/T154-clinical-audit-and-portfolio-review-cannot-be-filed-one-needs-an-attached-report-the-other-a-design.md) | P3 | Clinical audit and portfolio review cannot be filed: one needs an atta |  |
 | queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
 | queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
 | queued | [T163](tasks/queued/T163-every-msf-response-scans-every-invitation-ever-issued.md) | P3 | Every MSF response scans every invitation ever issued |  |
@@ -58,7 +57,7 @@
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
 
-Done: 138 task(s).
+Done: 139 task(s).
 
 ## From STATE.md
 
@@ -74,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+2d0aeb6 feat(activities): the last two v11.1 instruments — Clinical audit (report as a link, D34) and Portfolio and logbook review (a signed review of a period); an instrument that credits nothing is judged by the EPA it is evidence for (T154, D45)
 da4053b docs(execution): close T204 — dev Coordinator seeded; T167's snapshot and T184's MSF checks verified in the browser (review 2, campaign 5); T186's cause found
 02336bc chore(dev): seed a dev Coordinator, so committee scheduling and MSF campaigns can be exercised without the administrator's credential (T204)
 a0a8f11 docs(execution): close T162 (browser-verified, scripted Chrome) and T167 (pickers verified; the new snapshot's browser check moves to T204, which seeds a dev Coordinator)
 5ae1141 fix(activities): the system-written MSF evidence type is not offered to or creatable by a person; the dead permission-rule table is dropped (T162)
-fb5a3f4 feat(committee): the evidence snapshot names each line's EPA, instrument, rating and encounter date and groups by EPA; a STAR is staged, issued and ratified only on an in-force EPA of the trainee's curriculum (T167)
 ```
