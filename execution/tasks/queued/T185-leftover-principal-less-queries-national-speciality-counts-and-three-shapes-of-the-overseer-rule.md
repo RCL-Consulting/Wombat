@@ -51,3 +51,14 @@ T113, T153, T056.
   (three shapes of the overseer rule) now means folding `ActivityService.IsScopedOverseerOf` and
   `ActivityReadScope.WhereReadableBy` into these.
 
+## Note, 2026-09-24 (T169 review)
+
+The profile picks still disagree three ways:
+- The portfolio cover and T169's section use `TraineeScopeResolver.PreferredProfiles` (active, then highest id).
+- Credit (`CreditTargetResolver.PickProfileAsync`) and the progress page use active, then latest start.
+- The trajectory's ladder (`GetEpaTrajectoryForTraineeQuery.cs:326-332`) uses active, then latest start, with no id
+  tie-break.
+
+With two active profiles (the database forbids that, but past profiles tie), credit can land on one curriculum while
+the export reads another. Make it one pick.
+

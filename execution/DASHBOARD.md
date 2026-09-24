@@ -15,6 +15,9 @@
 | queued | [T184](tasks/queued/T184-msf-respondent-emails-are-written-to-the-audit-log-and-opening-a-campaign-sends-mail-after-the-mutation.md) | P2 | MSF: respondent emails are written to the audit log, and opening a cam |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
+| queued | [T200](tasks/queued/T200-pdfs-rendered-at-the-same-time-can-lose-their-text-layer-questpdf-so-an-export-may-be-unsearchable-and-unreadable-to-a-screen-reader.md) | P2 | PDFs rendered at the same time can lose their text layer (QuestPDF), s |  |
+| queued | [T201](tasks/queued/T201-when-a-handler-s-own-save-fails-the-audit-pipeline-re-saves-the-same-changes-loses-the-audit-row-and-hides-the-real-error.md) | P2 | When a handler's own save fails, the audit pipeline re-saves the same  |  |
+| queued | [T202](tasks/queued/T202-msf-a-withdrawn-campaign-keeps-respondents-emails-invitations-don-t-say-which-campaign-and-a-dead-link-answers-500.md) | P2 | MSF: a withdrawn campaign keeps respondents' emails, invitations don't |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -57,6 +60,7 @@
 | queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
+| queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
 
 Done: 133 task(s).
 
@@ -74,9 +78,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+d640787 fix(msf): respondent emails are redacted from the audit log, a failed invitation send leaves the campaign unopened, and one routine anonymises (T184)
 3c31fe5 feat(reporting): the portfolio PDF shows per-EPA progress against the period targets, and counts finished unrated and MSF evidence as complete (T169)
 21096e4 docs(execution): T131's design — judged from three proposals; six build slices; operator questions O1–O8 each with a default
 c4fa3be docs(execution): handoff progress
 6652c6d docs(execution): close T142, T173, T161, T158, T176, T182 and T183 — browser-verified on dev (activity 31, campaign 4, PAED-014 deactivated and restored); file T199
-b0cb335 fix(committee): refreshing the MSF count after a review action cannot put an error beside the action's success; DESIGN.md: no input takes a raw user id since T182; file T194–T198
 ```
