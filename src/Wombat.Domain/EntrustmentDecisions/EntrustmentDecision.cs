@@ -5,6 +5,10 @@ namespace Wombat.Domain.EntrustmentDecisions;
 
 public sealed class EntrustmentDecision
 {
+    /// <summary>The refusal for a STAR that names no evidence (D38).</summary>
+    public const string EvidenceRequired =
+        "An entrustment decision must rest on at least one item of the committee's evidence snapshot.";
+
     private EntrustmentDecision()
     {
     }
@@ -28,6 +32,13 @@ public sealed class EntrustmentDecision
     public Epa Epa { get; private set; } = null!;
     public EntrustmentLevel AuthorisedLevel { get; private set; } = null!;
     public CommitteeReview IssuedByCommitteeReview { get; private set; } = null!;
+
+    /// <summary>
+    /// The STAR that replaced this one on its EPA, set with <see cref="SupersededByDecisionId" /> by
+    /// <see cref="SupersedeBy" />. A navigation, so that a ratification can issue the new STAR and supersede the old one
+    /// in one save: the new STAR has no id until it is stored.
+    /// </summary>
+    public EntrustmentDecision? SupersededByDecision { get; private set; }
 
     private readonly List<EntrustmentEvidenceLink> _evidenceLinks = new();
     public IReadOnlyCollection<EntrustmentEvidenceLink> EvidenceLinks => _evidenceLinks;
@@ -78,6 +89,14 @@ public sealed class EntrustmentDecision
             throw new InvalidOperationException("An entrustment decision expiry date must be after the issue date.");
         }
 
+        // D38 (T131): the committee's decision draws on the assessment evidence, "never from a single form" and never
+        // from none. Every link is built from a line of the issuing review's frozen snapshot.
+        var links = (evidenceLinks ?? Array.Empty<EntrustmentEvidenceLink>()).ToList();
+        if (links.Count == 0)
+        {
+            throw new InvalidOperationException(EvidenceRequired);
+        }
+
         var decision = new EntrustmentDecision
         {
             TraineeUserId = traineeUserId.Trim(),
@@ -91,10 +110,7 @@ public sealed class EntrustmentDecision
             Status = EntrustmentDecisionStatus.Active
         };
 
-        foreach (var link in evidenceLinks ?? Array.Empty<EntrustmentEvidenceLink>())
-        {
-            decision._evidenceLinks.Add(link);
-        }
+        decision._evidenceLinks.AddRange(links);
 
         return decision;
     }
@@ -142,20 +158,35 @@ public sealed class EntrustmentDecision
         Status = EntrustmentDecisionStatus.Expired;
     }
 
-    public void SupersedeBy(int newDecisionId)
+    /// <summary>
+    /// Marks this STAR superseded by <paramref name="successor" />, which may not be stored yet: the foreign key follows
+    /// the navigation when both are saved together.
+    /// </summary>
+    public void SupersedeBy(EntrustmentDecision successor)
     {
+        ArgumentNullException.ThrowIfNull(successor);
+
         if (Status != EntrustmentDecisionStatus.Active)
         {
             throw new InvalidOperationException("Only active entrustment decisions can be superseded.");
         }
 
-        if (newDecisionId <= 0)
+        if (ReferenceEquals(successor, this) || (successor.Id > 0 && successor.Id == Id))
         {
-            throw new InvalidOperationException("A valid superseding decision id is required.");
+            throw new InvalidOperationException("An entrustment decision cannot supersede itself.");
+        }
+
+        if (successor.TraineeUserId != TraineeUserId || successor.EpaId != EpaId)
+        {
+            throw new InvalidOperationException("An entrustment decision is superseded only by one for the same trainee and EPA.");
         }
 
         Status = EntrustmentDecisionStatus.Superseded;
-        SupersededByDecisionId = newDecisionId;
+        SupersededByDecision = successor;
+        if (successor.Id > 0)
+        {
+            SupersededByDecisionId = successor.Id;
+        }
     }
 
     public void RecordExpiryReminderSent(DateOnly sentOn)

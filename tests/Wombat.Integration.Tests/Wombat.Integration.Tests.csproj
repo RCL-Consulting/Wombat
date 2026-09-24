@@ -31,6 +31,8 @@
   <ItemGroup>
     <!-- T102: one seed helper for the Identity rows a nominee is judged against. -->
     <Compile Include="../Shared/NomineeSeed.cs" Link="TestSupport/NomineeSeed.cs" />
+    <!-- T131: the evidence a STAR stored directly by a test rests on (D38). -->
+    <Compile Include="../Shared/StarEvidence.cs" Link="TestSupport/StarEvidence.cs" />
     <!-- T142: a user directory that answers the display-name lookup and counts the calls. -->
     <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
   </ItemGroup>

@@ -1,12 +1,9 @@
-using System.Text.Json;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
 internal static class EntrustmentDecisionMappings
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     public static EntrustmentDecisionDto ToDto(this EntrustmentDecision decision)
         => new(
             decision.Id,
@@ -39,7 +36,8 @@ internal static class EntrustmentDecisionMappings
                     link.CommitteeReviewId,
                     link.SourceLabel,
                     link.Summary,
-                    link.SourceRecordedOn))
+                    link.SourceRecordedOn,
+                    link.CommitteeEvidenceId))
                 .ToArray());
 
     public static PendingEntrustmentDecisionDto ToDto(this PendingEntrustmentDecision pending)
@@ -54,28 +52,7 @@ internal static class EntrustmentDecisionMappings
             pending.IssuedOn,
             pending.ExpiresOn,
             pending.Rationale,
-            DeserializeEvidenceLinks(pending.EvidenceLinksJson),
+            pending.EvidenceItemIds,
             pending.StagedOn,
             pending.StagedByUserId);
-
-    public static IReadOnlyList<EntrustmentEvidenceLinkInput> DeserializeEvidenceLinks(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return Array.Empty<EntrustmentEvidenceLinkInput>();
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<EntrustmentEvidenceLinkInput>>(json, JsonOptions)
-                ?? new List<EntrustmentEvidenceLinkInput>();
-        }
-        catch (JsonException)
-        {
-            return Array.Empty<EntrustmentEvidenceLinkInput>();
-        }
-    }
-
-    public static string SerializeEvidenceLinks(IReadOnlyList<EntrustmentEvidenceLinkInput> links)
-        => JsonSerializer.Serialize(links ?? Array.Empty<EntrustmentEvidenceLinkInput>(), JsonOptions);
 }

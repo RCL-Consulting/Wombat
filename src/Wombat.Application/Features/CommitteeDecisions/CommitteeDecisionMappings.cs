@@ -67,7 +67,8 @@ internal static class CommitteeDecisionMappings
                     item.RatingLabel,
                     item.ObservedOn,
                     item.ObservedOnSource is null ? null : item.ObservedOnSource == ObservationDateSource.Declared,
-                    item.SourceState))
+                    item.SourceState,
+                    item.SourceFinished))
                 .ToArray(),
             review.IsFormative,
             review.ReviewType);

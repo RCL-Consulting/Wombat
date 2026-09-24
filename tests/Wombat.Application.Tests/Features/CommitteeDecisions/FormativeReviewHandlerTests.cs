@@ -87,7 +87,7 @@ public sealed class FormativeReviewHandlerTests
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, 7, 3,
                 new DateOnly(2026, 4, 1), null, "Any.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
+                [1],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None));
 

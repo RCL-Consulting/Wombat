@@ -2,15 +2,8 @@ using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
-public sealed record EntrustmentEvidenceLinkInput(
-    EntrustmentEvidenceSourceType SourceType,
-    int? ActivityId,
-    int? MsfCampaignId,
-    int? CommitteeReviewId,
-    string SourceLabel,
-    string Summary,
-    DateTime? SourceRecordedOn);
-
+/// <summary>One item of evidence a STAR rests on, as the issuing review's snapshot line said it. (T131)</summary>
+/// <param name="CommitteeEvidenceId">The snapshot row it was copied from; null only on a link written before T131.</param>
 public sealed record EntrustmentEvidenceLinkDto(
     int Id,
     EntrustmentEvidenceSourceType SourceType,
@@ -19,7 +12,8 @@ public sealed record EntrustmentEvidenceLinkDto(
     int? CommitteeReviewId,
     string SourceLabel,
     string Summary,
-    DateTime? SourceRecordedOn);
+    DateTime? SourceRecordedOn,
+    int? CommitteeEvidenceId = null);
 
 public sealed record EntrustmentDecisionDto(
     int Id,
@@ -51,6 +45,10 @@ public sealed record EntrustmentDecisionDto(
     public string? TraineeName { get; init; }
 }
 
+/// <summary>An entrustment decision staged at a review, before ratification issues it.</summary>
+/// <param name="EvidenceItemIds">
+/// The ids of the review's snapshot lines (<c>CommitteeReviewDetailDto.EvidenceItems</c>) it rests on (D38, T131).
+/// </param>
 public sealed record PendingEntrustmentDecisionDto(
     int Id,
     int ReviewId,
@@ -62,14 +60,6 @@ public sealed record PendingEntrustmentDecisionDto(
     DateOnly IssuedOn,
     DateOnly? ExpiresOn,
     string Rationale,
-    IReadOnlyList<EntrustmentEvidenceLinkInput> EvidenceLinks,
+    IReadOnlyList<int> EvidenceItemIds,
     DateTime StagedOn,
     string StagedByUserId);
-
-public sealed record StagePendingEntrustmentDecisionInput(
-    int EpaId,
-    int AuthorisedLevelId,
-    DateOnly IssuedOn,
-    DateOnly? ExpiresOn,
-    string Rationale,
-    IReadOnlyList<EntrustmentEvidenceLinkInput> EvidenceLinks);

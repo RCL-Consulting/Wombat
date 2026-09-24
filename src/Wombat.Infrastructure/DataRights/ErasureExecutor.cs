@@ -82,6 +82,19 @@ public sealed class ErasureExecutor : IErasureExecutor
             version.PublishedByUserId = pseudonym;
 
         // --- Committee reviews: pseudonymise trainee and actor references ---
+        // CommitteeReview.StartedByUserId and RatifiedByUserId are private set — use raw SQL.
+        //
+        // Before the tracked load below, deliberately: a review carries an xmin concurrency token (T131), and a raw
+        // UPDATE of a row already loaded would move its xmin under the tracker, so the save at the end would find the
+        // review "changed" and refuse the whole erasure. That happens whenever the person erased is both a review's
+        // trainee and the one who started or ratified it. Loaded after, the tracker holds the xmin these leave.
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"CommitteeReviews\" SET \"StartedByUserId\" = {pseudonym} WHERE \"StartedByUserId\" = {userId}",
+            cancellationToken);
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"CommitteeReviews\" SET \"RatifiedByUserId\" = {pseudonym} WHERE \"RatifiedByUserId\" = {userId}",
+            cancellationToken);
+
         var reviewsAsTrainee = await _dbContext.Set<CommitteeReview>()
             .Where(r => r.TraineeUserId == userId)
             .ToListAsync(cancellationToken);
@@ -90,14 +103,6 @@ public sealed class ErasureExecutor : IErasureExecutor
 
         if (reviewsAsTrainee.Count > 0)
             retentionReasons.Add("committee_decision");
-
-        // CommitteeReview.StartedByUserId and RatifiedByUserId are private set — use raw SQL
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE \"CommitteeReviews\" SET \"StartedByUserId\" = {pseudonym} WHERE \"StartedByUserId\" = {userId}",
-            cancellationToken);
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE \"CommitteeReviews\" SET \"RatifiedByUserId\" = {pseudonym} WHERE \"RatifiedByUserId\" = {userId}",
-            cancellationToken);
 
         // --- Committee decisions ---
         await _dbContext.Database.ExecuteSqlInterpolatedAsync(

@@ -9,6 +9,7 @@ using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Tests.Shared;
 using Wombat.Infrastructure.Persistence;
@@ -18,7 +19,9 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// <summary>
 /// T167 on a real PostgreSQL server, migrated and seeded with the v11.1 catalogue: a committee snapshot line records its
 /// EPA, instrument, rung and encounter date in the columns T167's migration adds, and a STAR is held to the trainee's
-/// curriculum by the same query the page's picker runs.
+/// curriculum by the same query the page's picker runs. T131: a staged decision names the snapshot line it rests on,
+/// ratifying copies that line onto the STAR and supersedes the prior STAR in one save, and the table holds one staged
+/// decision per EPA at a review.
 /// </summary>
 /// <remarks>
 /// The unit suites run on EF InMemory, which neither applies the migration nor translates the preferred-profile
@@ -49,7 +52,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
         try
         {
             var schema = await SeededSchemaAsync();
-            int reviewId, paed001, demoEpa, ladderId, activityId;
+            int reviewId, paed001, demoEpa, ladderId, activityId, lineId;
 
             await using (var db = NewContext(schema))
             {
@@ -128,6 +131,8 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                     new GetCommitteeReviewByIdQuery(reviewId, Chair()), CancellationToken.None);
 
                 var line = review.EvidenceItems.Should().ContainSingle(item => item.ActivityId == activityId).Subject;
+                lineId = line.Id;
+                line.CanGroundADecision.Should().BeTrue("an activity line may be named as the evidence a STAR rests on");
                 line.EpaCode.Should().Be("PAED-001");
                 line.InstrumentKey.Should().Be("cca");
                 line.InstrumentName.Should().Be("CCA");
@@ -136,6 +141,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 line.ObservedOn.Should().Be(new DateOnly(2026, 2, 10));
                 line.ObservedOnDeclared.Should().BeTrue();
                 line.SourceState.Should().Be("completed");
+                line.SourceFinished.Should().BeTrue("T131: whether a line was finished work is frozen with its state");
 
                 var options = await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
                     new ListStarEpaOptionsForReviewQuery(reviewId, Chair()), CancellationToken.None);
@@ -148,7 +154,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                var offCurriculum = () => StageAsync(db, reviewId, demoEpa, rung3b);
+                var offCurriculum = () => StageAsync(db, reviewId, demoEpa, rung3b, lineId);
                 await offCurriculum.Should().ThrowAsync<InvalidOperationException>().WithMessage("*EPA-001 is not on this trainee's curriculum*");
                 await db.SaveChangesAsync();
             }
@@ -157,8 +163,59 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
             {
                 (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0, "a refusal writes nothing, even through the audit save");
 
-                var staged = await StageAsync(db, reviewId, paed001, rung3b);
+                var staged = await StageAsync(db, reviewId, paed001, rung3b, lineId);
                 staged.EpaCode.Should().Be("PAED-001");
+                staged.EvidenceItemIds.Should().Equal(lineId);
+            }
+
+            // T131: ratifying issues the STAR with a link copied from the frozen line, and supersedes the trainee's current
+            // STAR on the EPA in the same save, through the new self-referencing foreign key.
+            var rung3a = await RungAsync(schema, ladderId, "3a");
+            int priorId;
+            await using (var db = NewContext(schema))
+            {
+                var prior = EntrustmentDecision.Issue(
+                    TraineeUserId, paed001, rung3a, new DateOnly(2026, 1, 8), null, reviewId, ChairUserId, "An earlier sitting.",
+                    StarEvidence.One(lineId, activityId));
+                db.EntrustmentDecisions.Add(prior);
+                await db.SaveChangesAsync();
+                priorId = prior.Id;
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                await new RecordCommitteeDecisionCommandHandler(db).Handle(
+                    new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, Chair()),
+                    CancellationToken.None);
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+                    new RatifyCommitteeDecisionCommand(reviewId, Chair()), CancellationToken.None);
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                var frozen = await db.Set<CommitteeEvidence>().AsNoTracking().SingleAsync(item => item.Id == lineId);
+                var star = await db.EntrustmentDecisions.AsNoTracking()
+                    .Include(decision => decision.EvidenceLinks)
+                    .SingleAsync(decision => decision.Id != priorId);
+                star.Status.Should().Be(EntrustmentDecisionStatus.Active);
+                star.AuthorisedLevelId.Should().Be(rung3b);
+
+                var link = star.EvidenceLinks.Should().ContainSingle().Subject;
+                link.CommitteeEvidenceId.Should().Be(lineId);
+                link.SourceType.Should().Be(EntrustmentEvidenceSourceType.Activity);
+                link.ActivityId.Should().Be(activityId);
+                link.SourceLabel.Should().Be(frozen.SourceLabel);
+                link.Summary.Should().Be(frozen.Summary);
+                link.SourceRecordedOn.Should().Be(frozen.SourceRecordedOn);
+
+                var prior = await db.EntrustmentDecisions.AsNoTracking().SingleAsync(decision => decision.Id == priorId);
+                prior.Status.Should().Be(EntrustmentDecisionStatus.Superseded);
+                prior.SupersededByDecisionId.Should().Be(star.Id);
+                (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
             }
         }
         finally
@@ -167,7 +224,78 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
         }
     }
 
-    private static Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int reviewId, int epaId, int levelId)
+    /// <summary>
+    /// One staged decision per EPA at a review is held by the table, not only by the handler's check: two chairs staging
+    /// at once pass the check together, and the second insert fails on the unique index. (T131)
+    /// </summary>
+    [Fact]
+    public async Task OneStagedDecisionPerEpaAtAReview_IsHeldByTheUniqueIndex_OnPostgres()
+    {
+        try
+        {
+            var schema = await SeededSchemaAsync();
+            int reviewId, paed001, paed002, levelId;
+
+            await using (var db = NewContext(schema))
+            {
+                var host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                paed001 = await db.Epas.Where(epa => epa.Code == "PAED-001" && epa.OwningInstitutionId == null).Select(epa => epa.Id).SingleAsync();
+                paed002 = await db.Epas.Where(epa => epa.Code == "PAED-002" && epa.OwningInstitutionId == null).Select(epa => epa.Id).SingleAsync();
+                levelId = await db.EntrustmentLevels.Select(level => level.Id).FirstAsync();
+
+                var panel = new DecisionPanel
+                {
+                    Name = "T131 CCC",
+                    Scope = DecisionPanelScope.Institution,
+                    InstitutionId = host,
+                    CreatedOn = DateTime.UtcNow,
+                    Members = [new DecisionPanelMember { UserId = ChairUserId, Role = DecisionPanelMemberRole.Chair }]
+                };
+                var review = new CommitteeReview
+                {
+                    Panel = panel,
+                    TraineeUserId = TraineeUserId,
+                    ReviewPeriodFrom = new DateOnly(2026, 1, 1),
+                    ReviewPeriodTo = new DateOnly(2026, 6, 30),
+                    ScheduledOn = new DateOnly(2026, 7, 2)
+                };
+                db.CommitteeReviews.Add(review);
+                await db.SaveChangesAsync();
+                reviewId = review.Id;
+
+                db.PendingEntrustmentDecisions.Add(Pending(reviewId, paed001, levelId));
+                await db.SaveChangesAsync();
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                db.PendingEntrustmentDecisions.Add(Pending(reviewId, paed001, levelId));
+                var second = () => db.SaveChangesAsync();
+
+                (await second.Should().ThrowAsync<DbUpdateException>()).Which.InnerException
+                    .Should().BeOfType<PostgresException>().Which.SqlState.Should().Be(PostgresErrorCodes.UniqueViolation);
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                db.PendingEntrustmentDecisions.Add(Pending(reviewId, paed002, levelId));
+                await db.SaveChangesAsync();
+                (await db.PendingEntrustmentDecisions.CountAsync(pending => pending.ReviewId == reviewId))
+                    .Should().Be(2, "another EPA at the same review is its own decision");
+            }
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    private static PendingEntrustmentDecision Pending(int reviewId, int epaId, int levelId)
+        => PendingEntrustmentDecision.Stage(
+            reviewId, epaId, levelId, new DateOnly(2026, 7, 2), null, "Target met.", [1], ChairUserId, DateTime.UtcNow);
+
+    private static Task<PendingEntrustmentDecisionDto> StageAsync(
+        ApplicationDbContext db, int reviewId, int epaId, int levelId, params int[] evidenceItemIds)
         => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId,
@@ -177,7 +305,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 new DateOnly(2026, 7, 2),
                 null,
                 "Target met.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
+                evidenceItemIds,
                 Chair()),
             CancellationToken.None);
 

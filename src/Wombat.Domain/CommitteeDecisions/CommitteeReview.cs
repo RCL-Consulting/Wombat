@@ -94,7 +94,12 @@ public sealed class CommitteeReview
         State = CommitteeReviewState.Final;
     }
 
-    public void Ratify(string actorUserId, DateTime utcNow)
+    /// <summary>
+    /// Refuses, without changing anything, unless the review can be ratified now: binding, decided, with a decision. The
+    /// ratify handler runs it before its other checks and before its first mutation, so a review in the wrong state is
+    /// told that, and <see cref="Ratify" /> runs it again.
+    /// </summary>
+    public void EnsureRatifiable()
     {
         if (IsFormative)
         {
@@ -110,6 +115,11 @@ public sealed class CommitteeReview
         {
             throw new InvalidOperationException("A review cannot be ratified without a decision.");
         }
+    }
+
+    public void Ratify(string actorUserId, DateTime utcNow)
+    {
+        EnsureRatifiable();
 
         RatifiedByUserId = actorUserId.Trim();
         RatifiedOn = utcNow;

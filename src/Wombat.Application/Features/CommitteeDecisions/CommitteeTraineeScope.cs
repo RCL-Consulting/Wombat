@@ -31,7 +31,7 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </item>
 /// <item>
 /// To act on a review already scheduled (<see cref="DemandTraineeAtPanelInstitutionAsync" />), its trainee must
-/// still train at the panel's institution: start, record, close, ratify, and stage, remove or issue an entrustment
+/// still train at the panel's institution: start, record, close, ratify, and stage or remove an entrustment
 /// decision against it. A trainee can move institution after being scheduled, and the panel must not then read their
 /// new institution's evidence or supersede its decisions. Who may act is still the command's own panel ladder (a
 /// member, the chair); this adds only the trainee. A global Administrator is not refused here, so a review stranded by

@@ -37,6 +37,13 @@ public sealed class EntrustmentDecisionConfiguration : IEntityTypeConfiguration<
             .HasForeignKey(entity => entity.IssuedByCommitteeReviewId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // T131: a navigation, so a ratification issues the new STAR and supersedes the old one in one save. Restrict: a
+        // STAR is never deleted, and one that replaced another must not vanish from under it.
+        builder.HasOne(entity => entity.SupersededByDecision)
+            .WithMany()
+            .HasForeignKey(entity => entity.SupersededByDecisionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(entity => entity.EvidenceLinks)
             .WithOne(entity => entity.Decision)
             .HasForeignKey(entity => entity.DecisionId)

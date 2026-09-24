@@ -9,6 +9,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.EntrustmentDecisions;
 
@@ -153,7 +154,7 @@ public sealed class EntrustmentStandingPostgresTests : IAsyncLifetime
             var levelId = item.Code == "PAED-008" ? rung3b : levelByOrder[item.MinimumLevelOrder];
             db.EntrustmentDecisions.Add(EntrustmentDecision.Issue(
                 TraineeUserId, item.EpaId, levelId, new DateOnly(2026, 1, 15), expiresOn: null,
-                review.Id, "chair-1", "Consistent across the period.", []));
+                review.Id, "chair-1", "Consistent across the period.", StarEvidence.One()));
         }
 
         var miniCex = await db.ActivityTypes.Where(type => type.Key == "mini_cex_cpsa").Select(type => new { type.Id, type.Version }).SingleAsync();

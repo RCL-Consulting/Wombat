@@ -184,6 +184,51 @@ internal static class CommitteeDecisionAuthorization
     private static bool CoordinatesInstitution(ClaimsPrincipal principal, int institutionId)
         => principal.GetInstitutionId() == institutionId;
 
+    /// <summary>
+    /// The one refusal for a review id the caller may not conduct as its chair, whether or not the id names a review.
+    /// (T131, T194 item 1)
+    /// </summary>
+    internal const string ReviewNotChairedByCaller =
+        "The committee review could not be found among the reviews you chair.";
+
+    /// <summary>
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs its
+    /// panel or is a global Administrator. An unknown id and a review of another panel get the one refusal. (T131)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The page prints a command's refusal. Before T131 the entrustment commands said "could not be found" for an unknown
+    /// id and only then checked the formative flag, the review's state and the chair, each with its own message, so a
+    /// committee member of one panel could try review ids and learn which exist, which are formative and how far each
+    /// has got (T194 item 1). The state checks now come after this one.
+    /// </para>
+    /// <para>
+    /// A global Administrator may conduct every review, so for them an unknown id is only that. The review's
+    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// </para>
+    /// </remarks>
+    public static CommitteeReview DemandChairedReview(ClaimsPrincipal principal, CommitteeReview? review)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (principal.IsAdministrator())
+        {
+            return review ?? throw new InvalidOperationException("The committee review could not be found.");
+        }
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (review is null ||
+            string.IsNullOrEmpty(userId) ||
+            !review.Panel.Members.Any(member =>
+                string.Equals(member.UserId, userId, StringComparison.Ordinal) &&
+                member.Role == DecisionPanelMemberRole.Chair))
+        {
+            throw new UnauthorizedAccessException(ReviewNotChairedByCaller);
+        }
+
+        return review;
+    }
+
     public static void DemandChairAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {
         if (principal.IsInRole(WombatRoles.Administrator))

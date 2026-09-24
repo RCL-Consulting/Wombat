@@ -23,7 +23,7 @@ public sealed record StarEpaOptionDto(int EpaId, string Code, string Title, int?
 
 /// <summary>
 /// Which EPAs a Statement of Awarded Responsibility may be granted on for a trainee, and on which ladder: the one
-/// answer the committee's STAR picker lists and the staging and issuing handlers enforce. (T167)
+/// answer the committee's STAR picker lists and the staging and ratifying handlers enforce. (T167)
 /// </summary>
 /// <remarks>
 /// <para>
@@ -49,8 +49,7 @@ public sealed record StarEpaOptionDto(int EpaId, string Code, string Title, int?
 /// </para>
 /// <para>
 /// The picker and the gate call the same <see cref="ListAsync" />, so the picker cannot offer an EPA or a level the
-/// gate refuses, nor hide one it accepts. The gate runs where a STAR is staged, where one is issued directly, and again
-/// at ratification (<see cref="DemandStagedAsync" />), which is when a staged decision becomes a STAR: between staging
+/// gate refuses, nor hide one it accepts. The gate runs where a STAR is staged, and again at ratification (<see cref="DemandStagedAsync" />), which is when a staged decision becomes a STAR: between staging
 /// and ratifying, the item can be removed, its ladder re-pinned, its EPA deactivated, or the trainee moved to another
 /// curriculum.
 /// </para>
@@ -204,7 +203,7 @@ public static class StarCurriculum
 
     /// <summary>
     /// Why a STAR on this EPA, at a level on this ladder, is refused for a trainee whose admitted EPAs are
-    /// <paramref name="options" />; null when it is admitted. The one wording staging, issuing and ratifying share.
+    /// <paramref name="options" />; null when it is admitted. The one wording staging and ratifying share.
     /// </summary>
     /// <param name="options">What <see cref="ListAsync" /> admits for the trainee.</param>
     /// <param name="epaId">The EPA.</param>

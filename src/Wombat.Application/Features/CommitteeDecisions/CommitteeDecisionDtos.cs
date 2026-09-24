@@ -85,6 +85,10 @@ public sealed record CommitteeAppealDto(
 /// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the filing day (T161).
 /// </param>
 /// <param name="SourceState">The activity's workflow state, or the campaign's state, when the review started.</param>
+/// <param name="SourceFinished">
+/// Whether that was finished work: a terminal state of the activity's pinned workflow (D44), or a released campaign. Null
+/// on a line frozen before T131. The page says when every item a staged decision names was unfinished; nothing refuses it.
+/// </param>
 public sealed record CommitteeEvidenceDto(
     int Id,
     CommitteeEvidenceSourceType SourceType,
@@ -104,13 +108,20 @@ public sealed record CommitteeEvidenceDto(
     string? RatingLabel = null,
     DateOnly? ObservedOn = null,
     bool? ObservedOnDeclared = null,
-    string? SourceState = null)
+    string? SourceState = null,
+    bool? SourceFinished = null)
 {
     /// <summary>
     /// An activity line frozen before T167, which recorded none of the columns above: every activity line frozen since
     /// carries its encounter date. The page lists these as they were written rather than under an EPA they never named.
     /// </summary>
     public bool FrozenBeforeLinesNamedTheirEpa => SourceType == CommitteeEvidenceSourceType.Activity && ObservedOn is null;
+
+    /// <summary>
+    /// Whether a staged entrustment decision may name this line as evidence it rests on: the predicate the staging
+    /// handler enforces, so the page's picker offers exactly those lines (D38, T131).
+    /// </summary>
+    public bool CanGroundADecision => Wombat.Application.Features.EntrustmentDecisions.StagedEvidence.CanGround(SourceType);
 }
 
 public sealed record CommitteeReviewDetailDto(

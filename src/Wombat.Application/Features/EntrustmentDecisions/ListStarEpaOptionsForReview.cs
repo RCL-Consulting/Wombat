@@ -14,7 +14,7 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// </summary>
 /// <remarks>
 /// The list is <see cref="StarCurriculum.ListAsync" /> for the review's trainee, the same call
-/// <c>StagePendingEntrustmentDecisionCommand</c> and <c>IssueEntrustmentDecisionCommand</c> enforce, so the picker
+/// <c>StagePendingEntrustmentDecisionCommand</c> and <c>RatifyCommitteeDecisionCommand</c> enforce, so the picker
 /// offers exactly what the gate accepts. It replaces two queries: <c>ListEpasForSubSpecialityQuery</c>, which listed
 /// the EPAs in the CHAIR's scope rather than the trainee's curriculum, and <c>GetProgramScaleIdForReviewQuery</c>,
 /// whose one programme scale is now each option's fallback. It climbs the review read ladder, like every other query on

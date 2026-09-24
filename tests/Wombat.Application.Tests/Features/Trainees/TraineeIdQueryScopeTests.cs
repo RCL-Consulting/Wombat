@@ -14,6 +14,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Trainees;
 
@@ -165,7 +166,7 @@ public sealed class TraineeIdQueryScopeTests
 
         db.EntrustmentDecisions.Add(EntrustmentDecision.Issue(
             TraineeUserId, EpaId, authorisedLevelId: 3, new DateOnly(2026, 7, 1), expiresOn: null,
-            committeeReviewId: review.Id, "chair-1", "Consistent across the period.", []));
+            committeeReviewId: review.Id, "chair-1", "Consistent across the period.", StarEvidence.One()));
 
         db.MsfCampaigns.Add(new MsfCampaign
         {

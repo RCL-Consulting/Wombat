@@ -16,6 +16,14 @@ public sealed class CommitteeReviewConfiguration : IEntityTypeConfiguration<Comm
         builder.Property(entity => entity.ReviewPeriodTo).HasColumnType("date");
         builder.Property(entity => entity.ScheduledOn).HasColumnType("date");
 
+        // Optimistic concurrency on the review, using Postgres's own xmin (no column, no write path), as MsfCampaign does.
+        // Load-bearing since T131: staging a decision checks the review's state in memory, and ratifying deletes only the
+        // staged rows it read. Without a token a stage that read the review before a ratify committed would add a staged
+        // row to a ratified review, and a stage committed after a ratify read the review would be left behind by it: a
+        // staged row nothing can remove or issue. So staging marks the review modified, and whichever of the two saves
+        // second is refused whole (StagePendingEntrustmentDecision, CommitteeReviewRacePostgresTests).
+        builder.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
+
         builder.HasIndex(entity => new { entity.TraineeUserId, entity.State });
         builder.HasIndex(entity => new { entity.PanelId, entity.ScheduledOn });
 

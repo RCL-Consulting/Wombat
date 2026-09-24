@@ -40,6 +40,9 @@ public sealed record EvidenceSnapshotView(
     /// <summary>Whether <see cref="AcrossEpas" /> holds an activity, which is then one whose type names no EPA.</summary>
     public bool AcrossEpasHoldsAnActivity
         => AcrossEpas.Any(line => line.SourceType == CommitteeEvidenceSourceType.Activity);
+
+    /// <summary>Whether the view holds no line at all.</summary>
+    public bool IsEmpty => ByEpa.Count == 0 && AcrossEpas.Count == 0 && FrozenBeforeLinesNamedTheirEpa.Count == 0;
 }
 
 /// <summary>
@@ -94,6 +97,48 @@ public static class EvidenceSnapshotGroups
             .ToArray();
 
         return new EvidenceSnapshotView(byEpa, acrossEpas, frozenBefore);
+    }
+
+    /// <summary>
+    /// The lines a staged entrustment decision may name, grouped as <see cref="Build" /> groups them, with the chosen
+    /// EPA's group first (D38, T131).
+    /// </summary>
+    /// <remarks>
+    /// Only lines the staging handler accepts (<see cref="CommitteeEvidenceDto.CanGroundADecision" />), so the picker
+    /// offers nothing the gate refuses: never a supervisor report. The chosen EPA's lines come first as a hint, never as
+    /// a filter; a decision may rest on a line about any EPA. With no EPA chosen, or none of its lines in the snapshot,
+    /// the groups keep <see cref="Build" />'s code order.
+    /// </remarks>
+    public static EvidenceSnapshotView BuildPicker(IEnumerable<CommitteeEvidenceDto> items, int chosenEpaId)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        var view = Build(items.Where(line => line.CanGroundADecision));
+        var byEpa = view.ByEpa
+            .OrderBy(group => group.EpaId == chosenEpaId ? 0 : 1)
+            .ToArray();
+
+        return view with { ByEpa = byEpa };
+    }
+
+    /// <summary>What the picker says beside an EPA line's label: its rung, encounter date and state.</summary>
+    public static string PickerDetail(CommitteeEvidenceDto line)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+
+        var parts = new List<string> { RatingText(line) };
+        if (line.ObservedOn is DateOnly observedOn)
+        {
+            var day = observedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            parts.Add(line.ObservedOnDeclared == false ? $"{day} (filed)" : day);
+        }
+
+        if (!string.IsNullOrWhiteSpace(line.SourceState))
+        {
+            parts.Add(line.SourceState);
+        }
+
+        return string.Join(" · ", parts);
     }
 
     /// <summary>The rating column's text: the rung, else whether the instrument rates at all.</summary>

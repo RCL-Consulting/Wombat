@@ -10,6 +10,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
@@ -553,7 +554,7 @@ public sealed class GetEntrustmentStandingForTraineeTests
     {
         var decision = EntrustmentDecision.Issue(
             TraineeUserId, epaId, levelId, issuedOn ?? new DateOnly(2026, 1, 15), expiresOn: null,
-            committeeReviewId: 30, "chair-1", "Consistent across the period.", []);
+            committeeReviewId: 30, "chair-1", "Consistent across the period.", StarEvidence.One());
         db.EntrustmentDecisions.Add(decision);
         return decision;
     }

@@ -247,10 +247,83 @@
               <FormField Label="Rationale" InputId="pending-rationale" Required="true">
                 <InputTextArea id="pending-rationale" class="form-control" @bind-Value="_pending.Rationale" />
               </FormField>
+
+              @* D38 (T131): a decision names the lines of the frozen snapshot it rests on, at least one. The lines offered
+                 are the ones StagePendingEntrustmentDecision accepts (CanGroundADecision: never a supervisor report),
+                 grouped as the snapshot card below groups them, with the chosen EPA's lines first as a hint. A line
+                 about any EPA may be named; that none is about this one, or that only one is named, is said, not
+                 refused. *@
+              @{ var picker = EvidenceSnapshotGroups.BuildPicker(_review.EvidenceItems, _pending.EpaId); }
+              <fieldset class="full-width" aria-describedby="pending-evidence-help">
+                <legend>Evidence it rests on</legend>
+                <p id="pending-evidence-help" class="muted">
+                  Tick the lines of the evidence snapshot this decision rests on.@(SelectedStarEpa is null
+                    ? string.Empty
+                    : $" {SelectedStarEpa.Code}'s lines are listed first.")
+                </p>
+                @if (picker.IsEmpty)
+                {
+                  <p class="muted">
+                    The evidence snapshot holds no line a decision can rest on, so no entrustment decision can be staged
+                    at this review.
+                  </p>
+                }
+                @foreach (var group in picker.ByEpa)
+                {
+                  <fieldset class="form-group">
+                    <legend>@group.EpaCode@(string.IsNullOrWhiteSpace(group.EpaTitle) ? string.Empty : $" — {group.EpaTitle}")</legend>
+                    <div class="check-grid">
+                      @foreach (var line in group.Instruments.SelectMany(instrument => instrument.Lines))
+                      {
+                        @EvidenceCheckbox(line, EvidenceSnapshotGroups.PickerDetail(line))
+                      }
+                    </div>
+                  </fieldset>
+                }
+                @if (picker.AcrossEpas.Count > 0)
+                {
+                  <fieldset class="form-group">
+                    <legend>Not about a single EPA</legend>
+                    <div class="check-grid">
+                      @foreach (var line in picker.AcrossEpas)
+                      {
+                        @EvidenceCheckbox(line, line.SourceState)
+                      }
+                    </div>
+                  </fieldset>
+                }
+                @if (picker.FrozenBeforeLinesNamedTheirEpa.Count > 0)
+                {
+                  <fieldset class="form-group">
+                    <legend>Frozen before lines named their EPA</legend>
+                    <div class="check-grid">
+                      @foreach (var line in picker.FrozenBeforeLinesNamedTheirEpa)
+                      {
+                        @EvidenceCheckbox(line, null)
+                      }
+                    </div>
+                  </fieldset>
+                }
+                @* Always present, filled only when a hint applies: a screen reader announces a change to a region it
+                   already knows. *@
+                <div id="pending-evidence-hints" role="status">
+                  @foreach (var hint in EvidenceHints)
+                  {
+                    <p class="field-warning">@hint</p>
+                  }
+                </div>
+              </fieldset>
             </div>
             <FormActions>
-              <button type="submit" class="btn btn-primary">Stage pending decision</button>
+              <button type="submit" class="btn btn-primary" disabled="@(!EvidenceNamed)"
+                      aria-describedby="@(EvidenceNamed ? null : "pending-evidence-reason")">Stage pending decision</button>
             </FormActions>
+            @if (!EvidenceNamed)
+            {
+              <ul class="workflow-action-reasons">
+                <li id="pending-evidence-reason"><strong>Stage pending decision:</strong> @StagedEvidence.NoneNamed</li>
+              </ul>
+            }
           </EditForm>
         }
 
@@ -267,6 +340,17 @@
                 <strong>@pending.EpaCode — @pending.EpaTitle</strong>
                 <span>@pending.AuthorisedLevelLabel · issued @pending.IssuedOn.ToString("yyyy-MM-dd")@(pending.ExpiresOn.HasValue ? $" · expires {pending.ExpiresOn:yyyy-MM-dd}" : string.Empty)</span>
                 <p>@pending.Rationale</p>
+                @{ var restsOn = EvidenceLabels(pending.EvidenceItemIds); }
+                <p class="muted">
+                  @if (restsOn.Count == 0)
+                  {
+                    @:Names no evidence, so the review cannot be ratified with it. Remove it and stage it again.
+                  }
+                  else
+                  {
+                    @($"Rests on {restsOn.Count} item{(restsOn.Count == 1 ? string.Empty : "s")} of the snapshot: {string.Join("; ", restsOn)}.")
+                  }
+                </p>
                 @if (_review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
                 {
                   <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
@@ -648,6 +732,13 @@
     _error = null;
     _status = null;
 
+    // The button is disabled until an item is ticked; this covers a submit by the Enter key. The handler refuses too.
+    if (!EvidenceNamed)
+    {
+      _error = StagedEvidence.NoneNamed;
+      return;
+    }
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -659,7 +750,7 @@
         _pending.IssuedOn,
         _pending.ExpiresOn,
         _pending.Rationale,
-        Array.Empty<EntrustmentEvidenceLinkInput>(),
+        NamedEvidenceIds(),
         authState.User));
       _pending = new PendingDecisionFormModel();
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
@@ -698,6 +789,91 @@
       _pending.AuthorisedLevelId = 0;
     }
   }
+
+  // ---- The evidence a staged decision rests on (D38, T131) ----------------------------------------------------------
+
+  // The ticked lines, as the review holds them. Only lines the handler accepts can be ticked, since only they are listed;
+  // the filter is repeated so that nothing else is ever sent.
+  private IReadOnlyList<CommitteeEvidenceDto> NamedEvidenceLines()
+    => _review is null
+      ? Array.Empty<CommitteeEvidenceDto>()
+      : _review.EvidenceItems
+        .Where(line => line.CanGroundADecision && _pending.EvidenceItemIds.Contains(line.Id))
+        .ToArray();
+
+  private int[] NamedEvidenceIds() => NamedEvidenceLines().Select(line => line.Id).ToArray();
+
+  private bool EvidenceNamed => NamedEvidenceLines().Count > 0;
+
+  internal const string NoFinishedItemHint =
+    "None of the named items was finished when the review started (each shows the state it was in), so the decision " +
+    "would rest on no completed assessment.";
+
+  // Said, never enforced: D38 as adopted asks for one item, about any EPA (the design's Decision 8, question O1).
+  private IReadOnlyList<string> EvidenceHints
+  {
+    get
+    {
+      var named = NamedEvidenceLines();
+      if (named.Count == 0)
+      {
+        return Array.Empty<string>();
+      }
+
+      var hints = new List<string>();
+      if (named.Count == 1)
+      {
+        hints.Add("Only one item is named. The College's rule is that an entrustment decision is never taken from a single form.");
+      }
+
+      if (SelectedStarEpa is { } epa && named.All(line => line.EpaId != epa.EpaId))
+      {
+        hints.Add($"None of the named items is about {epa.Code}.");
+      }
+
+      // A requested form nobody filled in, a draft, a declined or cancelled request: every state is in the snapshot on
+      // purpose (T138), and D38 as adopted lets any line ground a decision, so this is said, not refused. Only lines
+      // known to be unfinished count; a line frozen before T131 records neither. (T131 review)
+      if (named.All(line => line.SourceFinished == false))
+      {
+        hints.Add(NoFinishedItemHint);
+      }
+
+      return hints;
+    }
+  }
+
+  private void ToggleEvidence(int evidenceId, bool isChecked)
+  {
+    if (isChecked)
+    {
+      _pending.EvidenceItemIds.Add(evidenceId);
+    }
+    else
+    {
+      _pending.EvidenceItemIds.Remove(evidenceId);
+    }
+  }
+
+  // What a staged decision rests on, by the snapshot's own labels.
+  private IReadOnlyList<string> EvidenceLabels(IReadOnlyList<int> evidenceItemIds)
+    => evidenceItemIds
+      .Select(id => _review?.EvidenceItems.FirstOrDefault(line => line.Id == id)?.SourceLabel ?? $"item #{id}")
+      .ToArray();
+
+  private RenderFragment EvidenceCheckbox(CommitteeEvidenceDto line, string? detail) =>
+    @<div class="form-check">
+      <input id="@($"pending-evidence-{line.Id}")" class="form-check-input" type="checkbox"
+             checked="@_pending.EvidenceItemIds.Contains(line.Id)"
+             @onchange="args => ToggleEvidence(line.Id, args.Value is bool isChecked && isChecked)" />
+      <label for="@($"pending-evidence-{line.Id}")">
+        @line.SourceLabel
+        @if (!string.IsNullOrWhiteSpace(detail))
+        {
+          <span class="muted">· @detail</span>
+        }
+      </label>
+    </div>;
 
   private async Task RemovePendingAsync(int pendingId)
   {
@@ -836,5 +1012,8 @@
 
     [Required]
     public string Rationale { get; set; } = string.Empty;
+
+    // The ids of the ticked snapshot lines (D38, T131).
+    public HashSet<int> EvidenceItemIds { get; } = new();
   }
 }

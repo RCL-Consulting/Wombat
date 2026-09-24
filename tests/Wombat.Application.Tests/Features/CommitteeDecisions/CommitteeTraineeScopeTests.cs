@@ -314,7 +314,7 @@ public sealed class CommitteeTraineeScopeTests
 
     public static TheoryData<string> ReviewCommands => new()
     {
-        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "Stage", "Remove", "Issue"
+        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "Stage", "Remove"
     };
 
     public static TheoryData<string, string> ReviewCommandsForTraineesNotAtThePanel()
@@ -322,7 +322,7 @@ public sealed class CommitteeTraineeScopeTests
         var cases = new TheoryData<string, string>();
         // Not ResolveAppeal: an appeal body answers an appeal against its own ratified review wherever the trainee now
         // trains (TheAppealBody_AnswersTheAppealOfATraineeWhoHasMovedAway).
-        foreach (var command in new[] { "Start", "Record", "Ratify", "Close", "Stage", "Remove", "Issue" })
+        foreach (var command in new[] { "Start", "Record", "Ratify", "Close", "Stage", "Remove" })
         {
             foreach (var trainee in new[] { PaedsAtB, MovedFromAToB, NoProfile })
             {
@@ -475,14 +475,11 @@ public sealed class CommitteeTraineeScopeTests
                 CancellationToken.None),
             "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
                 new StagePendingEntrustmentDecisionCommand(
-                    reviewId, null, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready for indirect supervision.", [], principal),
+                    reviewId, null, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready for indirect supervision.",
+                    [await EvidenceLineIdAsync(db, reviewId)], principal),
                 CancellationToken.None),
             "Remove" => (object)await new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
                 new RemovePendingEntrustmentDecisionCommand(reviewId, await PendingIdAsync(db, reviewId), principal),
-                CancellationToken.None),
-            "Issue" => await new IssueEntrustmentDecisionCommandHandler(db).Handle(
-                new IssueEntrustmentDecisionCommand(
-                    traineeUserId, EpaId, LevelId, new DateOnly(2027, 1, 8), null, reviewId, "Ready.", [], principal),
                 CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(command), command, null)
         };
@@ -491,6 +488,13 @@ public sealed class CommitteeTraineeScopeTests
     /// <summary>The panel member each command admits: the chair for all but Start, which any member may do.</summary>
     private static ClaimsPrincipal ActorFor(string command)
         => command == "Start" ? Member("member-a", InstitutionA) : Member("chair-a", InstitutionA);
+
+    /// <summary>The review's one snapshot line, which a staged decision names as the evidence it rests on (D38, T131).</summary>
+    private static async Task<int> EvidenceLineIdAsync(ApplicationDbContext db, int reviewId)
+        => await db.Set<CommitteeEvidence>()
+            .Where(line => line.ReviewId == reviewId)
+            .Select(line => line.Id)
+            .SingleAsync();
 
     private static async Task<int> PendingIdAsync(ApplicationDbContext db, int reviewId)
         => await db.Set<PendingEntrustmentDecision>()
@@ -514,17 +518,28 @@ public sealed class CommitteeTraineeScopeTests
             IsFormative = command == "Close"
         };
 
+        // One frozen line, which a staged decision names as the evidence it rests on (D38, T131).
+        var line = new CommitteeEvidence
+        {
+            SourceType = CommitteeEvidenceSourceType.Activity,
+            ActivityId = 900,
+            EpaId = EpaId,
+            SourceLabel = "Mini-CEX #900",
+            Summary = "State: completed.",
+            ObservedOn = new DateOnly(2026, 6, 1)
+        };
+
         if (command != "Start")
         {
-            review.Start([], "chair-a", now);
+            review.Start([line], "chair-a", now);
         }
 
-        if (command is "Ratify" or "ResolveAppeal" or "Issue")
+        if (command is "Ratify" or "ResolveAppeal")
         {
             review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now);
         }
 
-        if (command is "ResolveAppeal" or "Issue")
+        if (command == "ResolveAppeal")
         {
             review.Ratify("chair-a", now);
         }
@@ -540,14 +555,15 @@ public sealed class CommitteeTraineeScopeTests
         if (command is "Ratify" or "Remove")
         {
             db.Set<PendingEntrustmentDecision>().Add(PendingEntrustmentDecision.Stage(
-                review.Id, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready.", "[]", "chair-a", now));
+                review.Id, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready.", [line.Id], "chair-a", now));
         }
 
         if (command == "Ratify")
         {
             // The trainee's current decision on the EPA, which a ratified decision would supersede.
             db.Set<EntrustmentDecision>().Add(EntrustmentDecision.Issue(
-                traineeUserId, EpaId, 2, new DateOnly(2026, 1, 8), null, review.Id, "chair-a", "Earlier.", []));
+                traineeUserId, EpaId, 2, new DateOnly(2026, 1, 8), null, review.Id, "chair-a", "Earlier.",
+                [EntrustmentEvidenceLink.FromSnapshot(line)]));
         }
 
         await db.SaveChangesAsync();
@@ -592,7 +608,7 @@ public sealed class CommitteeTraineeScopeTests
             new EntrustmentLevel { Id = LevelId, ScaleId = 1, Order = 3, Label = "Indirect supervision" });
         db.Epas.Add(new Epa { Id = EpaId, SubSpecialityId = GeneralPaediatrics, Code = "PAED-007", Title = "Triage", IsActive = true });
         // A STAR is granted only on an EPA of the trainee's curriculum (T167), so the General Paediatrics curriculum
-        // every Stage, Issue and Ratify row's trainee follows holds the EPA they stage.
+        // every Stage and Ratify row's trainee follows holds the EPA they stage.
         db.CurriculumItems.Add(new CurriculumItem
         {
             Id = 1000, CurriculumId = 100, EpaId = EpaId, RequiredCount = 1, MinimumLevelOrder = 3

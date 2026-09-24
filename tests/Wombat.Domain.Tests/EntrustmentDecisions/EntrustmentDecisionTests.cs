@@ -1,18 +1,24 @@
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Domain.Tests.EntrustmentDecisions;
 
 public sealed class EntrustmentDecisionTests
 {
-    private static EntrustmentEvidenceLink SampleEvidence() =>
-        EntrustmentEvidenceLink.Create(
-            EntrustmentEvidenceSourceType.Activity,
-            activityId: 42,
-            msfCampaignId: null,
-            committeeReviewId: null,
-            sourceLabel: "Mini-CEX #42",
-            summary: "Direct observation.",
-            sourceRecordedOn: DateTime.UtcNow);
+    private static readonly DateTime Recorded = new(2026, 3, 2, 8, 30, 0, DateTimeKind.Utc);
+
+    private static CommitteeEvidence ActivityLine(int id = 501) => new()
+    {
+        Id = id,
+        ReviewId = 11,
+        SourceType = CommitteeEvidenceSourceType.Activity,
+        ActivityId = 42,
+        SourceLabel = "Mini-CEX #42",
+        Summary = "Direct observation.",
+        SourceRecordedOn = Recorded
+    };
+
+    private static EntrustmentEvidenceLink SampleEvidence() => EntrustmentEvidenceLink.FromSnapshot(ActivityLine());
 
     [Fact]
     public void Issue_HappyPath_ReturnsActiveDecisionWithEvidence()
@@ -53,7 +59,7 @@ public sealed class EntrustmentDecisionTests
                 reviewId,
                 chairUserId,
                 rationale,
-                Array.Empty<EntrustmentEvidenceLink>()));
+                [SampleEvidence()]));
 
         Assert.Contains(expectedFragment, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -71,9 +77,20 @@ public sealed class EntrustmentDecisionTests
                 11,
                 "chair-1",
                 "Rationale.",
-                Array.Empty<EntrustmentEvidenceLink>()));
+                [SampleEvidence()]));
 
         Assert.Contains("expiry", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Issue_RefusesADecisionThatRestsOnNoEvidence()
+    {
+        // D38 (T131): the committee's decision draws on the assessment evidence, never on none.
+        var exception = Assert.Throws<InvalidOperationException>(() => EntrustmentDecision.Issue(
+            "trainee-1", 7, 3, new DateOnly(2026, 4, 1), null, 11, "chair-1", "Rationale.",
+            Array.Empty<EntrustmentEvidenceLink>()));
+
+        Assert.Equal(EntrustmentDecision.EvidenceRequired, exception.Message);
     }
 
     [Fact]
@@ -102,7 +119,7 @@ public sealed class EntrustmentDecisionTests
         var decision = EntrustmentDecision.Issue(
             "trainee-1", 7, 3,
             new DateOnly(2026, 4, 1), expiresOn,
-            11, "chair-1", "Rationale.", Array.Empty<EntrustmentEvidenceLink>());
+            11, "chair-1", "Rationale.", [SampleEvidence()]);
 
         Assert.Throws<InvalidOperationException>(() =>
             decision.MarkExpired(expiresOn.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)));
@@ -120,20 +137,35 @@ public sealed class EntrustmentDecisionTests
         var decision = EntrustmentDecision.Issue(
             "trainee-1", 7, 3,
             new DateOnly(2026, 4, 1), expiresOn: null,
-            11, "chair-1", "Rationale.", Array.Empty<EntrustmentEvidenceLink>());
+            11, "chair-1", "Rationale.", [SampleEvidence()]);
 
         Assert.Throws<InvalidOperationException>(() => decision.MarkExpired(DateTime.UtcNow.AddYears(10)));
     }
 
     [Fact]
-    public void SupersedeBy_OnlyAllowedFromActive()
+    public void SupersedeBy_OnlyAllowedFromActive_AndThroughTheSuccessorBeforeItHasAnId()
     {
         var decision = BuildActive();
-        decision.SupersedeBy(99);
-        Assert.Equal(EntrustmentDecisionStatus.Superseded, decision.Status);
-        Assert.Equal(99, decision.SupersededByDecisionId);
+        var successor = BuildActive();
 
-        Assert.Throws<InvalidOperationException>(() => decision.SupersedeBy(100));
+        decision.SupersedeBy(successor);
+
+        Assert.Equal(EntrustmentDecisionStatus.Superseded, decision.Status);
+        Assert.Same(successor, decision.SupersededByDecision);
+        Assert.Null(decision.SupersededByDecisionId); // the save fills it from the navigation
+        Assert.Throws<InvalidOperationException>(() => decision.SupersedeBy(BuildActive()));
+    }
+
+    [Fact]
+    public void SupersedeBy_RefusesItself_AndAStarOnAnotherEpa()
+    {
+        var decision = BuildActive();
+        var otherEpa = EntrustmentDecision.Issue(
+            "trainee-1", 8, 3, new DateOnly(2026, 4, 1), null, 11, "chair-1", "Rationale.", [SampleEvidence()]);
+
+        Assert.Throws<InvalidOperationException>(() => decision.SupersedeBy(decision));
+        Assert.Throws<InvalidOperationException>(() => decision.SupersedeBy(otherEpa));
+        Assert.Equal(EntrustmentDecisionStatus.Active, decision.Status);
     }
 
     [Fact]
@@ -145,20 +177,66 @@ public sealed class EntrustmentDecisionTests
     }
 
     [Fact]
-    public void EvidenceLink_RequiresExactlyOneSourceId()
+    public void AnEvidenceLink_IsWhatItsSnapshotLineSays_AndNamesTheLine()
     {
-        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.Create(
-            EntrustmentEvidenceSourceType.Activity, null, null, null, "Label", "Summary", null));
-        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.Create(
-            EntrustmentEvidenceSourceType.Activity, 1, 2, null, "Label", "Summary", null));
+        var line = ActivityLine(id: 777);
+
+        var link = EntrustmentEvidenceLink.FromSnapshot(line);
+
+        Assert.Equal(EntrustmentEvidenceSourceType.Activity, link.SourceType);
+        Assert.Equal(42, link.ActivityId);
+        Assert.Null(link.MsfCampaignId);
+        Assert.Null(link.CommitteeReviewId);
+        Assert.Equal(777, link.CommitteeEvidenceId);
+        Assert.Equal("Mini-CEX #42", link.SourceLabel);
+        Assert.Equal("Direct observation.", link.Summary);
+        Assert.Equal(Recorded, link.SourceRecordedOn);
     }
 
     [Fact]
-    public void EvidenceLink_EnforcesSourceTypeMatchesPopulatedId()
+    public void AnMsfCampaignLine_BecomesACampaignLink()
     {
-        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.Create(
-            EntrustmentEvidenceSourceType.MsfCampaign, activityId: 1, msfCampaignId: null, committeeReviewId: null,
-            sourceLabel: "Label", summary: "Summary", sourceRecordedOn: null));
+        var link = EntrustmentEvidenceLink.FromSnapshot(new CommitteeEvidence
+        {
+            Id = 12,
+            SourceType = CommitteeEvidenceSourceType.MsfCampaign,
+            MsfCampaignId = 5,
+            SourceLabel = "Annual MSF #5",
+            Summary = "State: Released; responses 8."
+        });
+
+        Assert.Equal(EntrustmentEvidenceSourceType.MsfCampaign, link.SourceType);
+        Assert.Equal(5, link.MsfCampaignId);
+        Assert.Null(link.ActivityId);
+        Assert.Equal(12, link.CommitteeEvidenceId);
+    }
+
+    [Fact]
+    public void ASupervisorReportLine_CannotGroundADecision()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.FromSnapshot(new CommitteeEvidence
+        {
+            Id = 13,
+            SourceType = CommitteeEvidenceSourceType.SupervisorReport,
+            SupervisorReportId = 3,
+            SourceLabel = "Supervisor report #3"
+        }));
+
+        Assert.Contains("supervisor report", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ALineNotYetStored_OrNamingNoSource_IsRefused()
+    {
+        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.FromSnapshot(ActivityLine(id: 0)));
+
+        var noActivity = ActivityLine();
+        noActivity.ActivityId = null;
+        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.FromSnapshot(noActivity));
+
+        var noLabel = ActivityLine();
+        noLabel.SourceLabel = " ";
+        Assert.Throws<InvalidOperationException>(() => EntrustmentEvidenceLink.FromSnapshot(noLabel));
     }
 
     private static EntrustmentDecision BuildActive(DateOnly? expiresOn = null) =>
@@ -166,5 +244,5 @@ public sealed class EntrustmentDecisionTests
             "trainee-1", 7, 3,
             new DateOnly(2026, 4, 1),
             expiresOn ?? new DateOnly(2027, 4, 1),
-            11, "chair-1", "Rationale.", Array.Empty<EntrustmentEvidenceLink>());
+            11, "chair-1", "Rationale.", [SampleEvidence()]);
 }

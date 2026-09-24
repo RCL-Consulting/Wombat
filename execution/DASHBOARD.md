@@ -4,11 +4,11 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T131](tasks/in_progress/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T205](tasks/queued/T205-msf-respondents-have-no-page-to-answer-on-the-invitation-link-leads-to-a-json-endpoint-on-dev-and-to-nothing-in-production.md) | P1 | MSF respondents have no page to answer on: the invitation link leads t |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
-| queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
@@ -73,9 +73,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+26bc740 fix(msf): coverage is read from the released campaign's finished evidence rows everywhere — committee snapshot, coverage card, campaign report and portfolio PDF — so a campaign released before the per-EPA stamp is not reported as covering nothing (T186)
 455bb53 fix(web): a detail card's wide table scrolls in its own container at narrow widths instead of widening the page; docs(execution): close T166 and T168 (browser-verified), widen T186 to T168's coverage, file T210
 55c9085 feat(msf): the trainee and the committee see, per EPA and semester, whether a released MSF covered it (T168)
 4db504b feat(committee): the review and the trainee see each EPA's entrustment against Annexure A's target for the year, and exit-rule readiness — informational, no graduation gate (T166)
 2352a16 docs(execution): handoff progress
-89ac84e test(integration): T201's audit test supplies the trainee's name T202 now requires; docs(execution): close T200–T203, file T205–T209 (P1: MSF respondents have no page)
 ```

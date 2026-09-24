@@ -150,6 +150,53 @@ public sealed class CommitteeEvidenceSnapshotTests
     }
 
     /// <summary>
+    /// Each line records whether it was finished work when the review started: D44's terminal state of the PINNED
+    /// workflow, not the literal <c>completed</c>. A request nobody filled in and a declined one are not; a reflective
+    /// exercise finishes in <c>discussed</c>, an MSF record in <c>recorded</c>, and a campaign line is always a released
+    /// report. The committee page says when a staged decision names only unfinished lines (T131 review).
+    /// </summary>
+    [Fact]
+    public async Task EachLineSaysWhetherItWasFinished_ByItsPinnedWorkflow()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var miniCex = await SeedTypeAsync(db, "mini_cex_cpsa", "mini_cex");
+        var reflective = await SeedTypeAsync(db, "reflective_exercise_cpsa", "reflective_exercise");
+        var msf = await SeedTypeAsync(db, "msf_cpsa", "msf");
+        var completed = AddActivity(db, miniCex, "completed", Rated(3), Paed001);
+        var requested = AddActivity(db, miniCex, "requested", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "observed_on": "2026-02-10" }""", Paed001);
+        var declined = AddActivity(db, miniCex, "declined", Rated(2), Paed001);
+        var discussed = AddActivity(db, reflective, "discussed", """{ "epa_id": 7, "observed_on": "2026-02-10" }""", Paed001);
+        var recorded = AddActivity(db, msf, "recorded", """{ "epa_id": 7, "campaign_id": 50, "observed_on": "2026-02-10", "respondent_count": 8 }""", Paed001);
+        db.MsfTemplates.Add(new MsfTemplate { Id = 40, Name = "Annual MSF" });
+        db.MsfCampaigns.Add(new MsfCampaign
+        {
+            Id = 50,
+            SubjectUserId = "trainee-1",
+            TemplateId = 40,
+            CreatedByUserId = "coord-1",
+            CreatedOn = new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc),
+            OpensOn = new DateOnly(2026, 2, 1),
+            ClosesOn = new DateOnly(2026, 2, 9),
+            State = MsfCampaignState.Released,
+            OpenedOn = new DateTime(2026, 2, 1, 8, 0, 0, DateTimeKind.Utc),
+            ClosedOn = new DateTime(2026, 2, 10, 1, 0, 0, DateTimeKind.Utc),
+            ReleasedOn = new DateTime(2026, 2, 12, 8, 0, 0, DateTimeKind.Utc)
+        });
+        await db.SaveChangesAsync();
+
+        var lines = (await StartAsync(db)).EvidenceItems;
+
+        bool? Finished(int activityId) => lines.Single(item => item.ActivityId == activityId).SourceFinished;
+        Finished(completed.Id).Should().BeTrue();
+        Finished(requested.Id).Should().BeFalse("a request nobody has filled in holds no assessment");
+        Finished(declined.Id).Should().BeFalse("every seed makes declined a non-terminal dead end");
+        Finished(discussed.Id).Should().BeTrue("a reflective exercise finishes in discussed, not completed");
+        Finished(recorded.Id).Should().BeTrue("an MSF record finishes in recorded");
+        lines.Single(item => item.MsfCampaignId == 50).SourceFinished.Should().BeTrue("only released campaigns are frozen");
+    }
+
+    /// <summary>
     /// A released campaign's per-EPA records are ordinary activity lines, each under its own EPA. The campaign's own
     /// line is a report across them and names no single EPA.
     /// </summary>

@@ -16,7 +16,8 @@ namespace Wombat.Domain.CommitteeDecisions;
 /// The columns from <see cref="EpaId" /> on were added by T167, so that a line says which EPA it is about, by which
 /// instrument, at which rung and on which day, without the panel opening each activity. They are null on every row
 /// frozen before T167 (an activity row with no <see cref="ObservedOn" /> is one of those), and on an MSF campaign row,
-/// which is a report across several EPAs rather than evidence for one.
+/// which is a report across several EPAs rather than evidence for one. <see cref="SourceFinished" /> was added by T131
+/// and is null on every row frozen before it.
 /// </para>
 /// </remarks>
 public sealed class CommitteeEvidence
@@ -80,6 +81,19 @@ public sealed class CommitteeEvidence
     /// state is kept and labelled (T135): a run of declines is evidence too.
     /// </summary>
     public string? SourceState { get; set; }
+
+    /// <summary>
+    /// Whether the source was finished work when the review started (T131): an activity in a terminal state of its
+    /// pinned workflow, where its credit fires (D44, <c>ActivityCompletion</c>), or a released campaign, the only kind a
+    /// snapshot holds. A requested form nobody filled in, a draft, and a declined or cancelled request are not. Null on a
+    /// line frozen before T131.
+    /// </summary>
+    /// <remarks>
+    /// Frozen with <see cref="SourceState" /> rather than worked out when the page is read, because which states finish
+    /// differs by workflow and a line keeps no pin to one. The committee page uses it to say when every item a staged
+    /// decision names was unfinished; D38 as adopted lets any line ground a decision, so it refuses nothing.
+    /// </remarks>
+    public bool? SourceFinished { get; set; }
 
     public CommitteeReview Review { get; set; } = null!;
 }

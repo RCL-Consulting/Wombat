@@ -163,7 +163,7 @@ public sealed class CommitteeReviewReadLadderTests
             issuedOn: new DateOnly(2026, 4, 1),
             expiresOn: null,
             rationale: "Consistent independent practice across the review period.",
-            evidenceLinksJson: "[]",
+            evidenceItemIds: [1],
             actorUserId: "chair-1",
             utcNow: DateTime.UtcNow));
         await db.SaveChangesAsync();

@@ -18,6 +18,7 @@ using Wombat.Infrastructure.DataRights;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Infrastructure.Tests.Reporting;
 
@@ -338,7 +339,7 @@ public sealed class ConcurrentPdfRenderingTests
         db.Set<EntrustmentDecision>().Add(EntrustmentDecision.Issue(
             Trainee, epaId: 1, authorisedLevelId: 9, issuedOn: new DateOnly(2026, 6, 18), expiresOn: null,
             committeeReviewId: 1, chairUserId: "chair-1", rationale: "Target met.",
-            evidenceLinks: Array.Empty<EntrustmentEvidenceLink>()));
+            evidenceLinks: StarEvidence.One()));
         db.SaveChanges();
     }
 

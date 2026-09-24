@@ -84,7 +84,7 @@ public sealed class EntrustmentAdminListTraineeNameTests
             committeeReviewId: 30,
             chairUserId: "chair-1",
             rationale: "Ratified at the annual review.",
-            evidenceLinks: []);
+            evidenceLinks: StarEvidence.One());
 
     private static ApplicationDbContext SeededDb()
     {

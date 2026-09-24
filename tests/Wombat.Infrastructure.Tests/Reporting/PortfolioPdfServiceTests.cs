@@ -12,6 +12,7 @@ using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
+using Wombat.Tests.Shared;
 using System.Security.Claims;
 
 namespace Wombat.Infrastructure.Tests.Reporting;
@@ -285,7 +286,7 @@ public sealed class PortfolioPdfServiceTests
         db.Set<EntrustmentDecision>().Add(EntrustmentDecision.Issue(
             "trainee-1", epaId: 1, authorisedLevelId: 9, issuedOn: new DateOnly(2029, 11, 18),
             expiresOn: null, committeeReviewId: 1, chairUserId: "chair-1", rationale: "Target met.",
-            evidenceLinks: Array.Empty<EntrustmentEvidenceLink>()));
+            evidenceLinks: StarEvidence.One()));
         db.SaveChanges();
         return db;
     }

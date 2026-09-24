@@ -195,23 +195,36 @@ public sealed class DownloadEntrustmentCertificateTests
 
         var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
         await startHandler.Handle(new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
+
+        // The window held no activity, so the snapshot line the STAR rests on is written here (D38, T131).
+        var line = new CommitteeEvidence
+        {
+            ReviewId = review.Id,
+            SourceType = CommitteeEvidenceSourceType.Activity,
+            ActivityId = 101,
+            EpaId = 7,
+            SourceLabel = "Mini-CEX #101",
+            Summary = "State: completed."
+        };
+        dbContext.Set<CommitteeEvidence>().Add(line);
+        await dbContext.SaveChangesAsync();
+
         var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
         await recordHandler.Handle(
             new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
+        await new StagePendingEntrustmentDecisionCommandHandler(dbContext).Handle(
+            new StagePendingEntrustmentDecisionCommand(review.Id, null, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
+                "Sufficient evidence.", [line.Id], CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
         var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
         await ratifyHandler.Handle(new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
-        var issued = await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand("trainee-1", 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
-                review.Id, "Sufficient evidence.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-
-        return issued.Id;
+        return await dbContext.Set<EntrustmentDecision>()
+            .Where(decision => decision.IssuedByCommitteeReviewId == review.Id)
+            .Select(decision => decision.Id)
+            .SingleAsync();
     }
 
     private static ClaimsPrincipal CreatePrincipal(string userId, IReadOnlyCollection<string> roles, int? institutionId = null)

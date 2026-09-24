@@ -2,9 +2,7 @@ using System.Security.Claims;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
-using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
-using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
 
@@ -24,24 +22,6 @@ internal static class EntrustmentDecisionAuthorization
     public static string GetRequiredUserId(ClaimsPrincipal principal)
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException("The current user identifier is missing.");
-
-    public static void DemandChairAccess(ClaimsPrincipal principal, DecisionPanel panel)
-    {
-        if (principal.IsInRole(WombatRoles.Administrator))
-        {
-            return;
-        }
-
-        var userId = GetRequiredUserId(principal);
-        if (panel.Members.Any(member =>
-            string.Equals(member.UserId, userId, StringComparison.Ordinal) &&
-            member.Role == DecisionPanelMemberRole.Chair))
-        {
-            return;
-        }
-
-        throw new UnauthorizedAccessException("Only panel chairs can issue entrustment decisions.");
-    }
 
     /// <summary>
     /// Refuses to revoke a decision unless the caller is a global Administrator, the chair who issued it, or an

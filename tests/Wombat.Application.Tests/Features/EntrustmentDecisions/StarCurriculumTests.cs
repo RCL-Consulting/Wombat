@@ -45,6 +45,7 @@ public sealed class StarCurriculumTests
     private const int ForeignLocalEpa = 33;   // PAED-004: another institution's local extra
     private const int OffCurriculumEpa = 34;  // PAED-099: on another curriculum only
     private const int ReviewId = 60;
+    private const int EvidenceLineId = 61;
     private const string TraineeUserId = "trainee-1";
 
     private static int RungOf(int ladder, int order) => (ladder * 10) + order;
@@ -172,37 +173,6 @@ public sealed class StarCurriculumTests
         var act = () => ListAsync(db, TestPrincipals.InRole(WombatRoles.CommitteeMember, "stranger", HostInstitution));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
-    }
-
-    [Theory]
-    [InlineData(ForeignLocalEpa, 3)]
-    [InlineData(OffCurriculumEpa, 3)]
-    public async Task Issue_RefusesAnEpaOffTheTraineesCurriculum_AndWritesNothing(int epaId, int order)
-    {
-        await using var db = await SeededDbAsync();
-        await RatifyAsync(db);
-
-        var act = () => IssueAsync(db, epaId, RungOf(ProgrammeLadder, order));
-
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not on this trainee's curriculum*");
-        await SaveAndClearAsync(db);
-        (await db.EntrustmentDecisions.CountAsync()).Should().Be(0);
-    }
-
-    [Fact]
-    public async Task Issue_RefusesALevelOffTheItemsLadder_AndSupersedesNothing()
-    {
-        await using var db = await SeededDbAsync();
-        await RatifyAsync(db);
-        var prior = await IssueAsync(db, PinnedCoreEpa, RungOf(PinnedLadder, 3));
-
-        var act = () => IssueAsync(db, PinnedCoreEpa, RungOf(ProgrammeLadder, 4));
-
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*Pinned ladder*");
-        await SaveAndClearAsync(db);
-        var decisions = await db.EntrustmentDecisions.ToListAsync();
-        decisions.Should().ContainSingle().Which.Id.Should().Be(prior.Id);
-        decisions[0].Status.Should().Be(EntrustmentDecisionStatus.Active);
     }
 
     // ---- A deactivated EPA (T158) ----------------------------------------------------------------------------------
@@ -404,7 +374,7 @@ public sealed class StarCurriculumTests
                 new DateOnly(2027, 1, 8),
                 null,
                 "Target met.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
+                [EvidenceLineId],
                 principal ?? Chair()),
             CancellationToken.None);
 
@@ -434,29 +404,6 @@ public sealed class StarCurriculumTests
         await SaveAndClearAsync(db);
     }
 
-    private static Task<EntrustmentDecisionDto> IssueAsync(ApplicationDbContext db, int epaId, int levelId)
-        => new IssueEntrustmentDecisionCommandHandler(db).Handle(
-            new IssueEntrustmentDecisionCommand(
-                TraineeUserId,
-                epaId,
-                levelId,
-                new DateOnly(2027, 1, 8),
-                null,
-                ReviewId,
-                "Target met.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                Chair()),
-            CancellationToken.None);
-
-    private static async Task RatifyAsync(ApplicationDbContext db)
-    {
-        await new RecordCommitteeDecisionCommandHandler(db).Handle(
-            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, Chair()),
-            CancellationToken.None);
-        await new RatifyCommitteeDecisionCommandHandler(db).Handle(
-            new RatifyCommitteeDecisionCommand(ReviewId, Chair()),
-            CancellationToken.None);
-    }
 
     /// <summary>What the audit pipeline does after a refusal, then a fresh read of what is stored.</summary>
     private static async Task SaveAndClearAsync(ApplicationDbContext db)
@@ -542,7 +489,19 @@ public sealed class StarCurriculumTests
             ReviewPeriodTo = new DateOnly(2026, 12, 31),
             ScheduledOn = new DateOnly(2027, 1, 8)
         };
-        review.Start(Array.Empty<CommitteeEvidence>(), "chair-1", DateTime.UtcNow);
+        // One frozen line, which every staged decision here names as the evidence it rests on (D38, T131).
+        review.Start(
+            [new CommitteeEvidence
+            {
+                Id = EvidenceLineId,
+                SourceType = CommitteeEvidenceSourceType.Activity,
+                ActivityId = 700,
+                EpaId = PinnedCoreEpa,
+                SourceLabel = "Mini-CEX #700",
+                Summary = "State: completed."
+            }],
+            "chair-1",
+            DateTime.UtcNow);
         db.CommitteeReviews.Add(review);
 
         await db.SaveChangesAsync();

@@ -142,7 +142,9 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             SourceRecordedOn = campaign.ReleasedOn ?? campaign.ClosedOn ?? campaign.OpenedOn ?? campaign.CreatedOn,
             // A campaign is a report across the EPAs it covers, not evidence for one: it has no EPA, instrument, rating
             // or encounter of its own. Its per-EPA claims are ordinary activities above, each under its EPA. (T167)
-            SourceState = campaign.State.ToString()
+            SourceState = campaign.State.ToString(),
+            // Every campaign here is released (the filter above), and a released report is finished work. (T131)
+            SourceFinished = campaign.State == MsfCampaignState.Released
         });
 
         return activityEvidence.Concat(msfEvidence).ToArray();
@@ -278,7 +280,11 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                 RatingLabel = ratingLabel,
                 ObservedOn = activity.ObservedOn,
                 ObservedOnSource = activity.ObservedOnSource,
-                SourceState = activity.CurrentState
+                SourceState = activity.CurrentState,
+                // D44's "finished": a terminal state of the pinned workflow, the one answer the sampling report and the
+                // trajectory share. Frozen here, where the pin is known, so the page can say when a staged decision
+                // names only unfinished forms. (T131)
+                SourceFinished = profile.IsEvidence(activity.CurrentState)
             };
         }
 

@@ -213,7 +213,7 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
 
         var decision = EntrustmentDecision.Issue(
             traineeUserId, epaId, levelId, new DateOnly(2026, 7, 1), expiresOn: null,
-            review.Id, "chair-1", "Consistent across the period.", []);
+            review.Id, "chair-1", "Consistent across the period.", StarEvidence.One());
         db.EntrustmentDecisions.Add(decision);
         await db.SaveChangesAsync();
         return decision.Id;

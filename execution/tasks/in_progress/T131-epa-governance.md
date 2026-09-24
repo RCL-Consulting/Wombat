@@ -1,11 +1,12 @@
 ---
 id: T131
 title: "EPA governance: the committee cannot route, schedule or chase entrustment decisions"
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: [T130]
 created: 2026-09-20
+started: 2026-09-24
 ---
 
 # T131 — Entrustment decisions have no routing, no cadence, and no agenda

@@ -541,7 +541,7 @@ public sealed class EntrustmentDecisionAdminScopeTests
 
         var decision = EntrustmentDecision.Issue(
             traineeUserId, epaId: 1, authorisedLevelId: 3, new DateOnly(2026, 7, 1), expiresOn: null,
-            committeeReviewId: review.Id, "chair-1", "Consistent across the period.", []);
+            committeeReviewId: review.Id, "chair-1", "Consistent across the period.", StarEvidence.One());
         db.EntrustmentDecisions.Add(decision);
         await db.SaveChangesAsync();
 

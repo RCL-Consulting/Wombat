@@ -16,68 +16,47 @@ namespace Wombat.Application.Tests.Features.EntrustmentDecisions;
 
 public sealed class EntrustmentDecisionHandlersTests
 {
+    private const int EvidenceOnEpa7 = 501;
+    private const int EvidenceOnEpa8 = 502;
+
     [Fact]
-    public async Task Issue_OnlyAllowsChairsAndAutoSupersedesPriorActive()
+    public async Task Ratify_OnlyByTheChair_IssuesTheStagedStar_AndSupersedesThePriorActiveOne()
     {
         await using var dbContext = CreateDbContext();
-        var review = await SeedRatifiedReviewAsync(dbContext);
+        var review = await SeedReviewInStateAsync(dbContext, startReview: true);
+        var prior = await SeedStarAsync(dbContext, review.Id, epaId: 7, levelId: 3, new DateOnly(2026, 1, 10), null);
 
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
+        await RecordDecisionAsync(dbContext, review.Id);
+        await StageAsync(dbContext, review.Id, epaId: 7, levelId: 4, new DateOnly(2026, 4, 1), null, "Level advanced.", EvidenceOnEpa7);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand(
-                "trainee-1", 7, 3,
-                new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
-                review.Id, "Rationale.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
+        var ratify = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ratify.Handle(
+            new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None));
 
-        var first = await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand(
-                "trainee-1", 7, 3,
-                new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
-                review.Id, "First authorisation.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+        await ratify.Handle(
+            new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
 
-        first.Status.Should().Be(EntrustmentDecisionStatus.Active);
+        var issued = await dbContext.Set<EntrustmentDecision>().SingleAsync(d => d.Id != prior.Id);
+        issued.Status.Should().Be(EntrustmentDecisionStatus.Active);
+        issued.AuthorisedLevelId.Should().Be(4);
 
-        var second = await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand(
-                "trainee-1", 7, 4,
-                new DateOnly(2026, 6, 1), new DateOnly(2027, 6, 1),
-                review.Id, "Level advanced after additional evidence.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-
-        second.Status.Should().Be(EntrustmentDecisionStatus.Active);
-
-        var prior = await dbContext.Set<EntrustmentDecision>().SingleAsync(d => d.Id == first.Id);
-        prior.Status.Should().Be(EntrustmentDecisionStatus.Superseded);
-        prior.SupersededByDecisionId.Should().Be(second.Id);
+        var superseded = await dbContext.Set<EntrustmentDecision>().SingleAsync(d => d.Id == prior.Id);
+        superseded.Status.Should().Be(EntrustmentDecisionStatus.Superseded);
+        superseded.SupersededByDecisionId.Should().Be(issued.Id);
     }
 
     [Fact]
-    public async Task Issue_RejectsWhenReviewIsNotRatified()
+    public async Task Stage_OnAReviewNotYetStarted_IsRefused_AfterTheChairIsAuthorised()
     {
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewInStateAsync(dbContext, startReview: false);
 
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
+        var act = () => StageAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null, "Rationale.", EvidenceOnEpa7);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand(
-                "trainee-1", 7, 3,
-                new DateOnly(2026, 4, 1), null,
-                review.Id, "Rationale.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None));
-
-        exception.Message.Should().Contain("ratified", Exactly.Once());
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Contain("in-progress or decided");
     }
 
     [Fact]
@@ -85,16 +64,7 @@ public sealed class EntrustmentDecisionHandlersTests
     {
         await using var dbContext = CreateDbContext();
         var review = await SeedRatifiedReviewAsync(dbContext);
-
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
-        var issued = await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand(
-                "trainee-1", 7, 3,
-                new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
-                review.Id, "First authorisation.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1));
 
         var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext);
 
@@ -112,35 +82,14 @@ public sealed class EntrustmentDecisionHandlersTests
     }
 
     [Fact]
-    public async Task StagePendingAndRatify_IssuesAtomically()
+    public async Task StagePendingAndRatify_IssuesAtomically_EachStarWithTheEvidenceItWasStagedOn()
     {
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewInStateAsync(dbContext, startReview: true);
 
-        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
-        await recordHandler.Handle(
-            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-
-        var stageHandler = new StagePendingEntrustmentDecisionCommandHandler(dbContext);
-        await stageHandler.Handle(
-            new StagePendingEntrustmentDecisionCommand(
-                review.Id, null, 7, 3,
-                new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
-                "EPA 7 rationale.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-
-        await stageHandler.Handle(
-            new StagePendingEntrustmentDecisionCommand(
-                review.Id, null, 8, 4,
-                new DateOnly(2026, 4, 1), null,
-                "EPA 8 rationale.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        await RecordDecisionAsync(dbContext, review.Id);
+        await StageAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1), "EPA 7 rationale.", EvidenceOnEpa7);
+        await StageAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), null, "EPA 8 rationale.", EvidenceOnEpa7, EvidenceOnEpa8);
 
         (await dbContext.Set<PendingEntrustmentDecision>().CountAsync()).Should().Be(2);
 
@@ -148,10 +97,11 @@ public sealed class EntrustmentDecisionHandlersTests
         await ratifyHandler.Handle(
             new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
 
         (await dbContext.Set<PendingEntrustmentDecision>().CountAsync()).Should().Be(0);
 
-        var decisions = await dbContext.Set<EntrustmentDecision>().ToListAsync();
+        var decisions = await dbContext.Set<EntrustmentDecision>().Include(d => d.EvidenceLinks).OrderBy(d => d.EpaId).ToListAsync();
         decisions.Should().HaveCount(2);
         decisions.Should().AllSatisfy(d =>
         {
@@ -159,6 +109,8 @@ public sealed class EntrustmentDecisionHandlersTests
             d.IssuedByCommitteeReviewId.Should().Be(review.Id);
             d.IssuedByChairUserId.Should().Be("chair-1");
         });
+        decisions[0].EvidenceLinks.Select(link => link.CommitteeEvidenceId).Should().Equal(EvidenceOnEpa7);
+        decisions[1].EvidenceLinks.Select(link => link.CommitteeEvidenceId).Should().BeEquivalentTo([EvidenceOnEpa7, EvidenceOnEpa8]);
     }
 
     [Fact]
@@ -167,17 +119,8 @@ public sealed class EntrustmentDecisionHandlersTests
         await using var dbContext = CreateDbContext();
         var review = await SeedRatifiedReviewAsync(dbContext);
 
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
-        var first = await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand("trainee-1", 7, 3, new DateOnly(2026, 4, 1), null, review.Id, "EPA 7.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-        await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand("trainee-1", 8, 4, new DateOnly(2026, 4, 1), null, review.Id, "EPA 8.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        var first = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        await SeedStarAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), null);
 
         var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext);
         await revokeHandler.Handle(
@@ -189,6 +132,7 @@ public sealed class EntrustmentDecisionHandlersTests
 
         active.Should().HaveCount(1);
         active[0].EpaId.Should().Be(8);
+        active[0].EvidenceLinks.Should().ContainSingle().Which.CommitteeEvidenceId.Should().Be(EvidenceOnEpa8);
     }
 
     [Fact]
@@ -198,17 +142,8 @@ public sealed class EntrustmentDecisionHandlersTests
         var review = await SeedRatifiedReviewAsync(dbContext);
 
         var asOf = new DateOnly(2026, 4, 1);
-        var issueHandler = new IssueEntrustmentDecisionCommandHandler(dbContext);
-        await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand("trainee-1", 7, 3, asOf.AddDays(-30), asOf.AddDays(10), review.Id, "Expires within window.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
-        await issueHandler.Handle(
-            new IssueEntrustmentDecisionCommand("trainee-1", 8, 4, asOf.AddDays(-30), asOf.AddDays(100), review.Id, "Expires outside window.",
-                Array.Empty<EntrustmentEvidenceLinkInput>(),
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        await SeedStarAsync(dbContext, review.Id, 7, 3, asOf.AddDays(-30), asOf.AddDays(10));
+        await SeedStarAsync(dbContext, review.Id, 8, 4, asOf.AddDays(-30), asOf.AddDays(100));
 
         var handler = new ListExpiringDecisionsQueryHandler(dbContext);
         var expiring = await handler.Handle(new ListExpiringDecisionsQuery(30, asOf), CancellationToken.None);
@@ -226,14 +161,42 @@ public sealed class EntrustmentDecisionHandlersTests
         return new ApplicationDbContext(options);
     }
 
+    private static Task<PendingEntrustmentDecisionDto> StageAsync(
+        ApplicationDbContext dbContext, int reviewId, int epaId, int levelId, DateOnly issuedOn, DateOnly? expiresOn,
+        string rationale, params int[] evidenceItemIds)
+        => new StagePendingEntrustmentDecisionCommandHandler(dbContext).Handle(
+            new StagePendingEntrustmentDecisionCommand(
+                reviewId, null, epaId, levelId, issuedOn, expiresOn, rationale, evidenceItemIds,
+                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+    private static Task RecordDecisionAsync(ApplicationDbContext dbContext, int reviewId)
+        => new RecordCommitteeDecisionCommandHandler(dbContext).Handle(
+            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
+                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+    /// <summary>
+    /// A STAR issued by the review, resting on its snapshot line about the same EPA: what a ratification writes, stored
+    /// directly for the tests that only read or revoke one.
+    /// </summary>
+    private static async Task<EntrustmentDecision> SeedStarAsync(
+        ApplicationDbContext dbContext, int reviewId, int epaId, int levelId, DateOnly issuedOn, DateOnly? expiresOn)
+    {
+        var line = await dbContext.Set<CommitteeEvidence>()
+            .SingleAsync(item => item.Id == (epaId == 7 ? EvidenceOnEpa7 : EvidenceOnEpa8));
+        var decision = EntrustmentDecision.Issue(
+            "trainee-1", epaId, levelId, issuedOn, expiresOn, reviewId, "chair-1", $"EPA {epaId}.",
+            [EntrustmentEvidenceLink.FromSnapshot(line)]);
+        dbContext.Set<EntrustmentDecision>().Add(decision);
+        await dbContext.SaveChangesAsync();
+        return decision;
+    }
+
     private static async Task<CommitteeReview> SeedRatifiedReviewAsync(ApplicationDbContext dbContext)
     {
         var review = await SeedReviewInStateAsync(dbContext, startReview: true);
-        var recordHandler = new RecordCommitteeDecisionCommandHandler(dbContext);
-        await recordHandler.Handle(
-            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null,
-                CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
-            CancellationToken.None);
+        await RecordDecisionAsync(dbContext, review.Id);
         var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
         await ratifyHandler.Handle(
             new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
@@ -314,6 +277,23 @@ public sealed class EntrustmentDecisionHandlersTests
             await startHandler.Handle(
                 new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
                 CancellationToken.None);
+
+            // The window held no activity, so the snapshot is written here: one line about each EPA, which a staged
+            // decision names as the evidence it rests on (D38, T131).
+            dbContext.Set<CommitteeEvidence>().AddRange(
+                new CommitteeEvidence
+                {
+                    Id = EvidenceOnEpa7, ReviewId = review.Id, SourceType = CommitteeEvidenceSourceType.Activity, ActivityId = 101,
+                    EpaId = 7, EpaCode = "EPA-07", SourceLabel = "Mini-CEX #101", Summary = "State: completed.",
+                    ObservedOn = new DateOnly(2026, 2, 1)
+                },
+                new CommitteeEvidence
+                {
+                    Id = EvidenceOnEpa8, ReviewId = review.Id, SourceType = CommitteeEvidenceSourceType.Activity, ActivityId = 102,
+                    EpaId = 8, EpaCode = "EPA-08", SourceLabel = "CbD #102", Summary = "State: completed.",
+                    ObservedOn = new DateOnly(2026, 2, 2)
+                });
+            await dbContext.SaveChangesAsync();
         }
 
         return await dbContext.Set<CommitteeReview>().SingleAsync(r => r.Id == review.Id);

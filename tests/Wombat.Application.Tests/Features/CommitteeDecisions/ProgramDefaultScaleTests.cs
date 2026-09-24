@@ -122,8 +122,8 @@ public sealed class ProgramDefaultScaleTests
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*999*");
     }
 
-    private static Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int reviewId, int levelId)
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+    private static async Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int reviewId, int levelId)
+        => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 ReviewId: reviewId,
                 PendingId: null,
@@ -132,7 +132,7 @@ public sealed class ProgramDefaultScaleTests
                 IssuedOn: new DateOnly(2027, 1, 8),
                 ExpiresOn: null,
                 Rationale: "Target met.",
-                EvidenceLinks: Array.Empty<EntrustmentEvidenceLinkInput>(),
+                EvidenceItemIds: await db.Set<CommitteeEvidence>().Where(line => line.ReviewId == reviewId).Select(line => line.Id).ToArrayAsync(),
                 Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
@@ -149,7 +149,11 @@ public sealed class ProgramDefaultScaleTests
             ReviewPeriodTo = new DateOnly(2026, 12, 31),
             ScheduledOn = new DateOnly(2027, 1, 8)
         };
-        review.Start(Array.Empty<CommitteeEvidence>(), "actor", DateTime.UtcNow);
+        // One frozen line, which a staged decision names as the evidence it rests on (D38, T131).
+        review.Start(
+            [new CommitteeEvidence { SourceType = CommitteeEvidenceSourceType.Activity, ActivityId = 1, SourceLabel = "Mini-CEX #1" }],
+            "actor",
+            DateTime.UtcNow);
         db.Set<CommitteeReview>().Add(review);
         await db.SaveChangesAsync();
         return review.Id;
