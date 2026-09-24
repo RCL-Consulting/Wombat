@@ -1,11 +1,12 @@
 ---
 id: T200
 title: PDFs rendered at the same time can lose their text layer (QuestPDF), so an export may be unsearchable and unreadable to a screen reader
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -30,9 +31,22 @@ whether one bad render poisons later renders in the same process.
 
 ## Verification
 
-- [ ] Two parallel exports both carry a full text layer, repeatedly. Stress test without the test collection's
+- [x] Two parallel exports both carry a full text layer, repeatedly. Stress test without the test collection's
       serialisation.
 
 ## Related
 
 T169, T023 (the portfolio PDF), T026 (the access report).
+
+---
+
+## As built — 2026-09-24
+
+One shared `QuestPdfRenderer` serialises every QuestPDF render process-wide (`SemaphoreSlim(1)`). It waits with
+`ConfigureAwait(false)`, so a queued render never holds the gate on a busy circuit. An export whose caller has gone is
+never rendered. The portfolio, certificate and access-report PDFs all go through it, and an architecture test
+(`PdfRenderingTests`) refuses any other QuestPDF render call. A stress test renders in parallel without the test
+collection's serialisation, and every document keeps its text layer. Mutation-checked.
+
+Out of scope, noted: `AccessReportBuilder`'s bare `catch` would also swallow a cancellation. Nothing passes a token
+today.

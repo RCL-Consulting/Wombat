@@ -1,11 +1,12 @@
 ---
 id: T203
 title: Two dashboards count only the literal 'completed', and a graduate's last partial period prints as 'short'
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -29,9 +30,19 @@ created: 2026-09-24
 
 ## Verification
 
-- [ ] The dashboards count terminal states. Tests.
+- [x] The dashboards count terminal states. Tests.
 - [ ] The partial-end rule is decided and recorded, then applied.
 
 ## Related
 
 T169, T130, D14, D42.
+
+---
+
+## As built — 2026-09-24 (item 1)
+
+The assessor and trainee dashboards count an activity as finished in any terminal state of its pinned workflow (T169's
+helper). The assessor dashboard leaves out the caller's own portfolio, so a user who is both Assessor and Trainee does
+not see their own logged procedure as a "decision". Tested, including the other trainee's rows.
+
+**Item 2 (the partial-end rule) is split to [T209]**: it needs a decision first.

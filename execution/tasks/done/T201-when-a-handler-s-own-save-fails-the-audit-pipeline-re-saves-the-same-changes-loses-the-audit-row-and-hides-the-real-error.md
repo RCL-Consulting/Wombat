@@ -1,11 +1,12 @@
 ---
 id: T201
 title: When a handler's own save fails, the audit pipeline re-saves the same changes, loses the audit row and hides the real error
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -32,9 +33,26 @@ not save failures only if it is still wanted: the audit-trap memory says it is t
 
 ## Verification
 
-- [ ] A concurrency conflict in a handler leaves an audit row with Success=false and surfaces the original error.
+- [x] A concurrency conflict in a handler leaves an audit row with Success=false and surfaces the original error.
       Postgres test.
 
 ## Related
 
 T184, the audit-trap memory, T096.
+
+---
+
+## As built — 2026-09-24
+
+**Decision, recorded here and in memory:**
+- When the handler's own save is refused (`DbUpdateException`, found on the exception) or the failure write is refused,
+  `AuditPipelineBehavior` drops the pending changes and writes the audit row alone (Success=false). It then rethrows
+  the handler's own exception.
+- For any other exception, the known trap is unchanged: the failure write can still commit a change the handler made
+  before throwing, so checks still come first.
+- A refused success-row write is not recorded as a failed command.
+
+Tests: unit tests, plus Postgres tests for a concurrency conflict inside `UserManager` and for a refused insert whose
+clash has since gone. Mutation-checked.
+
+Filed: [T208] (the User-Agent and display-name lengths).

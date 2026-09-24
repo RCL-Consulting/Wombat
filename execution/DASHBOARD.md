@@ -6,6 +6,7 @@
 |---|---|---|---|---|
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
+| queued | [T205](tasks/queued/T205-msf-respondents-have-no-page-to-answer-on-the-invitation-link-leads-to-a-json-endpoint-on-dev-and-to-nothing-in-production.md) | P1 | MSF respondents have no page to answer on: the invitation link leads t |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
@@ -13,9 +14,8 @@
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
 | queued | [T195](tasks/queued/T195-a-curriculum-item-can-name-an-epa-of-another-owner-or-sub-speciality.md) | P2 | A curriculum item can name an EPA of another owner or sub-speciality |  |
-| queued | [T200](tasks/queued/T200-pdfs-rendered-at-the-same-time-can-lose-their-text-layer-questpdf-so-an-export-may-be-unsearchable-and-unreadable-to-a-screen-reader.md) | P2 | PDFs rendered at the same time can lose their text layer (QuestPDF), s |  |
-| queued | [T201](tasks/queued/T201-when-a-handler-s-own-save-fails-the-audit-pipeline-re-saves-the-same-changes-loses-the-audit-row-and-hides-the-real-error.md) | P2 | When a handler's own save fails, the audit pipeline re-saves the same  |  |
-| queued | [T202](tasks/queued/T202-msf-a-withdrawn-campaign-keeps-respondents-emails-invitations-don-t-say-which-campaign-and-a-dead-link-answers-500.md) | P2 | MSF: a withdrawn campaign keeps respondents' emails, invitations don't |  |
+| queued | [T206](tasks/queued/T206-msf-the-invitation-expiry-reminder-can-never-send-and-no-product-action-withdraws-a-campaign.md) | P2 | MSF: the invitation expiry reminder can never send, and no product act |  |
+| queued | [T207](tasks/queued/T207-msf-anonymisation-keeps-an-unsalted-hash-of-each-respondent-s-email-so-a-response-can-be-re-identified.md) | P2 | MSF 'anonymisation' keeps an unsalted hash of each respondent's email, |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -55,9 +55,10 @@
 | queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
-| queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
+| queued | [T208](tasks/queued/T208-an-audit-row-is-refused-when-a-user-agent-or-display-name-is-longer-than-its-column.md) | P3 | An audit row is refused when a User-Agent or display name is longer th |  |
+| queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
 
-Done: 139 task(s).
+Done: 143 task(s).
 
 ## From STATE.md
 
@@ -73,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+ea54fe1 fix(dashboards): an activity counts as finished in any terminal state of its pinned workflow; an assessor's dashboard leaves out their own portfolio (T203 item 1)
 45f38c0 fix(msf): a withdrawn campaign is anonymised, an invitation names its campaign and one true deadline, a dead or used link answers a readable 4xx, and Open cannot be sent twice from the page (T202)
 badeba0 fix(audit): a handler whose own save is refused leaves its audit row and surfaces its own error; a refused success-row write is not recorded as a failed command (T201)
 aee5db8 fix(reporting): PDF rendering is serialised process-wide, so concurrent exports keep their text layer (T200)
 d6833ae docs(execution): close T154 — browser-verified on dev (types 20–21, activities 33–34, forged EPAs refused)
-2d0aeb6 feat(activities): the last two v11.1 instruments — Clinical audit (report as a link, D34) and Portfolio and logbook review (a signed review of a period); an instrument that credits nothing is judged by the EPA it is evidence for (T154, D45)
 ```

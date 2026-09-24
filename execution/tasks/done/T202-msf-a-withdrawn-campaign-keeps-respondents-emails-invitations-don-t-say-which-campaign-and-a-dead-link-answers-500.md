@@ -1,11 +1,12 @@
 ---
 id: T202
 title: MSF: a withdrawn campaign keeps respondents' emails, invitations don't say which campaign, and a dead link answers 500
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -39,11 +40,27 @@ readable body) that explains it. The Open button is disabled while in flight.
 
 ## Verification
 
-- [ ] A withdrawn campaign's invitations are anonymised. Domain test.
-- [ ] A used link answers with a readable refusal, not 500. Api test.
-- [ ] Open cannot be sent twice from the page. bUnit.
-- [ ] The respondent's path, from email link to submitted response, works end to end on dev. Browser.
+- [x] A withdrawn campaign's invitations are anonymised. Domain test.
+- [x] A used link answers with a readable refusal, not 500. Api test.
+- [x] Open cannot be sent twice from the page. bUnit.
+- [ ] ~~The respondent's path, from email link to submitted response, works end to end on dev. Browser.
 
 ## Related
 
 T184, T121, T132, T163.
+
+---
+
+## As built — 2026-09-24
+
+- `MsfCampaign.Withdraw` anonymises through T184's routine.
+- The invitation names the trainee, the template and one true deadline (the earlier of ClosesOn and the expiry), and
+  refuses to open without the trainee's name.
+- The Api respond endpoint answers each refusal with a readable 4xx: used, unknown, closed, expired 410, revoked 410.
+  A fault answers a problem-details 500 with no message.
+- The Open button is disabled while in flight.
+- Tests throughout, mutation-checked.
+
+**Verification item 4 (email link to a submitted response) moves to [T205]**: respondents have no page to answer
+on. Also filed: [T206] (the expiry reminder never sends; there is no withdraw action; multi-tab invites) and
+[T207] (the unsalted email hash).

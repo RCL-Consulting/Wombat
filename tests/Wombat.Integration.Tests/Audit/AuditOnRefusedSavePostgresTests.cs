@@ -321,7 +321,7 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory(),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
