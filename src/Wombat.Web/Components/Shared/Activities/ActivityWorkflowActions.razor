@@ -6,11 +6,32 @@
   <div class="form-actions">
     @foreach (var action in Actions)
     {
-      <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="() => RequestTransitionAsync(action)">
-        @ToLabel(action.TransitionKey)
-      </button>
+      if (action.IsAvailable)
+      {
+        <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="() => RequestTransitionAsync(action)">
+          @ToLabel(action.TransitionKey)
+        </button>
+      }
+      else
+      {
+        @* T107. Shown, not hidden, so the actor learns what the move needs. No click handler at all: pressing it could
+           only be refused. *@
+        <button type="button" class="btn btn-primary" disabled aria-describedby="@ReasonId(action)">
+          @ToLabel(action.TransitionKey)
+        </button>
+      }
     }
   </div>
+
+  @if (Actions.Any(action => !action.IsAvailable))
+  {
+    <ul class="workflow-action-reasons">
+      @foreach (var action in Actions.Where(action => !action.IsAvailable))
+      {
+        <li id="@ReasonId(action)"><strong>@ToLabel(action.TransitionKey):</strong> @action.UnavailableReason</li>
+      }
+    </ul>
+  }
 
   @if (_selectedAction?.RequiresNote == true)
   {
@@ -35,6 +56,10 @@
   /// would have allowed the transition. Evaluating once, server-side, also stops the whole workflow
   /// being re-parsed on every parent render.
   /// </summary>
+  /// <remarks>
+  /// An action carrying an <c>UnavailableReason</c> is rendered disabled, described by the reason as visible text, and
+  /// never raises <see cref="OnTransitionRequested" /> (T107).
+  /// </remarks>
   [Parameter, EditorRequired] public IReadOnlyList<ActivityActionDto> Actions { get; set; } = [];
 
   [Parameter] public EventCallback<(string TransitionKey, string? Note)> OnTransitionRequested { get; set; }
@@ -45,8 +70,25 @@
   private ActivityActionDto? _selectedAction;
   private string? _note;
 
+  protected override void OnParametersSet()
+  {
+    // A note panel opened for an action the new list no longer offers (another action moved the activity on) would
+    // send a move the page can only refuse. Close it. One still offered keeps its panel and the note typed into it.
+    if (_selectedAction is not null &&
+        !Actions.Any(action => action.IsAvailable &&
+                               string.Equals(action.TransitionKey, _selectedAction.TransitionKey, StringComparison.Ordinal)))
+    {
+      ClearSelection();
+    }
+  }
+
   private async Task RequestTransitionAsync(ActivityActionDto action)
   {
+    if (!action.IsAvailable)
+    {
+      return;
+    }
+
     if (action.RequiresNote)
     {
       _selectedAction = action;
@@ -73,6 +115,12 @@
     _selectedAction = null;
     _note = null;
   }
+
+  // A transition key is any string the builder was given, and aria-describedby reads a space as two ids, so the id keeps
+  // only characters that are safe in both an id and an IDREFS list.
+  private static string ReasonId(ActivityActionDto action)
+      => "action-reason-" + string.Concat(action.TransitionKey.Select(character =>
+          char.IsAsciiLetterOrDigit(character) || character is '-' or '_' ? character : '-'));
 
   private static string ToLabel(string key)
       => string.Join(" ", key.Split('-', '_')).Trim() switch

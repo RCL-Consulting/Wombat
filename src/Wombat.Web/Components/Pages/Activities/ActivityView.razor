@@ -68,13 +68,14 @@
       <section class="detail-card">
         <h3>Activity details</h3>
 
-        @if (_editable.Count == 0 || _actions.Count == 0)
+        @if (_editable.Count == 0 || !_actions.Any(action => action.IsAvailable))
         {
           @* Read-only when no field is writable by this actor in this state (a non-bound user, or a
              finished activity) AND when there is nothing to submit with. A transition is the only
              save channel there is, so offering inputs with no action available would let someone
-             type a reflection and lose it on navigation. Restore the editable branch here if a
-             standalone save command ever lands (T106 item 1). *@
+             type a reflection and lose it on navigation. An action shown disabled (T107) is nothing
+             to submit with. Restore the editable branch here if a standalone save command ever lands
+             (T106 item 1). *@
           <ActivityDetail SchemaJson="@_activity.SchemaJson"
                           DataJson="@_activity.DataJson"
                           SubjectUserId="@_activity.SubjectUserId"
@@ -167,6 +168,9 @@
 
   // Shown until the next load or the next action. Taken, so it is shown once: reloading the page does not repeat it.
   private ActivityNotice? _notice;
+
+  public const string UnavailableActionMessage =
+    "That action is not available here. Reload the page to see what you can do now.";
 
   /// <summary>
   /// True when a transition on this activity was evaluated for credit and credited nothing (T108).
@@ -286,6 +290,16 @@
   {
     if (_activity is null || _busy)
     {
+      return;
+    }
+
+    // Only an action the server listed as available is sent (T107). ActivityWorkflowActions gives a disabled one no
+    // handler; this is the page refusing to be the second way in. Nothing is sent, but the actor is told, rather than
+    // pressing a button that silently does nothing.
+    if (!_actions.Any(action => action.IsAvailable &&
+                                string.Equals(action.TransitionKey, request.TransitionKey, StringComparison.Ordinal)))
+    {
+      _actionError = UnavailableActionMessage;
       return;
     }
 

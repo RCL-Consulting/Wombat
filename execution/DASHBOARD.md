@@ -4,9 +4,9 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
+| in_progress | [T107](tasks/in_progress/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
-| queued | [T107](tasks/queued/T107-stranded-activities-pinned-to-old-versions.md) | P2 | Activities pinned to a superseded schema version are permanently uncom |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T125](tasks/queued/T125-curriculum-item-minima-are-unguided-integer-writes.md) | P2 | An administrator sets a curriculum minimum by typing a bare integer, w |  |
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+29aad11 fix(committee): a panel's evidence snapshot holds only released MSF campaigns, windowed by the day each closed so it travels with its per-EPA evidence (T138)
 5fbc8c2 fix(activities): /activities/new creates once and moves to the activity with the outcome; a requested-born type is never withdrawn on Submit; a create that is the filing checks the author's fields (T127, T143, T148)
 54c9805 docs(execution): STATE back under its 60-line cap
 47a9aad docs(execution): re-baseline the EPA stream — close T118 and T104 by finding, fold merged tasks, file T158–T171, rewrite EPA-PROGRAMME §2 as the live queue
 431e69e docs(execution): close T099 — the catalogue is reachable on dev and on a fresh database; production never received it, filed as T157
-10834cf fix(identity): the SSO link endpoint reads everything from the external cookie, counts failures and is rate-limited; SSO sign-in refuses deactivated, Administrator and other-institution accounts (T149)
 ```

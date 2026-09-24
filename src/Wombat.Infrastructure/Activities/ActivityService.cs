@@ -611,7 +611,10 @@ public sealed class ActivityService : IActivityService
         var availableActions = workflow.Transitions
             .Where(transition => transition.From.Contains(activity.CurrentState, StringComparer.Ordinal))
             .Where(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed)
-            .Select(transition => new ActivityActionDto(transition.Key, transition.RequiresNote))
+            .Select(transition => new ActivityActionDto(
+                transition.Key,
+                transition.RequiresNote,
+                ExplainUnreachable(schema, workflow, activity, transition, principal, writableFieldKeys)))
             .ToList();
 
         return new ActivityDetailDto(
@@ -619,6 +622,94 @@ public sealed class ActivityService : IActivityService
             OrderBySchema(schema, writableFieldKeys),
             availableActions);
     }
+
+    /// <summary>
+    /// Why this actor cannot complete a transition they are allowed to take, or null when they can (T107, D33).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The transition's own validation (<see cref="ValidateForTransition" />: its <c>validation</c> scope plus its
+    /// <c>requires_fields</c>) is run against the STORED data under the PINNED version, and every field it flags that
+    /// this actor may not write in the current state is a field no patch from this page can supply. If any remain, the
+    /// move can only be refused. The action is still listed, disabled with this reason, so the actor learns what is
+    /// missing instead of finding the button gone. A flagged field the actor CAN write is theirs to fill in with the
+    /// move, and does not count.
+    /// </para>
+    /// <para>
+    /// The same validator decides what is required, so a field hidden by its <c>show_if</c> is not. A flagged field whose
+    /// condition (its own <c>show_if</c> or its section's) reads a field the actor may write does not count either: the
+    /// move's patch can hide it, and the server's validator, run on the merged data, will then not require it
+    /// (<see cref="ActorCanHide" />). Neither the EPA→tool gate (T122) nor the nominee gate (T102) is part of this: both
+    /// judge a patch this page has not sent yet.
+    /// </para>
+    /// <para>
+    /// The case that motivated it is an activity pinned to a superseded version whose assessor fields its assessor
+    /// could not write, which no republish can reach (T103 pins; re-pinning is T171). Saying which version the
+    /// activity was filed on is what tells that case apart from someone else's field left empty.
+    /// </para>
+    /// </remarks>
+    private string? ExplainUnreachable(
+        FormSchema schema,
+        Workflow workflow,
+        Activity activity,
+        WorkflowTransition transition,
+        ClaimsPrincipal principal,
+        IReadOnlySet<string> writableFieldKeys)
+    {
+        var unwritable = ValidateForTransition(schema, workflow, activity, transition, principal, activity.DataJson)
+            .Select(error => error.FieldKey)
+            .OfType<string>()
+            .Where(fieldKey => !writableFieldKeys.Contains(fieldKey))
+            .Where(fieldKey => !ActorCanHide(schema, fieldKey, writableFieldKeys))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (unwritable.Count == 0)
+        {
+            return null;
+        }
+
+        var reason = $"Needs {JoinLabels(unwritable.Select(fieldKey => FieldLabel(schema, fieldKey)).ToList())}, " +
+                     "which you cannot fill in here.";
+
+        return activity.SchemaVersion < activity.ActivityType.Version
+            ? $"{reason} This activity was filed on version {activity.SchemaVersion} of the form; " +
+              $"the current version is {activity.ActivityType.Version}."
+            : reason;
+    }
+
+    /// <summary>
+    /// Whether the condition that shows a field, its own <c>show_if</c> or its section's, reads a field this actor may
+    /// write, so that the actor's own move could hide it.
+    /// </summary>
+    /// <remarks>
+    /// Only the condition's key is read; whether it holds is still <c>SchemaValidator</c>'s call, on the data the move
+    /// sends. It errs towards offering the action: when the actor could not in fact choose a hiding value, the server
+    /// refuses the move as it did before T107.
+    /// </remarks>
+    private static bool ActorCanHide(FormSchema schema, string fieldKey, IReadOnlySet<string> writableFieldKeys)
+        => schema.Sections.Any(section => section.Fields.Any(field =>
+            string.Equals(field.Key, fieldKey, StringComparison.Ordinal) &&
+            (ReadsWritableField(field.ShowIf, writableFieldKeys) || ReadsWritableField(section.ShowIf, writableFieldKeys))));
+
+    private static bool ReadsWritableField(VisibilityCondition? condition, IReadOnlySet<string> writableFieldKeys)
+        => condition is not null && writableFieldKeys.Contains(condition.Field);
+
+    private static string FieldLabel(FormSchema schema, string fieldKey)
+    {
+        var label = schema.Sections
+            .SelectMany(section => section.Fields)
+            .FirstOrDefault(field => string.Equals(field.Key, fieldKey, StringComparison.Ordinal))
+            ?.Label;
+
+        return string.IsNullOrWhiteSpace(label) ? fieldKey : label.Trim();
+    }
+
+    /// <summary>"A", "A and B", "A, B and C".</summary>
+    private static string JoinLabels(IReadOnlyList<string> labels)
+        => labels.Count == 1
+            ? labels[0]
+            : $"{string.Join(", ", labels.Take(labels.Count - 1))} and {labels[^1]}";
 
     /// <summary>
     /// Whether the pinned version declares any credit at all — the anti-cry-wolf gate for the T108

@@ -224,6 +224,46 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     }
 
     [Fact]
+    public async Task ARequestForAnUnavailableAction_IsIgnoredByThePage()
+    {
+        // T107. ActivityWorkflowActions gives a disabled action no handler; the page must not be a second way in.
+        var sender = new FakeSender(Detail(NoOne(), availableActions:
+        [
+            new ActivityActionDto("complete", false, "Needs Overall level, which you cannot fill in here."),
+            new ActivityActionDto("decline", true)
+        ]));
+        var cut = RenderPage(sender);
+        var actions = cut.FindComponent<Wombat.Web.Components.Shared.Activities.ActivityWorkflowActions>();
+
+        await cut.InvokeAsync(() => actions.Instance.OnTransitionRequested.InvokeAsync(("complete", null)));
+        await cut.InvokeAsync(() => actions.Instance.OnTransitionRequested.InvokeAsync(("not_listed", null)));
+
+        sender.Transitions.Should().BeEmpty();
+        cut.Markup.Should().Contain(
+            Wombat.Web.Components.Pages.Activities.ActivityView.UnavailableActionMessage,
+            "nothing is sent, but the actor is told rather than left pressing a button that does nothing");
+
+        await cut.InvokeAsync(() => actions.Instance.OnTransitionRequested.InvokeAsync(("decline", "Not my patient.")));
+        sender.Transitions.Should().ContainSingle().Which.TransitionKey.Should().Be("decline");
+    }
+
+    [Fact]
+    public void WritableFields_WithOnlyUnavailableActions_StayReadOnly()
+    {
+        // Typing into a form no action can submit would be lost on navigation, as with no action at all.
+        var cut = RenderPage(new FakeSender(Detail(Assessor(), availableActions:
+        [
+            new ActivityActionDto("complete", false, "Needs Countersignature, which you cannot fill in here.")
+        ])));
+
+        cut.FindAll("input, textarea, select")
+            .Where(element => !element.HasAttribute("disabled"))
+            .Should().BeEmpty();
+        cut.FindAll("#discard-changes").Should().BeEmpty();
+        cut.Markup.Should().Contain("Needs Countersignature, which you cannot fill in here.");
+    }
+
+    [Fact]
     public void TheHistoryCard_RendersTheTransitionNote_WhichNothingUsedToShow()
     {
         var transitions = new[]

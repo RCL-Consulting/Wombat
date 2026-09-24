@@ -241,6 +241,7 @@ PagerControls
 .form-select-sm   /* compact variant */
 
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
+.workflow-action-reasons /* list under a workflow action row: why a disabled action cannot be taken (T107) */
 ```
 
 **Rules:**
@@ -256,6 +257,9 @@ PagerControls
   no single input. When two groups share a page (an inline edit row and an Add form), prefix their ids differently
   (`edit-tool-{key}` / `add-tool-{key}`, T122's curriculum tool list).
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
+- A workflow action the actor may take but cannot complete (T107) is a **disabled** button, never a hidden one. Its
+  reason is visible text in a `.workflow-action-reasons` list below the row, starting with the action's name, and the
+  button points at it with `aria-describedby`. A tooltip alone is not enough.
 
 ## Card system
 

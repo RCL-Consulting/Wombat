@@ -78,6 +78,117 @@ public sealed class ActivityWorkflowActionsTests : TestContext
         SendingButtons(cut).Should().HaveCount(3).And.OnlyContain(button => !button.HasAttribute("disabled"));
     }
 
+    private const string StrandedReason =
+        "Needs Overall level and Strengths, which you cannot fill in here. " +
+        "This activity was filed on version 1 of the form; the current version is 2.";
+
+    [Fact]
+    public void AnUnavailableAction_IsADisabledButton_DescribedByItsReason_ShownAsText()
+    {
+        // T107: shown, not hidden, and the reason is on the page, not in a tooltip.
+        var cut = Render([new ActivityActionDto("complete", false, StrandedReason), new ActivityActionDto("decline", true)]);
+
+        var complete = Button(cut, "Complete");
+        complete.HasAttribute("disabled").Should().BeTrue();
+
+        var reasonId = complete.GetAttribute("aria-describedby");
+        reasonId.Should().NotBeNullOrWhiteSpace();
+        var reason = cut.Find($"#{reasonId}");
+        reason.TextContent.Should().Contain(StrandedReason);
+        reason.TextContent.Should().StartWith("Complete:", "the reason names the action it belongs to");
+        // Visible text, not screen-reader-only copy: neither the reason nor anything around it is hidden.
+        for (var element = reason; element is not null; element = element.ParentElement)
+        {
+            element.ClassList.Should().NotContain("visually-hidden", "the reason is shown to everyone, not only read out");
+            element.HasAttribute("hidden").Should().BeFalse();
+            element.GetAttribute("aria-hidden").Should().NotBe("true");
+        }
+
+        var decline = Button(cut, "Decline");
+        decline.HasAttribute("disabled").Should().BeFalse("only the action that cannot be completed is disabled");
+        decline.HasAttribute("aria-describedby").Should().BeFalse();
+        cut.FindAll(".workflow-action-reasons li").Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ClickingAnUnavailableAction_DoesNothing_EvenWhenThePageIsNotBusy()
+    {
+        (string TransitionKey, string? Note)? captured = null;
+        var cut = Render([new ActivityActionDto("complete", false, StrandedReason)], request => captured = request);
+
+        var complete = Button(cut, "Complete");
+        complete.HasAttribute("disabled").Should().BeTrue();
+
+        // Not just disabled in the markup: the button carries no handler, so no click can reach the callback.
+        var click = () => complete.Click();
+        click.Should().Throw<MissingEventHandlerException>();
+
+        captured.Should().BeNull();
+        cut.FindAll("#transition-note").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void WithEveryActionAvailable_NoReasonListIsRendered()
+    {
+        var cut = Render([new ActivityActionDto("complete", false)]);
+
+        cut.FindAll(".workflow-action-reasons").Should().BeEmpty();
+        Button(cut, "Complete").HasAttribute("aria-describedby").Should().BeFalse();
+    }
+
+    [Fact]
+    public void AReasonForAKeyWithASpace_IsStillOneId_ThatTheButtonResolves()
+    {
+        // A builder may give a transition any key. aria-describedby is a space-separated list of ids, so a raw
+        // "sign off" would describe the button by two ids that do not exist.
+        var cut = Render([new ActivityActionDto("sign off", false, "Needs Countersignature, which you cannot fill in here.")]);
+
+        var reasonId = Button(cut, "Sign Off").GetAttribute("aria-describedby");
+
+        reasonId.Should().MatchRegex("^[A-Za-z0-9_-]+$");
+        cut.FindAll("li").Should().ContainSingle(item => item.Id == reasonId)
+            .Which.TextContent.Should().Contain("Needs Countersignature");
+    }
+
+    [Fact]
+    public void ANotePanelForAnActionNoLongerOffered_Closes_WhenTheActionsChange()
+    {
+        // Open decline's note panel, then the activity moves on (another action was taken) and decline is gone. The
+        // panel's Apply would send a move the page can only refuse, so it must not stay open.
+        (string TransitionKey, string? Note)? captured = null;
+        var cut = Render(
+            [new ActivityActionDto("accept", false), new ActivityActionDto("decline", true)],
+            request => captured = request);
+        Button(cut, "Decline").Click();
+        cut.Find("#transition-note").Change("Not my patient.");
+
+        cut.SetParametersAndRender(parameters => parameters.Add(
+            component => component.Actions,
+            (IReadOnlyList<ActivityActionDto>)[new ActivityActionDto("complete", false), new ActivityActionDto("decline", true, "Needs X.")]));
+
+        cut.FindAll("#transition-note").Should().BeEmpty("decline is no longer available");
+        cut.FindAll("button").Should().NotContain(button => button.TextContent.Trim() == "Apply");
+        captured.Should().BeNull();
+    }
+
+    [Fact]
+    public void ANotePanelForAnActionStillOffered_KeepsItsNote_WhenThePageReRenders()
+    {
+        // A refused move leaves the actions as they were: the actor's note must survive for the retry.
+        var cut = Render([new ActivityActionDto("decline", true)]);
+        Button(cut, "Decline").Click();
+        cut.Find("#transition-note").Change("Not my patient.");
+
+        cut.SetParametersAndRender(parameters => parameters.Add(
+            component => component.Actions,
+            (IReadOnlyList<ActivityActionDto>)[new ActivityActionDto("decline", true)]));
+
+        cut.Find("#transition-note").GetAttribute("value").Should().Be("Not my patient.");
+    }
+
+    private static AngleSharp.Dom.IElement Button(IRenderedComponent<ActivityWorkflowActions> cut, string label)
+        => cut.FindAll("button").Single(button => button.TextContent.Trim() == label);
+
     private static IReadOnlyList<AngleSharp.Dom.IElement> SendingButtons(IRenderedComponent<ActivityWorkflowActions> cut)
         => cut.FindAll("button").Where(button => button.TextContent.Trim() != "Cancel").ToList();
 

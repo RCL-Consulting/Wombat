@@ -108,9 +108,18 @@ public sealed record ActivityDto(
 /// evaluated server-side against the real pinned <c>ActivityType</c> (T070). The display label is the
 /// caller's business — <c>ActivityWorkflowActions</c> title-cases the key.
 /// </summary>
+/// <param name="UnavailableReason">
+/// Null when the actor can take the action from this page. Otherwise the action is shown disabled with this text
+/// (T107, D33): the transition's validation would flag, against the stored data, a field this actor cannot write in
+/// the current state, so pressing it could only fail. The server still refuses such a move on its own.
+/// </param>
 public sealed record ActivityActionDto(
     string TransitionKey,
-    bool RequiresNote);
+    bool RequiresNote,
+    string? UnavailableReason = null)
+{
+    public bool IsAvailable => UnavailableReason is null;
+}
 
 /// <summary>
 /// An activity plus the two things that can only be worked out with a principal in hand:

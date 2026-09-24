@@ -1,9 +1,10 @@
 ---
 id: T107
 title: "Activities pinned to a superseded schema version are permanently uncompletable, and the UI still offers the button"
-status: queued
+status: in_progress
 priority: P2
 created: 2026-09-17
+started: 2026-09-24
 ---
 # T107 — Activities pinned to a superseded schema version are permanently uncompletable, and the UI still offers the button
 
