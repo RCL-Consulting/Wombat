@@ -42,3 +42,13 @@ from `CreditTargetResolver`, the T108 EPA picker and the T122 gate, which all fo
 ## Related
 
 T102, T101, T108, T122.
+
+## Note from T113, 2026-09-24
+
+Two more places depend on a trainee's institution the same way:
+- **An MSF campaign follows its trainee.** Scope is checked against the subject's current preferred profile, so a
+  campaign moves with a trainee who changes institution. The fix is to stamp an institution on `MsfCampaign` (a
+  migration).
+- **`ListTraineesForSpecialityQuery` offers every profile at the caller's institution, past ones included,** while
+  Create checks the preferred profile. The picker and the gate disagree.
+

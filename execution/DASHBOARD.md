@@ -9,6 +9,8 @@
 | in_progress | [T150](tasks/in_progress/T150-sampling-and-trajectory-count-assessors-from-drafts-and-cancelled-requests-by-a-hard-coded-field-key.md) | P3 | Sampling and trajectory count assessors from drafts and cancelled requ |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
+| queued | [T182](tasks/queued/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
+| queued | [T183](tasks/queued/T183-the-entrustment-decision-admin-pages-are-national-any-admin-role-can-list-revoke-and-download-certificates-for-every-trainee.md) | P1 | The entrustment-decision admin pages are national: any admin role can  |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
 | queued | [T131](tasks/queued/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
@@ -18,6 +20,7 @@
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
 | queued | [T174](tasks/queued/T174-the-catalogue-seeder-re-pins-an-unpinned-seeded-curriculum-item-to-v11-1-at-every-boot-changing-what-its-stored-minima-mean.md) | P2 | The catalogue seeder re-pins an unpinned seeded curriculum item to v11 |  |
 | queued | [T175](tasks/queued/T175-app-css-is-served-without-a-version-in-its-url-so-a-deploy-can-show-a-new-page-with-an-old-stylesheet.md) | P2 | app.css is served without a version in its URL, so a deploy can show a |  |
+| queued | [T184](tasks/queued/T184-msf-respondent-emails-are-written-to-the-audit-log-and-opening-a-campaign-sends-mail-after-the-mutation.md) | P2 | MSF: respondent emails are written to the audit log, and opening a cam |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -55,6 +58,7 @@
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
 | queued | [T180](tasks/queued/T180-the-browser-tab-title-does-not-change-when-the-user-moves-between-pages-inside-the-app.md) | P3 | The browser tab title does not change when the user moves between page |  |
 | queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
+| queued | [T185](tasks/queued/T185-leftover-principal-less-queries-national-speciality-counts-and-three-shapes-of-the-overseer-rule.md) | P3 | Leftover principal-less queries, national speciality counts, and three |  |
 
 Done: 117 task(s).
 
@@ -72,9 +76,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+073a89b fix(security): trainee-id queries and the MSF commands and report check that the caller may see that trainee or campaign (T113)
 a73c5aa fix(committee): sampling and the trajectory count only terminal rated evidence, read the stamped EPA and the declared rating and assessor, and report unreadable and unattributed rows separately (T135, T150, D44)
 eb459b6 docs(execution): close T137 — browser-verified on dev (migration applied, 21/21 stamped, activity 24 stamped at create); file T181
 c30df9c docs(execution): close T141 and T147 — browser-verified on dev; file T180 (tab title does not follow in-app navigation)
 7aab72a feat(activities): an activity knows its EPA — stamped from a schema pointer that agrees with credit; activity lists show the EPA, the encounter date and what it credited (T137, T106 item 14)
-d0f8a90 docs(execution): close T144 and T140 (integration 23/23, no leaked schemas); file T177, T178, T179
 ```
