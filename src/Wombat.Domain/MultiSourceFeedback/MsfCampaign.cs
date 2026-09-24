@@ -84,15 +84,37 @@ public sealed class MsfCampaign
 
     public void Open(DateTime utcNow)
     {
-        if (State != MsfCampaignState.Draft)
-        {
-            throw new InvalidOperationException("Only draft campaigns can be opened.");
-        }
+        EnsureCanOpen();
 
         State = MsfCampaignState.Open;
         OpenedOn = utcNow;
     }
 
+    /// <summary>
+    /// Refuses, as <see cref="Open" /> would, a campaign that cannot be opened, and changes nothing. (T184)
+    /// </summary>
+    /// <remarks>
+    /// Opening mails every respondent before the campaign is touched, so the refusal has to come before the first
+    /// mail: a campaign that is already open must not send a second round of links that its stored tokens do not
+    /// match.
+    /// </remarks>
+    public void EnsureCanOpen()
+    {
+        if (State != MsfCampaignState.Draft)
+        {
+            throw new InvalidOperationException("Only draft campaigns can be opened.");
+        }
+    }
+
+    /// <summary>
+    /// Closes the campaign to responses and anonymises every respondent (<see cref="MsfInvitation.Anonymize" />).
+    /// </summary>
+    /// <remarks>
+    /// The anonymising is part of closing, not a separate step a caller must remember. A campaign closes in two
+    /// places, the coordinator's close command and the hourly auto-close job, and until T184 each carried its own copy
+    /// of the anonymise routine. The caller must have loaded <see cref="Invitations" />: an unloaded collection is
+    /// empty, and nothing would be anonymised.
+    /// </remarks>
     public void Close(DateTime utcNow)
     {
         if (State is not (MsfCampaignState.Open or MsfCampaignState.UnderReview))
@@ -102,6 +124,11 @@ public sealed class MsfCampaign
 
         State = MsfCampaignState.UnderReview;
         ClosedOn = utcNow;
+
+        foreach (var invitation in Invitations)
+        {
+            invitation.Anonymize(utcNow);
+        }
     }
 
     /// <summary>

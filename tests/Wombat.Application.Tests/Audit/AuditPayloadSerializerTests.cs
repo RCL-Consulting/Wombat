@@ -1,7 +1,11 @@
 using FluentAssertions;
+using MediatR;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using Wombat.Application.Audit;
+using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Tests.Audit;
 
@@ -69,6 +73,61 @@ public sealed class AuditPayloadSerializerTests
 
         doc.RootElement.GetProperty("message").GetString().Should().Be("hello");
         doc.RootElement.GetProperty("actor").GetString().Should().Be("[PRINCIPAL]");
+    }
+
+    /// <summary>
+    /// A respondent's address is written nowhere in the audit summary of the command that invites them. Closing a
+    /// campaign anonymises the invitations, not the audit trail, so an address written here outlived it. (T184)
+    /// </summary>
+    [Fact]
+    public void Serialize_AddMsfInvitationCommand_RedactsTheRespondentEmail()
+    {
+        var command = new AddMsfInvitationCommand(
+            7, "nurse-1@example.test", MsfRespondentCategory.Nurse, new ClaimsPrincipal());
+
+        var json = AuditPayloadSerializer.Serialize(command);
+        var doc = JsonDocument.Parse(json);
+
+        json.Should().NotContain("nurse-1@example.test");
+        doc.RootElement.GetProperty("respondentEmail").GetString().Should().Be("[REDACTED]");
+        doc.RootElement.GetProperty("campaignId").GetInt32().Should().Be(7);
+        doc.RootElement.GetProperty("respondentCategory").GetInt32().Should().Be((int)MsfRespondentCategory.Nurse);
+    }
+
+    /// <summary>
+    /// Every MSF request the audit pipeline records redacts every property that identifies a respondent: an address,
+    /// or the single-use token that stands in for one. A new MSF command carrying either fails here until it is marked.
+    /// (T101, T184)
+    /// </summary>
+    [Fact]
+    public void EveryAuditedMsfRequest_RedactsEveryRespondentIdentifier()
+    {
+        // The pipeline's own predicate (AuditPipelineBehavior.IsCommand): a "Command" name, or the opt-in marker.
+        var audited = typeof(AddMsfInvitationCommand).Assembly.GetTypes()
+            .Where(type => type.Namespace == typeof(AddMsfInvitationCommand).Namespace)
+            .Where(type => typeof(IBaseRequest).IsAssignableFrom(type) && !type.IsAbstract)
+            .Where(type => type.Name.EndsWith("Command", StringComparison.Ordinal)
+                           || typeof(IAuditedCommand).IsAssignableFrom(type))
+            .ToList();
+
+        var identifiers = audited
+            .SelectMany(type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.Name.Contains("Email", StringComparison.OrdinalIgnoreCase)
+                                   || property.Name.Contains("Token", StringComparison.OrdinalIgnoreCase))
+                .Select(property => (Type: type, Property: property)))
+            .ToList();
+
+        // Not vacuous: the two known identifiers are among those checked.
+        identifiers.Select(pair => $"{pair.Type.Name}.{pair.Property.Name}").Should().Contain(
+        [
+            $"{nameof(AddMsfInvitationCommand)}.{nameof(AddMsfInvitationCommand.RespondentEmail)}",
+            $"{nameof(SubmitMsfResponseCommand)}.{nameof(SubmitMsfResponseCommand.Token)}"
+        ]);
+
+        identifiers
+            .Where(pair => pair.Property.GetCustomAttribute<RedactAttribute>() is null)
+            .Select(pair => $"{pair.Type.Name}.{pair.Property.Name}")
+            .Should().BeEmpty("a respondent identifier written to the audit log undoes MSF's anonymity");
     }
 
     // Test DTOs — use property form so [Redact] is on a property, not a ctor param

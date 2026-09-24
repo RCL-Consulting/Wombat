@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Extensions;
@@ -296,19 +294,6 @@ public static class MsfCampaignRules
             {
                 throw new InvalidOperationException($"A comment is required for '{question.Prompt}'.");
             }
-        }
-    }
-
-    public static void AnonymizeInvitations(IEnumerable<MsfInvitation> invitations)
-    {
-        var utcNow = DateTime.UtcNow;
-
-        foreach (var invitation in invitations.Where(candidate => !string.IsNullOrWhiteSpace(candidate.RespondentEmail)))
-        {
-            invitation.RespondentEmailHash = Convert.ToHexString(
-                SHA256.HashData(Encoding.UTF8.GetBytes(invitation.RespondentEmail!.Trim().ToUpperInvariant())));
-            invitation.RespondentEmail = null;
-            invitation.AnonymizedOn = utcNow;
         }
     }
 }

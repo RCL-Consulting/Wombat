@@ -342,7 +342,9 @@
     try
     {
       await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, await GetPrincipalAsync()));
-      _status = "Campaign opened and respondent links issued to the logging email sender.";
+      // It used to name the development sender, which only logs a mail, on every host: a coordinator whose host has a
+      // mail server was told the links had gone to a log. (T184)
+      _status = "Campaign opened, and each respondent has been emailed a link to respond.";
     }
     catch (Exception exception)
     {

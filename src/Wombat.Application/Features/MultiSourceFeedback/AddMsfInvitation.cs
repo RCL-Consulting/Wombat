@@ -2,15 +2,23 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
+/// <remarks>
+/// <c>RespondentEmail</c> is redacted from the audit summary (T184). The AuditPipelineBehavior audits every request
+/// whose type name ends in "Command", and AuditPayloadSerializer writes its properties into SummaryJson. Closing a
+/// campaign anonymises its respondents (<c>MsfCampaign.Close</c>), but not the audit trail, which is the log kept
+/// longest: every address invited would outlive the anonymising there, beside the campaign it was invited to. The row
+/// still records the campaign, the category and who added the invitation.
+/// </remarks>
 public sealed record AddMsfInvitationCommand(
     int CampaignId,
-    string RespondentEmail,
+    [property: Redact] string RespondentEmail,
     MsfRespondentCategory RespondentCategory,
     ClaimsPrincipal Principal) : IRequest<int>;
 

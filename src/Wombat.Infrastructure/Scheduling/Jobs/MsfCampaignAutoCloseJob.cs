@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,25 +38,14 @@ public sealed class MsfCampaignAutoCloseJob : IScheduledJob
             return;
         }
 
+        // Closing anonymises every respondent (MsfCampaign.Close): the one routine the close command runs too, which
+        // is why the invitations are loaded above. (T184)
         foreach (var campaign in expiredCampaigns)
         {
             campaign.Close(context.UtcNow);
-            AnonymizeInvitations(campaign.Invitations);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         context.Logger.LogInformation("MsfCampaignAutoCloseJob: auto-closed {Count} campaigns.", expiredCampaigns.Count);
-    }
-
-    private static void AnonymizeInvitations(IEnumerable<MsfInvitation> invitations)
-    {
-        var utcNow = DateTime.UtcNow;
-        foreach (var invitation in invitations.Where(i => !string.IsNullOrWhiteSpace(i.RespondentEmail)))
-        {
-            invitation.RespondentEmailHash = Convert.ToHexString(
-                SHA256.HashData(Encoding.UTF8.GetBytes(invitation.RespondentEmail!.Trim().ToUpperInvariant())));
-            invitation.RespondentEmail = null;
-            invitation.AnonymizedOn = utcNow;
-        }
     }
 }

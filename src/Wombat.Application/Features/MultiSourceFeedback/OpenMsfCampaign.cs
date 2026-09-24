@@ -58,34 +58,91 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
             throw new InvalidOperationException("At least one respondent invitation is required before opening a campaign.");
         }
 
-        campaign.Open(DateTime.UtcNow);
+        // Refused before the first mail, not by Open() after it: an open campaign must not mail a second round of
+        // links that its stored tokens do not match. (T184)
+        campaign.EnsureCanOpen();
 
-        foreach (var invitation in campaign.Invitations.Where(candidate => !string.IsNullOrWhiteSpace(candidate.RespondentEmail)))
+        // Every link is minted and every respondent mailed BEFORE the campaign or any invitation is touched. (T184)
+        //
+        // The audit pipeline saves this request's DbContext from its catch, so a throw with a mutation pending commits
+        // it. Until T184 the campaign was opened first and each token rotated just before its own mail, so a send that
+        // threw committed an open campaign whose respondents after the failure held no link at all. Nothing could
+        // repair that: Open() refuses a campaign that is not a draft, and there is no resend.
+        //
+        // Sending after the save was the alternative, and it strands respondents the same way: the open is committed,
+        // an unmailed respondent is unreachable, and making that right needs a durable outbox or a resend command.
+        // This order fails the other way. A failed send leaves the campaign a draft with every stored token as it was,
+        // and opening it again mails everyone a fresh link. The cost is that a respondent mailed before the failure
+        // holds a link that will not work, and the refusal says so. In production a "send" is an enqueue on an
+        // in-process channel (QueuedEmailSender), which throws only when cancelled or shut down; SMTP delivery happens
+        // after the request whichever order is chosen.
+        var links = campaign.Invitations
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.RespondentEmail))
+            .Select(invitation =>
+            {
+                var token = _tokenService.GenerateToken();
+                return (Invitation: invitation, Token: token, TokenHash: _tokenService.HashToken(token));
+            })
+            .ToList();
+
+        foreach (var link in links)
         {
-            var token = _tokenService.GenerateToken();
-            invitation.TokenHash = _tokenService.HashToken(token);
+            var submitUrl = $"{respondUrl}?token={Uri.EscapeDataString(link.Token)}";
 
-            var submitUrl = $"{respondUrl}?token={Uri.EscapeDataString(token)}";
-            await _emailSender.SendAsync(new EmailMessage(
-                To: invitation.RespondentEmail!,
-                Subject: $"MSF request: {campaign.Template.Name}",
-                HtmlBody: $"""
-                    <p>You have been invited to provide anonymous multi-source feedback for <strong>{System.Net.WebUtility.HtmlEncode(campaign.Template.Name)}</strong>.</p>
-                    <p><a href="{System.Net.WebUtility.HtmlEncode(submitUrl)}">Submit your response</a></p>
-                    <p>This link expires on <strong>{invitation.ExpiresOn:yyyy-MM-dd}</strong>.</p>
-                    """,
-                TextBody: $"""
-                    You have been invited to provide anonymous multi-source feedback.
-
-                    Submit your response:
-                    {submitUrl}
-
-                    This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
-                    """,
-                Tags: ["msf-invite", $"campaign:{campaign.Id}"]),
-                cancellationToken);
+            try
+            {
+                await _emailSender.SendAsync(BuildInvitationEmail(campaign, link.Invitation, submitUrl), cancellationToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // Replaced rather than passed on, for two readers. The coordinator is told what state the campaign is
+                // in. And the audit row records a refusal's message: a sender's own message may name the respondent's
+                // address, which is exactly what AddMsfInvitationCommand keeps out of that log. (T184)
+                throw new InvalidOperationException(InvitationsNotSent, exception);
+            }
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        // From here to the save nothing can throw: every hash is already computed, and EnsureCanOpen() above is the
+        // only refusal Open() has. The save is not cancellable, because the mail has been handed over and cannot be
+        // recalled: a cancellation now would strand every link just sent.
+        //
+        // The save itself can still fail, and then the links this request sent are dead. Two opens that race (a
+        // double-click can) both pass EnsureCanOpen() and both mail. The hashes and the open go in this one save, under
+        // the campaign's xmin token, so the second save is refused whole: the first open's links are the stored ones,
+        // and a racing open cannot overwrite them (MsfOpenCampaignRacePostgresTests). The refused request's audit row
+        // is lost, because the audit pipeline's catch saves the same refused changes again. That fault is the audit
+        // writer's, shared by every handler whose own save fails, and is not mended here.
+        foreach (var link in links)
+        {
+            link.Invitation.TokenHash = link.TokenHash;
+        }
+
+        campaign.Open(DateTime.UtcNow);
+
+        await _dbContext.SaveChangesAsync(CancellationToken.None);
     }
+
+    /// <summary>The refusal when an invitation could not be sent. Nothing about the campaign has changed. (T184)</summary>
+    public const string InvitationsNotSent =
+        "The invitations could not all be sent, so the campaign has not been opened. Open it again to send every " +
+        "respondent a new link; any link sent before this failure will not work.";
+
+    private static EmailMessage BuildInvitationEmail(MsfCampaign campaign, MsfInvitation invitation, string submitUrl)
+        => new(
+            To: invitation.RespondentEmail!,
+            Subject: $"MSF request: {campaign.Template.Name}",
+            HtmlBody: $"""
+                <p>You have been invited to provide anonymous multi-source feedback for <strong>{System.Net.WebUtility.HtmlEncode(campaign.Template.Name)}</strong>.</p>
+                <p><a href="{System.Net.WebUtility.HtmlEncode(submitUrl)}">Submit your response</a></p>
+                <p>This link expires on <strong>{invitation.ExpiresOn:yyyy-MM-dd}</strong>.</p>
+                """,
+            TextBody: $"""
+                You have been invited to provide anonymous multi-source feedback.
+
+                Submit your response:
+                {submitUrl}
+
+                This link expires on {invitation.ExpiresOn:yyyy-MM-dd}.
+                """,
+            Tags: ["msf-invite", $"campaign:{campaign.Id}"]);
 }
