@@ -16,6 +16,7 @@ namespace Wombat.Infrastructure.Tests.Reporting;
 /// so these read what a reader of the page would read rather than what the component was asked to print. One element
 /// is one line: the qualified date must not wrap, which the fixed 100pt the bare date sat in would have made it do.
 /// </remarks>
+[Collection(QuestPdfRenderingCollection.Name)]
 public sealed class ActivitiesSectionEncounterDateTests
 {
     private static readonly XNamespace Svg = "http://www.w3.org/2000/svg";

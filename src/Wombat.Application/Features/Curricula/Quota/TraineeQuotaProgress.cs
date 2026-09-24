@@ -58,6 +58,8 @@ public sealed record QuotaWindowDto(
 }
 
 /// <summary>One curriculum item of a trainee's progress (T130).</summary>
+/// <param name="EpaId">The item's EPA. An EPA code is unique only within its namespace (national, or one institution's
+/// local extras), so a reader joining other per-EPA figures to this item joins on the id.</param>
 /// <param name="Target">The item's target per window: <see cref="CurriculumItem.RequiredCount" />.</param>
 /// <param name="Current">The window containing today.</param>
 /// <param name="Previous">The window before it, or null when the trainee had not started then.</param>
@@ -67,8 +69,16 @@ public sealed record QuotaWindowDto(
 /// which can differ when the training year changed inside the window. <see cref="TrainingYearChangedOn" /> says
 /// when that happened.
 /// </param>
+/// <param name="Periods">
+/// When the caller asked for a span, every window of the item's kind from <see cref="Current" /> back to the one
+/// containing the span's first day, newest first (<see cref="QuotaProgressCalculator.Since" />): <see cref="Current" />,
+/// then <see cref="Previous" /> when the span reaches it, then earlier ones, never one before the programme start.
+/// Null when the caller asked for no span: the progress page and the dashboard show the current and previous windows
+/// only. (T169, the portfolio export)
+/// </param>
 public sealed record TraineeCurriculumProgressDto(
     int CurriculumItemId,
+    int EpaId,
     string EpaCode,
     string EpaTitle,
     QuotaPeriod QuotaPeriod,
@@ -77,7 +87,8 @@ public sealed record TraineeCurriculumProgressDto(
     QuotaWindowDto? Previous,
     int EffectiveMinimumLevelOrder,
     string EffectiveMinimumLevelLabel,
-    DateOnly? TrainingYearChangedOn)
+    DateOnly? TrainingYearChangedOn,
+    IReadOnlyList<QuotaWindowDto>? Periods = null)
 {
     public bool IsPerSemester => QuotaPeriod == QuotaPeriod.Semester;
 }
@@ -157,10 +168,32 @@ public static class TraineeQuotaProgressReader
             .ThenByDescending(p => p.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (profile is null)
-        {
-            return null;
-        }
+        return profile is null
+            ? null
+            : await ReadForProfileAsync(dbContext, profile, asOf, periodsFrom: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// The same read for a profile the caller has already resolved, active or not, and when
+    /// <paramref name="periodsFrom" /> is given, each item also carries every window from <paramref name="asOf" />'s
+    /// back to <paramref name="periodsFrom" />'s (<see cref="TraineeCurriculumProgressDto.Periods" />). Everything else
+    /// is the same read, so the two cannot disagree.
+    /// </summary>
+    /// <remarks>
+    /// For the portfolio export (T169), which reads the profile its cover names (<c>TraineeScopeResolver</c>'s
+    /// preferred profile, the one the export was authorised against), so the programme on the cover and the targets
+    /// in the per-EPA section are the same programme. That profile may be a completed one: a graduation export is
+    /// read as on the completion day, which is the caller's to choose as <paramref name="asOf" />.
+    /// </remarks>
+    public static async Task<TraineeCurriculumProgressSummaryDto> ReadForProfileAsync(
+        IApplicationDbContext dbContext,
+        TraineeProfile profile,
+        DateOnly asOf,
+        DateOnly? periodsFrom,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var traineeUserId = profile.UserId;
 
         var stage = profile.GetStage(asOf);
 
@@ -173,6 +206,7 @@ public static class TraineeQuotaProgressReader
             .Select(item => new
             {
                 item.Id,
+                item.EpaId,
                 EpaCode = item.Epa.Code,
                 EpaTitle = item.Epa.Title,
                 item.RequiredCount,
@@ -212,8 +246,16 @@ public static class TraineeQuotaProgressReader
                 MinimumLevelByStageJson = item.MinimumLevelByStageJson
             }.GetMinimumLevelForStage(stage);
 
+            var periods = periodsFrom is { } since
+                ? QuotaProgressCalculator
+                    .Since(item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, since, asOf)
+                    .Select(QuotaWindowDto.From)
+                    .ToArray()
+                : null;
+
             result.Add(new TraineeCurriculumProgressDto(
                 item.Id,
+                item.EpaId,
                 item.EpaCode,
                 item.EpaTitle,
                 item.QuotaPeriod,
@@ -224,7 +266,8 @@ public static class TraineeQuotaProgressReader
                     : null,
                 effectiveMinimum,
                 rungs.Format(item.ScaleId, effectiveMinimum),
-                TrainingYearChangedWithin(profile, progress.Current.Window, asOf)));
+                TrainingYearChangedWithin(profile, progress.Current.Window, asOf),
+                periods));
         }
 
         var semester = AcademicPeriod.Containing(asOf);

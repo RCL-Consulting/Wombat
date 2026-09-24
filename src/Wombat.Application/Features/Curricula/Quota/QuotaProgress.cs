@@ -77,6 +77,48 @@ public static class QuotaProgressCalculator
         return new ItemQuotaProgress(current, previous);
     }
 
+    /// <summary>
+    /// Every window of the item's kind from the one containing <paramref name="asOf" /> back to the one containing
+    /// <paramref name="from" />, newest first: what a report covering a span, not a day, prints (the portfolio export,
+    /// T169).
+    /// </summary>
+    /// <remarks>
+    /// The first window is <see cref="For" />'s <c>Current</c> and the second its <c>Previous</c>, tallied by the same
+    /// code, so a span ending today opens with exactly what the progress page shows. A window that lies wholly before
+    /// the programme start is not listed, just as the progress page drops a previous window the trainee had not
+    /// started, and the walk stops there. The window containing <paramref name="asOf" /> is listed unless it ended
+    /// before <paramref name="from" />: a span that starts after <paramref name="asOf" />'s window has no window to
+    /// report, and listing that one would print a period the span does not cover.
+    /// </remarks>
+    public static IReadOnlyList<QuotaWindowTally> Since(
+        int curriculumItemId,
+        QuotaPeriod quotaPeriod,
+        int requiredCount,
+        IEnumerable<QuotaProgressRow> rows,
+        DateOnly programmeStart,
+        DateOnly from,
+        DateOnly asOf)
+    {
+        var itemRows = rows.Where(row => row.CurriculumItemId == curriculumItemId).ToList();
+
+        var window = QuotaWindow.For(quotaPeriod, asOf, programmeStart);
+        if (window.End < from)
+        {
+            return [];
+        }
+
+        var tallies = new List<QuotaWindowTally> { Tally(window, requiredCount, itemRows) };
+
+        for (var preceding = window.Preceding(programmeStart);
+             preceding is not null && preceding.End >= from && preceding.Status != QuotaWindowStatus.NotStarted;
+             preceding = preceding.Preceding(programmeStart))
+        {
+            tallies.Add(Tally(preceding, requiredCount, itemRows));
+        }
+
+        return tallies;
+    }
+
     private static QuotaWindowTally Tally(QuotaWindow window, int target, IReadOnlyList<QuotaProgressRow> rows)
     {
         var covered = rows.Where(row => window.Covers(row.AcademicYear, row.Semester)).ToList();

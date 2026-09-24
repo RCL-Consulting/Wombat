@@ -21,22 +21,23 @@ internal static class SummaryPageComponent
                 text.Span(data.Activities.Count.ToString()).FontSize(10).Bold();
             });
 
-            if (data.ActivitiesByType.Count > 0)
+            if (data.TypeSummaries.Count > 0)
             {
                 column.Item().PaddingTop(4).Text("Activities by type:").FontSize(10).Bold();
 
-                foreach (var (typeName, activities) in data.ActivitiesByType.OrderBy(pair => pair.Key))
+                foreach (var summary in data.TypeSummaries)
                 {
-                    var completedCount = activities.Count(activity =>
-                        string.Equals(activity.CurrentState, "completed", StringComparison.OrdinalIgnoreCase));
-
+                    // "Complete" is a terminal state of the activity's pinned workflow (T169, D44), counted when the data
+                    // was loaded: a discussed reflective exercise or a recorded MSF row is complete, a draft or a declined
+                    // request is not. Printed even when it is none, so a reader can tell "none finished" from "not said".
                     column.Item().PaddingLeft(12).Text(text =>
                     {
-                        text.Span($"{typeName}: ").FontSize(9);
-                        text.Span($"{activities.Count} total").FontSize(9);
-                        if (completedCount > 0)
+                        text.Span($"{summary.TypeName}: ").FontSize(9);
+                        text.Span($"{summary.Total} total, ").FontSize(9);
+                        var complete = text.Span($"{summary.Complete} complete").FontSize(9);
+                        if (summary.Complete > 0)
                         {
-                            text.Span($" ({completedCount} completed)").FontSize(9).FontColor(Colors.Green.Darken2);
+                            complete.FontColor(Colors.Green.Darken2);
                         }
                     });
                 }

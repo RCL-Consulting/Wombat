@@ -775,7 +775,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
         int target,
         QuotaWindowDto current,
         QuotaWindowDto? previous = null)
-        => new(id, code, title, period, target, current, previous, EffectiveMinimumLevelOrder: 3, EffectiveMinimumLevelLabel: "3a", TrainingYearChangedOn: null);
+        => new(id, EpaId: id, code, title, period, target, current, previous, EffectiveMinimumLevelOrder: 3, EffectiveMinimumLevelLabel: "3a", TrainingYearChangedOn: null);
 
     private static QuotaWindowDto Counting(WindowShape window, int count, int target, int minimumReached = 0, DateOnly? lastObservedOn = null)
         => new(

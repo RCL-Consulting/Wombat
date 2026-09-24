@@ -21,6 +21,7 @@ namespace Wombat.Infrastructure.Tests.Reporting;
 /// rendered <c>Generated: {DateTime.UtcNow}</c> and QuestPDF stamped DateTime.Now metadata, so two
 /// exports a minute apart produced different bytes.
 /// </summary>
+[Collection(QuestPdfRenderingCollection.Name)]
 public sealed class PortfolioPdfServiceTests
 {
     static PortfolioPdfServiceTests()
@@ -32,7 +33,10 @@ public sealed class PortfolioPdfServiceTests
     public async Task Generate_IsByteForByteDeterministic()
     {
         await using var db = SeededDb();
-        var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
+        // The per-EPA section prints the day it reads the targets on (T169), which for an open-ended export is today.
+        // Pinned, so two exports that straddle midnight in South Africa are still the same data on the same day.
+        var service = new PortfolioPdfService(
+            db, new ThrowingMsfAggregationService(), new FixedClock(new DateTimeOffset(2026, 9, 23, 8, 0, 0, TimeSpan.Zero)));
         var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
 
         var first = await service.GenerateAsync(request, CancellationToken.None);
@@ -245,4 +249,8 @@ public sealed class PortfolioPdfServiceTests
     private static ClaimsPrincipal SubjectPrincipal(string userId)
         => new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test"));
 
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 }

@@ -16,6 +16,12 @@ using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Application.Features.Activities.Queries;
+using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
+using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula;
+using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Infrastructure.Reporting;
 
@@ -39,18 +45,42 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
     private readonly IApplicationDbContext _dbContext;
     private readonly IMsfAggregationService _msfAggregationService;
+    private readonly TimeProvider _timeProvider;
 
-    public PortfolioPdfService(IApplicationDbContext dbContext, IMsfAggregationService msfAggregationService)
+    /// <param name="timeProvider">
+    /// "Today" for the per-EPA section of an open-ended export (T169), on the South African calendar. Defaults to the
+    /// system clock; a test pins it.
+    /// </param>
+    public PortfolioPdfService(
+        IApplicationDbContext dbContext,
+        IMsfAggregationService msfAggregationService,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _msfAggregationService = msfAggregationService;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<PortfolioExportResult> GenerateAsync(PortfolioExportRequest request, CancellationToken cancellationToken)
     {
         var data = await LoadPortfolioDataAsync(request, cancellationToken);
 
-        var document = Document.Create(container =>
+        var pdfBytes = ComposeDocument(data).GeneratePdf();
+
+        var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
+
+        var fileName = $"portfolio-{hash[..12]}.pdf";
+
+        return new PortfolioExportResult(pdfBytes, fileName, hash);
+    }
+
+    /// <summary>
+    /// The portfolio as a document, before it is rendered. Internal so a test can render it as SVG, whose text elements
+    /// are what a reader of the page reads (as <c>ActivitiesSectionEncounterDateTests</c> does, T161); the PDF's bytes
+    /// carry the text only inside compressed font-encoded streams.
+    /// </summary>
+    internal static Document ComposeDocument(PortfolioData data)
+        => Document.Create(container =>
         {
             container.Page(page =>
             {
@@ -65,15 +95,6 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             });
         }).WithMetadata(DeterministicMetadata);
 
-        var pdfBytes = document.GeneratePdf();
-
-        var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
-
-        var fileName = $"portfolio-{hash[..12]}.pdf";
-
-        return new PortfolioExportResult(pdfBytes, fileName, hash);
-    }
-
     private static void ComposeContent(IContainer container, PortfolioData data)
     {
         container.Column(column =>
@@ -86,6 +107,9 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             {
                 column.Item().Element(e => EntrustmentSummaryComponent.Compose(e, data.EntrustmentDecisions));
             }
+
+            // After the STARs, which [T166] will set against each EPA's year target in this same section. (T169)
+            column.Item().Element(e => EpaProgressSectionComponent.Compose(e, data.EpaProgress));
 
             if (data.CommitteeReviews.Count > 0)
             {
@@ -220,6 +244,34 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .GroupBy(activity => activity.ActivityType.Name)
             .ToDictionary(group => group.Key, group => group.ToList());
 
+        // T169: "complete" is a terminal state of the activity's PINNED workflow (D44), the point where credit fires,
+        // as the sampling report and the trajectory already read it. The literal "completed" printed a trainee's
+        // discussed reflective exercises, recorded MSF rows and logged procedures as never finished. The pin is the
+        // version row the activity was filed against, else the type's own columns for a type whose version rows were
+        // never written, as RatedEvidenceProfiles resolves it. Parsed once per pin.
+        var finishedStatesByPin = new Dictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>();
+        bool IsComplete(Activity activity)
+        {
+            var pin = (activity.ActivityTypeId, activity.SchemaVersion);
+            if (!finishedStatesByPin.TryGetValue(pin, out var finished))
+            {
+                finished = ActivityCompletion.FinishedStates(schemaVersions.TryGetValue(pin, out var version)
+                    ? version.WorkflowJson
+                    : activity.ActivityType.WorkflowJson);
+                finishedStatesByPin[pin] = finished;
+            }
+
+            return finished.Contains(activity.CurrentState);
+        }
+
+        var typeSummaries = activitiesByType
+            // The order the activities section prints the same groups in.
+            .OrderBy(pair => pair.Key)
+            .Select(pair => new PortfolioTypeSummary(pair.Key, pair.Value.Count, pair.Value.Count(IsComplete)))
+            .ToList();
+
+        var epaProgress = await LoadEpaProgressAsync(request, traineeProfile, cancellationToken);
+
         var committeeReviews = await _dbContext.Set<CommitteeReview>()
             .AsNoTracking()
             .Include(review => review.Decisions)
@@ -306,12 +358,91 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             Brand: brand,
             Activities: activities,
             ActivitiesByType: activitiesByType,
+            TypeSummaries: typeSummaries,
             SchemaVersions: schemaVersions,
             RungLabels: rungLabels,
+            EpaProgress: epaProgress,
             CommitteeReviews: committeeReviews,
             EntrustmentDecisions: entrustmentDecisions,
             MsfReports: msfReports,
             AuditEntries: auditEntries);
+    }
+
+    /// <summary>
+    /// The per-EPA section's data (T169), from the two reads behind the trainee's progress page: the quota reader for the
+    /// targets and the trajectory for the rated observations. Neither is re-derived here.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Which programme.</b> <paramref name="profile" />, the one the cover names: <c>TraineeScopeResolver</c>'s
+    /// preferred profile, which the export was authorised against. The progress page reads the active profile only, so a
+    /// completed or deactivated trainee has no targets there. A graduation export is exactly the one that must show
+    /// them, so the section reads the cover's profile whatever its state, and says what that state is.
+    /// </para>
+    /// <para>
+    /// <b>Which day.</b> <see cref="PortfolioEpaProgress.ReadOn" />: the export's last day, or today on the South African
+    /// calendar when the export is open-ended or ends in the future (a future day would read a period that has not
+    /// happened), and never after a completed programme's completion day. Every window from that day's back to the one
+    /// containing the export's first day is listed (the whole programme when there is none), so an annual export shows
+    /// both of that year's semesters and a graduation export every one.
+    /// </para>
+    /// <para>
+    /// <b>Scope.</b> The export was authorised for this trainee before this runs (<c>ExportPortfolio</c>, or the data
+    /// subject's own access request). The quota reader reads progress rows, never an activity, and every figure on it is
+    /// about this trainee, as on the progress page and the committee's dashboards. The trajectory reads activities
+    /// through the caller's read scope and the export's dates, the same cut as the activity list below it, so every
+    /// rated observation counted here is one the PDF lists.
+    /// </para>
+    /// </remarks>
+    private async Task<PortfolioEpaProgress> LoadEpaProgressAsync(
+        PortfolioExportRequest request,
+        TraineeProfile? profile,
+        CancellationToken cancellationToken)
+    {
+        var today = ProgrammeCalendar.DateOf(_timeProvider.GetUtcNow().UtcDateTime);
+        var programme = PortfolioProgramme.Of(profile);
+        var asOf = PortfolioEpaProgress.ReadOn(today, request.ToDate, programme);
+
+        var targets = profile is null
+            ? null
+            : await TraineeQuotaProgressReader.ReadForProfileAsync(
+                _dbContext,
+                profile,
+                asOf,
+                periodsFrom: request.FromDate ?? DateOnly.MinValue,
+                cancellationToken);
+
+        // The handler itself, not a copy of it: the chart on the progress page and this section cannot disagree.
+        var trajectories = await new GetEpaTrajectoryForTraineeQueryHandler(_dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery(request.TraineeUserId, request.Principal, request.FromDate, request.ToDate),
+            cancellationToken);
+
+        // Of the EPAs with rated evidence and no target, the ones this programme holds the trainee's item for whose EPA
+        // is deactivated (T158). The reader's owner predicate: another institution's local item is not this trainee's.
+        var targeted = targets?.Items.Select(item => item.EpaId).ToHashSet() ?? [];
+        var untargeted = trajectories
+            .Select(trajectory => trajectory.EpaId)
+            .Where(epaId => !targeted.Contains(epaId))
+            .ToArray();
+        var deactivated = profile is null || untargeted.Length == 0
+            ? []
+            : await _dbContext.Set<CurriculumItem>()
+                .AsNoTracking()
+                .NotInForce()
+                .Where(item => item.CurriculumId == profile.CurriculumId
+                    && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
+                    && untargeted.Contains(item.EpaId))
+                .Select(item => item.EpaId)
+                .ToListAsync(cancellationToken);
+
+        return PortfolioEpaProgress.Build(
+            asOf,
+            today,
+            request.FromDate,
+            programme,
+            targets,
+            trajectories,
+            deactivated.ToHashSet());
     }
 }
 
@@ -326,8 +457,10 @@ internal sealed record PortfolioData(
     InstitutionBrand? Brand,
     List<Activity> Activities,
     Dictionary<string, List<Activity>> ActivitiesByType,
+    IReadOnlyList<PortfolioTypeSummary> TypeSummaries,
     Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> SchemaVersions,
     EntrustmentRungLookup RungLabels,
+    PortfolioEpaProgress EpaProgress,
     List<CommitteeReview> CommitteeReviews,
     List<EntrustmentDecision> EntrustmentDecisions,
     List<MsfCampaignAggregateReportDto> MsfReports,

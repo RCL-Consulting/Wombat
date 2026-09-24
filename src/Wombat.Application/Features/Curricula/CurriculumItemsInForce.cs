@@ -34,4 +34,11 @@ public static class CurriculumItemsInForce
     /// <summary>The items whose EPA is active.</summary>
     public static IQueryable<CurriculumItem> InForce(this IQueryable<CurriculumItem> items)
         => items.Where(item => item.Epa.IsActive);
+
+    /// <summary>
+    /// The items whose EPA is deactivated: the complement of <see cref="InForce" />, for a reader that must say why an
+    /// EPA is no target rather than silently leave it out (the portfolio export's per-EPA section, T169).
+    /// </summary>
+    public static IQueryable<CurriculumItem> NotInForce(this IQueryable<CurriculumItem> items)
+        => items.Where(item => !item.Epa.IsActive);
 }

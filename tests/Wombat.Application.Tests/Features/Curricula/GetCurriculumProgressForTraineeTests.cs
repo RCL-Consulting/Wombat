@@ -334,6 +334,131 @@ public sealed class GetCurriculumProgressForTraineeTests
         (await Read(db)).Items.Single(r => r.EpaCode == "PAED-001").EffectiveMinimumLevelLabel.Should().Be("4");
     }
 
+    [Fact]
+    public async Task ASpanListsEveryWindowBackToItsFirstDay_NewestFirst_OpeningWithTheCurrentAndPrevious()
+    {
+        // T169: the portfolio export prints every period it covers. The first two are exactly what the progress page
+        // shows, read by the same tally; the span reaches back to the window CONTAINING its first day.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2024, 2, counts: 9);   // before the span: not listed
+        AddRow(db, SemesterItemId, 2025, 1, counts: 1, reached: 1);
+        AddRow(db, SemesterItemId, 2025, 2, counts: 3, reached: 2);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2, reached: 2);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);
+        AddRow(db, YearItemId, 2025, 2, counts: 1);
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await ReadSpan(db, periodsFrom: new DateOnly(2025, 3, 1));
+
+        var semester = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        semester.EpaId.Should().Be(1);
+        var periods = semester.Periods.Should().NotBeNull().And.Subject.As<IReadOnlyList<QuotaWindowDto>>();
+        periods.Select(period => period.Name).Should().Equal(
+            "Semester 2, 2026", "Semester 1, 2026", "Semester 2, 2025", "Semester 1, 2025");
+        periods.Select(period => period.Count).Should().Equal(1, 2, 3, 1);
+        periods.Select(period => period.IsMet).Should().Equal(false, false, true, false);
+        periods.Select(period => period.MinimumLevelReachedCount).Should().Equal(0, 2, 2, 1);
+        periods[0].Should().Be(semester.Current, "the span opens with the window the progress page calls current");
+        periods[1].Should().Be(semester.Previous, "and then the one it calls previous");
+
+        var year = summary.Items.Single(entry => entry.EpaCode == "PAED-002");
+        year.Periods!.Select(period => period.Name).Should().Equal("2026 academic year", "2025 academic year");
+        year.Periods!.Select(period => period.Count).Should().Equal(0, 1);
+    }
+
+    [Fact]
+    public async Task ASpanStopsAtTheProgrammeStart_AndKeepsTheWaivedFirstPeriod()
+    {
+        // A start on 15 August 2025 waives semester 2 of 2025 and the 2025 year (D14, D42). Those windows are listed,
+        // because encounters in them are evidence; nothing before them is, whatever the span asks for.
+        await using var db = CreateDb();
+        SeedCurriculum(db, programmeStart: new DateOnly(2025, 8, 15));
+        AddRow(db, SemesterItemId, 2025, 2, counts: 2);
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await ReadSpan(db, periodsFrom: DateOnly.MinValue);
+
+        var semester = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        semester.Periods!.Select(period => (period.Name, period.Status)).Should().Equal(
+            ("Semester 2, 2026", QuotaWindowStatus.Counting),
+            ("Semester 1, 2026", QuotaWindowStatus.Counting),
+            ("Semester 2, 2025", QuotaWindowStatus.ExemptPartialPeriod));
+        semester.Periods![2].Count.Should().Be(2, "a waived period still shows what was recorded in it");
+
+        summary.Items.Single(entry => entry.EpaCode == "PAED-002").Periods!.Select(period => (period.Name, period.Status))
+            .Should().Equal(
+                ("2026 academic year", QuotaWindowStatus.Counting),
+                ("2025 academic year", QuotaWindowStatus.ExemptPartialPeriod));
+    }
+
+    [Fact]
+    public async Task WithoutASpan_NoPeriodsAreRead()
+    {
+        // The progress page and the dashboard read the current and previous windows only.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2);
+        db.SaveChanges();
+
+        (await Read(db)).Items.Should().OnlyContain(entry => entry.Periods == null);
+    }
+
+    [Fact]
+    public async Task ASpanThatStartsAfterTheDaysWindow_ListsNoWindow()
+    {
+        // T169 review: an open-ended export from 1 January 2027, read on 23 September 2026, covers no period yet. Listing
+        // the window containing the day would print semester 2 of 2026, which the span does not cover.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await ReadSpan(db, periodsFrom: new DateOnly(2027, 1, 1));
+
+        summary.Items.Should().OnlyContain(entry => entry.Periods != null && entry.Periods.Count == 0);
+        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current.Name
+            .Should().Be("Semester 2, 2026", "the day's own window is still read; only the span's list is empty");
+
+        // A span starting on the window's last counted day still lists it.
+        (await ReadSpan(db, periodsFrom: new DateOnly(2026, 12, 31))).Items.Single(entry => entry.EpaCode == "PAED-001")
+            .Periods!.Select(period => period.Name).Should().Equal("Semester 2, 2026");
+    }
+
+    [Fact]
+    public async Task AResolvedProfileIsReadWhateverItsState_WhileTheProgressPageReadsOnlyAnActiveOne()
+    {
+        // T169 review: the portfolio export reads the programme its cover names, which for a graduate is a completed,
+        // inactive profile. The progress page still has nothing to show for one.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var page = await new GetCurriculumProgressForTraineeQueryHandler(db).Handle(
+            new GetCurriculumProgressForTraineeQuery("trainee-1", TestPrincipals.Trainee("trainee-1"), AsOf),
+            CancellationToken.None);
+        page.Should().BeNull();
+
+        var summary = await ReadSpan(db, periodsFrom: DateOnly.MinValue, asOf: new DateOnly(2026, 6, 30));
+        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current
+            .Should().Match<QuotaWindowDto>(window => window.Name == "Semester 1, 2026" && window.Count == 2);
+    }
+
+    private static async Task<TraineeCurriculumProgressSummaryDto> ReadSpan(
+        ApplicationDbContext db, DateOnly periodsFrom, DateOnly? asOf = null)
+    {
+        var profile = await db.Set<TraineeProfile>().AsNoTracking().SingleAsync(entity => entity.UserId == "trainee-1");
+        return await TraineeQuotaProgressReader.ReadForProfileAsync(
+            db, profile, asOf ?? AsOf, periodsFrom, CancellationToken.None);
+    }
+
     private static async Task<TraineeCurriculumProgressSummaryDto> Read(ApplicationDbContext db, DateOnly? asOf = null)
     {
         var handler = new GetCurriculumProgressForTraineeQueryHandler(db);

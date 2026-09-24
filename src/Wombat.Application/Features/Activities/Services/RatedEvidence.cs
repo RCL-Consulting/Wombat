@@ -113,9 +113,6 @@ public readonly record struct RatedEvidenceReading(
 /// </remarks>
 public sealed class RatedEvidenceProfile
 {
-    /// <summary>The state a type with no workflow is taken to finish in.</summary>
-    public const string NoWorkflowEvidenceState = "completed";
-
     /// <summary>
     /// An entrustment scale is data, so the rung count is not knowable here. This bound only rejects a value that
     /// cannot be a rung at all (a mis-mapped field, a year, a score out of 100). Moved from the trajectory query.
@@ -260,13 +257,10 @@ public sealed class RatedEvidenceProfile
         string? workflowJson,
         string? fallbackRatedLevelField)
     {
-        var workflow = TryParseWorkflow(workflowJson);
-        IReadOnlySet<string> evidenceStates = workflow is null
-            ? new HashSet<string>(StringComparer.Ordinal) { NoWorkflowEvidenceState }
-            : workflow.States
-                .Where(state => state.Terminal)
-                .Select(state => state.Key)
-                .ToHashSet(StringComparer.Ordinal);
+        var workflow = ActivityCompletion.TryParseWorkflow(workflowJson);
+        // D44: evidence is a finished activity, and "finished" has one definition (ActivityCompletion, shared with the
+        // portfolio export's summary since T169).
+        var evidenceStates = ActivityCompletion.FinishedStates(workflow);
 
         var schema = TryParseSchema(schemaJson);
         if (schema is null)
@@ -411,26 +405,6 @@ public sealed class RatedEvidenceProfile
     private static bool RequiredIn(IReadOnlySet<string> states, string? currentState)
         => currentState is not null && states.Contains(currentState);
 
-    private static Workflow? TryParseWorkflow(string? workflowJson)
-    {
-        if (string.IsNullOrWhiteSpace(workflowJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            return WorkflowParser.Parse(workflowJson);
-        }
-        catch (Exception)
-        {
-            // Deliberately broad, as CreditRuleFields is: the parser raises its own exception for the shapes it
-            // checks, and System.Text.Json raises InvalidOperationException for a value of the wrong kind. A stored
-            // workflow that no longer parses is a defect, but not a committee report's to raise.
-            return null;
-        }
-    }
-
     private static FormSchema? TryParseSchema(string? schemaJson)
     {
         if (string.IsNullOrWhiteSpace(schemaJson))
@@ -444,7 +418,9 @@ public sealed class RatedEvidenceProfile
         }
         catch (Exception)
         {
-            // As above.
+            // Deliberately broad, as ActivityCompletion.TryParseWorkflow is: the parser raises its own exception for
+            // the shapes it checks, and System.Text.Json raises InvalidOperationException for a value of the wrong
+            // kind. A stored schema that no longer parses is a defect, but not a committee report's to raise.
             return null;
         }
     }
