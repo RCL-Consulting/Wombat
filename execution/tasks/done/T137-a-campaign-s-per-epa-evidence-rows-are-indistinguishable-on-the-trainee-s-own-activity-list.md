@@ -1,13 +1,14 @@
 ---
 id: T137
 title: A campaign's per-EPA evidence rows are indistinguishable on the trainee's own activity list
-status: in_progress
+status: done
 priority: P2
 owner: agent
 model: opus
 depends_on: []
 created: 2026-09-21
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T137 — Eight identical rows, one per EPA, and nothing on the page says which is which
@@ -66,13 +67,13 @@ only; it does not fix the projection that every other reader also lacks.
 
 ## Verification
 
-- [ ] A trainee whose released campaign covered three EPAs can tell the three rows apart without
+- [x] A trainee whose released campaign covered three EPAs can tell the three rows apart without
       opening them — checked in the browser
-- [ ] Whatever is added to `ActivitySummaryDto` is populated for every seeded type, not only MSF —
+- [x] Whatever is added to `ActivitySummaryDto` is populated for every seeded type, not only MSF —
       checked by a test over the seed corpus
-- [ ] If `Activity.EpaId` is populated: a DSL property added for it survives Parse+Serialize — checked
+- [x] If `Activity.EpaId` is populated: a DSL property added for it survives Parse+Serialize — checked
       by a named `SeedRoundTripTests` fixture, per CLAUDE.md's Serialize-half trap
-- [ ] Full suite green — `dotnet test` per project, no `--no-build`
+- [x] Full suite green — `dotnet test` per project, no `--no-build`
 
 ## Related
 
@@ -113,8 +114,51 @@ is how a registrar sees across the whole list which completions counted.
 
 **Verification, added:**
 
-- [ ] `MyActivities` shows, for each completed activity, whether it credited, credited nothing, or was never
+- [x] `MyActivities` shows, for each completed activity, whether it credited, credited nothing, or was never
       evaluated. bUnit test, and in the browser.
-- [ ] A type whose schema pointer and credit `epa_field` disagree cannot be published. Test.
-- [ ] `EpaId` is stamped on create, on transition, and on the MSF release path. Application tests.
-- [ ] `/activities/inbox` shows each row's EPA and encounter date. bUnit test.
+- [x] A type whose schema pointer and credit `epa_field` disagree cannot be published. Test.
+- [x] `EpaId` is stamped on create, on transition, and on the MSF release path. Application tests.
+- [x] `/activities/inbox` shows each row's EPA and encounter date. bUnit test.
+
+---
+
+## As built — 2026-09-24 (with [T106] item 14)
+
+- **`evidence_epa_field`**, a schema-root pointer to the form's `epa` field (Parse + Serialize, a round-trip fixture,
+  a builder picker "EPA field"). It is named for what the field is, the EPA this activity is evidence for, which also
+  covers types that credit nothing. It cannot be misread as the credit directive's `epa_field`.
+- **Agreement, refused rather than defaulted** (`EvidenceEpa.EnsureCreditAgrees`, in `SaveDraft` and `PublishDraft`
+  before anything is assigned). There are two shapes:
+  - One EPA: a pointer, every `epa_field` equal to it, and no item-targeted directive.
+  - None: no pointer, and no `epa_field`.
+  Defaulting a missing `epa_field` to the pointer was rejected: credit, the tool gate, the rebuild and the picker would
+  each have had to learn it. See CUSTOMIZATION.md § Schema format.
+- **`Activity.EpaId`** is stamped by `EvidenceEpaResolver` at create, on every transition, and on the MSF release path,
+  and resolves only to an existing EPA.
+- **Migration `20260924123852_T137_ActivityEvidenceEpa`:**
+  - adds an index;
+  - adds the pointer to stored schemas where the version's own credit or its only `epa` field decides it, published
+    versions included (an inert addition, recorded as a W-007 exception in CUSTOMIZATION.md § Versioning);
+  - backfills `EpaId` from the data, parsing ids as `int.TryParse` does.
+- **Lists:**
+  - `ActivitySummaryDto` carries `EpaId`, `EpaCode`, `EpaTitle`, `ObservedOn`, `ObservedOnDeclared` and the last credit
+    outcome (three-valued, T108).
+  - `MyActivities` shows Type, EPA, Encounter date ("(filed; no encounter date)" when undated), State and Credited, and
+    sorts by encounter date. The inbox adds EPA and Encounter date.
+  - `CreditOutcome.Label` is the one wording, shared with `ActivityView`.
+- **Evidence.**
+  - Suites on master: Domain 398, Application 958, Infrastructure 658, Architecture 28, Web 384, Integration 28 (5 new
+    Postgres migration tests). `has-pending-model-changes` is clean. The mutants across both rounds were all caught.
+  - Browser on dev (the migration applied at startup; the refresher republished 0 of 19):
+    - EpaId: 21 of 21 activities with an `epa_id` are stamped. The six MSF rows carry PAED-001, 010, 012, 002, 005 and
+      007 and read apart on `/activities/mine`.
+    - Order and dates: the list order matches `ObservedOn DESC, UpdatedOn DESC, Id DESC`, and undated rows 17, 21 and
+      23 show "(filed; no encounter date)".
+    - Credit column: "1 item" and "—" were seen. "None" could not be, because no dev transition has
+      `CreditedItemCount = 0`; the bUnit tests cover it.
+    - Inbox: it shows EPA and encounter date.
+    - New activity: Mini-CEX 24, filed against PAED-007, was stamped `EpaId = 8` by the create INSERT.
+- Noticed, not T137's: dev's MSF activities 1–5 carry encounter dates after today (scenario data; [T160] refuses that
+  going forward). The trainee dashboard's recent-activities card could show the EPA code now; [T142] widens the same
+  surfaces.
+

@@ -4,7 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T137](tasks/in_progress/T137-a-campaign-s-per-epa-evidence-rows-are-indistinguishable-on-the-trainee-s-own-activity-list.md) | P2 | A campaign's per-EPA evidence rows are indistinguishable on the traine | opus |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T113](tasks/queued/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
@@ -55,8 +54,9 @@
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
 | queued | [T180](tasks/queued/T180-the-browser-tab-title-does-not-change-when-the-user-moves-between-pages-inside-the-app.md) | P3 | The browser tab title does not change when the user moves between page |  |
+| queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
 
-Done: 116 task(s).
+Done: 117 task(s).
 
 ## From STATE.md
 
@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+c30df9c docs(execution): close T141 and T147 — browser-verified on dev; file T180 (tab title does not follow in-app navigation)
 7aab72a feat(activities): an activity knows its EPA — stamped from a schema pointer that agrees with credit; activity lists show the EPA, the encounter date and what it credited (T137, T106 item 14)
 d0f8a90 docs(execution): close T144 and T140 (integration 23/23, no leaked schemas); file T177, T178, T179
 e2f4858 test(integration): the MSF respond-flow fixture seeds as startup does, cleans up on a failed setup, runs no scheduler, and asserts the ClosedOn date (T140)
 9ea13d2 fix(msf): every label on the campaign editor names a real control (T147)
-342660f fix(activities): a rated source is classified by the instrument it declares, not by its type key (T144)
 ```
