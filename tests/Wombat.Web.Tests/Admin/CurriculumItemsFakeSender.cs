@@ -94,8 +94,23 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     private static string? BodyName(string? key)
         => key is null ? null : DecisionBodies.FirstOrDefault(body => body.Key == key)?.Name ?? key;
 
-    /// <summary>What <see cref="ListEpasForSubSpecialityQuery" /> answers; <see cref="Epas" />, all active, when not set.</summary>
+    /// <summary>
+    /// What <see cref="ListCurriculumItemEpaOptionsQuery" /> answers for every picker; <see cref="Epas" />, all active,
+    /// when not set. <see cref="EpaOptionsFor" /> overrides it per picker.
+    /// </summary>
     public IReadOnlyList<EpaDto> EpaList { get; init; } = Epas;
+
+    /// <summary>
+    /// What <see cref="ListCurriculumItemEpaOptionsQuery" /> answers for a picker, by its item id (null for the Add
+    /// form), or null to answer <see cref="EpaList" />. The rule itself is the Application's (T195); this is its answer.
+    /// </summary>
+    public Func<int?, IReadOnlyList<EpaDto>?> EpaOptionsFor { get; init; } = _ => null;
+
+    /// <summary>The EPA picker queries the page sent, in order (T195).</summary>
+    public List<ListCurriculumItemEpaOptionsQuery> EpaOptionQueries { get; } = [];
+
+    /// <summary>A refusal the edit row's picker query answers with, as the handler does for a caller who may not save the item.</summary>
+    public Exception? EditOptionsFailure { get; init; }
 
     /// <summary><see cref="Epas" /> with the named ones inactive, as the EPA list would return them after a deactivation.</summary>
     public static IReadOnlyList<EpaDto> EpasWithInactive(params int[] inactiveIds)
@@ -106,7 +121,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         object response = request switch
         {
             GetCurriculumByIdQuery => Curriculum(),
-            ListEpasForSubSpecialityQuery => EpaList,
+            ListCurriculumItemEpaOptionsQuery options => EpaOptions(options),
             GetEntrustmentScalesListQuery => Scales,
             GetWbaToolsQuery => Vocabulary,
             GetDecisionBodiesQuery => DecisionBodies,
@@ -120,6 +135,17 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     public Task Send(IRequest request, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
+
+    private IReadOnlyList<EpaDto> EpaOptions(ListCurriculumItemEpaOptionsQuery query)
+    {
+        EpaOptionQueries.Add(query);
+        if (query.ItemId is not null && EditOptionsFailure is not null)
+        {
+            throw EditOptionsFailure;
+        }
+
+        return EpaOptionsFor(query.ItemId) ?? EpaList;
+    }
 
     private CurriculumDto Curriculum()
         => new(CurriculumId, 2, SubSpecialityId, "Paediatrics", "General Paediatrics", "CMSA", "Paediatrics v11.1", "11.1",
@@ -164,7 +190,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         return Curriculum();
     }
 
-    private static EpaDto Epa(int id, string code)
+    public static EpaDto Epa(int id, string code)
         => new(id, SubSpecialityId, "General Paediatrics", "CMSA", code, $"{code} title", null, null, EpaCategory.Core, true,
             new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 

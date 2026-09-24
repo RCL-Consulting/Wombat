@@ -122,7 +122,7 @@
                   else
                   {
                     <div class="actions-cell">
-                      <button class="btn btn-sm btn-outline" @onclick="() => BeginEdit(item)">Edit</button>
+                      <button class="btn btn-sm btn-outline" @onclick="() => BeginEditAsync(item)">Edit</button>
                       <button class="btn btn-sm btn-danger" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
                     </div>
                   }
@@ -141,12 +141,20 @@
                       <legend>Edit @item.EpaCode</legend>
                       <div class="form-grid form-grid--wide">
                         <FormField Label="EPA" InputId="edit-epa" Required="true" FullWidth="true">
-                          <InputSelect id="edit-epa" class="form-select" TValue="int" @bind-Value="_editModel.EpaId">
-                            @foreach (var epa in AvailableEpas)
+                          <InputSelect id="edit-epa" class="form-select" TValue="int" @bind-Value="_editModel.EpaId"
+                                       aria-describedby="@(EditEpaOffered ? null : "edit-epa-refused")">
+                            @foreach (var epa in _editEpas)
                             {
                               <option value="@epa.Id">@EpaOptionText(epa)</option>
                             }
                           </InputSelect>
+                          <small class="muted">@EpaHelp</small>
+                          @* T195. A stored EPA the item cannot name is not among the options, so the select shows none
+                             selected, and Save is refused for an EPA the operator cannot see. Say so before they press it. *@
+                          @if (!EditEpaOffered)
+                          {
+                            <div id="edit-epa-refused" class="validation-message">@item.EpaCode is not one of the EPAs this item can name, so none is selected. Choose one before saving.</div>
+                          }
                         </FormField>
 
                         <FormField Label="Target" InputId="edit-count">
@@ -279,11 +287,12 @@
           @* Full width here and in the edit row: v11.1's EPA titles run to over a hundred characters. *@
           <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true">
             <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
-              @foreach (var epa in AvailableEpas)
+              @foreach (var epa in _addEpas)
               {
                 <option value="@epa.Id">@EpaOptionText(epa)</option>
               }
             </InputSelect>
+            <small class="muted">@EpaHelp</small>
           </FormField>
 
           <FormField Label="Target" InputId="curriculum-item-count">
@@ -397,7 +406,18 @@
   public int Id { get; set; }
 
   private CurriculumDto? _curriculum;
-  private IReadOnlyList<EpaDto> _epas = [];
+  // What each EPA picker offers (T195): the Add form's for an item the caller would own, the edit row's for the item
+  // being edited, whose owner is stored. Each is ListCurriculumItemEpaOptionsQuery's answer, the rule the command it
+  // feeds enforces, so the page filters neither.
+  private IReadOnlyList<EpaDto> _addEpas = [];
+  private IReadOnlyList<EpaDto> _editEpas = [];
+
+  /// <summary>
+  /// Whether the edit row's EPA is one its picker offers. Only the stored EPA can be missing from it: anything chosen was
+  /// chosen from the list.
+  /// </summary>
+  private bool EditEpaOffered => _editEpas.Any(epa => epa.Id == _editModel.EpaId);
+
   private IReadOnlyList<EntrustmentScaleDto> _scales = [];
   private IReadOnlyList<WbaToolDto> _tools = [];
   private IReadOnlyList<DecisionBodyDto> _decisionBodies = [];
@@ -420,6 +440,7 @@
   // One help text per field, printed by the edit form and the Add form alike (T176): the two are the same fields, in the
   // same order, with the same help, and CurriculumItemsEditLayoutTests holds them to it. The scale's matters most while
   // editing, which is when a change of ladder clears the minima already stored.
+  private const string EpaHelp = "Lists only the EPAs this item can name: the national EPAs of this curriculum's sub-speciality and, for an item an institution added, that institution's own local EPAs.";
   private const string TargetHelp = "Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.";
   private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
   private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
@@ -428,8 +449,6 @@
   private const string DecisionBodyHelp = "The committee the College names to decide this EPA instead of the trainee's general panel, such as the neonatal CCC for paediatric EPAs 4 and 5.";
   private const string DecisionOpportunisticHelp = "For an EPA the College has decided as rotation or opportunity allows, such as paediatric EPAs 8, 9 and 13: its decision is never overdue. Needs a decision cadence.";
   private const string ToolsHelp = "The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.";
-
-  private IEnumerable<EpaDto> AvailableEpas => _epas.Where(entity => entity.SubSpecialityId == _curriculum?.SubSpecialityId);
 
   protected override async Task OnParametersSetAsync()
   {
@@ -448,7 +467,7 @@
         return;
       }
 
-      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(_curriculum.SubSpecialityId, authState.User));
+      _addEpas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, null, authState.User));
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
       _tools = await Sender.Send(new GetWbaToolsQuery());
       _decisionBodies = await Sender.Send(new GetDecisionBodiesQuery());
@@ -483,8 +502,23 @@
     ResetItemModel();
   }
 
-  private void BeginEdit(CurriculumItemDto item)
+  private async Task BeginEditAsync(CurriculumItemDto item)
   {
+    // The edit row's picker is the item's own (T195): the item's owner decides which local EPAs it may name. A caller
+    // the Update command would refuse is told so at the top, and the row does not open on a form they could not save.
+    _actionError = null;
+    _statusMessage = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _editEpas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, item.Id, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _actionError = exception.Message;
+      return;
+    }
+
     _editingItemId = item.Id;
     _rowError = null;
     _editModel.EpaId = item.EpaId;
@@ -564,7 +598,7 @@
 
   private void ResetItemModel()
   {
-    _addModel.EpaId = AvailableEpas.FirstOrDefault()?.Id ?? 0;
+    _addModel.EpaId = _addEpas.FirstOrDefault()?.Id ?? 0;
     _addModel.RequiredCount = 1;
     _addModel.QuotaPeriod = QuotaPeriod.AcademicYear;
     // No decision cadence until one is chosen (T131): every EPA due each academic year is not a default anybody chose.

@@ -178,19 +178,16 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
 
         // A CollegeAdmin/Administrator edits the national core; an InstitutionalAdmin adds an
         // institution-local item to the (adopted) national curriculum (T091 phase 3).
-        var owningInstitutionId = !request.Principal.IsAdministrator()
-            && !request.Principal.IsCollegeAdmin()
-            && request.Principal.IsInstitutionalAdmin()
-                ? request.Principal.GetInstitutionId()
-                : null;
+        var owningInstitutionId = CurriculumItemEpas.OwnerOfNewItem(request.Principal);
 
-        var authorized = owningInstitutionId is null
-            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
-            : request.Principal.CanAccessInstitution(owningInstitutionId.Value);
-        if (!authorized)
+        if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId, owningInstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
+
+        // T195: a national item names a national EPA of the curriculum's sub-speciality; a local one may also name its
+        // institution's own local EPAs. The Add picker lists exactly these.
+        await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, owningInstitutionId, request.EpaId, cancellationToken);
 
         if (curriculum.Items.Any(entity => entity.EpaId == request.EpaId))
         {
@@ -255,13 +252,14 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         }
 
         // National core item -> CollegeAdmin; institution-local item -> the owning InstitutionalAdmin.
-        var authorized = item.OwningInstitutionId is null
-            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
-            : request.Principal.CanAccessInstitution(item.OwningInstitutionId.Value);
-        if (!authorized)
+        if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId, item.OwningInstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
+
+        // T195: judged against the STORED item's owner, and on the requested EPA whether or not it changed. The edit
+        // row's picker lists exactly these.
+        await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, item.OwningInstitutionId, request.EpaId, cancellationToken);
 
         if (curriculum.Items.Any(entity => entity.Id != request.ItemId && entity.EpaId == request.EpaId))
         {
@@ -325,11 +323,9 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
             throw new InvalidOperationException("The requested curriculum item was not found.");
         }
 
-        // National core item -> CollegeAdmin; institution-local item -> the owning InstitutionalAdmin.
-        var authorized = item.OwningInstitutionId is null
-            ? request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId)
-            : request.Principal.CanAccessInstitution(item.OwningInstitutionId.Value);
-        if (!authorized)
+        // National core item -> CollegeAdmin; institution-local item -> the owning InstitutionalAdmin. The same rule as Add,
+        // Update and the EPA picker (CurriculumItemEpas.MayWrite), so the four cannot drift apart.
+        if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId, item.OwningInstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
