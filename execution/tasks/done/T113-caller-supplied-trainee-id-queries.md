@@ -1,10 +1,11 @@
 ---
 id: T113
 title: "Two more queries trust a caller-supplied trainee id"
-status: in_progress
+status: done
 priority: P2
 created: 2026-09-19
 started: 2026-09-24
+completed: 2026-09-24
 ---
 # T113 — Two more queries trust a caller-supplied trainee id
 
@@ -131,11 +132,53 @@ Observed at `431e69e`:
 
 **Verification (this file had none):**
 
-- [ ] Each of the six queries returns nothing to an out-of-scope caller and the data to an in-scope one. Handler tests.
-- [ ] Open, Close, Withdraw and AddInvitation refuse a Coordinator from another institution and change nothing. The
+- [x] Each of the six queries returns nothing to an out-of-scope caller and the data to an in-scope one. Handler tests.
+- [x] Open, Close, Withdraw and AddInvitation refuse a Coordinator from another institution and change nothing. The
       aggregate report refuses the same Coordinator. Handler tests.
-- [ ] One resolver remains. Its tie-break is tested with a trainee who holds two profiles.
-- [ ] Browser: `/msf/campaigns` and `/msf/reports/{id}` as a Coordinator from the other institution. First check that
+- [x] One resolver remains. Its tie-break is tested with a trainee who holds two profiles.
+- [x] Browser: `/msf/campaigns` and `/msf/reports/{id}` as a Coordinator from the other institution. First check that
       the scenario coordinators carry an institution claim.
-- [ ] The MSF scenario is re-run. Rows that newly disappear from lists are acceptable (W-007).
-- [ ] Full suite green, no `--no-build`.
+- [x] ~~The MSF scenario is re-run.~~ Replaced: the runbook's MSF step files the retired `msf_paed` activity type,
+      not `/msf/*` campaigns, so it would not exercise this change. It is retargeted by [T159]. The browser check below
+      exercises the campaign pages directly. Rows that newly disappear from lists are acceptable (W-007).
+- [x] Full suite green, no `--no-build`.
+
+---
+
+## As built — 2026-09-24
+
+- **One resolver:** `TraineeScopeResolver` (`src/Wombat.Application/Common/Security/`).
+  - The tie-break is Id desc. The database allows one *active* profile per trainee, so the tie-break matters only
+    between past profiles.
+  - The read ladder is T101's: self, Administrator, an in-scope overseer (`IsOverseenBy`).
+  - `SubjectScopeResolver`, `ExportPortfolio`, `PortfolioPdfService` and `MsfCampaignRules` all use it.
+- **Queries:** the five trainee-id queries return nothing out of scope. The coordinator campaign list is
+  institution-scoped, in one Postgres query with NOT EXISTS.
+- **MSF commands and the report:** Open, Close, Withdraw, AddInvitation and Release run
+  `EnsureCampaignIsInScopeAsync` before loading the tracked graph. It reads only the subject and requires Administrator,
+  or Coordinator plus the subject's institution. A missing id and an out-of-scope id get the same refusal. The report
+  returns null (T056), and the subject sees it only once it is released.
+- **Pages** pass the signed-in principal. `MyMsfReports` no longer leaves another trainee's report rendered under its
+  error. `CampaignEdit` loads EPA options only for a trainee its scoped picker offered.
+- **Guard:** `TraineeReadBoundaryTests`, an architecture test, fails any request with a `TraineeUserId`,
+  `SubjectUserId` or `TraineeUserIdFilter` and no `ClaimsPrincipal`.
+- **Evidence.**
+  - Tests: Application +~115, Web +19, Architecture +3, Integration +1. 30 mutants across two rounds, all caught.
+  - Suites on master: Domain 398, Application 1112, Infrastructure 660, Architecture 31, Web 400, Integration 29.
+  - Browser on dev, 2026-09-24: institution 2 ("T113 Second Institution") and Coordinator coordinator.t113b@wombat.local
+    were created through the admin UI. As that Coordinator:
+    - `/msf/campaigns` is empty.
+    - `/msf/reports/1` and `/msf/reports/999` both read "Report unavailable".
+    - On `/msf/campaigns/1` and `/999`, Add invitee and Open both read "The MSF campaign could not be found among the
+      campaigns you run."
+    - SQL before and after is identical: campaigns 1–3 still Released, still 12 invitations.
+  - As the Administrator, the list and the report still load.
+- **Decided here, recorded for the operator:**
+  - `MayReadAsync` admits any in-scope CommitteeMember, mirroring T101's `IsScopedOverseerOf`.
+  - An MSF campaign follows its trainee's current institution; see [T153]'s note.
+- **Filed from the review:**
+  - [T182] P1: committee scheduling accepts any trainee id.
+  - [T183] P1: the entrustment-decision admin surface is national.
+  - [T184] P2: respondent emails in the audit log, and the audit trap in Open.
+  - [T185] P3: the leftovers.
+

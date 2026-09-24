@@ -4,9 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T113](tasks/in_progress/T113-caller-supplied-trainee-id-queries.md) | P2 | Two more queries trust a caller-supplied trainee id |  |
-| in_progress | [T135](tasks/in_progress/T135-sampling-denominator-numerator-disagree.md) | P2 | The sampling denominator and numerator disagree about what counts as a |  |
-| in_progress | [T150](tasks/in_progress/T150-sampling-and-trajectory-count-assessors-from-drafts-and-cancelled-requests-by-a-hard-coded-field-key.md) | P3 | Sampling and trajectory count assessors from drafts and cancelled requ |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T182](tasks/queued/T182-scheduling-a-committee-review-accepts-any-trainee-id-so-a-panel-can-review-and-ratify-decisions-about-another-institution-s-trainee.md) | P1 | Scheduling a committee review accepts any trainee id, so a panel can r |  |
@@ -59,8 +56,9 @@
 | queued | [T180](tasks/queued/T180-the-browser-tab-title-does-not-change-when-the-user-moves-between-pages-inside-the-app.md) | P3 | The browser tab title does not change when the user moves between page |  |
 | queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
 | queued | [T185](tasks/queued/T185-leftover-principal-less-queries-national-speciality-counts-and-three-shapes-of-the-overseer-rule.md) | P3 | Leftover principal-less queries, national speciality counts, and three |  |
+| queued | [T186](tasks/queued/T186-a-released-msf-campaign-s-snapshot-row-can-say-its-epas-are-no-longer-on-the-curriculum-when-their-evidence-exists.md) | P3 | A released MSF campaign's snapshot row can say its EPAs are 'no longer |  |
 
-Done: 117 task(s).
+Done: 120 task(s).
 
 ## From STATE.md
 
@@ -76,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+7bfe443 docs(execution): file T182–T185 from the T113 review (two P1 cross-institution holes in committee scheduling and entrustment admin); note T153
 073a89b fix(security): trainee-id queries and the MSF commands and report check that the caller may see that trainee or campaign (T113)
 a73c5aa fix(committee): sampling and the trajectory count only terminal rated evidence, read the stamped EPA and the declared rating and assessor, and report unreadable and unattributed rows separately (T135, T150, D44)
 eb459b6 docs(execution): close T137 — browser-verified on dev (migration applied, 21/21 stamped, activity 24 stamped at create); file T181
 c30df9c docs(execution): close T141 and T147 — browser-verified on dev; file T180 (tab title does not follow in-app navigation)
-7aab72a feat(activities): an activity knows its EPA — stamped from a schema pointer that agrees with credit; activity lists show the EPA, the encounter date and what it credited (T137, T106 item 14)
 ```

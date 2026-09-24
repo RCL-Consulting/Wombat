@@ -1,12 +1,13 @@
 ---
 id: T135
 title: "The sampling denominator and numerator disagree about what counts as a rating"
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-20
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T135 — Two ways `TotalRatedActivities` can be wrong while `EvidenceComplete` says it is not
@@ -77,14 +78,14 @@ rather than lumping them. The same distinction will be needed for [T120]'s three
 
 ## Verification
 
-- [ ] A draft in the window is not counted as rated evidence — handler test, would fail today
-- [ ] A rated readable row with unreadable `DataJson` moves the report off `EvidenceComplete` —
+- [x] A draft in the window is not counted as rated evidence — handler test, would fail today
+- [x] A rated readable row with unreadable `DataJson` moves the report off `EvidenceComplete` —
       handler test, would fail today
-- [ ] `TotalRatedActivities + WithheldRatedActivities` accounts for every rated row in the window —
+- [x] `TotalRatedActivities + WithheldRatedActivities` accounts for every rated row in the window —
       a property asserted directly, since it is the invariant both defects break
-- [ ] Every existing sampling test stays green **without being edited** — the fixture is the evidence
+- [x] Every existing sampling test stays green **without being edited** — the fixture is the evidence
       legacy behaviour is unchanged, as it was for T134
-- [ ] Full suite green, no `--no-build`
+- [x] Full suite green, no `--no-build`
 
 ## Related
 
@@ -154,15 +155,15 @@ carrying `assessor_user_id`. `reflective_exercise_cpsa` declares no `rated_level
 
 **Verification, added:**
 
-- [ ] A draft, a cancelled and a declined row in the window move neither the rated count nor the distinct-assessor
+- [x] A draft, a cancelled and a declined row in the window move neither the rated count nor the distinct-assessor
       count. Handler tests.
-- [ ] An `msf_cpsa` row is counted as unattributed and leaves `EvidenceComplete` true. Handler test.
-- [ ] Total + Withheld + Unreadable + Unattributed equals the rated rows in the window in a qualifying state.
+- [x] An `msf_cpsa` row is counted as unattributed and leaves `EvidenceComplete` true. Handler test.
+- [x] Total + Withheld + Unreadable + Unattributed equals the rated rows in the window in a qualifying state.
       Property test.
-- [ ] A type whose assessor field has another key is counted, on the sampling report and on the trajectory. Tests.
-- [ ] The trajectory plots no draft or declined row, and does plot a rated builder type whose rated field is not
+- [x] A type whose assessor field has another key is counted, on the sampling report and on the trajectory. Tests.
+- [x] The trajectory plots no draft or declined row, and does plot a rated builder type whose rated field is not
       `overall_level`. Query tests.
-- [ ] Browser, on dev: a committee review for a trainee with a released MSF.
+- [x] Browser, on dev: a committee review for a trainee with a released MSF.
 
 ---
 
@@ -214,3 +215,18 @@ Withheld and unreadable make the report incomplete (`EvidenceComplete`). Not att
 **Evidence.** Two rounds, 45 mutants, all killed. At the merge the EPA source was switched to the stamped `EpaId`; that
 switch was mutation-checked too (5 tests fail without it). Suites on master: Domain 398, Application 1022,
 Infrastructure 658, Architecture 28, Web 391, Integration 28.
+
+**Browser, dev, 2026-09-24.** Review 1 (panel "T135 verification panel", window 2026) matched a read-only SQL
+expectation exactly, before and after Start and as the chair:
+- The sampling report read "9 rated observations from 2 distinct assessors". Those are Mini-CEX 7–13 and 16, and CCA 19.
+- The muted note read "Not counted: 6 records … no rating by a named assessor". Those are the six recorded `msf_cpsa`
+  rows.
+- There was no incomplete banner.
+- PAED-001 showed 7 ratings, 2 assessors, 2 sources and the >50% warning. PAED-006 and PAED-011 showed one rating
+  each.
+- Nothing counted from the cancelled (14, 15, 17), declined (18), requested (20, 22, 24) or draft (21, 23) rows.
+- The trainee's `/portfolio/progress` draws only those points: seven on PAED-001, one each on PAED-006 and PAED-011.
+  There is no MSF, requested or declined point.
+
+Suites on master at the commit: see the commit message.
+

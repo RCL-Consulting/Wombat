@@ -1,12 +1,13 @@
 ---
 id: T150
 title: Sampling and trajectory count assessors from drafts and cancelled requests, by a hard-coded field key
-status: in_progress
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
 started: 2026-09-24
+completed: 2026-09-24
 ---
 
 # T150 — Sampling and trajectory count assessors from drafts and cancelled requests, by a hard-coded field key
@@ -38,8 +39,8 @@ exactly.
 
 ## Verification
 
-- [ ] Drafts and cancelled requests do not change the distinct-assessor count — test.
-- [ ] A type with a differently named user field is counted — test.
+- [x] Drafts and cancelled requests do not change the distinct-assessor count — test.
+- [x] A type with a differently named user field is counted — test.
 
 ## Related
 
@@ -49,3 +50,8 @@ T102, T131.
 
 Folded into [T135] (same query, same verification), and closes with it. [T106] item 9 (the trajectory charts
 non-terminal states) is folded in with it. The decisions this file needed are recorded in T135's update.
+
+**Closed 2026-09-24 with [T135]**, which records the as-built (D44) and the browser check. The assessor now comes from
+the field the rating's rule names, and drafts and cancelled requests count nowhere. [T106] item 9 is covered too: the
+trajectory plots only attributed rows in a terminal state.
+
