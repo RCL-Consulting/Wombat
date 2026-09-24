@@ -74,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+c4fa3be docs(execution): handoff progress
+6652c6d docs(execution): close T142, T173, T161, T158, T176, T182 and T183 — browser-verified on dev (activity 31, campaign 4, PAED-014 deactivated and restored); file T199
 b0cb335 fix(committee): refreshing the MSF count after a review action cannot put an error beside the action's success; DESIGN.md: no input takes a raw user id since T182; file T194–T198
 fd1d1ec fix(curricula): the curriculum item edit form reads in full at laptop widths and every input has a name (T176)
 c702d5c feat(committee): a review says how many MSF campaigns closed in its window are awaiting release or were released after it started (T173)
-d67f0a8 fix(web): people are shown by name, not id, on the inbox, the activity history and the committee, entrustment and MSF pages (T142)
-382d483 fix(curricula): a deactivated EPA leaves progress and takes no new credit, as it already leaves the pickers; the editor marks items not in force (T158)
 ```
