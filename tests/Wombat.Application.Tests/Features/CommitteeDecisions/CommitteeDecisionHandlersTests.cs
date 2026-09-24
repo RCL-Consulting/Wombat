@@ -290,6 +290,8 @@ public sealed class CommitteeDecisionHandlersTests
             Id = 20,
             Name = "General Medicine ARCP",
             Scope = DecisionPanelScope.Speciality,
+            // The panel's institution is the trainee's: a panel acts only on its own institution's trainees. (T182)
+            InstitutionId = 1,
             SpecialityId = 5,
             CreatedOn = DateTime.UtcNow,
             Members =
@@ -359,6 +361,11 @@ public sealed class CommitteeDecisionHandlersTests
             ]
         };
 
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1, IsActive = true,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1)
+        });
         dbContext.ActivityTypes.Add(activityType);
         dbContext.DecisionPanels.Add(panel);
         dbContext.CommitteeReviews.Add(review);

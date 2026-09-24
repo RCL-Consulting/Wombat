@@ -68,12 +68,19 @@ public sealed class CommitteeReviewTypeTests
             Id = 20,
             Name = "ARCP panel",
             Scope = DecisionPanelScope.Speciality,
+            InstitutionId = 1,
             SpecialityId = 5,
             CreatedOn = DateTime.UtcNow,
             Members =
             [
                 new DecisionPanelMember { UserId = "chair-1", Role = DecisionPanelMemberRole.Chair }
             ]
+        });
+        // The trainee trains at the panel's institution: a panel acts only on its own institution's trainees. (T182)
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1, IsActive = true,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1)
         });
         await dbContext.SaveChangesAsync();
     }
@@ -86,6 +93,7 @@ public sealed class CommitteeReviewTypeTests
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
         claims.Add(new Claim(WombatClaimTypes.SpecialityId, "5"));
+        claims.Add(new Claim(WombatClaimTypes.InstitutionId, "1"));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 }

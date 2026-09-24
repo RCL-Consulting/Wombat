@@ -50,10 +50,10 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
     {
         CommitteeDecisionAuthorization.DemandPanelAdministration(request.Principal);
 
-        var resolvedInstitutionId = await ResolveInstitutionIdAsync(request, cancellationToken);
-        if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
+        var institutionId = await ResolveInstitutionIdAsync(request, cancellationToken);
+        if (!CommitteeDecisionAuthorization.MayAdministerPanel(request.Principal, institutionId, request.Scope))
         {
-            throw new UnauthorizedAccessException("You can only manage panels in your institution.");
+            throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
 
         var panel = new DecisionPanel
@@ -61,9 +61,8 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
             Name = request.Name.Trim(),
             Scope = request.Scope,
             // The panel carries its own institution regardless of scope (T091/T094): a Speciality-scoped
-            // panel still belongs to the institution running that programme. Without this, ListDecisionPanels
-            // (which filters an InstitutionalAdmin by InstitutionId) hides the panel from its own creator.
-            InstitutionId = resolvedInstitutionId,
+            // panel still belongs to the institution running that programme, and reviews only its trainees (T182).
+            InstitutionId = institutionId,
             SpecialityId = request.Scope == DecisionPanelScope.Speciality ? request.SpecialityId : null,
             CreatedOn = DateTime.UtcNow,
             Members = request.Members
@@ -87,21 +86,35 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
             panel.Members.Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role)).ToArray());
     }
 
-    // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
-    // now a national catalogue entry (T091) and no longer the source of the institution. An InstitutionalAdmin's
-    // panels are pinned to their own institution (T094); a global Administrator supplies it explicitly via the form.
-    private Task<int?> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Which institution the new panel runs at. Every panel has one (T182).
+    /// </summary>
+    /// <remarks>
+    /// Anyone but a global Administrator creates panels at their own institution: the form offers them no institution
+    /// for a Speciality-scoped panel, and naming one other than their own is refused by the scope rule that follows.
+    /// Until T182 only an InstitutionalAdmin was pinned (T094), so a SpecialityAdmin's panel carried no institution
+    /// and could review nobody once reviews were held to the panel's institution. An Administrator belongs to no
+    /// institution and must name one that exists, for every scope.
+    /// </remarks>
+    private async Task<int> ResolveInstitutionIdAsync(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
     {
-        // When the form supplies no institution (an InstitutionalAdmin creating a Speciality-scoped panel
-        // sees no institution picker), pin the panel to the caller's own institution (T094). An explicit
-        // request value is still honoured and validated by the CanAccessInstitution guard above.
-        if (!request.InstitutionId.HasValue
-            && request.Principal.IsInstitutionalAdmin()
-            && !request.Principal.IsAdministrator())
+        if (!request.Principal.IsAdministrator())
         {
-            return Task.FromResult(request.Principal.GetInstitutionId());
+            return request.InstitutionId
+                   ?? request.Principal.GetInstitutionId()
+                   ?? throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
 
-        return Task.FromResult(request.InstitutionId);
+        if (request.InstitutionId is not int institutionId)
+        {
+            throw new InvalidOperationException("Choose the institution that runs this panel.");
+        }
+
+        if (!await _dbContext.Set<Institution>().AnyAsync(entity => entity.Id == institutionId, cancellationToken))
+        {
+            throw new InvalidOperationException("The institution could not be found.");
+        }
+
+        return institutionId;
     }
 }

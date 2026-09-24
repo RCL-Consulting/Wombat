@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 
@@ -47,6 +48,7 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
         }
 
         EntrustmentDecisionAuthorization.DemandChairAccess(request.Principal, review.Panel);
+        await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .SingleOrDefaultAsync(p => p.Id == request.PendingId && p.ReviewId == request.ReviewId, cancellationToken)

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -79,6 +80,7 @@ public sealed class IssueEntrustmentDecisionCommandHandler : IRequestHandler<Iss
         }
 
         EntrustmentDecisionAuthorization.DemandChairAccess(request.Principal, review.Panel);
+        await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
         var chairUserId = EntrustmentDecisionAuthorization.GetRequiredUserId(request.Principal);
 
         var epa = await _dbContext.Set<Epa>().SingleOrDefaultAsync(e => e.Id == request.EpaId, cancellationToken)

@@ -95,6 +95,42 @@ public sealed class TraineeScopeResolverTests
         (await TraineeScopeResolver.ResolveAsync(db, "nobody", CancellationToken.None)).Should().BeNull();
     }
 
+    // ─── The set form ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ResolveAll_AgreesWithResolve_TraineeByTrainee_AndHoldsOnlyTheInstitutionAskedFor()
+    {
+        // The committee scheduling picker reads the set form and its handler the single one (T182); if the two ever
+        // disagreed about a trainee, the picker would offer someone the handler refuses, or hide someone it accepts.
+        // The rows cover each way a scope degrades, and the tie-break.
+        await using var db = CreateDb();
+        SeedTree(db);
+        db.SubSpecialities.Add(new SubSpeciality { Id = 12, SpecialityId = 404, Name = "Orphaned sub-speciality" });
+        db.Curricula.Add(new Curriculum { Id = 101, SubSpecialityId = 12, Name = "Orphaned", Version = "1" });
+        db.Curricula.Add(new Curriculum { Id = 102, SubSpecialityId = 505, Name = "Dangling", Version = "1" });
+        AddProfile(db, id: 1, "whole", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 100);
+        AddProfile(db, id: 2, "no-curriculum", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 999);
+        AddProfile(db, id: 3, "no-speciality", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 101);
+        AddProfile(db, id: 4, "no-sub-speciality", HostInstitution, isActive: true, start: new DateOnly(2024, 1, 1), curriculumId: 102);
+        AddProfile(db, id: 5, "moved", HostInstitution, isActive: false, start: new DateOnly(2022, 1, 1));
+        AddProfile(db, id: 6, "moved", OtherInstitution, isActive: true, start: new DateOnly(2021, 1, 1));
+        AddProfile(db, id: 7, "elsewhere", OtherInstitution, isActive: true, start: new DateOnly(2024, 1, 1));
+        await db.SaveChangesAsync();
+
+        var everyone = await TraineeScopeResolver.ResolveAllAsync(db, null, CancellationToken.None);
+        everyone.Keys.Should().BeEquivalentTo("whole", "no-curriculum", "no-speciality", "no-sub-speciality", "moved", "elsewhere");
+        foreach (var (userId, scope) in everyone)
+        {
+            scope.Should().Be(await TraineeScopeResolver.ResolveAsync(db, userId, CancellationToken.None), userId);
+        }
+
+        var host = await TraineeScopeResolver.ResolveAllAsync(db, HostInstitution, CancellationToken.None);
+        host.Keys.Should().BeEquivalentTo(["whole", "no-curriculum", "no-speciality", "no-sub-speciality"],
+            "a trainee is at the institution of their preferred profile only, so the one who moved is not here");
+        host["whole"].Should().Be(new TraineeScope(HostInstitution, PaediatricsSpeciality, GeneralPaediatrics));
+        host["no-curriculum"].Should().Be(new TraineeScope(HostInstitution, null, null));
+    }
+
     // ─── The read ladder ─────────────────────────────────────────────────────
 
     public static TheoryData<string, bool> Callers => new()

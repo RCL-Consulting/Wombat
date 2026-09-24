@@ -42,10 +42,11 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
             .SingleOrDefaultAsync(entity => entity.Id == request.PanelId, cancellationToken)
             ?? throw new InvalidOperationException("The decision panel could not be found.");
 
-        var resolvedInstitutionId = await ResolveInstitutionIdAsync(panel, cancellationToken);
-        if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
+        // Every panel carries its institution now (T182). This check used to be skipped for a panel without one, which
+        // let any panel administrator in the country rewrite that panel's members.
+        if (!CommitteeDecisionAuthorization.MayAdministerPanel(request.Principal, panel.InstitutionId, panel.Scope))
         {
-            throw new UnauthorizedAccessException("You can only manage panels in your institution.");
+            throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
 
         panel.Members.Clear();
@@ -68,9 +69,4 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
             panel.SpecialityId,
             panel.Members.Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role)).ToArray());
     }
-
-    // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
-    // now a national catalogue entry (T091) and no longer the source of the institution.
-    private Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
-        => Task.FromResult(panel.InstitutionId);
 }

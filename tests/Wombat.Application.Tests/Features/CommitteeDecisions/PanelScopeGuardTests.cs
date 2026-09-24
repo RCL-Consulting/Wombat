@@ -161,7 +161,7 @@ public sealed class PanelScopeGuardTests
         db.Set<DecisionPanel>().AddRange(
             new DecisionPanel { Name = "A-panel", Scope = DecisionPanelScope.Institution, InstitutionId = InstitutionA, CreatedOn = DateTime.UtcNow },
             new DecisionPanel { Name = "B-panel", Scope = DecisionPanelScope.Institution, InstitutionId = InstitutionB, CreatedOn = DateTime.UtcNow },
-            new DecisionPanel { Name = "Spec-B-panel", Scope = DecisionPanelScope.Speciality, SpecialityId = SpecialityInB, CreatedOn = DateTime.UtcNow });
+            new DecisionPanel { Name = "Spec-B-panel", Scope = DecisionPanelScope.Speciality, InstitutionId = InstitutionB, SpecialityId = SpecialityInB, CreatedOn = DateTime.UtcNow });
         await db.SaveChangesAsync();
 
         var handler = new ListDecisionPanelsQueryHandler(db);

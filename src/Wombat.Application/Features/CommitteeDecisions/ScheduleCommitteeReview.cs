@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
-using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -43,26 +42,30 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
     {
         CommitteeDecisionAuthorization.DemandReviewScheduling(request.Principal);
 
+        var traineeUserId = request.TraineeUserId.Trim();
+
         var panel = await _dbContext.Set<DecisionPanel>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(entity => entity.Id == request.PanelId, cancellationToken)
-            ?? throw new InvalidOperationException("The decision panel could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.PanelId, cancellationToken);
 
-        // An InstitutionalAdmin may only schedule on panels within their institution. The
-        // panel's effective institution is its InstitutionId when Institution-scoped, or its
-        // Speciality's InstitutionId when Speciality-scoped. (T075 / F-4A-1)
-        if (request.Principal.IsInstitutionalAdmin() && !request.Principal.IsAdministrator())
+        if (panel is null)
         {
-            var resolvedInstitutionId = await ResolveInstitutionIdAsync(panel, cancellationToken);
-            if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
-            {
-                throw new UnauthorizedAccessException("You can only schedule reviews for panels in your institution.");
-            }
+            // Anyone but an Administrator is refused exactly as for another institution's panel, so that the refusal
+            // does not say which panel ids exist. (T182)
+            throw request.Principal.IsAdministrator()
+                ? new InvalidOperationException("The decision panel could not be found.")
+                : new UnauthorizedAccessException(CommitteeTraineeScope.NotSchedulable);
         }
+
+        // The trainee must train at the panel's institution, and anyone but an Administrator must oversee them; before
+        // T182 only an InstitutionalAdmin's panel was checked, and the trainee not at all. Nothing is written until this
+        // passes.
+        await CommitteeTraineeScope.DemandSchedulableAsync(
+            _dbContext, request.Principal, panel, traineeUserId, cancellationToken);
 
         var review = new CommitteeReview
         {
-            TraineeUserId = request.TraineeUserId.Trim(),
+            TraineeUserId = traineeUserId,
             PanelId = request.PanelId,
             ReviewPeriodFrom = request.ReviewPeriodFrom,
             ReviewPeriodTo = request.ReviewPeriodTo,
@@ -88,8 +91,4 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             review.IsFormative,
             review.ReviewType);
     }
-
-    // The panel carries its own institution regardless of scope; the discipline is national now (T091).
-    private Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
-        => Task.FromResult(panel.InstitutionId);
 }

@@ -25,15 +25,21 @@
       <DataAnnotationsValidator />
       <ValidationSummary class="validation-summary-errors" />
       <div class="form-grid">
-        <FormField Label="Trainee user id" InputId="review-trainee" Required="true">
-          <InputText id="review-trainee" class="form-control" @bind-Value="_model.TraineeUserId" />
-        </FormField>
         <FormField Label="Panel" InputId="review-panel" Required="true">
-          <InputSelect id="review-panel" class="form-select" @bind-Value="_model.PanelId">
+          <InputSelect id="review-panel" class="form-select" @bind-Value="_model.PanelId" @bind-Value:after="LoadTraineesAsync">
             <option value="">Select panel</option>
             @foreach (var panel in _panels)
             {
               <option value="@panel.Id">@panel.Name</option>
+            }
+          </InputSelect>
+        </FormField>
+        <FormField Label="Trainee" InputId="review-trainee" Required="true" HelpText="@TraineeHelpText">
+          <InputSelect id="review-trainee" class="form-select" @bind-Value="_model.TraineeUserId" disabled="@(_model.PanelId is null)">
+            <option value="">Select trainee</option>
+            @foreach (var trainee in _trainees)
+            {
+              <option value="@trainee.UserId">@trainee.DisplayName</option>
             }
           </InputSelect>
         </FormField>
@@ -100,6 +106,8 @@
 @code {
   private readonly List<DecisionPanelSummaryDto> _panels = [];
   private readonly List<CommitteeReviewListItemDto> _reviews = [];
+  private readonly List<SchedulableTraineeDto> _trainees = [];
+  private bool _traineesLoading;
   private bool _loading = true;
   private bool _showCreateForm;
   private string? _loadError;
@@ -138,6 +146,48 @@
     _showCreateForm = !_showCreateForm;
   }
 
+  /// <summary>
+  /// Offers the trainees the scheduling handler would accept on the chosen panel, by the handler's own predicate
+  /// (ListSchedulableTraineesQuery). A panel reviews its own institution's trainees, so the list follows the panel. (T182)
+  /// </summary>
+  private async Task LoadTraineesAsync()
+  {
+    _trainees.Clear();
+    _model.TraineeUserId = string.Empty;
+
+    if (_model.PanelId is not int panelId)
+    {
+      return;
+    }
+
+    _traineesLoading = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var trainees = await Sender.Send(new ListSchedulableTraineesQuery(panelId, authState.User));
+
+      // The panel may have changed while this was in flight; the later request's answer is the one that counts.
+      if (_model.PanelId == panelId)
+      {
+        _trainees.AddRange(trainees);
+      }
+    }
+    catch (Exception exception)
+    {
+      _actionError = exception.Message;
+    }
+    finally
+    {
+      _traineesLoading = false;
+    }
+  }
+
+  private string? TraineeHelpText => _model.PanelId is null
+    ? "Choose a panel first. The list holds the trainees at its institution you can schedule."
+    : !_traineesLoading && _trainees.Count == 0
+      ? "This panel has no trainees you can schedule a review for."
+      : null;
+
   private static string ReviewTypeLabel(CommitteeReviewType type) => type switch
   {
     CommitteeReviewType.PreGraduation => "Pre-graduation",
@@ -147,6 +197,14 @@
   private async Task CreateAsync()
   {
     _actionError = null;
+
+    // The select's value arrives from the browser. The handler is the gate; this only keeps a value the picker never
+    // offered from being sent at all.
+    if (!_trainees.Any(trainee => string.Equals(trainee.UserId, _model.TraineeUserId, StringComparison.Ordinal)))
+    {
+      _actionError = "Choose a trainee from the list.";
+      return;
+    }
 
     try
     {

@@ -24,23 +24,78 @@ internal static class CommitteeDecisionAuthorization
         throw new UnauthorizedAccessException("You are not allowed to manage committee panels.");
     }
 
+    /// <summary>The one refusal to create, change or open a panel outside the caller's scope.</summary>
+    internal const string PanelOutOfScope = "You can only manage panels in your institution.";
+
+    /// <summary>
+    /// Whether this caller may create, change or open a panel of this scope at this institution. (T182)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A global Administrator may manage any panel. Everyone else manages only panels at their own institution, and
+    /// only through a panel-administration role: an InstitutionalAdmin any of them, a SpecialityAdmin or
+    /// SubSpecialityAdmin only a Speciality-scoped one, never the institution-wide panel.
+    /// </para>
+    /// <para>
+    /// Before T182 the panel's institution was stamped only when an InstitutionalAdmin created it, and the checks
+    /// that read it (<c>CanAccessInstitution</c>, which is true for an InstitutionalAdmin alone) were skipped when it
+    /// was null. So a SpecialityAdmin's panel carried no institution, could be rewritten by any panel administrator in
+    /// the country, and once T182 compared the panel's institution with the trainee's, could review nobody. Every
+    /// panel now carries its institution, and this is the one rule that reads it for administration.
+    /// </para>
+    /// <para>
+    /// Which speciality a SpecialityAdmin's panel covers is not checked here: a panel's speciality is not enforced
+    /// against its trainees either, and the two are one question for later.
+    /// </para>
+    /// </remarks>
+    public static bool MayAdministerPanel(ClaimsPrincipal principal, int institutionId, DecisionPanelScope scope)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (principal.IsAdministrator())
+        {
+            return true;
+        }
+
+        if (principal.GetInstitutionId() != institutionId)
+        {
+            return false;
+        }
+
+        if (principal.IsInstitutionalAdmin())
+        {
+            return true;
+        }
+
+        return scope == DecisionPanelScope.Speciality &&
+               (principal.IsInRole(WombatRoles.SpecialityAdmin) || principal.IsInRole(WombatRoles.SubSpecialityAdmin));
+    }
+
     public static void DemandReviewScheduling(ClaimsPrincipal principal)
     {
-        // InstitutionalAdmin can schedule reviews on panels in their own institution
-        // (the handler applies the scope check). This mirrors DemandPanelAdministration,
-        // which already admits InstitutionalAdmin — scheduling a review on a panel you can
-        // administer should not require a lesser Coordinator role. (T075 / F-4A-1)
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
-            principal.IsInRole(WombatRoles.Coordinator) ||
-            principal.IsInRole(WombatRoles.SpecialityAdmin) ||
-            principal.IsInRole(WombatRoles.SubSpecialityAdmin))
+        if (MayScheduleReviews(principal))
         {
             return;
         }
 
         throw new UnauthorizedAccessException("You are not allowed to schedule committee reviews.");
     }
+
+    /// <summary>
+    /// The roles that put trainees before a panel. Which trainees, and on which panels, is
+    /// <see cref="CommitteeTraineeScope" />'s question. (T182)
+    /// </summary>
+    /// <remarks>
+    /// InstitutionalAdmin can schedule reviews on panels in their own institution. This mirrors
+    /// DemandPanelAdministration, which already admits InstitutionalAdmin — scheduling a review on a panel you can
+    /// administer should not require a lesser Coordinator role. (T075 / F-4A-1)
+    /// </remarks>
+    public static bool MayScheduleReviews(ClaimsPrincipal principal)
+        => principal.IsInRole(WombatRoles.Administrator) ||
+           principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
+           principal.IsInRole(WombatRoles.Coordinator) ||
+           principal.IsInRole(WombatRoles.SpecialityAdmin) ||
+           principal.IsInRole(WombatRoles.SubSpecialityAdmin);
 
     public static void DemandPanelAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {
@@ -53,9 +108,6 @@ internal static class CommitteeDecisionAuthorization
         // own institution runs — not every institution's. The waiver used to be role-only, which
         // made any Coordinator anywhere a reader of every panel's reviews and, through the queries
         // that hang off a review, of every trainee's evidence. (T101 finding E)
-        // A panel with no institution stamp matches nobody here, for the same reason a null scope
-        // stamp matches nobody in ActivityReadScope: an unstamped row cannot be claimed by scope,
-        // only by membership, which is the next rung down.
         if (principal.IsInRole(WombatRoles.Coordinator) && CoordinatesInstitution(principal, panel.InstitutionId))
         {
             return;
@@ -111,8 +163,7 @@ internal static class CommitteeDecisionAuthorization
             // An InstitutionalAdmin can view (read-only) any review for a panel in their
             // institution, even without panel membership. Conduct actions (start/record/
             // ratify) remain chair-gated in their respective handlers. (T075 / F-4A-1)
-            if (review.Panel.InstitutionId.HasValue &&
-                !principal.CanAccessInstitution(review.Panel.InstitutionId.Value))
+            if (!principal.CanAccessInstitution(review.Panel.InstitutionId))
             {
                 throw new UnauthorizedAccessException("You can only view committee reviews for panels in your institution.");
             }
@@ -129,16 +180,8 @@ internal static class CommitteeDecisionAuthorization
     /// InstitutionalAdmin owns an institution; a Coordinator is scoped by the same claim without
     /// being an admin of it.
     /// </summary>
-    private static bool CoordinatesInstitution(ClaimsPrincipal principal, int? institutionId)
-    {
-        if (!institutionId.HasValue)
-        {
-            return false;
-        }
-
-        var scopedInstitutionId = principal.GetInstitutionId();
-        return scopedInstitutionId.HasValue && scopedInstitutionId.Value == institutionId.Value;
-    }
+    private static bool CoordinatesInstitution(ClaimsPrincipal principal, int institutionId)
+        => principal.GetInstitutionId() == institutionId;
 
     public static void DemandChairAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {

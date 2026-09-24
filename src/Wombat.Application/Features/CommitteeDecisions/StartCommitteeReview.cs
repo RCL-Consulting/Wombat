@@ -41,6 +41,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
         CommitteeDecisionAuthorization.DemandPanelAccess(request.Principal, review.Panel);
+        await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         var actorUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
         var evidenceItems = await BuildEvidenceSnapshotAsync(review, cancellationToken);

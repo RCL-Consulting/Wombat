@@ -64,7 +64,7 @@ public class ActivityReadBoundaryTests
             "Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of. Narrower than the read rule by construction.",
 
         ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
-            "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandPanelAccess, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating. Stores labels and dates, never DataJson.",
+            "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandPanelAccess, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
         ["Wombat.Application.Features.Dashboards.Assessor.GetAssessorDashboardSummaryQueryHandler"] =
             "Confined to rows the caller created or already transitioned - the creator and past-actor arms of IsReadableBy, which the list filter deliberately omits.",

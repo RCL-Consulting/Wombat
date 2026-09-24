@@ -39,6 +39,7 @@ public sealed class CloseFormativeReviewCommandHandler : IRequestHandler<CloseFo
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
         CommitteeDecisionAuthorization.DemandChairAccess(request.Principal, review.Panel);
+        await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
         review.Close(CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal), DateTime.UtcNow);
 
         await _dbContext.SaveChangesAsync(cancellationToken);

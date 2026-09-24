@@ -54,6 +54,7 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
         CommitteeDecisionAuthorization.DemandChairAccess(request.Principal, review.Panel);
+        await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         review.RecordDecision(
             request.Category,

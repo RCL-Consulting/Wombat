@@ -117,15 +117,84 @@ public static class TraineeScopeResolver
     }
 
     /// <summary>
+    /// Where each trainee trains, for every trainee whose preferred profile is at this institution, or for every trainee
+    /// with a profile when the institution is null. The set form of <see cref="ResolveAsync" />. (T182)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// For a picker that must offer exactly the trainees a single-trainee check would accept: the committee scheduling
+    /// page lists the trainees its handler would take, and the handler asks <see cref="ResolveAsync" /> about the one it
+    /// is given. The two must therefore see the same scope for the same trainee, which is why this reads the same
+    /// <see cref="PreferredProfiles" /> and degrades the same way, one level at a time: a missing curriculum leaves the
+    /// sub-speciality and speciality null, a missing sub-speciality leaves the speciality null, and the institution
+    /// survives both.
+    /// </para>
+    /// <para>
+    /// Three queries in all, whatever the number of trainees, where resolving them one by one would be three each.
+    /// </para>
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<string, TraineeScope>> ResolveAllAsync(
+        IApplicationDbContext dbContext,
+        int? institutionId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+
+        var preferred = PreferredProfiles(dbContext);
+        if (institutionId is int onlyInstitutionId)
+        {
+            preferred = preferred.Where(entity => entity.InstitutionId == onlyInstitutionId);
+        }
+
+        var profiles = await preferred
+            .Select(entity => new { entity.UserId, entity.InstitutionId, entity.CurriculumId })
+            .ToListAsync(cancellationToken);
+
+        if (profiles.Count == 0)
+        {
+            return new Dictionary<string, TraineeScope>(StringComparer.Ordinal);
+        }
+
+        var curriculumIds = profiles.Select(profile => profile.CurriculumId).Distinct().ToArray();
+        var subSpecialityByCurriculum = await dbContext.Set<Curriculum>()
+            .Where(entity => curriculumIds.Contains(entity.Id))
+            .Select(entity => new { entity.Id, entity.SubSpecialityId })
+            .ToDictionaryAsync(entity => entity.Id, entity => entity.SubSpecialityId, cancellationToken);
+
+        var subSpecialityIds = subSpecialityByCurriculum.Values.Distinct().ToArray();
+        var specialityBySubSpeciality = await dbContext.Set<SubSpeciality>()
+            .Where(entity => subSpecialityIds.Contains(entity.Id))
+            .Select(entity => new { entity.Id, entity.SpecialityId })
+            .ToDictionaryAsync(entity => entity.Id, entity => entity.SpecialityId, cancellationToken);
+
+        return profiles.ToDictionary(
+            profile => profile.UserId,
+            profile =>
+            {
+                int? subSpecialityId = subSpecialityByCurriculum.TryGetValue(profile.CurriculumId, out var subId)
+                    ? subId
+                    : null;
+                int? specialityId = subSpecialityId is int knownSubId &&
+                                    specialityBySubSpeciality.TryGetValue(knownSubId, out var specId)
+                    ? specId
+                    : null;
+
+                return new TraineeScope(profile.InstitutionId, specialityId, subSpecialityId);
+            },
+            StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// Whether this caller may read what the programme holds about this trainee: their curriculum progress, their
     /// committee reviews, their entrustment decisions, their released feedback. (T113)
     /// </summary>
     /// <remarks>
     /// <para>
     /// T101's read ladder, lifted to a trainee rather than an activity: the trainee themselves, a global Administrator,
-    /// or someone who oversees the programme the trainee is on (<see cref="IsOverseenBy" />). A trainee with no profile
-    /// has no organisational home, so no scoped role can be held over them; only the first two rungs reach them, and an
-    /// id that names nobody lands in the same place.
+    /// or someone who oversees the programme the trainee is on
+    /// (<see cref="IsOverseenBy(TraineeScope, ClaimsPrincipal)" />). A trainee with no profile has no organisational
+    /// home, so no scoped role can be held over them; only the first two rungs reach them, and an id that names nobody
+    /// lands in the same place.
     /// </para>
     /// <para>
     /// A query refused here returns what it returns for a trainee with nothing on record, an empty list or null, never
@@ -175,6 +244,19 @@ public static class TraineeScopeResolver
     /// paediatric trainee in the country.
     /// </remarks>
     public static bool IsOverseenBy(TraineeScope scope, ClaimsPrincipal principal)
+        => IsOverseenBy(scope, principal, throughCommitteeMembership: true);
+
+    /// <summary>
+    /// <see cref="IsOverseenBy(TraineeScope, ClaimsPrincipal)" />, with the CommitteeMember arm left out when
+    /// <paramref name="throughCommitteeMembership" /> is false. The same rule, not another shape of it.
+    /// </summary>
+    /// <remarks>
+    /// For a right that a CommitteeMember does not hold, whose reach must come from the role that grants it. Scheduling
+    /// a committee review asks this (T182): a SpecialityAdmin who also sits on the committee would otherwise pass the
+    /// role check as a SpecialityAdmin and the scope check as a committee member, and schedule every trainee at the
+    /// institution rather than their own speciality's.
+    /// </remarks>
+    public static bool IsOverseenBy(TraineeScope scope, ClaimsPrincipal principal, bool throughCommitteeMembership)
     {
         ArgumentNullException.ThrowIfNull(scope);
         ArgumentNullException.ThrowIfNull(principal);
@@ -186,7 +268,7 @@ public static class TraineeScopeResolver
 
         if (principal.IsInstitutionalAdmin() ||
             principal.IsInRole(WombatRoles.Coordinator) ||
-            principal.IsInRole(WombatRoles.CommitteeMember))
+            (throughCommitteeMembership && principal.IsInRole(WombatRoles.CommitteeMember)))
         {
             return true;
         }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
 
@@ -11,9 +12,9 @@ namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 /// <summary>
 /// T075 / F-4A-1 scope guards on the committee-review scheduling + view surface.
 /// An InstitutionalAdmin can schedule and view reviews for panels in their own
-/// institution (resolved via the panel's InstitutionId for Institution-scoped panels,
-/// or via the Speciality's InstitutionId for Speciality-scoped panels) but not for
+/// institution (the panel's own InstitutionId, whatever its scope: T091/T094) but not for
 /// panels in another institution. Mirrors the panel-admin guards in PanelScopeGuardTests.
+/// Which trainees may be put before a panel is CommitteeTraineeScopeTests (T182).
 /// </summary>
 public sealed class ReviewSchedulingScopeGuardTests
 {
@@ -47,7 +48,7 @@ public sealed class ReviewSchedulingScopeGuardTests
     public async Task Schedule_InstitutionalAdmin_CanScheduleOnOwnSpecialityPanel()
     {
         await using var db = SeededDb();
-        var panelId = await AddPanelAsync(db, DecisionPanelScope.Speciality, specialityId: SpecialityInA);
+        var panelId = await AddPanelAsync(db, DecisionPanelScope.Speciality, institutionId: InstitutionA, specialityId: SpecialityInA);
         var handler = new ScheduleCommitteeReviewCommandHandler(db);
 
         var result = await handler.Handle(
@@ -135,7 +136,7 @@ public sealed class ReviewSchedulingScopeGuardTests
     private static async Task<int> AddPanelAsync(
         ApplicationDbContext db,
         DecisionPanelScope scope,
-        int? institutionId = null,
+        int institutionId,
         int? specialityId = null)
     {
         var panel = new DecisionPanel
@@ -175,6 +176,11 @@ public sealed class ReviewSchedulingScopeGuardTests
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
         db.Set<Speciality>().Add(new Speciality { Id = SpecialityInA, CollegeId = InstitutionA, Name = "SpecA", IsActive = true });
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            UserId = "trainee-1", InstitutionId = InstitutionA, CurriculumId = 1, IsActive = true,
+            ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1)
+        });
         db.SaveChanges();
         return db;
     }

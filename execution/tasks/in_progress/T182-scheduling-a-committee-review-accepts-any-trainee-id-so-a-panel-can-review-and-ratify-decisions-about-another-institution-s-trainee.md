@@ -1,11 +1,12 @@
 ---
 id: T182
 title: Scheduling a committee review accepts any trainee id, so a panel can review, and ratify decisions about, another institution's trainee
-status: queued
+status: in_progress
 priority: P1
 owner: agent
 depends_on: []
 created: 2026-09-24
+started: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>

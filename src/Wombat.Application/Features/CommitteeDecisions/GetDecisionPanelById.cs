@@ -31,15 +31,12 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
             return null;
         }
 
-        // T063: scope guard — InstitutionalAdmin can only see panels in their institution.
-        // Out-of-scope id returns null (404, not 403) to avoid leaking other-institution ids.
-        if (request.Principal.IsInstitutionalAdmin() && !request.Principal.IsAdministrator())
+        // The panel form's read: the panels the caller may change (T063, T182). Out of scope is null (404, not 403),
+        // so the id's existence is not confirmed. Only an InstitutionalAdmin used to be checked; a SpecialityAdmin
+        // could open any panel in the country and read its members.
+        if (!CommitteeDecisionAuthorization.MayAdministerPanel(request.Principal, panel.InstitutionId, panel.Scope))
         {
-            var resolvedInstitutionId = await ResolveInstitutionIdAsync(panel, cancellationToken);
-            if (resolvedInstitutionId.HasValue && !request.Principal.CanAccessInstitution(resolvedInstitutionId.Value))
-            {
-                return null;
-            }
+            return null;
         }
 
         return new DecisionPanelDetailDto(
@@ -54,9 +51,4 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
                 .Select(member => new DecisionPanelMemberDto(member.Id, member.UserId, member.Role))
                 .ToArray());
     }
-
-    // The panel carries its own institution regardless of scope; the discipline (speciality) it covers is
-    // now a national catalogue entry (T091) and no longer the source of the institution.
-    private Task<int?> ResolveInstitutionIdAsync(DecisionPanel panel, CancellationToken cancellationToken)
-        => Task.FromResult(panel.InstitutionId);
 }

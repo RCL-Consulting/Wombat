@@ -56,6 +56,9 @@ public sealed class ResolveAppealCommandHandler : IRequestHandler<ResolveAppealC
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
             ?? throw new InvalidOperationException("The committee review could not be found.");
 
+        // The appeal body answers an appeal against its own ratified review wherever the trainee now trains: resolving
+        // it reads no evidence and supersedes no entrustment decision, and a trainee who moved keeps their recourse.
+        // The review's trainee was held to the panel's institution when it was ratified. (T182; CommitteeTraineeScope)
         CommitteeDecisionAuthorization.DemandAppealResolverAccess(request.Principal, review.Panel);
         review.ResolveAppeal(
             request.Outcome,
