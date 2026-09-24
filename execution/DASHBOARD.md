@@ -72,9 +72,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+9ea13d2 fix(msf): every label on the campaign editor names a real control (T147)
 342660f fix(activities): a rated source is classified by the instrument it declares, not by its type key (T144)
 e0a06a2 fix(nav): a trainee's My Progress goes to their progress page; a pending trainee is offered no trainee-only page (T141)
 87123be docs(execution): close T125 and T136 — browser-verified on dev (PAED-001 re-pinned to O-R and back, byte-identical); file T174, T175, T176
 02b2401 feat(curricula): a curriculum minimum is picked as a rung on the item's ladder; a scale change resets the minima; the refusal names the scale and field beside the row (T125, T136)
-4f3e256 docs(execution): handoff progress
 ```
