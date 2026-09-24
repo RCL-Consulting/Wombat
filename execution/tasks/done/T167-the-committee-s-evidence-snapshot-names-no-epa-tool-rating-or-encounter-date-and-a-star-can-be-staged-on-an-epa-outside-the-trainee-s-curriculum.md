@@ -104,3 +104,4 @@ not the presence of an `EpaId`.
   (bUnit) and `CommitteeEvidenceSnapshotPostgresTests`. The browser check moves to [T204], which seeds a dev
   Coordinator.
 
+**Browser check completed 2026-09-24 under [T204]:** review 2's grouped snapshot, as listed there.

@@ -16,7 +16,6 @@
 | queued | [T200](tasks/queued/T200-pdfs-rendered-at-the-same-time-can-lose-their-text-layer-questpdf-so-an-export-may-be-unsearchable-and-unreadable-to-a-screen-reader.md) | P2 | PDFs rendered at the same time can lose their text layer (QuestPDF), s |  |
 | queued | [T201](tasks/queued/T201-when-a-handler-s-own-save-fails-the-audit-pipeline-re-saves-the-same-changes-loses-the-audit-row-and-hides-the-real-error.md) | P2 | When a handler's own save fails, the audit pipeline re-saves the same  |  |
 | queued | [T202](tasks/queued/T202-msf-a-withdrawn-campaign-keeps-respondents-emails-invitations-don-t-say-which-campaign-and-a-dead-link-answers-500.md) | P2 | MSF: a withdrawn campaign keeps respondents' emails, invitations don't |  |
-| queued | [T204](tasks/queued/T204-the-dev-seed-has-no-coordinator-so-committee-scheduling-and-msf-campaigns-cannot-be-exercised-with-a-tracked-dev-account.md) | P2 | The dev seed has no Coordinator, so committee scheduling and MSF campa |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -59,7 +58,7 @@
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T203](tasks/queued/T203-two-dashboards-count-only-the-literal-completed-and-a-graduate-s-last-partial-period-prints-as-short.md) | P3 | Two dashboards count only the literal 'completed', and a graduate's la |  |
 
-Done: 137 task(s).
+Done: 138 task(s).
 
 ## From STATE.md
 
@@ -75,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+02336bc chore(dev): seed a dev Coordinator, so committee scheduling and MSF campaigns can be exercised without the administrator's credential (T204)
 a0a8f11 docs(execution): close T162 (browser-verified, scripted Chrome) and T167 (pickers verified; the new snapshot's browser check moves to T204, which seeds a dev Coordinator)
 5ae1141 fix(activities): the system-written MSF evidence type is not offered to or creatable by a person; the dead permission-rule table is dropped (T162)
 fb5a3f4 feat(committee): the evidence snapshot names each line's EPA, instrument, rating and encounter date and groups by EPA; a STAR is staged, issued and ratified only on an in-force EPA of the trainee's curriculum (T167)
 1a89410 docs(execution): close T169 (browser-verified, activity 32, exports 3–8) and T184 (tests; its browser checks were blocked by the credential permission and are left for the operator)
-45e7ed7 docs(execution): file T200–T203 from the T169 and T184 reviews (PDF render race, audit on a failed save, MSF withdraw/respondent path, terminal-state dashboards)
 ```

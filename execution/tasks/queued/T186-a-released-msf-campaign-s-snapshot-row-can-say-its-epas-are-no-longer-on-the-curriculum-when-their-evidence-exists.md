@@ -40,3 +40,11 @@ their `EpaId`), not from a stamp that can be missing.
 ## Related
 
 T121, T137, T138.
+
+## Cause found, 2026-09-24 (the T204 browser check)
+
+`MsfCampaignEpas.RecordedOn` is NULL for campaigns 1 and 2, and for campaign 3's PAED-013. `DescribeCoverage` in
+`StartCommitteeReview.cs` (around :305) reads a NULL as "no longer on the trainee's curriculum". Those releases predate
+the per-EPA stamp, so it is most likely scenario data. But the sentence gives a reason it cannot know. Derive coverage
+from the released campaign's `msf_cpsa` rows and their `EpaId`, and say "not recorded" rather than guess why.
+

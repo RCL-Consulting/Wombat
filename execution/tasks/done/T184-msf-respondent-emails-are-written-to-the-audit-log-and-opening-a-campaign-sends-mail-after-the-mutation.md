@@ -73,3 +73,5 @@ T113, T121, T132; the audit-trap memory.
 - [T201] a failed handler save loses its audit row;
 - [T202] withdraw does not anonymise, the invitation names no campaign, a dead link answers 500, and Open can be
   double-sent.
+
+**Browser checks completed 2026-09-24 under [T204]:** redaction, the open message and anonymisation on close, as listed there.
