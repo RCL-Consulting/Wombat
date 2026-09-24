@@ -31,7 +31,7 @@ public sealed class MsfResponseAnswersRefusalTests
     [InlineData(Fault.AQuestionTheFormDoesNotAsk, "An answer names a question that is not on this questionnaire.")]
     public async Task AnswersThatDoNotFitTheForm_AreRefusedAsIncomplete_AndUseNothingUp(Fault fault, string expectedMessage)
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var (scaleId, commentId) = await SeedOpenInvitationAsync(dbContext, token);
 
@@ -87,6 +87,7 @@ public sealed class MsfResponseAnswersRefusalTests
             },
             RespondentEmail = "respondent@example.test",
             RespondentCategory = MsfRespondentCategory.Other,
+            TokenSelector = _tokenService.SelectorOf(token),
             TokenHash = _tokenService.HashToken(token),
             IssuedOn = DateTime.UtcNow,
             ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10))

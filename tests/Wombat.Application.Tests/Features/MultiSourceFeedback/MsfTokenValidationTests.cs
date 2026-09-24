@@ -18,7 +18,7 @@ public sealed class MsfTokenValidationTests
     [InlineData(false, false, true, "used")]
     public async Task ResponseTokenValidation_RejectsInvalidLinks(bool expired, bool revoked, bool used, string expectedMessagePart)
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
 
         await using var dbContext = CreateDbContext();
         dbContext.MsfInvitations.Add(new MsfInvitation
@@ -39,6 +39,7 @@ public sealed class MsfTokenValidationTests
             },
             RespondentEmail = "respondent@example.test",
             RespondentCategory = MsfRespondentCategory.Other,
+            TokenSelector = _tokenService.SelectorOf(token),
             TokenHash = _tokenService.HashToken(token),
             IssuedOn = DateTime.UtcNow,
             ExpiresOn = expired ? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) : DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
@@ -63,7 +64,7 @@ public sealed class MsfTokenValidationTests
     [Fact]
     public async Task SubmitResponse_MarksInvitationUsed_AndPersistsAnswers()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
 
         await using var dbContext = CreateDbContext();
         dbContext.MsfInvitations.Add(new MsfInvitation
@@ -88,6 +89,7 @@ public sealed class MsfTokenValidationTests
             },
             RespondentEmail = "respondent@example.test",
             RespondentCategory = MsfRespondentCategory.Other,
+            TokenSelector = _tokenService.SelectorOf(token),
             TokenHash = _tokenService.HashToken(token),
             IssuedOn = DateTime.UtcNow,
             ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7))

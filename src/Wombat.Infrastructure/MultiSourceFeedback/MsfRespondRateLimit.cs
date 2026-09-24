@@ -26,10 +26,10 @@ namespace Wombat.Infrastructure.MultiSourceFeedback;
 /// inside the limit.
 /// </para>
 /// <para>
-/// Per address as well, because the per-link limit alone does not limit a client: every made-up link got a fresh ten, and
-/// every request through one loaded and hashed every invitation there is (T163). Sixty a minute is thirty respondents
-/// behind one address loading and submitting in the same minute. It applies to a respond route only: the rest of the host
-/// is untouched.
+/// Per address as well, because the per-link limit alone does not limit a client: every made-up link gets a fresh ten.
+/// Until T163 every request through one also loaded and hashed every invitation there was; now it reads one row by an
+/// index, or nothing when the link could not be a token at all. Sixty a minute is thirty respondents behind one address
+/// loading and submitting in the same minute. It applies to a respond route only: the rest of the host is untouched.
 /// </para>
 /// <para>
 /// The link is a partition's key as a hash, not as sent. A key lives at least a window in memory, and a link can be

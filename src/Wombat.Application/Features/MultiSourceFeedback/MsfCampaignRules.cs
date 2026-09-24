@@ -271,21 +271,27 @@ public static class MsfCampaignRules
         IInvitationTokenService tokenService,
         CancellationToken cancellationToken)
     {
-        // A link no token could be is refused before anything is read. The page answering it is public, and the lookup
-        // below loads every invitation (T163), so a made-up link must not cost that (T205).
-        if (!tokenService.IsWellFormed(rawToken))
+        // A link no token could be is refused before anything is read (T205), and so is a link mailed before T163, which
+        // carries no selector.
+        var selector = tokenService.SelectorOf(rawToken) ?? throw LinkNotRecognised();
+
+        // One row, by the selector's unique index; then the whole token against that row's hash, in constant time. Until
+        // T163 the hash was the only key, so every invitation there was, with its campaign and questionnaire, was loaded
+        // and hashed against the token, on a public page, for every load and every submit (T163).
+        var invitation = await dbContext.Set<MsfInvitation>()
+            .Include(candidate => candidate.Campaign)
+                .ThenInclude(campaign => campaign.Template)
+                    .ThenInclude(template => template.Questions)
+            .SingleOrDefaultAsync(candidate => candidate.TokenSelector == selector, cancellationToken);
+
+        // A selector alone opens nothing: it is not a secret, and a token whose secret half is wrong is refused as a link
+        // that names no invitation, in the same words as a selector that matched no row. The time taken can differ (a
+        // match costs a joined read and a hash), which tells a guesser nothing usable: a selector is 96 random bits, and
+        // whoever holds a real one holds the link it came in.
+        if (invitation is null || !tokenService.VerifyToken(rawToken, invitation.TokenHash))
         {
             throw LinkNotRecognised();
         }
-
-        var invitations = await dbContext.Set<MsfInvitation>()
-            .Include(invitation => invitation.Campaign)
-                .ThenInclude(campaign => campaign.Template)
-                    .ThenInclude(template => template.Questions)
-            .ToListAsync(cancellationToken);
-
-        var invitation = invitations.SingleOrDefault(candidate => tokenService.VerifyToken(rawToken, candidate.TokenHash))
-            ?? throw LinkNotRecognised();
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 

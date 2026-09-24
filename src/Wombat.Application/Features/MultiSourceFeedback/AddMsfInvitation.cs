@@ -93,6 +93,8 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
             RespondentEmail = request.RespondentEmail.Trim(),
             RespondentCategory = request.RespondentCategory,
             TeachingContext = MsfTeachingContexts.Normalize(request.TeachingContext),
+            // No link yet: opening the campaign issues one (MsfInvitation.IssueLink). Until then the invitee holds no
+            // selector, so no link finds this row, and the hash is of a token nobody was given. (T163)
             TokenHash = _tokenService.HashToken(_tokenService.GenerateToken()),
             IssuedOn = DateTime.UtcNow,
             ExpiresOn = campaign.ClosesOn.AddDays(7)

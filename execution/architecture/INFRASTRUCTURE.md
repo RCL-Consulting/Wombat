@@ -160,6 +160,39 @@ sudo -u postgres psql -d wombat -c 'VACUUM FULL "MsfInvitations";'   # T207
 |---|---|---|
 | T207 (`T207_DropMsfRespondentEmailHash`) | `MsfInvitations` | The unsalted SHA-256 of each anonymised MSF respondent's address. The migration rewrites every row that held one, then drops the column. |
 
+### After T163: MSF respondent links mailed before the deploy stop working
+
+Since T163 a respondent link's token begins with a selector, which the database holds in the clear under a unique index
+(`MsfInvitations.TokenSelector`), so the public respondent page reads one row per request instead of every invitation.
+The migration gives no invitation already stored a selector, so **every link mailed before the deploy is answered "not
+recognised"**. Nothing is live, so this was accepted rather than keeping the old scan for old links (W-007).
+
+A link is issued only when a campaign opens and by the expiry reminder. The reminder replaces a link at most once, and
+only a link issued **before** the first reminder day (two days before the respondent's last day to respond;
+`MsfInvitation.IsReminderDue`). So an unanswered respondent of a campaign open at the deploy falls into one of two groups:
+
+- **Link issued before the first reminder day:** dead until the reminder mails a new one, from that day on.
+- **Link issued on or after it** (the campaign opened late in its window, or the reminder already went out): no reminder
+  will come, so this respondent can never answer. The only remedy is to withdraw the campaign (which is final) and open
+  a new one for the trainee.
+
+List them before deploying; `reminded` is false for the second group:
+
+```bash
+sudo -u postgres psql -d wombat <<'SQL'
+SELECT c."Id" AS campaign, i."Id" AS invitation, c."ClosesOn",
+       i."IssuedOn" < ((LEAST(c."ClosesOn", i."ExpiresOn") - 2)::timestamp AT TIME ZONE 'UTC') AS reminded
+FROM "MsfInvitations" i JOIN "MsfCampaigns" c ON c."Id" = i."CampaignId"
+WHERE c."State" = 1                                   -- Open
+  AND i."RespondedOn" IS NULL AND i."RevokedOn" IS NULL AND COALESCE(i."RespondentEmail", '') <> ''
+ORDER BY c."Id", i."Id";
+SQL
+```
+
+**Rolling the migration back** (`Down`) drops every selector, and the pre-T163 build accepts only a 43-character token,
+so every link mailed after the deploy dies too. Restoring the pre-deploy `pg_dump` (the planned rollback) does the same
+to those links, and brings back the ones mailed before.
+
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):

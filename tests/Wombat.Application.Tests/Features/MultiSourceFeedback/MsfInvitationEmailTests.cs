@@ -60,6 +60,8 @@ public sealed class MsfInvitationEmailTests
             .Single(line => line.StartsWith(RespondUrl + "?token=", StringComparison.Ordinal));
         var token = Uri.UnescapeDataString(link[(RespondUrl + "?token=").Length..]);
         new InvitationTokenService().VerifyToken(token, stored.TokenHash).Should().BeTrue();
+        stored.TokenSelector.Should().NotBeNull().And.Be(
+            new InvitationTokenService().SelectorOf(token), "the link names its invitation by the selector stored with it (T163)");
         message.Tags.Should().Contain(["msf-invite", $"campaign:{campaignId}"]);
     }
 
@@ -109,6 +111,7 @@ public sealed class MsfInvitationEmailTests
         var after = await ReadInvitationAsync(campaignId);
         after.Campaign.State.Should().Be(MsfCampaignState.Draft);
         after.TokenHash.Should().Be(before.TokenHash);
+        after.TokenSelector.Should().BeNull("a draft's invitee holds no link, and a refused open issues none (T163)");
     }
 
     [Fact]

@@ -85,16 +85,12 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         // after the request whichever order is chosen.
         var links = campaign.Invitations
             .Where(candidate => !string.IsNullOrWhiteSpace(candidate.RespondentEmail))
-            .Select(invitation =>
-            {
-                var token = _tokenService.GenerateToken();
-                return (Invitation: invitation, Token: token, TokenHash: _tokenService.HashToken(token));
-            })
+            .Select(invitation => (Invitation: invitation, Token: _tokenService.GenerateSelectorToken()))
             .ToList();
 
         foreach (var link in links)
         {
-            var submitUrl = $"{respondUrl}?token={Uri.EscapeDataString(link.Token)}";
+            var submitUrl = $"{respondUrl}?token={Uri.EscapeDataString(link.Token.Token)}";
 
             try
             {
@@ -141,7 +137,7 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         foreach (var link in links)
         {
             // Stamped as issued now, so the reminder job does not replace a link mailed inside its window (T206).
-            link.Invitation.IssueLink(link.TokenHash, openedAt);
+            link.Invitation.IssueLink(link.Token.Selector, link.Token.Hash, openedAt);
         }
 
         campaign.Open(openedAt);

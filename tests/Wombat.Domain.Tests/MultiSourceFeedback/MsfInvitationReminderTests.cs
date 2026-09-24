@@ -52,8 +52,9 @@ public sealed class MsfInvitationReminderTests
         var invitation = OpenedInvitation();
         var remindedAt = At(ClosesOn.AddDays(-2));
 
-        invitation.IssueLink("reminder-hash", remindedAt);
+        invitation.IssueLink("reminder-selector", "reminder-hash", remindedAt);
 
+        Assert.Equal("reminder-selector", invitation.TokenSelector);
         Assert.Equal("reminder-hash", invitation.TokenHash);
         Assert.Equal(remindedAt, invitation.IssuedOn);
         Assert.False(invitation.IsReminderDue(Open, remindedAt.AddHours(3)), "a second run the same day");
@@ -66,7 +67,7 @@ public sealed class MsfInvitationReminderTests
     {
         // A campaign opened the day before its window closes: the invitation just sent names the same last day.
         var invitation = OpenedInvitation();
-        invitation.IssueLink("opening-hash", At(ClosesOn.AddDays(-1)).AddHours(-1));
+        invitation.IssueLink("opening-selector", "opening-hash", At(ClosesOn.AddDays(-1)).AddHours(-1));
 
         Assert.False(invitation.IsReminderDue(Open, At(ClosesOn.AddDays(-1))));
         Assert.False(invitation.IsReminderDue(Open, At(ClosesOn)));
@@ -80,7 +81,7 @@ public sealed class MsfInvitationReminderTests
     public void ALinkMailedTheEveningBeforeTheFirstReminderDay_IsReplacedADayLater_NotTheNextMorning()
     {
         var invitation = OpenedInvitation();
-        invitation.IssueLink("opening-hash", ClosesOn.AddDays(-3).ToDateTime(new TimeOnly(21, 30), DateTimeKind.Utc));
+        invitation.IssueLink("opening-selector", "opening-hash", ClosesOn.AddDays(-3).ToDateTime(new TimeOnly(21, 30), DateTimeKind.Utc));
 
         Assert.False(invitation.IsReminderDue(Open, At(ClosesOn.AddDays(-2))), "mailed ten and a half hours before");
         Assert.True(invitation.IsReminderDue(Open, At(ClosesOn.AddDays(-1))));
@@ -92,9 +93,9 @@ public sealed class MsfInvitationReminderTests
         var mailedAt = At(ClosesOn.AddDays(-2)) - MsfInvitation.ReminderMinimumLinkAge;
 
         var aDayOld = OpenedInvitation();
-        aDayOld.IssueLink("opening-hash", mailedAt);
+        aDayOld.IssueLink("opening-selector", "opening-hash", mailedAt);
         var notQuite = OpenedInvitation();
-        notQuite.IssueLink("opening-hash", mailedAt.AddTicks(1));
+        notQuite.IssueLink("opening-selector", "opening-hash", mailedAt.AddTicks(1));
 
         Assert.True(aDayOld.IsReminderDue(Open, At(ClosesOn.AddDays(-2))));
         Assert.False(notQuite.IsReminderDue(Open, At(ClosesOn.AddDays(-2))));
@@ -161,7 +162,7 @@ public sealed class MsfInvitationReminderTests
             ExpiresOn = ClosesOn.AddDays(7)
         };
 
-        invitation.IssueLink("opening-hash", OpenedAt);
+        invitation.IssueLink("opening-selector", "opening-hash", OpenedAt);
         return invitation;
     }
 

@@ -151,7 +151,13 @@ public sealed class MsfInvitationExpiryReminderJobTests
         reminderLink.Should().StartWith(RespondUrl + "?token=");
         await RespondAsync(provider, reminderLink);
 
-        // The invitation's link was replaced: it names no invitation now.
+        // The invitation's link was replaced: it names no invitation now, and the page says so. The reminder's link opens
+        // the questionnaire: it carries the selector the reminder stored (T163).
+        var original = () => OpenFormAsync(provider, campaign.Links["nurse-1@example.test"]);
+        (await original.Should().ThrowAsync<MsfResponseRefusedException>()).Which.Reason.Should().Be(MsfResponseRefusal.LinkNotRecognised);
+        (await OpenFormAsync(provider, LinkIn(reminders.Sent.Single(sent => sent.Message.To == "nurse-1@example.test").Message)))
+            .TemplateName.Should().Be(TemplateName);
+
         var stored = (await ReadInvitationsAsync(provider)).Single(invitation => invitation.RespondentEmail == "nurse-1@example.test");
         _tokens.VerifyToken(TokenIn(campaign.Links["nurse-1@example.test"]), stored.TokenHash)
             .Should().BeFalse("the reminder retires the invitation's link (T132)");
@@ -393,6 +399,15 @@ public sealed class MsfInvitationExpiryReminderJobTests
         await new SubmitMsfResponseCommandHandler(db, new InvitationTokenService()).Handle(
             new SubmitMsfResponseCommand(TokenIn(link), [new SubmitMsfResponseAnswerItem(questionId, null, "Calm with parents.")]),
             CancellationToken.None);
+    }
+
+    /// <summary>The questionnaire a link opens, as the respondent page asks for it.</summary>
+    private static async Task<MsfResponseFormDto> OpenFormAsync(ServiceProvider provider, string link)
+    {
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return await new GetMsfResponseFormQueryHandler(db, new InvitationTokenService(), new FakeUserDirectory((TraineeId, TraineeName)))
+            .Handle(new GetMsfResponseFormQuery(TokenIn(link)), CancellationToken.None);
     }
 
     private static async Task<List<MsfInvitation>> ReadInvitationsAsync(ServiceProvider provider)

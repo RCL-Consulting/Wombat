@@ -94,9 +94,10 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
                 continue;
             }
 
-            // The token this invitation was opened with cannot be recovered: only a one-way hash is
-            // stored (InvitationTokenService.HashToken). So the reminder RE-ISSUES — exactly as
-            // OpenMsfCampaign does — rather than trying to reconstruct the original.
+            // The token this invitation was opened with cannot be recovered: only its selector and a
+            // one-way hash of it are stored (InvitationTokenService.GenerateSelectorToken). So the
+            // reminder RE-ISSUES — exactly as OpenMsfCampaign does — rather than trying to reconstruct
+            // the original. The new selector replaces the old, so the old link finds no row (T163).
             //
             // This invalidates the link mailed when the campaign opened. That is the accepted cost
             // (T132): a respondent holding both emails and clicking the older one gets an invalid
@@ -104,8 +105,8 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
             // earlier one. Before this, the job mailed `invitation.TokenHash` itself as a relative
             // URL, so every reminder was both unclickable and unusable, and the job still logged
             // success.
-            var token = tokenService.GenerateToken();
-            var responseUrl = $"{respondUrl}?token={Uri.EscapeDataString(token)}";
+            var token = tokenService.GenerateSelectorToken();
+            var responseUrl = $"{respondUrl}?token={Uri.EscapeDataString(token.Token)}";
 
             await emailSender.SendAsync(
                 MsfExpiryReminderEmail.Build(new MsfInvitationEmailContent(
@@ -124,7 +125,7 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
             // original link working and still due, for the next run; the reminders already sent are stored, so their
             // links work. The other order, store then send, would retire a link and mail nothing to replace it. Not
             // cancellable: the mail has been handed over.
-            invitation.IssueLink(tokenService.HashToken(token), context.UtcNow);
+            invitation.IssueLink(token.Selector, token.Hash, context.UtcNow);
             await dbContext.SaveChangesAsync(CancellationToken.None);
             sentCount++;
         }

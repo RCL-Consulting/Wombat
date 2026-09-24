@@ -30,7 +30,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task TheForm_NamesTheTraineeTheInvitationNamed()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         await SeedOpenInvitationAsync(dbContext, token);
 
@@ -49,7 +49,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ALearnersForm_IsLearnerFeedback_AndCarriesNothingOfWhereTheyWereTaught()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         await SeedOpenInvitationAsync(
             dbContext,
@@ -69,7 +69,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ATraineeWithNoNameOnRecord_IsLeftUnnamed_NeverNamedByTheirId()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         await SeedOpenInvitationAsync(dbContext, token);
 
@@ -87,7 +87,7 @@ public sealed class MsfResponseFormTests
         int lastDayInDays)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         await SeedOpenInvitationAsync(dbContext, token, closesOn: today.AddDays(closesInDays), expiresOn: today.AddDays(expiresInDays));
 
@@ -99,7 +99,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task AScaleQuestionThatNamesNoScale_IsAnsweredOnTheDefaultFivePoints_AndACommentOnNone()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         await SeedOpenInvitationAsync(dbContext, token);
 
@@ -114,7 +114,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task AScaleQuestionThatNamesAScale_IsAnsweredOnItsLevels_StoredByOrder()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var scale = new EntrustmentScale
         {
@@ -162,7 +162,7 @@ public sealed class MsfResponseFormTests
     [InlineData(-1)]
     public async Task ARatingThatIsNotAPointOfTheScale_IsRefusedAsIncomplete_AndUsesNothingUp(int value)
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var (scaleId, commentId) = await SeedOpenInvitationAsync(dbContext, token);
 
@@ -179,7 +179,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ARatingOnANamedScale_IsHeldToThatScalesLevels()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var scale = new EntrustmentScale
         {
@@ -199,7 +199,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ACommentLongerThanTheColumnHolds_IsRefusedForTheRespondentToShorten_AndUsesNothingUp()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var (scaleId, commentId) = await SeedOpenInvitationAsync(dbContext, token);
         var tooLong = new string('x', MsfResponseAnswer.LongTextMaxLength + 1);
@@ -225,7 +225,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ACommentTheTextBoxAccepted_IsNotRefusedForItsLineBreaks_AndIsStoredWithOneCharacterEach()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var (scaleId, commentId) = await SeedOpenInvitationAsync(dbContext, token);
         const int lineBreaks = 10;
@@ -247,7 +247,7 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ARefusalOfOneQuestionsAnswer_NamesThatQuestion()
     {
-        var token = _tokenService.GenerateToken();
+        var token = _tokenService.GenerateSelectorToken().Token;
         await using var dbContext = CreateDbContext();
         var (scaleId, commentId) = await SeedOpenInvitationAsync(dbContext, token);
 
@@ -262,16 +262,22 @@ public sealed class MsfResponseFormTests
     }
 
     /// <summary>
-    /// The page is public and the lookup loads every invitation (T163), so a link that no token could be is refused
-    /// before the database is asked anything: this database throws on any use. (T205 review)
+    /// The page is public, so a link that no token could be is refused before the database is asked anything: this
+    /// database throws on any use. (T205 review) So is a link mailed before T163: forty-three characters, the shape of
+    /// every token then, with no selector to find a row by.
     /// </summary>
     [Theory]
     [InlineData("")]
     [InlineData("not-a-token-anyone-was-sent")]
     [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
     [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
     [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+")]
     [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")]
+    [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+")]
+    [InlineData("AAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
     public async Task ALinkNoTokenCouldBe_IsNotRecognised_WithoutTheDatabaseBeingAsked(string token)
     {
         var database = new Mock<IApplicationDbContext>(MockBehavior.Strict).Object;
@@ -288,17 +294,6 @@ public sealed class MsfResponseFormTests
     [Fact]
     public async Task ALinkOfSeveralKilobytes_IsNotRecognised_WithoutTheDatabaseBeingAsked()
         => await ALinkNoTokenCouldBe_IsNotRecognised_WithoutTheDatabaseBeingAsked(new string('A', 8 * 1024));
-
-    [Fact]
-    public void EveryTokenTheServiceMakes_IsWellFormed()
-    {
-        for (var i = 0; i < 200; i++)
-        {
-            var token = _tokenService.GenerateToken();
-            token.Should().HaveLength(InvitationTokenService.TokenLength);
-            _tokenService.IsWellFormed(token).Should().BeTrue(token);
-        }
-    }
 
     /// <summary>
     /// A respondent signed in to Wombat in the same browser must not be named on their submission's audit row (T205
@@ -391,6 +386,7 @@ public sealed class MsfResponseFormTests
             RespondentEmail = "respondent@example.test",
             RespondentCategory = category,
             TeachingContext = teachingContext,
+            TokenSelector = _tokenService.SelectorOf(token),
             TokenHash = _tokenService.HashToken(token),
             IssuedOn = DateTime.UtcNow,
             ExpiresOn = expiresOn ?? today.AddDays(10)

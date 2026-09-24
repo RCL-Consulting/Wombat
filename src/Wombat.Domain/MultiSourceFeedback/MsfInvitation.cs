@@ -27,6 +27,17 @@ public sealed class MsfInvitation
     /// </remarks>
     public string? TeachingContext { get; set; }
 
+    /// <summary>
+    /// The start of the link's token, stored in the clear under a unique index, so a link names its one row: the respondent
+    /// page reads that row and checks the whole token against its <see cref="TokenHash" /> in constant time. Null until a
+    /// link is issued (<see cref="IssueLink" />), so no link finds a draft's invitee. (T163)
+    /// </summary>
+    /// <remarks>
+    /// Not a secret, and not derived from the respondent: random, and the token's secret half follows it. Until T163 the
+    /// hash was the only key, so every response loaded every invitation there was and hashed the token against each.
+    /// </remarks>
+    public string? TokenSelector { get; set; }
+
     public string TokenHash { get; set; } = string.Empty;
 
     /// <summary>
@@ -132,13 +143,15 @@ public sealed class MsfInvitation
     }
 
     /// <summary>
-    /// Stores the hash of a newly issued link, which retires the one before it, and when it was issued. Opening the
-    /// campaign issues the first link a respondent is sent, and a reminder replaces it. (T206)
+    /// Stores the selector and hash of a newly issued link, which retires the one before it, and when it was issued.
+    /// Opening the campaign issues the first link a respondent is sent, and a reminder replaces it. (T206, T163)
     /// </summary>
-    public void IssueLink(string tokenHash, DateTime utcNow)
+    public void IssueLink(string tokenSelector, string tokenHash, DateTime utcNow)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenSelector);
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
 
+        TokenSelector = tokenSelector;
         TokenHash = tokenHash;
         IssuedOn = utcNow;
     }
