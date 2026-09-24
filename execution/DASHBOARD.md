@@ -15,8 +15,6 @@
 | queued | [T165](tasks/queued/T165-a-committee-decision-can-be-taken-by-one-person-a-one-member-panel-validates-and-the-chair-alone-ratifies.md) | P2 | A committee decision can be taken by one person: a one-member panel va |  |
 | queued | [T166](tasks/queued/T166-the-committee-cannot-see-where-a-trainee-stands-against-annexure-a-s-target-level-for-their-year-or-against-the-exit-rule.md) | P2 | The committee cannot see where a trainee stands against Annexure A's t |  |
 | queued | [T167](tasks/queued/T167-the-committee-s-evidence-snapshot-names-no-epa-tool-rating-or-encounter-date-and-a-star-can-be-staged-on-an-epa-outside-the-trainee-s-curriculum.md) | P2 | The committee's evidence snapshot names no EPA, tool, rating or encoun |  |
-| queued | [T174](tasks/queued/T174-the-catalogue-seeder-re-pins-an-unpinned-seeded-curriculum-item-to-v11-1-at-every-boot-changing-what-its-stored-minima-mean.md) | P2 | The catalogue seeder re-pins an unpinned seeded curriculum item to v11 |  |
-| queued | [T175](tasks/queued/T175-app-css-is-served-without-a-version-in-its-url-so-a-deploy-can-show-a-new-page-with-an-old-stylesheet.md) | P2 | app.css is served without a version in its URL, so a deploy can show a |  |
 | queued | [T184](tasks/queued/T184-msf-respondent-emails-are-written-to-the-audit-log-and-opening-a-campaign-sends-mail-after-the-mutation.md) | P2 | MSF: respondent emails are written to the audit log, and opening a cam |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
@@ -47,18 +45,20 @@
 | queued | [T169](tasks/queued/T169-the-portfolio-pdf-has-no-per-epa-progress-and-prints-unrated-and-msf-evidence-as-never-completed.md) | P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF  |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
-| queued | [T172](tasks/queued/T172-a-refusal-names-the-form-s-fields-by-key-presenting-problem-not-by-the-label-the-user-sees.md) | P3 | A refusal names the form's fields by key (presenting_problem), not by  |  |
 | queued | [T173](tasks/queued/T173-a-committee-review-cannot-tell-that-an-msf-campaign-closing-in-its-window-is-still-awaiting-release.md) | P3 | A committee review cannot tell that an MSF campaign closing in its win |  |
 | queued | [T176](tasks/queued/T176-the-curriculum-items-edit-row-is-cramped-at-laptop-widths-and-three-of-its-inputs-have-no-accessible-name.md) | P3 | The curriculum items edit row is cramped at laptop widths, and three o |  |
-| queued | [T177](tasks/queued/T177-activityform-s-multi-choice-and-file-fields-have-a-label-that-points-at-no-control.md) | P3 | ActivityForm's multi-choice and file fields have a label that points a |  |
 | queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
-| queued | [T180](tasks/queued/T180-the-browser-tab-title-does-not-change-when-the-user-moves-between-pages-inside-the-app.md) | P3 | The browser tab title does not change when the user moves between page |  |
 | queued | [T181](tasks/queued/T181-the-sign-in-page-logs-a-json-parse-error-on-every-load.md) | P3 | The sign-in page logs a JSON parse error on every load |  |
 | queued | [T185](tasks/queued/T185-leftover-principal-less-queries-national-speciality-counts-and-three-shapes-of-the-overseer-rule.md) | P3 | Leftover principal-less queries, national speciality counts, and three |  |
 | queued | [T186](tasks/queued/T186-a-released-msf-campaign-s-snapshot-row-can-say-its-epas-are-no-longer-on-the-curriculum-when-their-evidence-exists.md) | P3 | A released MSF campaign's snapshot row can say its EPAs are 'no longer |  |
+| queued | [T187](tasks/queued/T187-a-sub-speciality-s-default-entrustment-scale-is-reset-by-the-catalogue-seeder-on-every-boot.md) | P3 | A sub-speciality's default entrustment scale is reset by the catalogue |  |
+| queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
+| queued | [T189](tasks/queued/T189-refusal-texts-errors-joined-with-after-full-stops-and-transitionasync-s-remaining-key-named-refusals.md) | P3 | Refusal texts: errors joined with '; ' after full stops, and Transitio |  |
+| queued | [T190](tasks/queued/T190-page-titles-follow-no-common-pattern.md) | P3 | Page titles follow no common pattern |  |
+| queued | [T191](tasks/queued/T191-choice-options-in-some-seeds-are-bare-keys-so-the-form-shows-admission-notes-instead-of-a-label.md) | P3 | Choice options in some seeds are bare keys, so the form shows admissio |  |
 
-Done: 120 task(s).
+Done: 125 task(s).
 
 ## From STATE.md
 
@@ -74,9 +74,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+f05bde8 fix(catalogue): the seeders pin a curriculum item's scale only when they create it, and warn rather than re-pin; a data migration pins the demo item where it is unpinned (T174)
 0c2c20b fix(activities): every label on an activity form names a real control; group fields are named fieldsets (T177)
 9369920 fix(activities): a refusal names each field by the label the user sees, with its section where the label repeats (T172)
 6f10a8f fix(web): app.css and the other first-party assets are linked through fingerprinted URLs, and the tab title follows in-app navigation (T175, T180)
 f2545db docs(execution): handoff progress
-a0897a3 docs(execution): close T135, T150 and T113 — browser-verified on dev (sampling 9/2 with 6 MSF not attributed; a second-institution Coordinator sees and changes nothing); file T186
 ```

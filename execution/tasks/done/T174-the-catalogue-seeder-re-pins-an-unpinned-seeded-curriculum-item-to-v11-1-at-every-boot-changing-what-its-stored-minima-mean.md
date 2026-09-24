@@ -1,11 +1,12 @@
 ---
 id: T174
 title: The catalogue seeder re-pins an unpinned seeded curriculum item to v11.1 at every boot, changing what its stored minima mean
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -46,9 +47,28 @@ through a migration"; CLAUDE.md § Editing a seed folder).
 
 ## Verification
 
-- [ ] An unpinned seeded item stays unpinned across a restart, and its minima are unchanged. Seeder test.
-- [ ] The seeder logs a warning where a stored pin differs from the catalogue.
+- [x] An unpinned seeded item stays unpinned across a restart, and its minima are unchanged. Seeder test.
+- [x] The seeder logs a warning where a stored pin differs from the catalogue.
 
 ## Related
 
 [T125] (the page-side rule), [T109] (the server check), [T122] and [T130] (seeds stamp on create).
+
+---
+
+## As built — 2026-09-24
+
+**Decision:** a seeded curriculum item (v11.1, or the demo IM Core item) may be unpinned. The seeders set the pin only
+when they create the item. On later boots they warn and never re-pin, so no boot changes what a stored minimum means.
+
+- `PaediatricCatalogueSeeder` and `DataSeeder` lost their re-pin loops.
+- A data-only migration, `20260924140337_T174_PinDemoCurriculumItemScale`, pins the demo item to O-R where it is still
+  null, which is production's case. It never overwrites a choice.
+- CLAUDE.md § Editing a seed folder names both seeders and which migration stamped what.
+
+Tests: 5 seeder tests, 3 Postgres migration tests, and the fresh-database test. Mutation-checked.
+
+Browser/boot on dev: the migration applied and changed no row (the demo item was already on O-R). No seeder re-pinned
+or warned.
+
+Out of scope, filed: `EnsureDefaultScaleAsync` resets a sub-speciality's default scale on every boot.

@@ -1,11 +1,12 @@
 ---
 id: T180
 title: The browser tab title does not change when the user moves between pages inside the app
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -32,9 +33,18 @@ interactive page's `PageTitle` cannot reach a static `HeadOutlet`. The usual fix
 
 ## Verification
 
-- [ ] Clicking between three pages updates the tab title each time. Browser.
-- [ ] A full load still renders the right title (prerender). Browser.
+- [x] Clicking between three pages updates the tab title each time. Browser.
+- [x] A full load still renders the right title (prerender). Browser.
 
 ## Related
 
 T097 (CSP), T127 (first noticed).
+
+---
+
+## As built — 2026-09-24 (with [T175])
+
+`<HeadOutlet>` renders interactively, so `<PageTitle>` reaches it after in-app navigation. Browser on dev, as the
+trainee, with no page reloads: Dashboard, then My Activities, My progress, New Activity, and back to Dashboard. Each
+title followed. A full reload and the prerendered HTML both carry the page's title. The console shows no CSP violation.
+Titles follow no common style ("— Wombat", "- Wombat" or no suffix; mixed capitals); filed separately.

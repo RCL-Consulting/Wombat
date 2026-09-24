@@ -1,11 +1,12 @@
 ---
 id: T177
 title: ActivityForm's multi-choice and file fields have a label that points at no control
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -34,9 +35,24 @@ assert that every `label[for]` resolves, on an ActivityForm rendered from each s
 
 ## Verification
 
-- [ ] Every `label[for]` on an ActivityForm rendered from each seed schema names an existing element. bUnit.
-- [ ] Browser: an accessibility snapshot of a form with a multi-choice field shows a named group.
+- [x] Every `label[for]` on an ActivityForm rendered from each seed schema names an existing element. bUnit.
+- [x] Browser: an accessibility snapshot of a form with a multi-choice field shows a named group.
 
 ## Related
 
 T147, T122, T154 (the File field and D34).
+
+---
+
+## As built — 2026-09-24
+
+A MultiChoice field (and File, DateTime, Checkbox, Markdown) renders as a named `fieldset.form-group` with a legend.
+Each checkbox is named by its option. Every other type is exactly one keyed control named by one `label[for]`.
+`ActivityFormLabelTests` pins this per field type, and checks every seed schema for orphaned references. DESIGN.md's
+rule is scoped to ActivityForm.
+
+Browser on dev:
+- The CCA form's "Documentation reviewed" is a named group, one checkbox per option.
+- Orphan-label count was 0 on the Mini-CEX, QI Project and CCA new forms, and on activities 26 and 19.
+
+The CCA options display as raw keys (`admission_notes`), because the seed gives no option labels: filed.

@@ -37,3 +37,13 @@ suspects are the auth layout, a manifest, or a Blazor boot resource under the CS
 ## Related
 
 T097 (CSP), T175 (static assets).
+
+## Cause found, 2026-09-24 (the T175 browser check)
+
+On `/account/login` and `/account/forgot-password`, `GET /_blazor/initializers` (a fetch by `blazor.web.js`, not an
+asset) is answered with a **302 to `/account/login?ReturnUrl=%2F_blazor%2Finitializers`**. The fallback authorization
+policy covers that endpoint, so the script parses the login page's HTML as JSON. T097 recorded it as "Filed, NOT fixed"
+(its § 7), but no open task carried it until this one. The fix is to exempt the Blazor framework endpoints from the
+fallback policy (as `MapWombatStaticAssets()` does for assets, T175), or to map them `AllowAnonymous`. Check that no
+circuit endpoint becomes reachable unauthenticated beyond what Blazor needs.
+

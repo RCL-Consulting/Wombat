@@ -1,11 +1,12 @@
 ---
 id: T175
 title: app.css is served without a version in its URL, so a deploy can show a new page with an old stylesheet
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -37,10 +38,30 @@ forced refresh.
 
 ## Verification
 
-- [ ] The rendered `<link>` for app.css carries a content hash. bUnit or a response check.
-- [ ] After a CSS edit and a restart, a normal reload picks up the new rule. Browser.
-- [ ] The CSP check in `deploy/verify/` still passes.
+- [x] The rendered `<link>` for app.css carries a content hash. bUnit or a response check.
+- [x] After a CSS edit and a restart, a normal reload picks up the new rule. Browser.
+- [x] The CSP check in `deploy/verify/` still passes. *(No CSP script exists there; replaced by
+      `AppAssetUrlTests.EveryScript_IsSameOriginOrCarriesTheResponsesNonce` and a clean console on dev.)*
 
 ## Related
 
 T125 (where it bit), T097 (CSP), T157 (the deploy that would ship it).
+
+---
+
+## As built — 2026-09-24
+
+- `App.razor` links `app.css`, the scoped-CSS bundle, the app's scripts and the Blazor script through `@Assets[...]`,
+  and the import map lists the modules. Every URL carries a content hash. `MapWombatStaticAssets()`
+  (`src/Wombat.Web/Security/StaticAssetEndpoints.cs`) is `MapStaticAssets().AllowAnonymous()`. `Program.cs` and the
+  test host both call it.
+- Tests. `AppAssetUrlTests` checks that the hashed links render, and that every stylesheet, script and module reaches a
+  visitor who has not signed in, under the real fallback policy. It also checks that every script is same-origin or
+  carries the response's nonce, which stands in for the CSP item: `deploy/verify/` has no CSP script. Mutation-checked.
+- Browser on dev, signed out: `/account/login` and `/account/forgot-password` are styled.
+  - The link is `app.lbtk4vx6s6.css`, and every CSS, JS and module request returns 200. There is no CSP violation.
+  - Appending a comment to `app.css` and restarting changed the link to `app.u2nsyhf8ct.css`; the edit was then
+    reverted.
+  - Dev serves the hashed files `no-cache`, so the year-long immutable header can only be seen on a published build
+    (T157).
+- Not covered, and cosmetic: fonts, the brand SVG and the favicons still use bare paths.

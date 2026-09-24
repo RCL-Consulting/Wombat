@@ -1,11 +1,12 @@
 ---
 id: T172
 title: A refusal names the form's fields by key (presenting_problem), not by the label the user sees
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-24
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -34,9 +35,24 @@ anything matches on it. Grep the tests that assert on the `key: message` shape a
 
 ## Verification
 
-- [ ] A refused submit names "Presenting problem", not `presenting_problem`. Application test and a browser check.
-- [ ] A field with no label still shows its key.
+- [x] A refused submit names "Presenting problem", not `presenting_problem`. Application test and a browser check.
+- [x] A field with no label still shows its key.
 
 ## Related
 
 [T127] (the notice that carries the refusal), [T107] (reasons already by label).
+
+---
+
+## As built — 2026-09-24
+
+`FormSchema.FieldLabel` names a field by its label, falling back to its key. Where another field has the same label,
+it adds the section title in brackets. The refusal composer, T107's reasons and both gates share it.
+
+Browser on dev, as the trainee:
+- Activity 25, a Mini-CEX missing Presenting problem: "Saved as a draft, but not submitted: Presenting problem: A value
+  is required. Fix the fields below and submit again."
+- Activity 26, a QI Project missing PDSA cycle 1's Plan: "… Plan (PDSA cycle 1): A value is required. …"
+
+Left for a follow-up: the "; " joiner after messages that end in ".", and the key-named refusals left in
+`TransitionAsync`.
