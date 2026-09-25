@@ -46,7 +46,7 @@ public sealed class MsfCampaignScopeTests
 
     // ─── The commands ────────────────────────────────────────────────────────
 
-    public static TheoryData<string> Commands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation" };
+    public static TheoryData<string> Commands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation", "Resend" };
 
     [Theory]
     [MemberData(nameof(Commands))]
@@ -497,11 +497,11 @@ public sealed class MsfCampaignScopeTests
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /// <summary>Every command addressed by campaign id; Release is refused before its evidence setup is reached.</summary>
-    public static TheoryData<string> CampaignIdCommands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation", "Release" };
+    public static TheoryData<string> CampaignIdCommands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation", "Release", "Resend" };
 
     private static MsfCampaignState StateFor(string command) => command switch
     {
-        "Close" => MsfCampaignState.Open,
+        "Close" or "Resend" => MsfCampaignState.Open,
         "Release" => MsfCampaignState.UnderReview,
         _ => MsfCampaignState.Draft
     };
@@ -548,6 +548,16 @@ public sealed class MsfCampaignScopeTests
                     .FirstOrDefaultAsync();
                 await new RemoveMsfInvitationCommandHandler(db)
                     .Handle(new RemoveMsfInvitationCommand(campaignId, invitationId > 0 ? invitationId : 1, principal), CancellationToken.None);
+                break;
+            case "Resend":
+                // T251: sends a new link to each respondent whose link was not delivered, so it is refused as the open is.
+                await new ResendMsfLinksCommandHandler(
+                        db,
+                        _emailSender,
+                        new InvitationTokenService(),
+                        new FakeUserDirectory((SubjectUserId, "Thandi Nkosi")),
+                        Options.Create(new WombatOptions { MsfRespondUrl = "https://wombat.example/msf/respond" }))
+                    .Handle(new ResendMsfLinksCommand(campaignId, principal), CancellationToken.None);
                 break;
             case "Release":
                 await new ReleaseMsfCampaignCommandHandler(
@@ -670,7 +680,11 @@ public sealed class MsfCampaignScopeTests
                     RespondentCategory = MsfRespondentCategory.Nurse,
                     TokenHash = tokens.HashToken(tokens.GenerateToken()),
                     IssuedOn = DateTime.UtcNow,
-                    ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(21)
+                    ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(21),
+                    // An open campaign's invitee holds a link whose mail was dropped, so a resend has one to send (T251).
+                    TokenSelector = state == MsfCampaignState.Open ? "seeded-selector" : null,
+                    DeliveryLinkSelector = state == MsfCampaignState.Open ? "seeded-selector" : null,
+                    DeliveryFailedOn = state == MsfCampaignState.Open ? DateTime.UtcNow : null
                 }
             ]
         };

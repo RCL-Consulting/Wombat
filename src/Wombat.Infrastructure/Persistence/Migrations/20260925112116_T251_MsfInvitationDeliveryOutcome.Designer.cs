@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Wombat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Wombat.Infrastructure.Persistence;
 namespace Wombat.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260925112116_T251_MsfInvitationDeliveryOutcome")]
+    partial class T251_MsfInvitationDeliveryOutcome
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -939,13 +942,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
-                    b.Property<string>("WithdrawalReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime?>("WithdrawnOn")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -968,8 +964,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_CommitteeReviews_AcademicYear", "\"AcademicYear\" BETWEEN 2 AND 9998");
 
                             t.HasCheckConstraint("CK_CommitteeReviews_Semester", "\"Semester\" IN (1, 2)");
-
-                            t.HasCheckConstraint("CK_CommitteeReviews_Withdrawn", "(\"State\" = 7 AND \"WithdrawnOn\" IS NOT NULL AND \"WithdrawalReason\" IS NOT NULL) OR (\"State\" <> 7 AND \"WithdrawnOn\" IS NULL AND \"WithdrawalReason\" IS NULL)");
                         });
                 });
 

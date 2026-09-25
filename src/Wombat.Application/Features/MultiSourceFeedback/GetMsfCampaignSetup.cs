@@ -102,6 +102,31 @@ public sealed record MsfCampaignSetupDto(
     /// </para>
     /// </remarks>
     public IReadOnlyList<MsfDraftInviteeDto> DraftInvitees { get; init; } = [];
+
+    /// <summary>
+    /// While the campaign is open, how many respondents' links did not reach them
+    /// (<see cref="MsfInvitation.LinkNotDelivered" />): the number the page's Resend sends again
+    /// (<see cref="ResendMsfLinksCommand" />). Zero in every other state. (T251)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A number, never who, for the reason <see cref="Invitees" /> is counted by group (T217): the coordinator knows
+    /// which address is whom, and an undelivered respondent is one who has not answered. Counted in one statement that
+    /// reads no row per invitee.
+    /// </para>
+    /// <para>
+    /// Not quite nothing. Two links not delivered beside two groups' counts can let a coordinator who knows one address
+    /// is mistyped guess that it is one of the two. Resending, not naming, is what the page offers: an address cannot be
+    /// corrected once the campaign has opened.
+    /// </para>
+    /// </remarks>
+    public int LinksNotDelivered { get; init; }
+
+    /// <summary>
+    /// While the campaign is open, how many links' mail the mail worker has not yet reported on
+    /// (<see cref="MsfInvitation.LinkBeingSent" />). Zero in every other state. (T251)
+    /// </summary>
+    public int LinksBeingSent { get; init; }
 }
 
 /// <summary>One respondent group's invitees on a campaign: how many were invited, and how many have responded. (T217)</summary>
@@ -121,11 +146,16 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _users;
+    private readonly TimeProvider _timeProvider;
 
-    public GetMsfCampaignSetupQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
+    public GetMsfCampaignSetupQueryHandler(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _users = users;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<MsfCampaignSetupDto?> Handle(GetMsfCampaignSetupQuery request, CancellationToken cancellationToken)
@@ -169,6 +199,20 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
                 .ToListAsync(cancellationToken);
         }
 
+        // How many links did not reach their respondents, and how many are still being sent, while the campaign is open
+        // (T251). Two counts, each one statement by the rule the Resend sends by, so the page is sent numbers and no row.
+        var linksNotDelivered = 0;
+        var linksBeingSent = 0;
+        if (campaign.State == MsfCampaignState.Open)
+        {
+            var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+            var campaignInvitations = _dbContext.Set<MsfInvitation>()
+                .AsNoTracking()
+                .Where(invitation => invitation.CampaignId == campaign.Id);
+            linksNotDelivered = await campaignInvitations.CountAsync(MsfInvitation.LinkNotDelivered(utcNow), cancellationToken);
+            linksBeingSent = await campaignInvitations.CountAsync(MsfInvitation.LinkBeingSent(utcNow), cancellationToken);
+        }
+
         var names = await UserDisplayNames.ResolveAsync(_users, [campaign.SubjectUserId], cancellationToken);
 
         return new MsfCampaignSetupDto(
@@ -186,7 +230,9 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
                 .OrderBy(group => group.Key)
                 .Select(group => new MsfInviteeCountDto(group.Key, group.Count(), group.Sum(invitation => invitation.Responses)))
                 .ToList(),
-            DraftInvitees = draftInvitees
+            DraftInvitees = draftInvitees,
+            LinksNotDelivered = linksNotDelivered,
+            LinksBeingSent = linksBeingSent
         };
     }
 }

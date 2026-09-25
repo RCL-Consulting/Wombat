@@ -73,7 +73,8 @@ public static class MsfInvitationEmail
             Subject: subject,
             HtmlBody: html,
             TextBody: text,
-            Tags: ["msf-invite", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"]);
+            Tags: ["msf-invite", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"],
+            DeliveryKey: content.DeliveryKey);
     }
 
     /// <summary>The feedback window, as the invitation and the reminder both give it.</summary>
@@ -113,6 +114,10 @@ public static class MsfInvitationEmail
 
 /// <summary>What one respondent's invitation says. (T202)</summary>
 /// <param name="Kind">What the questionnaire collects (T164): a learner is asked about the trainee's teaching.</param>
+/// <param name="DeliveryKey">
+/// The invitation and the link the mail carries (<see cref="MsfInvitation.DeliveryKey" />), which the mail worker hands
+/// back with the mail's outcome so the campaign page can say whether the link arrived. Never in the mail itself. (T251)
+/// </param>
 public sealed record MsfInvitationEmailContent(
     int CampaignId,
     string RespondentEmail,
@@ -122,4 +127,5 @@ public sealed record MsfInvitationEmailContent(
     DateOnly ClosesOn,
     DateOnly ExpiresOn,
     string ResponseUrl,
-    MsfTemplateKind Kind = MsfTemplateKind.Msf);
+    MsfTemplateKind Kind = MsfTemplateKind.Msf,
+    string? DeliveryKey = null);

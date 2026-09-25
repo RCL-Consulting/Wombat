@@ -169,6 +169,15 @@ public sealed class MsfInvitationExpiryReminderJobTests
         _tokens.VerifyToken(TokenIn(campaign.Links["nurse-1@example.test"]), stored.PreviousTokenHash!)
             .Should().BeTrue("the invitation's link is kept as the previous one (T214)");
 
+        // The reminder asks what became of it, keyed by the invitation and the link it carries, the one now stored
+        // (T251): a reminder the mail server drops is counted on the campaign page and can be sent again.
+        var reminderToNurse = reminders.Sent.Single(sent => sent.Message.To == "nurse-1@example.test").Message;
+        MsfInvitation.TryReadDeliveryKey(reminderToNurse.DeliveryKey, out var keyedInvitation, out var keyedSelector)
+            .Should().BeTrue();
+        keyedInvitation.Should().Be(stored.Id);
+        keyedSelector.Should().Be(stored.TokenSelector);
+        reminderToNurse.Tags.Should().NotContain(tag => tag.Contains(keyedSelector, StringComparison.Ordinal));
+
         // The respondent who answered through the reminder's link: nothing is left for the invitation's link to take, so
         // it is retired, and the page no longer recognises it.
         var answered = (await ReadInvitationsAsync(provider)).Single(invitation => invitation.RespondentEmail == "consultant-1@example.test");

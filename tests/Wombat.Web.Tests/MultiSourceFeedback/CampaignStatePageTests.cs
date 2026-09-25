@@ -186,8 +186,8 @@ public sealed class CampaignStatePageTests : WombatTestContext
                 "Response window: 2029-03-01 to 2029-03-21");
 
         Text(cut.Find("#msf-campaign-state-note")).Should().Be(
-            "Open. Each respondent has been emailed a link, which gives 2029-03-21 as their last day to respond. The " +
-            "campaign closes by itself once that day has passed; to close it sooner, use Close campaign on its report.");
+            "Open. Each respondent is emailed a link, which gives 2029-03-21 as their last day to respond. The campaign " +
+            "closes by itself once that day has passed; to close it sooner, use Close campaign on its report.");
         cut.Markup.Should().NotContain("Add invitees, then open the campaign");
     }
 
@@ -365,7 +365,7 @@ public sealed class CampaignStatePageTests : WombatTestContext
         cut.Find("#msf-open-campaign").Click();
 
         cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Open"));
-        Text(cut.Find(".alert-success")).Should().Be("Campaign opened, and each respondent has been emailed a link to respond.");
+        Text(cut.Find(".alert-success")).Should().Be("Campaign opened; links are being sent.");
         cut.FindAll("#msf-open-campaign").Should().BeEmpty("the campaign is open");
         cut.FindAll("#msf-respondent-email").Should().BeEmpty("invitees are added only to a draft");
         HeaderCells(cut.Find("table")).Should().Equal("Respondent group", "Invited", "Responded");

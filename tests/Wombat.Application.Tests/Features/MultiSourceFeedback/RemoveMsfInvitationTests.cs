@@ -151,6 +151,14 @@ public sealed class RemoveMsfInvitationTests
         RemoveMsfInvitationCommandHandler.OnlyFromADraft.Should().Contain("has been opened");
     }
 
+    [Fact]
+    public void TheRefusalOfAnOpenedCampaign_DoesNotSayEachInviteeWasEmailed_WhichTheOpenCannotKnow()
+    {
+        // The mail leaves after the open, and whether it arrived is what the campaign page counts (T251 review, finding 4).
+        RemoveMsfInvitationCommandHandler.OnlyFromADraft.Should().NotContainEquivalentOf("has been emailed")
+            .And.Contain("is sent a link");
+    }
+
     private static string NotADraftRefusal(MsfCampaignState state)
         => state == MsfCampaignState.Withdrawn
             ? RemoveMsfInvitationCommandHandler.OnlyFromADraftWithdrawn

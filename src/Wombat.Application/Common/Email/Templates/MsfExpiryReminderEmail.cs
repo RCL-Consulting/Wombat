@@ -71,7 +71,8 @@ public static class MsfExpiryReminderEmail
             Subject: subject,
             HtmlBody: html,
             TextBody: text,
-            Tags: ["nudge", "msf-expiry", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"]);
+            Tags: ["nudge", "msf-expiry", $"campaign:{content.CampaignId.ToString(CultureInfo.InvariantCulture)}"],
+            DeliveryKey: content.DeliveryKey);
     }
 
     /// <summary>What the reminder's link is to the invitation's, which still works until the last day (T214).</summary>

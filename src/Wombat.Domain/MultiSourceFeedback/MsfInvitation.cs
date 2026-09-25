@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Linq.Expressions;
+
 namespace Wombat.Domain.MultiSourceFeedback;
 
 public sealed class MsfInvitation
@@ -88,11 +91,58 @@ public sealed class MsfInvitation
     public DateTime? RevokedOn { get; set; }
     public DateTime? AnonymizedOn { get; set; }
 
+    /// <summary>
+    /// When the mail carrying the link <see cref="DeliveryLinkSelector" /> names was accepted by the mail server; null
+    /// when none has been reported sent. (T251)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Mail leaves the product after the request that sends it: a send is a hand-off to an in-process queue, and the mail
+    /// worker delivers it later, retrying three times before it gives up. Until T251 nothing recorded what became of an
+    /// MSF link, so a campaign opened while the mail server was down was reported as sent to every respondent, and none of
+    /// them could ever answer.
+    /// </para>
+    /// <para>
+    /// Written only by the worker's report (<c>MsfLinkDeliveryRecorder</c>), with <see cref="DeliveryLinkSelector" /> and
+    /// <see cref="DeliveryFailedOn" /> in one statement, and never by issuing a link. The report can arrive before the
+    /// link it is about has been stored: the open and the reminder hand the mail over first and store the link after
+    /// (T184, T206), and a fast mail server answers in between. So an outcome says which link it is about, and it counts
+    /// only while that is still the current link (<see cref="LinkDeliveryFailed" />, <see cref="LinkNotDelivered" />).
+    /// </para>
+    /// <para>
+    /// Carries no address, but it is not nothing about the respondent: the worker logs the address it sent to at the same
+    /// instant, so a time one mail apart from the next ties a row, and the answers given on it, to an address. It serves
+    /// only the Resend of an open campaign, so anonymising the invitation clears it (<see cref="Anonymize" />), and every
+    /// save of an anonymised invitation writes it cleared, whatever that save read (<c>ApplicationDbContext</c>): a report
+    /// that lands between a close's read and its save would otherwise survive on the erased row (T251 review).
+    /// </para>
+    /// </remarks>
+    public DateTime? SentOn { get; set; }
+
+    /// <summary>
+    /// When the mail carrying the link <see cref="DeliveryLinkSelector" /> names was given up on: the worker's last retry
+    /// failed, or the host stopped with it still queued. Null otherwise; never set with <see cref="SentOn" />. (T251)
+    /// </summary>
+    public DateTime? DeliveryFailedOn { get; set; }
+
+    /// <summary>
+    /// The selector of the link whose mail <see cref="SentOn" /> or <see cref="DeliveryFailedOn" /> reports on; null
+    /// until the worker has reported on one. The link's own selector, which the invitation already holds in the clear
+    /// (<see cref="TokenSelector" />): not a secret, and nothing about the respondent. (T251)
+    /// </summary>
+    public string? DeliveryLinkSelector { get; set; }
+
     public MsfCampaign Campaign { get; set; } = null!;
     public ICollection<MsfResponse> Responses { get; set; } = [];
 
     public bool IsTokenUsable(DateOnly today)
         => RevokedOn is null && RespondedOn is null && ExpiresOn >= today;
+
+    /// <summary>
+    /// Whether the invitation holds no address: anonymising erased it (<see cref="Anonymize" />). Such an invitation holds
+    /// no delivery outcome either, and every save of one writes that it holds none (<c>ApplicationDbContext</c>). (T251)
+    /// </summary>
+    public bool HoldsNoAddress => string.IsNullOrWhiteSpace(RespondentEmail);
 
     /// <summary>
     /// An address as two invitations to one campaign are compared: trimmed and lower-cased. A campaign invites an address
@@ -207,19 +257,40 @@ public sealed class MsfInvitation
     }
 
     /// <summary>
-    /// Stores a reminder's new link in place of the one the respondent was sent, and keeps that one as the previous link
-    /// (<see cref="PreviousTokenSelector" />), which still takes their response until their last day to respond. (T214)
+    /// Stores a new link in place of the one the respondent was sent, a reminder's (T214) or a resend's (T251), and keeps
+    /// that one as the previous link (<see cref="PreviousTokenSelector" />), which still takes their response until their
+    /// last day to respond. A link whose own mail was reported dropped (<see cref="LinkDeliveryFailed" />) is not kept: it
+    /// reached nobody, and the previous link stays as it was. Nor is a link nothing was heard of kept in place of a
+    /// previous link whose mail was reported sent (<see cref="PreviousLinkDeliveredOverUnreported" />). (T251)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Only a link a token can find is kept: one with a selector. An invitation holding none, as every invitation stored
-    /// before T163 does, is found by no link, and keeping its hash would revive nothing. A reminder replaces
-    /// a link at most once (<see cref="IsReminderDue" />), so one previous link is all there ever is; were a second
-    /// replacement to come, the older of the two would be retired.
+    /// before T163 does, is found by no link, and keeping its hash would revive nothing. One previous link is all there
+    /// ever is: were a link the respondent may hold to be replaced twice, the older of the two would be retired.
+    /// </para>
+    /// <para>
+    /// A dropped link is let go rather than kept for T251's sake. A reminder whose own mail was dropped, resent, would
+    /// otherwise push out the link the respondent was first mailed, which still works and which they may be answering
+    /// through, for a link nobody holds. A link that nothing was ever heard of (the host stopped without reporting it) may
+    /// have arrived, so it is kept as a reminder keeps any other, unless the one slot holds a link known to have
+    /// arrived: that link is what the respondent surely holds, so it stays, and the link whose fate is unknown goes
+    /// (T251 review). Were it the other way, a resend after a crash that lost a reminder's mail would retire the link the
+    /// respondent was first mailed, and may be answering through, for a link that most likely never left.
+    /// </para>
     /// </remarks>
     public void ReplaceLink(string tokenSelector, string tokenHash, DateTime utcNow)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenSelector);
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+
+        if (LinkDeliveryFailed || PreviousLinkDeliveredOverUnreported)
+        {
+            TokenSelector = tokenSelector;
+            TokenHash = tokenHash;
+            IssuedOn = utcNow;
+            return;
+        }
 
         var replacedSelector = TokenSelector;
         var replacedHash = TokenSelector is null ? null : TokenHash;
@@ -270,6 +341,13 @@ public sealed class MsfInvitation
         // whether or not the address is still here to erase.
         RetirePreviousLink();
 
+        // What became of the last link's mail serves only a resend, which a campaign that takes no responses has no use
+        // for (T251). A dropped mail is a fact about the address, so it goes with it. Cleared as the previous link is,
+        // whether or not the address is still here.
+        SentOn = null;
+        DeliveryFailedOn = null;
+        DeliveryLinkSelector = null;
+
         if (string.IsNullOrWhiteSpace(RespondentEmail))
         {
             return;
@@ -277,5 +355,161 @@ public sealed class MsfInvitation
 
         RespondentEmail = null;
         AnonymizedOn = utcNow;
+    }
+
+    // ─── What became of a link's mail (T251) ────────────────────────────────
+
+    /// <summary>What an MSF link's mail carries so that the worker can report its outcome. (T251)</summary>
+    private const string DeliveryKeyPrefix = "msf-link:";
+
+    /// <summary>
+    /// How long a link's mail may go unreported before the link counts as not delivered: the host stopped without
+    /// reporting it, so it is not coming. (T251)
+    /// </summary>
+    /// <remarks>
+    /// The queue lives in the web process. A host that stops in order reports what it still holds as dropped
+    /// (<c>EmailWorker</c>), but not the mail it was sending at that moment, which may have arrived; one that crashes
+    /// reports nothing. Their links would otherwise read as being sent for ever. An hour is well past what the worker
+    /// takes over one mail (three attempts, each bounded by the mail server's timeout) and past a long queue of them. A
+    /// link counted too soon, still queued, is only sent a second time: the first is kept as the previous link
+    /// (<see cref="ReplaceLink" />), so whichever arrives works, unless the link before it is known to have arrived, which
+    /// is then kept instead and works beside the new one.
+    /// </remarks>
+    public static readonly TimeSpan DeliveryReportDeadline = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// The key an MSF link's mail carries (<c>EmailMessage.DeliveryKey</c>), which the worker hands back with the mail's
+    /// outcome: this invitation, and the link the mail carries. (T251)
+    /// </summary>
+    /// <remarks>
+    /// Not a tag, and never logged: every log line about a mail names its recipient, and a log that paired an address with
+    /// the invitation's row would name the respondent behind that row's answers long after anonymising erased the
+    /// address, which is what T207 took out of the database.
+    /// </remarks>
+    public static string DeliveryKey(int invitationId, string linkSelector)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(invitationId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(linkSelector);
+        if (linkSelector.Contains(':', StringComparison.Ordinal))
+        {
+            throw new ArgumentException("A link selector holds no colon.", nameof(linkSelector));
+        }
+
+        return string.Create(CultureInfo.InvariantCulture, $"{DeliveryKeyPrefix}{invitationId}:{linkSelector}");
+    }
+
+    /// <summary>The invitation and link a <see cref="DeliveryKey" /> names; false for any other key, or none. (T251)</summary>
+    public static bool TryReadDeliveryKey(string? key, out int invitationId, out string linkSelector)
+    {
+        invitationId = 0;
+        linkSelector = string.Empty;
+
+        if (key is null || !key.StartsWith(DeliveryKeyPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var parts = key[DeliveryKeyPrefix.Length..].Split(':');
+        if (parts.Length != 2 ||
+            !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var id) ||
+            id <= 0 ||
+            string.IsNullOrWhiteSpace(parts[1]))
+        {
+            return false;
+        }
+
+        invitationId = id;
+        linkSelector = parts[1];
+        return true;
+    }
+
+    /// <summary>
+    /// Whether the mail carrying the current link was reported dropped: nobody holds that link. (T251)
+    /// </summary>
+    public bool LinkDeliveryFailed
+        => TokenSelector is not null && DeliveryLinkSelector == TokenSelector && DeliveryFailedOn is not null;
+
+    /// <summary>
+    /// Whether the outcome on record is about the previous link, and says it was sent, while nothing has been heard of the
+    /// current link's mail: the previous link is the one the respondent is known to hold. (T251 review)
+    /// </summary>
+    /// <remarks>
+    /// The last report wins (<c>MsfLinkDeliveryRecorder</c>), so the outcome still naming the previous link means that no
+    /// report about the current one has landed.
+    /// </remarks>
+    private bool PreviousLinkDeliveredOverUnreported
+        => PreviousTokenSelector is not null &&
+           DeliveryLinkSelector == PreviousTokenSelector &&
+           DeliveryLinkSelector != TokenSelector &&
+           SentOn is not null;
+
+    /// <summary>
+    /// The invitations whose current link did not reach their respondent, and who can still answer through a new one: the
+    /// ones the campaign page counts as not delivered and its Resend sends again (<c>ResendMsfLinksCommand</c>). (T251)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A link is not delivered when the worker reported its mail dropped, or when nothing was reported of it within
+    /// <see cref="DeliveryReportDeadline" /> of its issue. An outcome about another link, one this invitation no longer
+    /// holds or does not hold yet, says nothing about the current one.
+    /// </para>
+    /// <para>
+    /// Only while a new link could still be answered: the campaign is open, the respondent has not answered, has not been
+    /// revoked and has not been anonymised, and their last day to respond (<see cref="LastDayToRespond" />) has not
+    /// passed. A draft's invitees hold no link yet.
+    /// </para>
+    /// <para>
+    /// An expression, so the page's count and the resend are one statement each and read no row per invitee (T217):
+    /// the page is sent a number, never who. It never names the address, not even to ask whether one is held, so the
+    /// page's count sends no statement that mentions an address (<c>MsfCampaignScopePostgresTests</c>); an open campaign's
+    /// invitations all hold one until anonymising erases it.
+    /// </para>
+    /// </remarks>
+    public static Expression<Func<MsfInvitation, bool>> LinkNotDelivered(DateTime utcNow)
+    {
+        var reportDue = utcNow - DeliveryReportDeadline;
+        return AwaitingAnswerAnd(utcNow, invitation =>
+            invitation.DeliveryLinkSelector == invitation.TokenSelector
+                ? invitation.DeliveryFailedOn != null
+                : invitation.IssuedOn < reportDue);
+    }
+
+    /// <summary>
+    /// The invitations whose current link's mail has not been reported on yet, and is not overdue: still being sent.
+    /// Asked of the same invitations as <see cref="LinkNotDelivered" />. (T251)
+    /// </summary>
+    public static Expression<Func<MsfInvitation, bool>> LinkBeingSent(DateTime utcNow)
+    {
+        var reportDue = utcNow - DeliveryReportDeadline;
+        return AwaitingAnswerAnd(utcNow, invitation =>
+            invitation.DeliveryLinkSelector != invitation.TokenSelector && invitation.IssuedOn >= reportDue);
+    }
+
+    /// <summary>
+    /// <paramref name="delivery" />, asked only of an invitation that still awaits an answer through the link it holds:
+    /// the rule <see cref="LinkNotDelivered" /> and <see cref="LinkBeingSent" /> share. (T251)
+    /// </summary>
+    private static Expression<Func<MsfInvitation, bool>> AwaitingAnswerAnd(
+        DateTime utcNow, Expression<Func<MsfInvitation, bool>> delivery)
+    {
+        var today = DateOnly.FromDateTime(utcNow);
+        Expression<Func<MsfInvitation, bool>> awaiting = invitation =>
+            invitation.Campaign.State == MsfCampaignState.Open &&
+            invitation.Campaign.ClosesOn >= today &&
+            invitation.ExpiresOn >= today &&
+            invitation.RespondedOn == null &&
+            invitation.RevokedOn == null &&
+            invitation.AnonymizedOn == null &&
+            invitation.TokenSelector != null;
+
+        var parameter = awaiting.Parameters[0];
+        var deliveryBody = new ParameterSwap(delivery.Parameters[0], parameter).Visit(delivery.Body);
+        return Expression.Lambda<Func<MsfInvitation, bool>>(Expression.AndAlso(awaiting.Body, deliveryBody), parameter);
+    }
+
+    /// <summary>Puts one lambda's parameter in place of another's, so two bodies can be joined into one lambda.</summary>
+    private sealed class ParameterSwap(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
     }
 }

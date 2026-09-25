@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
@@ -16,6 +17,7 @@ using Wombat.Application.Features.DataRights.Queries;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Email;
+using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -93,6 +95,9 @@ public static class DependencyInjection
             services.AddScoped<IEmailSender, QueuedEmailSender>();
             services.AddHostedService<EmailWorker>();
         }
+
+        // What the mail worker reports about a mail that asks (T251): an MSF link's is recorded onto its invitation.
+        services.AddScoped<IEmailDeliveryObserver, MsfLinkDeliveryRecorder>();
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<SsoGroupMapper>();
         services.AddScoped<ExternalLoginHandler>();

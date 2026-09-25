@@ -78,6 +78,55 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<SsoGroupRoleMapping> SsoGroupRoleMappings => Set<SsoGroupRoleMapping>();
     public DbSet<UserRoleAssignment> UserRoleAssignments => Set<UserRoleAssignment>();
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        WriteAnonymisedInvitationsDeliveryOutcome();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        WriteAnonymisedInvitationsDeliveryOutcome();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Makes every save of an anonymised MSF invitation write what became of its link's mail, whatever the invitation was
+    /// read holding: none, since anonymising clears it (<see cref="MsfInvitation.Anonymize" />). (T251 review)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The mail worker's report (<c>MsfLinkDeliveryRecorder</c>) is one <c>UPDATE</c> on a scope of its own, and it can
+    /// land between a close's read of the invitations and that close's save. EF writes only the columns it saw change, and
+    /// a column read as null and cleared to null has not changed, so the report's <see cref="MsfInvitation.SentOn" /> or
+    /// <see cref="MsfInvitation.DeliveryFailedOn" />, and its <see cref="MsfInvitation.DeliveryLinkSelector" />, would
+    /// survive on the erased row. That time is not "nothing about the respondent": the worker logs, at the same instant,
+    /// the address it sent to and the campaign, and the row's responses name the row (<c>MsfResponse.InvitationId</c>).
+    /// So a timestamp one mail apart from the next would tie an erased address to its answers, the linkage T207 took out.
+    /// </para>
+    /// <para>
+    /// Written here, not in each caller, because three writers anonymise (the close command, the withdraw command and the
+    /// auto-close job) through <see cref="MsfCampaign.Close" /> and <see cref="MsfCampaign.Withdraw" />, and a fourth
+    /// would not know to. With the three columns in its <c>UPDATE</c>, the anonymising save meets the report on the row's
+    /// lock: a report that committed first is overwritten, and one that waited finds the address erased and, by its own
+    /// condition, writes nothing.
+    /// </para>
+    /// </remarks>
+    private void WriteAnonymisedInvitationsDeliveryOutcome()
+    {
+        foreach (var entry in ChangeTracker.Entries<MsfInvitation>())
+        {
+            if (entry.State != EntityState.Modified || !entry.Entity.HoldsNoAddress)
+            {
+                continue;
+            }
+
+            entry.Property(invitation => invitation.SentOn).IsModified = true;
+            entry.Property(invitation => invitation.DeliveryFailedOn).IsModified = true;
+            entry.Property(invitation => invitation.DeliveryLinkSelector).IsModified = true;
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

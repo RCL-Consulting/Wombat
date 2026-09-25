@@ -8,6 +8,11 @@ namespace Wombat.Infrastructure.Email;
 /// Development/test fallback — logs emails instead of sending them.
 /// Registered when Email:SmtpHost is not configured.
 /// </summary>
+/// <remarks>
+/// Reports nothing to the <see cref="IEmailDeliveryObserver" />s (T251): no mail worker runs, and nobody is mailed. So an
+/// MSF link sent through it reads as still being sent for an hour, then as not delivered, which is true
+/// (INFRASTRUCTURE.md § After T251).
+/// </remarks>
 public sealed class LoggingEmailSender : IEmailSender
 {
     private readonly ILogger<LoggingEmailSender> _logger;

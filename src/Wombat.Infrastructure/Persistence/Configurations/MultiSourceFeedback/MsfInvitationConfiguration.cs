@@ -31,6 +31,16 @@ public sealed class MsfInvitationConfiguration : IEntityTypeConfiguration<MsfInv
             table.HasCheckConstraint(
                 "CK_MsfInvitations_PreviousLinkUnanswered",
                 "\"PreviousTokenSelector\" IS NULL OR \"RespondedOn\" IS NULL");
+
+            // A link's mail was sent or dropped, never both (T251). The worker's report writes the selector and both
+            // times in one statement, one of them null; anonymising nulls all three (MsfInvitation.Anonymize), and every
+            // save of an anonymised invitation writes them, whatever it read (ApplicationDbContext, T251 review). Without
+            // that, a close that read an invitation before a report landed would write only the columns it saw change
+            // and leave the report's time on the erased row, one mail apart from the next, beside a log line naming the
+            // address it was sent to at that instant.
+            table.HasCheckConstraint(
+                "CK_MsfInvitations_DeliveryOutcome",
+                "\"SentOn\" IS NULL OR \"DeliveryFailedOn\" IS NULL");
         });
         builder.Property(entity => entity.RespondentEmail).HasMaxLength(320);
         builder.Property(entity => entity.TeachingContext).HasMaxLength(MsfTeachingContexts.MaximumLength);
@@ -38,6 +48,7 @@ public sealed class MsfInvitationConfiguration : IEntityTypeConfiguration<MsfInv
         builder.Property(entity => entity.TokenHash).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.PreviousTokenSelector).HasMaxLength(InvitationTokenService.SelectorLength);
         builder.Property(entity => entity.PreviousTokenHash).HasMaxLength(64);
+        builder.Property(entity => entity.DeliveryLinkSelector).HasMaxLength(InvitationTokenService.SelectorLength);
         builder.Property(entity => entity.ExpiresOn).HasColumnType("date");
 
         // The respondent page's one read: a link names its row by the selector its token begins with (T163). Unique, so

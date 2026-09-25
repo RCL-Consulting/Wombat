@@ -83,6 +83,11 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         // holds a link that will not work, and the refusal says so. In production a "send" is an enqueue on an
         // in-process channel (QueuedEmailSender), which throws only when cancelled or shut down; SMTP delivery happens
         // after the request whichever order is chosen.
+        //
+        // So a send here is a hand-off, and a mail server that is down is not a refusal (T251). The worker reports what
+        // became of each mail onto its invitation (MsfLinkDeliveryRecorder), keyed by the invitation and the link the mail
+        // carries, and the campaign page counts the links not delivered and resends them (ResendMsfLinksCommand). Until
+        // T251 a campaign opened while mail was down was reported as emailed to everyone, and nobody could ever answer.
         var links = campaign.Invitations
             .Where(candidate => !string.IsNullOrWhiteSpace(candidate.RespondentEmail))
             .Select(invitation => (Invitation: invitation, Token: _tokenService.GenerateSelectorToken()))
@@ -104,7 +109,8 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
                         campaign.ClosesOn,
                         link.Invitation.ExpiresOn,
                         submitUrl,
-                        campaign.Template.Kind)),
+                        campaign.Template.Kind,
+                        MsfInvitation.DeliveryKey(link.Invitation.Id, link.Token.Selector))),
                     cancellationToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
@@ -164,7 +170,15 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         "This attempt did not open it, and any link it sent will not work. If the campaign is still a draft, open it " +
         "again: every respondent, including anyone just added, is sent a new link.";
 
-    /// <summary>The refusal when an invitation could not be sent. Nothing about the campaign has changed. (T184)</summary>
+    /// <summary>
+    /// The refusal when an invitation could not be handed over for sending. Nothing about the campaign has changed.
+    /// (T184)
+    /// </summary>
+    /// <remarks>
+    /// Only for a hand-off that fails, which in production is the queue refusing a mail as the host stops. A mail server
+    /// that is down or refuses a mail is not this: the campaign opens, and its page counts the links not delivered, with a
+    /// Resend (T251).
+    /// </remarks>
     public const string InvitationsNotSent =
         "The invitations could not all be sent, so the campaign has not been opened. Open it again to send every " +
         "respondent a new link; any link sent before this failure will not work.";

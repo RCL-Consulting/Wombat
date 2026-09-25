@@ -89,6 +89,15 @@ Port the good parts of the current Wombat email setup:
 - `IEmailSender` interface in Application.
 - `MailKitEmailSender` implementation in Infrastructure.
 - An in-process channel queue (`System.Threading.Channels.Channel<EmailMessage>`) and a hosted `EmailWorker : BackgroundService` that drains it. Keeps web requests snappy.
+- **A send is a hand-off, not a delivery** (T251). `QueuedEmailSender` never fails for want of a mail server, so a request
+  cannot say whether its mail arrived. A mail that needs to know carries an `EmailMessage.DeliveryKey`, and the worker
+  reports its outcome (sent on attempt N, or dropped after three attempts, or still queued as the host stops) to every
+  `IEmailDeliveryObserver` on a scope of its own. A mail cut off mid-send by the host stopping is not reported: it may
+  have arrived (T251 review). The key is never a tag and never logged: every log line about a mail
+  names its recipient. An MSF link's key names its invitation and link (`MsfInvitation.DeliveryKey`), and
+  `MsfLinkDeliveryRecorder` writes the outcome onto the invitation in one conditioned `UPDATE`, which may land before the
+  request that sent the mail has stored the link, so it names the link it is about and touches no column the request
+  writes. Account invitations, nudges and digests ask for nothing yet.
 - Templates stored as Razor files under `Wombat.Infrastructure/Email/Templates/` and rendered with `Microsoft.Extensions.RazorTemplating` or a hand-rolled renderer — whichever ClinicAssist uses.
 - SMTP settings come from `appsettings.json` / environment variables, never from the database (simpler to audit, simpler to rotate).
 

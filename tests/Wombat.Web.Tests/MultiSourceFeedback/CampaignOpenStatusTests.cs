@@ -37,8 +37,12 @@ public sealed class CampaignOpenStatusTests : TestContext
         Services.AddSingleton<IActivityReferenceDataService>(new StubActivityReferenceDataService());
     }
 
+    /// <summary>
+    /// Says only that the links are on their way (T251): the mail leaves after the open, and until T251 the page said that
+    /// each respondent had been emailed while the mail server was down and nobody had been.
+    /// </summary>
     [Fact]
-    public void OpeningACampaign_SaysEachRespondentWasEmailed_WithoutNamingTheDevelopmentSender()
+    public void OpeningACampaign_SaysTheLinksAreBeingSent_WithoutClaimingTheyArrived_OrNamingTheDevelopmentSender()
     {
         var sender = new FakeSender(openFailure: null);
         Services.AddSingleton<IScopedSender>(sender);
@@ -50,8 +54,9 @@ public sealed class CampaignOpenStatusTests : TestContext
         sender.Opened.Should().Equal(CampaignId);
 
         var status = cut.Find(".alert-success").TextContent.Trim();
-        status.Should().Be("Campaign opened, and each respondent has been emailed a link to respond.");
+        status.Should().Be("Campaign opened; links are being sent.");
         status.Should().NotContainEquivalentOf("logging");
+        status.Should().NotContainEquivalentOf("has been emailed");
         cut.FindAll(".alert-danger").Should().BeEmpty();
     }
 

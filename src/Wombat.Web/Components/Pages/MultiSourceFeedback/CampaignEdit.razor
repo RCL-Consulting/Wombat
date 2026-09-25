@@ -182,6 +182,19 @@
             </dl>
             <p id="msf-campaign-state-note">@StateNote(setup)</p>
 
+            @* What became of the links, while the campaign is open (T251): a count, never whose (T217). Mail leaves after
+               the request, so the open cannot say whether it arrived; the mail worker reports each outcome later. Standing
+               content, so the warning has no role: it is there on every visit until the links are sent again, and the
+               Resend button names it. *@
+            @if (setup.State == MsfCampaignState.Open && setup.LinksNotDelivered > 0)
+            {
+              <Alert Id="msf-links-not-delivered" Kind="warning" Role="">@MsfCampaignText.LinksNotDelivered(setup.LinksNotDelivered)</Alert>
+            }
+            @if (setup.State == MsfCampaignState.Open && setup.LinksBeingSent > 0)
+            {
+              <p id="msf-links-being-sent" class="muted">@MsfCampaignText.LinksBeingSent(setup.LinksBeingSent)</p>
+            }
+
             @* Counted by respondent group, never a row per invitee once the campaign has opened
                (MsfCampaignSetupDto.Invitees, T217): the coordinator knows which row is whom, so a "responded" mark on one
                row would name the author of the comment that has just appeared on the report. A draft has no responses, so
@@ -331,6 +344,19 @@
             @if (setup.State != MsfCampaignState.Withdrawn)
             {
               <FormActions>
+                @if (CanResend(setup))
+                {
+                  @* Sends a new link to each respondent whose link was not delivered (T251). Not disabled by its own resend
+                     (T234): it has the focus, and a second press sends nothing (ResendLinksAsync). Named by the warning above,
+                     which says how many and that the page never says whose. *@
+                  <button id="msf-resend-links" type="button" class="btn btn-outline"
+                          disabled="@(_withdrawing || _adding || _removing || _opening)"
+                          aria-disabled="@InFlight.AriaDisabled(_resending)"
+                          aria-describedby="msf-links-not-delivered"
+                          @onclick="ResendLinksAsync">
+                    @(_resending ? "Resending links…" : MsfCampaignText.ResendLinksLabel(setup.LinksNotDelivered))
+                  </button>
+                }
                 @if (CanWithdraw(setup))
                 {
                   <button id="msf-withdraw-campaign" type="button" class="btn btn-outline" disabled="@Busy" @onclick="AskWithdrawAsync">Withdraw campaign</button>
@@ -422,6 +448,9 @@
   /// <summary>An invitee remove has been sent and has not yet answered. (T247)</summary>
   private bool _removing;
 
+  /// <summary>A resend of the links not delivered has been sent and has not yet answered. (T251)</summary>
+  private bool _resending;
+
   /// <summary>The draft invitee the remove dialog was opened for, until it is confirmed or cancelled. (T247)</summary>
   private MsfDraftInviteeDto? _pendingRemove;
 
@@ -444,10 +473,10 @@
   internal ElementReference? EmailInput => _emailInput?.Element;
 
   /// <summary>
-  /// An open, a withdraw, an invitee add or an invitee remove is in flight, so nothing else may be sent. (T202, T217,
-  /// T228 review, T247)
+  /// An open, a withdraw, an invitee add, an invitee remove or a resend is in flight, so nothing else may be sent. (T202,
+  /// T217, T228 review, T247, T251)
   /// </summary>
-  private bool Busy => _opening || _withdrawing || _adding || _removing;
+  private bool Busy => _opening || _withdrawing || _adding || _removing || _resending;
 
   private TemplateFormModel _template = new();
   private CampaignFormModel _campaign = new();
@@ -530,7 +559,7 @@
       // An action's refusal is kept over the failed read that follows it (T217 review): it says why the action was not
       // taken, and the card already says that the campaign could not be loaded.
       _setup = null;
-      _error ??= exception.Message;
+      _error ??= RefusalText.Of(exception);
     }
     finally
     {
@@ -557,6 +586,10 @@
   private string RemoveBody
     => _pendingRemove is null ? string.Empty : MsfCampaignText.RemoveInviteeBody(DescribeInvitee(_pendingRemove));
 
+  /// <summary>An open campaign with a link that was not delivered: what Resend sends again (T251).</summary>
+  private static bool CanResend(MsfCampaignSetupDto setup)
+    => setup.State == MsfCampaignState.Open && setup.LinksNotDelivered > 0;
+
   /// <summary>A draft or an open campaign, the two the campaign list offers Withdraw on (T206).</summary>
   private static bool CanWithdraw(MsfCampaignSetupDto setup)
     => setup.State is MsfCampaignState.Draft or MsfCampaignState.Open;
@@ -568,9 +601,11 @@
     return setup.State switch
     {
       MsfCampaignState.Draft => InviteesIntro,
+      // "Is emailed", not "has been emailed" (T251): the mail leaves after the open, and whether it arrived is what the
+      // lines below this one say.
       MsfCampaignState.Open =>
-        $"Open. Each respondent has been emailed a link, which gives {closesOn} as their last day to respond. The " +
-        "campaign closes by itself once that day has passed; to close it sooner, use Close campaign on its report.",
+        $"Open. Each respondent is emailed a link, which gives {closesOn} as their last day to respond. The campaign " +
+        "closes by itself once that day has passed; to close it sooner, use Close campaign on its report.",
       MsfCampaignState.Closed or MsfCampaignState.UnderReview =>
         "Closed to responses, and every respondent's email address has been removed. Review the responses on its " +
         "report, and release it to the trainee there.",
@@ -739,7 +774,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 
@@ -797,7 +832,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 
@@ -825,7 +860,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 
@@ -865,7 +900,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
 
     try
@@ -914,13 +949,13 @@
     try
     {
       await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, await GetPrincipalAsync()));
-      // It used to name the development sender, which only logs a mail, on every host: a coordinator whose host has a
-      // mail server was told the links had gone to a log. (T184)
-      _status = "Campaign opened, and each respondent has been emailed a link to respond.";
+      // It used to name the development sender, which only logs a mail, on every host (T184), and then said that each
+      // respondent had been emailed, which the open cannot know: the mail leaves after it (T251).
+      _status = MsfCampaignText.CampaignOpened;
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
 
     try
@@ -934,6 +969,48 @@
     }
 
     _focusResult = _setup is not { State: MsfCampaignState.Draft };
+  }
+
+  /// <remarks>
+  /// Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second press that
+  /// reaches the circuit while this resend runs sends nothing. The campaign is read again whatever the answer, so the
+  /// count is what it is now. The result takes the focus once the resend is done, and after a refusal that leaves no
+  /// Resend button (every link was sent again elsewhere, or the campaign closed); a refusal that leaves it keeps the
+  /// focus on it, for the retry. (T251, T234)
+  /// </remarks>
+  private async Task ResendLinksAsync()
+  {
+    if (!CampaignId.HasValue || Busy)
+    {
+      return;
+    }
+
+    _resending = true;
+    _status = null;
+    _error = null;
+    var resent = false;
+
+    try
+    {
+      var count = await Sender.Send(new ResendMsfLinksCommand(CampaignId.Value, await GetPrincipalAsync()));
+      _status = MsfCampaignText.LinksResent(count);
+      resent = true;
+    }
+    catch (Exception exception)
+    {
+      _error = RefusalText.Of(exception);
+    }
+
+    try
+    {
+      await LoadSetupAsync();
+    }
+    finally
+    {
+      _resending = false;
+    }
+
+    _focusResult = resent || _setup is null || !CanResend(_setup);
   }
 
   private async Task AskWithdrawAsync()
@@ -975,7 +1052,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
 
     try
@@ -1035,7 +1112,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
 
     try

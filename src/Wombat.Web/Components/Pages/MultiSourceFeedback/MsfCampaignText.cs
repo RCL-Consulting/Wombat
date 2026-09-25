@@ -87,6 +87,37 @@ public static class MsfCampaignText
     /// </summary>
     public const string OpenNeedsInvitees = "add at least one invitee first. Opening the campaign emails each invitee a link to respond.";
 
+    /// <summary>
+    /// What an open campaign's page says of the links that did not reach their respondents (T251): how many, and what
+    /// Resend does. It never says whose: the coordinator knows which address is whom, and an undelivered respondent is one
+    /// who has not answered (T217).
+    /// </summary>
+    public static string LinksNotDelivered(int count)
+        => (count == 1 ? "1 link was not delivered." : $"{count} links were not delivered.") +
+           " Resend sends each of these respondents a new link; this page never says who they are.";
+
+    /// <summary>The Resend button's label, with how many links it sends again. (T251)</summary>
+    public static string ResendLinksLabel(int count) => count == 1 ? "Resend 1 link" : $"Resend {count} links";
+
+    /// <summary>What a resend did: handed the links to the mail worker, which has not yet sent them. (T251)</summary>
+    public static string LinksResent(int count)
+        => count == 1 ? "1 new link is being sent." : $"{count} new links are being sent.";
+
+    /// <summary>
+    /// What an open campaign's page says of links whose mail has not been reported on yet (T251). The page does not
+    /// refresh by itself, so it says how to find out.
+    /// </summary>
+    public static string LinksBeingSent(int count)
+        => count == 1
+            ? "1 link is still being sent. Reload this page to see whether it was delivered."
+            : $"{count} links are still being sent. Reload this page to see whether they were delivered.";
+
+    /// <summary>
+    /// What an open reports (T251). Only that the links are on their way: the mail server answers after the request, and
+    /// until T251 the page said that each respondent had been emailed, including while nobody had been.
+    /// </summary>
+    public const string CampaignOpened = "Campaign opened; links are being sent.";
+
     /// <summary>The state in words: "Under review", not the enum's "UnderReview" (T217).</summary>
     public static string State(MsfCampaignState state)
         => state switch

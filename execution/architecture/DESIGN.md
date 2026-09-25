@@ -910,7 +910,17 @@ campaign that exists already has its questionnaire, and its page reads no templa
 
 - A `details-list`: Trainee (by name), Template (with its kind), State (a badge) and Response window. Then one sentence
   saying what the state means and what comes next: an open campaign names its respondents' last day to respond and says
-  that Close campaign is on its report.
+  that Close campaign is on its report. It says each respondent "is emailed" a link, never "has been emailed": the mail
+  leaves after the open, and whether it arrived is what the next lines say (T251).
+- **What became of the links, on an open campaign, counted and never whose** (T251). The mail worker reports each link's
+  mail sent or dropped onto its invitation, and a link nothing was heard of for an hour (the host crashed, or stopped
+  mid-send) counts as dropped (`MsfInvitation.LinkNotDelivered`, `LinkBeingSent`). Links not delivered are a `warning` `Alert`
+  (`#msf-links-not-delivered`, `Role=""`: standing content, there on every visit until they are resent) reading "2 links
+  were not delivered. Resend sends each of these respondents a new link; this page never says who they are."
+  (`MsfCampaignText.LinksNotDelivered`). Links still being sent are a `.muted` line (`#msf-links-being-sent`) that says
+  how many and to reload the page to see whether they arrived. A number, never a row or an address, for the reason the
+  invitees are counted by group: an undelivered respondent is one who has not answered. Nothing is shown when every link
+  was sent, and nothing on any other state.
 - **Invitees, counted by respondent group, never listed once the campaign has opened.** An `<h4>`, a `.muted` line
   saying the page never lists who was invited or which of them responded ("Once the campaign opens, …" on a draft), and
   promising nothing more: a campaign whose category threshold is one shows a one-person group's answers on its report.
@@ -940,7 +950,9 @@ campaign that exists already has its questionnaire, and its page reads no templa
   every Remove are disabled (the focus is in the dialog), and a second confirm sends nothing.
 - The invitee form, only on a draft.
 - One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
-  open campaign has Withdraw campaign and a "View report" link, where it is closed; a closed one under review has a
+  open campaign has Withdraw campaign and a "View report" link, where it is closed, and, first, "Resend 2 links"
+  (`.btn .btn-outline`, `#msf-resend-links`) while any link was not delivered, whose `aria-describedby` names the
+  warning above (T251); a closed one under review has a
   "Review and release" link; a released one "View report"; a withdrawn one has no row. Withdraw is where the campaign
   list offers it (T206), behind the same `ConfirmDialog` wording (`MsfCampaignText`). On a draft that invites nobody,
   Open campaign is shown **disabled** with its reason (the T107 pattern above, T225): no click handler, and
@@ -950,7 +962,14 @@ campaign that exists already has its questionnaire, and its page reads no templa
 - An action's result is an `Alert` in an `.action-result` region that takes the focus once it has answered, whenever
   the button that sent it is gone: after an open or a withdraw, and after an invitee add refused because the campaign
   was opened or withdrawn elsewhere (its form is gone). A refused open on a campaign that is still a draft leaves the
-  focus on Open, for the retry; an add on a draft leaves it in the form. An address the campaign already invites, in any
+  focus on Open, for the retry; an add on a draft leaves it in the form. An open reports "Campaign opened; links are
+  being sent." (`MsfCampaignText.CampaignOpened`, T251): the mail server answers after the request, so the open cannot say
+  the links arrived, and its "could not all be sent" refusal is only for a mail the queue would not take. A resend reports
+  "2 new links are being sent." and moves the focus to its result (its button is gone once no link awaits resending); a
+  refused resend that leaves the button (a hand-off that failed) leaves the focus on it for the retry, and one that finds
+  the campaign closed elsewhere moves the focus to the refusal, beside the campaign read again. Resend is never disabled
+  by its own resend (T234): it carries `aria-disabled` and reads "Resending links…" while it runs, and a second press
+  sends nothing; Withdraw campaign is disabled then. An address the campaign already invites, in any
   capitals, is refused the same way (T228): a `role="alert"` refusal naming no address, with the address left typed to
   correct and nobody counted. While an open is in flight, Withdraw campaign and Add invitee are disabled, and Open reads
   "Opening campaign…" but stays enabled and a second click on it sends nothing (T225 review): it holds the focus, and a

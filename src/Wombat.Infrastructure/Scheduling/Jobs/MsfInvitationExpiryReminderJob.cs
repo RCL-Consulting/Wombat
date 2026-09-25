@@ -126,7 +126,9 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
                     campaign.ClosesOn,
                     invitation.ExpiresOn,
                     responseUrl,
-                    campaign.Template.Kind)),
+                    campaign.Template.Kind,
+                    // So the campaign page can say whether this link arrived, and resend it if not (T251).
+                    MsfInvitation.DeliveryKey(invitation.Id, token.Selector))),
                 cancellationToken);
 
             // Stored after the send, and one respondent at a time (T206). A send that throws leaves this respondent's

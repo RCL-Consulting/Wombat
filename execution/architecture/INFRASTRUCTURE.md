@@ -224,6 +224,34 @@ it again.
 - **Rolling back** (`Down`, or restoring the pre-deploy dump) retires every previous link again. `Down` leaves the
   current links as they are.
 
+### After T251: what became of each MSF link's mail
+
+Since T251 the mail worker reports each MSF link's mail onto its invitation (`MsfInvitations.SentOn`,
+`DeliveryFailedOn`, and `DeliveryLinkSelector`, the link the report is about; `CK_MsfInvitations_DeliveryOutcome` keeps
+sent and dropped apart). An open campaign's page counts the links not delivered and offers Resend. A link counts as not
+delivered when its mail was dropped after three attempts, when it was still queued as the app stopped (the queue is in
+process; a stop in order reports it), or when nothing was heard of it for an hour (the app crashed, or stopped while
+that mail was being sent).
+
+- **Nothing is backfilled.** Whether a link mailed before the deploy arrived is not known. So every unanswered link of a
+  campaign open at the deploy that was issued more than an hour before it reads as **not delivered**, and its page offers
+  Resend. Only scenario data is affected (W-007). Resending mails each respondent a new link and keeps the old one
+  working as the previous link, so a respondent who did receive it loses nothing.
+- **A deploy restarts the app.** Mail still queued at the restart is reported dropped, and its campaign offers Resend. The
+  log line is `Email (subject: …, tags: …) abandoned unsent: the app is shutting down.` The one mail being sent at that
+  moment is not reported (T251 review): it may have reached the mail server, so its link reads as still being sent for
+  an hour, then as not delivered, and a Resend keeps it working as the previous link. Its log line is `Email to … cut
+  off by the app's shutdown; whether it was sent is not known.`
+- **A host with no `Email:SmtpHost`** (`appsettings.json`'s default) logs each mail instead of sending it
+  (`LoggingEmailSender`) and runs no mail worker, so nothing is ever reported. Every MSF link there reads as still being
+  sent for an hour, then as not delivered, and a Resend only logs another. That is true, since nobody was mailed. Dev
+  sets `localhost` (the SMTP sink on port 25) and production sets its relay, so neither is affected; a host that
+  should send mail and shows this has lost its `Email__SmtpHost`.
+- **An address that the mail server always refuses** (a mistyped domain) stays not delivered however often it is resent.
+  The page never says whose link it is, so the remedy is to withdraw the campaign and invite again. The worker's log names
+  the address: `Email to … failed after 3 attempts. Message dropped.`
+- **Rolling back** (`Down`) drops the three columns and the check; nothing else reads them.
+
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):

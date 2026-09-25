@@ -104,8 +104,8 @@ public sealed class RemoveMsfInvitationCommandHandler : IRequestHandler<RemoveMs
     /// The refusal of a campaign that has opened since the page read it: open, closed, under review or released. (T247)
     /// </summary>
     public const string OnlyFromADraft =
-        "Invitees can only be removed while a campaign is in draft. This one has been opened, and each invitee has been " +
-        "emailed a link to respond. Nothing has been changed.";
+        "Invitees can only be removed while a campaign is in draft. This one has been opened, and each invitee is sent " +
+        "a link to respond. Nothing has been changed.";
 
     /// <summary>
     /// The refusal of a campaign that has been withdrawn, from a draft or once open. It says nothing of links, since a
