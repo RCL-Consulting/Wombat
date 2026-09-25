@@ -36,352 +36,17 @@
           </NavLink>
         </div>
 
-        <AuthorizeView Roles="@($"{WombatRoles.Trainee},{WombatRoles.PendingTrainee}")" Context="traineeAuth">
+        @* Each of the user's roles adds its section's links, in the order of Sections below. A page two of their roles
+           offer appears once, where the first of those sections puts it (T178). *@
+        @foreach (var link in LinksFor(navUser.User))
+        {
           <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/activities/new">
-              <Icon Name="calendar" />
-              Activities
+            <NavLink class="nav-link" href="@link.Href">
+              <Icon Name="@link.Icon" />
+              @link.Label
             </NavLink>
           </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/activities/mine">
-              <Icon Name="file-text" />
-              My Activities
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        @* Trainee only: these pages do not admit a PendingTrainee, who would be refused (T141). *@
-        <AuthorizeView Roles="@WombatRoles.Trainee" Context="traineeOnlyAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/msf/my-reports">
-              <Icon Name="file-text" />
-              MSF Reports
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/my-reviews">
-              <Icon Name="file-text" />
-              Committee Reviews
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/portfolio/progress">
-              <Icon Name="book" />
-              My Progress
-            </NavLink>
-          </div>
-          @* T154: the portfolio review asks the trainee to export the period and hand the PDF to their reviewer. *@
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/portfolio/export">
-              <Icon Name="arrow-down" />
-              Export Portfolio
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@WombatRoles.Assessor" Context="assessorAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/activities/inbox">
-              <Icon Name="inbox" />
-              Activity Inbox
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/recent-activities">
-              <Icon Name="file-text" />
-              Recent Activities
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@WombatRoles.Coordinator" Context="coordinatorAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/invitations">
-              <Icon Name="users" />
-              Invitations
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/data-rights">
-              <Icon Name="shield" />
-              Data Rights
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/msf/campaigns">
-              <Icon Name="file-text" />
-              MSF Campaigns
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/reviews">
-              <Icon Name="file-text" />
-              Committee Reviews
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/decisions-due">
-              <Icon Name="calendar" />
-              Decisions Due
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/stalled-activities">
-              <Icon Name="alert-triangle" />
-              Stalled Activities
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin},{WombatRoles.CommitteeMember}")" Context="programmeAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/programme-trainees">
-              <Icon Name="users" />
-              Programme Trainees
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/panels">
-              <Icon Name="users" />
-              Decision Panels
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/reviews">
-              <Icon Name="file-text" />
-              Committee Reviews
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@($"{WombatRoles.SpecialityAdmin},{WombatRoles.SubSpecialityAdmin}")" Context="curriculumAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/curricula">
-              <Icon Name="book" />
-              Curriculum
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/star-review-queue">
-              <Icon Name="file-text" />
-              STAR Review Queue
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/decisions-due">
-              <Icon Name="calendar" />
-              Decisions Due
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@WombatRoles.CollegeAdmin" Context="collegeAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/specialities">
-              <Icon Name="settings" />
-              Specialities
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/epas">
-              <Icon Name="file-text" />
-              EPAs
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/curricula">
-              <Icon Name="book" />
-              Curricula
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@WombatRoles.InstitutionalAdmin" Context="institutionAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/adoptions">
-              <Icon Name="book" />
-              Curriculum Adoptions
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/epas">
-              <Icon Name="file-text" />
-              EPAs
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/curricula">
-              <Icon Name="book" />
-              Curricula
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/activity-types">
-              <Icon Name="file-text" />
-              Activity Types
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/entrustment-scales">
-              <Icon Name="award" />
-              Entrustment Scales
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/trainees">
-              <Icon Name="users" />
-              Trainees
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/assessors">
-              <Icon Name="users" />
-              Assessors
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/invitations">
-              <Icon Name="users" />
-              Invitations
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/users">
-              <Icon Name="users" />
-              Users
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/sso/group-mappings">
-              <Icon Name="key" />
-              SSO Mappings
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/audit">
-              <Icon Name="shield" />
-              Audit Log
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/panels">
-              <Icon Name="users" />
-              Decision Panels
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/reviews">
-              <Icon Name="file-text" />
-              Committee Reviews
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/decisions-due">
-              <Icon Name="calendar" />
-              Decisions Due
-            </NavLink>
-          </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="@WombatRoles.Administrator" Context="adminAuth">
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/colleges">
-              <Icon Name="award" />
-              Colleges
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/epas">
-              <Icon Name="file-text" />
-              EPAs
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/curricula">
-              <Icon Name="book" />
-              Curricula
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/institutions">
-              <Icon Name="settings" />
-              Institutions
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/invitations">
-              <Icon Name="users" />
-              Invitations
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/users">
-              <Icon Name="users" />
-              Users
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/activity-types">
-              <Icon Name="file-text" />
-              Activity Types
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/entrustment-scales">
-              <Icon Name="award" />
-              Entrustment Scales
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/jobs">
-              <Icon Name="clock" />
-              Scheduled Jobs
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/sso/group-mappings">
-              <Icon Name="key" />
-              SSO Mappings
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/audit">
-              <Icon Name="shield" />
-              Audit Log
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/panels">
-              <Icon Name="users" />
-              Decision Panels
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/reviews">
-              <Icon Name="file-text" />
-              Committee Reviews
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/committee/decisions-due">
-              <Icon Name="calendar" />
-              Decisions Due
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/data-rights">
-              <Icon Name="shield" />
-              Data Rights
-            </NavLink>
-          </div>
-          <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/placeholder/system">
-              <Icon Name="settings" />
-              System
-            </NavLink>
-          </div>
-        </AuthorizeView>
+        }
 
         <div class="nav-item px-3">
           <form action="/account/logout" method="post">
@@ -414,5 +79,102 @@
     {
       IsNavMenuExpanded = false;
     }
+  }
+
+  private sealed record NavItem(string Href, string Label, string Icon);
+
+  private sealed record NavSection(string[] Roles, NavItem[] Items);
+
+  // One entry per page, so a page has one label and one icon wherever it is offered. Every label is unique, so a user
+  // holding several roles never sees two links with the same name (T178).
+  private static readonly NavItem NewActivity = new("/activities/new", "Activities", "calendar");
+  private static readonly NavItem MyActivities = new("/activities/mine", "My Activities", "file-text");
+  private static readonly NavItem MyMsfReports = new("/msf/my-reports", "MSF Reports", "file-text");
+  private static readonly NavItem MyCommitteeReviews = new("/committee/my-reviews", "My Committee Reviews", "file-text");
+  private static readonly NavItem MyProgress = new("/portfolio/progress", "My Progress", "book");
+  private static readonly NavItem ExportPortfolio = new("/portfolio/export", "Export Portfolio", "arrow-down");
+  private static readonly NavItem ActivityInbox = new("/activities/inbox", "Activity Inbox", "inbox");
+  private static readonly NavItem RecentActivities = new("/placeholder/recent-activities", "Recent Activities", "file-text");
+  private static readonly NavItem DataRightsRequests = new("/admin/data-rights", "Data Rights Requests", "shield");
+  private static readonly NavItem MsfCampaigns = new("/msf/campaigns", "MSF Campaigns", "file-text");
+  private static readonly NavItem CommitteeReviews = new("/committee/reviews", "Committee Reviews", "file-text");
+  private static readonly NavItem DecisionsDue = new("/committee/decisions-due", "Decisions Due", "calendar");
+  private static readonly NavItem StalledActivities = new("/placeholder/stalled-activities", "Stalled Activities", "alert-triangle");
+  private static readonly NavItem ProgrammeTrainees = new("/placeholder/programme-trainees", "Programme Trainees", "users");
+  private static readonly NavItem DecisionPanels = new("/committee/panels", "Decision Panels", "users");
+  private static readonly NavItem StarReviewQueue = new("/placeholder/star-review-queue", "STAR Review Queue", "file-text");
+  private static readonly NavItem Specialities = new("/admin/specialities", "Specialities", "settings");
+  private static readonly NavItem Epas = new("/admin/epas", "EPAs", "file-text");
+  private static readonly NavItem Curricula = new("/admin/curricula", "Curricula", "book");
+  private static readonly NavItem CurriculumAdoptions = new("/admin/adoptions", "Curriculum Adoptions", "book");
+  private static readonly NavItem ActivityTypes = new("/admin/activity-types", "Activity Types", "file-text");
+  private static readonly NavItem EntrustmentScales = new("/admin/entrustment-scales", "Entrustment Scales", "award");
+  private static readonly NavItem Trainees = new("/admin/trainees", "Trainees", "users");
+  private static readonly NavItem Assessors = new("/admin/assessors", "Assessors", "users");
+  private static readonly NavItem Invitations = new("/admin/invitations", "Invitations", "users");
+  private static readonly NavItem Users = new("/admin/users", "Users", "users");
+  private static readonly NavItem SsoMappings = new("/admin/sso/group-mappings", "SSO Mappings", "key");
+  private static readonly NavItem AuditLog = new("/admin/audit", "Audit Log", "shield");
+  private static readonly NavItem Colleges = new("/admin/colleges", "Colleges", "award");
+  private static readonly NavItem Institutions = new("/admin/institutions", "Institutions", "settings");
+  private static readonly NavItem ScheduledJobs = new("/admin/jobs", "Scheduled Jobs", "clock");
+  private static readonly NavItem SystemSettings = new("/placeholder/system", "System", "settings");
+
+  // A section offers a link only if the link's page admits every role of the section: NavMenuAuthorizationTests judges
+  // each rendered link against its page's [Authorize] for every role. DESIGN.md § The NavMenu tabulates the result.
+  private static readonly NavSection[] Sections =
+  [
+    new([WombatRoles.Trainee, WombatRoles.PendingTrainee], [NewActivity, MyActivities]),
+
+    // Trainee only: these pages do not admit a PendingTrainee (T141). T154: the portfolio review asks the trainee to
+    // export the period and hand the PDF to their reviewer.
+    new([WombatRoles.Trainee], [MyMsfReports, MyCommitteeReviews, MyProgress, ExportPortfolio]),
+
+    new([WombatRoles.Assessor], [ActivityInbox, RecentActivities]),
+
+    // Not Invitations: its page admits only an Administrator or an InstitutionalAdmin (T178).
+    new([WombatRoles.Coordinator], [DataRightsRequests, MsfCampaigns, CommitteeReviews, DecisionsDue, StalledActivities]),
+
+    new(
+      [WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin, WombatRoles.CommitteeMember],
+      [ProgrammeTrainees, DecisionPanels, CommitteeReviews]),
+
+    // Not Curricula: the national catalogue admits an Administrator, a CollegeAdmin or an InstitutionalAdmin (T178).
+    new([WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin], [StarReviewQueue, DecisionsDue]),
+
+    new([WombatRoles.CollegeAdmin], [Specialities, Epas, Curricula]),
+
+    new(
+      [WombatRoles.InstitutionalAdmin],
+      [
+        CurriculumAdoptions, Epas, Curricula, ActivityTypes, EntrustmentScales, Trainees, Assessors, Invitations, Users,
+        SsoMappings, AuditLog, DecisionPanels, CommitteeReviews, DecisionsDue
+      ]),
+
+    new(
+      [WombatRoles.Administrator],
+      [
+        Colleges, Epas, Curricula, Institutions, Invitations, Users, ActivityTypes, EntrustmentScales, ScheduledJobs,
+        SsoMappings, AuditLog, DecisionPanels, CommitteeReviews, DecisionsDue, DataRightsRequests, SystemSettings
+      ])
+  ];
+
+  private static List<NavItem> LinksFor(System.Security.Claims.ClaimsPrincipal user)
+  {
+    var offered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    var links = new List<NavItem>();
+
+    foreach (var section in Sections.Where(section => section.Roles.Any(user.IsInRole)))
+    {
+      foreach (var item in section.Items)
+      {
+        if (offered.Add(item.Href))
+        {
+          links.Add(item);
+        }
+      }
+    }
+
+    return links;
   }
 }

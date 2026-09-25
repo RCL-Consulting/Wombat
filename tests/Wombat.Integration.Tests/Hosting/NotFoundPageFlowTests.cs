@@ -51,6 +51,8 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
     [InlineData("/no-such-page")]
     [InlineData("/admin/forms")] // retired by T145, where this was found
     [InlineData("/activities/no/such/page?from=a-bookmark")]
+    [InlineData("/placeholder/activities")] // a stub T178 retired: the page it stood in for exists
+    [InlineData("/placeholder/no-such-feature")] // the placeholder's route matches, but it stands in for nothing
     public async Task ASignedInUser_OpeningAnUnknownAddress_GetsTheAppsPageNotFoundPage_WithStatus404(string address)
     {
         using var browser = NewBrowser();
@@ -80,6 +82,27 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
         var nonce = Regex.Match(policy, "'nonce-([^']+)'").Groups[1].Value;
         nonce.Should().NotBeNullOrEmpty();
         page.QuerySelector("script[type=importmap]")!.GetAttribute("nonce").Should().Be(nonce);
+    }
+
+    /// <summary>
+    /// A placeholder the nav still links answers as before, with its own heading and status 200: only a feature the
+    /// placeholder does not stand in for is Page not found (T178). Named in any case, as the route itself is matched.
+    /// </summary>
+    [Theory]
+    [InlineData("/placeholder/recent-activities")]
+    [InlineData("/placeholder/Recent-Activities")]
+    public async Task ASignedInUser_OpeningAPlaceholderTheNavLinks_GetsItsComingSoonPage(string address)
+    {
+        using var browser = NewBrowser();
+        await SignInAsANewAssessorAsync(browser);
+
+        using var response = await LoadPageAsync(browser, address);
+        var html = await response.Content.ReadAsStringAsync();
+        var page = Parse(html);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, html);
+        page.QuerySelector("h1")!.TextContent.Should().Be("Recent Activities", html);
+        page.QuerySelector(".state-panel-title")!.TextContent.Should().Be("Coming soon");
     }
 
     /// <summary>

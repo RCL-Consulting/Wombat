@@ -162,41 +162,65 @@ Copy `MainLayout.razor.css` from ClinicAssist with the class names unchanged. On
 
 ## The NavMenu
 
-- Brand row at the top with `Wombat` wordmark (no icon until a logo exists).
-- Nav items are `<NavLink class="nav-link">` inside `<div class="nav-item px-3">`, wrapped in `<AuthorizeView>` blocks so each item only renders for authorized roles.
+- Brand row at the top: the mark (`/brand/wombat-mark.svg`, an `<img>`, § Logo & brand assets) and the `Wombat`
+  wordmark.
+- Nav items are `<NavLink class="nav-link">` inside `<div class="nav-item px-3">`. Home, My Account, Data Rights and
+  Logout are written out; the role links come from `Sections` in `NavMenu.razor`'s `@code`, a list of (roles, links)
+  rendered inside the signed-in `<AuthorizeView>` (T178). Each page is declared once there, so it has one label and one
+  icon wherever it is offered.
 - Active and hover states are in `NavMenu.razor.css`: `rgba(255,255,255,0.37)` for active, `rgba(255,255,255,0.1)` for hover, `#d7d7d7` default text.
-- Icons are inline SVG background-images on a sized `<span>` (the "CSS background-image SVG" pattern from ClinicAssist) — **no Bootstrap Icons font**. Put one CSS rule per icon under `NavMenu.razor.css`.
+- Each item's icon is the shared `<Icon Name="…" />` (§ Icons), sized and spaced by `NavMenu.razor.css`'s
+  `.nav-item ::deep .icon` rule — **no Bootstrap Icons font**. A role link names its icon in its `Sections` entry.
 - Logout is a `<form action="/account/logout" method="post">` with an `AntiforgeryToken`, rendered as a full-width `.nav-logout-button`.
 - Mobile: a checkbox-backed `.navbar-toggler` controls visibility. No JavaScript.
 
-The nav item list is role-driven. The initial set:
+The nav item list is role-driven. Each row is what that role alone sees, in menu order; `…` in the "Everyone signed in"
+row is where the role's own links go. `NavMenuAuthorizationTests` renders the nav for every row and fails when the two
+differ, so a change to the nav is a change to this table (T178).
 
-| Role                        | Items                                                    |
-|-----------------------------|----------------------------------------------------------|
-| Everyone (authenticated)    | Home, My Account, Logout                                 |
-| Trainee                     | Activities, My Activities, MSF Reports, Committee Reviews, My Progress |
-| PendingTrainee              | Activities, My Activities                                |
-| Assessor                    | Activity Inbox, Recent Activities                        |
-| Coordinator                 | Invitations, Data Rights, MSF Campaigns, Committee Reviews, Decisions Due, Stalled Activities |
-| SpecialityAdmin / SubSpec.  | Programme Trainees, Curriculum, STAR Review Queue, Decisions Due |
-| InstitutionalAdmin          | Institution, Specialities, Users, Decisions Due          |
-| Administrator               | Institutions, Invitations, Users, Activity Types, System, Decisions Due |
-| CommitteeMember             | Programme Trainees (read-only)                           |
+| Role                 | Items |
+|----------------------|-------|
+| Signed out           | Home, Sign in |
+| Everyone signed in   | Home, My Account, Data Rights, …, Logout |
+| Trainee              | Activities, My Activities, MSF Reports, My Committee Reviews, My Progress, Export Portfolio |
+| PendingTrainee       | Activities, My Activities |
+| Assessor             | Activity Inbox, Recent Activities |
+| Coordinator          | Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due, Stalled Activities |
+| CommitteeMember      | Programme Trainees, Decision Panels, Committee Reviews |
+| SpecialityAdmin      | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
+| SubSpecialityAdmin   | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
+| CollegeAdmin         | Specialities, EPAs, Curricula |
+| InstitutionalAdmin   | Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment Scales, Trainees, Assessors, Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due |
+| Administrator        | Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due, Data Rights Requests, System |
+
+Every link opens a page that admits the role offering it. `NavMenuAuthorizationTests` judges each rendered link against
+its page's `[Authorize]` through the app's own policies, for every role in `WombatRoles.All`. So the Coordinator is not
+offered Invitations and the speciality admins are not offered Curricula: those pages refuse them (T178).
+
+A user holding several roles sees each of their roles' rows in the table's order, and a page an earlier row already
+offered is not repeated. `NavMenuAuthorizationTests` checks that for every pair of roles and for all of them at once.
+No two links share a label, so the union never shows the same name twice. That is why the trainee's own reviews are
+"My Committee Reviews" beside the staff's "Committee Reviews", and the queue of other people's requests is "Data Rights
+Requests" beside everyone's own "Data Rights".
+
+Recent Activities, Stalled Activities, Programme Trainees, STAR Review Queue and System still open the
+`/placeholder/{Feature}` stub. `PlaceholderPage.Headings` lists exactly the features the nav links there, so a feature
+that gains a real page loses its placeholder entry when its link moves. Any other `/placeholder/…` address is Page not
+found, with status 404 (`NavigationManager.NotFound()`), not a "Coming soon" for a page that exists.
 
 Decisions Due (`/committee/decisions-due`, T131 slice 6) is offered to the roles that schedule committee reviews and to
 no other: a CommitteeMember is not offered it, and its page does not admit one. `NavMenuAuthorizationTests` checks both.
 
-MSF Reports, Committee Reviews and My Progress sit in their own Trainee-only `AuthorizeView`, outside the block
-shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the shared
-block only if its page admits PendingTrainee; `NavMenuAuthorizationTests` checks every link a trainee or pending
-trainee is offered against its page's `[Authorize]`.
+MSF Reports, My Committee Reviews, My Progress and Export Portfolio sit in their own Trainee-only section, apart from
+the one shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the
+shared section only if its page admits PendingTrainee.
 
 MSF coverage (`/msf/coverage`, T210) is not a nav item. It is a planning aid for the campaigns, so it is reached from
 the MSF campaign list's header, an outline "MSF coverage" link (`#msf-coverage-link`) beside New campaign, and its own
 header links back ("Back to campaigns"). The link is not offered to someone who holds Trainee, whom the page shows no
 programme (`GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo`).
 
-New items go in this table and then in `NavMenu.razor`, not anywhere else.
+New items go in this table and then in `NavMenu.razor`'s `Sections`, not anywhere else.
 
 ## Button system
 
@@ -1156,7 +1180,7 @@ Used in the Administrator dashboard system-health card to show service status at
 
 - One `Icon.razor` wraps `<svg>` + `<use href="/icons/{name}.svg#i" />` or inline path data.
 - Icons live under `src/Wombat.Web/wwwroot/icons/` as individual SVG files, copied from Lucide (MIT licensed, compatible with AGPL-3.0).
-- Nav icons are the exception — they use CSS background-image data URIs (`NavMenu.razor.css`) so hovering repaints the whole strip cheaply.
+- The nav uses the same `Icon.razor`; `NavMenu.razor.css` only sizes and spaces it (§ The NavMenu).
 - **Do not load a Bootstrap Icons font.** ClinicAssist tried and the `<i class="bi bi-*">` approach renders nothing without the font, silently. Repeating that mistake is not on the table.
 
 ## Page-level patterns
