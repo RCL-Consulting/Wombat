@@ -10,7 +10,14 @@ namespace Wombat.Application.Features.Curricula.Quota;
 /// </summary>
 public static class QuotaCalendar
 {
-    public static DateOnly Today() => ProgrammeCalendar.DateOf(DateTime.UtcNow);
+    public static DateOnly Today() => Today(TimeProvider.System);
+
+    /// <summary>Today on the South African calendar, by <paramref name="clock" />, so a test can pin 22:30 UTC.</summary>
+    public static DateOnly Today(TimeProvider clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        return ProgrammeCalendar.DateOf(clock.GetUtcNow().UtcDateTime);
+    }
 }
 
 /// <summary>One stored semester bucket, reduced to what the quota reads.</summary>
@@ -40,7 +47,10 @@ public sealed record QuotaWindowTally(
     DateOnly? LastObservedOn,
     bool LastObservedOnDeclared)
 {
-    /// <summary>The target applies: the trainee is neither exempt (D14) nor not yet started.</summary>
+    /// <summary>
+    /// The target applies: the trainee is not exempt (D14 at the start, D49 at the end), not yet started, nor past the
+    /// programme's end.
+    /// </summary>
     public bool Applies => Window.Status == QuotaWindowStatus.Counting;
 
     public bool IsMet => Applies && Count >= Target;
@@ -60,26 +70,36 @@ public sealed record ItemQuotaProgress(QuotaWindowTally Current, QuotaWindowTall
 /// The one place a curriculum item's stored semester buckets are read against its target (T130).
 /// </summary>
 /// <remarks>
+/// <para>
 /// Pure: dates in, figures out. Every progress reader goes through it: the trainee's progress page, the
-/// trainee dashboard, and the committee and coverage dashboards. So a committee member sees the number the
-/// trainee sees. Before T130 the same arithmetic was written five times, in three different ways.
+/// trainee dashboard, the committee and coverage dashboards, and the portfolio export. So a committee member sees the
+/// number the trainee sees. Before T130 the same arithmetic was written five times, in three different ways.
+/// </para>
+/// <para>
+/// <b>Which windows hold a target</b> is <see cref="QuotaWindow.For" />'s, with both ends of the programme: D14 and D42
+/// at the start, D49 at the end (T209). Every reader passes the programme's actual end (<c>TraineeProfile.EndedOn</c>),
+/// which is null while it runs, so no reader can hold a graduate's cut-short last period, or a period after they left,
+/// to a target.
+/// </para>
 /// </remarks>
 public static class QuotaProgressCalculator
 {
+    /// <param name="programmeEnd">The day the programme actually ended (<c>TraineeProfile.EndedOn</c>), or null while it runs.</param>
     public static ItemQuotaProgress For(
         int curriculumItemId,
         QuotaPeriod quotaPeriod,
         int requiredCount,
         IEnumerable<QuotaProgressRow> rows,
         DateOnly programmeStart,
+        DateOnly? programmeEnd,
         DateOnly asOf)
     {
         var itemRows = rows.Where(row => row.CurriculumItemId == curriculumItemId).ToList();
 
-        var window = QuotaWindow.For(quotaPeriod, asOf, programmeStart);
+        var window = QuotaWindow.For(quotaPeriod, asOf, programmeStart, programmeEnd);
         var current = Tally(window, requiredCount, itemRows);
 
-        var preceding = window.Preceding(programmeStart);
+        var preceding = window.Preceding(programmeStart, programmeEnd);
         var previous = preceding is null ? null : Tally(preceding, requiredCount, itemRows);
 
         return new ItemQuotaProgress(current, previous);
@@ -104,12 +124,13 @@ public static class QuotaProgressCalculator
         int requiredCount,
         IEnumerable<QuotaProgressRow> rows,
         DateOnly programmeStart,
+        DateOnly? programmeEnd,
         DateOnly from,
         DateOnly asOf)
     {
         var itemRows = rows.Where(row => row.CurriculumItemId == curriculumItemId).ToList();
 
-        var window = QuotaWindow.For(quotaPeriod, asOf, programmeStart);
+        var window = QuotaWindow.For(quotaPeriod, asOf, programmeStart, programmeEnd);
         if (window.End < from)
         {
             return [];
@@ -117,9 +138,9 @@ public static class QuotaProgressCalculator
 
         var tallies = new List<QuotaWindowTally> { Tally(window, requiredCount, itemRows) };
 
-        for (var preceding = window.Preceding(programmeStart);
+        for (var preceding = window.Preceding(programmeStart, programmeEnd);
              preceding is not null && preceding.End >= from && preceding.Status != QuotaWindowStatus.NotStarted;
-             preceding = preceding.Preceding(programmeStart))
+             preceding = preceding.Preceding(programmeStart, programmeEnd))
         {
             tallies.Add(Tally(preceding, requiredCount, itemRows));
         }
@@ -170,7 +191,10 @@ public static class QuotaText
     /// <summary>"January to June".</summary>
     public static string Months(AcademicPeriod period) => MonthRange(period.Start, period.NominalEnd);
 
-    /// <summary>The first window a trainee is held to: "semester 1, 2027" or "the 2027 academic year".</summary>
+    /// <summary>
+    /// The first window a trainee is held to: "semester 1, 2027" or "the 2027 academic year". Null when there is none
+    /// (<see cref="QuotaWindow.FirstCountedPeriodFor" />).
+    /// </summary>
     public static string? FirstCountedName(QuotaWindow window)
         => window.FirstCountedPeriod is not { } first
             ? null

@@ -290,6 +290,46 @@ public sealed class QuotaProgressRenderingTests : TestContext
     }
 
     [Fact]
+    public void AWindowTheProgrammeEndedIn_OrAfter_ReadsAsNoTarget_NeverAsALateStartOrAShortfall()
+    {
+        // T209, D49. The one fixture here no reader builds today: the page reads the active profile only, and an active
+        // programme has not ended. It pins the copy for the statuses D49 added, so that no reader handing the page one can
+        // make an ended programme read "you started part-way through", "targets start with" or "short". Programme ended
+        // 15 May 2026: semester 1 was cut short before June, semester 2 is after the end, and the year was cut short
+        // before November.
+        var cut = RenderMyProgress(Summary(
+            AsOf,
+            programmeStart: new(2025, 1, 1),
+            stage: 2,
+            [
+                Item(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3,
+                    NoTargetAfterTheEnd(Semester2Of2026, QuotaWindowStatus.AfterProgrammeEnd, count: 2, target: 3),
+                    previous: NoTargetAfterTheEnd(Semester1Of2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 1, target: 3)),
+                Item(11, "PAED-011", "Managing population health challenges", QuotaPeriod.AcademicYear, 1,
+                    NoTargetAfterTheEnd(Year2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 0, target: 1),
+                    previous: Counting(Year2025, count: 1, target: 1, minimumReached: 1))
+            ]));
+
+        var semester = ItemCard(cut, "PAED-001");
+        Text(semester).Should().Contain("No target: this is after your programme ended · 2 recorded");
+        Text(semester).Should().Contain("Semester 1, 2026: no target (your programme ended part-way through) · 1 recorded");
+        semester.QuerySelector(".progress-bar").Should().BeNull("no target applies, so there is nothing to fill");
+
+        var year = ItemCard(cut, "PAED-011");
+        Text(year).Should().Contain("No target in 2026 · 0 recorded · your programme ended part-way through");
+        Text(year).Should().Contain("2025 academic year: 1 of 1, met");
+        year.QuerySelector(".progress-bar").Should().BeNull();
+
+        foreach (var card in new[] { semester, year })
+        {
+            Text(card).Should().NotContain("started part-way");
+            Text(card).Should().NotContain("targets start with");
+            Text(card).Should().NotContain("short");
+            Text(card).Should().NotContain("No target yet");
+        }
+    }
+
+    [Fact]
     public void AProgrammeNotYetStarted_SaysWhenItStarts_AndWhichWindowsCountFirst()
     {
         var cut = RenderMyProgress(NotYetStarted());
@@ -863,6 +903,25 @@ public sealed class QuotaProgressRenderingTests : TestContext
             LastObservedOnDeclared: count > 0,
             firstCountedName,
             firstCountedOn);
+
+    /// <summary>A window D49 holds to no target: the programme ended in it before its last month, or before it began.</summary>
+    private static QuotaWindowDto NoTargetAfterTheEnd(WindowShape window, QuotaWindowStatus status, int count, int target)
+        => new(
+            window.Name,
+            window.Months,
+            window.Start,
+            window.NominalEnd,
+            status,
+            count,
+            target,
+            IsMet: false,
+            Shortfall: 0,
+            PercentOfTarget: 0,
+            MinimumLevelReachedCount: count,
+            LastObservedOn: count > 0 ? window.Start.AddDays(10) : null,
+            LastObservedOnDeclared: count > 0,
+            FirstCountedName: null,
+            FirstCountedOn: null);
 
     private static QuotaWindowDto NotStarted(WindowShape window, int target, string firstCountedName, DateOnly firstCountedOn)
         => new(

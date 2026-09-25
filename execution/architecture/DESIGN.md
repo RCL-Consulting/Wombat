@@ -231,6 +231,15 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - The same holds on a form page whose confirmed action removes the button that opened the dialog: Deactivate on the EPA
   page is offered only on an active EPA, so once it deactivates, its result takes the focus (T196 review). An action
   that leaves its button, such as a refused deactivation or a Save, leaves the focus on it.
+- A destructive action on a form page that acts on a field (the trainee profile's Deactivate and Mark complete, which
+  each record the "Last day in the programme", T209 review) is an `.btn-outline` in the form's actions row whose
+  `ConfirmDialog` names the value it will record and says it cannot be changed afterwards. Its result goes to the page's
+  `.action-result` region, which takes the focus once it has answered, done or refused. A refusal's `Alert` has an `Id`
+  that the field names with `aria-describedby` (after its help, `FieldHelp.DescribedBy`) while the refusal stands; a
+  refusal of anything else on the page (Save) carries no such id, and the field does not name it. A date field bounded by
+  "today" defaults to today on the South African calendar (`QuotaCalendar.Today(TimeProvider)`), never the server's
+  `DateTime.Today`. It carries no `max`: the field sits inside the page's `EditForm`, and the browser would then refuse
+  Save over a field Save does not send. The server's refusal is the rule.
 
 ## Table system
 
@@ -501,7 +510,10 @@ Curriculum progress figures (T130) are always **a count against a target for a n
 "1 of 1 in 2026", "4 of 9 trainees met". Never a lifetime total, and never a mean percentage across trainees. Say
 "training year N" for `TraineeProfile.GetStage` and "Semester S, YYYY" / "YYYY academic year" for a quota window:
 the two are different concepts (D17), and the bare word "year" beside both is ambiguous. When a target is waived
-under the College's D14 rule, show the count and the date targets start, never a fraction and bar.
+under the College's D14 rule, show the count and the date targets start, never a fraction and bar. When the programme's
+end waives it (D49, T209: it ended in the window before the window's last month, or the window is after the end), show
+the count and why ("the programme ended part-way through", "after the programme ended"), never a fraction, a bar, "short"
+or "targets start with": the targets did not start later, they stopped.
 
 Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. Below `~900px` the `.dashboard-grid` auto-fit collapses everything to a single column.
 

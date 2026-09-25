@@ -21,6 +21,9 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
     private const int InstitutionA = 1;
     private const int InstitutionB = 2;
 
+    /// <summary>Noon UTC on 10 January 2030: 10 January in South Africa too.</summary>
+    private static readonly DateTimeOffset Now = new(2030, 1, 10, 12, 0, 0, TimeSpan.Zero);
+
     [Fact]
     public async Task Handle_RecordsCompletion_RemovesRole_AndEmails()
     {
@@ -30,7 +33,7 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
             .ReturnsAsync(new UserIdentityDetails("trainee-1", "molefe@kgk", "Lerato", "Molefe", InstitutionA, [], [], [WombatRoles.Trainee]));
         var email = new Mock<IEmailSender>();
 
-        var handler = new CompleteTraineeProfileCommandHandler(db, users.Object, email.Object);
+        var handler = Handler(db, users, email);
 
         await handler.Handle(
             new CompleteTraineeProfileCommand(1, new DateOnly(2029, 12, 15), TestPrincipals.Administrator()),
@@ -49,7 +52,7 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
         await using var db = SeededDb();
         var users = new Mock<IUserAdministrationService>();
         var email = new Mock<IEmailSender>();
-        var handler = new CompleteTraineeProfileCommandHandler(db, users.Object, email.Object);
+        var handler = Handler(db, users, email);
 
         var act = () => handler.Handle(
             new CompleteTraineeProfileCommand(1, new DateOnly(2029, 12, 15), TestPrincipals.InstitutionalAdmin(InstitutionB)),
@@ -59,6 +62,39 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
         (await db.Set<TraineeProfile>().SingleAsync(p => p.Id == 1)).IsActive.Should().BeTrue();
         users.Verify(s => s.RemoveRoleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_RefusesADayAfterToday_AndLeavesNothingToCommit_NorRemovesTheRole_NorEmails()
+    {
+        // T209 review: the profile ends now, and D49 reads the day. A graduation day still to come would be an end that has
+        // not happened. Refused before anything changes; the audit pipeline's save after the throw commits nothing.
+        await using var db = SeededDb();
+        var users = new Mock<IUserAdministrationService>();
+        var email = new Mock<IEmailSender>();
+
+        var act = () => Handler(db, users, email).Handle(
+            new CompleteTraineeProfileCommand(1, new DateOnly(2030, 1, 11), TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("The completion date cannot be after today (2030-01-10).");
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var profile = await db.Set<TraineeProfile>().SingleAsync(p => p.Id == 1);
+        profile.IsActive.Should().BeTrue();
+        profile.CompletedOn.Should().BeNull();
+        users.Verify(s => s.RemoveRoleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static CompleteTraineeProfileCommandHandler Handler(
+        ApplicationDbContext db, Mock<IUserAdministrationService> users, Mock<IEmailSender> email)
+        => new(db, users.Object, email.Object, new FixedClock(Now));
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 
     private static ApplicationDbContext SeededDb()

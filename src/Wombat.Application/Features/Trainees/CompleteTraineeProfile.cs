@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Trainees;
@@ -30,15 +31,18 @@ public sealed class CompleteTraineeProfileCommandHandler : IRequestHandler<Compl
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
     private readonly IEmailSender _emailSender;
+    private readonly TimeProvider _timeProvider;
 
     public CompleteTraineeProfileCommandHandler(
         IApplicationDbContext dbContext,
         IUserAdministrationService userAdministrationService,
-        IEmailSender emailSender)
+        IEmailSender emailSender,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _userAdministrationService = userAdministrationService;
         _emailSender = emailSender;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task Handle(CompleteTraineeProfileCommand request, CancellationToken cancellationToken)
@@ -55,7 +59,9 @@ public sealed class CompleteTraineeProfileCommandHandler : IRequestHandler<Compl
             throw new UnauthorizedAccessException("You do not have permission to complete this trainee profile.");
         }
 
-        profile.Complete(request.CompletedOn);
+        // Complete checks that the profile is active and that the day lies between the programme start and today (T209
+        // review: D49 reads it) before it changes anything, so a refusal leaves nothing for the audit pipeline to commit.
+        profile.Complete(request.CompletedOn, QuotaCalendar.Today(_timeProvider));
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         // Role transition: there is no Alumnus role, so the Trainee role is removed and the profile archived.

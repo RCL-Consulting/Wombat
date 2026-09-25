@@ -50,6 +50,15 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
             throw new UnauthorizedAccessException("You do not have permission to update this trainee profile.");
         }
 
+        // A recorded end (a completion or a deactivation day, T209) was checked against the start when it was recorded, so
+        // the start may not now move past it: the quota would read a programme that ended before it began, and the
+        // portfolio would print it as not started (T209 review). Checked before anything changes (the audit trap).
+        if (profile.EndedOn is { } endedOn && request.ProgrammeStartDate > endedOn)
+        {
+            throw new InvalidOperationException(
+                $"The programme start date cannot be after the trainee's last day in the programme ({endedOn:yyyy-MM-dd}).");
+        }
+
         var curriculum = await _dbContext.Set<Curriculum>()
             .Include(entity => entity.SubSpeciality)
                 .ThenInclude(entity => entity.Speciality)

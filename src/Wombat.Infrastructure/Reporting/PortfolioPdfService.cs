@@ -413,9 +413,10 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
     /// <para>
     /// <b>Which day.</b> <see cref="PortfolioEpaProgress.ReadOn" />: the export's last day, or today on the South African
     /// calendar when the export is open-ended or ends in the future (a future day would read a period that has not
-    /// happened), and never after a completed programme's completion day. Every window from that day's back to the one
-    /// containing the export's first day is listed (the whole programme when there is none), so an annual export shows
-    /// both of that year's semesters and a graduation export every one.
+    /// happened), and never after the day a completed or deactivated programme ended. Every window from that day's back
+    /// to the one containing the export's first day is listed (the whole programme when there is none), so an annual export
+    /// shows both of that year's semesters and a graduation export every one. The window the programme ended in holds no
+    /// target unless it ended in that window's last month (D49, T209), which the quota reader applies.
     /// </para>
     /// <para>
     /// <b>Scope.</b> The export was authorised for this trainee before this runs (<c>ExportPortfolio</c>, or the data

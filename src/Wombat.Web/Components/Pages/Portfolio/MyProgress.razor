@@ -241,8 +241,24 @@
   private static string WindowWords(TraineeCurriculumProgressDto item)
     => item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}";
 
+  /// <summary>
+  /// The window before this one, in words. A window with no target says why: the programme started part-way through
+  /// it (D14), or ended part-way through it before its last month (D49), or it is after the programme ended. This page
+  /// reads the active profile only, so today only the first can reach it; the others are worded so that no reader can
+  /// ever make an ended programme read as a late start.
+  /// </summary>
   private static string PreviousLine(QuotaWindowDto previous)
   {
+    if (previous.EndedPartWay)
+    {
+      return $"{previous.Name}: no target (your programme ended part-way through) · {previous.Count} recorded";
+    }
+
+    if (previous.IsAfterProgrammeEnd)
+    {
+      return $"{previous.Name}: no target (after your programme ended) · {previous.Count} recorded";
+    }
+
     if (!previous.Applies)
     {
       return $"{previous.Name}: no target (you started part-way through) · {previous.Count} recorded";
@@ -307,6 +323,19 @@
       {
         <p class="progress-row-meta">
           No target @WindowWords(item) · @current.Count recorded@(current.FirstCountedName is { } first ? $" · targets start with {first}" : string.Empty)
+        </p>
+      }
+      else if (current.EndedPartWay)
+      {
+        @* D49: the programme ended before this window's last month. Never "targets start with": they stopped. *@
+        <p class="progress-row-meta">
+          No target @WindowWords(item) · @current.Count recorded · your programme ended part-way through
+        </p>
+      }
+      else if (current.IsAfterProgrammeEnd)
+      {
+        <p class="progress-row-meta">
+          No target: this is after your programme ended · @current.Count recorded
         </p>
       }
       else

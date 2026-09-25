@@ -10,7 +10,8 @@ namespace Wombat.Infrastructure.Reporting;
 /// "Progress per EPA" (T169): for each EPA of the trainee's curriculum, the target and the count in every period the
 /// export covers, and the rated observations the entrustment trajectory draws for it. The figures are the progress
 /// page's, and so are its distinctions: a closed period is met or short, a period still running is a count so far with
-/// what is still to do by when, and a period the trainee was not held to says why.
+/// what is still to do by when, and a period the trainee was not held to says why: the programme started or ended
+/// part-way through it (D14, D49), or it is outside the programme.
 /// </summary>
 /// <remarks>
 /// One row per EPA, with the figures as labelled lines in the right-hand cell. [T166]'s entrustment standing and
@@ -77,10 +78,21 @@ internal static class EpaProgressSectionComponent
 
         var day = QuotaText.LongDate(progress.AsOf);
         var stage = progress.Targets.TraineeStage is { } year ? $" (training year {year})" : string.Empty;
+        // D49: the end waives the period it falls in unless it falls in that period's last month. Said once, here, beside
+        // the day, so a reader of a period line that says "the programme ended part-way through" knows the rule behind it.
+        // The section is read as on the last day (PortfolioEpaProgress.ReadOn), so a period that began after it is not
+        // listed at all, even with encounters credited in it; the second sentence says so rather than leaving a reader
+        // to wonder where they went (T209 review).
+        const string endRule = "A period the programme ended in before that period's last month has no target. " +
+                               "No period that began after the programme ended is listed: it is outside the programme.";
         var programme = progress.Programme switch
         {
-            { State: PortfolioProgrammeState.Completed, CompletedOn: { } completedOn } =>
-                $"The trainee completed the programme on {QuotaText.LongDate(completedOn)}. Targets as on {day}{stage}.",
+            { State: PortfolioProgrammeState.Completed, EndedOn: { } completedOn } =>
+                $"The trainee completed the programme on {QuotaText.LongDate(completedOn)}. Targets as on {day}{stage}. " +
+                endRule,
+            { State: PortfolioProgrammeState.Inactive, EndedOn: { } deactivatedOn } =>
+                $"The trainee's programme was ended without being completed, on {QuotaText.LongDate(deactivatedOn)}. " +
+                $"Targets as on {day}{stage}. {endRule}",
             { State: PortfolioProgrammeState.Inactive } =>
                 $"The trainee's programme is inactive: it was ended without being completed, on a day Wombat does not " +
                 $"record. Targets as on {day}{stage}, so periods after it ended are listed too.",
@@ -165,8 +177,9 @@ internal static class EpaProgressSectionComponent
     /// One period, in the progress page's words (<c>MyProgress</c>). A period that ended before
     /// <paramref name="today" /> is met or short (<c>PreviousLine</c>). One still running is a count so far and, while
     /// the programme is in progress, what is still to do by when: the College's last day, or in December, when the
-    /// College's year is over but encounters still count (D40). A waived period (D14) and one before the programme
-    /// started say so.
+    /// College's year is over but encounters still count (D40). A waived period says why: the programme started part-way
+    /// through it (D14), or ended part-way through it, before its last month (D49). One before the programme started, or
+    /// after it ended, says so. None of them is ever short.
     /// </summary>
     /// <param name="programmeActive">
     /// False for a completed or deactivated programme: the trainee owes nothing more, so a running period is its count
@@ -183,6 +196,12 @@ internal static class EpaProgressSectionComponent
 
             case QuotaWindowStatus.ExemptPartialPeriod:
                 return $"no target (started part-way through), {period.Count} recorded";
+
+            case QuotaWindowStatus.ExemptProgrammeEnded:
+                return $"no target (the programme ended part-way through), {period.Count} recorded";
+
+            case QuotaWindowStatus.AfterProgrammeEnd:
+                return $"no target (after the programme ended), {period.Count} recorded";
 
             default:
                 var atMinimum = period.Count > 0

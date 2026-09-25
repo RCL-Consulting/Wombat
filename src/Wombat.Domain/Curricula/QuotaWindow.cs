@@ -1,7 +1,7 @@
 namespace Wombat.Domain.Curricula;
 
 /// <summary>
-/// Whether a trainee is held to a target in a given window (T130, D14).
+/// Whether a trainee is held to a target in a given window (T130, D14; T209, D49).
 /// </summary>
 public enum QuotaWindowStatus
 {
@@ -16,12 +16,25 @@ public enum QuotaWindowStatus
     ExemptPartialPeriod = 1,
 
     /// <summary>The whole window lies before the trainee's programme start, or the day asked about does.</summary>
-    NotStarted = 2
+    NotStarted = 2,
+
+    /// <summary>
+    /// The programme ended (completion or deactivation) inside the window, before the window's last month. D49 exempts
+    /// the window, as D14 exempts a late start's first one. Encounters in it are still credited and still shown. Only the
+    /// target is waived.
+    /// </summary>
+    ExemptProgrammeEnded = 3,
+
+    /// <summary>
+    /// The whole window lies after the programme ended. It is outside the programme, so it holds no target and is never
+    /// short (D49). Anything credited in it is still shown.
+    /// </summary>
+    AfterProgrammeEnd = 4
 }
 
 /// <summary>
 /// The window a curriculum item's target is measured over on a given day, and whether the target applies to
-/// this trainee. This is the one implementation of the College's D14 rule.
+/// this trainee. This is the one implementation of the College's D14 rule, and of D49, its mirror at the programme's end.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -51,6 +64,16 @@ public enum QuotaWindowStatus
 /// <para>
 /// Both rules live in <see cref="LatestOnTimeStart" />. Changing them needs no rebuild.
 /// </para>
+/// <para>
+/// <b>The end of the programme (D49, provisional, T209).</b> A programme that completion or deactivation ends inside a
+/// window, before the window's last month, is exempt for it, as a late start is for its first window: the College
+/// published no figure for part of a period, and pro-rating would invent one. An end in the window's last month (June
+/// for semester 1, November for semester 2 and for the academic year, on the College's calendar) or later holds the full
+/// target. A window that starts after the end is outside the programme: never short. The end is the day the programme
+/// actually ended (<c>TraineeProfile.EndedOn</c>), never the expected completion date, which is only a plan. The rule
+/// lives in <see cref="EarliestFullPeriodEnd" />. Unlike D42 it is the same for both kinds, as D49 words it: an
+/// academic-year target is waived for an end in October, although D42 holds a start in April to one.
+/// </para>
 /// </remarks>
 public sealed record QuotaWindow(
     QuotaPeriod Kind,
@@ -76,12 +99,23 @@ public sealed record QuotaWindow(
 
     /// <summary>
     /// The window of <paramref name="kind" /> that contains <paramref name="day" />, judged for a trainee who
-    /// started the programme on <paramref name="programmeStart" />. Total: it never throws for any pair of dates.
+    /// started the programme on <paramref name="programmeStart" /> and, when it has ended, left it on
+    /// <paramref name="programmeEnd" />. Total: it never throws for any dates, in any order.
     /// </summary>
-    public static QuotaWindow For(QuotaPeriod kind, DateOnly day, DateOnly programmeStart)
+    /// <param name="programmeEnd">
+    /// The day the programme actually ended (<c>TraineeProfile.EndedOn</c>), or null while it is running. Null reproduces
+    /// the rule before D49 exactly, which is what a caller that reads only running programmes, or a committee's decision
+    /// cadence rather than a target, passes.
+    /// </param>
+    public static QuotaWindow For(QuotaPeriod kind, DateOnly day, DateOnly programmeStart, DateOnly? programmeEnd = null)
     {
         var semesters = SemestersOfWindowContaining(kind, day);
-        var firstCounted = FirstCountedPeriodFor(kind, programmeStart);
+        var firstCounted = FirstCountedPeriodFor(kind, programmeStart, programmeEnd);
+
+        if (programmeEnd is { } lastDay && semesters[0].Start > lastDay)
+        {
+            return new QuotaWindow(kind, semesters, QuotaWindowStatus.AfterProgrammeEnd, firstCounted);
+        }
 
         if (day < programmeStart)
         {
@@ -93,14 +127,22 @@ public sealed record QuotaWindow(
             return new QuotaWindow(kind, semesters, QuotaWindowStatus.ExemptPartialPeriod, firstCounted);
         }
 
+        if (programmeEnd is { } end && end < EarliestFullPeriodEnd(semesters))
+        {
+            return new QuotaWindow(kind, semesters, QuotaWindowStatus.ExemptProgrammeEnded, firstCounted);
+        }
+
         return new QuotaWindow(kind, semesters, QuotaWindowStatus.Counting, firstCounted);
     }
 
-    /// <summary>The window of the same kind immediately before this one, judged for the same trainee, or null at the start of time.</summary>
-    public QuotaWindow? Preceding(DateOnly programmeStart)
+    /// <summary>
+    /// The window of the same kind immediately before this one, judged for the same trainee, or null at the start of time.
+    /// Pass the <paramref name="programmeEnd" /> this window was judged with.
+    /// </summary>
+    public QuotaWindow? Preceding(DateOnly programmeStart, DateOnly? programmeEnd = null)
     {
         var previous = Semesters[0].Previous();
-        return previous is null ? null : For(Kind, previous.Value.End, programmeStart);
+        return previous is null ? null : For(Kind, previous.Value.End, programmeStart, programmeEnd);
     }
 
     /// <summary>
@@ -113,18 +155,37 @@ public sealed record QuotaWindow(
             : AcademicPeriod.SecondSemesterStart(window[0].Year).AddDays(-1);
 
     /// <summary>
-    /// The first semester of the first window of <paramref name="kind" /> whose target applies to a trainee who
-    /// started on <paramref name="programmeStart" />. Null only when no later window is representable.
+    /// The earliest programme end that still holds a window to its full target: the first day of the window's last month
+    /// on the College's calendar (1 June for semester 1; 1 November for semester 2 and for the academic year, whose
+    /// December is folded in, D40). An earlier end inside the window exempts it. The one place D49's rule lives, beside
+    /// <see cref="LatestOnTimeStart" />.
     /// </summary>
-    public static AcademicPeriod? FirstCountedPeriodFor(QuotaPeriod kind, DateOnly programmeStart)
+    public static DateOnly EarliestFullPeriodEnd(IReadOnlyList<AcademicPeriod> window)
+    {
+        var lastDay = window[^1].NominalEnd;
+        return new DateOnly(lastDay.Year, lastDay.Month, 1);
+    }
+
+    /// <summary>
+    /// The first semester of the first window of <paramref name="kind" /> whose target applies to a trainee who
+    /// started on <paramref name="programmeStart" />. Null when no later window is representable, and when the programme
+    /// ended (<paramref name="programmeEnd" />) before that window's last month: no window of this kind ever held the
+    /// trainee to a target, so there is no "targets start with" to say.
+    /// </summary>
+    public static AcademicPeriod? FirstCountedPeriodFor(QuotaPeriod kind, DateOnly programmeStart, DateOnly? programmeEnd = null)
     {
         var containing = SemestersOfWindowContaining(kind, programmeStart);
-        if (programmeStart <= LatestOnTimeStart(kind, containing))
+        var first = programmeStart <= LatestOnTimeStart(kind, containing)
+            ? containing[0]
+            : containing[^1].Next();
+
+        if (first is { } period && programmeEnd is { } end &&
+            end < EarliestFullPeriodEnd(SemestersOfWindowContaining(kind, period.Start)))
         {
-            return containing[0];
+            return null;
         }
 
-        return containing[^1].Next();
+        return first;
     }
 
     private static IReadOnlyList<AcademicPeriod> SemestersOfWindowContaining(QuotaPeriod kind, DateOnly day)

@@ -170,7 +170,7 @@ public sealed class PortfolioEpaProgressTests
         // deactivates the profile, so the section printed "no active training programme" under a cover naming it. It
         // reads the cover's programme instead, as on the day it was completed: no period after that is listed.
         await using var db = SeededDb();
-        db.TraineeProfiles.Single().Complete(new DateOnly(2026, 5, 15));
+        db.TraineeProfiles.Single().Complete(new DateOnly(2026, 5, 15), Today);
         Save(db);
 
         var progress = (await LoadAsync(db)).EpaProgress;
@@ -192,11 +192,98 @@ public sealed class PortfolioEpaProgressTests
     }
 
     [Fact]
-    public async Task TheEpaSection_ForADeactivatedTrainee_KeepsTheTargets_AndOwesNothingMoreInARunningPeriod()
+    public async Task TheEpaSection_ForAGraduateWhoseLastPeriodWasCutShort_PrintsItAsExempt_NotShort()
     {
-        // Deactivated without being completed: Wombat does not record the day, so the targets are read as on today and
-        // the introduction says periods after the programme ended are listed too. A period still running is a count so
-        // far, with nothing "more by" a date the trainee is no longer held to.
+        // T209, D49. Completed on 15 May 2026, before June, the last month of semester 1: that semester and the 2026
+        // academic year hold no target. Before T209 they printed as "2 of 3, 1 short" and "0 of 1, 1 short".
+        await using var db = SeededDb();
+        db.TraineeProfiles.Single().Complete(new DateOnly(2026, 5, 15), Today);
+        Save(db);
+
+        var data = await LoadAsync(db);
+        var progress = data.EpaProgress;
+
+        var semester = progress.Rows.Single(row => row.EpaCode == "PAED-001");
+        semester.Periods.Select(period => (period.Name, period.Status)).Should().Equal(
+            ("Semester 1, 2026", QuotaWindowStatus.ExemptProgrammeEnded),
+            ("Semester 2, 2025", QuotaWindowStatus.Counting),
+            ("Semester 1, 2025", QuotaWindowStatus.Counting));
+        semester.Periods.Select(period => EpaProgressSectionComponent.PeriodLine(period, progress.Today, progress.Programme.IsActive))
+            .Should().Equal(
+                "no target (the programme ended part-way through), 2 recorded",
+                "3 of 3, met; 3 at the minimum level when observed",
+                "1 of 3, 2 short; 1 at the minimum level when observed");
+
+        var year = progress.Rows.Single(row => row.EpaCode == "PAED-002");
+        year.Periods.Select(period => EpaProgressSectionComponent.PeriodLine(period, progress.Today, progress.Programme.IsActive))
+            .Should().Equal(
+                "no target (the programme ended part-way through), 0 recorded",
+                "1 of 1, met; 1 at the minimum level when observed");
+
+        EpaProgressSectionComponent.Introduction(progress).Should().StartWith(
+            "The trainee completed the programme on 15 May 2026. Targets as on 15 May 2026 (training year 2). " +
+            "A period the programme ended in before that period's last month has no target. " +
+            "No period that began after the programme ended is listed: it is outside the programme.");
+
+        RenderedText(data).Should().ContainInConsecutiveOrder(
+            "PAED-001", "Acute admission",
+            "Target:", "3 per semester (6 a year), minimum 3a in training year 2",
+            "Semester 1, 2026:", "no target (the programme ended part-way through), 2 recorded");
+    }
+
+    [Fact]
+    public async Task TheEpaSection_ForAGraduateWhoFinishedInTheLastMonth_HoldsThatPeriodToItsTarget()
+    {
+        // D49: an end in June leaves semester 1 whole. It is short, and says so.
+        await using var db = SeededDb();
+        db.TraineeProfiles.Single().Complete(new DateOnly(2026, 6, 1), Today);
+        Save(db);
+
+        var progress = (await LoadAsync(db)).EpaProgress;
+
+        var last = progress.Rows.Single(row => row.EpaCode == "PAED-001").Periods[0];
+        last.Status.Should().Be(QuotaWindowStatus.Counting);
+        EpaProgressSectionComponent.PeriodLine(last, progress.Today, progress.Programme.IsActive)
+            .Should().Be("2 of 3, 1 short; 2 at the minimum level when observed");
+    }
+
+    [Fact]
+    public async Task TheEpaSection_ForADeactivatedTrainee_IsReadAsOnTheirLastDay_AndListsNoPeriodAfterIt()
+    {
+        // T209. Deactivated on 20 August 2026, in semester 2's first month. Before T209 the day was not recorded, so the
+        // section read today and listed the periods after the end as if the trainee were still held to them. It is now
+        // read as on the last day, like a graduate's: semester 2 is exempt (D49), and nothing after it is listed.
+        await using var db = SeededDb();
+        db.TraineeProfiles.Single().Deactivate(new DateOnly(2026, 8, 20), Today);
+        Save(db);
+
+        var progress = (await LoadAsync(db)).EpaProgress;
+
+        progress.Programme.Should().Be(new PortfolioProgramme(PortfolioProgrammeState.Inactive, new DateOnly(2026, 8, 20)));
+        progress.AsOf.Should().Be(new DateOnly(2026, 8, 20));
+        var semester = progress.Rows.Single(row => row.EpaCode == "PAED-001");
+        semester.Periods.Select(period => (period.Name, period.Status)).Should().Equal(
+            ("Semester 2, 2026", QuotaWindowStatus.ExemptProgrammeEnded),
+            ("Semester 1, 2026", QuotaWindowStatus.Counting),
+            ("Semester 2, 2025", QuotaWindowStatus.Counting),
+            ("Semester 1, 2025", QuotaWindowStatus.Counting));
+        EpaProgressSectionComponent.PeriodLine(semester.Periods[0], progress.Today, progress.Programme.IsActive)
+            .Should().Be("no target (the programme ended part-way through), 1 recorded");
+        EpaProgressSectionComponent.Introduction(progress).Should().StartWith(
+            "The trainee's programme was ended without being completed, on 20 August 2026. Targets as on 20 August 2026 " +
+            "(training year 2). A period the programme ended in before that period's last month has no target. " +
+            "No period that began after the programme ended is listed: it is outside the programme.");
+
+        // A later export window still reads the last day, never a period after it.
+        (await LoadAsync(db, toDate: new DateOnly(2027, 3, 1))).EpaProgress.AsOf.Should().Be(new DateOnly(2026, 8, 20));
+    }
+
+    [Fact]
+    public async Task TheEpaSection_ForATraineeDeactivatedBeforeTheDayWasRecorded_KeepsTheTargets_AndOwesNothingMoreInARunningPeriod()
+    {
+        // Deactivated before T209 recorded the day (IsActive cleared, no DeactivatedOn): the targets are read as on today
+        // and the introduction says periods after the programme ended are listed too. A period still running is a count
+        // so far, with nothing "more by" a date the trainee is no longer held to.
         await using var db = SeededDb();
         db.TraineeProfiles.Single().IsActive = false;
         Save(db);
@@ -539,6 +626,24 @@ public sealed class PortfolioEpaProgressTests
     }
 
     [Fact]
+    public void APeriodLine_ForAPeriodTheProgrammeEndedInOrAfter_SaysSo_AndIsNeverShort()
+    {
+        // D49 (T209). Read long after both periods closed, when a counting period would be "met" or "short".
+        var end = new DateOnly(2026, 3, 14);
+        var endedIn = Period(QuotaPeriod.Semester, new DateOnly(2026, 2, 1), ProgrammeStart, count: 1, target: 3, reached: 1, end);
+        var after = Period(QuotaPeriod.Semester, new DateOnly(2026, 8, 1), ProgrammeStart, count: 2, target: 3, reached: 2, end);
+
+        EpaProgressSectionComponent.PeriodLine(endedIn, new DateOnly(2027, 3, 1), programmeActive: false)
+            .Should().Be("no target (the programme ended part-way through), 1 recorded");
+        EpaProgressSectionComponent.PeriodLine(after, new DateOnly(2027, 3, 1), programmeActive: false)
+            .Should().Be("no target (after the programme ended), 2 recorded");
+
+        var endedInLastMonth = Period(QuotaPeriod.Semester, new DateOnly(2026, 2, 1), ProgrammeStart, count: 1, target: 3, reached: 1, new DateOnly(2026, 6, 1));
+        EpaProgressSectionComponent.PeriodLine(endedInLastMonth, new DateOnly(2027, 3, 1), programmeActive: false)
+            .Should().Be("1 of 3, 2 short; 1 at the minimum level when observed");
+    }
+
+    [Fact]
     public void TheTargetLine_IsTheProgressPagesTarget()
     {
         var semester = Item(QuotaPeriod.Semester, target: 3);
@@ -601,9 +706,10 @@ public sealed class PortfolioEpaProgressTests
             .ToList();
 
     private static QuotaWindowDto Period(
-        QuotaPeriod kind, DateOnly inPeriod, DateOnly programmeStart, int count, int target, int reached)
+        QuotaPeriod kind, DateOnly inPeriod, DateOnly programmeStart, int count, int target, int reached,
+        DateOnly? programmeEnd = null)
         => QuotaWindowDto.From(new QuotaWindowTally(
-            QuotaWindow.For(kind, inPeriod, programmeStart), target, count, reached, LastObservedOn: null, LastObservedOnDeclared: false));
+            QuotaWindow.For(kind, inPeriod, programmeStart, programmeEnd), target, count, reached, LastObservedOn: null, LastObservedOnDeclared: false));
 
     private static TraineeCurriculumProgressDto Item(QuotaPeriod kind, int target)
     {

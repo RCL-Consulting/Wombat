@@ -25,8 +25,8 @@ namespace Wombat.Infrastructure.Reporting;
 /// </remarks>
 /// <param name="AsOf">
 /// The day the targets are read for: the export's last day, or today when the export is open-ended or runs past today,
-/// and never after the day a completed programme ended (<see cref="ReadOn" />). Printed on the section, so the bytes
-/// change with the day only where the printed figures do.
+/// and never after the day a completed or deactivated programme ended (<see cref="ReadOn" />). Printed on the section, so
+/// the bytes change with the day only where the printed figures do.
 /// </param>
 /// <param name="Today">
 /// Today on the South African calendar. A period that has not ended by today is still running, and is printed as a
@@ -46,14 +46,14 @@ internal sealed record PortfolioEpaProgress(
     IReadOnlyList<PortfolioEpaProgressRow> Rows)
 {
     /// <summary>
-    /// The day the section reads the targets on: today, or the export's last day when that is earlier, or the day a
-    /// completed programme ended when that is earlier still. A graduate's export is read as on their completion day, so
-    /// it never lists a period that began after they left.
+    /// The day the section reads the targets on: today, or the export's last day when that is earlier, or the day the
+    /// programme ended (completed or deactivated) when that is earlier still. A graduate's or a withdrawn trainee's export
+    /// is read as on their last day, so it never lists a period that began after they left (D49: outside the programme).
     /// </summary>
     public static DateOnly ReadOn(DateOnly today, DateOnly? exportTo, PortfolioProgramme programme)
     {
         var day = exportTo is { } to && to < today ? to : today;
-        return programme.CompletedOn is { } completed && completed < day ? completed : day;
+        return programme.EndedOn is { } ended && ended < day ? ended : day;
     }
 
     /// <param name="deactivatedEpaIds">
@@ -117,20 +117,26 @@ internal enum PortfolioProgrammeState
     /// <summary>Completed at a final review (<c>TraineeProfile.Complete</c>, T080).</summary>
     Completed,
 
-    /// <summary>Deactivated without being completed. Wombat does not record the day.</summary>
+    /// <summary>
+    /// Deactivated without being completed (a withdrawal). The day is <c>TraineeProfile.DeactivatedOn</c> (T209), which a
+    /// profile deactivated before T209 does not have.
+    /// </summary>
     Inactive
 }
 
 /// <summary>The programme the cover names, as the section words it.</summary>
-/// <param name="CompletedOn">The day a completed programme ended; null otherwise.</param>
-internal sealed record PortfolioProgramme(PortfolioProgrammeState State, DateOnly? CompletedOn)
+/// <param name="EndedOn">
+/// The day the programme ended: the completion day, or the day a deactivated one was ended (<c>TraineeProfile.EndedOn</c>).
+/// Null while it runs, and for a programme deactivated before Wombat recorded that day.
+/// </param>
+internal sealed record PortfolioProgramme(PortfolioProgrammeState State, DateOnly? EndedOn)
 {
     public static PortfolioProgramme Of(TraineeProfile? profile) => profile switch
     {
         null => new(PortfolioProgrammeState.None, null),
         { IsActive: true } => new(PortfolioProgrammeState.Active, null),
         { CompletedOn: { } completedOn } => new(PortfolioProgrammeState.Completed, completedOn),
-        _ => new(PortfolioProgrammeState.Inactive, null)
+        _ => new(PortfolioProgrammeState.Inactive, profile.DeactivatedOn)
     };
 
     /// <summary>Only a programme still in progress owes anything more in a period that is still running.</summary>

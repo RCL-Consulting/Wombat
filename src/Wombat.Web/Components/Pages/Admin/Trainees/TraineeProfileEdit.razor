@@ -1,8 +1,12 @@
 @page "/admin/trainees/edit"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using System.Security.Claims
+@using MediatR
+@using Wombat.Application.Features.Curricula.Quota
 @inject IScopedSender Sender
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject TimeProvider Clock
 
 <PageTitle>Trainee Profile</PageTitle>
 
@@ -12,15 +16,20 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+@* Every action's result lands here. After Deactivate or Mark complete answers, the region takes the focus (DESIGN.md
+   § Button system): on success both buttons are gone, and the dialog that sent it has closed. A refusal of either keeps
+   its id, which the last-day field names, so the refusal is read with the field it is usually about (T209 review). *@
+<div @ref="_result" class="action-result" tabindex="-1">
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Id="@(_endRefused ? EndRefusalId : null)" Kind="danger">@_errorMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+</div>
 
 <StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The trainee profile could not be loaded." LoadError="@(null)">
   @if (_model is not null)
@@ -34,6 +43,10 @@
         @if (_model.CompletedOn.HasValue)
         {
           <p><strong>Completed:</strong> @_model.CompletedOn.Value.ToString("yyyy-MM-dd")</p>
+        }
+        @if (_model.DeactivatedOn.HasValue)
+        {
+          <p><strong>Left the programme:</strong> @_model.DeactivatedOn.Value.ToString("yyyy-MM-dd")</p>
         }
       </aside>
 
@@ -64,9 +77,14 @@
 
           @if (!_isAdmission && _model.IsActive)
           {
+            @* T209, D49: both ways out of the programme record its last day, and the quota reads it: the period it falls in
+               holds no target unless it is in that period's last month. The buttons name the help, because each one acts
+               on the date above it. *@
             <div class="form-grid form-grid--wide">
-              <FormField Label="Completion date" InputId="completion-date" HelpText="Records graduation: archives the profile and removes the Trainee role.">
-                <InputDate id="completion-date" class="form-control" aria-describedby="@FieldHelp.Id("completion-date")" @bind-Value="_model.CompletionDate" />
+              <FormField Label="Last day in the programme" InputId="programme-end-date" HelpText="@EndDateHelp">
+                <InputDate id="programme-end-date" class="form-control"
+                           aria-describedby="@FieldHelp.DescribedBy("programme-end-date", EndDateHelp, _endRefused ? EndRefusalId : null)"
+                           @bind-Value="_model.EndDate" />
               </FormField>
             </div>
           }
@@ -75,8 +93,10 @@
             <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
             @if (!_isAdmission && _model.IsActive)
             {
-              <button type="button" class="btn btn-danger" disabled="@_saving" @onclick="DeactivateAsync">Deactivate</button>
-              <button type="button" class="btn btn-outline" disabled="@_saving" @onclick="CompleteAsync">Mark complete</button>
+              @* Each asks first, naming the day (DESIGN.md § Button system): neither can be undone, and the day each records
+                 cannot be changed afterwards. The red button is only in the dialog's footer. *@
+              <button type="button" class="btn btn-outline" disabled="@_saving" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
+              <button type="button" class="btn btn-outline" disabled="@_saving" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
             }
             <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
           </FormActions>
@@ -86,6 +106,20 @@
   }
 </StatePanel>
 
+<ConfirmDialog @ref="_confirmDeactivate"
+               Title="Deactivate this trainee profile?"
+               Body="@DeactivateBody"
+               ConfirmLabel="Deactivate"
+               DangerAction="true"
+               OnConfirm="DeactivateAsync" />
+
+<ConfirmDialog @ref="_confirmComplete"
+               Title="Mark this programme complete?"
+               Body="@CompleteBody"
+               ConfirmLabel="Mark complete"
+               DangerAction="false"
+               OnConfirm="CompleteAsync" />
+
 @code {
   [SupplyParameterFromQuery(Name = "id")]
   public int? Id { get; set; }
@@ -93,7 +127,34 @@
   [SupplyParameterFromQuery(Name = "userId")]
   public string? UserId { get; set; }
 
+  private const string EndDateHelp =
+    "Mark complete records it as the graduation day, archives the profile and removes the Trainee role. Deactivate " +
+    "records it as the day the trainee left without completing. It cannot be after today, and it cannot be changed " +
+    "afterwards. Either way, the period it falls in holds no target unless it is in that period's last month.";
+
+  /// <summary>The id of the refusal alert, which the last-day field names after Deactivate or Mark complete is refused.</summary>
+  private const string EndRefusalId = "programme-end-refusal";
+
   private IReadOnlyList<CurriculumDto> _curricula = [];
+  private ConfirmDialog? _confirmDeactivate;
+  private ConfirmDialog? _confirmComplete;
+  private ElementReference _result;
+
+  /// <summary>The region holding an action's result, which takes the focus once an end action has answered. For its tests.</summary>
+  internal ElementReference ResultRegion => _result;
+
+  /// <summary>
+  /// Today on the South African calendar: the field's default, and the latest last day either action accepts. The server
+  /// refuses a later one; the field carries no <c>max</c>, because it sits in the profile form and the browser would then
+  /// refuse Save profile over a date Save does not send.
+  /// </summary>
+  private DateOnly _today;
+
+  /// <summary>Deactivate or Mark complete was refused, so the last-day field names the refusal.</summary>
+  private bool _endRefused;
+
+  /// <summary>An end action has answered, and its result takes the focus after the next render.</summary>
+  private bool _focusResult;
   private TraineeProfileFormModel? _model;
   private bool _loading = true;
   private bool _saving;
@@ -106,6 +167,8 @@
     _loading = true;
     _errorMessage = null;
     _statusMessage = null;
+    _endRefused = false;
+    _today = QuotaCalendar.Today(Clock);
 
     try
     {
@@ -126,7 +189,9 @@
           ProgrammeStartDate = profile.ProgrammeStartDate,
           ExpectedCompletionDate = profile.ExpectedCompletionDate,
           IsActive = profile.IsActive,
-          CompletedOn = profile.CompletedOn
+          CompletedOn = profile.CompletedOn,
+          DeactivatedOn = profile.DeactivatedOn,
+          EndDate = _today
         };
       }
       else if (!string.IsNullOrWhiteSpace(UserId))
@@ -144,7 +209,7 @@
           Email = pendingUser.Email,
           FullName = $"{pendingUser.FirstName} {pendingUser.LastName}",
           CurriculumId = defaultCurriculum?.Id ?? _curricula.FirstOrDefault()?.Id ?? 0,
-          ProgrammeStartDate = DateOnly.FromDateTime(DateTime.Today)
+          ProgrammeStartDate = _today
         };
       }
       else
@@ -187,6 +252,7 @@
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
+    _endRefused = false;
 
     try
     {
@@ -223,9 +289,49 @@
     }
   }
 
-  private async Task DeactivateAsync()
+  private string DeactivateBody => _model is null
+    ? string.Empty
+    : $"Deactivate {_model.FullName}'s profile, with {_model.EndDate:yyyy-MM-dd} as their last day in the programme? " +
+      "The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
+
+  private string CompleteBody => _model is null
+    ? string.Empty
+    : $"Record {_model.EndDate:yyyy-MM-dd} as {_model.FullName}'s graduation day? The profile is archived, the Trainee " +
+      "role is removed and a graduation email is sent. The day cannot be changed afterwards, and this cannot be undone.";
+
+  private async Task AskAsync(ConfirmDialog? dialog)
   {
-    if (_model is null || _model.Id <= 0)
+    if (_saving || dialog is null)
+    {
+      return;
+    }
+
+    await dialog.ShowAsync();
+  }
+
+  private Task DeactivateAsync() => EndAsync(
+    (id, day, principal) => new DeactivateTraineeProfileCommand(id, day, principal),
+    day =>
+    {
+      _model!.DeactivatedOn = day;
+      return $"Trainee profile deactivated. Their last day in the programme is recorded as {day:yyyy-MM-dd}.";
+    });
+
+  private Task CompleteAsync() => EndAsync(
+    (id, day, principal) => new CompleteTraineeProfileCommand(id, day, principal),
+    day =>
+    {
+      _model!.CompletedOn = day;
+      return "Trainee marked complete. The Trainee role has been removed and a graduation email sent.";
+    });
+
+  /// <remarks>
+  /// Sent at most once at a time: the flag is set before the first await, so a second confirm that reaches the circuit
+  /// before the re-render does nothing. The result takes the focus in <see cref="OnAfterRenderAsync" />, done or refused.
+  /// </remarks>
+  private async Task EndAsync(Func<int, DateOnly, ClaimsPrincipal, IRequest> command, Func<DateOnly, string> ended)
+  {
+    if (_model is null || _model.Id <= 0 || _saving)
     {
       return;
     }
@@ -233,50 +339,39 @@
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
+    _endRefused = false;
+    var day = _model.EndDate;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new DeactivateTraineeProfileCommand(_model.Id, authState.User));
+      await Sender.Send(command(_model.Id, day, authState.User));
       _model.IsActive = false;
-      _statusMessage = "Trainee profile deactivated.";
+      _statusMessage = ended(day);
     }
     catch (Exception exception)
     {
       _errorMessage = exception.Message;
+      _endRefused = true;
     }
     finally
     {
       _saving = false;
+      _focusResult = true;
     }
   }
 
-  private async Task CompleteAsync()
+  /// <remarks>
+  /// The result takes the focus here, once the browser has acknowledged the render that follows the action. By then the
+  /// dialog is closed: ConfirmDialog asks the browser to close it as soon as the action returns, and while a modal dialog
+  /// is open nothing outside it can take the focus (DESIGN.md § Button system, T206).
+  /// </remarks>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_model is null || _model.Id <= 0)
+    if (_focusResult)
     {
-      return;
-    }
-
-    _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new CompleteTraineeProfileCommand(_model.Id, _model.CompletionDate, authState.User));
-      _model.IsActive = false;
-      _model.CompletedOn = _model.CompletionDate;
-      _statusMessage = "Trainee marked complete. The Trainee role has been removed and a graduation email sent.";
-    }
-    catch (Exception exception)
-    {
-      _errorMessage = exception.Message;
-    }
-    finally
-    {
-      _saving = false;
+      _focusResult = false;
+      await _result.FocusAsync();
     }
   }
 
@@ -297,6 +392,12 @@
     public DateOnly? ExpectedCompletionDate { get; set; }
     public bool IsActive { get; set; } = true;
     public DateOnly? CompletedOn { get; set; }
-    public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly? DeactivatedOn { get; set; }
+
+    /// <summary>
+    /// The last day in the programme, which Mark complete and Deactivate each record (T209). Set to today on the South
+    /// African calendar when the page loads, not the server's local date.
+    /// </summary>
+    public DateOnly EndDate { get; set; }
   }
 }

@@ -54,6 +54,7 @@ public sealed class GetTraineeProfileByIdQueryHandler : IRequestHandler<GetTrain
             profile.ProgrammeStartDate,
             profile.ExpectedCompletionDate,
             profile.IsActive,
-            profile.CompletedOn);
+            profile.CompletedOn,
+            profile.DeactivatedOn);
     }
 }

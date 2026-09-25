@@ -16,7 +16,8 @@ public sealed record TraineeProfileDto(
     DateOnly ProgrammeStartDate,
     DateOnly ExpectedCompletionDate,
     bool IsActive,
-    DateOnly? CompletedOn = null);
+    DateOnly? CompletedOn = null,
+    DateOnly? DeactivatedOn = null);
 
 public sealed record PendingTraineeDto(
     string UserId,

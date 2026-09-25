@@ -486,7 +486,7 @@ public sealed class GetCurriculumProgressForTraineeTests
         SeedCurriculum(db);
         AddRow(db, SemesterItemId, 2026, 1, counts: 2);
         db.SaveChanges();
-        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30));
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30), today: new DateOnly(2026, 6, 30));
         db.SaveChanges();
         db.ChangeTracker.Clear();
 
@@ -498,6 +498,62 @@ public sealed class GetCurriculumProgressForTraineeTests
         var summary = await ReadSpan(db, periodsFrom: DateOnly.MinValue, asOf: new DateOnly(2026, 6, 30));
         summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current
             .Should().Match<QuotaWindowDto>(window => window.Name == "Semester 1, 2026" && window.Count == 2);
+    }
+
+    [Fact]
+    public async Task ADeactivatedProgramme_IsReadWithItsEnd_SoThePeriodItCutShortIsExempt_AndNoStartIsAnnounced()
+    {
+        // T209, D49. Deactivated on 15 October 2026, before November, the last month of semester 2 and of the academic
+        // year: neither holds a target, and both still show what was credited. The summary must not announce when targets
+        // "start" either: that is D14's sentence for a late start, and this trainee's first counted window is 2024's.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 1);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 2);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Deactivate(new DateOnly(2026, 10, 15), today: new DateOnly(2026, 10, 15));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await ReadSpan(db, periodsFrom: new DateOnly(2026, 1, 1), asOf: new DateOnly(2026, 10, 15));
+
+        var semester = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        semester.Current.Status.Should().Be(QuotaWindowStatus.ExemptProgrammeEnded);
+        semester.Current.Count.Should().Be(2);
+        semester.Current.Shortfall.Should().Be(0);
+        semester.Previous!.Status.Should().Be(QuotaWindowStatus.Counting);
+        semester.Previous.Shortfall.Should().Be(2, "semester 1 was served in full, so it is still short");
+        semester.Periods!.Select(period => (period.Name, period.Status)).Should().Equal(
+            ("Semester 2, 2026", QuotaWindowStatus.ExemptProgrammeEnded),
+            ("Semester 1, 2026", QuotaWindowStatus.Counting));
+
+        summary.Items.Single(entry => entry.EpaCode == "PAED-002").Current.Status
+            .Should().Be(QuotaWindowStatus.ExemptProgrammeEnded);
+        summary.SemesterTargetsApplying.Should().Be(0);
+        summary.YearTargetsApplying.Should().Be(0);
+        summary.SemesterTargetsStart.Should().BeNull();
+        summary.YearTargetsStart.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AGraduationInTheLastMonth_HoldsThatPeriodToItsFullTarget()
+    {
+        // D49: an end in November leaves semester 2 and the academic year whole.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 2);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 11, 20), today: new DateOnly(2026, 11, 20));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await ReadSpan(db, periodsFrom: new DateOnly(2026, 7, 1), asOf: new DateOnly(2026, 11, 20));
+
+        var semester = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        semester.Current.Status.Should().Be(QuotaWindowStatus.Counting);
+        semester.Current.Shortfall.Should().Be(1);
+        summary.Items.Single(entry => entry.EpaCode == "PAED-002").Current.Status.Should().Be(QuotaWindowStatus.Counting);
+        summary.SemesterTargetsApplying.Should().Be(1);
     }
 
     [Fact]

@@ -105,7 +105,7 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
     {
         var handler = new DeactivateTraineeProfileCommandHandler(_db);
         var act = () => handler.Handle(
-            new DeactivateTraineeProfileCommand(_institutionBProfileId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new DeactivateTraineeProfileCommand(_institutionBProfileId, new DateOnly(2026, 5, 31), TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }

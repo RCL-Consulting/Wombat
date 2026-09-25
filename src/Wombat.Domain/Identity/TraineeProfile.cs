@@ -35,26 +35,79 @@ public sealed class TraineeProfile
     /// </summary>
     public DateOnly? CompletedOn { get; private set; }
 
+    /// <summary>
+    /// The trainee's last day in the programme when it was ended without being completed (a withdrawal), or null.
+    /// Set via <see cref="Deactivate"/> (T209). Null on a profile deactivated before T209, whose day was never
+    /// recorded, and on a completed one, whose day is <see cref="CompletedOn"/>.
+    /// </summary>
+    public DateOnly? DeactivatedOn { get; private set; }
+
+    /// <summary>
+    /// The day the programme actually ended: completion (<see cref="CompletedOn"/>) or deactivation
+    /// (<see cref="DeactivatedOn"/>). Null while it is running, and for a profile deactivated before the day was recorded.
+    /// Not <see cref="ExpectedCompletionDate"/>, which is a plan: a trainee still active after it is still in the
+    /// programme. The quota reads it for D49: the period it falls in is exempt unless it falls in that period's last month,
+    /// and periods after it are outside the programme (<see cref="QuotaWindow"/>).
+    /// </summary>
+    public DateOnly? EndedOn => CompletedOn ?? DeactivatedOn;
+
     public Curriculum Curriculum { get; set; } = null!;
 
     /// <summary>
     /// Marks the programme complete (graduation): records the completion date and deactivates the
     /// profile. The caller is responsible for the role transition (removing the Trainee role).
     /// </summary>
-    public void Complete(DateOnly completedOn)
+    /// <param name="completedOn">The graduation day: on or after the programme start, and not after <paramref name="today" />.</param>
+    /// <param name="today">
+    /// Today on the South African calendar. The profile ends now, so a later day would be an end that has not happened:
+    /// D49 would read the periods up to it as still in the programme (T209 review). Every check runs before anything changes.
+    /// </param>
+    public void Complete(DateOnly completedOn, DateOnly today)
     {
-        if (!IsActive)
-        {
-            throw new InvalidOperationException("Only an active trainee profile can be marked complete.");
-        }
-
-        if (completedOn < ProgrammeStartDate)
-        {
-            throw new InvalidOperationException("The completion date cannot be before the programme start date.");
-        }
+        EnsureCanEnd(completedOn, today, "marked complete", "completion");
 
         CompletedOn = completedOn;
         IsActive = false;
+    }
+
+    /// <summary>
+    /// Ends the programme without completing it (a withdrawal): records the trainee's last day and deactivates the
+    /// profile (T209). The day is what D49 reads, so it is the day the trainee left, which an administrator may record
+    /// after the fact, as a completion is, but never ahead of it. Every check runs before anything changes.
+    /// </summary>
+    /// <param name="deactivatedOn">The trainee's last day: on or after the programme start, and not after <paramref name="today" />.</param>
+    /// <param name="today">
+    /// Today on the South African calendar. The profile ends now, so a later day (a resignation's notice date, say) would
+    /// be an end that has not happened: D49 would hold the trainee to every period up to it (T209 review).
+    /// </param>
+    public void Deactivate(DateOnly deactivatedOn, DateOnly today)
+    {
+        EnsureCanEnd(deactivatedOn, today, "deactivated", "deactivation");
+
+        DeactivatedOn = deactivatedOn;
+        IsActive = false;
+    }
+
+    /// <summary>
+    /// The checks both ways out of the programme share, run before either changes anything: the profile is still active,
+    /// and the day it ends on lies between the programme start and today.
+    /// </summary>
+    private void EnsureCanEnd(DateOnly endedOn, DateOnly today, string verb, string noun)
+    {
+        if (!IsActive)
+        {
+            throw new InvalidOperationException($"Only an active trainee profile can be {verb}.");
+        }
+
+        if (endedOn < ProgrammeStartDate)
+        {
+            throw new InvalidOperationException($"The {noun} date cannot be before the programme start date.");
+        }
+
+        if (endedOn > today)
+        {
+            throw new InvalidOperationException($"The {noun} date cannot be after today ({today:yyyy-MM-dd}).");
+        }
     }
 
     /// <summary>

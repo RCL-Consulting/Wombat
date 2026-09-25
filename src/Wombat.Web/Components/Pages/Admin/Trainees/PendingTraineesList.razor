@@ -93,7 +93,7 @@
               <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
               <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
               <td>@trainee.SubSpecialityName</td>
-              <td>@(trainee.CompletedOn.HasValue ? $"Completed {trainee.CompletedOn.Value:yyyy-MM-dd}" : "Withdrawn")</td>
+              <td>@(trainee.CompletedOn.HasValue ? $"Completed {trainee.CompletedOn.Value:yyyy-MM-dd}" : trainee.DeactivatedOn.HasValue ? $"Withdrawn {trainee.DeactivatedOn.Value:yyyy-MM-dd}" : "Withdrawn")</td>
               <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a></td>
             </tr>
           </Row>

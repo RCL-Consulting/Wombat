@@ -178,8 +178,10 @@ public static class CurriculumCoverageReader
             int semesterMet = 0, semesterApplying = 0, yearMet = 0, yearApplying = 0;
             foreach (var item in traineeItems)
             {
+                // The callers pass active profiles, whose EndedOn is null, but the end is passed as every reader passes
+                // it (D49), so this cannot hold an ended programme to a target if one is ever passed in.
                 var tally = QuotaProgressCalculator.For(
-                    item.Id, item.QuotaPeriod, item.RequiredCount, traineeRows, profile.ProgrammeStartDate, asOf).Current;
+                    item.Id, item.QuotaPeriod, item.RequiredCount, traineeRows, profile.ProgrammeStartDate, profile.EndedOn, asOf).Current;
 
                 var key = (item.EpaId, item.QuotaPeriod, item.RequiredCount);
                 (CoverageItem First, int Met, int Applying, int Exempt) entry =
