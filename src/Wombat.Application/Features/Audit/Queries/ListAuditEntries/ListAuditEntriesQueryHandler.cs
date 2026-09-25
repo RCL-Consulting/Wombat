@@ -60,8 +60,9 @@ public sealed class ListAuditEntriesQueryHandler : IRequestHandler<ListAuditEntr
 
         var totalCount = await query.CountAsync(cancellationToken);
 
+        // Newest first, ties settled by id, so a page boundary inside a tie neither repeats nor skips an entry (T262).
         var items = await query
-            .OrderByDescending(e => e.OccurredAt)
+            .NewestFirst()
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(e => new AuditEntryDto(

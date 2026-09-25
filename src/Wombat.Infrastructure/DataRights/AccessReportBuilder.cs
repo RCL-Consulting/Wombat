@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Audit;
 using Wombat.Application.Features.DataRights;
 using Wombat.Application.Features.Reporting;
 using Wombat.Domain.Activities;
@@ -125,10 +126,11 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
             })
             .ToListAsync(cancellationToken);
 
-        // Audit entries where user is the subject
+        // Audit entries where user is the actor: the newest 500, ties settled by id, so a cut that falls inside a tie keeps
+        // the same entries on every run (T262).
         report.AuditEntries = await _dbContext.Set<AuditEntry>()
             .Where(e => e.ActorUserId == userId)
-            .OrderByDescending(e => e.OccurredAt)
+            .NewestFirst()
             .Take(500)
             .Select(e => new AuditEntrySection
             {

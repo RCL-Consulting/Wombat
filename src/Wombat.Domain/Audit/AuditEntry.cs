@@ -6,6 +6,7 @@ namespace Wombat.Domain.Audit;
 /// the rest random, so two entries written in the same millisecond sort by Id either way (T244). OccurredAt can tie as
 /// well: two requests can start in the same clock tick, and Postgres keeps only microseconds. So a reader that pages, or
 /// stops at a count, must order by OccurredAt then Id. The order within a tie is then arbitrary, but the same on every read.
+/// Application's <c>AuditEntryOrder.NewestFirst</c> is that order; the audit log and the access report read through it (T262).
 /// </summary>
 public sealed class AuditEntry
 {
