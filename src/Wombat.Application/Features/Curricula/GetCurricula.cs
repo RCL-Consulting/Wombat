@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Curricula;
 
@@ -33,7 +34,7 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
             .ThenBy(entity => entity.SubSpeciality.Name)
             .ThenBy(entity => entity.Name)
             .ThenByDescending(entity => entity.EffectiveFrom)
-            .Select(CurriculumRow.Projection)
+            .Select(CurriculumRow.Projection(_dbContext.Set<Institution>()))
             .ToListAsync(cancellationToken);
 
         return rows.Select(row => CurriculumAdminScope.ForCaller(row.Curriculum, row.CollegeId, request.Principal)).ToList();
@@ -53,7 +54,7 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
     {
         var row = await CurriculumAdminScope.Openable(_dbContext, request.Principal)
             .Where(entity => entity.Id == request.Id)
-            .Select(CurriculumRow.Projection)
+            .Select(CurriculumRow.Projection(_dbContext.Set<Institution>()))
             .SingleOrDefaultAsync(cancellationToken);
 
         return row is null ? null : CurriculumAdminScope.ForCaller(row.Curriculum, row.CollegeId, request.Principal);
@@ -66,7 +67,12 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
 /// </summary>
 internal sealed record CurriculumRow(CurriculumDto Curriculum, int CollegeId)
 {
-    public static readonly Expression<Func<Curriculum, CurriculumRow>> Projection = entity => new CurriculumRow(
+    /// <summary>The projection, with each local item's owner looked up by name in <paramref name="institutions" /> (T222).</summary>
+    /// <param name="institutions">
+    /// The institutions set. A curriculum item has no navigation to its institution, so its name is a correlated scalar
+    /// subquery inside the item projection: the curriculum and its items are still read in one statement.
+    /// </param>
+    public static Expression<Func<Curriculum, CurriculumRow>> Projection(IQueryable<Institution> institutions) => entity => new CurriculumRow(
         new CurriculumDto(
             entity.Id,
             entity.SubSpeciality.SpecialityId,
@@ -82,7 +88,9 @@ internal sealed record CurriculumRow(CurriculumDto Curriculum, int CollegeId)
             true,
             entity.Items
                 .OrderBy(item => item.Epa.Code)
-                .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.Epa.IsActive, item.OwningInstitutionId, item.DecisionCadence, item.DecisionBodyKey, item.DecisionBody == null ? null : item.DecisionBody.Name, item.DecisionIsOpportunistic, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
+                .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.Epa.IsActive, item.OwningInstitutionId,
+                    institutions.Where(institution => institution.Id == item.OwningInstitutionId).Select(institution => (string?)institution.Name).FirstOrDefault(),
+                    item.DecisionCadence, item.DecisionBodyKey, item.DecisionBody == null ? null : item.DecisionBody.Name, item.DecisionIsOpportunistic, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
                 .ToList(),
             entity.SubSpeciality.DefaultEntrustmentScaleId),
         entity.SubSpeciality.Speciality.CollegeId);

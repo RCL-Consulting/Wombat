@@ -270,8 +270,29 @@ from the caller's roles: each row carries the flag the command's own rule sets (
 page's policy admits (`IAuthorizationService` with that policy's name). A row with no action is not left blank: its
 actions cell says why in a `.muted` span ("Set by the College"). Where whole groups of rows are read-only to the
 caller, a standing `Alert` (`Role=""`) at the top says what they may and may not change there. An institution's own
-item on a shared national list is marked under its title, `.muted .text-sm` ("The institution's own item"), as the
-entrustment standing panel marks an institution's own EPA.
+item on a shared national list is marked under its title, `.muted .text-sm`, as the entrustment standing panel marks an
+institution's own EPA. It names the owner to a caller whose reads span institutions ("Groote Schuur Hospital's own
+item": an Administrator, T222), and says "Your institution's own item" to anyone else, every local item they read being
+their own. The query decides which (`CurriculumItemDto.OwningInstitutionName`, cut by
+`CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles.
+
+**Row actions on the curriculum items page** (T222) follow § Button system: Edit and Remove are `.btn .btn-sm
+.btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and Remove opens the page's one
+`ConfirmDialog`, whose result takes the focus in an `.action-result` region once the dialog has closed. The dialog says
+whose trainees the item stops measuring: a national item's in every institution that has adopted the curriculum, an
+institution's own item only that institution's, named as the row names its owner (T222 review). **An actions
+column's header is a `.visually-hidden` "Actions", never an empty `<th>`**: a header names the cells under it. A column of
+buttons that fits in its content's width needs no `.col-actions`; the curriculum items table has no room for its 12rem.
+
+**A picker offers exactly what the command it feeds accepts, and is asked again after every command that changes that**
+(T195, T222). The curriculum item editor's EPA pickers leave out every EPA the curriculum already holds, apart from the
+edited item's own, because the Add and Update commands refuse it; after each Add, Save and Remove the page asks for both
+pickers again (the edit row's while one is open). A choice the new answer no longer offers moves to one it does: the Add
+form's to the first EPA on offer, the edit row's back to the item's stored EPA. **A refusal reads the page again too**
+(T222 review): the likeliest one comes from a page that is out of date (an EPA added, or an item removed, in another tab),
+so the page reads the curriculum and both pickers again and keeps the refusal. An edit row whose item has gone closes, and
+its refusal moves to the `.action-result` region, which takes the focus; a refused Add that leaves nothing to add puts its
+refusal at the head of the empty state (§ Card system).
 
 A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
@@ -407,6 +428,7 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .detail-card--interactive     /* hover: translateY(-2px), bigger shadow, cursor pointer */
 .detail-card--empty           /* dashed border, centred muted text, var(--space-xl) */
 .detail-card--empty-compact   /* dashed border, centred, var(--space-md) */
+.detail-card--empty-compact[tabindex]:focus-visible /* focus ring, for an empty state the page moves the focus to (T222) */
 .detail-card--emphasis        /* left 4px solid accent stripe, --secondary-color */
 .detail-card--warning         /* left 4px solid accent stripe, --warning-color */
 ```
@@ -414,6 +436,15 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 - `.detail-card h3` has a bottom border and primary colour — gives the card a titled strip.
 - Cards are the building block of dashboards and detail pages. Anywhere you want to group fields inside a page, reach for a card.
 - The empty-state card uses a dashed border so it reads as "nothing yet" at a glance.
+- **A form with nothing left to offer is replaced by its empty state** (T222). When a form's one required picker would
+  be empty (the curriculum item editor's Add form, once every EPA the item could name is already on the curriculum), the
+  form is not rendered with an empty select and a live submit button. Under the form's heading, a
+  `div.detail-card.detail-card--empty-compact` says that nothing is left, in the words of what the form would have made,
+  and what would have to change for there to be something. It has `tabindex="-1"`: when the action that emptied the
+  picker took its own button away with the form (the last Add), the page moves the focus to it in `OnAfterRenderAsync`,
+  and it starts with that action's result ("Curriculum item added.", or a refusal in `.text-danger`), so the focus reads
+  the result out where the operator is. A status alert that arrives already filled just as the focus moves may not be
+  read at all (T222 review). The page's usual result alert still shows at the top.
 
 ## Dashboard layout grid
 

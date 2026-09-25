@@ -128,7 +128,86 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
         }
     }
 
-    private sealed record World(int CurriculumId, int CollegeId, int Adopter, int Other, int Stranger, int AdopterItem, int OtherItem);
+    /// <summary>
+    /// T222 on PostgreSQL, against the seeded v11.1 curriculum, whose fifteen national EPAs are all items: each EPA picker
+    /// leaves out what the curriculum holds, in the one statement that lists the EPAs, and an Administrator reads whose
+    /// own each local item is, in the one statement that reads the curriculum.
+    /// </summary>
+    [Fact]
+    public async Task OnPostgres_ThePickersLeaveOutWhatTheCurriculumHolds_AndAnAdministratorReadsEachLocalItemsOwner()
+    {
+        try
+        {
+            var schema = await SeededSchemaAsync();
+            var world = await SeedWorldAsync(schema);
+
+            // A second local EPA of the adopter's, not yet on the curriculum.
+            await using (var db = NewContext(schema))
+            {
+                var subSpecialityId = await db.Curricula.Where(entity => entity.Id == world.CurriculumId).Select(entity => entity.SubSpecialityId).SingleAsync();
+                db.Epas.Add(new Epa { Code = "LOC-A02", Title = "The adopter's second", SubSpecialityId = subSpecialityId, OwningInstitutionId = world.Adopter });
+                await db.SaveChangesAsync();
+            }
+
+            var pickerCommands = new CommandLog();
+            await using (var db = NewContext(schema, pickerCommands))
+            {
+                (await PickerAsync(db, world.CurriculumId, null, CollegeAdmin(world.CollegeId)))
+                    .Should().BeEmpty("every national EPA of v11.1 is already an item, so the College has nothing to add");
+                (await PickerAsync(db, world.CurriculumId, null, InstitutionalAdmin(world.Adopter)))
+                    .Should().Equal(["LOC-A02"], "the national EPAs and LOC-A01 are on the curriculum; LOC-B01 is not the adopter's");
+                (await PickerAsync(db, world.CurriculumId, world.AdopterItem, InstitutionalAdmin(world.Adopter)))
+                    .Should().Equal(["LOC-A01", "LOC-A02"], "the edited item keeps its own EPA on offer");
+            }
+
+            var pickerReads = pickerCommands.Texts.Where(text => text.Contains("FROM \"Epas\"", StringComparison.Ordinal)).ToList();
+            pickerReads.Should().HaveCount(3, "each picker lists its EPAs in one statement");
+            pickerReads.Should().OnlyContain(text => text.Contains("\"CurriculumItems\"", StringComparison.Ordinal),
+                "the EPAs the curriculum holds are left out in SQL, not after reading the items");
+
+            var readCommands = new CommandLog();
+            await using (var db = NewContext(schema, readCommands))
+            {
+                var administrator = (await ReadAsync(db, world.CurriculumId, Administrator()))!;
+                administrator.Items.Where(item => item.IsLocal).ToDictionary(item => item.Id, item => item.OwningInstitutionName)
+                    .Should().BeEquivalentTo(new Dictionary<int, string?>
+                    {
+                        [world.AdopterItem] = "Adopting Academic",
+                        [world.OtherItem] = "Other Academic"
+                    });
+                administrator.Items.Where(item => !item.IsLocal).Should().HaveCount(15).And.OnlyContain(item => item.OwningInstitutionName == null);
+            }
+
+            var reads = readCommands.Texts.Where(text => text.Contains("\"Curricula\"", StringComparison.Ordinal)).ToList();
+            reads.Should().ContainSingle("the owners' names are read with the curriculum and its items");
+            reads[0].Should().Contain("\"Institutions\"", "each owner is a correlated lookup in the item projection");
+
+            await using (var db = NewContext(schema))
+            {
+                (await ReadAsync(db, world.CurriculumId, InstitutionalAdmin(world.Adopter)))!.Items
+                    .Should().OnlyContain(item => item.OwningInstitutionName == null, "every local item the adopter reads is its own");
+
+                var saved = await new UpdateCurriculumItemCommandHandler(db).Handle(
+                    new UpdateCurriculumItemCommand(world.CurriculumId, world.AdopterItem, world.AdopterEpa, 2, QuotaPeriod.AcademicYear, 3, 12,
+                        null, null, null, null, null, false, Administrator()),
+                    CancellationToken.None);
+                saved.Items.Single(item => item.Id == world.AdopterItem).OwningInstitutionName
+                    .Should().Be("Adopting Academic", "a command's returned curriculum names the owners as the read does");
+            }
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    private static async Task<IReadOnlyList<string>> PickerAsync(ApplicationDbContext db, int curriculumId, int? itemId, ClaimsPrincipal principal)
+        => (await new ListCurriculumItemEpaOptionsQueryHandler(db).Handle(
+                new ListCurriculumItemEpaOptionsQuery(curriculumId, itemId, principal), CancellationToken.None))
+            .Select(epa => epa.Code)
+            .ToList();
+
+    private sealed record World(int CurriculumId, int CollegeId, int Adopter, int Other, int Stranger, int AdopterItem, int OtherItem, int AdopterEpa);
 
     /// <summary>
     /// Three institutions. The first adopts the paediatric curriculum and keeps an item of its own on it; the second keeps
@@ -167,7 +246,7 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
         });
         await db.SaveChangesAsync();
 
-        return new World(curriculum.Id, curriculum.CollegeId, adopter.Id, other.Id, stranger.Id, adopterItem.Id, otherItem.Id);
+        return new World(curriculum.Id, curriculum.CollegeId, adopter.Id, other.Id, stranger.Id, adopterItem.Id, otherItem.Id, adopterEpa.Id);
     }
 
     private static CurriculumItem LocalItem(int curriculumId, int epaId, int institutionId)

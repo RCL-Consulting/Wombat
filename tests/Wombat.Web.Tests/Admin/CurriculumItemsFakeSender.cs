@@ -38,6 +38,13 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         Epa(3, "PAED-003")
     ];
 
+    /// <summary>Two more of the sub-speciality's EPAs, which no default item names: somewhere to add to (T222).</summary>
+    public static readonly IReadOnlyList<EpaDto> MoreEpas =
+    [
+        Epa(4, "PAED-004"),
+        Epa(5, "PAED-005")
+    ];
+
     /// <summary>The v11.1 ladder: level 3 is split, so Order 6 is the College's rung "5" (T100).</summary>
     public static readonly EntrustmentScaleDto CpsaScale = Scale(901, "CPSA Paediatric Entrustment Scale v11.1", "1", "2", "3a", "3b", "4", "5");
 
@@ -79,6 +86,45 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     public Exception? AddFailure { get; init; }
 
+    /// <summary>A refusal the Remove command answers with (T222).</summary>
+    public Exception? RemoveFailure { get; init; }
+
+    /// <summary>
+    /// Whether an Add stores the item it was sent and an Update moves the item to the EPA it was sent, as the handlers
+    /// store them, so the curriculum the page redraws from holds the EPAs the commands put on it (T222). Off by default:
+    /// the older tests check what was sent, not what the list shows after. On, the commands also refuse as the handlers
+    /// do: an Add or Update naming an EPA another item holds, and an Update or Remove of an item the curriculum no longer
+    /// holds (T222 review).
+    /// </summary>
+    public bool StoresItems { get; init; }
+
+    /// <summary>How many times the page read the curriculum (<see cref="GetCurriculumByIdQuery" />).</summary>
+    public int CurriculumReads { get; private set; }
+
+    /// <summary>Puts an item on the curriculum behind the page's back, as another tab or admin would (T222 review).</summary>
+    public void AddElsewhere(int itemId, int epaId)
+        => _items = [.. _items, Item(itemId, epaId, 1, QuotaPeriod.AcademicYear, null)];
+
+    /// <summary>Removes an item from the curriculum behind the page's back, as another tab or admin would (T222 review).</summary>
+    public void RemoveElsewhere(int itemId)
+        => _items = _items.Where(item => item.Id != itemId).ToList();
+
+    /// <summary>Holds each Remove until <see cref="Release" /> (T222, as T206's Withdraw).</summary>
+    public bool HoldRemoves { get; init; }
+
+    /// <summary>
+    /// Holds the first EPA picker query after a Remove has answered until <see cref="Release" />: the page's refresh of
+    /// its pickers, which is still part of the Remove (T222).
+    /// </summary>
+    public bool HoldPickersAfterARemove { get; init; }
+
+    private TaskCompletionSource? _held;
+
+    public void Release() => (_held ?? throw new InvalidOperationException("Nothing was held.")).SetResult();
+
+    /// <summary>The curriculum's items as the fake holds them now, for a picker answer worked out from them.</summary>
+    public IReadOnlyList<CurriculumItemDto> CurrentItems => _items;
+
     public static CurriculumItemDto Item(
         int id,
         int epaId,
@@ -93,12 +139,13 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         string? decisionBodyKey = null,
         bool decisionIsOpportunistic = false,
         int? owningInstitutionId = null,
-        bool canEdit = true)
+        bool canEdit = true,
+        string? owningInstitutionName = null)
     {
-        var epa = Epas.Single(candidate => candidate.Id == epaId);
+        var epa = Epas.Concat(MoreEpas).Single(candidate => candidate.Id == epaId);
         return new CurriculumItemDto(id, epaId, epa.Code, epa.Title, requiredCount, period, minimumLevelOrder, 12, null,
-            stageMinimaJson, permittedToolsJson, epaIsActive, owningInstitutionId, decisionCadence, decisionBodyKey,
-            BodyName(decisionBodyKey), decisionIsOpportunistic, scale?.Id, scale?.Name)
+            stageMinimaJson, permittedToolsJson, epaIsActive, owningInstitutionId, owningInstitutionName, decisionCadence,
+            decisionBodyKey, BodyName(decisionBodyKey), decisionIsOpportunistic, scale?.Id, scale?.Name)
         {
             // What CurriculumAdminScope.ForCaller answers for the caller (T211); an editable item unless a test says not.
             CanEdit = canEdit
@@ -132,9 +179,21 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
+        if (request is RemoveCurriculumItemCommand heldRemove && HoldRemoves)
+        {
+            _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _held.Task.ContinueWith(_ => (TResponse)(object)Remove(heldRemove), TaskScheduler.Default);
+        }
+
+        if (request is ListCurriculumItemEpaOptionsQuery heldOptions && HoldPickersAfterARemove && Removes.Count > 0 && _held is null)
+        {
+            _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _held.Task.ContinueWith(_ => (TResponse)(object)EpaOptions(heldOptions), TaskScheduler.Default);
+        }
+
         object response = request switch
         {
-            GetCurriculumByIdQuery => Curriculum(),
+            GetCurriculumByIdQuery => ReadCurriculum(),
             ListCurriculumItemEpaOptionsQuery options => EpaOptions(options),
             GetEntrustmentScalesListQuery => Scales,
             GetWbaToolsQuery => Vocabulary,
@@ -162,6 +221,29 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         return EpaOptionsFor(query.ItemId) ?? EpaList;
     }
 
+    private CurriculumDto ReadCurriculum()
+    {
+        CurriculumReads++;
+        return Curriculum();
+    }
+
+    // The handlers' refusals, in their words, where the fake stores what the commands send.
+    private void EnsureHeld(int itemId)
+    {
+        if (StoresItems && _items.All(item => item.Id != itemId))
+        {
+            throw new InvalidOperationException("The requested curriculum item was not found.");
+        }
+    }
+
+    private void EnsureEpaNotYetOn(int epaId, int? exceptItemId)
+    {
+        if (StoresItems && _items.Any(item => item.Id != exceptItemId && item.EpaId == epaId))
+        {
+            throw new InvalidOperationException("This curriculum already contains the selected EPA.");
+        }
+    }
+
     private CurriculumDto Curriculum()
         => new(CurriculumId, 2, SubSpecialityId, "Paediatrics", "General Paediatrics", "CMSA", "Paediatrics v11.1", "11.1",
             new DateOnly(2026, 1, 1), null, true, true, _items, SubSpecialityDefaultScaleId)
@@ -172,6 +254,13 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     private CurriculumDto Remove(RemoveCurriculumItemCommand command)
     {
         Removes.Add(command);
+        if (RemoveFailure is not null)
+        {
+            throw RemoveFailure;
+        }
+
+        EnsureHeld(command.ItemId);
+
         _items = _items.Where(item => item.Id != command.ItemId).ToList();
         return Curriculum();
     }
@@ -185,10 +274,17 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
             throw UpdateFailure;
         }
 
+        EnsureHeld(command.ItemId);
+        EnsureEpaNotYetOn(command.EpaId, command.ItemId);
+
+        var epa = StoresItems ? Epas.Concat(MoreEpas).Single(candidate => candidate.Id == command.EpaId) : null;
         _items = _items
             .Select(item => item.Id == command.ItemId
                 ? item with
                 {
+                    EpaId = epa?.Id ?? item.EpaId,
+                    EpaCode = epa?.Code ?? item.EpaCode,
+                    EpaTitle = epa?.Title ?? item.EpaTitle,
                     MinimumLevelOrder = command.MinimumLevelOrder,
                     MinimumLevelByStageJson = CurriculumItem.NormalizeStageOverridesJson(command.MinimumLevelByStageJson),
                     ScaleId = command.ScaleId,
@@ -210,6 +306,18 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         if (AddFailure is not null)
         {
             throw AddFailure;
+        }
+
+        EnsureEpaNotYetOn(command.EpaId, null);
+
+        if (StoresItems)
+        {
+            _items =
+            [
+                .. _items,
+                Item(_items.Select(item => item.Id).DefaultIfEmpty(10).Max() + 1, command.EpaId, command.RequiredCount,
+                    command.QuotaPeriod, CurriculumItem.NormalizePermittedToolsJson(command.PermittedToolKeys), command.MinimumLevelOrder)
+            ];
         }
 
         return Curriculum();

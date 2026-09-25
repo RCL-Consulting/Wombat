@@ -20,15 +20,19 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What an action did. After a Remove it takes the focus once the dialog has closed (T222, as T206's Withdraw): the row's
+   Remove button, which had the focus before the dialog, is gone with its row. *@
+<div @ref="_result" class="action-result" tabindex="-1">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success" Role="status">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger" Role="alert">@_actionError</Alert>
+  }
+</div>
 
 <StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@_loadError">
   @if (_curriculum is not null)
@@ -88,7 +92,9 @@
               <th>Completion window (months)</th>
               <th>Weight</th>
               <th class="col-wrap">Tools</th>
-              <th></th>
+              @* Named, not blank (T222). Not .col-actions: its 12rem would push this table past its container at 1280px
+                 (T176, T198), and two small buttons need no more than their own width. *@
+              <th><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -107,7 +113,7 @@
                   }
                   @if (item.IsLocal)
                   {
-                    <div class="muted text-sm">The institution's own item</div>
+                    <div class="muted text-sm">@OwnerText(item)</div>
                   }
                 </td>
                 <td>
@@ -156,9 +162,14 @@
                   }
                   else
                   {
+                    @* Each button's name starts with its label and names the item's EPA (T222): a column of identical
+                       "Edit" and "Remove" buttons is otherwise indistinguishable to a screen reader. Remove asks first, in
+                       the one ConfirmDialog below; the red button is only in its footer (DESIGN.md § Button system). *@
                     <div class="actions-cell">
-                      <button class="btn btn-sm btn-outline" @onclick="() => BeginEditAsync(item)">Edit</button>
-                      <button class="btn btn-sm btn-danger" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
+                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Edit {item.EpaCode}")"
+                              @onclick="() => BeginEditAsync(item)">Edit</button>
+                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Remove {item.EpaCode}")"
+                              disabled="@(_saving || _removing)" @onclick="() => AskRemoveAsync(item)">Remove</button>
                     </div>
                   }
                 </td>
@@ -309,126 +320,157 @@
          makes a national item exactly where the caller writes the College's (CurriculumItemEpas.OwnerOfNewItem), which
          is what CanEditCurriculum says, so the heading names the kind of item the form will make. *@
       <h3>@(_curriculum.CanEditCurriculum ? "Add item" : "Add your institution's own item")</h3>
-      <EditForm Model="_addModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
+      @if (_addEpas.Count == 0)
+      {
+        @* T222. The picker leaves out every EPA the curriculum already holds, so on a curriculum that holds all it could
+           name the form would offer an empty select and an Add button with nothing to add. It says so instead, and how
+           to get past it. After an Add that leaves nothing, the Add button is gone with the form, so this takes the
+           focus (OnAfterRenderAsync), and it starts with that Add's result (T222 review): the focus reads it out where
+           the operator is, and a status alert at the top of the page, arriving already filled just as the focus moves,
+           may not be read at all. A refusal is only here: the form that would have shown it is gone. *@
+        <div @ref="_addEmpty" class="detail-card detail-card--empty-compact" tabindex="-1">
+          @if (_addEmptyLead is { } lead)
+          {
+            @* The space is an expression: the Razor compiler drops a whitespace-only text node between the span and the text. *@
+            <span class="@(lead.Refused ? "text-danger" : null)">@lead.Text</span>@(" ")
+          }
+          @AddEmptyText
+        </div>
+      }
+      else
+      {
+        <EditForm Model="_addModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
 
-        @if (!string.IsNullOrWhiteSpace(_addError))
-        {
-          <Alert Kind="danger" Role="alert">@_addError</Alert>
-        }
+          @if (!string.IsNullOrWhiteSpace(_addError))
+          {
+            <Alert Kind="danger" Role="alert">@_addError</Alert>
+          }
 
-        <div class="form-grid form-grid--wide">
-          @* Full width here and in the edit row: v11.1's EPA titles run to over a hundred characters. *@
-          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true" HelpText="@EpaHelp">
-            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" aria-describedby="@FieldHelp.Id("curriculum-item-epa")" @bind-Value="_addModel.EpaId">
-              @foreach (var epa in _addEpas)
+          <div class="form-grid form-grid--wide">
+            @* Full width here and in the edit row: v11.1's EPA titles run to over a hundred characters. *@
+            <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true" HelpText="@EpaHelp">
+              <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" aria-describedby="@FieldHelp.Id("curriculum-item-epa")" @bind-Value="_addModel.EpaId">
+                @foreach (var epa in _addEpas)
+                {
+                  <option value="@epa.Id">@EpaOptionText(epa)</option>
+                }
+              </InputSelect>
+            </FormField>
+
+            <FormField Label="Target" InputId="curriculum-item-count" HelpText="@TargetHelp">
+              <InputNumber id="curriculum-item-count" aria-describedby="@FieldHelp.Id("curriculum-item-count")" class="form-control" @bind-Value="_addModel.RequiredCount" />
+            </FormField>
+
+            <FormField Label="Per" InputId="curriculum-item-period" HelpText="@PeriodHelp">
+              <InputSelect id="curriculum-item-period" aria-describedby="@FieldHelp.Id("curriculum-item-period")" class="form-select" TValue="QuotaPeriod" @bind-Value="_addModel.QuotaPeriod">
+                <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
+                <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
+              </InputSelect>
+            </FormField>
+
+            <FormField Label="Decision cadence" InputId="curriculum-item-decision-cadence" HelpText="@DecisionCadenceHelp">
+              <InputSelect id="curriculum-item-decision-cadence" aria-describedby="@FieldHelp.Id("curriculum-item-decision-cadence")" class="form-select" TValue="QuotaPeriod?"
+                           @bind-Value="_addModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_addModel)">
+                <option value="">No published cadence</option>
+                <option value="@QuotaPeriod.Semester">Each semester</option>
+                <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
+              </InputSelect>
+            </FormField>
+
+            <FormField Label="Decided by" InputId="curriculum-item-decision-body" HelpText="@DecisionBodyHelp">
+              <InputSelect id="curriculum-item-decision-body" aria-describedby="@FieldHelp.Id("curriculum-item-decision-body")" class="form-select" TValue="string" @bind-Value="_addModel.DecisionBodyKey">
+                <option value="">The trainee's general panel</option>
+                @foreach (var body in _decisionBodies)
+                {
+                  <option value="@body.Key">@body.Name</option>
+                }
+              </InputSelect>
+            </FormField>
+
+            <FormField Label="Opportunistic" InputId="curriculum-item-decision-opportunistic" HelpText="@DecisionOpportunisticHelp">
+              <div class="form-check">
+                <input id="curriculum-item-decision-opportunistic" aria-describedby="@FieldHelp.Id("curriculum-item-decision-opportunistic")" class="form-check-input" type="checkbox"
+                       checked="@_addModel.DecisionIsOpportunistic" disabled="@(_addModel.DecisionCadence is null)"
+                       @onchange="args => _addModel.DecisionIsOpportunistic = args.Value is true" />
+                <label for="curriculum-item-decision-opportunistic">Decided as rotation or opportunity allows</label>
+              </div>
+            </FormField>
+
+            @{ var addScaleReason = AddScaleReason(); }
+            <FormField Label="Entrustment scale" InputId="curriculum-item-scale" HelpText="@ScaleHelp">
+              <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?"
+                           aria-describedby="@FieldHelp.DescribedBy("curriculum-item-scale", ScaleHelp, addScaleReason is null ? null : AddScaleReasonId)"
+                           @bind-Value="_addModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_addModel)">
+                <option value="">Not pinned</option>
+                @foreach (var scale in _scales)
+                {
+                  <option value="@scale.Id">@scale.Name</option>
+                }
+              </InputSelect>
+              @if (addScaleReason is not null)
               {
-                <option value="@epa.Id">@EpaOptionText(epa)</option>
+                <small id="@AddScaleReasonId" class="muted">Suggested because @addScaleReason.</small>
               }
-            </InputSelect>
-          </FormField>
+            </FormField>
 
-          <FormField Label="Target" InputId="curriculum-item-count" HelpText="@TargetHelp">
-            <InputNumber id="curriculum-item-count" aria-describedby="@FieldHelp.Id("curriculum-item-count")" class="form-control" @bind-Value="_addModel.RequiredCount" />
-          </FormField>
+            <FormField Label="Minimum level" InputId="curriculum-item-level" Required="true">
+              <RungPicker Id="curriculum-item-level" Scale="ScaleOf(_addModel.ScaleId)" @bind-Value="_addModel.MinimumLevelOrder" />
+            </FormField>
 
-          <FormField Label="Per" InputId="curriculum-item-period" HelpText="@PeriodHelp">
-            <InputSelect id="curriculum-item-period" aria-describedby="@FieldHelp.Id("curriculum-item-period")" class="form-select" TValue="QuotaPeriod" @bind-Value="_addModel.QuotaPeriod">
-              <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
-              <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Decision cadence" InputId="curriculum-item-decision-cadence" HelpText="@DecisionCadenceHelp">
-            <InputSelect id="curriculum-item-decision-cadence" aria-describedby="@FieldHelp.Id("curriculum-item-decision-cadence")" class="form-select" TValue="QuotaPeriod?"
-                         @bind-Value="_addModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_addModel)">
-              <option value="">No published cadence</option>
-              <option value="@QuotaPeriod.Semester">Each semester</option>
-              <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Decided by" InputId="curriculum-item-decision-body" HelpText="@DecisionBodyHelp">
-            <InputSelect id="curriculum-item-decision-body" aria-describedby="@FieldHelp.Id("curriculum-item-decision-body")" class="form-select" TValue="string" @bind-Value="_addModel.DecisionBodyKey">
-              <option value="">The trainee's general panel</option>
-              @foreach (var body in _decisionBodies)
-              {
-                <option value="@body.Key">@body.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Opportunistic" InputId="curriculum-item-decision-opportunistic" HelpText="@DecisionOpportunisticHelp">
-            <div class="form-check">
-              <input id="curriculum-item-decision-opportunistic" aria-describedby="@FieldHelp.Id("curriculum-item-decision-opportunistic")" class="form-check-input" type="checkbox"
-                     checked="@_addModel.DecisionIsOpportunistic" disabled="@(_addModel.DecisionCadence is null)"
-                     @onchange="args => _addModel.DecisionIsOpportunistic = args.Value is true" />
-              <label for="curriculum-item-decision-opportunistic">Decided as rotation or opportunity allows</label>
+            <div class="full-width">
+              <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
             </div>
-          </FormField>
 
-          @{ var addScaleReason = AddScaleReason(); }
-          <FormField Label="Entrustment scale" InputId="curriculum-item-scale" HelpText="@ScaleHelp">
-            <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?"
-                         aria-describedby="@FieldHelp.DescribedBy("curriculum-item-scale", ScaleHelp, addScaleReason is null ? null : AddScaleReasonId)"
-                         @bind-Value="_addModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_addModel)">
-              <option value="">Not pinned</option>
-              @foreach (var scale in _scales)
-              {
-                <option value="@scale.Id">@scale.Name</option>
-              }
-            </InputSelect>
-            @if (addScaleReason is not null)
-            {
-              <small id="@AddScaleReasonId" class="muted">Suggested because @addScaleReason.</small>
-            }
-          </FormField>
+            <FormField Label="Completion window (months)" InputId="curriculum-item-window" HelpText="@WindowHelp">
+              <InputNumber id="curriculum-item-window" aria-describedby="@FieldHelp.Id("curriculum-item-window")" class="form-control" @bind-Value="_addModel.WindowMonths" />
+            </FormField>
 
-          <FormField Label="Minimum level" InputId="curriculum-item-level" Required="true">
-            <RungPicker Id="curriculum-item-level" Scale="ScaleOf(_addModel.ScaleId)" @bind-Value="_addModel.MinimumLevelOrder" />
-          </FormField>
+            <FormField Label="Weight" InputId="curriculum-item-weight">
+              <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_addModel.Weight" />
+            </FormField>
 
-          <div class="full-width">
-            <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
+            @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
+            <fieldset class="full-width" aria-describedby="add-tools-help">
+              <legend>Tools</legend>
+              <p id="add-tools-help" class="muted">@ToolsHelp</p>
+              <div class="check-grid">
+                @foreach (var tool in ToolOptions(_addModel))
+                {
+                  <div class="form-check">
+                    <input id="@($"add-tool-{tool.Key}")" class="form-check-input" type="checkbox"
+                           checked="@_addModel.PermittedToolKeys.Contains(tool.Key)"
+                           @onchange="args => ToggleTool(_addModel, tool.Key, args)" />
+                    <label for="@($"add-tool-{tool.Key}")">@tool.Name</label>
+                  </div>
+                }
+              </div>
+            </fieldset>
           </div>
 
-          <FormField Label="Completion window (months)" InputId="curriculum-item-window" HelpText="@WindowHelp">
-            <InputNumber id="curriculum-item-window" aria-describedby="@FieldHelp.Id("curriculum-item-window")" class="form-control" @bind-Value="_addModel.WindowMonths" />
-          </FormField>
-
-          <FormField Label="Weight" InputId="curriculum-item-weight">
-            <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_addModel.Weight" />
-          </FormField>
-
-          @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
-          <fieldset class="full-width" aria-describedby="add-tools-help">
-            <legend>Tools</legend>
-            <p id="add-tools-help" class="muted">@ToolsHelp</p>
-            <div class="check-grid">
-              @foreach (var tool in ToolOptions(_addModel))
-              {
-                <div class="form-check">
-                  <input id="@($"add-tool-{tool.Key}")" class="form-check-input" type="checkbox"
-                         checked="@_addModel.PermittedToolKeys.Contains(tool.Key)"
-                         @onchange="args => ToggleTool(_addModel, tool.Key, args)" />
-                  <label for="@($"add-tool-{tool.Key}")">@tool.Name</label>
-                </div>
-              }
-            </div>
-          </fieldset>
-        </div>
-
-        <FormActions>
-          @* Always rendered, filled only when adding is off; see the edit row's status for why. *@
-          <span id="add-minima-status" class="muted" role="status">@(MinimaComplete(_addModel) ? null : IncompleteText(_addModel, "Adding"))</span>
-          <button type="submit" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_addModel))"
-                  aria-describedby="add-minima-status">Add item</button>
-        </FormActions>
-      </EditForm>
+          <FormActions>
+            @* Always rendered, filled only when adding is off; see the edit row's status for why. *@
+            <span id="add-minima-status" class="muted" role="status">@(MinimaComplete(_addModel) ? null : IncompleteText(_addModel, "Adding"))</span>
+            <button type="submit" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_addModel))"
+                    aria-describedby="add-minima-status">Add item</button>
+          </FormActions>
+        </EditForm>
+      }
     </div>
   }
 </StatePanel>
+
+@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system; T222). Removing an item deletes its
+   settings and every trainee's tally toward it (CurriculumItemProgress cascades), for every institution on the
+   curriculum where the item is the College's. One dialog for the page, naming the item it was opened from. *@
+<ConfirmDialog @ref="_confirmRemove"
+               Title="Remove this item?"
+               Body="@RemoveBody"
+               ConfirmLabel="Remove item"
+               DangerAction="true"
+               OnConfirm="RemoveItemAsync"
+               OnCancel="CancelRemove" />
 
 @code {
   [Parameter]
@@ -437,15 +479,41 @@
   private CurriculumDto? _curriculum;
   // What each EPA picker offers (T195): the Add form's for an item the caller would own, the edit row's for the item
   // being edited, whose owner is stored. Each is ListCurriculumItemEpaOptionsQuery's answer, the rule the command it
-  // feeds enforces, so the page filters neither.
+  // feeds enforces, so the page filters neither. Since T222 that answer leaves out the EPAs the curriculum already
+  // holds, so it changes with every Add, Save and Remove, and is asked for again after each (RefreshPickersAsync).
   private IReadOnlyList<EpaDto> _addEpas = [];
   private IReadOnlyList<EpaDto> _editEpas = [];
 
   /// <summary>
   /// Whether the edit row's EPA is one its picker offers. Only the stored EPA can be missing from it: anything chosen was
-  /// chosen from the list.
+  /// chosen from the list, and a choice a refresh takes away goes back to the stored EPA (<see cref="RefreshPickersAsync" />).
   /// </summary>
   private bool EditEpaOffered => _editEpas.Any(epa => epa.Id == _editModel.EpaId);
+
+  // Remove asks first (T222). The item the open dialog asks about, or null when none is open.
+  private ConfirmDialog? _confirmRemove;
+  private CurriculumItemDto? _pendingRemove;
+
+  // A Remove has been confirmed and has not yet answered, its pickers included.
+  private bool _removing;
+
+  // The region holding an action's result, which takes the focus after a Remove; and the Add form's empty state, which
+  // takes it after an Add that leaves nothing to add. Each is focused in OnAfterRenderAsync, once it is on the page and
+  // the dialog has closed: while a modal dialog is open, nothing outside it can take the focus (T206 review).
+  private ElementReference _result;
+  private ElementReference _addEmpty;
+  private bool _focusResult;
+  private bool _focusAddEmpty;
+
+  // The result of the Add that left nothing to add, at the head of the empty state that took the focus: "Curriculum item
+  // added.", or the refusal of an Add sent from a page that was out of date. Cleared with every other result.
+  private (string Text, bool Refused)? _addEmptyLead;
+
+  /// <summary>The region holding an action's result, which takes the focus after a Remove. For its tests.</summary>
+  internal ElementReference ResultRegion => _result;
+
+  /// <summary>The Add form's empty state, which takes the focus after an Add that leaves nothing to add. For its tests.</summary>
+  internal ElementReference AddEmptyState => _addEmpty;
 
   private IReadOnlyList<EntrustmentScaleDto> _scales = [];
   private IReadOnlyList<WbaToolDto> _tools = [];
@@ -469,7 +537,7 @@
   // One help text per field, printed by the edit form and the Add form alike (T176): the two are the same fields, in the
   // same order, with the same help, and CurriculumItemsEditLayoutTests holds them to it. The scale's matters most while
   // editing, which is when a change of ladder clears the minima already stored.
-  private const string EpaHelp = "Lists only the EPAs this item can name: the national EPAs of this curriculum's sub-speciality and, for an item an institution added, that institution's own local EPAs.";
+  private const string EpaHelp = "Lists only the EPAs this item can name that are not already on this curriculum: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. An EPA can be on a curriculum only once.";
   private const string TargetHelp = "Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.";
   private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
   private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
@@ -484,8 +552,7 @@
   {
     _loading = true;
     _loadError = null;
-    _actionError = null;
-    _statusMessage = null;
+    ClearResult();
 
     try
     {
@@ -523,21 +590,44 @@
 
     _addError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), _addModel.DecisionCadence, NullIfBlank(_addModel.DecisionBodyKey), _addModel.DecisionIsOpportunistic, authState.User, _addModel.ScaleId)), "Curriculum item added.");
+    _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), _addModel.DecisionCadence, NullIfBlank(_addModel.DecisionBodyKey), _addModel.DecisionIsOpportunistic, authState.User, _addModel.ScaleId)), AddedMessage);
     if (_addError is not null)
     {
+      // Refused, likeliest because the page is out of date: the EPA was put on the curriculum elsewhere since the picker
+      // was asked. The form keeps what was picked; the picker stops offering what was just refused (T222 review).
+      await ReloadAfterRefusalAsync(authState.User);
+      if (_addEpas.Count == 0)
+      {
+        // Nothing is left to add, so the form, and the refusal in it, are gone. The refusal heads the empty state.
+        _addEmptyLead = (_addError, true);
+        _addError = null;
+        _focusAddEmpty = true;
+      }
+
       return;
     }
 
+    // The EPA just added is on the curriculum now, so the picker no longer offers it (T222). Asked before the form is
+    // reset, which selects the first EPA still on offer.
+    await RefreshPickersAsync(authState.User);
     ResetItemModel();
+
+    // The Add button went with the form if nothing is left to add; the empty state that replaced it takes the focus,
+    // and says first what the Add did.
+    if (_addEpas.Count == 0)
+    {
+      _addEmptyLead = (AddedMessage, false);
+      _focusAddEmpty = true;
+    }
   }
+
+  private const string AddedMessage = "Curriculum item added.";
 
   private async Task BeginEditAsync(CurriculumItemDto item)
   {
     // The edit row's picker is the item's own (T195): the item's owner decides which local EPAs it may name. A caller
     // the Update command would refuse is told so at the top, and the row does not open on a form they could not save.
-    _actionError = null;
-    _statusMessage = null;
+    ClearResult();
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -591,24 +681,178 @@
     _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), _editModel.DecisionCadence, NullIfBlank(_editModel.DecisionBodyKey), _editModel.DecisionIsOpportunistic, authState.User, _editModel.ScaleId)), "Curriculum item saved.");
     if (_rowError is not null)
     {
+      // Refused, possibly because the page is out of date (T222 review): the EPA chosen was put on the curriculum
+      // elsewhere, and the row goes back to the item's stored EPA; or the item itself was removed elsewhere.
+      await ReloadAfterRefusalAsync(authState.User);
+      if (_editingItemId is null)
+      {
+        // The item is gone, and its row with it: Save, and the refusal beside it. The refusal moves to the top of the
+        // page and takes the focus, as a Remove's does.
+        _actionError = _rowError;
+        _rowError = null;
+        _focusResult = true;
+      }
+
       return;
     }
 
     _editingItemId = null;
+
+    // A save that moved the item to another EPA frees the one it held and takes the one it names (T222).
+    await RefreshPickersAsync(authState.User);
   }
 
-  private async Task RemoveItemAsync(int itemId)
+  /// <summary>
+  /// The Remove dialog's question, naming the item it was opened from (T222), and whose trainees it stops measuring: a
+  /// national item measures the trainees of every institution that has adopted the curriculum, an institution's own item
+  /// only that institution's (T222 review). The owner is named as the row names it (<see cref="OwnerText" />).
+  /// </summary>
+  private string RemoveBody
+    => _pendingRemove is not { } item || _curriculum is null
+      ? string.Empty
+      : $"Remove {item.EpaCode} - {item.EpaTitle} from {_curriculum.Name} ({_curriculum.Version})? Its target, minima, decision and tool list are deleted, and so is each trainee's tally toward it. {NoLongerMeasured(item)} This cannot be undone.";
+
+  private static string NoLongerMeasured(CurriculumItemDto item)
+    => !item.IsLocal
+      ? "Trainees on this curriculum, in every institution that has adopted it, are no longer measured against this EPA."
+      : item.OwningInstitutionName is { Length: > 0 } owner
+        ? $"{owner}'s trainees on this curriculum are no longer measured against this EPA."
+        : "Your institution's trainees on this curriculum are no longer measured against this EPA.";
+
+  private async Task AskRemoveAsync(CurriculumItemDto item)
   {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _actionError = await RunAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, itemId, authState.User)), "Curriculum item removed.");
+    if (_saving || _removing)
+    {
+      return;
+    }
+
+    _pendingRemove = item;
+    ClearResult();
+
+    if (_confirmRemove is not null)
+    {
+      await _confirmRemove.ShowAsync();
+    }
+  }
+
+  private void CancelRemove() => _pendingRemove = null;
+
+  /// <remarks>
+  /// Sent at most once at a time, as the MSF campaign list's Withdraw is (T206): the flag is set before the first await,
+  /// so a second confirm that reaches the circuit before the re-render does nothing.
+  /// </remarks>
+  private async Task RemoveItemAsync()
+  {
+    if (_pendingRemove is not { } item || _saving || _removing)
+    {
+      return;
+    }
+
+    _removing = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _actionError = await RunAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, item.Id, authState.User)), $"{item.EpaCode} removed from this curriculum.");
+      if (_actionError is null)
+      {
+        // Its EPA is free again, so the pickers offer it (T222).
+        await RefreshPickersAsync(authState.User);
+      }
+      else
+      {
+        // Refused, possibly because the item was removed elsewhere: the list shows what the curriculum holds now.
+        await ReloadAfterRefusalAsync(authState.User);
+      }
+    }
+    finally
+    {
+      _pendingRemove = null;
+      _removing = false;
+    }
+
+    _focusResult = true;
+  }
+
+  /// <summary>
+  /// Asks each picker again after an Add, a Save or a Remove has changed which EPAs the curriculum holds (T222): the Add
+  /// form's, and the edit row's while one is open.
+  /// </summary>
+  /// <remarks>
+  /// The Add form keeps what the operator had chosen while it is still on offer, and otherwise moves to the first EPA that
+  /// is. The edit row keeps its choice likewise; a choice no longer on offer (the Add form has just put it on the
+  /// curriculum) goes back to the item's stored EPA, the one EPA the row may show unoffered (<see cref="EditEpaOffered" />).
+  /// An open edit row whose item the curriculum no longer holds (removed elsewhere) is closed: there is nothing left to
+  /// save, and its picker would be refused. A failure is shown at the top unless a refusal is already there.
+  /// </remarks>
+  private async Task RefreshPickersAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    if (_editingItemId is int open && _curriculum?.Items.Any(item => item.Id == open) != true)
+    {
+      _editingItemId = null;
+    }
+
+    try
+    {
+      _addEpas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, null, user));
+      if (_addEpas.All(epa => epa.Id != _addModel.EpaId))
+      {
+        _addModel.EpaId = _addEpas.FirstOrDefault()?.Id ?? 0;
+      }
+
+      if (_editingItemId is int editing)
+      {
+        _editEpas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, editing, user));
+        if (!EditEpaOffered && _curriculum?.Items.FirstOrDefault(item => item.Id == editing) is { } stored)
+        {
+          _editModel.EpaId = stored.EpaId;
+        }
+      }
+    }
+    catch (Exception exception)
+    {
+      _actionError ??= exception.Message;
+    }
+  }
+
+  /// <summary>
+  /// After a refused Add, Save or Remove, reads the curriculum again and asks the pickers again (T222 review). The
+  /// likeliest refusal is a page that is out of date: an EPA put on the curriculum, or an item removed, in another tab or
+  /// by another admin. Left as it was, the page would go on offering what the command had just refused, which is the dead
+  /// end T222 removed, reached through a stale page. The refusal is kept. If the curriculum cannot be read again, the page
+  /// stays as it was and the refusal says why the action was not taken (as T206's Withdraw).
+  /// </summary>
+  private async Task ReloadAfterRefusalAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    try
+    {
+      if (await Sender.Send(new GetCurriculumByIdQuery(Id, user)) is not { } reloaded)
+      {
+        return;
+      }
+
+      _curriculum = reloaded;
+    }
+    catch (Exception)
+    {
+      return;
+    }
+
+    await RefreshPickersAsync(user);
+  }
+
+  /// <summary>Clears the last action's result, wherever it is shown, as the next action starts.</summary>
+  private void ClearResult()
+  {
+    _statusMessage = null;
+    _actionError = null;
+    _addEmptyLead = null;
   }
 
   /// <summary>Runs a command and reloads the curriculum from its result. Returns the refusal, or null on success.</summary>
   private async Task<string?> RunAsync(Func<Task<CurriculumDto>> action, string successMessage)
   {
     _saving = true;
-    _actionError = null;
-    _statusMessage = null;
+    ClearResult();
 
     try
     {
@@ -810,6 +1054,46 @@
     => item.QuotaPeriod == QuotaPeriod.Semester
       ? $"{item.RequiredCount} per semester"
       : $"{item.RequiredCount} per academic year";
+
+  /// <summary>
+  /// Whose own item a local item is (T222). The query names the owner to a caller whose reads span institutions
+  /// (<c>CurriculumAdminScope.NamesItemOwners</c>: an Administrator), who could not otherwise tell one institution's
+  /// items from another's. To anyone else every local item they read is their own institution's, and it says so.
+  /// </summary>
+  private static string OwnerText(CurriculumItemDto item)
+    => item.OwningInstitutionName is { Length: > 0 } owner ? $"{owner}'s own item" : "Your institution's own item";
+
+  /// <summary>
+  /// The Add form's empty state, in the words of the item it would have added (T222): a national item where the caller
+  /// writes the College's (<see cref="CurriculumDto.CanEditCurriculum" />, as the form's heading reads it), else one of
+  /// the caller's institution's own. It says what would have to change for there to be something to add.
+  /// </summary>
+  private string AddEmptyText
+    => _curriculum is not { } curriculum
+      ? string.Empty
+      : curriculum.CanEditCurriculum
+        ? $"Every national EPA of {curriculum.SubSpecialityName} is already on this curriculum, so there is none left to add. To add an item, first add a national EPA of {curriculum.SubSpecialityName}, or remove an item to free its EPA."
+        : $"Every EPA your institution could add is already on this curriculum: each national EPA of {curriculum.SubSpecialityName}, and each of your institution's own EPAs of {curriculum.SubSpecialityName}. To add an item of your own, first create a local EPA of {curriculum.SubSpecialityName}.";
+
+  /// <remarks>
+  /// A Remove's result takes the focus once the browser has acknowledged the render that follows it; by then the dialog
+  /// is closed, since ConfirmDialog closes it as soon as <see cref="RemoveItemAsync" /> returns (T206 review). The Add
+  /// form's empty state takes it after the Add that emptied the picker, whose button went with the form.
+  /// </remarks>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult)
+    {
+      _focusResult = false;
+      await _result.FocusAsync();
+    }
+
+    if (_focusAddEmpty)
+    {
+      _focusAddEmpty = false;
+      await _addEmpty.FocusAsync();
+    }
+  }
 
   private sealed class CurriculumItemFormModel
   {

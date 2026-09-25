@@ -217,7 +217,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
     }
 }
 
@@ -286,7 +286,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
     }
 }
 
@@ -329,6 +329,6 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
     }
 }

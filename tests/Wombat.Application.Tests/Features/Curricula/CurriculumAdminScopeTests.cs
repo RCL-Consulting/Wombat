@@ -182,6 +182,100 @@ public sealed class CurriculumAdminScopeTests
         });
     }
 
+    // ---- Whose own item (T222) ----
+
+    [Fact]
+    public async Task AnAdministrator_ReadsWhichInstitutionOwnsEachLocalItem_OnTheReadAndTheList()
+    {
+        // An Administrator reads every institution's items, so "The institution's own item" on each told them nothing
+        // about whose it was. The read and the list name the owner; a national item has none.
+        await using var dbContext = await SeededAsync();
+
+        var read = (await ReadAsync(dbContext, Adopted, Caller.Administrator))!;
+        var list = (await new GetCurriculaListQueryHandler(dbContext).Handle(
+            new GetCurriculaListQuery(Principal(Caller.Administrator)), CancellationToken.None)).Single(row => row.Id == Adopted);
+
+        foreach (var curriculum in new[] { read, list })
+        {
+            Owners(curriculum).Should().BeEquivalentTo(new Dictionary<int, string?>
+            {
+                [NationalItem] = null,
+                [ALocalItem] = "Institution A",
+                [ANationalEpaItem] = "Institution A",
+                [BLocalItem] = "Institution B",
+                [BNationalEpaItem] = "Institution B"
+            });
+        }
+    }
+
+    [Theory]
+    [InlineData(Caller.InstitutionalAdminA)]
+    // A CollegeAdmin who is also an InstitutionalAdmin reads only their institution's items, as an InstitutionalAdmin does.
+    [InlineData(Caller.OtherCollegeAdminAndInstitutionalAdminA)]
+    public async Task AnInstitutionalAdmin_IsNotToldTheirOwnInstitutionsName_EveryLocalItemTheyReadIsTheirs(Caller caller)
+    {
+        await using var dbContext = await SeededAsync();
+
+        var read = (await ReadAsync(dbContext, Adopted, caller))!;
+
+        read.Items.Where(item => item.IsLocal).Should().NotBeEmpty("guard: A's own items are read");
+        read.Items.Should().OnlyContain(item => item.OwningInstitutionName == null,
+            "the editor says \"Your institution's own item\": the name would tell them nothing");
+    }
+
+    [Theory]
+    [InlineData(Caller.Administrator, true)]
+    [InlineData(Caller.CollegeAdmin, true)]
+    [InlineData(Caller.InstitutionalAdminA, false)]
+    [InlineData(Caller.OtherCollegeAdminAndInstitutionalAdminA, false)]
+    public void NamesItemOwners_ForACallerWhoseReadsCanSpanInstitutions(Caller caller, bool names)
+        => CurriculumAdminScope.NamesItemOwners(Principal(caller)).Should().Be(names);
+
+    [Fact]
+    public async Task EachItemCommand_ReturnsTheOwnersNamed_AsTheReadDoes()
+    {
+        // The item editor redraws from what each command returns (CurriculumMappings.ToDtoAsync), so the names must not
+        // vanish the moment an Administrator saves.
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+        }
+
+        var administrator = Principal(Caller.Administrator);
+        var expected = new Dictionary<int, string?>
+        {
+            [NationalItem] = null,
+            [ALocalItem] = "Institution A",
+            [ANationalEpaItem] = "Institution A",
+            [BLocalItem] = "Institution B",
+            [BNationalEpaItem] = "Institution B"
+        };
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var updated = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
+                new UpdateCurriculumItemCommand(Adopted, ALocalItem, LocA01, 2, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, administrator),
+                CancellationToken.None);
+            Owners(updated).Should().BeEquivalentTo(expected);
+        }
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var removed = await new RemoveCurriculumItemCommandHandler(dbContext).Handle(
+                new RemoveCurriculumItemCommand(Adopted, BLocalItem, administrator), CancellationToken.None);
+            Owners(removed).Should().BeEquivalentTo(expected.Where(entry => entry.Key != BLocalItem).ToDictionary());
+        }
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var byInstitution = await new AddCurriculumItemCommandHandler(dbContext).Handle(
+                new AddCurriculumItemCommand(Adopted, LocA02, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(Caller.InstitutionalAdminA)),
+                CancellationToken.None);
+            byInstitution.Items.Should().OnlyContain(item => item.OwningInstitutionName == null, "institution A is told none");
+        }
+    }
+
     // ---- The list ----
 
     [Theory]
@@ -244,8 +338,10 @@ public sealed class CurriculumAdminScopeTests
 
             var offered = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
                 new ListCurriculumItemEpaOptionsQuery(Adopted, null, principal), CancellationToken.None);
-            offered.Select(epa => epa.Code).Should().Equal(["LOC-A01", "LOC-A02", "PAED-001", "PAED-002", "PAED-003"],
-                "an item of A's own names a national EPA or one of A's, never B's");
+            // An item of A's own names a national EPA or one of A's, never B's (T195); and not one the curriculum already
+            // holds, whoever's item holds it (T222): PAED-001 to 003 and LOC-A01 are all items here.
+            offered.Select(epa => epa.Code).Should().Equal(["LOC-A02"],
+                "of the national EPAs and A's own, only LOC-A02 is not yet on the curriculum");
 
             var added = await new AddCurriculumItemCommandHandler(dbContext).Handle(
                 new AddCurriculumItemCommand(Adopted, LocA02, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, principal),
@@ -398,6 +494,9 @@ public sealed class CurriculumAdminScopeTests
 
     private static Dictionary<int, bool> Editability(CurriculumDto curriculum)
         => curriculum.Items.ToDictionary(item => item.Id, item => item.CanEdit);
+
+    private static Dictionary<int, string?> Owners(CurriculumDto curriculum)
+        => curriculum.Items.ToDictionary(item => item.Id, item => item.OwningInstitutionName);
 
     private static Task<CurriculumDto?> ReadAsync(ApplicationDbContext dbContext, int curriculumId, Caller caller)
         => new GetCurriculumByIdQueryHandler(dbContext).Handle(

@@ -11,8 +11,9 @@ namespace Wombat.Application.Features.Curricula;
 
 /// <summary>
 /// The EPAs the curriculum item editor's picker offers (T195): for the Add form when <paramref name="ItemId" /> is
-/// null, else for that item's edit row. Exactly <see cref="CurriculumItemEpas.Nameable" />, the rule the Add and Update
-/// handlers enforce.
+/// null, else for that item's edit row. Exactly what the Add and Update handlers accept: an EPA the item may name
+/// (<see cref="CurriculumItemEpas.Nameable" />) that the curriculum does not already hold, apart from the edited item's
+/// own (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222). Empty when every such EPA is already on it.
 /// </summary>
 /// <remarks>
 /// It replaces <c>ListEpasForSubSpecialityQuery</c> on that page, which listed the EPAs in the CALLER's scope: every
@@ -79,6 +80,7 @@ public sealed class ListCurriculumItemEpaOptionsQueryHandler
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
-        return await CurriculumItemEpas.ListAsync(_dbContext, curriculum.SubSpecialityId, owningInstitutionId, cancellationToken);
+        return await CurriculumItemEpas.ListAsync(
+            _dbContext, request.CurriculumId, curriculum.SubSpecialityId, owningInstitutionId, request.ItemId, cancellationToken);
     }
 }

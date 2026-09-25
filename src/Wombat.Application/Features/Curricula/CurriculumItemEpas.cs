@@ -78,15 +78,30 @@ public static class CurriculumItemEpas
             ? principal.CanAccessCollege(collegeId)
             : principal.CanAccessInstitution(itemOwningInstitutionId.Value);
 
-    /// <summary>The EPAs the picker offers such an item, by code. Inactive ones included, as the item editor marks them (T158).</summary>
+    /// <summary>
+    /// The EPAs the picker offers such an item, by code: the ones it may name (<see cref="Nameable" />) that the curriculum
+    /// does not already hold (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222), so exactly the ones the Add or
+    /// Update command accepts. Inactive ones included, as the item editor marks them (T158).
+    /// </summary>
+    /// <param name="editedItemId">The item being edited, whose own EPA stays on offer; null for the Add form.</param>
     internal static async Task<IReadOnlyList<EpaDto>> ListAsync(
         IApplicationDbContext dbContext,
+        int curriculumId,
         int curriculumSubSpecialityId,
         int? itemOwningInstitutionId,
+        int? editedItemId,
         CancellationToken cancellationToken)
-        => await dbContext.Set<Epa>()
+    {
+        // Composed into the one statement as a NOT IN subquery; the curriculum's items are not read first.
+        var held = dbContext.Set<CurriculumItem>()
+            .Where(item => item.CurriculumId == curriculumId)
+            .Where(CurriculumAdminScope.HoldsItsEpaAgainst(editedItemId))
+            .Select(item => item.EpaId);
+
+        return await dbContext.Set<Epa>()
             .AsNoTracking()
             .Where(Nameable(curriculumSubSpecialityId, itemOwningInstitutionId))
+            .Where(entity => !held.Contains(entity.Id))
             .OrderBy(entity => entity.Code)
             .ThenBy(entity => entity.Id)
             .Select(entity => new EpaDto(
@@ -102,6 +117,7 @@ public static class CurriculumItemEpas
                 entity.IsActive,
                 entity.CreatedOn))
             .ToListAsync(cancellationToken);
+    }
 
     /// <summary>
     /// Refuses an EPA the item may not name, including one that does not exist. Called before either handler mutates

@@ -41,13 +41,35 @@ public sealed class CurriculumItemsScopeTests : TestContext
             var row = Row(cut, code);
             row.QuerySelectorAll("button").Should().BeEmpty($"{code} is the College's, and the Update and Remove commands refuse it");
             row.QuerySelectorAll("td").Last().TextContent.Trim().Should().Be("Set by the College");
-            row.TextContent.Should().NotContain("The institution's own item");
+            row.TextContent.Should().NotContain("own item");
         }
 
         var own = Row(cut, "PAED-003");
         Buttons(own).Should().Equal("Edit", "Remove");
-        own.QuerySelector("td")!.TextContent.Should().Contain("The institution's own item");
+        OwnerLine(own).Should().Be("Your institution's own item",
+            "the query names no owner to an institution, every local item it reads being its own (T222)");
     }
+
+    [Fact]
+    public void AnAdministrator_IsToldWhoseOwnItemEachLocalItemIs()
+    {
+        // T222. An Administrator reads every institution's items; the query names each owner, and the row says whose.
+        SignIn(WombatRoles.Administrator);
+        var cut = RenderPage(new FakeSender(
+        [
+            FakeSender.Item(11, 1, 3, QuotaPeriod.Semester, null),
+            FakeSender.Item(12, 2, 3, QuotaPeriod.AcademicYear, null, owningInstitutionId: InstitutionA, owningInstitutionName: "Groote Schuur Hospital"),
+            FakeSender.Item(13, 3, 1, QuotaPeriod.AcademicYear, null, owningInstitutionId: 41, owningInstitutionName: "Red Cross War Memorial Children's Hospital")
+        ]));
+
+        OwnerLine(Row(cut, "PAED-001")).Should().BeNull("a national item is the College's, and says nothing");
+        OwnerLine(Row(cut, "PAED-002")).Should().Be("Groote Schuur Hospital's own item");
+        OwnerLine(Row(cut, "PAED-003")).Should().Be("Red Cross War Memorial Children's Hospital's own item");
+    }
+
+    /// <summary>The line under an item's EPA saying whose own item it is, or null for a national item.</summary>
+    private static string? OwnerLine(IElement row)
+        => row.QuerySelector("td")!.QuerySelector(".muted.text-sm")?.TextContent.Trim();
 
     [Fact]
     public void AnInstitution_IsToldTheNationalItemsAreReadOnly_AndIsNotSentToTheCurriculumsOwnPage()
@@ -93,10 +115,14 @@ public sealed class CurriculumItemsScopeTests : TestContext
         var sender = InstitutionsView();
         var cut = RenderPage(sender);
 
+        JSInterop.SetupVoid("wombatDialog.showModal", _ => true).SetVoidResult();
+        JSInterop.SetupVoid("wombatDialog.close", _ => true).SetVoidResult();
+
         ClickIn(Row(cut, "PAED-003"), "Remove");
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Remove item").Click();
 
         sender.Removes.Should().ContainSingle().Which.ItemId.Should().Be(13);
-        cut.FindAll("tbody tr").Should().HaveCount(2);
+        cut.WaitForAssertion(() => cut.FindAll("tbody tr").Should().HaveCount(2));
     }
 
     [Fact]

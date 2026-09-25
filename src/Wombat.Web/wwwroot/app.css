@@ -705,6 +705,13 @@ h1[tabindex="-1"]:focus {
   text-align: center;
 }
 
+/* An empty state that takes the focus when the action that emptied it removed the control that had it: the curriculum
+   item editor's Add form, once nothing is left to add (T222). tabindex="-1", so only the page can focus it. */
+.detail-card--empty-compact[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 /* ── Dashboard grid ───────────────────────────────── */
 .dashboard-grid {
   align-items: start;

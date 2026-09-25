@@ -236,7 +236,8 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
             .Should().Equal(
                 ("EPA", "col-wrap col-wrap--wide"), ("Target and decision", ""), ("Scale", ""), ("Minimum level", ""),
                 ("Minimum by training year", ""), ("Completion window (months)", ""), ("Weight", ""), ("Tools", "col-wrap"),
-                ("", ""));
+                // Named for a screen reader only (T222), and not .col-actions, whose 12rem this table has no room for.
+                ("Actions", ""));
 
         var itemRows = cut.FindAll("tbody tr").Where(row => row.QuerySelector("td[colspan]") is null).ToList();
         itemRows.Should().HaveCount(2);

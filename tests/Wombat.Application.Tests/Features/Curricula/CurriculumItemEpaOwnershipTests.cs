@@ -245,15 +245,18 @@ public sealed class CurriculumItemEpaOwnershipTests
     // ---- The picker ----
 
     [Theory]
-    [InlineData(Caller.Administrator, null, new[] { "PAED-001", "PAED-009" })]
-    [InlineData(Caller.CollegeAdmin, null, new[] { "PAED-001", "PAED-009" })]
-    [InlineData(Caller.InstitutionalAdminA, null, new[] { "LOC-A00", "LOC-A01", "PAED-001", "PAED-009" })]
-    [InlineData(Caller.InstitutionalAdminB, null, new[] { "LOC-B01", "PAED-001", "PAED-009" })]
+    // The curriculum already holds PAED-001 (the national item) and LOC-A00 (A's own item), so neither Add picker offers
+    // them (T222): the Add command refuses both as already on the curriculum.
+    [InlineData(Caller.Administrator, null, new[] { "PAED-009" })]
+    [InlineData(Caller.CollegeAdmin, null, new[] { "PAED-009" })]
+    [InlineData(Caller.InstitutionalAdminA, null, new[] { "LOC-A01", "PAED-009" })]
+    [InlineData(Caller.InstitutionalAdminB, null, new[] { "LOC-B01", "PAED-009" })]
+    // An edit row keeps its own item's EPA on offer, and leaves out the one the other item holds.
     [InlineData(Caller.Administrator, NationalItemId, new[] { "PAED-001", "PAED-009" })]
     [InlineData(Caller.CollegeAdmin, NationalItemId, new[] { "PAED-001", "PAED-009" })]
-    [InlineData(Caller.Administrator, LocalItemId, new[] { "LOC-A00", "LOC-A01", "PAED-001", "PAED-009" })]
-    [InlineData(Caller.InstitutionalAdminA, LocalItemId, new[] { "LOC-A00", "LOC-A01", "PAED-001", "PAED-009" })]
-    public async Task ThePicker_OffersTheEpasTheItemsOwnerMayUse(Caller caller, int? itemId, string[] expectedCodes)
+    [InlineData(Caller.Administrator, LocalItemId, new[] { "LOC-A00", "LOC-A01", "PAED-009" })]
+    [InlineData(Caller.InstitutionalAdminA, LocalItemId, new[] { "LOC-A00", "LOC-A01", "PAED-009" })]
+    public async Task ThePicker_OffersTheEpasTheItemsOwnerMayUse_ThatTheCurriculumDoesNotHold(Caller caller, int? itemId, string[] expectedCodes)
     {
         await using var dbContext = CreateDbContext(Guid.NewGuid().ToString());
         await SeedAsync(dbContext);
@@ -274,9 +277,11 @@ public sealed class CurriculumItemEpaOwnershipTests
     [InlineData(Caller.InstitutionalAdminA, LocalItemId)]
     public async Task ThePicker_OffersAnEpa_ExactlyWhenTheCommandItFeedsAcceptsIt(Caller caller, int? itemId)
     {
-        // The shared predicate, checked from both ends over every EPA there is: what is offered passes the handler's EPA
-        // check, and what is not offered is refused by it. A refusal for another reason (the EPA is already on the
-        // curriculum) is past the EPA check, so it counts as accepted here.
+        // The shared predicates, checked from both ends over every EPA there is: what is offered the command accepts, and
+        // what is not offered it refuses. Changed deliberately by T222: before it, an EPA already on the curriculum was
+        // offered and counted as accepted here, because its refusal came after the EPA check. The Add picker on the v11.1
+        // curriculum offered fifteen EPAs that way and the command refused every one. It now counts as refused, and the
+        // picker leaves it out.
         IReadOnlySet<int> offered;
         await using (var dbContext = CreateDbContext(Guid.NewGuid().ToString()))
         {
@@ -294,10 +299,99 @@ public sealed class CurriculumItemEpaOwnershipTests
             await using var dbContext = CreateDbContext(Guid.NewGuid().ToString());
             await SeedAsync(dbContext);
 
-            var accepted = await PassesTheEpaCheckAsync(dbContext, caller, itemId, epaId);
+            var accepted = await TheCommandAcceptsAsync(dbContext, caller, itemId, epaId);
 
             accepted.Should().Be(offered.Contains(epaId), $"EPA {epaId} is {(offered.Contains(epaId) ? "offered" : "not offered")}");
         }
+    }
+
+    [Fact]
+    public async Task ThePicker_LeavesOutAnEpaAnotherOwnersItemHolds_AsTheCommandRefusesIt()
+    {
+        // T222. The unique index is one item per EPA per curriculum, whoever owns it (T091), so an institution's own item on
+        // a national EPA keeps it from the College too. The picker follows the command: an EPA held by an item of the same
+        // owner is left out, and so is one held by an item of another owner. With PAED-001 on the national item and
+        // PAED-009 on institution A's, the College has nothing left to add, and says nothing of A's item.
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+            dbContext.Set<CurriculumItem>().Add(new CurriculumItem
+            {
+                Id = 7002,
+                CurriculumId = CurriculumId,
+                EpaId = NationalHere,
+                OwningInstitutionId = InstitutionA,
+                RequiredCount = 3,
+                QuotaPeriod = QuotaPeriod.Semester,
+                MinimumLevelOrder = 4,
+                WindowMonths = 12
+            });
+            await dbContext.SaveChangesAsync();
+        }
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var options = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+            options.Should().BeEmpty("every national EPA of the sub-speciality is on the curriculum, one as A's own item");
+
+            var nationalEdit = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, NationalItemId, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+            nationalEdit.Select(option => option.Code).Should().Equal(["PAED-001"], "an edit row keeps its own EPA, and nothing else is free");
+
+            var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
+                AddCommand(NationalHere, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+            (await act.Should().ThrowAsync<InvalidOperationException>()).WithMessage("This curriculum already contains the selected EPA*");
+            await AssertNothingForTheAuditSaveToCommitAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task ThePicker_IsAskedAfterEachCommand_AndFollowsWhatItChanged()
+    {
+        // T222. The page asks again after each Add, Save and Remove; each answer is the curriculum as that command left it.
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+        }
+
+        var administrator = TestPrincipals.Administrator();
+        async Task<string[]> AddPickerAsync()
+        {
+            await using var dbContext = CreateDbContext(databaseName);
+            return (await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
+                    new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, administrator), CancellationToken.None))
+                .Select(option => option.Code)
+                .ToArray();
+        }
+
+        (await AddPickerAsync()).Should().Equal("PAED-009");
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            // Moves the national item from PAED-001 to PAED-009: the one it held is free, the one it names is not.
+            await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
+                UpdateCommand(NationalItemId, NationalHere, administrator), CancellationToken.None);
+        }
+
+        (await AddPickerAsync()).Should().Equal("PAED-001");
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await new AddCurriculumItemCommandHandler(dbContext).Handle(AddCommand(CoreEpaId, administrator), CancellationToken.None);
+        }
+
+        (await AddPickerAsync()).Should().BeEmpty("both national EPAs are on the curriculum now");
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await new RemoveCurriculumItemCommandHandler(dbContext).Handle(
+                new RemoveCurriculumItemCommand(CurriculumId, NationalItemId, administrator), CancellationToken.None);
+        }
+
+        (await AddPickerAsync()).Should().Equal("PAED-009");
     }
 
     [Theory]
@@ -423,7 +517,12 @@ public sealed class CurriculumItemEpaOwnershipTests
 
     // ---- helpers ----
 
-    private static async Task<bool> PassesTheEpaCheckAsync(ApplicationDbContext dbContext, Caller caller, int? itemId, int epaId)
+    /// <summary>
+    /// Whether the Add (no item) or Update command stores the EPA. Refused for either of the two reasons the pickers
+    /// answer for: an EPA the item may not name, or one the curriculum already holds (T222). The command's other
+    /// arguments are valid, so a refusal for any other reason fails the test rather than count as either.
+    /// </summary>
+    private static async Task<bool> TheCommandAcceptsAsync(ApplicationDbContext dbContext, Caller caller, int? itemId, int epaId)
     {
         try
         {
@@ -438,14 +537,12 @@ public sealed class CurriculumItemEpaOwnershipTests
 
             return true;
         }
-        catch (InvalidOperationException exception) when (!exception.Message.StartsWith(Refusal, StringComparison.Ordinal))
+        catch (InvalidOperationException exception)
         {
-            exception.Message.Should().Be("This curriculum already contains the selected EPA.",
-                "guard: the only other refusal this seed can meet is the duplicate check, which comes after the EPA check");
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
+            exception.Message.Should().Match(message =>
+                    message.StartsWith(Refusal, StringComparison.Ordinal)
+                    || message.StartsWith("This curriculum already contains the selected EPA", StringComparison.Ordinal),
+                "guard: the only refusals this seed can meet are the EPA check and the duplicate check");
             return false;
         }
     }

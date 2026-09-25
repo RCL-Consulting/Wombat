@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
@@ -75,30 +76,76 @@ public static class CurriculumAdminScope
         => itemOwningInstitutionId is null || principal.CanAccessInstitution(itemOwningInstitutionId.Value);
 
     /// <summary>
-    /// The curriculum as the caller sees it: only the items they read, each marked with whether they may change it, and
-    /// the curriculum marked with whether they may change it. Every path that hands a <see cref="CurriculumDto" /> to the
-    /// pages goes through here, the commands' returned curricula included: the item editor redraws from them.
+    /// Whether the item editor names the institution that owns each local item the caller reads (T222). True where the
+    /// caller's reads can span institutions: an Administrator, who reads every institution's items, and a CollegeAdmin, who
+    /// reads none today (<see cref="Reads" />) and would need the name the day they did. False for an InstitutionalAdmin
+    /// who is no Administrator: <c>CanAccessInstitution</c> admits them to their own institution's items and no other, so
+    /// every local item they read is their own, and the editor says so ("Your institution's own item").
+    /// </summary>
+    /// <remarks>
+    /// Before T222 every local item read "The institution's own item", so an Administrator looking at a curriculum that
+    /// several institutions had added to could not tell whose each was. A user who is both CollegeAdmin and
+    /// InstitutionalAdmin reads only their own institution's items, and is answered as an InstitutionalAdmin.
+    /// </remarks>
+    public static bool NamesItemOwners(ClaimsPrincipal principal)
+        => principal.IsAdministrator() || !principal.IsInstitutionalAdmin();
+
+    /// <summary>
+    /// The curriculum as the caller sees it: only the items they read, each marked with whether they may change it and
+    /// named with its owner where <see cref="NamesItemOwners" /> says so, and the curriculum marked with whether they may
+    /// change it. Every path that hands a <see cref="CurriculumDto" /> to the pages goes through here, the commands'
+    /// returned curricula included: the item editor redraws from them.
     /// </summary>
     /// <param name="collegeId">The College whose curriculum it is.</param>
     public static CurriculumDto ForCaller(CurriculumDto curriculum, int collegeId, ClaimsPrincipal principal)
-        => curriculum with
+    {
+        var namesOwners = NamesItemOwners(principal);
+        return curriculum with
         {
             CanEditCurriculum = principal.CanAccessCollege(collegeId),
             Items = curriculum.Items
                 .Where(item => Reads(principal, item.OwningInstitutionId))
-                .Select(item => item with { CanEdit = CurriculumItemEpas.MayWrite(principal, collegeId, item.OwningInstitutionId) })
+                .Select(item => item with
+                {
+                    OwningInstitutionName = namesOwners && item.IsLocal ? item.OwningInstitutionName : null,
+                    CanEdit = CurriculumItemEpas.MayWrite(principal, collegeId, item.OwningInstitutionId)
+                })
                 .ToList()
         };
+    }
 
     /// <summary>
-    /// Refuses an EPA the curriculum already holds (the unique index is one item per EPA per curriculum, whoever owns it,
-    /// T091). Where the item holding it is one the caller does not read, the refusal says it is an institution's own, and
-    /// names neither the institution nor the item: otherwise the caller is told the EPA is on a list that does not show it.
+    /// The items of a curriculum that keep their EPA from another item of it (T222): every item but the one being edited,
+    /// whoever owns it. The one rule <see cref="EnsureEpaNotYetOn" /> refuses by, and the item editor's EPA pickers leave
+    /// out by (<see cref="CurriculumItemEpas.ListAsync" />), so neither picker offers an EPA its command would refuse as
+    /// already on the curriculum.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every owner's item counts, the College's and each institution's alike, because the unique index is one item per EPA
+    /// per curriculum, whoever owns it (T091). An EPA held by an item of the same owner is therefore left out, and so is one
+    /// held by another owner's item, which the Add and Update commands refuse just the same. [T223] makes the index per
+    /// owner; this is the one place the rule then changes, and both the refusal and the pickers follow it.
+    /// </para>
+    /// <para>
+    /// Before T222 both pickers listed every EPA the item could name. On the v11.1 curriculum, whose fifteen national EPAs
+    /// are all items, the Add picker offered fifteen EPAs and the command refused every one.
+    /// </para>
+    /// </remarks>
+    /// <param name="editedItemId">The item being edited, which keeps its own EPA; null for an Add.</param>
+    internal static Expression<Func<CurriculumItem, bool>> HoldsItsEpaAgainst(int? editedItemId)
+        => item => item.Id != editedItemId;
+
+    /// <summary>
+    /// Refuses an EPA the curriculum already holds (<see cref="HoldsItsEpaAgainst" />). Where the item holding it is one
+    /// the caller does not read, the refusal says it is an institution's own, and names neither the institution nor the
+    /// item: otherwise the caller is told the EPA is on a list that does not show it.
     /// </summary>
     /// <param name="exceptItemId">The item being edited, which may keep its own EPA; null for an Add.</param>
     internal static void EnsureEpaNotYetOn(Curriculum curriculum, int epaId, int? exceptItemId, ClaimsPrincipal principal)
     {
-        var holder = curriculum.Items.FirstOrDefault(item => item.Id != exceptItemId && item.EpaId == epaId);
+        var holdsItsEpa = HoldsItsEpaAgainst(exceptItemId).Compile();
+        var holder = curriculum.Items.FirstOrDefault(item => holdsItsEpa(item) && item.EpaId == epaId);
         if (holder is null)
         {
             return;

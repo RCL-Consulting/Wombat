@@ -62,6 +62,15 @@ public sealed record CurriculumItemDto(
     /// </summary>
     int? OwningInstitutionId,
     /// <summary>
+    /// The name of the institution whose own item this is, for a caller whose reads span institutions (T222); null for a
+    /// national item, and for a caller who reads no institution's items but their own, whom the editor tells "Your
+    /// institution's own item". Looked up by both item projections (<c>CurriculumRow.Projection</c>,
+    /// <c>CurriculumMappings.ToDtoAsync</c>), since an item has no navigation to its institution, and cut to the caller by
+    /// <see cref="CurriculumAdminScope.ForCaller" />. Positional and not defaulted, between two parameters of other types,
+    /// so a projection that forgot it fails to compile.
+    /// </summary>
+    string? OwningInstitutionName,
+    /// <summary>
     /// How often a committee decides this EPA, or null for no published cadence (T131). Nullable and not defaulted:
     /// <c>AcademicYear</c> is the enum's zero value, so a projection that filled it in by default would make the EPA due
     /// every year, and an editor that re-saved the DTO would store it.
