@@ -16,31 +16,29 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
   - T160 (the D15 date bounds), T137, T135 (D44), T113, T182 and T183 (security), and 40-odd smaller tasks.
   - See `git log` and each task's "As built".
 - **2026-09-25: merged, browser-checked, closed and pushed** (the operator: "push when they land and keep going"):
-  - F1, F2 and G1 (T145, T219, T221, T196).
-  - The committee chain (T215, T213, T212, T216, T194).
-  - G2 (T228, T224, T225, T210, T209, T220), G3 (T151, T227, T222, T223) and G4 (T229, T232, T231, T230).
-  - A `pg_dump` was taken before each migration batch (`recovery/pre-g{1,2,3,4}-*.dump`).
-- **Master `4776848` = origin.** Its code tree was 5,648 tests green: Domain 658, Application 2,595, Infrastructure
-  910, Architecture 35, Web 1,239 and Integration 211.
-- **Running:**
-  - Committee chain 2: T235 (P2), T237 and T238.
-  - H1: T233, T178 and T244; T236, T234 and T226.
-  - MSF chain 2: T246 (P2), T249, T248 and T247.
-  - The jobs chain: T117 (P2), T240, T243 and T241.
-  - The scale chain: T253 (P2), T254 and T255.
-- **Next:**
-  - T251 (P2: dropped MSF links) and T252.
-  - Committee chain 3: T218a, T239, T250 and T245.
-  - H2: T190, T188 and T199.
+  - Committee: F1, F2, G1–G4, chains 1–2 (T215–T238).
+  - H1 (T233, T178, T244, T236, T234, T226).
+  - MSF chain 2 (T246–T249).
+  - The scale chain (T253–T255).
+  - The jobs chain (T117, T240, T243, T241).
+  - Each migration batch was preceded by a `pg_dump` in `recovery/`.
+- **Master = origin; the last full run was 6,255 tests green.** Dev's PostgreSQL is 16 and production's is 18 (T275).
+- **Running:** committee chain 3 (T256 P2, T218, T250, T239, T257, T245), lifecycle (T258 P2, T252, T262), MSF chain 3
+  (T251 P2, T268, T269, T267), account (T265 P2, T155 P2, T156) and H2 (T261, T263, T199; T266, T188).
+- **Next:** T190 (page titles), then the rest of the P3 queue.
+  - EPA-stream items still open: T259, T260, T270–T273 and T274.
   - T159 (the runbook replay on a fresh database) goes last.
 - **Workflow traps:**
   - Run suites in the verify-master worktree while the dev app runs (it locks the per-project Release output).
-  - Regenerate every branch migration on master's snapshot at merge.
+  - Regenerate a branch migration whose timestamp sorts before master's.
+  - Take a lane's review fixes from any merge commit that holds them (use `git merge-tree` to compare).
   - Write commit messages to a file.
+  - Never commit on master while a merge agent works.
 - **Decisions adopted on recommendation**, all in EPA-PROGRAMME § 3; the operator may overrule any of them:
   - D33 part 1; D34 (a link); D35 (an MSF kind); D38(a); D44; D45; D46 (quorum 2, no Administrator bypass).
   - D47 (an interim 5-point MSF scale); D48, D49 and D50 (2026-09-25; T196, T209 and T151).
   - T237: refuse a Trainee in any panel seat. T240: the draft reminder counts as a digest.
+  - T268: a locked account is not a current trainee. T273: frozen snapshots are not re-marked. T242: recommendation (c).
   - T131's O1–O8 defaults; T160's credit-bearing scope; T174 (seeds pin on create only).
 - **Left for the operator or the College:**
   - T139 (WindowMonths; § 3F question 10) and T170 (self-assessment; question 11). T209 is built to D49's
