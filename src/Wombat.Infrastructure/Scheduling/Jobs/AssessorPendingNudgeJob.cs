@@ -84,27 +84,52 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
             pendingItems.Add((assessorUserId, activity.ActivityType.Name, activity.SubjectUserId, daysWaiting));
         }
 
-        if (pendingItems.Count == 0)
-        {
-            context.Logger.LogInformation("AssessorPendingNudgeJob: no pending activities found.");
-            return;
-        }
+        var outcome = await NudgeAsync(dbContext, emailSender, pendingItems, cancellationToken);
 
-        var grouped = pendingItems.GroupBy(p => p.AssessorUserId);
+        // One line per run, whatever happened, so a quiet day and a day where every nominee was skipped read apart. Each
+        // count follows its label, so the line reads right at 1 as well as at 0 or 2.
+        context.Logger.LogInformation(
+            "AssessorPendingNudgeJob: assessors nudged {NudgedCount} (activities {NudgedActivityCount}); nominees " +
+            "skipped: no such account {UnknownUserCount}, deactivated {DeactivatedCount}, opted out of digest emails " +
+            "{OptedOutCount}, no email address {NoEmailCount}.",
+            outcome.Nudged,
+            outcome.NudgedActivities,
+            outcome.Skipped(NudgeSkipReason.UnknownUser),
+            outcome.Skipped(NudgeSkipReason.Deactivated),
+            outcome.Skipped(NudgeSkipReason.OptedOut),
+            outcome.Skipped(NudgeSkipReason.NoEmail));
+    }
+
+    private static async Task<NudgeOutcome> NudgeAsync(
+        IApplicationDbContext dbContext,
+        IEmailSender emailSender,
+        List<(string AssessorUserId, string ActivityTypeName, string TraineeUserId, int DaysWaiting)> pendingItems,
+        CancellationToken cancellationToken)
+    {
+        var outcome = new NudgeOutcome();
+        if (pendingItems.Count == 0)
+            return outcome;
+
+        var grouped = pendingItems.GroupBy(p => p.AssessorUserId, StringComparer.Ordinal).ToList();
         var userIds = grouped.Select(g => g.Key)
             .Concat(pendingItems.Select(p => p.TraineeUserId))
             .Distinct()
             .ToList();
 
         var users = await dbContext.Set<WombatIdentityUser>()
+            .AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Email, u.FirstName, u.LastName })
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
+            .Select(u => new NudgePerson(u.Id, u.Email, u.FirstName, u.LastName, u.LockoutEnd, u.OptOutOfDigestEmails))
+            .ToDictionaryAsync(u => u.Id, StringComparer.Ordinal, cancellationToken);
 
         foreach (var group in grouped)
         {
-            if (!users.TryGetValue(group.Key, out var assessor) || string.IsNullOrWhiteSpace(assessor.Email))
+            var nominee = users.GetValueOrDefault(group.Key);
+            if (SkipReasonFor(nominee) is { } reason)
+            {
+                outcome.Skip(reason);
                 continue;
+            }
 
             var items = group.Select(p =>
             {
@@ -114,11 +139,67 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
                 return (p.ActivityTypeName, TraineeName: traineeName, p.DaysWaiting);
             }).ToList();
 
-            var email = AssessorPendingNudgeEmail.Build(assessor.Email, assessor.FirstName, items);
+            var email = AssessorPendingNudgeEmail.Build(nominee!.Email!, nominee.FirstName, items);
             await emailSender.SendAsync(email, cancellationToken);
+            outcome.Nudged++;
+            outcome.NudgedActivities += items.Count;
         }
 
-        context.Logger.LogInformation("AssessorPendingNudgeJob: sent nudges to {Count} assessors.", grouped.Count());
+        return outcome;
+    }
+
+    /// <summary>
+    /// Why a nominee is not written to (D50, T151), or null when they are. One reason each, the first that applies in
+    /// this order, so an erased account (deactivated, opted out and without an email) is counted once, as deactivated.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A deactivated account (<see cref="UserDeactivation" />: an administrator's lock or an erasure) is not written to,
+    /// and neither is a user who opted out of digest emails: the nudge is a digest. A brute-force lockout is not a
+    /// deactivation and lifts itself, so that nominee is still nudged.
+    /// </para>
+    /// <para>
+    /// A nominee who has since lost the Assessor role or moved institution IS still nudged. The nominee gate (T102)
+    /// judges eligibility when the activity is handed to them, and lets them complete it afterwards; so this job
+    /// deliberately does not re-read <c>NomineeDirectory</c>, which would silence the one person able to act.
+    /// </para>
+    /// </remarks>
+    internal static NudgeSkipReason? SkipReasonFor(NudgePerson? nominee) => nominee switch
+    {
+        null => NudgeSkipReason.UnknownUser,
+        _ when UserDeactivation.IsDeactivated(nominee.LockoutEnd) => NudgeSkipReason.Deactivated,
+        { OptOutOfDigestEmails: true } => NudgeSkipReason.OptedOut,
+        _ when string.IsNullOrWhiteSpace(nominee.Email) => NudgeSkipReason.NoEmail,
+        _ => null
+    };
+
+    internal sealed record NudgePerson(
+        string Id,
+        string? Email,
+        string FirstName,
+        string LastName,
+        DateTimeOffset? LockoutEnd,
+        bool OptOutOfDigestEmails);
+
+    internal enum NudgeSkipReason
+    {
+        UnknownUser,
+        Deactivated,
+        OptedOut,
+        NoEmail
+    }
+
+    private sealed class NudgeOutcome
+    {
+        private readonly Dictionary<NudgeSkipReason, int> _skipped = [];
+
+        public int Nudged { get; set; }
+
+        public int NudgedActivities { get; set; }
+
+        public void Skip(NudgeSkipReason reason) => _skipped[reason] = Skipped(reason) + 1;
+
+        public int Skipped(NudgeSkipReason reason) => _skipped.GetValueOrDefault(reason);
     }
 
     private static bool HasFieldUserActor(ActorRule rule) => rule switch

@@ -1,35 +1,48 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Scheduling.Jobs;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Scheduling;
 
 /// <summary>
-/// T102: <see cref="AssessorPendingNudgeJob" /> reads the workflow of the version each activity is PINNED to, as the
-/// inbox does, never the type's live one.
+/// <see cref="AssessorPendingNudgeJob" />: whom it writes to about activities waiting on them, and what it says it skipped.
 /// </summary>
 /// <remarks>
-/// The nominee gate judged the pinned version's <c>field:</c> rules when the activity was filed, so the pinned
+/// <para>
+/// T102: the job reads the workflow of the version each activity is PINNED to, as the inbox does, never the type's live
+/// one. The nominee gate judged the pinned version's <c>field:</c> rules when the activity was filed, so the pinned
 /// version's field is the one holding a vetted person. A republish that moves the assessor rule to another field must
 /// not redirect the reminder for activities already in flight: the other field may be empty, or name someone the gate
 /// never judged as the actor.
+/// </para>
+/// <para>
+/// T151, D50: it does not write to a deactivated account or to a user who opted out of digest emails, and it does write
+/// to a nominee who has since lost the Assessor role or moved institution, because T102 lets them complete what was
+/// handed to them. Every run logs one line counting whom it nudged and whom it skipped, by reason. Each test below has a
+/// nominee who IS written to beside the one who is not, so "nothing was sent" can never pass for the wrong reason.
+/// </para>
 /// </remarks>
 public sealed class AssessorPendingNudgeJobTests
 {
     private const int ActivityTypeId = 1;
+    private const int InstitutionId = 10;
 
     private const string TraineeId = "trainee-1";
     private const string PinnedAssessorId = "assessor-v1";
     private const string LiveVersionAssessorId = "assessor-v2";
+
+    /// <summary>The nominee every T151 test nudges beside the one it skips: active, an Assessor, at the activity's institution.</summary>
+    private const string ActiveAssessorId = "assessor-active";
 
     [Fact]
     public async Task AnActivityPinnedToV1_IsNudgedThroughV1sAssessorField_EvenThoughTheLiveVersionNamesAnotherField()
@@ -41,11 +54,11 @@ public sealed class AssessorPendingNudgeJobTests
 
         await RunAsync(provider);
 
-        var sent = SentMessages(emailSender);
+        var sent = emailSender.Sent;
         sent.Should().ContainSingle();
-        sent[0].To.Should().Be($"{PinnedAssessorId}@test.local");
+        sent[0].To.Should().Be(EmailOf(PinnedAssessorId));
         sent[0].TextBody.Should().Contain("Mini-CEX").And.Contain("Thandi Trainee");
-        sent.Should().NotContain(message => message.To == $"{LiveVersionAssessorId}@test.local");
+        sent.Should().NotContain(message => message.To == EmailOf(LiveVersionAssessorId));
     }
 
     [Fact]
@@ -59,42 +72,277 @@ public sealed class AssessorPendingNudgeJobTests
 
         await RunAsync(provider);
 
-        var sent = SentMessages(emailSender);
-        sent.Select(message => message.To).Should().BeEquivalentTo([$"{PinnedAssessorId}@test.local", $"{LiveVersionAssessorId}@test.local"]);
-        sent.Single(message => message.To == $"{PinnedAssessorId}@test.local").TextBody.Should().Contain("waiting 10 days").And.NotContain("waiting 8 days");
-        sent.Single(message => message.To == $"{LiveVersionAssessorId}@test.local").TextBody.Should().Contain("waiting 8 days").And.NotContain("waiting 10 days");
+        var sent = emailSender.Sent;
+        sent.Select(message => message.To).Should().BeEquivalentTo([EmailOf(PinnedAssessorId), EmailOf(LiveVersionAssessorId)]);
+        sent.Single(message => message.To == EmailOf(PinnedAssessorId)).TextBody.Should().Contain("waiting 10 days").And.NotContain("waiting 8 days");
+        sent.Single(message => message.To == EmailOf(LiveVersionAssessorId)).TextBody.Should().Contain("waiting 8 days").And.NotContain("waiting 10 days");
+    }
+
+    // ---- T151, D50: whom the nudge writes to ------------------------------------------------------------------
+
+    [Fact]
+    public async Task ADeactivatedNominee_IsNotWrittenTo_AndIsCountedAsDeactivated()
+    {
+        // An administrator's lock: indefinite, as UserAdministrationService writes it.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-deactivated"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-deactivated", InstitutionId, UserDeactivation.IndefiniteLockoutEnd, WombatRoles.Assessor);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 1, Deactivated: 1));
+    }
+
+    [Fact]
+    public async Task ANomineeLockedOutByFailedPasswords_IsStillNudged()
+    {
+        // Identity's brute-force lockout writes the same column minutes out and lifts itself. Treating it as a
+        // deactivation would let anyone silence an assessor's reminder by typing five wrong passwords at their account.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-locked-out"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-locked-out", InstitutionId, DateTimeOffset.UtcNow.AddMinutes(15), WombatRoles.Assessor);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo([EmailOf(ActiveAssessorId), EmailOf("assessor-locked-out")]);
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 2, NudgedActivities: 2));
+    }
+
+    [Fact]
+    public async Task ANomineeWhoOptedOutOfDigestEmails_IsNotWrittenTo_AndIsCountedAsOptedOut()
+    {
+        // The nudge is a digest (D50), so the T026 objection flag covers it.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-opted-out"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-opted-out", InstitutionId, WombatRoles.Assessor).OptOutOfDigestEmails = true;
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 1, OptedOut: 1));
+    }
+
+    [Fact]
+    public async Task AnErasedNominee_IsCountedOnce_AsDeactivated()
+    {
+        // An erasure leaves an account deactivated, opted out and without an email all at once (ErasureExecutor).
+        // It is one person skipped, so it is one count, under the reason that says the most.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-erased"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            var erased = NomineeSeed.AddUser(db, "assessor-erased", institutionId: null, UserDeactivation.IndefiniteLockoutEnd);
+            erased.Email = null;
+            erased.NormalizedEmail = null;
+            erased.FirstName = string.Empty;
+            erased.LastName = string.Empty;
+            erased.OptOutOfDigestEmails = true;
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 1, Deactivated: 1));
+    }
+
+    [Fact]
+    public async Task AnIdNamingNoAccount_IsCountedAsUnknown()
+    {
+        // Before T151 this was a silent `continue`: the job could not say it had skipped anyone.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "no-such-user"], db =>
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor));
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 1, UnknownUser: 1));
+    }
+
+    [Fact]
+    public async Task ANomineeWithoutAnEmailAddress_IsCountedAsHavingNone()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-no-email"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            var noEmail = NomineeSeed.AddUser(db, "assessor-no-email", InstitutionId, WombatRoles.Assessor);
+            noEmail.Email = null;
+            noEmail.NormalizedEmail = null;
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 1, NoEmail: 1));
+    }
+
+    [Fact]
+    public async Task ANomineeWhoHasSinceLostTheAssessorRoleAndMovedInstitution_IsStillNudged()
+    {
+        // D50: the nominee gate judged them eligible when the activity was handed to them, and T102 lets them complete
+        // it afterwards. They are the one person able to act, so re-reading NomineeDirectory here would silence the
+        // reminder for exactly the activity that is stuck.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-moved"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-moved", institutionId: 99, WombatRoles.Trainee);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo([EmailOf(ActiveAssessorId), EmailOf("assessor-moved")]);
+        emailSender.Sent.Single(message => message.To == EmailOf("assessor-moved")).TextBody.Should().Contain("Thandi Trainee");
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 2, NudgedActivities: 2));
+    }
+
+    [Fact]
+    public async Task SkipsAreCountedPerNominee_NotPerActivity()
+    {
+        // Two activities each wait on the deactivated nominee and on the active one. One person skipped is one count,
+        // and the active nominee gets one email listing both.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, ActiveAssessorId, "assessor-deactivated", "assessor-deactivated"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-deactivated", InstitutionId, UserDeactivation.IndefiniteLockoutEnd, WombatRoles.Assessor);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().Equal(EmailOf(ActiveAssessorId));
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 1, NudgedActivities: 2, Deactivated: 1));
+    }
+
+    [Fact]
+    public async Task ARunWithNothingPending_StillLogsItsOneLine()
+    {
+        // One line per run, whatever happened: a quiet day must read apart from a day on which every nominee was skipped.
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [], db => NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor));
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Sent.Should().BeEmpty();
+        Summary(logger).Should().Be(new NudgeSummary());
     }
 
     // ---- helpers ----------------------------------------------------------------------------------------------
 
-    private static (ServiceProvider Provider, Mock<IEmailSender> EmailSender) BuildServices()
+    private static (ServiceProvider Provider, RecordingEmailSender EmailSender) BuildServices()
     {
-        var emailSender = new Mock<IEmailSender>();
+        var emailSender = new RecordingEmailSender();
         var dbName = Guid.NewGuid().ToString();
 
         var services = new ServiceCollection();
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(dbName));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-        services.AddScoped(_ => emailSender.Object);
+        services.AddScoped<IEmailSender>(_ => emailSender);
 
         return (services.BuildServiceProvider(), emailSender);
     }
 
-    private static Task RunAsync(ServiceProvider provider)
-        => new AssessorPendingNudgeJob(provider.GetRequiredService<IServiceScopeFactory>())
-            .ExecuteAsync(new ScheduledJobContext(DateTime.UtcNow, NullLogger.Instance), CancellationToken.None);
+    private static async Task<CapturingLogger> RunAsync(ServiceProvider provider)
+    {
+        var logger = new CapturingLogger();
+        await new AssessorPendingNudgeJob(provider.GetRequiredService<IServiceScopeFactory>())
+            .ExecuteAsync(new ScheduledJobContext(DateTime.UtcNow, logger), CancellationToken.None);
+        return logger;
+    }
 
-    private static List<EmailMessage> SentMessages(Mock<IEmailSender> emailSender)
-        => emailSender.Invocations
-            .Where(invocation => invocation.Method.Name == nameof(IEmailSender.SendAsync))
-            .Select(invocation => (EmailMessage)invocation.Arguments[0])
-            .ToList();
+    private static string EmailOf(string userId) => $"{userId}@test.local";
+
+    /// <summary>The run's one log line, read from its structured values rather than from the rendered text.</summary>
+    private static NudgeSummary Summary(CapturingLogger logger)
+    {
+        var entry = logger.Entries.Should().ContainSingle().Which;
+        entry.Level.Should().Be(LogLevel.Information);
+
+        return new NudgeSummary(
+            Nudged: Count(entry, "NudgedCount"),
+            NudgedActivities: Count(entry, "NudgedActivityCount"),
+            UnknownUser: Count(entry, "UnknownUserCount"),
+            Deactivated: Count(entry, "DeactivatedCount"),
+            OptedOut: Count(entry, "OptedOutCount"),
+            NoEmail: Count(entry, "NoEmailCount"));
+
+        static int Count(CapturedLogEntry entry, string key)
+        {
+            entry.Values.Should().ContainKey(key);
+            return (int)entry.Values[key]!;
+        }
+    }
+
+    private sealed record NudgeSummary(
+        int Nudged = 0,
+        int NudgedActivities = 0,
+        int UnknownUser = 0,
+        int Deactivated = 0,
+        int OptedOut = 0,
+        int NoEmail = 0);
+
+    /// <summary>
+    /// One activity per id in <paramref name="nomineeIds" />, each pinned to v1, waiting in <c>requested</c> on its
+    /// <c>assessor_user_id</c>. The trainee is seeded; <paramref name="addUsers" /> seeds the nominees.
+    /// </summary>
+    private static async Task SeedNomineesAsync(
+        ServiceProvider provider,
+        IReadOnlyList<string> nomineeIds,
+        Action<ApplicationDbContext> addUsers)
+    {
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        AddActivityType(db);
+        foreach (var nomineeId in nomineeIds)
+        {
+            AddPendingActivity(db, schemaVersion: 1, daysAgo: 10, $$"""{ "assessor_user_id": "{{nomineeId}}" }""");
+        }
+
+        var trainee = NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
+        trainee.FirstName = "Thandi";
+        trainee.LastName = "Trainee";
+        addUsers(db);
+
+        await db.SaveChangesAsync();
+    }
 
     private static async Task SeedAsync(ServiceProvider provider, params (int SchemaVersion, int DaysAgo)[] activities)
     {
         using var scope = provider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        AddActivityType(db);
+        foreach (var (schemaVersion, daysAgo) in activities)
+        {
+            AddPendingActivity(
+                db,
+                schemaVersion,
+                daysAgo,
+                $$"""{ "assessor_user_id": "{{PinnedAssessorId}}", "supervisor_user_id": "{{LiveVersionAssessorId}}" }""");
+        }
+
+        db.Users.AddRange(
+            User(TraineeId, "Thandi", "Trainee"),
+            User(PinnedAssessorId, "Pinned", "Assessor"),
+            User(LiveVersionAssessorId, "Live", "Assessor"));
+
+        await db.SaveChangesAsync();
+    }
+
+    private static void AddActivityType(ApplicationDbContext db)
+    {
         var publishedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var activityType = new ActivityType
         {
@@ -102,7 +350,7 @@ public sealed class AssessorPendingNudgeJobTests
             Key = "mini_cex_republished",
             Name = "Mini-CEX",
             Scope = ActivityScope.Institution,
-            ScopeId = 10,
+            ScopeId = InstitutionId,
             // v2 is live: the type row carries its payload, as a publish leaves it.
             Version = 2,
             SchemaJson = SchemaJson,
@@ -116,30 +364,23 @@ public sealed class AssessorPendingNudgeJobTests
         activityType.Versions.Add(Version(1, WorkflowNaming("assessor_user_id"), publishedOn));
         activityType.Versions.Add(Version(2, WorkflowNaming("supervisor_user_id"), publishedOn.AddDays(30)));
         db.ActivityTypes.Add(activityType);
+    }
 
-        foreach (var (schemaVersion, daysAgo) in activities)
+    private static void AddPendingActivity(ApplicationDbContext db, int schemaVersion, int daysAgo, string dataJson)
+    {
+        var updatedOn = DateTime.UtcNow.AddDays(-daysAgo).AddHours(-1);
+        db.Activities.Add(new Activity
         {
-            var updatedOn = DateTime.UtcNow.AddDays(-daysAgo).AddHours(-1);
-            db.Activities.Add(new Activity
-            {
-                ActivityTypeId = ActivityTypeId,
-                SchemaVersion = schemaVersion,
-                SubjectUserId = TraineeId,
-                CreatedByUserId = TraineeId,
-                CurrentState = "requested",
-                DataJson = $$"""{ "assessor_user_id": "{{PinnedAssessorId}}", "supervisor_user_id": "{{LiveVersionAssessorId}}" }""",
-                InstitutionId = 10,
-                CreatedOn = updatedOn,
-                UpdatedOn = updatedOn
-            });
-        }
-
-        db.Users.AddRange(
-            User(TraineeId, "Thandi", "Trainee"),
-            User(PinnedAssessorId, "Pinned", "Assessor"),
-            User(LiveVersionAssessorId, "Live", "Assessor"));
-
-        await db.SaveChangesAsync();
+            ActivityTypeId = ActivityTypeId,
+            SchemaVersion = schemaVersion,
+            SubjectUserId = TraineeId,
+            CreatedByUserId = TraineeId,
+            CurrentState = "requested",
+            DataJson = dataJson,
+            InstitutionId = InstitutionId,
+            CreatedOn = updatedOn,
+            UpdatedOn = updatedOn
+        });
     }
 
     private static ActivityTypeVersion Version(int version, string workflowJson, DateTime publishedOn)
@@ -202,4 +443,49 @@ public sealed class AssessorPendingNudgeJobTests
           ]
         }
         """;
+
+    /// <summary>Keeps every message the job hands over, in order, so a test asserts on exactly who was written to.</summary>
+    private sealed class RecordingEmailSender : IEmailSender
+    {
+        public List<EmailMessage> Sent { get; } = [];
+
+        public IReadOnlyList<string> Recipients => Sent.Select(message => message.To).ToList();
+
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        {
+            Sent.Add(message);
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Keeps every entry with its structured values, so a test asserts on <c>{DeactivatedCount}</c> itself rather than
+    /// on a substring of a rendered message that a reworded template would silently stop matching.
+    /// </summary>
+    private sealed class CapturingLogger : ILogger
+    {
+        public List<CapturedLogEntry> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull
+            => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            var values = state is IReadOnlyList<KeyValuePair<string, object?>> pairs
+                ? pairs.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
+                : new Dictionary<string, object?>(StringComparer.Ordinal);
+
+            Entries.Add(new CapturedLogEntry(logLevel, formatter(state, exception), values));
+        }
+    }
+
+    private sealed record CapturedLogEntry(LogLevel Level, string Message, IReadOnlyDictionary<string, object?> Values);
 }
