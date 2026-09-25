@@ -1,11 +1,12 @@
 ---
 id: T197
 title: The undated-date wording names an encounter date and then denies it, and progress shows an unmarked last encounter
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T197 — The undated-date wording names an encounter date and then denies it, and progress shows an unmarked last encounter
@@ -33,7 +34,7 @@ Add the declared flag to the progress row, and mark "Last encounter".
 ## Verification
 
 - [x] Every surface shows the new wording. bUnit.
-- [ ] An undated last encounter is marked on My progress. bUnit.
+- [ ] ~~An undated last encounter is marked on My progress. bUnit.~~ Split to [T219]: it needs a migration.
 
 ## Related
 

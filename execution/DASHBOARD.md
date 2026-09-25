@@ -37,7 +37,6 @@
 | queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
 | queued | [T190](tasks/queued/T190-page-titles-follow-no-common-pattern.md) | P3 | Page titles follow no common pattern |  |
 | queued | [T196](tasks/queued/T196-reactivating-an-epa-does-not-re-credit-what-was-filed-while-it-was-inactive-and-a-rebuild-while-inactive-drops-earned-credit.md) | P3 | Reactivating an EPA does not re-credit what was filed while it was ina |  |
-| queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
 | queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
 | queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
@@ -50,7 +49,7 @@
 | queued | [T219](tasks/queued/T219-my-progress-shows-a-trainee-s-last-encounter-unmarked-when-that-date-was-never-stated.md) | P3 | My progress shows a trainee's last encounter unmarked when that date w |  |
 | queued | [T220](tasks/queued/T220-activity-pages-lists-and-dashboards-show-workflow-state-and-move-keys-not-their-labels.md) | P3 | Activity pages, lists and dashboards show workflow state and move keys |  |
 
-Done: 162 task(s).
+Done: 163 task(s).
 
 ## From STATE.md
 
@@ -66,9 +65,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+9c01829 docs(execution): close T191, T192, T189 and T193 (browser-verified); T197 closes with its last item split to T219; file T220
 850de24 docs(execution): handoff progress
 2561f07 fix(web): refusals are announced, help text is linked to its input, and sign-in fields say what they are (T193)
 7e52344 fix(activities): refusals read as sentences and name transitions and states by label (T189)
 960d738 fix(activities): the late-filing warning never contradicts a pre-programme refusal; an undated date is named as the encounter's where nothing else says so (T192, T197 review)
-b74d4c8 fix(activities): an undated activity reads 'not recorded (created …)', and a date refusal names its own field (T197)
 ```
