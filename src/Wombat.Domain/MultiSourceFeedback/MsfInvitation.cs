@@ -95,6 +95,21 @@ public sealed class MsfInvitation
         => RevokedOn is null && RespondedOn is null && ExpiresOn >= today;
 
     /// <summary>
+    /// An address as two invitations to one campaign are compared: trimmed and lower-cased. A campaign invites an address
+    /// once, so that no one is mailed two links, responds twice and counts twice towards the minimums. (T228)
+    /// </summary>
+    /// <remarks>
+    /// An address is stored trimmed (<c>AddMsfInvitationCommandHandler</c>), and the database holds the rule too, in a
+    /// unique index on the campaign and the lower-cased address while it is held (<c>MsfInvitationConfiguration</c>).
+    /// Anonymising an invitation (<see cref="Anonymize" />) nulls its address, and the key with it.
+    /// </remarks>
+    public static string AddressKey(string address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return address.Trim().ToLowerInvariant();
+    }
+
+    /// <summary>
     /// The last day a respondent's link takes a response: the earlier of the day the feedback window closes and the
     /// invitation's own expiry. (T202, T205)
     /// </summary>

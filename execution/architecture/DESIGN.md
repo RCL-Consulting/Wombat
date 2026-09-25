@@ -669,9 +669,14 @@ because the campaign changed elsewhere. The card holds:
 - An action's result is an `Alert` in an `.action-result` region that takes the focus once it has answered, whenever
   the button that sent it is gone: after an open or a withdraw, and after an invitee add refused because the campaign
   was opened or withdrawn elsewhere (its form is gone). A refused open on a campaign that is still a draft leaves the
-  focus on Open, for the retry; an add on a draft leaves it in the form. While an open or a withdraw is in flight, Open,
-  Withdraw campaign and Add invitee are disabled and a second click sends nothing. A refusal is kept when the campaign
-  cannot then be read again: the card says it could not be loaded, and the refusal says why the action was not taken.
+  focus on Open, for the retry; an add on a draft leaves it in the form. An address the campaign already invites, in any
+  capitals, is refused the same way (T228): a `role="alert"` refusal naming no address, with the address left typed to
+  correct and nobody counted. While an open or a withdraw is in flight, Open,
+  Withdraw campaign and Add invitee are disabled and a second click sends nothing. While an invitee add is in flight,
+  Open and Withdraw campaign are disabled and a second Enter or click on Add invitee sends nothing (T228 review); Add
+  invitee itself stays enabled, because it may hold the focus that a refusal on a draft leaves in place. A refusal is kept
+  when the campaign cannot then be read again: the card says it could not be loaded, and the refusal says why the action
+  was not taken.
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `MsfCampaignText.StateBadge`:

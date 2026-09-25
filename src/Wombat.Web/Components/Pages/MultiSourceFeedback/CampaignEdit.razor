@@ -248,9 +248,11 @@
               </div>
               @* Disabled while an open or a withdraw is in flight (T202, T217). An invitee added mid-open would be left out
                  of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
-                 another tab is refused, or refuses the open, at the save (T206). *@
+                 another tab is refused, or refuses the open, at the save (T206). Not disabled by its own add: it may hold
+                 the focus, which a refusal on a draft leaves where it was (T217); a second press while the add runs sends
+                 nothing (AddInviteeAsync, T228 review). *@
               <FormActions>
-                <button type="submit" class="btn btn-outline" disabled="@Busy">Add invitee</button>
+                <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing)">Add invitee</button>
               </FormActions>
             </EditForm>
           }
@@ -321,6 +323,9 @@
   /// <summary>A withdraw has been sent and has not yet answered. (T217)</summary>
   private bool _withdrawing;
 
+  /// <summary>An invitee add has been sent and has not yet answered. (T228 review)</summary>
+  private bool _adding;
+
   private ConfirmDialog? _confirmWithdraw;
   private ElementReference _result;
 
@@ -338,8 +343,8 @@
 
   internal ElementReference? EmailInput => _emailInput?.Element;
 
-  /// <summary>An open or a withdraw is in flight, so nothing else may be sent. (T202, T217)</summary>
-  private bool Busy => _opening || _withdrawing;
+  /// <summary>An open, a withdraw or an invitee add is in flight, so nothing else may be sent. (T202, T217, T228 review)</summary>
+  private bool Busy => _opening || _withdrawing || _adding;
 
   private TemplateFormModel _template = new();
   private CampaignFormModel _campaign = new();
@@ -660,6 +665,13 @@
     }
   }
 
+  /// <remarks>
+  /// Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second Enter or
+  /// click that reaches the circuit while this add runs does nothing, and Open and Withdraw campaign wait for it too.
+  /// Until the T228 review a double press sent the same address twice: the server now stores it once, but the page
+  /// showed "Invitee added." beside the second add's "already invites" refusal, which was read last, with the address
+  /// already cleared.
+  /// </remarks>
   private async Task AddInviteeAsync()
   {
     if (!CampaignId.HasValue || Busy)
@@ -667,6 +679,7 @@
       return;
     }
 
+    _adding = true;
     _error = null;
     _status = null;
 
@@ -691,8 +704,15 @@
       _error = exception.Message;
     }
 
-    // The counts include the invitee just added; after a refusal, the campaign may have been opened elsewhere (T217).
-    await LoadSetupAsync();
+    try
+    {
+      // The counts include the invitee just added; after a refusal, the campaign may have been opened elsewhere (T217).
+      await LoadSetupAsync();
+    }
+    finally
+    {
+      _adding = false;
+    }
 
     // A campaign no longer a draft has no invitee form, so the submit button that had the focus is gone (T217 review).
     // On a draft the form stays. After an add the focus goes to the email, for the next invitee; after a refusal it

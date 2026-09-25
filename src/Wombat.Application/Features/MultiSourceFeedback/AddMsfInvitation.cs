@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
@@ -87,10 +88,28 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
             throw new InvalidOperationException(RefusalFor(campaign.Template, request.RespondentCategory));
         }
 
+        // One invitation per address (T228). Until T228 an address added twice was mailed two working links, and one
+        // respondent could fill a group's minimum alone. Asked before anything is added, so a refusal leaves nothing for
+        // the audit pipeline's write to commit. Only a draft gets this far, and a draft has no responses, so saying that
+        // an address is already invited tells the coordinator nothing about anyone's answers; the refusal names no
+        // address, the one typed included, because the audit row keeps its message (T184). An address stored after this
+        // read, by another add racing this one or by any other writer, is refused at the save by the unique index on the
+        // campaign and the address (MsfInvitationConfiguration).
+        var address = request.RespondentEmail.Trim();
+        var key = MsfInvitation.AddressKey(address);
+        if (await _dbContext.Set<MsfInvitation>().AnyAsync(
+                candidate => candidate.CampaignId == campaign.Id &&
+                             candidate.RespondentEmail != null &&
+                             candidate.RespondentEmail.ToLower() == key,
+                cancellationToken))
+        {
+            throw new InvalidOperationException(AlreadyInvited);
+        }
+
         var invitation = new MsfInvitation
         {
             CampaignId = campaign.Id,
-            RespondentEmail = request.RespondentEmail.Trim(),
+            RespondentEmail = address,
             RespondentCategory = request.RespondentCategory,
             TeachingContext = MsfTeachingContexts.Normalize(request.TeachingContext),
             // No link yet: opening the campaign issues one (MsfInvitation.IssueLink). Until then the invitee holds no
@@ -121,9 +140,31 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
             // (T201).
             throw new InvalidOperationException(CampaignChanged, exception);
         }
+        catch (DbUpdateException exception) when (exception.InnerException is DbException { SqlState: UniqueViolation })
+        {
+            // The address was stored after the check above read the table (T228). Another add racing this one moved the
+            // campaign's xmin token too, but the save sends the campaign's update and this insert as one batch, and it is
+            // the server's refusal of the insert that the save raises, so the add that lost is told what it lost to
+            // (MsfInvitationAddressOncePostgresTests). The address index is the only unique index a new invitation can
+            // meet: it holds no link selector until the campaign opens, and PostgreSQL does not count NULLs as equal.
+            // Carried, as above, so the refused insert is not sent again with the audit row (T201).
+            throw new InvalidOperationException(AlreadyInvited, exception);
+        }
 
         return invitation.Id;
     }
+
+    /// <summary>PostgreSQL's unique_violation, which the index on the campaign and the address raises. (T228)</summary>
+    private const string UniqueViolation = "23505";
+
+    /// <summary>
+    /// The refusal of an address the campaign already invites, in any capitals. It names no address: the audit row keeps
+    /// the message (T184). (T228)
+    /// </summary>
+    public const string AlreadyInvited =
+        "This campaign already invites that address. Capitals are ignored, so the same address typed differently is the " +
+        "same respondent. Each respondent is invited once, so that nobody can respond twice. The invitee has not been " +
+        "added again.";
 
     private static string RefusalFor(MsfTemplate template, MsfRespondentCategory category)
         => template.Kind == MsfTemplateKind.LearnerFeedback

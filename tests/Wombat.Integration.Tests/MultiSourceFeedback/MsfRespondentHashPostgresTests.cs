@@ -80,7 +80,9 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
             var hashedVersion = await RowVersionAsync(schema, anonymised);
             var unhashedVersion = await RowVersionAsync(schema, stillOpen);
 
-            await MigrateToLatestAsync(schema);
+            // To T207 and no further: the row versions below are T207's own writes. A later migration may rewrite the
+            // whole table, as T228's stored key column does, and that is no evidence about this one.
+            await MigrateToT207Async(schema);
 
             (await ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeFalse();
             (await TracesAsync(schema, ClosedByHand)).Should().BeEmpty("no column the app can read holds the hash");
@@ -93,6 +95,10 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
                 hashedVersion, "the row that held a hash is rewritten without it before the drop, so no live row keeps one");
             (await RowVersionAsync(schema, stillOpen)).Should().Be(
                 unhashedVersion, "guard: a row with no hash is not rewritten, so the rewrite above is the migration's own");
+
+            // Read through today's model, which needs today's schema.
+            await MigrateToLatestAsync(schema);
+            (await TracesAsync(schema, ClosedByHand)).Should().BeEmpty("no later migration brings the hash back");
 
             await using var read = NewContext(schema);
             var invitations = await read.MsfInvitations.AsNoTracking().ToDictionaryAsync(invitation => invitation.Id);
@@ -224,6 +230,16 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
             """);
 
     // ---- schema lifecycle (as SystemManagedMigrationPostgresTests) ----------------------------------------------------
+
+    /// <summary>Applies the T207 migration and nothing after it, found from the assembly as its predecessor is.</summary>
+    private async Task MigrateToT207Async(string schema)
+    {
+        await using var db = NewContext(schema);
+        var t207 = db.Database.GetMigrations()
+            .Single(migration => migration.EndsWith(T207MigrationSuffix, StringComparison.Ordinal));
+        await db.GetService<IMigrator>().MigrateAsync(t207);
+        (await db.Database.GetAppliedMigrationsAsync()).Last().Should().Be(t207);
+    }
 
     private async Task MigrateToLatestAsync(string schema)
     {

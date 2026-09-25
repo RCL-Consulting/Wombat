@@ -228,6 +228,31 @@ public sealed class CampaignStatePageTests : TestContext
     }
 
     [Fact]
+    public void AnAddressAlreadyInvited_IsRefusedAloud_AndLeftInTheFormToCorrect()
+    {
+        // T228: the handler refuses an address the campaign already invites. The refusal is read at once, as every
+        // refusal on this page is (T217), counts nobody, and leaves the address typed, and the focus, in the form.
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft, Group(MsfRespondentCategory.PeerDoctor, 3, 0)))
+        {
+            Refusal = new InvalidOperationException(AddMsfInvitationCommandHandler.AlreadyInvited)
+        };
+        var cut = Render(sender);
+
+        SubmitInvitee(cut, "PEER-2@example.test");
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-danger")).Should().Be(AddMsfInvitationCommandHandler.AlreadyInvited));
+        cut.Find(".alert-danger").GetAttribute("role").Should().Be("alert", "a refusal after Add invitee is read at once");
+        cut.Find(".alert-danger").Closest(".action-result").Should().NotBeNull("in the page's one result region");
+        cut.FindAll(".alert-success").Should().BeEmpty();
+
+        cut.Find("#msf-respondent-email").GetAttribute("value").Should().Be("PEER-2@example.test", "kept, to correct");
+        BodyRows(cut.Find("table")).Should().Equal(["Peer doctor | 3"], "nobody more is counted");
+        Text(cut.Find("#msf-campaign-state")).Should().Be("Draft");
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == FocusIdentifier,
+            "the form is still there, so the focus stays in it");
+    }
+
+    [Fact]
     public void TheInviteePicker_NamesEachGroupByItsLabel()
     {
         var cut = Render(new CampaignSender(Setup(MsfCampaignState.Draft)));
@@ -404,6 +429,41 @@ public sealed class CampaignStatePageTests : TestContext
     }
 
     [Fact]
+    public void WhileAnAddRuns_ASecondPressSendsNothing_AndTheFirstAnswersAlone()
+    {
+        // T228 review: a double Enter or a double click sent the same address twice. The server now stores it once, but
+        // the page showed "Invitee added." beside the second add's "already invites" refusal, read last, with the
+        // address cleared. As the open (T202) and the withdraw (T217): the flag is set before the first await.
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft, Group(MsfRespondentCategory.PeerDoctor, 3, 0)))
+        {
+            Hold = true
+        };
+        var cut = Render(sender);
+
+        SubmitInvitee(cut, "peer-4@example.test");
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<AddMsfInvitationCommand>();
+
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeTrue("an add is in flight");
+        cut.Find("#msf-withdraw-campaign").HasAttribute("disabled").Should().BeTrue("an add is in flight");
+        AddInviteeButton(cut).HasAttribute("disabled").Should().BeFalse(
+            "it may hold the focus, which a refusal on a draft leaves where it was");
+
+        cut.Find("#msf-respondent-email").Closest("form")!.Submit();
+        cut.Find("#msf-open-campaign").Click();
+        cut.Find("#msf-withdraw-campaign").Click();
+
+        sender.Commands.Should().ContainSingle("one add is in flight, and nothing may be sent beside it");
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "wombatDialog.showModal");
+
+        sender.Release();
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."));
+        cut.FindAll(".alert-danger").Should().BeEmpty();
+        sender.Commands.Should().ContainSingle();
+        BodyRows(cut.Find("table")).Should().Equal(["Peer doctor | 4"]);
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeFalse("released once the add has answered");
+    }
+
+    [Fact]
     public void ARefusedWithdraw_SaysWhy_AndShowsTheCampaignAsItIsNow()
     {
         var sender = new CampaignSender(Setup(MsfCampaignState.Open, Group(MsfRespondentCategory.PeerDoctor, 3, 3)))
@@ -500,7 +560,7 @@ public sealed class CampaignStatePageTests : TestContext
         /// <summary>What every read of the campaign throws once a command has been refused.</summary>
         public Exception? ReadFailureAfterRefusal { get; init; }
 
-        /// <summary>Holds each open and withdraw until <see cref="Release" />.</summary>
+        /// <summary>Holds each add, open and withdraw until <see cref="Release" />.</summary>
         public bool Hold { get; init; }
 
         public void Release() => (_held ?? throw new InvalidOperationException("Nothing was held.")).SetResult();
@@ -527,7 +587,14 @@ public sealed class CampaignStatePageTests : TestContext
                     ? group with { Invited = group.Invited + 1 }
                     : new MsfInviteeCountDto(add.RespondentCategory, 1, 0);
                 _setup = _setup with { Invitees = groups.Values.OrderBy(entry => entry.Category).ToList() };
-                return Task.FromResult((TResponse)(object)groups.Values.Sum(entry => entry.Invited));
+                var added = (TResponse)(object)groups.Values.Sum(entry => entry.Invited);
+                if (Hold)
+                {
+                    _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    return AfterAsync(_held.Task, added);
+                }
+
+                return Task.FromResult(added);
             }
 
             object? response = request switch
@@ -565,6 +632,12 @@ public sealed class CampaignStatePageTests : TestContext
             }
 
             return Task.CompletedTask;
+        }
+
+        private static async Task<T> AfterAsync<T>(Task held, T result)
+        {
+            await held;
+            return result;
         }
 
         private void Refuse()

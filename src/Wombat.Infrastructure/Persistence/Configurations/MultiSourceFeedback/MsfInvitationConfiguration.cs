@@ -7,6 +7,12 @@ namespace Wombat.Infrastructure.Persistence.Configurations.MultiSourceFeedback;
 
 public sealed class MsfInvitationConfiguration : IEntityTypeConfiguration<MsfInvitation>
 {
+    /// <summary>The address as invitations are compared, lower-cased by the database; a shadow property. (T228)</summary>
+    public const string RespondentEmailKey = "RespondentEmailKey";
+
+    /// <summary>One invitation per campaign and address while the address is held. (T228)</summary>
+    public const string RespondentEmailKeyIndex = "IX_MsfInvitations_CampaignId_RespondentEmailKey";
+
     public void Configure(EntityTypeBuilder<MsfInvitation> builder)
     {
         builder.ToTable("MsfInvitations", table =>
@@ -44,6 +50,24 @@ public sealed class MsfInvitationConfiguration : IEntityTypeConfiguration<MsfInv
         builder.HasIndex(entity => entity.PreviousTokenSelector).IsUnique();
 
         builder.HasIndex(entity => new { entity.CampaignId, entity.RespondentCategory });
+
+        // A campaign invites an address once, in any capitals (T228). Until T228 an address added twice was mailed two
+        // working links, so one respondent could answer twice and fill a group's minimum alone. The add command refuses
+        // it first (MsfInvitation.AddressKey); this holds it for every writer and for two adds that race.
+        //
+        // The key is a stored generated column, so the rule is in the model rather than in a migration's raw SQL, and
+        // it follows the address: anonymising an invitation nulls the address (MsfInvitation.Anonymize, T207), and
+        // PostgreSQL recomputes the key to NULL in the same update, so nothing derived from the address outlives it.
+        // While the address is held, the key tells no one more than the address beside it. An erased address leaves
+        // the index (the filter), and so does not block anything. Stored, because PostgreSQL 18 makes a generated
+        // column virtual by default, and a virtual one cannot be indexed.
+        builder.Property<string?>(RespondentEmailKey)
+            .HasMaxLength(320)
+            .HasComputedColumnSql("lower(\"RespondentEmail\")", stored: true);
+        builder.HasIndex(nameof(MsfInvitation.CampaignId), RespondentEmailKey)
+            .IsUnique()
+            .HasFilter($"\"{RespondentEmailKey}\" IS NOT NULL")
+            .HasDatabaseName(RespondentEmailKeyIndex);
 
         builder.HasOne(entity => entity.Campaign)
             .WithMany(campaign => campaign.Invitations)
