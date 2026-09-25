@@ -64,6 +64,30 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
     public FakeUserDirectory WithTraineesOf(IApplicationDbContext db)
         => WithTrainees(db.Set<TraineeProfile>().Select(profile => profile.UserId).Distinct().ToArray());
 
+    /// <summary>
+    /// An active CommitteeMember holder at each decision panel's institution for every member of it, as the panels in
+    /// <paramref name="db" /> stand when this is called: a fixture in which everyone seated may sit (<c>PanelSeat</c>,
+    /// T165), so a panel's chair may take the chair's actions (T256). A test about someone who may not sit builds its
+    /// directory by hand.
+    /// </summary>
+    public static FakeUserDirectory PanelMembersOf(IApplicationDbContext db)
+        => new FakeUserDirectory().WithPanelMembersOf(db);
+
+    /// <summary>Adds an active CommitteeMember holder at each panel's institution for every member of it (T256).</summary>
+    public FakeUserDirectory WithPanelMembersOf(IApplicationDbContext db)
+    {
+        var seats = db.Set<Wombat.Domain.CommitteeDecisions.DecisionPanel>()
+            .SelectMany(panel => panel.Members.Select(member => new { panel.InstitutionId, member.UserId }))
+            .ToArray();
+
+        foreach (var seat in seats)
+        {
+            WithCommitteeMembers(seat.InstitutionId, seat.UserId);
+        }
+
+        return this;
+    }
+
     /// <summary>Adds accounts that hold Trainee, one per id (T238).</summary>
     public FakeUserDirectory WithTrainees(params string[] userIds)
     {

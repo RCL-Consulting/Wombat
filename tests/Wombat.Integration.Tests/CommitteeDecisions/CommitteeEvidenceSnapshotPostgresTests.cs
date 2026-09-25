@@ -221,7 +221,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
                 foreach (var agendaLineId in closingUnstaged)
                 {
-                    await new DeferAgendaLineCommandHandler(db).Handle(
+                    await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                         new DeferAgendaLineCommand(reviewId, agendaLineId, "Not yet observed enough to decide.", Chair()),
                         CancellationToken.None);
                 }
@@ -234,7 +234,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+                await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new RatifyCommitteeDecisionCommand(reviewId, Chair()), CancellationToken.None);
             }
 
@@ -352,7 +352,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
     private static Task<PendingEntrustmentDecisionDto> StageAsync(
         ApplicationDbContext db, int reviewId, int epaId, int levelId, params int[] evidenceItemIds)
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId,
                 null,

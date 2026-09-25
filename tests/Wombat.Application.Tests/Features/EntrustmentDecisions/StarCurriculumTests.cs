@@ -378,7 +378,7 @@ public sealed class StarCurriculumTests
 
     private static Task<PendingEntrustmentDecisionDto> StageAsync(
         ApplicationDbContext db, int epaId, int levelId, int? pendingId = null, ClaimsPrincipal? principal = null)
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 ReviewId,
                 pendingId,
@@ -397,7 +397,7 @@ public sealed class StarCurriculumTests
             CancellationToken.None);
 
     private static Task RatifyOnlyAsync(ApplicationDbContext db)
-        => new RatifyCommitteeDecisionCommandHandler(db).Handle(
+        => new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RatifyCommitteeDecisionCommand(ReviewId, Chair()),
             CancellationToken.None);
 

@@ -293,6 +293,85 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
             "ratify the committee's decision.");
     }
 
+    // ─── A chair who may no longer sit (T256) ────────────────────────────────
+
+    /// <summary>What the query tells the Chair seat's holder who may not sit now: the sentence their click is refused with.</summary>
+    private const string YouMayNotChair =
+        "You chair this panel but cannot take the chair's actions now: only an active committee member at the panel's " +
+        "institution who is not a trainee can, and never the trainee under review. A panel administrator must seat a " +
+        "chair who can.";
+
+    /// <summary>What the query tells everyone else, naming the chair.</summary>
+    private const string TheChairMayNotAct =
+        "The panel's chair, Thandi Zulu, cannot take the chair's actions now: only an active committee member at the " +
+        "panel's institution who is not a trainee can, and never the trainee under review. A panel administrator must " +
+        "seat a chair who can.";
+
+    public static TheoryData<CommitteeReviewState, bool> StatesWithAChairsActionOpen => new()
+    {
+        { CommitteeReviewState.InProgress, false },
+        { CommitteeReviewState.InProgress, true },
+        { CommitteeReviewState.Decided, false }
+    };
+
+    [Theory]
+    [MemberData(nameof(StatesWithAChairsActionOpen))]
+    public void AChairWhoMayNoLongerSit_IsOfferedNoneOfTheChairsControls_AndIsToldWhy(CommitteeReviewState state, bool formative)
+    {
+        // Before T256 the query asked only the seat, from claims frozen for the circuit's life, so a chair who had lost the
+        // CommitteeMember role, moved or been deactivated was offered Ratify, Close, Stage, Remove, Defer and Reinstate,
+        // and each worked. The query now asks the seat rule too, and says why.
+        SignInAs("chair-1");
+        var cut = Render(
+            Review(state, callerChairs: false) with { IsFormative = formative, ChairCannotAct = YouMayNotChair },
+            [Pending(7, evidence: [501])]);
+
+        Buttons(cut).Should().NotContain(ChairsControls, $"{state}, formative: {formative}");
+        cut.FindAll("#decision-rationale").Should().BeEmpty();
+        cut.FindAll("#pending-epa").Should().BeEmpty();
+        Text(cut.Find("#chair-cannot-act-note")).Should().Be(YouMayNotChair);
+        cut.Find("#chair-cannot-act-note").GetAttribute("role").Should().BeNull("standing page content is not announced on every load");
+        cut.FindAll("#chair-actions-note").Should().BeEmpty("it would name the chair as the one who can act");
+    }
+
+    [Theory]
+    [MemberData(nameof(StatesWithAChairsActionOpen))]
+    public void WhenTheChairMayNoLongerSit_AMemberIsToldSo_NotToWaitForTheChair(CommitteeReviewState state, bool formative)
+    {
+        SignInAs("member-1");
+        var cut = Render(Review(state, callerChairs: false) with { IsFormative = formative, ChairCannotAct = TheChairMayNotAct });
+
+        Buttons(cut).Should().NotContain(ChairsControls);
+        Text(cut.Find("#chair-cannot-act-note")).Should().Be(TheChairMayNotAct);
+        cut.FindAll("#chair-actions-note").Should().BeEmpty("\"Only the panel's chair, Thandi Zulu, can …\" is not so");
+    }
+
+    [Fact]
+    public void WhenTheChairMayNoLongerSit_AScheduledReview_StillSaysWhoCanStartIt()
+    {
+        // Start is not the chair's: who can start it is still said, beside why the chair will not be able to act.
+        SignInAs("instadmin-1");
+        var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with
+        {
+            CallerMayStart = false,
+            ChairCannotAct = TheChairMayNotAct
+        });
+
+        Text(cut.Find("#chair-actions-note"))
+            .Should().Be("Only the panel's members, and the coordinators of its institution, can start this review.");
+        Text(cut.Find("#chair-cannot-act-note")).Should().Be(TheChairMayNotAct);
+    }
+
+    [Fact]
+    public void WhenTheChairMaySit_NothingIsSaidAboutTheChair()
+    {
+        SignInAs("chair-1");
+        var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: true));
+
+        Buttons(cut).Should().Contain("Ratify");
+        cut.FindAll("#chair-cannot-act-note").Should().BeEmpty();
+    }
+
     // ─── A trainee who has moved institution (T213 review) ───────────────────
 
     [Fact]

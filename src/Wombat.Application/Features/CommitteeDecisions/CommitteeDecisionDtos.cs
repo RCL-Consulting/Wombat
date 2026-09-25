@@ -19,7 +19,16 @@ public sealed record DecisionPanelSummaryDto(
     int? SpecialityId,
     int MemberCount,
     string? DecisionBodyKey = null,
-    string? DecisionBodyName = null);
+    string? DecisionBodyName = null)
+{
+    /// <summary>
+    /// Whether the caller may open this panel to change it: the rule panel update and the panel form's read demand
+    /// (<c>CommitteeDecisionAuthorization.PanelReachAsync</c>), so the panel list offers Edit exactly where the form would
+    /// open. Never for someone who holds Trainee (T256). Filled by <c>ListDecisionPanelsQuery</c>; false from everywhere
+    /// else.
+    /// </summary>
+    public bool CallerMayManage { get; init; }
+}
 
 /// <param name="DecisionBodyKey">The College committee the panel sits as (T131), or null for a general panel.</param>
 /// <param name="DecisionBodyName">That committee's name, or null for a general panel.</param>
@@ -246,15 +255,28 @@ public sealed record CommitteeReviewDetailDto(
     public IReadOnlyList<CommitteePersonDto> PanelMembers { get; init; } = [];
 
     /// <summary>
-    /// Whether the caller holds the panel's Chair seat, and so may take the chair's actions at this review: record the
-    /// decision, ratify it, close a formative review, stage and remove entrustment decisions, and defer and reinstate
-    /// agenda lines (T213). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate those handlers demand
-    /// (<c>CommitteeDecisionAuthorization.Chairs</c>), so the review page offers the chair's controls to the chair alone:
-    /// before T213 it offered them to every reader, and each refused on the click. False from everywhere else, so nobody
-    /// is offered them on the strength of a copy that never asked. Those handlers also demand the trainee check, so the
-    /// page offers the controls only while <see cref="TraineeElsewhere" /> is null as well.
+    /// Whether the caller holds the panel's Chair seat and may sit at this review now, and so may take the chair's actions
+    /// at it: record the decision, ratify it, close a formative review, stage and remove entrustment decisions, and defer
+    /// and reinstate agenda lines (T213, T256). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate those
+    /// handlers demand (<c>CommitteeDecisionAuthorization.Chairs</c>), so the review page offers the chair's controls to
+    /// the chair alone, and only while the chair may sit (<c>PanelSeat.SittingAt</c>): before T213 it offered them to every
+    /// reader, and each refused on the click, and before T256 it offered them to a chair who had lost the CommitteeMember
+    /// role, moved or been deactivated. False from everywhere else, so nobody is offered them on the strength of a copy
+    /// that never asked. Those handlers also demand the trainee check, so the page offers the controls only while
+    /// <see cref="TraineeElsewhere" /> is null as well.
     /// </summary>
     public bool CallerChairs { get; init; }
+
+    /// <summary>
+    /// Why nobody can take the chair's actions at this review now, or null when its chair can: the panel's chair may not
+    /// sit at it (<c>PanelSeat.SittingAt</c>: an active committee member at the panel's institution who is not a trainee,
+    /// and never the trainee under review), which every chair's action demands (T256). To the Chair seat's holder it is the
+    /// sentence their click would be refused with (<c>PanelSeat.MayNotChairFromSeat</c>); to everyone else it names the
+    /// chair (<c>PanelSeat.ChairCannotAct</c>). Filled by <c>GetCommitteeReviewByIdQuery</c> while the review is
+    /// scheduled, in progress or decided; null in every other state, where no chair's action is open or to come, and
+    /// from everywhere else. The review page shows it where the chair's controls, or the note naming the chair, would be.
+    /// </summary>
+    public string? ChairCannotAct { get; init; }
 
     /// <summary>
     /// Whether the caller may start this review, once it is scheduled: a member of its panel, a Coordinator of the panel's
@@ -359,8 +381,8 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>
     /// This review, named from an earlier copy of it: the trainee's name, the names of the panel and of those present at
-    /// each decision, which panel members may sit, who can resolve an appeal, and what the caller may do at it (T213,
-    /// T237).
+    /// each decision, which panel members may sit, who can resolve an appeal, what the caller may do at it, and why the
+    /// chair cannot act where they cannot (T213, T237, T256).
     /// </summary>
     /// <remarks>
     /// A command answers with the review from the lookup-free mapper, which names nobody, seats nobody and knows no caller
@@ -397,6 +419,7 @@ public sealed record CommitteeReviewDetailDto(
         {
             TraineeName = earlier.TraineeName,
             CallerChairs = earlier.CallerChairs,
+            ChairCannotAct = earlier.ChairCannotAct,
             CallerMayStart = earlier.CallerMayStart,
             CallerResolvesAppeals = earlier.CallerResolvesAppeals,
             TraineeElsewhere = earlier.TraineeElsewhere,

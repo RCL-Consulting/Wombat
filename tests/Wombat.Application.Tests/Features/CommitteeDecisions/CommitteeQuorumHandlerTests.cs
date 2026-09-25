@@ -1166,8 +1166,8 @@ public sealed class CommitteeQuorumHandlerTests
                 ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, present, principal),
             CancellationToken.None);
 
-    private static Task<CommitteeReviewDetailDto> RatifyAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => new RatifyCommitteeDecisionCommandHandler(db).Handle(
+    private Task<CommitteeReviewDetailDto> RatifyAsync(ApplicationDbContext db, ClaimsPrincipal principal)
+        => new RatifyCommitteeDecisionCommandHandler(db, Directory()).Handle(
             new RatifyCommitteeDecisionCommand(ReviewId, principal), CancellationToken.None);
 
     private Task<CommitteeReviewDetailDto> ResolveAsync(
@@ -1183,16 +1183,16 @@ public sealed class CommitteeQuorumHandlerTests
                 principal),
             CancellationToken.None);
 
-    private static Task<PendingEntrustmentDecisionDto> StageThroughTheHandlerAsync(
+    private Task<PendingEntrustmentDecisionDto> StageThroughTheHandlerAsync(
         ApplicationDbContext db, int epaId, int? pendingId = null, string rationale = "Ready for indirect supervision.")
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(db, Directory()).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 ReviewId, pendingId, epaId, LevelId, new DateOnly(2026, 7, 2), null, rationale,
                 [epaId == EpaId ? EvidenceOnEpa : EvidenceOnSecondEpa], Chair()),
             CancellationToken.None);
 
-    private static Task RemoveAsync(ApplicationDbContext db, int pendingId)
-        => new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
+    private Task RemoveAsync(ApplicationDbContext db, int pendingId)
+        => new RemovePendingEntrustmentDecisionCommandHandler(db, Directory()).Handle(
             new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, Chair()), CancellationToken.None);
 
     private static async Task StageAsync(ApplicationDbContext db)

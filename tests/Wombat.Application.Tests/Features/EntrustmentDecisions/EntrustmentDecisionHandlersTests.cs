@@ -32,7 +32,7 @@ public sealed class EntrustmentDecisionHandlersTests
         await StageAsync(dbContext, review.Id, epaId: 7, levelId: 4, new DateOnly(2026, 4, 1), null, "Level advanced.", EvidenceOnEpa7);
         await RecordDecisionAsync(dbContext, review.Id);
 
-        var ratify = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        var ratify = new RatifyCommitteeDecisionCommandHandler(dbContext, Committee);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ratify.Handle(
             new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None));
@@ -100,7 +100,7 @@ public sealed class EntrustmentDecisionHandlersTests
 
         await RecordDecisionAsync(dbContext, review.Id);
 
-        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext, Committee);
         await ratifyHandler.Handle(
             new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
@@ -184,7 +184,7 @@ public sealed class EntrustmentDecisionHandlersTests
     private static Task<PendingEntrustmentDecisionDto> StageAsync(
         ApplicationDbContext dbContext, int reviewId, int epaId, int levelId, DateOnly issuedOn, DateOnly? expiresOn,
         string rationale, params int[] evidenceItemIds)
-        => new StagePendingEntrustmentDecisionCommandHandler(dbContext).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(dbContext, Committee).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, epaId, levelId, issuedOn, expiresOn, rationale, evidenceItemIds,
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
@@ -221,7 +221,7 @@ public sealed class EntrustmentDecisionHandlersTests
     {
         var review = await SeedReviewInStateAsync(dbContext, startReview: true);
         await RecordDecisionAsync(dbContext, review.Id);
-        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext, Committee);
         await ratifyHandler.Handle(
             new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);

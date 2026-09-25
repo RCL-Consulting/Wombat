@@ -582,14 +582,14 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
         var command = new StagePendingEntrustmentDecisionCommand(
             review.ReviewId, pendingId, epaId, levelId, new DateOnly(2026, 7, 2), null, "Consistent across the window.",
             evidenceItemIds, Chair());
-        await ThroughTheAuditPipelineAsync(db, command, () => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(command, CancellationToken.None));
+        await ThroughTheAuditPipelineAsync(db, command, () => new StagePendingEntrustmentDecisionCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
     }
 
     private async Task RatifyAsync(SeededReview review, Func<Task>? beforeSave = null)
     {
         await using var db = NewContext(review.Schema, beforeSave);
         var command = new RatifyCommitteeDecisionCommand(review.ReviewId, Chair());
-        await ThroughTheAuditPipelineAsync(db, command, () => new RatifyCommitteeDecisionCommandHandler(db).Handle(command, CancellationToken.None));
+        await ThroughTheAuditPipelineAsync(db, command, () => new RatifyCommitteeDecisionCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
     }
 
     /// <summary>Records the committee's decision with a quorate sitting, the chair and the other member (T165).</summary>
@@ -609,14 +609,14 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     {
         await using var db = NewContext(review.Schema, beforeSave);
         var command = new DeferAgendaLineCommand(review.ReviewId, lineId, Deferral, Chair());
-        await ThroughTheAuditPipelineAsync(db, command, () => new DeferAgendaLineCommandHandler(db).Handle(command, CancellationToken.None));
+        await ThroughTheAuditPipelineAsync(db, command, () => new DeferAgendaLineCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
     }
 
     private async Task ReinstateAsync(SeededReview review, int lineId, Func<Task>? beforeSave = null)
     {
         await using var db = NewContext(review.Schema, beforeSave);
         var command = new ReinstateAgendaLineCommand(review.ReviewId, lineId, Chair());
-        await ThroughTheAuditPipelineAsync(db, command, () => new ReinstateAgendaLineCommandHandler(db).Handle(command, CancellationToken.None));
+        await ThroughTheAuditPipelineAsync(db, command, () => new ReinstateAgendaLineCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
     }
 
     private static async Task<(CommitteeAgendaLineState State, string? Reason)> LineStateAsync(ApplicationDbContext db, int lineId)
@@ -629,7 +629,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
     {
         await using var db = NewContext(review.Schema, beforeSave);
         var command = new RemovePendingEntrustmentDecisionCommand(review.ReviewId, pendingId, Chair());
-        await ThroughTheAuditPipelineAsync(db, command, () => new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(command, CancellationToken.None));
+        await ThroughTheAuditPipelineAsync(db, command, () => new RemovePendingEntrustmentDecisionCommandHandler(db, Committee(review)).Handle(command, CancellationToken.None));
     }
 
     private static Task<TResponse> ThroughTheAuditPipelineAsync<TRequest, TResponse>(
@@ -791,7 +791,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             lineA = await db.Set<CommitteeEvidence>().Where(line => line.ActivityId == activityA).Select(line => line.Id).SingleAsync();
             lineB = await db.Set<CommitteeEvidence>().Where(line => line.ActivityId == activityB).Select(line => line.Id).SingleAsync();
 
-            var staged = await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+            var staged = await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new StagePendingEntrustmentDecisionCommand(
                     reviewId, null, paed001, rung3a, new DateOnly(2026, 7, 2), null, "Target met.", [lineA], Chair()),
                 CancellationToken.None);
@@ -815,7 +815,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
 
                 foreach (var lineId in closing)
                 {
-                    await new DeferAgendaLineCommandHandler(db).Handle(
+                    await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                         new DeferAgendaLineCommand(reviewId, lineId, Deferral, Chair()), CancellationToken.None);
                     db.ChangeTracker.Clear();
                 }

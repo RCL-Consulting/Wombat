@@ -55,6 +55,7 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
 
     public async Task<DecisionPanelDetailDto> Handle(CreateDecisionPanelCommand request, CancellationToken cancellationToken)
     {
+        // Who may manage panels at all, before anything is read: never someone who holds Trainee (T256).
         CommitteeDecisionAuthorization.DemandPanelAdministration(request.Principal);
 
         var institutionId = await ResolveInstitutionIdAsync(request, cancellationToken);

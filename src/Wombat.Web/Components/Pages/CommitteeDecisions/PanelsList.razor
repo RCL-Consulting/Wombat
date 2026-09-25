@@ -7,12 +7,23 @@
 
 <PageHeader Title="Decision panels" Subtitle="Reusable committees for progression reviews.">
   <Actions>
-    <a class="btn btn-primary" href="/committee/panels/new">New panel</a>
+    @* T256: offered only when creating a panel would be accepted, by the rule the create handler demands
+       (GetDecisionPanelFormOptionsQuery): never to someone who holds Trainee, a committee member or a coordinator. *@
+    @if (_formOptions is { MayCreateAny: true })
+    {
+      <a class="btn btn-primary" href="/committee/panels/new">New panel</a>
+    }
   </Actions>
 </PageHeader>
 
 <div class="stack-list">
-  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No decision panels" EmptyBody="Create a panel before scheduling reviews.">
+  @* T256. Standing page content, there on every visit: an info Alert, which carries no role. *@
+  @if (_formOptions?.TraineeNote is { } traineeNote)
+  {
+    <Alert Kind="info" Id="panels-trainee-note">@traineeNote</Alert>
+  }
+  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No decision panels"
+              EmptyBody="@EmptyBody">
     <DataTable Items="_items">
       <HeaderRow>
         <tr>
@@ -30,7 +41,11 @@
           <td>@(item.DecisionBodyName ?? "General panel")</td>
           <td>@item.MemberCount</td>
           <td class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")">Edit</a>
+            @* T256: Edit only where the panel form would open, by the rule its read and panel update demand. *@
+            @if (item.CallerMayManage)
+            {
+              <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")">Edit</a>
+            }
           </td>
         </tr>
       </Row>
@@ -137,6 +152,14 @@
   private readonly List<DecisionPanelSummaryDto> _items = [];
   private bool _loading = true;
   private string? _error;
+  private DecisionPanelFormOptionsDto? _formOptions;
+
+  // T256: someone not offered New panel is not told to create one. A global Administrator belongs to no institution and
+  // lists every panel, so their empty list is the system's, not "your institution's".
+  private string EmptyBody
+    => _formOptions is { MayCreateAny: true } ? "Create a panel before scheduling reviews."
+      : _isAdministrator ? "No decision panel has been created yet."
+      : "No decision panel runs at your institution yet.";
 
   private bool _isAdministrator;
   private IReadOnlyList<InstitutionDto> _institutions = [];
@@ -149,6 +172,17 @@
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
+
+    // Whether New panel is offered, and why not to someone who holds Trainee (T256). In its own try: a failure offers no
+    // New panel and never replaces the list.
+    try
+    {
+      _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
+    }
+    catch (Exception)
+    {
+      _formOptions = null;
+    }
 
     try
     {

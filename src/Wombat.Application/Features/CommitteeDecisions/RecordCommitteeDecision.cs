@@ -83,13 +83,15 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
 
         // Authorise first: an unknown review and one the caller does not chair get the one refusal, before the review's
         // state is said (T194 item 1). The panel's chair, and no one else: T165 removed the Administrator's bypass from the
-        // actions that take a decision (D46).
-        review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
+        // actions that take a decision (D46). And a chair who may sit at the review now (T256), read from the user store
+        // once, for the attendance below too.
+        (review, var eligible) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
+            request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         // Every check, the domain's own included, runs before RecordDecision changes anything: the audit pipeline saves
         // the request's context from its catch. Who may be counted is PanelSeat's rule, read from the user store.
-        var present = await PanelSeat.DemandPresentAsync(_users, review, request.PresentUserIds, cancellationToken);
+        var present = PanelSeat.DemandPresent(review, request.PresentUserIds, eligible);
 
         // T131 slice 4: the decision fixes the agenda with the staged decisions (the deferrals are the committee's too), so
         // every closing line must be staged or deferred before it is recorded, by the predicate ratify enforces again.

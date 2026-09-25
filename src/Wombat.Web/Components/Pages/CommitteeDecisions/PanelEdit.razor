@@ -30,6 +30,18 @@
 </ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="" LoadError="@_loadError">
+  @if (_traineeNote is { } traineeNote)
+  {
+    @* T256. Someone who holds Trainee beside a role that manages panels creates, changes and opens none, the one that
+       reviews them included: panel create and update refuse them first, and the panel's read gives them nothing. So no
+       form is offered, for a new panel or this one, and the card says why in the words the handlers refuse with. *@
+    <section class="detail-card detail-card--empty" id="panel-trainee-note">
+      <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
+      <p class="muted">@traineeNote</p>
+    </section>
+  }
+  else
+  {
   @if (_unseatable > 0)
   {
     @* T165. A member who can no longer sit (erased, deactivated, moved, no longer a committee member, or since T237 a
@@ -197,6 +209,7 @@
     </section>
     }
   </div>
+  }
 </StatePanel>
 
 @code {
@@ -224,6 +237,7 @@
   private DecisionPanelFormOptionsDto? _formOptions;
   private IReadOnlyList<PanelMemberCandidateDto> _candidates = [];
   private int _unseatable;
+  private string? _traineeNote;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -240,13 +254,23 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
       _mayChooseBody = _isAdministrator || authState.User.IsInRole(WombatRoles.InstitutionalAdmin);
+
+      // What a panel may be, by the rule creating one demands (T194), asked first for a new panel and an existing one
+      // alike: someone who holds Trainee beside a role that manages panels is told why nothing is offered, and nothing
+      // else is read for them (T256).
+      _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
+      _traineeNote = _formOptions.TraineeNote;
+      if (_traineeNote is not null)
+      {
+        return;
+      }
+
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
       if (!PanelId.HasValue)
       {
-        // What a new panel may be, by the rule creating one demands (T194). The form starts on a scope it offers:
-        // Speciality where it offers one, as it always did, else the institution-wide scope.
-        _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
+        // The form starts on a scope it offers: Speciality where it offers one, as it always did, else the
+        // institution-wide scope.
         _model.Scope = MayCreate(DecisionPanelScope.Speciality) || !MayCreate(DecisionPanelScope.Institution)
           ? DecisionPanelScope.Speciality
           : DecisionPanelScope.Institution;

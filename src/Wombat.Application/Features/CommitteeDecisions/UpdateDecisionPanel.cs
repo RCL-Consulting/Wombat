@@ -39,6 +39,7 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
 
     public async Task<DecisionPanelDetailDto> Handle(UpdateDecisionPanelCommand request, CancellationToken cancellationToken)
     {
+        // Who may manage panels at all, before the panel is looked up: never someone who holds Trainee (T256).
         CommitteeDecisionAuthorization.DemandPanelAdministration(request.Principal);
 
         var panel = await _dbContext.Set<DecisionPanel>()

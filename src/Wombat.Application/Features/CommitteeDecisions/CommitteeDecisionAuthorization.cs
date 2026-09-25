@@ -15,17 +15,77 @@ internal static class CommitteeDecisionAuthorization
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException("The current user identifier is missing.");
 
+    /// <summary>The refusal to manage panels for a caller who holds no role that manages them. Given before any lookup.</summary>
+    internal const string MayNotManagePanels = "You are not allowed to manage committee panels.";
+
+    /// <summary>
+    /// The refusal to create, change or open any decision panel for a caller who holds the Trainee role beside a role that
+    /// manages panels, and what the panel pages say to them in place of what those roles would offer. It is given before
+    /// any panel is looked up, so it says nothing about an id. (T256)
+    /// </summary>
+    internal const string TraineeManagesNoPanel =
+        "You hold the Trainee role, so you cannot create or change a decision panel, including one that reviews you.";
+
+    /// <summary>
+    /// Refuses, before anything is looked up, a caller who may not manage decision panels at all
+    /// (<see cref="MayAdministerPanels" />): panel create and update ask it first. (T256)
+    /// </summary>
+    /// <remarks>
+    /// Only a caller whose Trainee role is what stands in the way, one who also holds a role that manages panels, is told
+    /// that it is, as scheduling tells them (<see cref="DemandReviewScheduling" />, T216). Anyone else holds no role that
+    /// manages panels, and is told so.
+    /// </remarks>
     public static void DemandPanelAdministration(ClaimsPrincipal principal)
     {
-        if (principal.IsInRole(WombatRoles.Administrator) ||
-            principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
-            principal.IsInRole(WombatRoles.SpecialityAdmin) ||
-            principal.IsInRole(WombatRoles.SubSpecialityAdmin))
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (MayAdministerPanels(principal))
         {
             return;
         }
 
-        throw new UnauthorizedAccessException("You are not allowed to manage committee panels.");
+        throw new UnauthorizedAccessException(
+            HoldsPanelAdministrationRole(principal) ? TraineeManagesNoPanel : MayNotManagePanels);
+    }
+
+    /// <summary>
+    /// Whether this caller may manage decision panels at all: a role that manages them, and not the Trainee role. Which
+    /// panels is <see cref="PanelReachAsync" />'s question, which asks this first. (T256)
+    /// </summary>
+    /// <remarks>
+    /// <b>A trainee first</b> (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185), asked before every arm, the
+    /// Administrator's included. A registrar who also administers their institution, speciality or sub-speciality, or the
+    /// system, creates no panel, changes none and opens none to change it. Not a peer's: a panel's members decide the
+    /// entrustment of every trainee it reviews, and its chair alone records and ratifies. Not the one that reviews them
+    /// either: a trainee does not choose who sits on their review, as they do not schedule it (T216). Until T256 a Trainee
+    /// who also held InstitutionalAdmin, SpecialityAdmin or SubSpecialityAdmin could name the chair and the external
+    /// members of the panel that decides their own EPAs, and, as an InstitutionalAdmin, which College committee it sits
+    /// as (<see cref="MaySetDecisionBody" />).
+    /// </remarks>
+    public static bool MayAdministerPanels(ClaimsPrincipal principal)
+        => !TraineeScopeResolver.ActsAsTrainee(principal) && HoldsPanelAdministrationRole(principal);
+
+    /// <summary>
+    /// Whether this caller holds a role that manages panels, whatever else they hold. Not the right to manage them, which
+    /// is <see cref="MayAdministerPanels" />: this only says which refusal a caller who may not is given.
+    /// </summary>
+    private static bool HoldsPanelAdministrationRole(ClaimsPrincipal principal)
+        => principal.IsInRole(WombatRoles.Administrator) ||
+           principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
+           principal.IsInRole(WombatRoles.SpecialityAdmin) ||
+           principal.IsInRole(WombatRoles.SubSpecialityAdmin);
+
+    /// <summary>
+    /// What the panel pages say to someone who holds Trainee beside a role that manages panels: why they offer no panel to
+    /// create or change (<see cref="TraineeManagesNoPanel" />); null for anyone else. (T256)
+    /// </summary>
+    public static string? TraineeNoteOnPanelPages(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        return TraineeScopeResolver.ActsAsTrainee(principal) && HoldsPanelAdministrationRole(principal)
+            ? TraineeManagesNoPanel
+            : null;
     }
 
     /// <summary>The one refusal to create, change or open a panel outside the caller's scope.</summary>
@@ -75,8 +135,15 @@ internal static class CommitteeDecisionAuthorization
     /// scope and a speciality exactly when creating that panel would be accepted. (T194)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The speciality half reads the SubSpecialityAdmin's sub-specialities' specialities from the store, so it is asked
     /// once per request, not once per speciality.
+    /// </para>
+    /// <para>
+    /// Someone who holds Trainee reaches no panel, whatever other role they hold, the Administrator's included
+    /// (<see cref="MayAdministerPanels" />, T256): asked first, so the gate, the panel form's read and its offer all refuse
+    /// them by this one value, as panel create and update refuse them first.
+    /// </para>
     /// </remarks>
     public static async Task<PanelAdministrationReach> PanelReachAsync(
         IApplicationDbContext dbContext,
@@ -85,6 +152,11 @@ internal static class CommitteeDecisionAuthorization
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(principal);
+
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            return PanelAdministrationReach.None;
+        }
 
         if (principal.IsAdministrator())
         {
@@ -134,22 +206,45 @@ internal static class CommitteeDecisionAuthorization
     /// Administrator, or an InstitutionalAdmin of that institution. (T131, Decision 3)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Stricter than <see cref="MayAdministerPanelAsync" />, which lets a SpecialityAdmin manage their own speciality's
     /// panel. A body tag takes that body's EPAs away from every other panel covering the trainee: a panel carrying
     /// <c>neonatal</c> that covers the trainee's speciality comes before the institution's own. Which committee decides an
     /// EPA is the institution's arrangement, so it is the institution's administrator's to make.
+    /// </para>
+    /// <para>
+    /// Never someone who holds Trainee (<see cref="MayAdministerPanels" />, T256): the tag chooses which panel decides EPAs
+    /// 4 and 5 for every trainee it covers, the caller among them.
+    /// </para>
     /// </remarks>
     public static bool MaySetDecisionBody(ClaimsPrincipal principal, int institutionId)
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        return principal.IsAdministrator() ||
-               (principal.IsInstitutionalAdmin() && principal.GetInstitutionId() == institutionId);
+        return !TraineeScopeResolver.ActsAsTrainee(principal) &&
+               (principal.IsAdministrator() ||
+                (principal.IsInstitutionalAdmin() && principal.GetInstitutionId() == institutionId));
     }
 
-    /// <summary>Whether this caller holds a role that could set a panel's decision body anywhere: the pre-lookup check.</summary>
-    public static bool HoldsDecisionBodyRole(ClaimsPrincipal principal)
-        => principal.IsAdministrator() || principal.IsInstitutionalAdmin();
+    /// <summary>
+    /// Refuses, before the panel is looked up, a caller who could set no panel's decision body anywhere: one who holds no
+    /// role that may (<see cref="DecisionBodyNeedsInstitutionalAdmin" />), or who holds Trainee beside one
+    /// (<see cref="TraineeManagesNoPanel" />, T256).
+    /// </summary>
+    public static void DemandDecisionBodyRole(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (!principal.IsAdministrator() && !principal.IsInstitutionalAdmin())
+        {
+            throw new UnauthorizedAccessException(DecisionBodyNeedsInstitutionalAdmin);
+        }
+
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            throw new UnauthorizedAccessException(TraineeManagesNoPanel);
+        }
+    }
 
     /// <summary>The refusal to schedule, or preview, a review for a caller who holds no role that schedules.</summary>
     internal const string MayNotScheduleReviews = "You are not allowed to schedule committee reviews.";
@@ -419,11 +514,16 @@ internal static class CommitteeDecisionAuthorization
         "The committee review could not be found among the reviews you chair.";
 
     /// <summary>
-    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs its
-    /// panel: the gate of every chair's action, recording the decision, ratifying it, closing a formative review, staging
-    /// and removing entrustment decisions, and deferring and reinstating agenda lines. An unknown id and a review of
-    /// another panel get the one refusal. (T131, T165, T194 item 1)
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs it now
+    /// (<see cref="Chairs" />): the gate of every chair's action, recording the decision, ratifying it, closing a formative
+    /// review, staging and removing entrustment decisions, and deferring and reinstating agenda lines. An unknown id and a
+    /// review of another panel get the one refusal; the Chair seat's holder who may not sit at the review now gets the
+    /// seat's own (<see cref="PanelSeat.MayNotChairFromSeat" />). (T131, T165, T194 item 1, T256)
     /// </summary>
+    /// <returns>
+    /// The review, and who may sit on its panel now (<see cref="PanelSeat.EligibleAsync" />), read once here for a handler
+    /// that holds attendance to the same rule (recording the decision).
+    /// </returns>
     /// <remarks>
     /// <para>
     /// The page prints a command's refusal. Before T131 the entrustment commands said "could not be found" for an unknown
@@ -441,27 +541,87 @@ internal static class CommitteeDecisionAuthorization
     /// chair, not by an Administrator acting in their own right. There used to be two copies of the check, one here and
     /// one in <c>EntrustmentDecisionAuthorization</c>, each with the bypass; this is the only one now.
     /// </para>
+    /// <para>
+    /// Two steps, in this order. The seat, from the caller's claims, gives the one refusal and reads nothing: so an id's
+    /// existence is never confirmed to someone who holds no Chair seat on its panel. Then acting from the seat now, read
+    /// from the user store (T256): only the Chair seat's holder is told that the seat is theirs but they may not act from
+    /// it, which tells them nothing they cannot read on the review page. Reads only: every handler calls this before it
+    /// changes anything, and the audit pipeline saves the request's context from its catch.
+    /// </para>
     /// <para>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</para>
     /// </remarks>
-    public static CommitteeReview DemandChairedReview(ClaimsPrincipal principal, CommitteeReview? review)
+    public static async Task<(CommitteeReview Review, IReadOnlyDictionary<string, UserIdentityDetails> Eligible)> DemandChairedReviewAsync(
+        ClaimsPrincipal principal,
+        CommitteeReview? review,
+        IUserAdministrationService users,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(users);
 
-        if (review is null || !Chairs(principal, review.Panel))
+        if (review is null || !HoldsChairSeat(principal, review.Panel))
         {
             throw new UnauthorizedAccessException(ReviewNotChairedByCaller);
         }
 
-        return review;
+        var eligible = await PanelSeat.EligibleAsync(users, review.Panel.InstitutionId, cancellationToken);
+        if (!Chairs(principal, review, eligible))
+        {
+            throw new UnauthorizedAccessException(PanelSeat.MayNotChairFromSeat);
+        }
+
+        return (review, eligible);
     }
 
     /// <summary>
-    /// Whether the caller holds this panel's Chair seat: the one predicate every chair's action demands
-    /// (<see cref="DemandChairedReview" />) and the review page's offer of those actions reads
+    /// Whether the caller chairs this review now: they hold its panel's Chair seat, and may sit at the review now
+    /// (<see cref="PanelSeat.SittingAt" />, T237's one rule). The one predicate every chair's action demands
+    /// (<see cref="DemandChairedReviewAsync" />) and the review page's offer of those actions reads
     /// (<see cref="CommitteeReviewDetailDto.CallerChairs" />), so the page offers the chair's controls to exactly the
-    /// people the handlers let use them. (T165, T213)
+    /// people the handlers let use them. (T165, T213, T256)
     /// </summary>
-    public static bool Chairs(ClaimsPrincipal principal, DecisionPanel panel)
+    /// <param name="eligible">Who may sit on the review's panel now (<see cref="PanelSeat.EligibleAsync" />).</param>
+    /// <remarks>
+    /// <para>
+    /// The seat alone reads the caller's claims, which cannot say whether they are still an active committee member at
+    /// the panel's institution: a circuit's claims are frozen for its life. Until T256 a chair who had lost the
+    /// CommitteeMember role, moved to another institution or been deactivated kept every chair's action that records no
+    /// attendance: ratifying, which issues the staged STARs, closing a formative review, staging and removing STARs, and
+    /// deferring and reinstating agenda lines. Recording refused them only because it records the chair as present, and
+    /// the appeal body since T237 (<see cref="PanelSeat.AppealBodyAt" />). So D46's "an active CommitteeMember at the
+    /// panel's institution" now holds for every chair's action, by the rule the panel form seats people by.
+    /// </para>
+    /// <para>
+    /// It rules out the trainee under review too, as <see cref="PanelSeat.SittingAt" /> does: a trainee who has lost the
+    /// Trainee role and chairs the panel that reviews them never acts on their own review.
+    /// </para>
+    /// </remarks>
+    public static bool Chairs(
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        IReadOnlyDictionary<string, UserIdentityDetails> eligible)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(review);
+        ArgumentNullException.ThrowIfNull(eligible);
+
+        if (!HoldsChairSeat(principal, review.Panel))
+        {
+            return false;
+        }
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return PanelSeat.SittingAt(review, eligible).Any(member =>
+            member.Role == DecisionPanelMemberRole.Chair &&
+            string.Equals(member.UserId, userId, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Whether the caller holds this panel's Chair seat, from their claims: the first half of <see cref="Chairs" />, which
+    /// the gate asks before it reads the user store, and the review page asks to know whom to tell that they may not act
+    /// from it (<see cref="CommitteeReviewDetailDto.ChairCannotAct" />).
+    /// </summary>
+    public static bool HoldsChairSeat(ClaimsPrincipal principal, DecisionPanel panel)
         => HoldsSeat(principal, panel, role => role == DecisionPanelMemberRole.Chair);
 
     /// <summary>
@@ -495,8 +655,13 @@ internal static class CommitteeDecisionAuthorization
     /// Since T237 nobody who holds Trainee is seated either (<see cref="PanelSeat" />, the same rung read from the user
     /// store): the panel form does not offer them, and panel create and update refuse them in any seat. The rung is still
     /// asked here for a member given Trainee after they were seated, whom the panel's next save takes off: until then a
-    /// panel whose Chair holds Trainee has no one who can take the chair's actions, and its review page says the chair
-    /// cannot be recorded as present (<see cref="CommitteeReviewDetailDto.PanelShortfall" />).
+    /// panel whose Chair holds Trainee has no one who can take the chair's actions, and its review page says so
+    /// (<see cref="CommitteeReviewDetailDto.ChairCannotAct" />, T256).
+    /// </para>
+    /// <para>
+    /// The seat, from claims, is only half of acting from it: the chair's actions and the appeal body also demand that the
+    /// caller may sit at the review now, read from the user store (<see cref="Chairs" />, T256;
+    /// <see cref="PanelSeat.DemandSitsOnAppealBody" />, T237).
     /// </para>
     /// </remarks>
     private static bool HoldsSeat(ClaimsPrincipal principal, DecisionPanel panel, Func<DecisionPanelMemberRole, bool> role)
@@ -528,7 +693,7 @@ internal static class CommitteeDecisionAuthorization
     /// the one refusal; whether the review is under appeal is judged only after this. (T165, D46, T194 item 1)
     /// </summary>
     /// <remarks>
-    /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairedReview" />).
+    /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairedReviewAsync" />).
     /// Until T165 an Administrator with no seat on the panel could dismiss a trainee's appeal, or remit it and write the
     /// replacement decision alone, which every page then showed beside the original sitting's attendance. The review's
     /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. The resolve handler then demands that the

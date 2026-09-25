@@ -72,7 +72,7 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
             panels = panels.Where(panel => schedulableIds.Contains(panel.Id));
         }
 
-        return await panels
+        var summaries = await panels
             .OrderBy(panel => panel.Name)
             .Select(panel => new DecisionPanelSummaryDto(
                 panel.Id,
@@ -84,5 +84,17 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
                 panel.DecisionBodyKey,
                 panel.DecisionBody == null ? null : panel.DecisionBody.Name))
             .ToListAsync(cancellationToken);
+
+        // Which of them the caller may open to change, by the rule the panel form's read and panel update demand, so the
+        // list offers Edit exactly where the form opens: never to someone who holds Trainee (T256), a committee member or
+        // a coordinator, and to a Speciality or SubSpecialityAdmin only on their own speciality's panels.
+        var reach = await CommitteeDecisionAuthorization.PanelReachAsync(_dbContext, request.Principal, cancellationToken);
+        return summaries
+            .Select(summary => summary with
+            {
+                CallerMayManage = summary.InstitutionId is int institutionId &&
+                                  reach.Admits(institutionId, summary.Scope, summary.SpecialityId)
+            })
+            .ToArray();
     }
 }

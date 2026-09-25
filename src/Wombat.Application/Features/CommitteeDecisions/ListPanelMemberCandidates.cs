@@ -39,6 +39,13 @@ public sealed class ListPanelMemberCandidatesQueryHandler : IRequestHandler<List
 
     public async Task<IReadOnlyList<PanelMemberCandidateDto>> Handle(ListPanelMemberCandidatesQuery request, CancellationToken cancellationToken)
     {
+        // Picker = gate (T256): panel create and update refuse anyone who may not manage panels, someone who holds Trainee
+        // beside a role that does included, whoever is named, so the picker offers them nobody.
+        if (!CommitteeDecisionAuthorization.MayAdministerPanels(request.Principal))
+        {
+            return Array.Empty<PanelMemberCandidateDto>();
+        }
+
         var institutionId = request.Principal.IsAdministrator()
             ? request.InstitutionId
             : request.Principal.GetInstitutionId();

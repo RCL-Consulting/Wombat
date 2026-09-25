@@ -28,10 +28,12 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
     : IRequestHandler<RemovePendingEntrustmentDecisionCommand, Unit>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public RemovePendingEntrustmentDecisionCommandHandler(IApplicationDbContext dbContext)
+    public RemovePendingEntrustmentDecisionCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<Unit> Handle(RemovePendingEntrustmentDecisionCommand request, CancellationToken cancellationToken)
@@ -43,8 +45,9 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
         // Authorise first: an unknown review and one the caller does not chair get the one refusal, before the review's
-        // state is said (T194 item 1, T131).
-        review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
+        // state is said (T194 item 1, T131). And a chair who may sit at the review now (T256).
+        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
+            request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         if (review.State is not CommitteeReviewState.InProgress and not CommitteeReviewState.Decided)

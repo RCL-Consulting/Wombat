@@ -214,7 +214,7 @@ public sealed class DownloadEntrustmentCertificateTests
         await dbContext.SaveChangesAsync();
 
         // Staged at the sitting and issued by ratifying: since T165 the only way a STAR is issued.
-        await new StagePendingEntrustmentDecisionCommandHandler(dbContext).Handle(
+        await new StagePendingEntrustmentDecisionCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StagePendingEntrustmentDecisionCommand(review.Id, null, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1),
                 "Sufficient evidence.", [line.Id], CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
@@ -224,7 +224,7 @@ public sealed class DownloadEntrustmentCertificateTests
             new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
-        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         await ratifyHandler.Handle(new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
         return await dbContext.Set<EntrustmentDecision>()

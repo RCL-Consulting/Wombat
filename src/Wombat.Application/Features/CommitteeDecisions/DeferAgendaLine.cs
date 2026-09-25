@@ -55,16 +55,18 @@ public sealed class DeferAgendaLineCommandHandler : IRequestHandler<DeferAgendaL
     public const string FixedWhenDecided = AgendaLineCommands.FixedWhenDecided;
 
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public DeferAgendaLineCommandHandler(IApplicationDbContext dbContext)
+    public DeferAgendaLineCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<Unit> Handle(DeferAgendaLineCommand request, CancellationToken cancellationToken)
     {
         var (review, line) = await AgendaLineCommands.DemandOpenLineAsync(
-            _dbContext, request.ReviewId, request.LineId, request.Principal, cancellationToken);
+            _dbContext, _users, request.ReviewId, request.LineId, request.Principal, cancellationToken);
 
         var staged = await _dbContext.Set<PendingEntrustmentDecision>()
             .AnyAsync(pending => pending.ReviewId == review.Id && pending.EpaId == line.EpaId, cancellationToken);
@@ -125,16 +127,18 @@ public sealed class ReinstateAgendaLineCommandValidator : AbstractValidator<Rein
 public sealed class ReinstateAgendaLineCommandHandler : IRequestHandler<ReinstateAgendaLineCommand, Unit>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ReinstateAgendaLineCommandHandler(IApplicationDbContext dbContext)
+    public ReinstateAgendaLineCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<Unit> Handle(ReinstateAgendaLineCommand request, CancellationToken cancellationToken)
     {
         var (review, line) = await AgendaLineCommands.DemandOpenLineAsync(
-            _dbContext, request.ReviewId, request.LineId, request.Principal, cancellationToken);
+            _dbContext, _users, request.ReviewId, request.LineId, request.Principal, cancellationToken);
 
         // T165: a deferral is fixed with the committee's decision once it is recorded, with no exception: taking one back
         // then would reopen an EPA the committee settled, and nothing could be staged on it any more.
@@ -173,12 +177,13 @@ internal static class AgendaLineCommands
 
     /// <summary>
     /// The review and its agenda line, once every check has passed: the caller chairs the review's panel (one refusal for
-    /// an unknown review and another panel's, T194 item 1), the trainee still trains at the panel's institution (T182),
-    /// the review is binding and in progress or decided, and the line is its own. Reads only; tracked, for the caller's one
-    /// mutation. Whether a decided review's line may still change is each command's (T165).
+    /// an unknown review and another panel's, T194 item 1) and may sit at it now (T256), the trainee still trains at the
+    /// panel's institution (T182), the review is binding and in progress or decided, and the line is its own. Reads only;
+    /// tracked, for the caller's one mutation. Whether a decided review's line may still change is each command's (T165).
     /// </summary>
     public static async Task<(CommitteeReview Review, CommitteeAgendaLine Line)> DemandOpenLineAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         int reviewId,
         int lineId,
         ClaimsPrincipal principal,
@@ -190,7 +195,7 @@ internal static class AgendaLineCommands
             .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == reviewId, cancellationToken);
 
-        review = CommitteeDecisionAuthorization.DemandChairedReview(principal, review);
+        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(principal, review, users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(dbContext, principal, review, cancellationToken);
 
         if (review.IsFormative)

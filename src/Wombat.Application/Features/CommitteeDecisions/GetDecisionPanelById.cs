@@ -35,7 +35,8 @@ public sealed class GetDecisionPanelByIdQueryHandler : IRequestHandler<GetDecisi
         // The panel form's read: the panels the caller may change (T063, T182). Out of scope is null (404, not 403),
         // so the id's existence is not confirmed. Only an InstitutionalAdmin used to be checked; a SpecialityAdmin
         // could open any panel in the country and read its members, and until T131 slice 3 any speciality's at their
-        // own hospital.
+        // own hospital. Someone who holds Trainee opens none (T256): the reach is asked of the trainee rung first, and the
+        // form says why from its options (DecisionPanelFormOptionsDto.TraineeNote).
         if (!await CommitteeDecisionAuthorization.MayAdministerPanelAsync(
                 _dbContext, request.Principal, panel.InstitutionId, panel.Scope, panel.SpecialityId, cancellationToken))
         {

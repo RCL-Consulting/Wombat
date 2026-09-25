@@ -404,24 +404,24 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
                     reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
                     ["chair-a", "member-a"], principal),
                 CancellationToken.None),
-            "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+            "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db, users).Handle(
                 new RatifyCommitteeDecisionCommand(reviewId, principal), CancellationToken.None),
-            "Close" => await new CloseFormativeReviewCommandHandler(db).Handle(
+            "Close" => await new CloseFormativeReviewCommandHandler(db, users).Handle(
                 new CloseFormativeReviewCommand(reviewId, principal), CancellationToken.None),
             "ResolveAppeal" => await new ResolveAppealCommandHandler(db, users).Handle(
                 new ResolveAppealCommand(reviewId, CommitteeAppealOutcome.Dismissed, null, null, null, null, principal),
                 CancellationToken.None),
             "LodgeAppeal" => await new LodgeAppealCommandHandler(db).Handle(
                 new LodgeAppealCommand(reviewId, "The window missed my rotation.", principal), CancellationToken.None),
-            "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+            "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db, users).Handle(
                 new StagePendingEntrustmentDecisionCommand(
                     reviewId, null, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready.", [1], principal),
                 CancellationToken.None),
-            "Remove" => await new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
+            "Remove" => await new RemovePendingEntrustmentDecisionCommandHandler(db, users).Handle(
                 new RemovePendingEntrustmentDecisionCommand(reviewId, 1, principal), CancellationToken.None),
-            "Defer" => await new DeferAgendaLineCommandHandler(db).Handle(
+            "Defer" => await new DeferAgendaLineCommandHandler(db, users).Handle(
                 new DeferAgendaLineCommand(reviewId, 1, "Not yet observed.", principal), CancellationToken.None),
-            "Reinstate" => await new ReinstateAgendaLineCommandHandler(db).Handle(
+            "Reinstate" => await new ReinstateAgendaLineCommandHandler(db, users).Handle(
                 new ReinstateAgendaLineCommand(reviewId, 1, principal), CancellationToken.None),
             "GetById" => await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
                 new GetCommitteeReviewByIdQuery(reviewId, principal), CancellationToken.None),

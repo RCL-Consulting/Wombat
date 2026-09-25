@@ -1139,7 +1139,17 @@ the T194 review): a trainee seated on the panel that reviews them before they he
 is ratified, and is offered neither the chair's controls nor the resolve form on it. Since T237 no one who holds Trainee
 is seated at all (see **The panel form**). The chair alone is offered the decision form and Record decision
 (while the review is in progress), Ratify and its reason (once decided), Close review, the staging form, Remove, and the
-agenda's Stage, Defer and Reinstate. The appeal body alone (the chair or an external member) is offered the
+agenda's Stage, Defer and Reinstate, and only while the chair may sit at the review now (`PanelSeat.SittingAt`, T237's
+one rule, which `CommitteeDecisionAuthorization.Chairs` asks and every chair's action demands, T256): an active committee
+member at the panel's institution who is not a trainee, and never the trainee under review. A chair who has since lost
+the CommitteeMember role, moved institution, been deactivated or been given Trainee is offered none of them. In their
+place, while a chair's action is open or to come (scheduled, in progress or decided), a standing warning `Alert` with no
+role (`#chair-cannot-act-note`, the query's `ChairCannotAct`) says why: to the chair, the sentence each click would be
+refused with ("You chair this panel but cannot take the chair's actions now: only an active committee member at the
+panel's institution who is not a trainee can, and never the trainee under review. A panel administrator must seat a
+chair who can."); to every other reader, the same naming the chair ("The panel's chair, Thandi Zulu, cannot take the
+chair's actions now: …"). `#chair-actions-note` then says nothing about the chair's actions, which it would name the
+chair as able to take; on a scheduled review it still says who can start it. The appeal body alone (the chair or an external member) is offered the
 resolve-appeal form, and only while the review is under appeal: a form is never shown with empty fields and no button.
 It is offered only to a member of the appeal body who may sit on the panel now (`PanelSeat.AppealBodyAt`, the list the
 note below names, T237), which the resolve handler demands too; a chair or external member who has since lost the
@@ -1174,8 +1184,11 @@ before ratification included), "…you can start.", "…you chair." (every chair
 and "…among your own ratified reviews." (lodging an appeal). A panel id gets its own gate's sentence ("You can only
 manage panels in your institution.", or the scheduling refusal). Only who may act at all is said before the lookup,
 because it says nothing about the id: "Only trainees can lodge appeals.", "You are not allowed to manage committee
-panels.", "Only an institutional administrator can say which College committee a panel sits as.", or T216's scheduling
-refusals.
+panels.", "You hold the Trainee role, so you cannot create or change a decision panel, including one that reviews you."
+(T256, to someone who holds Trainee beside a role that manages panels), "Only an institutional administrator can say
+which College committee a panel sits as.", or T216's scheduling refusals. The seat refusals come after the one refusal,
+and only to the seat's holder, who can read the review: "You sit on this panel's appeal body but cannot resolve its
+appeals now: …" (T237) and "You chair this panel but cannot take the chair's actions now: …" (T256).
 
 **The trainee's own reviews** (`/committee/my-reviews`). The list's Period column names the period the review sat for,
 then its evidence window in a `.muted` span, as the schedule does: "2026 S2 · 2026-01-01 to 2026-12-31" (T212). The
@@ -1224,6 +1237,22 @@ says so before the save ("1 member of this panel can no longer sit on it, so is 
 committee member at its institution who is not a trainee can. Saving takes that member off the panel."). A stored chair
 who cannot sit leaves the Chair select on "Select chair", so the form cannot be saved until another chair is chosen:
 Save shows "Choose a chair." in the validation summary.
+
+**Nobody who holds Trainee administers a panel** (T256). Panel create and update refuse someone who holds Trainee beside
+a role that manages panels (the Administrator's included, T185's rung) before anything is read, the panel's read gives
+them nothing, and the pickers offer them nobody: a trainee does not choose who sits on their review. So the panel form,
+for a new panel (`/committee/panels/new`) and an existing one (`/committee/panels/{id}`) alike, reads
+`GetDecisionPanelFormOptionsQuery` first and, where its `TraineeNote` is set, shows no form, no "Decides for" card and
+nothing about the panel: a `detail-card--empty` card (`#panel-trainee-note`) headed "Create panel" or "Update members"
+says in a `.muted` paragraph "You hold the Trainee role, so you cannot create or change a decision panel, including one
+that reviews you.". The panel list (`/committee/panels`) offers **New panel** only when creating a panel would be
+accepted (`MayCreateAny`) and **Edit** only on a row whose form would open (`DecisionPanelSummaryDto.CallerMayManage`,
+the rule panel update and the form's read demand), so a committee member, a coordinator, or a speciality administrator
+looking at another speciality's panel is offered neither either. To someone who holds Trainee beside a role that manages
+panels it also says why, in a standing info `Alert` (no role) above the list (`#panels-trainee-note`), with the same
+sentence; the list of panels and who decides each EPA stay in view. Its empty card says "Create a panel before
+scheduling reviews." only to someone who may create one; otherwise "No decision panel runs at your institution yet.", or
+to a global Administrator, who belongs to no institution and lists every panel, "No decision panel has been created yet."
 
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
 roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a

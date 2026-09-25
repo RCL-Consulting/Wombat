@@ -40,10 +40,12 @@ public sealed class RatifyCommitteeDecisionCommandValidator : AbstractValidator<
 public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<RatifyCommitteeDecisionCommand, CommitteeReviewDetailDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public RatifyCommitteeDecisionCommandHandler(IApplicationDbContext dbContext)
+    public RatifyCommitteeDecisionCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeReviewDetailDto> Handle(RatifyCommitteeDecisionCommand request, CancellationToken cancellationToken)
@@ -60,8 +62,10 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
 
         // Authorise first: an unknown review and one the caller does not chair get the one refusal (T194 item 1). The
         // panel's chair, and no one else: T165 removed the Administrator's bypass from the actions that take a decision
-        // (D46).
-        review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
+        // (D46). And a chair who may sit at the review now (T256): ratifying issues the staged STARs, so a chair who has
+        // lost the CommitteeMember role, moved or been deactivated issues none.
+        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
+            request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         // The review's state, and (T165) the decision's recorded attendance, which must hold a quorum: the chair and at

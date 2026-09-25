@@ -523,7 +523,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
     {
         var evidence = await db.CommitteeEvidenceItems.Where(line => line.ReviewId == reviewId && line.EpaId == epaId)
             .Select(line => line.Id).ToArrayAsync();
-        await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, epaId, Level, new DateOnly(2026, 7, 2), null, "Consistent.", evidence, await ChairOfAsync(db, reviewId)),
             CancellationToken.None);
@@ -534,7 +534,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
     {
         var lineId = await db.CommitteeAgendaLines.Where(line => line.ReviewId == reviewId && line.EpaCode == epaCode)
             .Select(line => line.Id).SingleAsync();
-        await new DeferAgendaLineCommandHandler(db).Handle(
+        await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new DeferAgendaLineCommand(reviewId, lineId, reason, await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
@@ -551,7 +551,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
 
     private static async Task<CommitteeReviewDetailDto> RatifyAsync(ApplicationDbContext db, int reviewId, ClaimsPrincipal chair)
     {
-        var ratified = await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+        var ratified = await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RatifyCommitteeDecisionCommand(reviewId, chair), CancellationToken.None);
         db.ChangeTracker.Clear();
         return ratified;

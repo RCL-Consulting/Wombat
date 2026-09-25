@@ -292,7 +292,7 @@ public sealed class CommitteeDecisionHandlersTests
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
-        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext);
+        var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext, committee);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             ratifyHandler.Handle(new RatifyCommitteeDecisionCommand(review.Id, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])), CancellationToken.None));

@@ -882,19 +882,19 @@ public sealed class CommitteeTraineeScopeTests
                     // The actor and one member present (T165): the chair records, and sat.
                     [principal.FindFirst(ClaimTypes.NameIdentifier)!.Value, "member-a"], principal),
                 CancellationToken.None),
-            "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+            "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db, Committee).Handle(
                 new RatifyCommitteeDecisionCommand(reviewId, principal), CancellationToken.None),
-            "Close" => await new CloseFormativeReviewCommandHandler(db).Handle(
+            "Close" => await new CloseFormativeReviewCommandHandler(db, Committee).Handle(
                 new CloseFormativeReviewCommand(reviewId, principal), CancellationToken.None),
             "ResolveAppeal" => await new ResolveAppealCommandHandler(db, Committee).Handle(
                 new ResolveAppealCommand(reviewId, CommitteeAppealOutcome.Dismissed, null, null, null, null, principal),
                 CancellationToken.None),
-            "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+            "Stage" => await new StagePendingEntrustmentDecisionCommandHandler(db, Committee).Handle(
                 new StagePendingEntrustmentDecisionCommand(
                     reviewId, null, EpaId, LevelId, new DateOnly(2027, 1, 8), null, "Ready for indirect supervision.",
                     [await EvidenceLineIdAsync(db, reviewId)], principal),
                 CancellationToken.None),
-            "Remove" => (object)await new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
+            "Remove" => (object)await new RemovePendingEntrustmentDecisionCommandHandler(db, Committee).Handle(
                 new RemovePendingEntrustmentDecisionCommand(reviewId, await PendingIdAsync(db, reviewId), principal),
                 CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(command), command, null)

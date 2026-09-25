@@ -11,6 +11,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -123,7 +124,7 @@ public sealed class ProgramDefaultScaleTests
     }
 
     private static async Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int reviewId, int levelId)
-        => await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 ReviewId: reviewId,
                 PendingId: null,

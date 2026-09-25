@@ -1358,7 +1358,7 @@ public sealed class CommitteeAgendaHandlerTests
     {
         var evidence = await db.CommitteeEvidenceItems.Where(line => line.ReviewId == reviewId && line.EpaId == epaId)
             .Select(line => line.Id).ToArrayAsync();
-        var staged = await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        var staged = await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, epaId, Level, new DateOnly(2026, 7, 2), null, "Consistent.", evidence, await ChairOfAsync(db, reviewId)),
             CancellationToken.None);
@@ -1368,21 +1368,21 @@ public sealed class CommitteeAgendaHandlerTests
 
     private static async Task RemoveAsync(ApplicationDbContext db, int reviewId, int pendingId)
     {
-        await new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
+        await new RemovePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RemovePendingEntrustmentDecisionCommand(reviewId, pendingId, await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
 
     private static async Task DeferAsync(ApplicationDbContext db, int reviewId, int lineId, string reason, ClaimsPrincipal? principal = null)
     {
-        await new DeferAgendaLineCommandHandler(db).Handle(
+        await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new DeferAgendaLineCommand(reviewId, lineId, reason, principal ?? await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
 
     private static async Task ReinstateAsync(ApplicationDbContext db, int reviewId, int lineId)
     {
-        await new ReinstateAgendaLineCommandHandler(db).Handle(
+        await new ReinstateAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ReinstateAgendaLineCommand(reviewId, lineId, await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
@@ -1424,7 +1424,7 @@ public sealed class CommitteeAgendaHandlerTests
 
     private static async Task RatifyAsync(ApplicationDbContext db, int reviewId)
     {
-        await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+        await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RatifyCommitteeDecisionCommand(reviewId, await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }

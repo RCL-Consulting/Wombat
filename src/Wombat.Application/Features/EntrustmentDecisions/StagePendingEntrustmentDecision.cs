@@ -79,10 +79,12 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
     private const string UniqueViolation = "23505";
 
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public StagePendingEntrustmentDecisionCommandHandler(IApplicationDbContext dbContext)
+    public StagePendingEntrustmentDecisionCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<PendingEntrustmentDecisionDto> Handle(StagePendingEntrustmentDecisionCommand request, CancellationToken cancellationToken)
@@ -97,8 +99,9 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
         // 1-2. Authorise first: an unknown review and one the caller does not chair get the one refusal, before anything
-        // about the review, its state included, is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
+        // about the review, its state included, is said (T194 item 1). And a chair who may sit at the review now (T256).
+        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
+            request.Principal, review, _users, cancellationToken);
 
         // 3. The trainee still trains at the panel's institution (T182).
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);

@@ -354,12 +354,12 @@ public sealed class StagedEvidenceTests
             evidenceItemIds, Chair());
 
     private static Task<PendingEntrustmentDecisionDto> StageAsync(ApplicationDbContext db, int epaId, params int[] evidenceItemIds)
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             Command(evidenceItemIds, epaId: epaId), CancellationToken.None);
 
     private static Task<PendingEntrustmentDecisionDto> EditAsync(
         ApplicationDbContext db, int epaId, int pendingId, params int[] evidenceItemIds)
-        => new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        => new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             Command(evidenceItemIds, pendingId, epaId), CancellationToken.None);
 
     /// <summary>Records the decision with a quorate sitting: the chair and the panel's other member, both seatable (T165).</summary>
@@ -370,7 +370,7 @@ public sealed class StagedEvidenceTests
             CancellationToken.None);
 
     private static Task RatifyAsync(ApplicationDbContext db)
-        => new RatifyCommitteeDecisionCommandHandler(db).Handle(
+        => new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RatifyCommitteeDecisionCommand(ReviewId, Chair()), CancellationToken.None);
 
     private static async Task RunAsync(ApplicationDbContext db, string command, int reviewId, ClaimsPrincipal principal)
@@ -378,17 +378,17 @@ public sealed class StagedEvidenceTests
         switch (command)
         {
             case "Stage":
-                await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+                await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     Command([MiniCexOnEpa7]) with { ReviewId = reviewId, Principal = principal }, CancellationToken.None);
                 break;
             case "Remove":
                 var pendingId = await db.PendingEntrustmentDecisions.Select(pending => pending.Id).FirstOrDefaultAsync();
-                await new RemovePendingEntrustmentDecisionCommandHandler(db).Handle(
+                await new RemovePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new RemovePendingEntrustmentDecisionCommand(reviewId, pendingId == 0 ? 1 : pendingId, principal),
                     CancellationToken.None);
                 break;
             case "Ratify":
-                await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+                await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new RatifyCommitteeDecisionCommand(reviewId, principal), CancellationToken.None);
                 break;
             default:

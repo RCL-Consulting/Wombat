@@ -42,7 +42,7 @@ public sealed class FormativeReviewHandlerTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedAndStartFormativeReviewAsync(dbContext);
 
-        var closeHandler = new CloseFormativeReviewCommandHandler(dbContext);
+        var closeHandler = new CloseFormativeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var result = await closeHandler.Handle(
             new CloseFormativeReviewCommand(reviewId, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
@@ -57,7 +57,7 @@ public sealed class FormativeReviewHandlerTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedAndStartFormativeReviewAsync(dbContext);
 
-        var closeHandler = new CloseFormativeReviewCommandHandler(dbContext);
+        var closeHandler = new CloseFormativeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => closeHandler.Handle(
             new CloseFormativeReviewCommand(reviewId, CreatePrincipal("member-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None));
@@ -84,7 +84,7 @@ public sealed class FormativeReviewHandlerTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedAndStartFormativeReviewAsync(dbContext);
 
-        var stageHandler = new StagePendingEntrustmentDecisionCommandHandler(dbContext);
+        var stageHandler = new StagePendingEntrustmentDecisionCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => stageHandler.Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, 7, 3,

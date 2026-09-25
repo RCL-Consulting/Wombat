@@ -108,7 +108,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
                     .Where(level => level.Scale.Name == "CPSA Paediatric Entrustment Scale v11.1" && level.Label == "3a")
                     .Select(level => level.Id)
                     .SingleAsync();
-                await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+                await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new StagePendingEntrustmentDecisionCommand(
                         firstReviewId, null, paed001, rung, new DateOnly(2026, 7, 2), null, "Target met.", [evidence.Id], Chair()),
                     CancellationToken.None);
@@ -122,7 +122,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
                     .ToListAsync();
                 foreach (var lineId in closing)
                 {
-                    await new DeferAgendaLineCommandHandler(db).Handle(
+                    await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                         new DeferAgendaLineCommand(firstReviewId, lineId, "Not at a decision point.", Chair()), CancellationToken.None);
                 }
             }
@@ -139,7 +139,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+                await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new RatifyCommitteeDecisionCommand(firstReviewId, Chair()), CancellationToken.None);
             }
 

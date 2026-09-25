@@ -789,7 +789,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
             .Where(line => line.ReviewId == reviewId && line.EpaId == epaId)
             .Select(line => line.Id)
             .SingleAsync();
-        await new DeferAgendaLineCommandHandler(db).Handle(
+        await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new DeferAgendaLineCommand(reviewId, lineId, "Evidence still to come.", Chair()), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
@@ -862,7 +862,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     {
         var evidence = await db.CommitteeEvidenceItems.Where(line => line.ReviewId == reviewId && line.EpaId == epaId)
             .Select(line => line.Id).ToArrayAsync();
-        await new StagePendingEntrustmentDecisionCommandHandler(db).Handle(
+        await new StagePendingEntrustmentDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StagePendingEntrustmentDecisionCommand(
                 reviewId, null, epaId, Level, new DateOnly(2026, 7, 2), expiresOn, "Consistent.", evidence, Chair()),
             CancellationToken.None);
@@ -878,7 +878,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
 
         foreach (var line in agenda.OutstandingClosingLines)
         {
-            await new DeferAgendaLineCommandHandler(db).Handle(
+            await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new DeferAgendaLineCommand(reviewId, line.Id, "Not decided at this sitting.", Chair()), CancellationToken.None);
             db.ChangeTracker.Clear();
         }
@@ -897,7 +897,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
 
     private static async Task RatifyAsync(ApplicationDbContext db, int reviewId)
     {
-        await new RatifyCommitteeDecisionCommandHandler(db).Handle(
+        await new RatifyCommitteeDecisionCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new RatifyCommitteeDecisionCommand(reviewId, Chair()), CancellationToken.None);
         db.ChangeTracker.Clear();
     }

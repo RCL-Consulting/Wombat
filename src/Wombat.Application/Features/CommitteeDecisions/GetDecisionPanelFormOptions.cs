@@ -21,12 +21,22 @@ public sealed record DecisionPanelFormOptionsDto(bool MayCreateInstitutionWide, 
 {
     /// <summary>Whether this caller may create any panel at all.</summary>
     public bool MayCreateAny => MayCreateInstitutionWide || Specialities is not { Count: 0 };
+
+    /// <summary>
+    /// Why the panel pages offer this caller no panel to create or change, when the reason is the Trainee role beside a
+    /// role that manages panels (<c>CommitteeDecisionAuthorization.TraineeNoteOnPanelPages</c>, T256); null for anyone
+    /// else. The sentence panel create and update refuse such a caller with, before any panel is looked up, so the panel
+    /// list and the panel form say it in place of what they would offer, whichever panel is asked for.
+    /// </summary>
+    public string? TraineeNote { get; init; }
 }
 
 /// <summary>
 /// The panel form's offer, read from the rule creating a panel demands
 /// (<see cref="CommitteeDecisionAuthorization.PanelReachAsync" />), so the form offers a scope and a speciality exactly
-/// when <see cref="CreateDecisionPanelCommand" /> would accept them. (T194)
+/// when <see cref="CreateDecisionPanelCommand" /> would accept them. (T194) The panel list reads it too, to offer New panel
+/// only when creating one would be accepted, and both panel pages read its <see cref="DecisionPanelFormOptionsDto.TraineeNote" />
+/// to say why they offer someone who holds Trainee nothing (T256).
 /// </summary>
 /// <remarks>
 /// Before T194 the form decided from the caller's roles. A Speciality or SubSpecialityAdmin was offered only the
@@ -51,6 +61,13 @@ public sealed class GetDecisionPanelFormOptionsQueryHandler
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request.Principal);
+
+        // T256: someone who holds Trainee beside a role that manages panels reaches none (PanelReachAsync asks it first),
+        // and is told why.
+        if (CommitteeDecisionAuthorization.TraineeNoteOnPanelPages(request.Principal) is { } traineeNote)
+        {
+            return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: false, Specialities: []) { TraineeNote = traineeNote };
+        }
 
         var reach = await CommitteeDecisionAuthorization.PanelReachAsync(_dbContext, request.Principal, cancellationToken);
         if (reach.ManagesEveryPanel)

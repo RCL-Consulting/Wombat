@@ -14,10 +14,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Only an InstitutionalAdmin of the panel's institution or a global Administrator
-/// (<see cref="CommitteeDecisionAuthorization.MaySetDecisionBody" />). Anyone else is refused before the panel is looked
-/// up, and an unknown panel is refused exactly as another institution's is, so neither refusal says which ids exist
-/// (T194 item 1). A global Administrator is told when an id names no panel.
+/// Only an InstitutionalAdmin of the panel's institution or a global Administrator, and never someone who holds Trainee
+/// beside either role (<see cref="CommitteeDecisionAuthorization.MaySetDecisionBody" />, T256). Anyone else is refused
+/// before the panel is looked up, and an unknown panel is refused exactly as another institution's is, so neither refusal
+/// says which ids exist (T194 item 1). A global Administrator is told when an id names no panel.
 /// </para>
 /// <para>
 /// A change reaches only reviews scheduled afterwards, and it is refused while the panel holds a review that is scheduled,
@@ -58,10 +58,8 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
 
     public async Task<DecisionPanelDetailDto> Handle(SetDecisionPanelBodyCommand request, CancellationToken cancellationToken)
     {
-        if (!CommitteeDecisionAuthorization.HoldsDecisionBodyRole(request.Principal))
-        {
-            throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.DecisionBodyNeedsInstitutionalAdmin);
-        }
+        // Who may set any panel's body at all, before the panel is looked up: never someone who holds Trainee (T256).
+        CommitteeDecisionAuthorization.DemandDecisionBodyRole(request.Principal);
 
         var panel = await _dbContext.Set<DecisionPanel>()
             .Include(entity => entity.Members)

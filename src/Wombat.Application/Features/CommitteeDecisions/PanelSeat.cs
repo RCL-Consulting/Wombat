@@ -8,8 +8,9 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <summary>
 /// Who may sit on a decision panel, and so be counted towards a decision's quorum: an active holder of the
 /// CommitteeMember role at the panel's institution who does not hold Trainee. The one rule the panel picker lists, panel
-/// create and update enforce, the review page offers as present, recording a decision enforces, and the appeal body is
-/// named by and must meet to resolve an appeal (<see cref="AppealBodyAt" />). (T165, D46, T237)
+/// create and update enforce, the review page offers as present, recording a decision enforces, the appeal body is
+/// named by and must meet to resolve an appeal (<see cref="AppealBodyAt" />), and the chair must meet to take any of the
+/// chair's actions (<c>CommitteeDecisionAuthorization.Chairs</c>). (T165, D46, T237, T256)
 /// </summary>
 /// <remarks>
 /// <para>
@@ -61,6 +62,26 @@ public static class PanelSeat
         "You sit on this panel's appeal body but cannot resolve its appeals now: only an active committee member at the " +
         "panel's institution who is not a trainee can, and never the trainee under review.";
 
+    /// <summary>
+    /// The refusal of the holder of a review's Chair seat who may not sit at the review now: every chair's action gives it
+    /// (<c>CommitteeDecisionAuthorization.DemandChairedReviewAsync</c>), and the review page says it to them where the
+    /// chair's controls would be (<c>CommitteeReviewDetailDto.ChairCannotAct</c>). They hold the seat, so may read the
+    /// review, and the refusal tells them nothing they cannot see. (T256)
+    /// </summary>
+    public const string MayNotChairFromSeat =
+        "You chair this panel but cannot take the chair's actions now: only an active committee member at the panel's " +
+        "institution who is not a trainee can, and never the trainee under review. A panel administrator must seat a " +
+        "chair who can.";
+
+    /// <summary>
+    /// What the review page says to everyone else when the panel's chair may not sit at the review now: that nobody can
+    /// take the chair's actions, and what unblocks it. The chair by name where there is one. (T256)
+    /// </summary>
+    public static string ChairCannotAct(string? chairName)
+        => (chairName is null ? "The panel's chair" : $"The panel's chair, {chairName},") +
+           " cannot take the chair's actions now: only an active committee member at the panel's institution who is not " +
+           "a trainee can, and never the trainee under review. A panel administrator must seat a chair who can.";
+
     /// <summary>The refusal of an attendance that names the trainee whose review it is.</summary>
     public const string TraineeUnderReview =
         "The trainee under review cannot be recorded as present at their own review.";
@@ -98,8 +119,9 @@ public static class PanelSeat
 
     /// <summary>
     /// The members of this review's panel who may sit at it now: eligible to sit on the panel (<see cref="EligibleAsync" />),
-    /// and never the trainee whose review it is. Who the review page offers as present and, among its Chair and External
-    /// members, the appeal body that can act (<see cref="AppealBodyAt" />).
+    /// and never the trainee whose review it is. Who the review page offers as present; among its Chair and External
+    /// members, the appeal body that can act (<see cref="AppealBodyAt" />); and whether its chair may take the chair's
+    /// actions (<c>CommitteeDecisionAuthorization.Chairs</c>, T256).
     /// </summary>
     public static IEnumerable<DecisionPanelMember> SittingAt(
         CommitteeReview review,
@@ -184,30 +206,11 @@ public static class PanelSeat
     /// The review's panel members named as present, each held to the rule: on this panel, eligible to sit now, and not
     /// the trainee under review. Reads only: the handlers that record a decision call it before they change anything.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Someone named may not be recorded as present.</exception>
-    public static async Task<IReadOnlyCollection<DecisionPanelMember>> DemandPresentAsync(
-        IUserAdministrationService users,
-        CommitteeReview review,
-        IReadOnlyList<string>? presentUserIds,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(review);
-
-        if (presentUserIds is null)
-        {
-            throw new InvalidOperationException(CommitteeReview.QuorumRule);
-        }
-
-        return DemandPresent(
-            review,
-            presentUserIds,
-            await EligibleAsync(users, review.Panel.InstitutionId, cancellationToken));
-    }
-
-    /// <summary>
-    /// <see cref="DemandPresentAsync" /> with who may sit already read, for a handler that reads it for another check too
-    /// (resolving an appeal, <see cref="DemandSitsOnAppealBody" />).
-    /// </summary>
+    /// <param name="eligible">
+    /// Who may sit on the review's panel now (<see cref="EligibleAsync" />), read once by the caller for its own gate too:
+    /// the chair's (<c>CommitteeDecisionAuthorization.DemandChairedReviewAsync</c>, T256) when recording a decision, the
+    /// appeal body's (<see cref="DemandSitsOnAppealBody" />, T237) when resolving an appeal.
+    /// </param>
     /// <exception cref="InvalidOperationException">Someone named may not be recorded as present.</exception>
     public static IReadOnlyCollection<DecisionPanelMember> DemandPresent(
         CommitteeReview review,

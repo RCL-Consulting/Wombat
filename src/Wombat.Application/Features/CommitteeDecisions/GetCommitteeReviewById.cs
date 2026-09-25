@@ -54,22 +54,23 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                 .Prepend(review.TraineeUserId),
             cancellationToken);
 
-        // Who may sit on the panel now (PanelSeat), read once and only where the page uses it: the present list while the
-        // review can still take a decision, the appeal body's note under appeal, and whether a caller seated on the appeal
-        // body may act from the seat, which resolving demands (T237).
-        var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel);
-        var eligible = MayStillDecide(review) || review.State == CommitteeReviewState.UnderAppeal || holdsAppealSeat
-            ? await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken)
-            : null;
-        var seated = Seated(review, request.Principal, eligible);
-        var callerUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
         // T213 review. Starting the review and every chair's action also demand that its trainee still trains at the
         // panel's institution, so the page is told when that fails for this caller, by the same predicate, and offers none
         // of them. Asked only in the states where one of them is open.
         var actionOpen = review.State is CommitteeReviewState.Scheduled
             or CommitteeReviewState.InProgress
             or CommitteeReviewState.Decided;
+
+        // Who may sit on the panel now (PanelSeat), read once and only where the page uses it: the present list while the
+        // review can still take a decision, the appeal body's note under appeal, whether a caller seated on the appeal
+        // body may act from the seat, which resolving demands (T237), and whether the panel's chair may take the chair's
+        // actions, which each of them demands (T256), in every state one of them is open or about to be.
+        var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel);
+        var eligible = MayStillDecide(review) || review.State == CommitteeReviewState.UnderAppeal || holdsAppealSeat || actionOpen
+            ? await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken)
+            : null;
+        var seated = Seated(review, request.Principal, eligible);
+        var callerUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var traineeElsewhere =
             actionOpen && !await CommitteeTraineeScope.MayActOnTraineeAsync(_dbContext, request.Principal, review, cancellationToken)
                 ? CommitteeTraineeScope.TraineeNotAtPanelInstitution
@@ -84,8 +85,11 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             TraineeName = names.NameOf(review.TraineeUserId),
             Agenda = agenda,
             // T213: what the caller may do here, by the predicates the handlers demand, so the page offers each control to
-            // exactly the people its handler lets use it.
-            CallerChairs = CommitteeDecisionAuthorization.Chairs(request.Principal, review.Panel),
+            // exactly the people its handler lets use it. The chair's: the seat, and sitting at the review now (T256).
+            CallerChairs = eligible is not null && CommitteeDecisionAuthorization.Chairs(request.Principal, review, eligible),
+            ChairCannotAct = actionOpen && eligible is not null
+                ? ChairCannotActOf(review, request.Principal, eligible, names)
+                : null,
             CallerMayStart = CommitteeDecisionAuthorization.WorksOnPanel(request.Principal, review.Panel),
             // The seat, and acting from it now: the two checks the resolve handler demands, in its order (T237).
             CallerResolvesAppeals = holdsAppealSeat &&
@@ -146,6 +150,32 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         return PanelSeat.SittingAt(review, eligible)
             .Select(member => member.UserId)
             .ToHashSet(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Why nobody can take the chair's actions at this review now, or null when its chair may (T256): the panel's chair
+    /// may not sit at it (<see cref="PanelSeat.SittingAt" />), the rule every chair's action demands
+    /// (<see cref="CommitteeDecisionAuthorization.Chairs" />). Said to the Chair seat's holder in the words their click
+    /// would be refused with, and to everyone else naming the chair.
+    /// </summary>
+    private static string? ChairCannotActOf(
+        CommitteeReview review,
+        ClaimsPrincipal principal,
+        IReadOnlyDictionary<string, Common.Interfaces.UserIdentityDetails> eligible,
+        UserDisplayNames names)
+    {
+        if (PanelSeat.SittingAt(review, eligible).Any(member => member.Role == DecisionPanelMemberRole.Chair))
+        {
+            return null;
+        }
+
+        if (CommitteeDecisionAuthorization.HoldsChairSeat(principal, review.Panel))
+        {
+            return PanelSeat.MayNotChairFromSeat;
+        }
+
+        var chair = review.Panel.Members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
+        return PanelSeat.ChairCannotAct(chair is null ? null : names.NameOf(chair.UserId));
     }
 
     /// <summary>

@@ -523,7 +523,11 @@ public static class TraineeScopeResolver
     /// campaign but the caller's own released one;</item>
     /// <item>seating a decision panel (<c>PanelSeat</c>, T237), asked of the people named rather than of the caller
     /// (<see cref="HoldersAsync" />): the panel form's pickers leave out anyone who holds Trainee, panel create and update
-    /// refuse them in any seat, and a decision cannot record one as present.</item>
+    /// refuse them in any seat, and a decision cannot record one as present;</item>
+    /// <item>administering a decision panel (<c>CommitteeDecisionAuthorization.MayAdministerPanels</c> and
+    /// <c>PanelReachAsync</c>, T256): creating or changing a panel, opening one to change it, the panel form's offer and
+    /// pickers, the panel list's Edit, and saying which College committee a panel sits as, which such a caller is refused,
+    /// and not offered, for every panel, the one that reviews them included.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,

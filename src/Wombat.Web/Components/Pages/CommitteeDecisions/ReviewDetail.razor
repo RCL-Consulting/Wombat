@@ -192,6 +192,14 @@
       {
         <Alert Kind="warning" Role="" Id="trainee-elsewhere-note">@traineeElsewhere</Alert>
       }
+      @* T256. The panel's chair may not sit at the review now (lost the CommitteeMember role, moved, deactivated, or holds
+         Trainee), so every chair's action refuses and none is offered. Standing page content until a panel administrator
+         seats a chair who can: no role. To the chair it is the sentence their click would be refused with; to everyone
+         else it names the chair, in place of #chair-actions-note's "Only the panel's chair … can". *@
+      @if (_review.ChairCannotAct is { } chairCannotAct)
+      {
+        <Alert Kind="warning" Role="" Id="chair-cannot-act-note">@chairCannotAct</Alert>
+      }
     </section>
 
     @if (!_review.IsFormative)
@@ -892,7 +900,8 @@
   /// left looking for a button: the chair by name, and what only the chair can do in the review's state; on a scheduled
   /// review, to a reader not offered Start (T194), who can start it. Nothing while no such action is open, nothing to the
   /// chair, and nothing while the trainee check refuses the panel's actions, the chair's included:
-  /// #trainee-elsewhere-note says so instead.
+  /// #trainee-elsewhere-note says so instead. Nothing about the chair's actions while the chair may not sit at the review
+  /// (T256): it would name as able to act someone who cannot, and #chair-cannot-act-note says so instead.
   /// </summary>
   private string? ChairActionsNote
   {
@@ -903,13 +912,21 @@
         return null;
       }
 
+      if (_review is { State: CommitteeReviewState.Scheduled, CallerMayStart: false })
+      {
+        // T194: Start is not the chair's alone, but it is not every reader's either.
+        return "Only the panel's members, and the coordinators of its institution, can start this review.";
+      }
+
+      if (_review.ChairCannotAct is not null)
+      {
+        return null;
+      }
+
       var chair = _review.PanelMembers.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
       var only = chair is null ? "Only the panel's chair" : $"Only the panel's chair, {chair.DisplayName},";
       return _review switch
       {
-        // T194: Start is not the chair's alone, but it is not every reader's either.
-        { State: CommitteeReviewState.Scheduled, CallerMayStart: false } =>
-          "Only the panel's members, and the coordinators of its institution, can start this review.",
         { IsFormative: true, State: CommitteeReviewState.InProgress } => $"{only} can close this review.",
         { IsFormative: false, State: CommitteeReviewState.InProgress } =>
           $"{only} can stage entrustment decisions, defer agenda lines and record the committee's decision.",
