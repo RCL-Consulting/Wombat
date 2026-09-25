@@ -1,11 +1,12 @@
 ---
 id: T266
 title: Design-system leftovers: undefined badge classes on eight pages, Bootstrap classes in NavMenu, and the builder overflows at 901–1000px
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T266 — Design-system leftovers: undefined badge classes on eight pages, Bootstrap classes in NavMenu, and the builder overflows at 901–1000px
@@ -42,7 +43,7 @@ browser pass at 390, 950 and 1280px.
 
 ## Verification
 
-- [ ] No undefined class remains (a test that scans `.razor` files for classes app.css does not define). Browser at the
+- [x] No undefined class remains (a test that scans `.razor` files for classes app.css does not define). Browser at the
       three widths.
 
 ## Related
@@ -54,3 +55,30 @@ the page's two-column grid (223px wide, 447px empty beside it), and its table sc
 
 Note, 2026-09-25 (the lifecycle browser check): the trainee's data-rights table shows UTC times with no zone label
 ("12:58" for 14:58 SAST). Show South African time, or label the zone.
+
+Notes, 2026-09-25 (the final browser check): the Formative checkbox is centred against its four-line label rather than
+lined up with the first line. After signing in with `returnUrl=/access-denied?...`, the user lands on Access denied even
+when now authorised.
+
+---
+
+## As built — 2026-09-25 (`ff42c17`)
+
+- **Classes.** Every class a page uses is defined, enforced by a test (`DefinedClassTests`). Badges map to state tokens
+  through one helper (`BadgeFor`).
+- **NavMenu** is free of Bootstrap classes.
+- **Widths.** The builder's two columns collapse by container width, `.stage-minima` fits phone widths, and the campaign
+  page's lone card fills its row.
+- **The decisions page** uses a `StatePanel` and `RefusalText`.
+
+CSS and bUnit tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **The builder:** stacked at 950–1115px, and side by side from 1116px.
+- **Stage minima** fit at 360px.
+- **Campaign 4's card** fills its row at 1000px.
+- **Badges** are green, red and grey by state, and the audit list's OK and FAILED badges are coloured.
+- **No sideways scroll** at any measured width.
+- **Not run:** accepting a teaching session (no dev SpecialityAdmin).
+
+A nit and a pre-existing redirect are noted on this task's file.

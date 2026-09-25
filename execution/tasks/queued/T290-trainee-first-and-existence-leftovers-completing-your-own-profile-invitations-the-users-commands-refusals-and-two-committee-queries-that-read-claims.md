@@ -38,3 +38,7 @@ created: 2026-09-25
 ## Related
 
 T278, T279, T281, T194, T185.
+
+Note, 2026-09-25 (the final browser check): a circuit whose tab has gone still runs T279's revalidation after a role
+change, and logs "Navigation failed … TaskCanceledException" and "Unhandled exception in circuit" at error level. It is
+harmless, but it is noise: treat a cancelled navigation on a gone circuit as expected.

@@ -1,11 +1,12 @@
 ---
 id: T284
 title: A draft MSF campaign about a trainee who has since been locked or has left can still be opened, and the digest lists them as inactive every week
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T284 — A draft MSF campaign about a trainee who has since been locked or has left can still be opened, and the digest lists them as inactive every week
@@ -35,9 +36,29 @@ create gives. Resend and the reminders of an already-open campaign carry on.
 
 ## Verification
 
-- [ ] Opening a draft about a locked trainee is refused. The digest leaves out non-current trainees. Tests.
-- [ ] The lock card names the effects. bUnit.
+- [x] Opening a draft about a locked trainee is refused. The digest leaves out non-current trainees. Tests.
+- [x] The lock card names the effects. bUnit.
 
 ## Related
 
 T268, T238, T117.
+
+---
+
+## As built — 2026-09-25 (`0ea7f56`)
+
+Opening a draft is new work (the decision adopted in the task).
+- **Open and Add** refuse a subject who is no longer current, as create does. Resend and the reminders of an already open
+  campaign carry on.
+- **The weekly digest** keeps only current trainees.
+- **The admin lock card** names what a lock does.
+
+Handler, job and bUnit tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **The lock card** reads as designed.
+- **With the trainee locked,** Add and Open on draft 27 were refused (role=alert, 0 mails), and the picker dropped them.
+  An open campaign's Resend still sent.
+- **After reactivation,** Open sent exactly one mail.
+
+**Filed from the review:** the page still offers Add and Open before refusing them (noted on [T270]).

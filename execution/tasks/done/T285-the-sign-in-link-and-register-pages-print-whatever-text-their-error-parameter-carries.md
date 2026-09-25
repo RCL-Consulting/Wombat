@@ -1,11 +1,12 @@
 ---
 id: T285
 title: The sign-in, link and register pages print whatever text their ?error= parameter carries
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T285 — The sign-in, link and register pages print whatever text their ?error= parameter carries
@@ -35,9 +36,28 @@ Any unknown code gets one generic sentence. Log the exception, and never put its
 
 ## Verification
 
-- [ ] `/account/login?error=Call%20012` shows only a generic sentence, and each real refusal still reads right.
+- [x] `/account/login?error=Call%20012` shows only a generic sentence, and each real refusal still reads right.
       Integration tests (WebApplicationFactory) and bUnit.
 
 ## Related
 
 T265, T155, T156, T181.
+
+---
+
+## As built — 2026-09-25 (`a494581`)
+
+Every sign-in, link and register endpoint redirects with a code. Each page maps its codes to fixed sentences, and any
+unknown code to one generic sentence. Exception messages are logged, never put in a URL. The register page refuses an
+invitation that no submit could complete (an address already held, or one Identity will not accept), so the form never
+loops. Integration and bUnit tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **Crafted text.** A crafted `?error=Call%20012` shows only the generic sentence, on sign-in, register and link.
+- **Real refusals** read right: Refused, LockedOut, SsoUnknownProvider, ConfirmationMismatch (with the focus in First
+  name), Identity's rules, and DetailsInvalid.
+- **Invitations.** A used invitation reads "already been used". An invitation to an existing address reads "already
+  exists", with no form.
+- **Not run:** the SSO link page's own refusals (no provider on dev).
+
+**Filed from the review:** the leftovers are noted on [T286].

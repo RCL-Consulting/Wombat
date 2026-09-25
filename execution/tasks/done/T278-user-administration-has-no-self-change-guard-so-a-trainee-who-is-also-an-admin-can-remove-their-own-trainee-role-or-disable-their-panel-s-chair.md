@@ -1,11 +1,12 @@
 ---
 id: T278
 title: User administration has no self-change guard, so a trainee who is also an admin can remove their own Trainee role or disable their panel's chair
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T278 — User administration has no self-change guard, so a trainee who is also an admin can remove their own Trainee role or disable their panel's chair
@@ -37,8 +38,30 @@ Handler tests per command (the audit trap); bUnit for the pages.
 
 ## Verification
 
-- [ ] Nobody changes their own roles or lockout, and a Trainee administers no user. Tests.
+- [x] Nobody changes their own roles or lockout, and a Trainee administers no user. Tests.
 
 ## Related
 
 T256, T185, T237, D46.
+
+---
+
+## As built — 2026-09-25 (`2290ed5`)
+
+- **Nobody changes their own account.** Nobody changes their own roles or lockout, and resets go through "Change your
+  password".
+- **Trainee first.** Anyone who holds Trainee administers no user: the Users pages show only a note, and every command
+  refuses first.
+
+Protecting the members of a panel that reviews the caller was considered and not adopted. Anyone under review while
+holding Trainee is already refused. Covering a former trainee would mean widening `ActsAsTrainee` everywhere at once.
+Handler and bUnit tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **instadmin's own account** shows the note, no Remove, and no Add role, Reset or Lockout. committee's account is fully
+  offered.
+- **A trainee given InstitutionalAdmin** sees only the Trainee note on `/admin/users` and on any user page.
+- **Confirmed, not fixed:** `/admin/trainees` still opens for that trainee (noted on [T290]).
+
+**Filed from the review:** [T288] (P2: SSO group mappings across institutions), [T289] (P2: the assessor-profile form)
+and [T290] (trainee-first leftovers).

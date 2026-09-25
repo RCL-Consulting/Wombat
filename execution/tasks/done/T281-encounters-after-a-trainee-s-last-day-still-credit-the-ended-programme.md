@@ -1,11 +1,12 @@
 ---
 id: T281
 title: Encounters after a trainee's last day still credit the ended programme
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T281 — Encounters after a trainee's last day still credit the ended programme
@@ -34,8 +35,28 @@ campaigns closed by then.
 
 ## Verification
 
-- [ ] An encounter after the last day credits nothing, and the ended page does not count it. Tests.
+- [x] An encounter after the last day credits nothing, and the ended page does not count it. Tests.
 
 ## Related
 
 T252, T209, D49, T160.
+
+---
+
+## As built — 2026-09-25 (`25b7261`, decision adopted)
+
+An encounter observed after the programme's last day credits nothing on that profile. The credit path and the rebuild
+share one rule. The migration `T281_ProgressWithoutEncountersAfterTheEnd` empties progress for the bootstrapper to
+refill, and an end and a completion of the same trainee are serialised on the profile's row (`ITraineeCreditLock`). The
+ended page and the PDF count only encounters up to the last day. Handler, Postgres and architecture tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **The bootstrapper** logged "Curriculum progress was empty and 15 completions record credit, so it was rebuilt".
+- **A last day of 2026-09-20** took PAED-001's Semester 2 from 10 to 2 in the same save. The page and the PDF read "no
+  target (…ended part-way through) · 2 recorded".
+- **New encounters:** activity 53 (dated 25 September) credited 0, and activity 54 (15 September) raised the count to 3.
+
+**Not undone:** the trainee's end. The permission classifier refused the SQL restore, so the dev trainee is left
+deactivated. See HANDOFF.
+
+**Filed from the review:** there is no warning while an after-end date is typed (noted on [T290]).

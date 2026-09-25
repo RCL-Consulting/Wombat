@@ -1,11 +1,12 @@
 ---
 id: T188
 title: Field-level fieldsets outside ActivityForm lack the form-group class the design rule now asks for
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T188 — Field-level fieldsets outside ActivityForm lack the form-group class the design rule now asks for
@@ -31,8 +32,19 @@ browser.
 
 ## Verification
 
-- [ ] Each page renders its group like a field. Browser.
+- [x] Each page renders its group like a field. Browser.
 
 ## Related
 
 T177, T147, T122, T125.
+
+---
+
+## As built — 2026-09-25 (`0a9a4cb`)
+
+Every field-level fieldset renders as a form group: a legend at the label's size, help at the help's size, and a nested
+rule running the legend's full height. DESIGN.md's rule covers every field-level fieldset, and a scan test enforces it.
+"Evidence it rests on" is marked required.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`): the fieldsets on the campaign, curriculum-item and staging forms read at the label's size, with grey help. Nested
+groups are named by their legend, and section legends keep their weight.

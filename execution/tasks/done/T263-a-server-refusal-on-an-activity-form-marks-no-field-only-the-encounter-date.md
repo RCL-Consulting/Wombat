@@ -1,11 +1,12 @@
 ---
 id: T263
 title: A server refusal on an activity form marks no field, only the encounter date
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T263 — A server refusal on an activity form marks no field, only the encounter date
@@ -32,8 +33,24 @@ refusals.
 
 ## Verification
 
-- [ ] A refused required field and a refused nominee are marked. bUnit.
+- [x] A refused required field and a refused nominee are marked. bUnit.
 
 ## Related
 
 T236, T189, T193, T102.
+
+---
+
+## As built — 2026-09-25 (`3168233`)
+
+A field the server refused is marked, not only named. The refusal carries the refused field keys, and those inputs get
+T236's invalid style, `aria-invalid`, and `aria-describedby` pointing at the refusal. It covers `NewActivity`, and
+`ActivityView`'s edit and move. A refused date is never also called fileable. bUnit.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- A future date marked only `observed_on`.
+- Activity 51's "Saved as a draft, but not submitted" marked only `presenting_problem`. The mark cleared when the field
+  was filled.
+- Switching the type cleared the marks.
+- A refused assessor marked the Assessor select.
+- The assessor and committee saw no marks.

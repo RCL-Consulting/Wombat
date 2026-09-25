@@ -1,11 +1,12 @@
 ---
 id: T283
 title: Only MSF links record what became of their mail: account invitations, nudges and digests are still dropped without a trace
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T283 — Only MSF links record what became of their mail: account invitations, nudges and digests are still dropped without a trace
@@ -28,8 +29,25 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] An undelivered account invitation is shown and can be resent. Tests.
+- [x] An undelivered account invitation is shown and can be resent. Tests.
 
 ## Related
 
 T251, T184, T240.
+
+---
+
+## As built — 2026-09-25 (`1657470`)
+
+Each account invitation's mail outcome is recorded by tag (migration `T283_AccountInvitationDeliveryOutcome`).
+- **The invitations list** shows "being sent", "sent" or "not delivered", with a failure count.
+- **Resend** issues a new token, retires the old one, and says to check the address after a second failure.
+- **CollegeAdmin invitations** can be resent only by an Administrator.
+
+Worker, handler, Postgres and bUnit tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`; `pg_dump -n public` first, at `recovery/pre-t283-t281-migrations.dump`):
+- **Undelivered:** with the sink stopped, the invitation read "Not delivered", then "failed 2 times".
+- **Resend** mailed exactly one link (C), and the invitation read "Sent". Links A and B are invalid, and C opens the form.
+- **A stale tab's** Resend read "…delivered or is still being sent, so nothing was sent again.", focused.
+- **Not run:** the Administrator's CollegeAdmin case.
