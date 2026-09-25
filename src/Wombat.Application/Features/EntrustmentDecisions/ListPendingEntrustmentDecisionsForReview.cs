@@ -51,7 +51,8 @@ public sealed class ListPendingEntrustmentDecisionsForReviewQueryHandler
             .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
+            _dbContext, request.Principal, review, cancellationToken);
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .AsNoTracking()

@@ -440,15 +440,17 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     }
 
     [Fact]
-    public async Task AHoldingReview_IsLinkedOnlyWhereItsReadLadderAdmitsTheCaller()
+    public async Task AHoldingReview_IsLinkedWhereItsReadLadderAdmitsTheCaller()
     {
         await using var db = await SeededDbAsync();
         var open = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
 
         var specialityAdmin = Row(await DueAsync(db, 2026, 2, SpecialityAdmin(Paediatrics)), Trainee, "PAED-001");
 
+        // Since T218 the ladder reaches a speciality administrator over their own trainees' reviews at their institution,
+        // which they schedule: before, they were linked to nothing unless they sat on the panel.
         (specialityAdmin.HoldingReviewId, specialityAdmin.MayOpenHoldingReview).Should().Be(
-            (open.Id, false), "a SpecialityAdmin who does not sit on the panel cannot open its reviews");
+            (open.Id, true), "the Paediatrics SpecialityAdmin of A opens the reviews of A's Paediatrics trainees");
     }
 
     [Fact]
@@ -592,7 +594,21 @@ public sealed class EntrustmentDecisionsDueHandlerTests
 
         (coordinator.ReviewId, coordinator.MayOpenReview).Should().Be((review, true));
         (specialityAdmin.ReviewId, specialityAdmin.MayOpenReview).Should().Be(
-            (review, false), "a SpecialityAdmin who does not sit on the panel cannot open its reviews");
+            (review, true), "the Paediatrics SpecialityAdmin of A opens the reviews of A's Paediatrics trainees (T218)");
+
+        // The trainee moves to B and their STAR goes with them, so B's administrators see it decided. The review that
+        // decided it is A's panel's, which B's administrators do not read: the row names it and links nothing.
+        await MoveAsync(db, Trainee, InstitutionB);
+        foreach (var atB in new[]
+                 {
+                     TestPrincipals.InstitutionalAdmin(InstitutionB),
+                     TestPrincipals.InRole(WombatRoles.SpecialityAdmin, "speciality-admin-b", InstitutionB, Paediatrics)
+                 })
+        {
+            var row = Row(await DueAsync(db, 2026, 1, atB), Trainee, "PAED-001");
+            (row.Status, row.ReviewId, row.MayOpenReview).Should().Be(
+                (EntrustmentDecisionDueStatus.Decided, review, false), "a panel of A holds the review");
+        }
     }
 
     [Fact]

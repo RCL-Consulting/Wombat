@@ -36,7 +36,7 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// keyed by where each trains (<c>TraineeProfile.InstitutionId</c> on the preferred profile);</item>
 /// <item>feedback campaigns: those the recipient runs (<see cref="MsfCampaignRules.WhereRunBy" />, the campaign list's
 /// rule, which also keeps a recipient off campaigns about themselves);</item>
-/// <item>committee reviews: those the recipient may open (<see cref="CommitteeReviewReadAccess.MayRead" />,
+/// <item>committee reviews: those the recipient may open (<see cref="CommitteeReviewReadAccess.ReadableAsync" />,
 /// the review page's ladder), on a panel run by their institution (<c>DecisionPanel.InstitutionId</c>).</item>
 /// </list>
 /// <para>
@@ -234,9 +234,13 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             .Select(campaign => $"{campaign.Template.Name} (campaign #{campaign.Id})")
             .ToListAsync(cancellationToken);
 
-        var committeeReviewsThisWeek = facts.ReviewsThisWeek
-            .Where(review => review.Panel.InstitutionId == institutionId &&
-                             CommitteeReviewReadAccess.MayRead(recipient, review))
+        var reviewsAtInstitution = facts.ReviewsThisWeek
+            .Where(review => review.Panel.InstitutionId == institutionId)
+            .ToList();
+        var readableReviews = await CommitteeReviewReadAccess.ReadableAsync(
+            dbContext, recipient, reviewsAtInstitution, cancellationToken);
+
+        var committeeReviewsThisWeek = readableReviews
             .OrderBy(review => review.ScheduledOn)
             .ThenBy(review => review.Id)
             .Select(review =>

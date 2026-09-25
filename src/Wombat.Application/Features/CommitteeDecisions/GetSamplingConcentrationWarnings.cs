@@ -123,7 +123,8 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
+            _dbContext, request.Principal, review, cancellationToken);
 
         // Bunching is a question about clinical practice — was this trainee only ever watched by one
         // assessor, in one narrow stretch of the period? — so the window selects on the encounter date

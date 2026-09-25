@@ -31,8 +31,8 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </para>
 /// <para>
 /// Scoped exactly as the snapshot is. The readers are the snapshot's: the review ladder
-/// (<see cref="CommitteeDecisionAuthorization.DemandReviewAccess" />) that the review and its other sibling queries on
-/// the page climb, which refuses anyone with no claim on the review. The trainee is taken from the review, never from
+/// (<see cref="CommitteeDecisionAuthorization.DemandReviewAccessAsync" />) that the review and its other sibling queries
+/// on the page climb, which refuses anyone with no claim on the review. The trainee is taken from the review, never from
 /// the caller (T113).
 /// </para>
 /// <para>
@@ -99,7 +99,8 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
+            _dbContext, request.Principal, review, cancellationToken);
 
         // The ladder's trainee arm comes first and admits only the trainee's own ratified review, so reaching here
         // in the role means this is the subject reading about themselves.

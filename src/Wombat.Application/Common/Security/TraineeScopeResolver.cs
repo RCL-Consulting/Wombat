@@ -384,7 +384,7 @@ public static class TraineeScopeResolver
     /// </para>
     /// <para>
     /// The trainee rung comes first (<see cref="ActsAsTrainee" />), as it does on the committee review
-    /// (<c>CommitteeDecisionAuthorization.DemandReviewAccess</c>): someone who holds Trainee beside an oversight role,
+    /// (<c>CommitteeDecisionAuthorization.DemandReviewAccessAsync</c>): someone who holds Trainee beside an oversight role,
     /// the Administrator role included, reads their own record here and nobody else's, whatever the other role would
     /// reach. Decided in T185; until then a Trainee who was also a CommitteeMember read every trainee at the hospital
     /// here while the review refused them. <see cref="ActsAsTrainee" /> names every surface that applies the rung, and
@@ -502,7 +502,7 @@ public static class TraineeScopeResolver
     /// for a trainee, entrustment decisions and standing, the certificate, MSF campaigns and coverage, the portfolio
     /// export; and its set form <see cref="ReadableAsync" />, which the programme's MSF coverage lists by (T210), and
     /// which that page leaves empty for such a caller, since a programme view is about other trainees;</item>
-    /// <item>the committee review itself (<c>CommitteeDecisionAuthorization.DemandReviewAccess</c>), where the rung
+    /// <item>the committee review itself (<c>CommitteeDecisionAuthorization.DemandReviewAccessAsync</c>), where the rung
     /// started;</item>
     /// <item>the entrustment admin list and revoking (<c>ListEntrustmentDecisionsForAdminQuery</c>,
     /// <c>EntrustmentDecisionAuthorization.DemandRevocationAccessAsync</c>), so every row the list shows is one the

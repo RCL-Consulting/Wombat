@@ -39,9 +39,11 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // The ladder this handler used to spell out inline now lives beside the other committee
         // guards, because the two sibling queries on the same page have to climb the identical one.
         // The panel carries its own institution regardless of scope; the discipline is national
-        // now (T091), so no further lookup is needed to place a review. (T101 finding E)
+        // now (T091), so no further lookup is needed to place a review. (T101 finding E) Only a speciality
+        // administrator's rung also reads where the trainee trains (T218).
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
+            _dbContext, request.Principal, review, cancellationToken);
 
         // T142. The trainee by name, looked up only once the caller has passed the review ladder above. T165 adds the
         // panel's members and those recorded as present at each decision, in the same one lookup.

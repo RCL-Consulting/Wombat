@@ -462,7 +462,7 @@ public static class MsfCampaignRules
     /// The subject of the feedback reads it once it has been released, and not before, whatever other role they
     /// hold: the report before release is the coordinator's working copy, and the point of the review step is that
     /// the trainee sees what the reviewer released rather than what came in. That arm is first for the reason
-    /// <c>CommitteeDecisionAuthorization.DemandReviewAccess</c> puts its trainee arm first.
+    /// <c>CommitteeDecisionAuthorization.DemandReviewAccessAsync</c> puts its trainee arm first.
     /// </para>
     /// <para>
     /// Everyone else reads it only if they run campaigns for the trainee (<see cref="IsSubjectInScopeAsync" />), which

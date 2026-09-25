@@ -248,11 +248,16 @@
   // query's words, and where their own reviews are.
   private string EmptyTitle => _access?.TraineeNote is not null ? "No reviews to show" : "No reviews yet";
 
+  // The list holds only the reviews this caller may open (ListReviewsForPanelQuery, T218), so an empty one says which
+  // reviews appear here, never that none exists: other trainees' reviews may, out of the caller's reach.
   private string EmptyBody => _access switch
   {
     { TraineeNote: { } note } => note,
     { MaySchedule: false } => "The reviews of the panels you sit on appear here once they are scheduled.",
-    _ => "Schedule the first committee review to start the progression record."
+    // Not which reviews those are: a coordinator's follow the panel's institution, a speciality administrator's the
+    // trainee's programme, an Administrator's are every one (T218 review).
+    _ => "The reviews you can open appear here once they are scheduled. Use Schedule review to put a trainee before a " +
+         "panel."
   };
 
   private RenderFragment? EmptyActions => _access?.TraineeNote is null ? null : MyReviewsLink;

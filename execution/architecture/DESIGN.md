@@ -1131,19 +1131,20 @@ in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery
 `CallerChairs`, `CallerResolvesAppeals` and `CallerMayStart`, computed by the predicates the handlers demand
 (`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnPanel`), and `TraineeElsewhere`, the trainee check
 every chair's action and Start also demand (`CommitteeTraineeScope`). Start is offered on a scheduled review to a member
-of its panel, a coordinator of the panel's institution or an Administrator (T194); an institutional administrator who
-reads the review without a seat is not offered it, and `#chair-actions-note` reads "Only the panel's members, and the
-coordinators of its institution, can start this review." None of the three flags is ever true for someone who holds
-Trainee, whatever seat or role they hold beside it (T185's rung, asked by `WorksOnPanel` and by the seat predicates since
-the T194 review): a trainee seated on the panel that reviews them before they held Trainee reads their own review once it
-is ratified, and is offered neither the chair's controls nor the resolve form on it. Since T237 no one who holds Trainee
-is seated at all (see **The panel form**). The chair alone is offered the decision form and Record decision
-(while the review is in progress), Ratify and its reason (once decided), Close review, the staging form, Remove, and the
-agenda's Stage, Defer and Reinstate, and only while the chair may sit at the review now (`PanelSeat.SittingAt`, T237's
-one rule, which `CommitteeDecisionAuthorization.Chairs` asks and every chair's action demands, T256): an active committee
-member at the panel's institution who is not a trainee, and never the trainee under review. A chair who has since lost
-the CommitteeMember role, moved institution, been deactivated or been given Trainee is offered none of them. In their
-place, while a chair's action is open or to come (scheduled, in progress or decided), a standing warning `Alert` with no
+of its panel, a coordinator of the panel's institution or an Administrator (T194); an institutional, speciality or
+sub-speciality administrator who reads the review without a seat (T218) is not offered it, and `#chair-actions-note`
+reads "Only the panel's members, and the coordinators of its institution, can start this review." None of the three
+flags is ever true for someone who holds Trainee, whatever seat or role they hold beside it (T185's rung, asked by
+`WorksOnPanel` and by the seat predicates since the T194 review): a trainee seated on the panel that reviews them before
+they held Trainee reads their own review once it is ratified, and is offered neither the chair's controls nor the
+resolve form on it. Since T237 no one who holds Trainee is seated at all (see **The panel form**). The chair alone is
+offered the decision form and Record decision (while the review is in progress), Ratify and its reason (once decided),
+Close review, the staging form, Remove, and the agenda's Stage, Defer and Reinstate, and only while the chair may sit at
+the review now (`PanelSeat.SittingAt`, T237's one rule, which `CommitteeDecisionAuthorization.Chairs` asks and every
+chair's action demands, T256): an active committee member at the panel's institution who is not a trainee, and never the
+trainee under review. A chair who has since lost the CommitteeMember role, moved institution, been deactivated or been
+given Trainee is offered none of them. In their place, while a chair's action is open or to come (scheduled, in progress
+or decided), a standing warning `Alert` with no
 role (`#chair-cannot-act-note`, the query's `ChairCannotAct`) says why: to the chair, the sentence each click would be
 refused with ("You chair this panel but cannot take the chair's actions now: only an active committee member at the
 panel's institution who is not a trainee can, and never the trainee under review. A panel administrator must seat a
@@ -1265,6 +1266,23 @@ review or preview its agenda, and this page lists no one's reviews. Your own are
 ratified.", or, beside a committee member's role alone, "…so this page lists no one's committee reviews…"), and its
 action is a `.btn-outline` link, "Open My committee reviews". A committee member who holds no Trainee role keeps the
 list of their panels' reviews; their empty card says those appear once they are scheduled.
+
+**Who is listed which reviews** (T218). The list is exactly the reviews whose Open link will open, by the review's own
+read ladder in its set form (`CommitteeDecisionAuthorization.ReadableReviewsAsync`, which the review page and every
+sibling read demand through `DemandReviewAccessAsync`): a coordinator or institutional administrator every review a panel
+of their institution holds; a speciality or sub-speciality administrator the reviews of their own speciality's or
+sub-speciality's trainees at their institution (T182's scope, read back); a committee member the reviews of the panels
+they sit on, wherever; a global Administrator every review. Someone who holds Trainee is listed none (above), not even
+their own ratified review, which opens for them and is on My committee reviews: the one place the list is narrower than
+the review. So a scheduler finds the review they have just scheduled, and the Decisions due page links a review exactly
+where it would open. A speciality administrator's reach follows the trainee's programme now, as every read about the
+trainee does, not the programme they were reviewed in: when a trainee moves from Surgery to Paediatrics at the same
+institution, their earlier reviews there pass to the Paediatrics administrator and leave the Surgery one
+(`CommitteeDecisionAuthorization.InSchedulingReach` says why the review is not stamped instead). The list's empty card
+never says that no review exists, since reviews out of the caller's reach may, and does not say which reviews are in
+reach, which differs by role: to a caller who may schedule, its title is "No reviews yet" and its body "The reviews you
+can open appear here once they are scheduled. Use Schedule review to put a trainee before a panel." It never says
+"Schedule the first committee review".
 
 **Entrustment-only reviews** (T131 slice 5). A review before a panel sitting as a College committee (the neonatal CCC)
 decides entrustment only: its decision is the STARs staged at it, and it records no progression category. A general

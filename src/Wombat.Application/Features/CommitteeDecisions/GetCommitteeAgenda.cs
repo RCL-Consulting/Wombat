@@ -14,8 +14,8 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// committee still owes in the period, and what a STAR already decided in its window (T215). (T131 slice 4)
 /// </summary>
 /// <remarks>
-/// Read through <see cref="CommitteeDecisionAuthorization.DemandReviewAccess" />, the one read ladder of a review and of
-/// everything computed from it, so a trainee sees their review's line states only once it is ratified.
+/// Read through <see cref="CommitteeDecisionAuthorization.DemandReviewAccessAsync" />, the one read ladder of a review
+/// and of everything computed from it, so a trainee sees their review's line states only once it is ratified.
 /// <see cref="GetCommitteeReviewByIdQuery" /> answers with the same agenda; the review page reads this one again after
 /// each action, because the commands answer with the review as the mapper they share builds it, which reads nothing.
 /// </remarks>
@@ -52,7 +52,8 @@ public sealed class GetCommitteeAgendaQueryHandler : IRequestHandler<GetCommitte
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
+            _dbContext, request.Principal, review, cancellationToken);
 
         return await CommitteeAgendaReader.ReadAsync(
             _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);

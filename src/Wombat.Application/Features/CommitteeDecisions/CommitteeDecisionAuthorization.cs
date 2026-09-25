@@ -344,7 +344,7 @@ internal static class CommitteeDecisionAuthorization
     /// <summary>
     /// Whether the caller works on this panel's reviews: a global Administrator, a Coordinator of the panel's institution,
     /// or a member of the panel, and in every case not someone who holds Trainee. Who may start a review
-    /// (<see cref="DemandStartableReview" />), and the read ladder's last rung (<see cref="MayReadReview" />).
+    /// (<see cref="DemandStartableReview" />), and one of the read ladder's last two rungs (<see cref="MayReadReview" />).
     /// </summary>
     /// <remarks>
     /// <para>
@@ -410,12 +410,21 @@ internal static class CommitteeDecisionAuthorization
     /// anyone who could open the page could walk review ids and learn which exist, and a trainee that a review of theirs
     /// was scheduled. The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.
     /// </para>
+    /// <para>
+    /// It reads only (where the review's trainee trains, and only for a speciality administrator), so it can be asked
+    /// before anything is changed.
+    /// </para>
     /// </remarks>
-    public static CommitteeReview DemandReviewAccess(ClaimsPrincipal principal, CommitteeReview? review)
+    public static async Task<CommitteeReview> DemandReviewAccessAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CommitteeReview? review,
+        CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(principal);
 
-        if (review is null || !MayReadReview(principal, review))
+        if (review is null || (await ReadableReviewsAsync(dbContext, principal, [review], cancellationToken)).Count == 0)
         {
             throw new UnauthorizedAccessException(ReviewNotReadableByCaller);
         }
@@ -424,18 +433,64 @@ internal static class CommitteeDecisionAuthorization
     }
 
     /// <summary>
-    /// Whether the caller may read this review: the rule <see cref="DemandReviewAccess" /> demands, and the decisions-due
-    /// page's links read so it links only to a review that will open. The review's <see cref="CommitteeReview.Panel" />
-    /// and its members must be loaded.
+    /// The reviews among <paramref name="reviews" /> the caller may read: the set form of
+    /// <see cref="DemandReviewAccessAsync" />, by the same rule (<see cref="MayReadReview" />). What the committee reviews
+    /// page lists (<see cref="ListReviewsForPanelQuery" />, T218) and what the decisions-due page links to
+    /// (<see cref="GetEntrustmentDecisionsDueQuery" />), so each lists or links a review exactly when it will open.
     /// </summary>
-    public static bool MayReadReview(ClaimsPrincipal principal, CommitteeReview review)
+    /// <remarks>
+    /// Where each review's trainee trains is read only for a caller whose rung asks it (a speciality or sub-speciality
+    /// administrator, <see cref="ReadsReviewsByTrainee" />), in one resolve for every review however many there are
+    /// (<see cref="TraineeScopeResolver.ResolveManyAsync" />, three queries at most). Each review's
+    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// </remarks>
+    public static async Task<IReadOnlyList<CommitteeReview>> ReadableReviewsAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        IReadOnlyCollection<CommitteeReview> reviews,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(reviews);
+
+        var trainees = reviews.Count > 0 && ReadsReviewsByTrainee(principal)
+            ? await TraineeScopeResolver.ResolveManyAsync(
+                dbContext, reviews.Select(review => review.TraineeUserId), cancellationToken)
+            : new Dictionary<string, TraineeScope>(StringComparer.Ordinal);
+
+        return reviews
+            .Where(review => MayReadReview(principal, review, trainees.GetValueOrDefault(review.TraineeUserId)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Whether the caller may read this review, given where its trainee trains (<paramref name="trainee" />, their
+    /// preferred profile, <see cref="TraineeScopeResolver.ResolveAsync" />; null when they hold none, or when the caller's
+    /// rung does not ask it). Asked only through <see cref="DemandReviewAccessAsync" /> and
+    /// <see cref="ReadableReviewsAsync" />, which resolve the trainee as the rung needs, so no caller can hand it a scope
+    /// read some other way.
+    /// </summary>
+    /// <remarks>
+    /// <list type="number">
+    /// <item><b>A trainee first</b> (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185): someone holding Trainee
+    /// alongside an oversight role is still a trainee about their own record, and must not read a panel's working notes on
+    /// someone else through the wider role. They read their own review once it is ratified, and nothing else.</item>
+    /// <item>A global Administrator reads every review.</item>
+    /// <item>Whoever works on the panel (<see cref="WorksOnPanel" />): its members, wherever they now are, and the
+    /// coordinators of its institution. So whoever may start, chair or resolve an appeal on a review may read it (the T194
+    /// review: a member who had moved institution was admitted to Start and refused the review it had just
+    /// started).</item>
+    /// <item>A role that schedules reviews, over the reviews it could have scheduled (<see cref="InSchedulingReach" />,
+    /// T182's scope, T218).</item>
+    /// </list>
+    /// </remarks>
+    private static bool MayReadReview(ClaimsPrincipal principal, CommitteeReview review, TraineeScope? trainee)
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(review);
 
-        // The trainee arm comes first deliberately: someone holding Trainee alongside an oversight role is still a trainee
-        // about their own record, and must not read a panel's working notes on someone else through the wider role.
-        if (principal.IsInRole(WombatRoles.Trainee))
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
         {
             return IsOwnVisibleReview(principal, review);
         }
@@ -445,20 +500,95 @@ internal static class CommitteeDecisionAuthorization
             return true;
         }
 
-        if (principal.IsInstitutionalAdmin())
+        return WorksOnPanel(principal, review.Panel) || InSchedulingReach(principal, review.Panel, trainee);
+    }
+
+    /// <summary>
+    /// Whether a role that schedules reviews reaches a review on this panel of this trainee: T182's scope, read back over
+    /// a review already scheduled. The panel must be at the caller's institution. There, an InstitutionalAdmin or a
+    /// Coordinator reaches every review the panel holds; a SpecialityAdmin or SubSpecialityAdmin those whose trainee trains
+    /// in their own speciality or sub-speciality at that institution (<see cref="TraineeScopeResolver.IsAdministeredBy" />,
+    /// the role and its own scope claim asked together). (T218)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Until T218 a speciality or sub-speciality administrator read only the reviews of a panel they sat on. They schedule
+    /// reviews of their own trainees (<see cref="CommitteeTraineeScope.MayScheduleFor" />), and the scheduling page then
+    /// opened the review it had just created, which refused them. They already read those trainees' records
+    /// (<see cref="TraineeScopeResolver.IsOverseenBy" />) and preview the agenda before scheduling, so the review is no
+    /// wider a read.
+    /// </para>
+    /// <para>
+    /// The institution-wide roles read by the panel's institution, as they did (T075, T101 finding E), not by where the
+    /// trainee now trains: a coordinator supports the panels of their institution, including a review whose trainee has
+    /// since moved away. A speciality administrator reads by the trainee, whose speciality is what they administer: once a
+    /// trainee has moved to another institution, their reviews there are no longer in reach.
+    /// </para>
+    /// <para>
+    /// <b>By the trainee's programme now, not the one they were reviewed in</b>, deliberately (the T218 review). When a
+    /// trainee moves from Surgery to Paediatrics at the same institution, the Paediatrics administrator reaches every review
+    /// of theirs on that institution's panels, the Surgery-era ones included, and the Surgery administrator who scheduled
+    /// them reaches none. That is how every other read about the trainee already answers
+    /// (<see cref="TraineeScopeResolver.MayReadAsync" />, their preferred profile): the Paediatrics administrator reads the
+    /// trainee's progress, entrustment history and ratified reviews (<see cref="ListReviewsForTraineeQuery" />), and the
+    /// Surgery administrator none of them, and scheduling the next review asks the same programme
+    /// (<see cref="CommitteeTraineeScope.MayScheduleFor" />). Stamping the review with the programme it was scheduled in
+    /// was rejected: it would make a review the one part of a trainee's record that stays with an administrator who no
+    /// longer administers them, and hide it from the one who now must.
+    /// </para>
+    /// <para>
+    /// The frozen evidence is not the per-activity read. <see cref="CommitteeReview.EvidenceItems" /> copies every activity
+    /// of the trainee's in the review window at Start, whatever programme or institution it was stamped to (T185), and
+    /// whoever reads the review reads those lines: a panel member and a coordinator as much as a speciality administrator.
+    /// So a reader of the review may see a line for an activity whose own page, judged by its stamp, would refuse them.
+    /// </para>
+    /// <para>
+    /// Never someone who holds Trainee: <see cref="MayReadReview" /> asks the trainee rung before this.
+    /// </para>
+    /// </remarks>
+    private static bool InSchedulingReach(ClaimsPrincipal principal, DecisionPanel panel, TraineeScope? trainee)
+    {
+        if (!ReadsReviewsByInstitution(principal) || principal.GetInstitutionId() != panel.InstitutionId)
         {
-            // An InstitutionalAdmin can view (read-only) any review for a panel in their institution, even without panel
-            // membership. Conduct actions (start/record/ratify) keep their own gates. (T075 / F-4A-1)
-            //
-            // And, as anyone else, the reviews of a panel they work on (T194 review): one who holds a seat on another
-            // institution's panel, which happens only when a seated member moves institution (PanelSeat refuses such a
-            // seat on save), was admitted to Start by WorksOnPanel and refused the review it had just started. So whoever
-            // may start, chair or resolve an appeal on a review may read it.
-            return principal.CanAccessInstitution(review.Panel.InstitutionId) || WorksOnPanel(principal, review.Panel);
+            return false;
         }
 
-        return WorksOnPanel(principal, review.Panel);
+        if (principal.IsInstitutionalAdmin() || principal.IsInRole(WombatRoles.Coordinator))
+        {
+            return true;
+        }
+
+        return trainee is not null && TraineeScopeResolver.IsAdministeredBy(trainee, principal);
     }
+
+    /// <summary>
+    /// Whether <see cref="MayReadReview" /> reads where the review's trainee trains for this caller: only the speciality
+    /// administrators' arm of <see cref="InSchedulingReach" /> does, and only for someone who neither holds Trainee nor is
+    /// an Administrator, whose rungs answer first. For anyone else the answer is the same with no trainee, so no lookup is
+    /// made. (T218)
+    /// </summary>
+    private static bool ReadsReviewsByTrainee(ClaimsPrincipal principal)
+        => !TraineeScopeResolver.ActsAsTrainee(principal) &&
+           !principal.IsAdministrator() &&
+           (principal.IsInRole(WombatRoles.SpecialityAdmin) || principal.IsInRole(WombatRoles.SubSpecialityAdmin));
+
+    /// <summary>
+    /// Whether a rung of the read ladder can reach this caller through the panel's institution rather than a seat on the
+    /// panel: an InstitutionalAdmin, a Coordinator (<see cref="WorksOnPanel" /> and <see cref="InSchedulingReach" />), a
+    /// SpecialityAdmin or a SubSpecialityAdmin (<see cref="InSchedulingReach" />, which asks it first). For anyone else,
+    /// a committee member who holds none of them, only a seat admits, wherever the panel is. (T218 review)
+    /// </summary>
+    /// <remarks>
+    /// The committee reviews list asks it so as to ask the store only for reviews the ladder could admit
+    /// (<see cref="ListReviewsForPanelQuery" />): a committee member alone is sent their panels' reviews, not every review
+    /// at their institution to judge one by one. It answers the role alone, so the Administrator's and the Trainee's rungs,
+    /// which answer before it, are the caller's to ask.
+    /// </remarks>
+    internal static bool ReadsReviewsByInstitution(ClaimsPrincipal principal)
+        => principal.IsInstitutionalAdmin() ||
+           principal.IsInRole(WombatRoles.Coordinator) ||
+           principal.IsInRole(WombatRoles.SpecialityAdmin) ||
+           principal.IsInRole(WombatRoles.SubSpecialityAdmin);
 
     /// <summary>
     /// Whether this is the caller's own review in a state its trainee may see: ratified, under appeal or final. Before

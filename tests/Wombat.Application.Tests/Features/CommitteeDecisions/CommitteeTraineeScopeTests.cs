@@ -492,6 +492,24 @@ public sealed class CommitteeTraineeScopeTests
 
     [Theory]
     [MemberData(nameof(RolesThatListReviews))]
+    public async Task TheReviewList_ListsATraineeWhoAlsoHoldsAnotherRole_NotTheirOwnRatifiedReview_WhichOpens(string role)
+    {
+        // The one place the list is narrower than the review's read ladder (T216, the T218 review): the ladder opens a
+        // trainee's own review once it is ratified, and it is on My committee reviews, but this page lists no one's reviews
+        // to someone who holds Trainee, whatever other role brings them here. The ladder alone would list it.
+        await using var db = await SeededDbAsync();
+        var own = await SeedReviewForAsync(db, "Ratified", PaedsAtA);
+        var paedsWhoAlsoHoldsRole = TraineeWho(role, PaedsAtA);
+
+        var opened = await OpenAsync(db, paedsWhoAlsoHoldsRole, own);
+        (opened.TraineeUserId, opened.State).Should().Be(
+            (PaedsAtA, CommitteeReviewState.Ratified), $"{role}: the review page opens a trainee's own ratified review");
+
+        (await ListAsync(db, paedsWhoAlsoHoldsRole)).Should().BeEmpty($"{role} who also holds Trainee");
+    }
+
+    [Theory]
+    [MemberData(nameof(RolesThatListReviews))]
     public async Task TheReviewsPage_OffersScheduling_ExactlyToWhomTheHandlersAdmit_AndSaysWhyToATrainee(string role)
     {
         await using var db = await SeededDbAsync();
@@ -524,6 +542,176 @@ public sealed class CommitteeTraineeScopeTests
     private const string TraineeListsNoReview =
         "You hold the Trainee role, so this page lists no one's committee reviews. Your own are on My committee reviews " +
         "once they are ratified.";
+
+    // ─── Which reviews the page lists, and opens (T218) ──────────────────────
+    //
+    // The list shows each caller exactly the reviews the review's own read ladder opens for them, and the ladder reaches
+    // a role that schedules over the reviews it could have scheduled (T182's scope): a Coordinator or InstitutionalAdmin
+    // every review a panel of their institution holds, a Speciality or SubSpecialityAdmin those of their own trainees
+    // there. Until T218 the list showed a Coordinator only the panels they sat on, so the review they had just scheduled
+    // was not there, and a Speciality or SubSpecialityAdmin was refused the review they had just scheduled.
+
+    /// <summary>The reviews <see cref="SeedEveryonesReviewsAsync" /> writes, one per trainee and panel.</summary>
+    private sealed record Reviews(int PaedsOnA, int NeonatologyOnPaediatricsA, int SurgeryOnA, int MovedAwayOnA, int PaedsOnB)
+    {
+        public int[] All => [PaedsOnA, NeonatologyOnPaediatricsA, SurgeryOnA, MovedAwayOnA, PaedsOnB];
+    }
+
+    public static TheoryData<string> CallersOfTheReviewList => new()
+    {
+        "Coordinator of A", "InstitutionalAdmin of A", "SpecialityAdmin of A", "SubSpecialityAdmin of A",
+        "Surgery SpecialityAdmin of A", "SpecialityAdmin of B", "Coordinator of B", "CommitteeMember of A",
+        "SpecialityAdmin on the committee of A", "B's external member, since moved to A", "Administrator", "Trainee of A",
+        "Trainee who coordinates at A", "Trainee who is an Administrator"
+    };
+
+    [Theory]
+    [MemberData(nameof(CallersOfTheReviewList))]
+    public async Task TheReviewList_ListsEachCallerTheReviewsOfTheirScope(string caller)
+    {
+        await using var db = await SeededDbAsync();
+        var reviews = await SeedEveryonesReviewsAsync(db);
+
+        var expected = caller switch
+        {
+            // Every review a panel of their institution holds, the stranded one of a trainee who has moved away included.
+            "Coordinator of A" or "InstitutionalAdmin of A" or "CommitteeMember of A" =>
+                [reviews.PaedsOnA, reviews.NeonatologyOnPaediatricsA, reviews.SurgeryOnA, reviews.MovedAwayOnA],
+            // Their own speciality's trainees at A: not Surgery's, and not the trainee who now trains at B. The committee
+            // role without a seat reaches no review (T113's rule: one role's reach never stands in for another's).
+            "SpecialityAdmin of A" or "SpecialityAdmin on the committee of A" =>
+                [reviews.PaedsOnA, reviews.NeonatologyOnPaediatricsA],
+            "SubSpecialityAdmin of A" => [reviews.PaedsOnA],
+            "Surgery SpecialityAdmin of A" => [reviews.SurgeryOnA],
+            // The trainee who moved to B is B's now, but A's panel holds that review: B's administrator does not read A's.
+            "SpecialityAdmin of B" or "Coordinator of B" => [reviews.PaedsOnB],
+            // A seat is read wherever the panel is: whoever may start a review on it may read it (the T194 review).
+            "B's external member, since moved to A" => [reviews.PaedsOnB],
+            "Administrator" => reviews.All,
+            _ => Array.Empty<int>()
+        };
+
+        (await ListAsync(db, Caller(caller))).Select(review => review.Id).Should().BeEquivalentTo(expected, caller);
+    }
+
+    [Theory]
+    [MemberData(nameof(CallersOfTheReviewList))]
+    public async Task TheReviewList_IsExactlyTheReviewsTheReviewPageOpens(string caller)
+    {
+        // One rule: the list is the review page's own read ladder in its set form, so every row's Open link opens and no
+        // review that would open is missing. Someone who holds Trainee is the one exception, listed none (T216): their own
+        // ratified reviews are on My committee reviews. Here the trainees who are callers have no review, so the two agree;
+        // the exception is held by TheReviewList_ListsATraineeWhoAlsoHoldsAnotherRole_NotTheirOwnRatifiedReview_WhichOpens.
+        await using var db = await SeededDbAsync();
+        var reviews = await SeedEveryonesReviewsAsync(db);
+        var principal = Caller(caller);
+
+        var opened = new List<int>();
+        foreach (var reviewId in reviews.All)
+        {
+            if (await OpensAsync(db, principal, reviewId))
+            {
+                opened.Add(reviewId);
+            }
+        }
+
+        (await ListAsync(db, principal)).Select(review => review.Id).Should().BeEquivalentTo(opened, caller);
+    }
+
+    [Theory]
+    [MemberData(nameof(SchedulersOfA))]
+    public async Task ASchedulerOfA_FindsTheReviewTheyJustScheduled_AndOpensIt(string role)
+    {
+        // The symptom: a Coordinator scheduled a review and the list read "No reviews yet". A Speciality or
+        // SubSpecialityAdmin was sent to the review they had just created, and it refused them.
+        await using var db = await SeededDbAsync();
+        var scheduler = Scheduler(role, InstitutionA);
+
+        var scheduled = await ScheduleAsync(db, scheduler, PanelA, PaedsAtA);
+
+        var listed = (await ListAsync(db, scheduler)).Should().ContainSingle().Subject;
+        (listed.Id, listed.TraineeName).Should().Be((scheduled.Id, "Palesa Paeds"));
+        (await OpenAsync(db, scheduler, scheduled.Id)).TraineeUserId.Should().Be(PaedsAtA);
+    }
+
+    public static TheoryData<string> SiblingReadsOfAReview => new()
+    {
+        "Review", "Agenda", "Sampling", "MsfOutsideSnapshot", "Pending", "StarEpaOptions"
+    };
+
+    [Theory]
+    [MemberData(nameof(SiblingReadsOfAReview))]
+    public async Task EveryReadOfAReview_AdmitsTheSpecialityAdminOfItsTrainee_AndRefusesAnotherSpecialitysAsAnUnknownId(
+        string read)
+    {
+        // The review page's sibling reads climb the one ladder, so they cannot drift from the review (T101 finding E).
+        await using var db = await SeededDbAsync();
+        var reviews = await SeedEveryonesReviewsAsync(db);
+
+        await ReadAsync(db, read, reviews.PaedsOnA, Caller("SpecialityAdmin of A"));
+
+        foreach (var reviewId in new[] { reviews.PaedsOnA, 999 })
+        {
+            (await RefusalAsync(() => ReadAsync(db, read, reviewId, Caller("Surgery SpecialityAdmin of A"))))
+                .Should().BeOfType<UnauthorizedAccessException>()
+                .Which.Message.Should().Be("The committee review could not be found among the reviews you can view.");
+        }
+    }
+
+    /// <summary>
+    /// One scheduled review of each kind the list must sort: two of A's trainees in Paediatrics (one before A's Paediatrics
+    /// panel), A's Surgery trainee, the trainee who has moved from A to B (on A's panel, stranded), and B's own trainee.
+    /// </summary>
+    private async Task<Reviews> SeedEveryonesReviewsAsync(ApplicationDbContext db)
+        => new(
+            await SeedReviewForAsync(db, "Start", PaedsAtA),
+            await SeedReviewForAsync(db, "Start", NeonatologyAtA, PaediatricsPanelA),
+            await SeedReviewForAsync(db, "Start", SurgeryAtA),
+            await SeedReviewForAsync(db, "Start", MovedFromAToB),
+            await SeedReviewForAsync(db, "Start", PaedsAtB, PanelB));
+
+    /// <summary>Whether the review page opens this review for the caller; a refusal must be the ladder's one sentence.</summary>
+    private static async Task<bool> OpensAsync(ApplicationDbContext db, ClaimsPrincipal principal, int reviewId)
+    {
+        try
+        {
+            await OpenAsync(db, principal, reviewId);
+            return true;
+        }
+        catch (UnauthorizedAccessException refusal)
+            when (refusal.Message == "The committee review could not be found among the reviews you can view.")
+        {
+            return false;
+        }
+    }
+
+    private static async Task<CommitteeReviewDetailDto> OpenAsync(ApplicationDbContext db, ClaimsPrincipal principal, int reviewId)
+    {
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, new NamedUsers()).Handle(
+            new GetCommitteeReviewByIdQuery(reviewId, principal, new DateOnly(2027, 1, 8)), CancellationToken.None);
+        db.ChangeTracker.Clear();
+        return review;
+    }
+
+    private static async Task ReadAsync(ApplicationDbContext db, string read, int reviewId, ClaimsPrincipal principal)
+    {
+        _ = read switch
+        {
+            "Review" => await OpenAsync(db, principal, reviewId),
+            "Agenda" => await new GetCommitteeAgendaQueryHandler(db).Handle(
+                new GetCommitteeAgendaQuery(reviewId, principal, new DateOnly(2027, 1, 8)), CancellationToken.None),
+            "Sampling" => await new GetSamplingConcentrationWarningsQueryHandler(db).Handle(
+                new GetSamplingConcentrationWarningsQuery(reviewId, principal), CancellationToken.None),
+            "MsfOutsideSnapshot" => await new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+                new CountMsfCampaignsOutsideSnapshotQuery(reviewId, principal), CancellationToken.None),
+            "Pending" => await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+                new ListPendingEntrustmentDecisionsForReviewQuery(reviewId, principal), CancellationToken.None),
+            "StarEpaOptions" => (object)await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+                new ListStarEpaOptionsForReviewQuery(reviewId, principal), CancellationToken.None),
+            _ => throw new ArgumentOutOfRangeException(nameof(read), read, null)
+        };
+        db.ChangeTracker.Clear();
+    }
 
     /// <summary>Whether the agenda preview is refused by the rule that admits a caller to scheduling at all.</summary>
     private static async Task<bool> PreviewRefusedByTheSchedulingRuleAsync(ApplicationDbContext db, ClaimsPrincipal principal)
@@ -946,8 +1134,11 @@ public sealed class CommitteeTraineeScopeTests
         db.ChangeTracker.Clear();
     }
 
-    /// <summary>A review on panel A in the state the command acts on, with what the command reads.</summary>
-    private async Task<int> SeedReviewForAsync(ApplicationDbContext db, string command, string traineeUserId)
+    /// <summary>
+    /// A review on panel A, or on <paramref name="panelId" />, in the state the command acts on, with what it reads; or,
+    /// for <c>"Ratified"</c>, which is no command, ratified and left there.
+    /// </summary>
+    private async Task<int> SeedReviewForAsync(ApplicationDbContext db, string command, string traineeUserId, int panelId = PanelA)
     {
         var now = new DateTime(2027, 1, 8, 9, 0, 0, DateTimeKind.Utc);
         var review = new CommitteeReview
@@ -955,7 +1146,7 @@ public sealed class CommitteeTraineeScopeTests
             AcademicYear = 2026,
             Semester = 2,
             TraineeUserId = traineeUserId,
-            PanelId = PanelA,
+            PanelId = panelId,
             ReviewPeriodFrom = new DateOnly(2026, 1, 1),
             ReviewPeriodTo = new DateOnly(2026, 12, 31),
             ScheduledOn = new DateOnly(2027, 1, 8),
@@ -989,12 +1180,12 @@ public sealed class CommitteeTraineeScopeTests
             review.Start([line], agenda, "chair-a", now);
         }
 
-        if (command is "Ratify" or "ResolveAppeal")
+        if (command is "Ratify" or "ResolveAppeal" or "Ratified")
         {
             review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now, PresentAtA, [], []);
         }
 
-        if (command == "ResolveAppeal")
+        if (command is "ResolveAppeal" or "Ratified")
         {
             review.Ratify("chair-a", now);
         }
@@ -1126,7 +1317,11 @@ public sealed class CommitteeTraineeScopeTests
         "SpecialityAdmin of A" => Scheduler("SpecialityAdmin", InstitutionA),
         "SubSpecialityAdmin of A" => Scheduler("SubSpecialityAdmin", InstitutionA),
         "Coordinator of B" => Scheduler("Coordinator", InstitutionB),
+        "SpecialityAdmin of B" => Scheduler("SpecialityAdmin", InstitutionB),
+        "Surgery SpecialityAdmin of A" => TestPrincipals.InRole(
+            WombatRoles.SpecialityAdmin, "surgery-admin", InstitutionA, specialityId: Surgery),
         "CommitteeMember of A" => Member("member-a", InstitutionA),
+        "B's external member, since moved to A" => Member("external-b", InstitutionA),
         "Trainee of A" => TestPrincipals.Trainee(PaedsAtA, InstitutionA),
         "SpecialityAdmin on the committee of A" => AlsoCommitteeMember(Scheduler("SpecialityAdmin", InstitutionA)),
         "Administrator" => TestPrincipals.Administrator(),
