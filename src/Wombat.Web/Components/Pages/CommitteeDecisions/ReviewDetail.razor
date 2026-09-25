@@ -454,9 +454,15 @@
           </EditForm>
         }
 
+        @if (_pendingDecisionsError is not null)
+        {
+          @* T212. A warning, as the agenda card's is: the action that preceded the read succeeded, and the list last read
+             stays in view below it. *@
+          <Alert Kind="warning">The staged decisions could not be read again: @_pendingDecisionsError</Alert>
+        }
         @if (_pendingDecisions.Count == 0)
         {
-          <p>No pending entrustment decisions have been staged for this review.</p>
+          <p id="no-pending-note">@NoPendingNote</p>
         }
         else
         {
@@ -767,6 +773,7 @@
   private AppealResolutionModel _appeal = new();
   private PendingDecisionFormModel _pending = new();
   private IReadOnlyList<PendingEntrustmentDecisionDto> _pendingDecisions = Array.Empty<PendingEntrustmentDecisionDto>();
+  private string? _pendingDecisionsError;
   private IReadOnlyList<StarEpaOptionDto> _starEpas = Array.Empty<StarEpaOptionDto>();
   private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
   private SamplingConcentrationReportDto? _samplingReport;
@@ -912,6 +919,30 @@
       _ => StagedEvidence.UngroundedOnceRecorded
     });
 
+  /// <summary>
+  /// Said when nothing is staged (T212). Before the review is ratified, nothing has been. Once it is, the list is empty
+  /// whatever ratifying did, so the sentence says which it was, by the agenda: "none have been staged" straight after
+  /// Ratify would read as if the decisions just ratified were lost, and "issued what was staged" would be false of a
+  /// review ratified with nothing staged, which the ratify handler allows (every line optional or deferred, or a
+  /// progression review with an empty agenda).
+  /// </summary>
+  private string NoPendingNote
+    => _review?.State is not (CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final)
+      ? "No pending entrustment decisions have been staged for this review."
+      : _agenda is null
+        ? "Nothing is pending: the review is ratified."
+        : _agenda.Lines.Any(RatifyingIssuedOn)
+          ? "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one."
+          : "Nothing was staged when the review was ratified, so ratifying it issued no STAR.";
+
+  /// <summary>
+  /// Whether ratifying issued a STAR on this line: it is Decided, or, where the agenda could not be read again after
+  /// Ratify and the page still holds the one read before, it was staged, since ratifying issues every staged decision.
+  /// Staging always leaves the EPA a line, so the agenda names every STAR ratifying issued.
+  /// </summary>
+  private static bool RatifyingIssuedOn(CommitteeAgendaLineDto line)
+    => line.State == CommitteeAgendaLineState.Decided || line.IsStaged;
+
   protected override async Task OnParametersSetAsync()
   {
     await LoadAsync();
@@ -927,6 +958,7 @@
       _agenda = _review.Agenda;
       _agendaError = null;
       _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
+      _pendingDecisionsError = null;
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
       _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
       _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId, authState.User));
@@ -1140,7 +1172,6 @@
         NamedEvidenceIds(),
         authState.User));
       _pending = new PendingDecisionFormModel();
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _status = "Pending entrustment decision staged.";
     }
     catch (Exception exception)
@@ -1149,6 +1180,7 @@
       return;
     }
 
+    await LoadPendingDecisionsAsync();
     await LoadAgendaAsync();
   }
 
@@ -1258,9 +1290,11 @@
              @onchange="args => ToggleEvidence(line.Id, args.Value is bool isChecked && isChecked)" />
       <label for="@($"pending-evidence-{line.Id}")">
         @line.SourceLabel
+        @* T212: the space before "·" is part of the detail's text. Written in the markup, it stood alone before the @if,
+           and Razor drops whitespace there, so the label read "… #19· 3a · …" (T166 met the same). *@
         @if (!string.IsNullOrWhiteSpace(detail))
         {
-          <span class="muted">· @detail</span>
+          <span class="muted">@($" · {detail}")</span>
         }
       </label>
     </div>;
@@ -1274,7 +1308,6 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
       _status = "Pending entrustment decision removed.";
     }
     catch (Exception exception)
@@ -1283,6 +1316,7 @@
       return;
     }
 
+    await LoadPendingDecisionsAsync();
     await LoadAgendaAsync();
   }
 
@@ -1368,7 +1402,29 @@
     // Ratifying issues the staged STAR decisions, which is exactly what the standing reads, so it is read again after
     // every action. A failure lands in the standing card, not beside the action's success.
     await LoadStandingAsync();
+    // Ratifying also clears the staged list it issued; before T212 the list was not read again, and the page went on
+    // showing the decisions it had just issued as still pending until a reload.
+    await LoadPendingDecisionsAsync();
     await LoadAgendaAsync();
+  }
+
+  /// <summary>
+  /// The staged decisions, read again after an action (T212): staging adds one, Remove takes one off, and ratifying
+  /// issues them all as STARs and clears the list. Read outside the action's <c>try</c>, as the agenda is: the action has
+  /// succeeded, so a failure here is a warning in the card, and the list last read stays in view below it.
+  /// </summary>
+  private async Task LoadPendingDecisionsAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
+      _pendingDecisionsError = null;
+    }
+    catch (Exception exception)
+    {
+      _pendingDecisionsError = RefusalText.Of(exception);
+    }
   }
 
   /// <summary>
@@ -1446,6 +1502,18 @@
       }
     }
   }
+
+  private const string DeferralReasonHelp =
+    "Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.";
+
+  /// <summary>The region under the deferral's reason that holds its validation message; the box names it (T212).</summary>
+  private const string DeferralReasonMessageId = "deferral-reason-message";
+
+  /// <summary>
+  /// A submit the form refused (an empty reason, T212) moves the focus to the reason, whose description now includes
+  /// the message saying why, as opening the form does.
+  /// </summary>
+  private void FocusDeferralReason() => _focusDeferralReason = true;
 
   private void CancelDeferral() => _deferral = null;
 
@@ -1587,14 +1655,26 @@
 
         @if (_deferral is { } deferral)
         {
-          <EditForm Model="deferral" OnValidSubmit="DeferAsync" FormName="agenda-deferral">
+          <EditForm Model="deferral" OnValidSubmit="DeferAsync" OnInvalidSubmit="FocusDeferralReason" FormName="agenda-deferral">
             <DataAnnotationsValidator />
             <fieldset>
               <legend>Defer @deferral.EpaCode</legend>
               <div class="form-grid">
+                @* T212: an empty reason is refused here, and says why under the field. Before, the box was marked invalid
+                   and nothing said what was wrong. The message's region is always present and the box names it, and a
+                   refused submit moves the focus to the box, so a screen reader reads the message with it. *@
                 <FormField Label="Why the committee is deferring it" InputId="deferral-reason" Required="true" FullWidth="true"
-                           HelpText="Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.">
-                  <InputTextArea id="deferral-reason" class="form-control" aria-describedby="@FieldHelp.Id("deferral-reason")" @bind-Value="deferral.Reason" @ref="_deferralReason" />
+                           HelpText="@DeferralReasonHelp">
+                  <ChildContent>
+                    <InputTextArea id="deferral-reason" class="form-control"
+                                   aria-describedby="@FieldHelp.DescribedBy("deferral-reason", DeferralReasonHelp, DeferralReasonMessageId)"
+                                   @bind-Value="deferral.Reason" @ref="_deferralReason" />
+                  </ChildContent>
+                  <ValidationContent>
+                    <div id="@DeferralReasonMessageId">
+                      <ValidationMessage For="() => deferral.Reason" />
+                    </div>
+                  </ValidationContent>
                 </FormField>
               </div>
               <FormActions>
@@ -1685,7 +1765,9 @@
     public string EpaCode { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Say why the committee is deferring the decision.")]
-    [StringLength(2000)]
+    // The domain's own limit and words (CommitteeAgendaLine.DeferralReasonMaxLength): without them, the message under
+    // the box (T212) would print the framework's "The field Reason must be a string with a maximum length of 2000."
+    [StringLength(2000, ErrorMessage = "A deferral reason is at most 2000 characters.")]
     public string Reason { get; set; } = string.Empty;
   }
 

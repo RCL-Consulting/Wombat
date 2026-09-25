@@ -32,7 +32,9 @@
     <Row Context="item">
       <tr>
         <td>@item.PanelName</td>
-        <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
+        @* T212: the period the review sat for, then its evidence window, as the schedule prints them. The window alone
+           read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. *@
+        <td>@item.PeriodLabel <span class="muted">@($"· {Window(item.ReviewPeriodFrom, item.ReviewPeriodTo)}")</span></td>
         <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
         <td>@item.State</td>
         @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
@@ -50,6 +52,8 @@
   <section class="detail-card">
     <h3>Review detail</h3>
     <p><strong>Panel:</strong> @_selectedReview.PanelName</p>
+    <p id="my-review-period"><strong>Sits for:</strong> @_selectedReview.PeriodLabel</p>
+    <p id="my-review-window"><strong>Evidence window:</strong> @Window(_selectedReview.ReviewPeriodFrom, _selectedReview.ReviewPeriodTo)</p>
     <p id="my-review-type"><strong>Type:</strong> @CommitteeDecisionWording.ReviewTypeLabel(_selectedReview.ReviewType)</p>
     <p><strong>State:</strong> @_selectedReview.State</p>
 
@@ -203,6 +207,11 @@
       _actionError = RefusalText.Of(exception);
     }
   }
+
+  /// <summary>A review's evidence window, in the words the committee's pages use: "2026-01-01 to 2026-12-31".</summary>
+  private static string Window(DateOnly from, DateOnly to)
+    => $"{from.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)} to " +
+       $"{to.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}";
 
   private static bool IsRatified(CommitteeReviewState state)
     => state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;

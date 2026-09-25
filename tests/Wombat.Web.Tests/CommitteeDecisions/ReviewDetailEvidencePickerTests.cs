@@ -43,6 +43,17 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
     }
 
     [Fact]
+    public void EachLabel_ReadsWithASpaceBeforeItsDetail()
+    {
+        // T212: the space before the first "·" stood alone before the detail's @if, where Razor drops whitespace, so a
+        // label read "Mini-CEX #101· 3a · …". Checked on the label's own text, not with Contain, which passed it.
+        var (cut, _) = RenderPage();
+
+        LabelText(cut, 1).Should().Be("Mini-CEX #101 · 3a · 2026-02-10 · completed");
+        LabelText(cut, 3).Should().Be("Annual MSF #50 · Released");
+    }
+
+    [Fact]
     public void ChoosingAnEpa_ListsItsLinesFirst_AsAHint_WithoutHidingTheOthers()
     {
         var (cut, _) = RenderPage();
@@ -138,6 +149,10 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         cut.WaitForState(() => sender.Staged is not null);
         sender.Staged!.EvidenceItemIds.Should().BeEquivalentTo(new[] { 1, 3 });
         sender.Staged.EpaId.Should().Be(7);
+
+        // The list is read again once the decision is staged (T212: outside the stage's own try), so it shows.
+        cut.WaitForState(() => cut.Markup.Contains("Pending entrustment decision staged."));
+        cut.Markup.Should().Contain("Rests on 2 items of the snapshot: Mini-CEX #101; Annual MSF #50.");
     }
 
     [Fact]
@@ -178,6 +193,11 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         => PendingForm(cut).QuerySelectorAll("input[type=checkbox]")
             .Select(input => input.Id ?? string.Empty)
             .ToArray();
+
+    /// <summary>The label's text as a reader gets it: runs of whitespace as one space, and no space where none is.</summary>
+    private static string LabelText(IRenderedComponent<ReviewDetail> cut, int evidenceId)
+        => System.Text.RegularExpressions.Regex.Replace(
+            cut.Find($"label[for=pending-evidence-{evidenceId}]").TextContent, @"\s+", " ").Trim();
 
     private static IReadOnlyList<string> Hints(IRenderedComponent<ReviewDetail> cut)
         => cut.FindAll("#pending-evidence-hints .field-warning").Select(hint => hint.TextContent.Trim()).ToArray();
@@ -304,7 +324,7 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
             object? response = request switch
             {
                 GetCommitteeReviewByIdQuery => _review,
-                ListPendingEntrustmentDecisionsForReviewQuery => _pending,
+                ListPendingEntrustmentDecisionsForReviewQuery => _staged is null ? _pending : _pending.Append(_staged).ToArray(),
                 GetSamplingConcentrationWarningsQuery => null,
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,
                 GetEpaTrajectoryForTraineeQuery => Array.Empty<EpaTrajectoryDto>(),
@@ -320,10 +340,12 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
 
+        private PendingEntrustmentDecisionDto? _staged;
+
         private PendingEntrustmentDecisionDto Stage(StagePendingEntrustmentDecisionCommand command)
         {
             Staged = command;
-            return new PendingEntrustmentDecisionDto(
+            return _staged = new PendingEntrustmentDecisionDto(
                 91, command.ReviewId, command.EpaId, "PAED-001", "Acute admission", command.AuthorisedLevelId, "3a",
                 command.IssuedOn, command.ExpiresOn, command.Rationale, command.EvidenceItemIds, DateTime.UtcNow, "chair-1");
         }

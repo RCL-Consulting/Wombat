@@ -663,7 +663,10 @@ no Agenda card. The card holds:
   STAR staged on it was removed afterwards because it no longer fits the trainee's curriculum.
 - A deferral opens a `<fieldset>` form under the table, with its `<legend>` naming the EPA ("Defer PAED-002"), a
   required reason, and Cancel and Defer in a `.form-actions` row. The focus moves to the reason once the form is
-  rendered, as Stage moves it to the EPA. The trainee sees the reason once the review is ratified (below).
+  rendered, as Stage moves it to the EPA. The trainee sees the reason once the review is ratified (below). An empty
+  reason is refused in the form with "Say why the committee is deferring the decision." as a `.validation-message` under
+  the box (T212). Its region (`#deferral-reason-message`) is there before anything is refused, and the box names it with
+  `aria-describedby` after its help. A refused submit moves the focus back to the box, so the message is read with it.
 - The EPAs routed to this panel that a STAR already decided in their window, so the planner left them off, as one
   `.muted` sentence (`#agenda-decided-in-window`) in the scheduling preview's words: "Already decided in this window, so
   not on the agenda: PAED-001 and PAED-006." (T215). A STAR decides its window whether or not an agenda line records it,
@@ -697,6 +700,18 @@ The agenda is read again after every action on the page. A failure is a warning 
 the action's success, and the agenda last read stays in view. Every sentence is built in C# (`CommitteeAgendaText`),
 which the scheduling form's preview shares.
 
+The "Pending entrustment decisions" list is read again after every action that can change it (T212): Stage, Remove, and
+the review's own actions (Start, Record, Ratify, Close, Resolve). Ratifying issues the staged decisions as STARs and
+clears the list, which the page used to go on showing until a reload. Defer and Reinstate do not read it: a line with a
+decision staged on it cannot be deferred, and neither touches a staged row. A failed read is a warning `Alert` in that
+card, as the agenda's is, and the list last read stays in view. An empty list says why it is empty
+(`#no-pending-note`). Before the review is ratified it says that nothing has been staged. Once it is ratified, the
+sentence depends on the agenda. With a line ratifying decided, it says that ratifying issued what was staged as STARs
+and the agenda names each one; staging always leaves the EPA a line, so that is exact. With none, which ratify allows
+when every line was optional or deferred (or a progression review's agenda is empty), it says that nothing was staged when the review was ratified, so it issued no
+STAR. Where the agenda could not be read again straight after Ratify, the lines staged in the agenda last read count as
+issued, since ratifying issues every staged decision.
+
 **The chair's controls** (T213). The review page offers each control to exactly the people its handler lets use it,
 in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller may do:
 `CallerChairs` and `CallerResolvesAppeals`, computed by the predicates the handlers demand
@@ -722,7 +737,11 @@ caller, who is the resolver because only the appeal body is offered the form. A 
 again; once the decision is recorded it says what the ratify refusal says, that it is fixed and an administrator must
 look into it (D46).
 
-**The trainee's own reviews** (`/committee/my-reviews`). A ratified review's detail shows its agenda read-only, as an
+**The trainee's own reviews** (`/committee/my-reviews`). The list's Period column names the period the review sat for,
+then its evidence window in a `.muted` span, as the schedule does: "2026 S2 · 2026-01-01 to 2026-12-31" (T212). The
+window alone read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. The detail
+says the same on two lines, "Sits for" and "Evidence window", as the committee's review page does. A ratified review's
+detail shows its agenda read-only, as an
 `article.detail-card--compact` headed "Agenda": a muted sentence naming the period, then a `.clinic-table` of three
 columns, EPA (the row header), window and outcome. The outcome cell holds the same badge as the chair's table and, under
 it, a `.muted` line: the committee's reason for a deferral (O6), the STAR a decided line names, or that it was not
