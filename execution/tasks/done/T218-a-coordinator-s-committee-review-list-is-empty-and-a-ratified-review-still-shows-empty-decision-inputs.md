@@ -1,11 +1,12 @@
 ---
 id: T218
 title: A Coordinator's committee review list is empty, and a ratified review still shows empty decision inputs
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T218 — A Coordinator's committee review list is empty, and a ratified review still shows empty decision inputs
@@ -32,8 +33,8 @@ render a decided review's decision read-only.
 
 ## Verification
 
-- [ ] The Coordinator's list shows review 5. bUnit and browser.
-- [ ] A ratified review shows no decision inputs. bUnit.
+- [x] The Coordinator's list shows review 5. bUnit and browser.
+- [x] A ratified review shows no decision inputs. bUnit.
 
 ## Related
 
@@ -47,3 +48,18 @@ T131, T182, T212.
   review…" with eight reviews at institution 1. `ListReviewsForPanel` lists only panels the caller sits on unless they
   are an Administrator or InstitutionalAdmin. It must also stop telling a coordinator to schedule the first review
   when reviews exist.
+
+---
+
+## As built — 2026-09-25 (`c92c55d`)
+
+A scheduling role's `/committee/reviews` lists the reviews they may open at their institution, by one read rule
+(`CommitteeReviewReadAccess`) shared with the review page, trainee first. The empty card never says "schedule the first
+review" when reviews exist that the caller cannot see. Item 2 (a ratified review's decision inputs) was done by T213.
+
+Browser on dev (scripted Chrome, master `b4fd566`):
+- **coordinator:** 19 rows, equal to the database count, each opening. A newly scheduled review 20 appeared at once.
+- **An assessor given SpecialityAdmin:** the same 20 rows.
+- **committee:** its panels' reviews, and no Schedule button.
+- **A trainee given Coordinator:** "No reviews to show" with the Trainee-role note. My committee reviews listed their 14,
+  and review 15 (a peer's scope) was refused.

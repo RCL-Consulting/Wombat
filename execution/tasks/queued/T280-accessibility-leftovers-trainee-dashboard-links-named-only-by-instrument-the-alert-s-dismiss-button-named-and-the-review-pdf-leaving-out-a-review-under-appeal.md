@@ -34,3 +34,10 @@ created: 2026-09-25
 ## Related
 
 T239, T250, T212.
+
+Notes, 2026-09-25 (committee chain 3's browser check):
+- `/msf/campaigns` has 22 duplicate accessible names (e.g. "View campaign: the campaign for Demo Trainee (Default MSF,
+  closing 2026-10-09)", and Manage, View report and Withdraw likewise). `CampaignsList.razor` does not use
+  `RowNames.Distinct`, which DESIGN.md § Table system (T239) requires.
+- The assessor dashboard's Recent decisions names links "<instrument> for <trainee>", so several rows for one trainee
+  share a name (6 × "Mini-CEX (Paediatrics) for Demo Trainee" on dev). Add the date or EPA.

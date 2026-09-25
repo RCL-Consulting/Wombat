@@ -1,11 +1,12 @@
 ---
 id: T245
 title: A SpecialityAdmin's panel form offers specialities their institution has not adopted
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T245 — A SpecialityAdmin's panel form offers specialities their institution has not adopted
@@ -33,8 +34,25 @@ predicate.
 
 ## Verification
 
-- [ ] The form and create agree: a speciality with no adoption is neither offered nor accepted. Handler and bUnit tests.
+- [x] The form and create agree: a speciality with no adoption is neither offered nor accepted. Handler and bUnit tests.
 
 ## Related
 
 T194, T182.
+
+---
+
+## As built — 2026-09-25 (`9a62c92`)
+
+A speciality admin is offered, and may create, panels only for the specialities their claims name that their
+institution has adopted. It is one predicate for the offer and for create, and an Administrator's offer follows the
+chosen institution. Handler and bUnit tests.
+
+Browser on dev (scripted Chrome, master `b4fd566`):
+- **A coordinator given SpecialityAdmin** was offered only the Speciality scope and only Paediatrics, with the help
+  line.
+- **A hand-built General Medicine choice** was refused: "Your institution has adopted no curriculum in this speciality…".
+  Nothing was stored.
+- **A Paediatrics panel** (4) was created.
+- **instadmin** was offered both scopes, and only Paediatrics.
+- **Not run:** removing a speciality scope (there is no scope editor, and SQL was not allowed), and the Administrator.

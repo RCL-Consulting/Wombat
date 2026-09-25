@@ -1,11 +1,12 @@
 ---
 id: T250
 title: Committee review states print their raw enum names, and the assessor dashboard stores a user id as a subject's name
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T250 — Committee review states print their raw enum names, and the assessor dashboard stores a user id as a subject's name
@@ -35,9 +36,25 @@ Resolve the subject's display name in the assessor query, or drop the field.
 
 ## Verification
 
-- [ ] Every surface prints the label. bUnit, and a PDF text test.
-- [ ] The assessor DTO carries a name or no name field. Handler test.
+- [x] Every surface prints the label. bUnit, and a PDF text test.
+- [x] The assessor DTO carries a name or no name field. Handler test.
 
 ## Related
 
 T220, T142, T189.
+
+---
+
+## As built — 2026-09-25 (`ea38d73`)
+
+One label per committee review state (`CommitteeDecisionWording.StateLabel`, Withdrawn included), used by the schedule
+list, the review page, My reviews and the portfolio PDF. Each assessor-dashboard row carries the trainee's name, and its
+link is named by the instrument and trainee. bUnit, handler and PDF text tests.
+
+Browser on dev (scripted Chrome, master `b4fd566`):
+- **The State columns** read Scheduled, In progress, Ratified, Under appeal, Closed and Withdrawn, with no enum name
+  anywhere.
+- **The PDF** reads Ratified 11 times and Closed twice, with no "Final".
+- **The assessor dashboard** shows no user ids.
+
+**Filed from the review:** [T280] (the PDF leaves out a review under appeal; confirmed on dev: review 6 is absent).

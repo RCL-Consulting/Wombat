@@ -1,11 +1,12 @@
 ---
 id: T239
 title: My committee reviews: every row's View button has the same accessible name, and the actions column has no header
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T239 — My committee reviews: every row's View button has the same accessible name, and the actions column has no header
@@ -26,8 +27,24 @@ fix them, or list them.
 
 ## Verification
 
-- [ ] bUnit: each View has a unique accessible name, and the header has text.
+- [x] bUnit: each View has a unique accessible name, and the header has text.
 
 ## Related
 
 T212, T198, T222.
+
+---
+
+## As built — 2026-09-25 (`0097df6`)
+
+Row actions are named by what they act on, and no two on one list share a name (`RowNames.Distinct`). Every actions
+column has a hidden "Actions" header. A scan test checks what a name says.
+
+Browser on dev (scripted Chrome, master `b4fd566`):
+- **Unique, descriptive names** as trainee, assessor, coordinator, committee, instadmin and collegeadmin, across My
+  reviews, My activities, the inbox, authorisations, My MSF reports, `/committee/reviews`, data rights, panels, users,
+  trainees, activity types, the builder, entrustment decisions, audit and curriculum items.
+- **Headers:** every actions header is a hidden "Actions", and there is no empty `<th>`.
+
+**Found:** `/msf/campaigns` still has duplicate names (22), and the assessor dashboard's names repeat for one trainee.
+Both are noted on [T280].
