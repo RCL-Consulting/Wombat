@@ -1,12 +1,13 @@
 ---
 id: T131
 title: "EPA governance: the committee cannot route, schedule or chase entrustment decisions"
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: [T130]
 created: 2026-09-20
 started: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T131 — Entrustment decisions have no routing, no cadence, and no agenda
@@ -61,14 +62,14 @@ rather than a bare outcome.
 
 ## Verification
 
-- [ ] EPAs 4 and 5 route to a neonatal panel where one is configured, and to the default panel
+- [x] EPAs 4 and 5 route to a neonatal panel where one is configured, and to the default panel
       where none is — checked in the browser and by a handler test
-- [ ] A review carries an EPA agenda whose lines have their own state — checked by a query test
-- [ ] Cadence is expressed against [T130]'s period, with no second calendar introduced —
+- [x] A review carries an EPA agenda whose lines have their own state — checked by a query test
+- [x] Cadence is expressed against [T130]'s period, with no second calendar introduced —
       checked by reading the code and by grep for a competing date concept
-- [ ] An institution's committee configuration is invisible to another institution — checked by
+- [x] An institution's committee configuration is invisible to another institution — checked by
       a scope test in the [T056] family
-- [ ] Full suite green — `dotnet test` per project, no `--no-build`
+- [x] Full suite green — `dotnet test` per project, no `--no-build`
 
 ## Related
 
@@ -393,4 +394,37 @@ panel reviews only its own speciality. `MayAdministerPanelAsync` bounds speciali
 - **Found:** PAED-001 and PAED-006 were planned as Due although their STARs are active in the window. Filed as
   [T215] (P2). The deferral form never shows its "say why" message, and My reviews lists reviews by window, not by
   period: both added to [T212].
+
+## Slices 5 and 6 — shipped 2026-09-25 (`727e691`, `7d50b49`); T131 closed
+
+**Slice 5.** A review before a College committee panel is entrustment-only: it records no progression category
+(O4). A general review keeps one: three types in semester 1, and annual or pre-graduation in semester 2. A remit says
+the STARs stand. The migration `T131_EntrustmentOnlyReviews` makes `Category` nullable.
+
+**Slice 6.** `/committee/decisions-due` lists, per trainee and EPA:
+- the status: Decided, Scheduled, Deferred, Revoked, Due by year end, Partial period, As opportunity allows, Not
+  scheduled or Missed;
+- a "By EPA" summary, filters, and links to open or schedule a review.
+
+The page is scoped to the caller's institution, with trainee first (T185). An Administrator must name an institution.
+The page and the planner share `DecisionWindowRecords`.
+
+**Browser on dev (scripted Chrome, `7d50b49`):**
+- **Slice 5.** Scheduling on Neonatal CCC offers only "Entrustment-only review", and on the general panel for 2026 S2,
+  annual or pre-graduation only. Review 5 (Neonatal CCC, 2026 S2) staged PAED-004 and deferred PAED-005. Its Decision
+  card has no Category field. It recorded with quorum and ratified (Category NULL, STAR #5). The trainee sees "Entrustment
+  decisions only".
+- **Slice 6.** Decisions-due for 2026 S2: PAED-001, 002, 004 and 006 Decided (STARs #3, #4, #5, #2), PAED-005 and the
+  review-4 deferrals Deferred, 8, 9 and 13 "As opportunity allows". 2026 S1's semester EPAs read Missed. The filters and
+  the "By EPA" summary agree. CommitteeMembers are refused, and the Coordinator and InstitutionalAdmin see the page.
+  "Open review" links work.
+
+**Follow-ups:**
+- [T215] (in progress): the agenda planner counts pre-agenda STARs by the page's rule. The page already does.
+- [T213], [T212], [T216], [T194]: running as one chain.
+- The Coordinator's `/committee/reviews` list is empty (it lists only panels the caller sits on), and a ratified
+  review still shows empty Rationale inputs. Both predate T131; filed below.
+
+**Operator questions O1–O8** took their defaults (design § Open questions). The decisions they stand on are D38, D44
+and D46.
 

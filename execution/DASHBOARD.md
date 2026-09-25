@@ -4,7 +4,6 @@
 
 | lane | id | pri | title | model |
 |---|---|---|---|---|
-| in_progress | [T131](tasks/in_progress/T131-epa-governance.md) | P2 | EPA governance: the committee cannot route, schedule or chase entrustm |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
@@ -51,8 +50,9 @@
 | queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
 | queued | [T216](tasks/queued/T216-a-user-who-is-both-trainee-and-coordinator-can-schedule-and-preview-a-peer-s-committee-review.md) | P3 | A user who is both Trainee and Coordinator can schedule and preview a  |  |
 | queued | [T217](tasks/queued/T217-the-msf-campaign-page-does-not-change-after-the-campaign-opens-it-still-offers-open-and-shows-no-invitees.md) | P3 | The MSF campaign page does not change after the campaign opens: it sti |  |
+| queued | [T218](tasks/queued/T218-a-coordinator-s-committee-review-list-is-empty-and-a-ratified-review-still-shows-empty-decision-inputs.md) | P3 | A Coordinator's committee review list is empty, and a ratified review  |  |
 
-Done: 157 task(s).
+Done: 158 task(s).
 
 ## From STATE.md
 
@@ -68,9 +68,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
+7d50b49 feat(committee): a decisions-due page shows, per trainee and EPA, what is decided, scheduled, deferred, missed or not scheduled this period (T131 slice 6)
+727e691 feat(committee): a review before a College committee decides entrustment only, with no progression category; a remit says the STARs stand (T131 slice 5)
+00dbf95 docs(execution): task files filed today carry their real headings (a filing script had kept the template's placeholder)
 5045041 docs(execution): close T207, T163, T214, T181, T208, T185 and T195 (browser/SQL-verified where reachable; T195's browser check moves to T211); file T217
 150417e docs(execution): CUSTOMIZATION.md's MSF anonymity note follows T207 and T205; file T216
-fbd1525 fix(security): the last principal-less queries take the caller, dashboards conjoin the institution, the profile pick is one rule, and a Trainee with an admin role is a trainee first (T185)
-0cde061 fix(audit): an over-long user agent or display name is truncated, not the reason an audit row is refused (T208)
-705bf2c fix(web): the sign-in pages load without a console error; the Blazor initializers endpoint answers signed out (T181)
 ```
