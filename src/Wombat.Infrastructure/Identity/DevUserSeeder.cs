@@ -9,7 +9,8 @@ namespace Wombat.Infrastructure.Identity;
 
 /// <summary>
 /// Seeds dev-only users so the GUI review (and other local browser verification)
-/// can sign in as a Trainee, either of two CommitteeMembers, an Assessor or a Coordinator without walking the full
+/// can sign in as a Trainee, either of two CommitteeMembers, an Assessor, a Coordinator, an InstitutionalAdmin or a
+/// CollegeAdmin without walking the full
 /// invitation flow each time. Only invoked from Program.cs when
 /// <c>IHostEnvironment.IsDevelopment()</c> is true. Production deployments
 /// must never run this — the seed credentials are hardcoded by design.
@@ -50,6 +51,11 @@ public sealed class DevUserSeeder
     // dev with a seeded account.
     private const string InstitutionalAdminEmail = "instadmin@wombat.local";
     private const string InstitutionalAdminPassword = "ChangeThisInstAdmin123!";
+
+    // A CollegeAdmin authors the national catalogue: sub-specialities, national EPAs and curricula (T093). Without one,
+    // the College's side of the curriculum and sub-speciality pages cannot be exercised on dev with a seeded account.
+    private const string CollegeAdminEmail = "collegeadmin@wombat.local";
+    private const string CollegeAdminPassword = "ChangeThisCollegeAdmin123!";
 
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
@@ -112,6 +118,34 @@ public sealed class DevUserSeeder
         await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId, scopes, cancellationToken);
         await EnsureStaffUserAsync(InstitutionalAdminEmail, InstitutionalAdminPassword, "Institutional Admin", WombatRoles.InstitutionalAdmin, institutionId, scopes, cancellationToken);
+        await EnsureCollegeAdminAsync(cancellationToken);
+    }
+
+    private async Task EnsureCollegeAdminAsync(CancellationToken cancellationToken)
+    {
+        var collegeId = await _dbContext.Colleges
+            .Where(college => college.ShortCode == "CPSA")
+            .Select(college => (int?)college.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (collegeId is null || await _userManager.FindByEmailAsync(CollegeAdminEmail) is not null)
+        {
+            return;
+        }
+
+        // Scoped to its College, not to an institution, as an invited CollegeAdmin is.
+        var user = new WombatIdentityUser
+        {
+            UserName = CollegeAdminEmail,
+            Email = CollegeAdminEmail,
+            EmailConfirmed = true,
+            FirstName = "Demo",
+            LastName = "College Admin",
+            CollegeId = collegeId
+        };
+
+        await CreateUserAsync(user, CollegeAdminPassword, WombatRoles.CollegeAdmin);
+        _logger.LogInformation("Seeded dev {Role} user {Email}.", WombatRoles.CollegeAdmin, CollegeAdminEmail);
     }
 
     private async Task EnsureTraineeAsync(
