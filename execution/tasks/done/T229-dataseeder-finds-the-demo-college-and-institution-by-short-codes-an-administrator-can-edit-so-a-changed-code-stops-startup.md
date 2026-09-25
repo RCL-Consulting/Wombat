@@ -1,11 +1,12 @@
 ---
 id: T229
 title: DataSeeder finds the demo College and institution by short codes an administrator can edit, so a changed code stops startup
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T229 — DataSeeder finds the demo College and institution by short codes an administrator can edit, so a changed code stops startup
@@ -37,9 +38,30 @@ second set, and never fail startup.
 
 ## Verification
 
-- [ ] Changing each short code, then booting, creates nothing and logs at most a warning. Postgres test per row.
-- [ ] A fresh database still seeds the demo data once.
+- [x] Changing each short code, then booting, creates nothing and logs at most a warning. Postgres test per row.
+- [x] A fresh database still seeds the demo data once.
 
 ## Related
 
 T221, T187, T174.
+
+---
+
+## As built — 2026-09-25 (`9fcfa55`)
+
+`DataSeeder` finds its demo rows by a `SeedKey`, as T221 does for the catalogue. That covers the institution, College,
+speciality, sub-speciality, O-R scale, EPA and curriculum. The migration `T229_DemoSeedKeys` adds `Institutions.SeedKey`
+and stamps the demo rows of seven tables.
+- **Missing rows.** Once the demo data exists, a missing row is warned about and skipped; nothing is created and
+  startup never fails.
+- **Collisions.** The collision warning names every seed key to stamp, in both seeders.
+- **The dev seeder** finds the paediatric curriculum by its key prefix.
+
+Postgres tests change each short code; a fresh database seeds the demo data once.
+
+Browser on dev (scripted Chrome, master `dea2997`; `pg_dump` first, at `recovery/pre-g4-migration.dump`):
+- **First boot.** The migration applied with no seed-key warnings, and each of the seven tables holds one demo key.
+- **The rename.** instadmin changed DEMO to DEMO-2027, and SQL changed DEMO-C to DEMO-C2. After a restart: no warnings,
+  no inserts, every row count unchanged, and the trainee's dashboard loads. Both codes were restored.
+
+**Filed from the review:** [T253] (P2): seeds bind their scales by name.

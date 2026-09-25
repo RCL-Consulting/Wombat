@@ -1,11 +1,12 @@
 ---
 id: T232
 title: Deleting a scale that is a sub-speciality's default fails with a raw database error instead of a refusal
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T232 — Deleting a scale that is a sub-speciality's default fails with a raw database error instead of a refusal
@@ -31,9 +32,22 @@ sub-speciality, as it does for a pinned curriculum item.
 
 ## Verification
 
-- [ ] Deleting a scale that is a sub-speciality's default is refused with a message naming it. Handler test (the audit
+- [x] Deleting a scale that is a sub-speciality's default is refused with a message naming it. Handler test (the audit
       trap: nothing written).
 
 ## Related
 
 T145, T187, T174.
+
+---
+
+## As built — 2026-09-25 (`f319f43`)
+
+`EntrustmentScaleReferences` includes a sub-speciality's default scale. The delete is refused before any write, naming
+the sub-speciality and saying to change its default first. Handler tests (the audit trap) and a Postgres test showing
+the refusal comes before the RESTRICT foreign key.
+
+**Browser:** not run. The scale list's Delete is Administrator-only, and no session may use the admin credential.
+
+**Filed from the review:** [T253] (P2): a delete ignores id bindings. [T254]: the delete race, and the sub-speciality
+saves' wording.
