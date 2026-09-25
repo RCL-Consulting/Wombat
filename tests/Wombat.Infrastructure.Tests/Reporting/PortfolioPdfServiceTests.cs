@@ -126,13 +126,15 @@ public sealed class PortfolioPdfServiceTests
 
     /// <summary>
     /// T225: the feedback section names each respondent group by its label, as the report page does, never by the key it
-    /// stores. A peer doctor's line read "PeerDoctor: 1 responses", and an allied health professional's "Ahp: …".
+    /// stores. A peer doctor's line read "PeerDoctor: 1 responses", and an allied health professional's "Ahp: …". Two of
+    /// each, so both groups clear the threshold of two and are printed (T249).
     /// </summary>
     [Fact]
     public async Task TheFeedbackSection_NamesEachRespondentGroupByItsLabel()
     {
         await using var db = SeededDb();
-        SeedReleasedCampaign(db, categories: [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Ahp]);
+        SeedReleasedCampaign(db, categories:
+            [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Ahp, MsfRespondentCategory.Ahp]);
 
         var service = new PortfolioPdfService(db, new MsfAggregationService());
         var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
@@ -142,6 +144,105 @@ public sealed class PortfolioPdfServiceTests
             .And.Contain("Allied health professional:")
             .And.NotContain("PeerDoctor")
             .And.NotContain("Ahp:");
+    }
+
+    /// <summary>
+    /// T249: a group below the category threshold prints nothing, neither its label nor its count, as the trainee's web
+    /// copy shows nothing of it. It printed "Nurse: 1 responses" above "Below minimum threshold", an exact count under a
+    /// group's name that the threshold exists to hide. One line, once however many groups were left out, says why the
+    /// groups printed add up to less than the total, and names none of them.
+    /// The category threshold (3) differs from the campaign's minimum (2), so the line names the one it is about; two groups
+    /// are printed, so a line printed once per printed group shows; and the nurses are two, so a hidden group's count is
+    /// hidden when it is more than one (T249 review).
+    /// </summary>
+    [Fact]
+    public async Task TheFeedbackSection_PrintsNothingOfASuppressedGroup_AndSaysOnceThatGroupsBelowTheThresholdAreNotShown()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(
+            db,
+            categories:
+            [
+                MsfRespondentCategory.Consultant, MsfRespondentCategory.Consultant, MsfRespondentCategory.Consultant,
+                MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.PeerDoctor,
+                MsfRespondentCategory.Nurse, MsfRespondentCategory.Nurse,
+                MsfRespondentCategory.Ahp
+            ],
+            minimumCategoryResponses: 3);
+
+        var lines = await FeedbackSectionLinesAsync(db);
+
+        // Each span of a line is its own line of the text layer: "Consultant:", then "3 responses".
+        lines.Should().ContainInConsecutiveOrder("Total responses:", "9")
+            .And.ContainInConsecutiveOrder("Consultant:", "3 responses")
+            .And.ContainInConsecutiveOrder("Peer doctor:", "3 responses");
+        lines.Where(line => line.EndsWith(" response", StringComparison.Ordinal) || line.EndsWith(" responses", StringComparison.Ordinal))
+            .Should().Equal(new[] { "3 responses", "3 responses" }, "the printed groups' counts are the only group counts printed");
+        string.Join("\n", lines).Should().NotContain("Nurse")
+            .And.NotContain("Allied health professional")
+            .And.NotContain("Below minimum threshold")
+            .And.NotContain("2 responses")
+            .And.NotContain("1 response");
+        lines.Where(line => line.Contains("are not shown", StringComparison.Ordinal)).Should().Equal(
+            new[] { SuppressedGroupsLine(3) },
+            "two groups were left out and two were printed, and the line that says so is printed once, naming the category threshold");
+    }
+
+    /// <summary>
+    /// T249: a count reads right at one. A campaign whose category threshold is one prints a one-person group, and its
+    /// lines read "1 response" and "(1 rating)", never "1 responses" or "1 ratings". Nothing is below a threshold of one,
+    /// so no line says a group was left out. Exported under a culture whose decimal separator is a comma: the average
+    /// prints "4.0" wherever the export runs, as the section's other numbers do, so one portfolio is one set of bytes on
+    /// any host (T078) (T249 review).
+    /// </summary>
+    [Fact]
+    public async Task TheFeedbackSection_CountsOneResponseAndOneRating_InTheSingular()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(
+            db,
+            categories: [MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse, MsfRespondentCategory.Nurse],
+            minimumCategoryResponses: 1);
+
+        IReadOnlyList<string> lines;
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+            lines = await FeedbackSectionLinesAsync(db);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+        }
+
+        lines.Should().ContainInConsecutiveOrder("Consultant:", "1 response", "Professional performance:", "Avg 4.0", " (1 rating)")
+            .And.ContainInConsecutiveOrder("Nurse:", "2 responses", "Professional performance:", "Avg 4.0", " (2 ratings)")
+            .And.NotContain("1 responses")
+            .And.NotContain(" (1 ratings)");
+        string.Join("\n", lines).Should().NotContain("are not shown");
+    }
+
+    private static string SuppressedGroupsLine(int minimumCategoryResponses) =>
+        $"Respondent groups with fewer than {minimumCategoryResponses} responses are not shown, to protect the respondents' anonymity.";
+
+    /// <summary>
+    /// The lines of the exported portfolio's feedback section, from its heading to the end of the document. The text layer
+    /// ends a line at each span, so "Consultant: 3 responses" reads as "Consultant: " and then "3 responses"; each line's
+    /// trailing space is dropped.
+    /// </summary>
+    private static async Task<IReadOnlyList<string>> FeedbackSectionLinesAsync(ApplicationDbContext db)
+    {
+        var service = new PortfolioPdfService(db, new MsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+        var lines = PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes)
+            .SelectMany(page => page.Split('\n'))
+            .Select(line => line.TrimEnd())
+            .ToList();
+
+        var start = lines.IndexOf("Multi-Source Feedback");
+        start.Should().BeGreaterThanOrEqualTo(0, "the export prints the feedback section");
+        return lines[start..];
     }
 
     /// <summary>
@@ -560,7 +661,8 @@ public sealed class PortfolioPdfServiceTests
         ApplicationDbContext db,
         MsfTemplateKind kind = MsfTemplateKind.Msf,
         int[]? coveredEpaIds = null,
-        MsfRespondentCategory[]? categories = null)
+        MsfRespondentCategory[]? categories = null,
+        int minimumCategoryResponses = 2)
     {
         var learnerFeedback = kind == MsfTemplateKind.LearnerFeedback;
         var template = new MsfTemplate
@@ -578,7 +680,7 @@ public sealed class PortfolioPdfServiceTests
             OpensOn = new DateOnly(2029, 1, 1),
             ClosesOn = new DateOnly(2029, 6, 30),
             MinimumResponses = 2,
-            MinimumCategoryResponses = 2,
+            MinimumCategoryResponses = minimumCategoryResponses,
             MinimumRespondentCategories = learnerFeedback ? 1 : 2,
             State = MsfCampaignState.Released,
             ReleasedOn = new DateTime(2029, 7, 1, 0, 0, 0, DateTimeKind.Utc),

@@ -953,6 +953,24 @@ and the report print too. Its badge is `MsfCampaignText.StateBadge`:
 | Released | `badge-completed` |
 | Withdrawn | `badge-declined` |
 
+**The trainee's copies of a released report** (`/msf/my-reports` and the portfolio PDF's feedback section,
+`MsfSectionComponent`) print nothing of a respondent group below the category threshold: not its label, its answers or
+its own count (T249). The PDF used to print "Nurse: 1 responses" above "Below minimum threshold", an exact count under a
+group's name, which is what the threshold hides. When the PDF leaves any group out, it prints one line, however many
+were left out: "Respondent groups with fewer than N responses are not shown, to protect the respondents' anonymity." N
+is the campaign's category threshold. The line explains why the printed groups add up to less than the total, and it
+names none of them. A count of one is singular: "1 response", "(1 rating)", and every number prints the same on any
+host (invariant culture, so an export is the same bytes, T078).
+
+The two copies differ in one respect. The web copy prints the total (in its list) and no group's count. The PDF prints
+the total and each printed group's count ("Consultant: 3 responses"), and a required rating's "(3 ratings)" is the same
+figure. So the total less the printed counts is the hidden groups' count together, and with one hidden group it is that
+group's own; if the template allows only one other group, it also says which. That says at most who took part, never
+what anyone answered, and it is accepted, as the campaign page accepts it for the coordinator (T217 review above) (T249
+review). Dropping the group and rating counts from the PDF would match the web copy exactly; that is the operator's
+call, not made here, since T249 asked for the counts to be kept and pluralised. The coordinator's report page is not
+changed: it still shows a suppressed group's card, without its answers.
+
 **Committee agenda** (T131 slice 4). The committee review page's Agenda card is full width, directly above the
 "Pending entrustment decisions" card, so a chair reads what is due and stages it in one place. A formative review has
 no Agenda card. The card holds:

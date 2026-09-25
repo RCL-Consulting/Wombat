@@ -67,7 +67,7 @@ internal static class MsfSectionComponent
             column.Item().Text(text =>
             {
                 text.Span("Total responses: ").FontSize(9);
-                text.Span(report.TotalResponses.ToString()).FontSize(9).Bold();
+                text.Span(report.TotalResponses.ToString(System.Globalization.CultureInfo.InvariantCulture)).FontSize(9).Bold();
             });
 
             // T164: EPA 15's "at least two teaching contexts" is counted here, and reported rather than judged. The count
@@ -100,13 +100,38 @@ internal static class MsfSectionComponent
                 column.Item().PaddingLeft(8).Text(report.CoordinatorNarrative).FontSize(9);
             }
 
-            foreach (var category in report.Categories)
+            // T249: a group below the category threshold is left out, label and count, as the trainee's web copy
+            // (/msf/my-reports) leaves it out: an exact count under a group's name is what the threshold hides. One line,
+            // printed once, says why the groups printed add up to less than the total, and names none it left out. Unlike
+            // the web copy, the PDF prints each printed group's count, so the total less those counts is still the hidden
+            // groups' count together, and one hidden group's own. That says at most who took part, never what anyone
+            // answered, and it is accepted (DESIGN.md, "The trainee's copies of a released report"; T249 review).
+            foreach (var category in report.Categories.Where(category => !category.IsSuppressed))
             {
                 column.Item().Element(e => ComposeCategory(e, category));
+            }
+
+            if (report.Categories.Any(category => category.IsSuppressed))
+            {
+                column.Item().PaddingTop(4).Text(SuppressedGroupsLine(report.MinimumCategoryResponses))
+                    .FontSize(8).Italic().FontColor(Colors.Grey.Darken1);
             }
         });
     }
 
+    /// <summary>
+    /// Why a report's groups add up to less than its total: some were below the category threshold. Says how many a group
+    /// needed, never which group or how many it had (T249).
+    /// </summary>
+    private static string SuppressedGroupsLine(int minimumCategoryResponses)
+        => $"Respondent groups with fewer than {Counted(minimumCategoryResponses, "response", "responses")} are not " +
+           "shown, to protect the respondents' anonymity.";
+
+    /// <summary>A count with its noun, singular at one: "1 response", "2 responses" (T249).</summary>
+    private static string Counted(int count, string one, string many)
+        => $"{count.ToString(System.Globalization.CultureInfo.InvariantCulture)} {(count == 1 ? one : many)}";
+
+    /// <summary>A group that cleared the category threshold: its label, its count and its answers.</summary>
     private static void ComposeCategory(IContainer container, MsfCategoryAggregateDto category)
     {
         container.PaddingTop(6).Column(column =>
@@ -117,16 +142,8 @@ internal static class MsfSectionComponent
             {
                 // By the group's label, never its key (T225): "Peer doctor", not "PeerDoctor".
                 text.Span($"{MsfRespondentCategories.Describe(category.Category)}: ").FontSize(9).Bold();
-                text.Span($"{category.ResponseCount} responses").FontSize(9);
+                text.Span(Counted(category.ResponseCount, "response", "responses")).FontSize(9);
             });
-
-            if (category.IsSuppressed)
-            {
-                column.Item().PaddingLeft(8).Text(
-                    "Below minimum threshold — data suppressed to protect anonymity.")
-                    .FontSize(8).Italic().FontColor(Colors.Grey.Darken1);
-                return;
-            }
 
             foreach (var question in category.Questions)
             {
@@ -146,8 +163,10 @@ internal static class MsfSectionComponent
                 column.Item().Text(text =>
                 {
                     text.Span($"{question.Prompt}: ").FontSize(8);
-                    text.Span($"Avg {question.Scale.Average:F1}").FontSize(8).Bold();
-                    text.Span($" ({question.Scale.ResponseCount} ratings)").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    // Invariant, as the section's other numbers: "4.0" on any host, so an export is the same bytes (T078).
+                    text.Span($"Avg {question.Scale.Average.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}")
+                        .FontSize(8).Bold();
+                    text.Span($" ({Counted(question.Scale.ResponseCount, "rating", "ratings")})").FontSize(8).FontColor(Colors.Grey.Darken1);
                 });
             }
             else if (question.Comments.Count > 0)
