@@ -572,6 +572,45 @@ says which EPAs another panel decides ("schedule them separately"), and says whi
 Only the opening sentences sit in a `role="status"` region (`#agenda-preview-summary`), so a screen reader hears what a
 new choice changed, not every line again.
 
+**Entrustment-only reviews** (T131 slice 5). A review before a panel sitting as a College committee (the neonatal CCC)
+decides entrustment only: its decision is the STARs staged at it, and it records no progression category. A general
+panel's semester-1 sitting may be one too. Every page says so in the same words, built in C#
+(`CommitteeDecisionWording`, which the portfolio PDF shares):
+
+- **The type** reads "Annual progression review", "Pre-graduation review" or "Entrustment-only review" on the review
+  card, and "Annual progression", "Pre-graduation" or "Entrustment only" in a list column.
+- **The outcome** of a recorded decision is its category in words ("Satisfactory with Observations"), never the enum's
+  name. An entrustment-only review's reads "Entrustment decisions only": as the decision's heading on the review page,
+  in the Decision column of the schedule and of the trainee's reviews, as the heading of the trainee's current decision,
+  and on the portfolio PDF's Decision line. It never reads "Pending" once the decision is recorded.
+- **The Decision card** of an entrustment-only review has no Category field. In its place, above the form, a `.muted`
+  paragraph (`#entrustment-only-note`) says the decision is the entrustment decisions staged below and records no
+  progression category; once the review is ratified it says instead that the decision is the entrustment decisions the
+  review issued, each named on its agenda. Rationale, conditions and who was present are asked as on any review. O8's
+  sitting-order warning is not shown: it is about a progression decision, and this review takes none. While nothing is
+  on its agenda, Record decision is shown disabled with the reason (the T107 pattern, `#record-reason`): its decision is
+  what the agenda holds, and staging a decision puts the EPA there.
+- **Every category select opens on "Select a category…"**, the first-time decision's as well as a remitted appeal's
+  replacement, so the page never shows a category the chair did not choose. Leaving it there on a progression review is
+  refused by the handler, whose reason the page shows ("… records a progression category. Choose one.").
+- **A remitted appeal** on an entrustment-only review has no Replacement category either. A `.muted` line
+  (`#remit-entrustment-only-note`) says why, and says what the remit does not do: the replacement changes no entrustment
+  decision, the STARs the review issued stand, and one is changed by revoking it and re-deciding the EPA at a new review.
+- **The trainee's reviews.** Under the heading of an entrustment-only review's decision, a `.muted` line says "This
+  review decided entrustment only, so it records no progression outcome."; adds, when an appeal remitted the decision,
+  that the decision is the appeal body's and the review's STARs stand unless one is revoked; and adds "What it decided on
+  each EPA is on its agenda below." when the agenda is shown. The detail names the type.
+- **Scheduling.** The Review type select offers only the types the handler accepts (`CommitteeReviewTypes.Allowed`):
+  before a College committee, only "Entrustment-only review", with help text naming the committee; before a general
+  panel, all three in semester 1 and the two progression types in semester 2. The semester-1 help text says when to
+  choose entrustment-only (the sitting decides STARs, not progression) and that the semester-2 sitting always decides
+  progression; it does not say semester 1 never does. Choosing a panel takes its default type; choosing a period keeps
+  the chosen type while the period allows it, and takes the default otherwise. Where the panel decides no EPA on the
+  trainee's curriculum, the agenda preview says so first, since an entrustment-only review there is refused.
+- **The panel's College committee** ("Decides for" on the panel form) cannot change while a review before the panel is
+  scheduled, in progress or awaiting ratification: what the review decides was fixed from it. The select's help text
+  says so, and a refused save names the open review in the card's `Alert`.
+
 ## Status dots
 
 ```css

@@ -18,6 +18,7 @@ public sealed class CommitteeReviewConfiguration : IEntityTypeConfiguration<Comm
         });
         builder.Property(entity => entity.TraineeUserId).HasMaxLength(450).IsRequired();
         builder.Ignore(entity => entity.Period);
+        builder.Ignore(entity => entity.DecidesProgression);
         builder.Property(entity => entity.StartedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.RatifiedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.ReviewPeriodFrom).HasColumnType("date");

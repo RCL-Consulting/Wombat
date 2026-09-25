@@ -64,10 +64,15 @@
         <FormField Label="Scheduled on" InputId="review-scheduled" Required="true">
           <InputDate id="review-scheduled" class="form-control" @bind-Value="_model.ScheduledOn" />
         </FormField>
-        <FormField Label="Review type" InputId="review-type" Required="true">
-          <InputSelect id="review-type" class="form-select" @bind-Value="_model.ReviewType">
-            <option value="@CommitteeReviewType.AnnualProgression">Annual progression review</option>
-            <option value="@CommitteeReviewType.PreGraduation">Pre-graduation review</option>
+        @* T131 slice 5. The types the handler accepts for this panel and period (CommitteeReviewTypes.Allowed), and no
+           other: entrustment-only before a College committee, and never at a general panel's semester-2 sitting. *@
+        <FormField Label="Review type" InputId="review-type" Required="true" HelpText="@ReviewTypeHelpText">
+          <InputSelect id="review-type" class="form-select" @bind-Value="_model.ReviewType"
+                       aria-describedby="@(ReviewTypeHelpText is null ? null : Wombat.Web.Components.Shared.FormField.HelpTextId("review-type"))">
+            @foreach (var type in AllowedTypes)
+            {
+              <option value="@type">@CommitteeDecisionWording.ReviewTypeLabel(type)</option>
+            }
           </InputSelect>
         </FormField>
         <FormField Label="Formative only" InputId="review-formative">
@@ -104,10 +109,10 @@
         <td>@item.TraineeName</td>
         <td>@item.PanelName</td>
         <td>@item.PeriodLabel <span class="muted">· @item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</span></td>
-        <td>@ReviewTypeLabel(item.ReviewType)</td>
+        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
         <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.State</td>
-        <td>@(item.IsFormative ? "—" : item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
+        <td>@(item.IsFormative ? "—" : CommitteeDecisionWording.OutcomeLabel(item))</td>
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")">Open</a>
         </td>
@@ -178,6 +183,7 @@
   {
     _trainees.Clear();
     _model.TraineeUserId = string.Empty;
+    ResetReviewType();
     ClearPreview();
 
     if (_model.PanelId is not int panelId)
@@ -224,6 +230,7 @@
       ApplyPeriod(period);
     }
 
+    KeepAllowedReviewType();
     await LoadPreviewAsync();
   }
 
@@ -327,11 +334,41 @@
       ? "This panel has no trainees you can schedule a review for."
       : null;
 
-  private static string ReviewTypeLabel(CommitteeReviewType type) => type switch
+  private DecisionPanelSummaryDto? SelectedPanel => _panels.FirstOrDefault(panel => panel.Id == _model.PanelId);
+
+  /// <summary>
+  /// The review types the scheduling handler accepts for the chosen panel and period, by its own rule
+  /// (<see cref="CommitteeReviewTypes.Allowed" />, T131 slice 5), the default first.
+  /// </summary>
+  private IReadOnlyList<CommitteeReviewType> AllowedTypes
+    => CommitteeReviewTypes.Allowed(SelectedPanel?.DecisionBodyKey is not null, SelectedPeriod?.Semester ?? 1);
+
+  private string? ReviewTypeHelpText => SelectedPanel switch
   {
-    CommitteeReviewType.PreGraduation => "Pre-graduation",
-    _ => "Annual progression"
+    { DecisionBodyKey: not null } panel =>
+      $"{panel.Name} sits as the {panel.DecisionBodyName ?? panel.DecisionBodyKey}, which decides entrustment only: a " +
+      "review before it records no progression category.",
+    // A semester-1 sitting may decide progression (the default) or entrustment only; the help text claims neither is the
+    // rule, only what each type records.
+    not null when SelectedPeriod?.Semester == 1 =>
+      "Choose Entrustment-only review when this sitting decides STARs and not the trainee's progression: it records no " +
+      "progression category. The semester-2 sitting always decides progression.",
+    not null => "The semester-2 sitting decides the trainee's progression for the year.",
+    _ => null
   };
+
+  /// <summary>A new panel's review type is its default: entrustment-only before a College committee.</summary>
+  private void ResetReviewType()
+    => _model.ReviewType = AllowedTypes[0];
+
+  /// <summary>Keeps the chosen type when the period still allows it, else takes the default.</summary>
+  private void KeepAllowedReviewType()
+  {
+    if (!AllowedTypes.Contains(_model.ReviewType))
+    {
+      _model.ReviewType = AllowedTypes[0];
+    }
+  }
 
   private async Task CreateAsync()
   {

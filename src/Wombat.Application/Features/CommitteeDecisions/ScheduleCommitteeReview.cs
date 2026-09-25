@@ -30,6 +30,15 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// The check runs before the first mutation and names the review in the way. The database's partial unique index holds
 /// the same panel against a race; two different panels of one seat scheduled at the same instant are not held by it.
 /// </para>
+/// <para>
+/// <b>What the review decides</b> (T131 slice 5): <paramref name="ReviewType" /> must be one
+/// <see cref="CommitteeReviewTypes.Allowed" /> gives for the panel and the semester. Before a panel sitting as a College
+/// committee that is entrustment-only and nothing else; a general panel's semester-2 sitting decides progression. Null
+/// asks for the panel's default (<see cref="CommitteeReviewTypes.DefaultFor" />): entrustment-only before a College
+/// committee, annual progression before a general panel. The scheduling form offers exactly the allowed types. A binding
+/// entrustment-only review is refused before a panel that decides no EPA on the trainee's curriculum, which is nothing it
+/// could put on its agenda (<see cref="AgendaPlan.PanelDecidesAnything" />).
+/// </para>
 /// </remarks>
 public sealed record ScheduleCommitteeReviewCommand(
     string TraineeUserId,
@@ -41,7 +50,7 @@ public sealed record ScheduleCommitteeReviewCommand(
     DateOnly ScheduledOn,
     ClaimsPrincipal Principal,
     bool IsFormative = false,
-    CommitteeReviewType ReviewType = CommitteeReviewType.AnnualProgression) : IRequest<CommitteeReviewListItemDto>;
+    CommitteeReviewType? ReviewType = null) : IRequest<CommitteeReviewListItemDto>;
 
 public sealed class ScheduleCommitteeReviewCommandValidator : AbstractValidator<ScheduleCommitteeReviewCommand>
 {
@@ -53,6 +62,7 @@ public sealed class ScheduleCommitteeReviewCommandValidator : AbstractValidator<
         RuleFor(command => command.Semester).InclusiveBetween(1, 2).WithMessage(ReviewPeriodRules.SemesterMessage);
         RuleFor(command => command.Principal).NotNull();
         RuleFor(command => command.ReviewPeriodTo).GreaterThanOrEqualTo(command => command.ReviewPeriodFrom);
+        RuleFor(command => command.ReviewType).IsInEnum().WithMessage(CommitteeReviewTypes.UnknownType);
     }
 }
 
@@ -95,6 +105,17 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
 
         var period = new AcademicPeriod(request.AcademicYear, request.Semester);
 
+        // T131 slice 5: what the review decides. Before a College committee, entrustment only; a general panel's
+        // semester-2 sitting decides progression. Judged from the panel as it is now; the review keeps its type after.
+        var bodyName = panel.DecisionBodyKey is { } bodyKey
+            ? await DecisionPanelBodies.NameOfAsync(_dbContext, bodyKey, cancellationToken) ?? bodyKey
+            : null;
+        var reviewType = request.ReviewType ?? CommitteeReviewTypes.DefaultFor(bodyName is not null, period.Semester);
+        if (CommitteeReviewTypes.Refusal(reviewType, bodyName, period.Semester) is { } typeRefusal)
+        {
+            throw new InvalidOperationException(typeRefusal);
+        }
+
         // One open binding review per trainee, period and seat (see the remarks): named, so the scheduler can open it
         // instead. The index holds the same panel against a race.
         IReadOnlyList<CommitteeAgendaLine> agenda = [];
@@ -106,9 +127,18 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
                 throw new InvalidOperationException(AlreadyScheduled(open, period));
             }
 
-            agenda = (await AgendaPlanner.PlanAsync(
-                    _dbContext, traineeUserId, panel, period, ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken))
-                .Lines;
+            var plan = await AgendaPlanner.PlanAsync(
+                _dbContext, traineeUserId, panel, period, ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
+
+            // T131 slice 5: an entrustment-only review decides what its agenda holds, and cannot be recorded with nothing on
+            // it (CommitteeReview.EmptyAgendaRefusal). Before a panel that decides no EPA on the trainee's curriculum, due or
+            // not, nothing could ever be put there, and the review could never be recorded.
+            if (reviewType == CommitteeReviewType.EntrustmentOnly && !plan.PanelDecidesAnything)
+            {
+                throw new InvalidOperationException(NothingToDecide(panel.Name));
+            }
+
+            agenda = plan.Lines;
         }
 
         // The first mutation.
@@ -122,7 +152,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             ReviewPeriodTo = request.ReviewPeriodTo,
             ScheduledOn = request.ScheduledOn,
             IsFormative = request.IsFormative,
-            ReviewType = request.ReviewType
+            ReviewType = reviewType
         };
         review.AddCadenceLines(agenda);
 
@@ -193,6 +223,14 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
     }
 
     /// <summary>The refusal for a second open binding review of one trainee, in one seat, for one period.</summary>
+    /// <summary>
+    /// The refusal for an entrustment-only review before a panel that decides no EPA on the trainee's curriculum (T131
+    /// slice 5). The scheduling preview says the same first (<see cref="CommitteeAgendaPreviewDto.PanelDecidesAnything" />).
+    /// </summary>
+    internal static string NothingToDecide(string panelName)
+        => $"{panelName} decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have " +
+           "nothing to decide.";
+
     internal static string AlreadyScheduled(OpenReview open, AcademicPeriod period)
         => $"Review #{open.Id} already puts this trainee before {open.PanelName} for {period} " +
            $"({StateLabel(open.State)}, scheduled {open.ScheduledOn:yyyy-MM-dd}). A trainee has one binding review for " +

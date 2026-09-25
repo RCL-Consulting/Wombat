@@ -113,7 +113,7 @@
         <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
         <div><dt>Sits for</dt><dd>@_review.PeriodLabel</dd></div>
         <div><dt>Evidence window</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
-        <div><dt>Type</dt><dd>@(_review.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation review" : "Annual progression review")</dd></div>
+        <div><dt>Type</dt><dd id="review-type">@CommitteeDecisionWording.ReviewTypeLabel(_review.ReviewType)</dd></div>
         <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
         <div><dt>State</dt><dd>@_review.State</dd></div>
       </dl>
@@ -178,18 +178,31 @@
             </div>
           </Alert>
         }
+        @* T131 slice 5. An entrustment-only review's decision is the STARs staged at it: it asks for no progression
+           category, and says why where the category would be. The handler refuses a category on it, and requires one on
+           any other review. Once ratified, the staged decisions are STARs its agenda names, and the note says so. *@
+        @if (!_review.DecidesProgression)
+        {
+          <p id="entrustment-only-note" class="muted">@CommitteeDecisionWording.EntrustmentOnlyPanelNote(_review.State)</p>
+        }
         <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
           <DataAnnotationsValidator />
           <ValidationSummary class="validation-summary-errors" />
           <div class="form-grid">
-            <FormField Label="Category" InputId="decision-category" Required="true">
-              <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
-                @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                {
-                  <option value="@category">@category</option>
-                }
-              </InputSelect>
-            </FormField>
+            @if (_review.DecidesProgression)
+            {
+              @* Opens on no category, as the remit's select does (DESIGN.md § Entrustment-only reviews): a chair who
+                 leaves it alone records nothing, and the handler says a progression review needs one. *@
+              <FormField Label="Category" InputId="decision-category" Required="true">
+                <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
+                  <option value="">Select a category…</option>
+                  @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                  {
+                    <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                  }
+                </InputSelect>
+              </FormField>
+            }
             <FormField Label="Rationale" InputId="decision-rationale" Required="true">
               <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
             </FormField>
@@ -203,7 +216,10 @@
               @PresentFieldset("decision-present", _decision.PresentUserIds, lockedUserId: null)
             }
           </div>
-          @if (_review.State == CommitteeReviewState.InProgress && CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
+          @* O8's warning is about a progression decision taken before another panel's entrustment decisions: an
+             entrustment-only review takes none, so it is not warned. *@
+          @if (_review.State == CommitteeReviewState.InProgress && _review.DecidesProgression &&
+               CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
           {
             <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
           }
@@ -248,7 +264,7 @@
               @* T165. Each decision says who took it: a decision an appeal remitted was taken by whoever sat for the
                  appeal, not by the review's first sitting. *@
               <article class="detail-card detail-card--compact" id="decision-@decision.Id">
-                <h4>@decision.Category</h4>
+                <h4>@CommitteeDecisionWording.OutcomeLabel(decision.Category)</h4>
                 @if (replaced.Contains(decision.Id))
                 {
                   <p class="muted">Replaced on appeal by the decision above.</p>
@@ -645,14 +661,24 @@
             </FormField>
             @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
             {
-              <FormField Label="Replacement category" InputId="appeal-category" Required="true">
-                <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
-                  @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                  {
-                    <option value="@category">@category</option>
-                  }
-                </InputSelect>
-              </FormField>
+              @* T131 slice 5: a remitted entrustment-only review's replacement records no category either. *@
+              if (_review.DecidesProgression)
+              {
+                <FormField Label="Replacement category" InputId="appeal-category" Required="true">
+                  <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                    <option value="">Select a category…</option>
+                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                    {
+                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                    }
+                  </InputSelect>
+                </FormField>
+              }
+              else
+              {
+                @* A remit here changes no STAR the review issued: the appeal body is told so, and how one is changed. *@
+                <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
+              }
               <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
                 <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
               </FormField>
@@ -736,9 +762,10 @@
   /// <summary>
   /// Why Record is refused now, or null when it is not, in the record handler's order: the panel cannot seat a quorum
   /// (T165), or a closing line of the agenda is neither staged nor deferred, since the decision fixes the agenda with it
-  /// (T131 slice 4). The agenda's sentence is the one Ratify shows: it names the lines, not the button.
+  /// (T131 slice 4), or an entrustment-only review has nothing on its agenda (slice 5). The closing lines' sentence is the
+  /// one Ratify shows: it names the lines, not the button.
   /// </summary>
-  private string? RecordBlockedReason => _review?.PanelShortfall ?? _agenda?.RatifyBlockedReason;
+  private string? RecordBlockedReason => _review?.PanelShortfall ?? _agenda?.RecordBlockedReason;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -840,7 +867,10 @@
   {
     await ExecuteAsync(
       user => Sender.Send(new RecordCommitteeDecisionCommand(
-        ReviewId, _decision.Category, _decision.Rationale, _decision.Conditions,
+        ReviewId,
+        // T131 slice 5: an entrustment-only review's decision records no category; the form offers none.
+        _review?.DecidesProgression == false ? null : _decision.Category,
+        _decision.Rationale, _decision.Conditions,
         PresentUserIds(_decision.PresentUserIds, lockedUserId: null), user)),
       "Decision recorded.");
   }
@@ -929,7 +959,8 @@
       user => Sender.Send(new ResolveAppealCommand(
         ReviewId,
         _appeal.Outcome,
-        _appeal.RemittedCategory,
+        // Only a remitted progression review's replacement takes a category (T131 slice 5).
+        _appeal.Outcome == CommitteeAppealOutcome.Remitted && _review?.DecidesProgression == true ? _appeal.RemittedCategory : null,
         _appeal.RemittedRationale,
         _appeal.RemittedConditions,
         // T165: a remitted appeal's replacement records who sat for it; the other outcomes take no decision.
@@ -1460,8 +1491,12 @@
 
   private sealed class DecisionFormModel
   {
-    [Required]
-    public CommitteeDecisionCategory Category { get; set; } = CommitteeDecisionCategory.SatisfactoryProgress;
+    /// <summary>
+    /// The progression category, or null until the chair chooses one. Not [Required]: an entrustment-only review takes
+    /// none (T131 slice 5), and a progression review sent without one is refused by the handler, whose reason the page
+    /// shows.
+    /// </summary>
+    public CommitteeDecisionCategory? Category { get; set; }
 
     [Required]
     public string Rationale { get; set; } = string.Empty;

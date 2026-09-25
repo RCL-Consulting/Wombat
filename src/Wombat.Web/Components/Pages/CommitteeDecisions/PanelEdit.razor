@@ -271,7 +271,8 @@
 
   private const string BodyHelpText =
     "A panel sitting as a College committee decides the EPAs the College gives that committee (the neonatal CCC " +
-    "decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them.";
+    "decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them. It cannot " +
+    "change while a review before the panel is scheduled, in progress or awaiting ratification.";
 
   /// <summary>Whether the caller may create a panel of this scope: the institution-wide one is an institution's.</summary>
   private bool MayCreate(DecisionPanelScope scope)

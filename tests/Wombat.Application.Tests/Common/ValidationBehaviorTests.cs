@@ -20,7 +20,8 @@ public sealed class ValidationBehaviorTests
         var behavior = CreateBehavior();
         var handlerCalled = false;
 
-        // Remitted with no replacement category/rationale -> validator must reject before the handler.
+        // Remitted with no replacement rationale and no attendance -> validator must reject before the handler. (Whether
+        // the replacement needs a category is the review's type, which the domain judges: T131 slice 5.)
         var command = new ResolveAppealCommand(
             ReviewId: 1,
             Outcome: CommitteeAppealOutcome.Remitted,

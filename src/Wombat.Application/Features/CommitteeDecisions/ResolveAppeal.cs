@@ -18,6 +18,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <c>PresentUserIds</c> is read only for a remitted appeal: who sat for the replacement decision, held to the quorum
 /// the review's own decision was (T165). It stays in the clear, as it does when a decision is recorded.
 /// </para>
+/// <para>
+/// <c>RemittedCategory</c> is read only for a remitted appeal, and follows the review's type as a recorded decision's
+/// category does (T131 slice 5): required on a progression review, refused on an entrustment-only one.
+/// </para>
 /// </remarks>
 public sealed record ResolveAppealCommand(
     int ReviewId,
@@ -34,9 +38,12 @@ public sealed class ResolveAppealCommandValidator : AbstractValidator<ResolveApp
     {
         RuleFor(command => command.ReviewId).GreaterThan(0);
         RuleFor(command => command.Principal).NotNull();
+        // Whether a remitted replacement takes a category is its review's type (T131 slice 5), which the validator cannot
+        // see: CommitteeReview.ResolveAppeal refuses a progression review's replacement without one, and an
+        // entrustment-only review's with one, before anything changes.
+        RuleFor(command => command.RemittedCategory).IsInEnum();
         When(command => command.Outcome == CommitteeAppealOutcome.Remitted, () =>
         {
-            RuleFor(command => command.RemittedCategory).NotNull();
             RuleFor(command => command.RemittedRationale).NotEmpty().MaximumLength(4000);
             // T165: the replacement is a committee decision, so it records a quorum present, as recording one does.
             RuleFor(command => command.PresentUserIds)

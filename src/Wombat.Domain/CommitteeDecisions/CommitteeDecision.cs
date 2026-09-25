@@ -8,7 +8,13 @@ public sealed class CommitteeDecision
 
     public int Id { get; private set; }
     public int ReviewId { get; private set; }
-    public CommitteeDecisionCategory Category { get; private set; }
+
+    /// <summary>
+    /// The progression outcome, or null on the decision of an entrustment-only review, whose decision is the STARs staged
+    /// at it (T131 slice 5). Which a decision must carry is its review's type (<see cref="CommitteeReviewTypes" />), held
+    /// by <see cref="CommitteeReview" /> when the decision is recorded, remitted or ratified.
+    /// </summary>
+    public CommitteeDecisionCategory? Category { get; private set; }
     public string Rationale { get; private set; } = string.Empty;
     public string? Conditions { get; private set; }
     public DateTime DecidedOn { get; private set; }
@@ -28,7 +34,7 @@ public sealed class CommitteeDecision
     /// attendance to the quorum before it calls this; this only refuses what no decision can be.
     /// </summary>
     public static CommitteeDecision Create(
-        CommitteeDecisionCategory category,
+        CommitteeDecisionCategory? category,
         string rationale,
         string? conditions,
         string chairUserId,
@@ -66,6 +72,6 @@ public sealed class CommitteeDecision
         return decision;
     }
 
-    public void Amend(CommitteeDecisionCategory category, string rationale, string? conditions)
+    public void Amend(CommitteeDecisionCategory? category, string rationale, string? conditions)
         => throw new InvalidOperationException("Committee decisions are immutable. Record a new decision through the appeal workflow.");
 }

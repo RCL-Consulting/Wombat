@@ -105,7 +105,10 @@ internal static class CommitteeAgendaReader
             sitting.ToString(),
             review.IsFormative,
             lines,
-            elsewhere);
+            elsewhere)
+        {
+            DecidesProgression = review.DecidesProgression
+        };
     }
 
     /// <summary>A line as the page shows it. <paramref name="evidenceCount" /> is the snapshot's lines about its EPA.</summary>

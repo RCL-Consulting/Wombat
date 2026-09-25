@@ -935,18 +935,26 @@ public sealed class CommitteeAgendaHandlerTests
 
     /// <summary>
     /// Records the committee's decision with the whole panel present, each an active committee member at its institution:
-    /// a quorum (T165, PanelSeat).
+    /// a quorum (T165, PanelSeat). A progression review's decision records a category; the neonatal CCC's reviews are
+    /// entrustment-only and record none (T131 slice 5).
     /// </summary>
     private static async Task RecordDecisionAsync(ApplicationDbContext db, int reviewId)
     {
         var panel = await db.CommitteeReviews.AsNoTracking()
             .Where(review => review.Id == reviewId)
-            .Select(review => new { review.Panel.InstitutionId, Members = review.Panel.Members.Select(member => member.UserId).ToList() })
+            .Select(review => new
+            {
+                review.Panel.InstitutionId,
+                review.ReviewType,
+                Members = review.Panel.Members.Select(member => member.UserId).ToList()
+            })
             .SingleAsync();
 
         await new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(panel.InstitutionId, [.. panel.Members])).Handle(
-            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
-                panel.Members, await ChairOfAsync(db, reviewId)),
+            new RecordCommitteeDecisionCommand(
+                reviewId,
+                panel.ReviewType == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
+                "On track.", null, panel.Members, await ChairOfAsync(db, reviewId)),
             CancellationToken.None);
         db.ChangeTracker.Clear();
     }

@@ -117,6 +117,12 @@ public sealed record CommitteeAgendaDto(
             .ThenBy(line => line.EpaId)
             .ToArray();
 
+    /// <summary>
+    /// Whether the review's decision records a progression category: false for an entrustment-only review (T131 slice 5),
+    /// whose decision is what this agenda holds. Filled by the agenda's reader; true unless it says otherwise.
+    /// </summary>
+    public bool DecidesProgression { get; init; } = true;
+
     /// <summary>Why the review cannot be ratified yet, in the ratify refusal's own words; null when nothing blocks it.</summary>
     public string? RatifyBlockedReason
     {
@@ -128,6 +134,15 @@ public sealed record CommitteeAgendaDto(
                 : CommitteeReview.OutstandingClosingLinesReason(outstanding.Select(line => line.EpaCode).ToArray());
         }
     }
+
+    /// <summary>
+    /// Why the committee's decision cannot be recorded yet, in the record refusal's own words; null when the agenda does not
+    /// block it. What blocks ratify first, since recording settles the agenda (slice 4); then, on an entrustment-only review,
+    /// an empty agenda (<see cref="CommitteeReview.EmptyAgendaRefusal" />, slice 5), which ratify does not ask again.
+    /// </summary>
+    public string? RecordBlockedReason
+        => RatifyBlockedReason
+           ?? (!IsFormative && !DecidesProgression && Lines.Count == 0 ? CommitteeReview.NothingOnTheAgenda : null);
 
     /// <summary>The EPAs another panel takes that are not yet decided in their window.</summary>
     public IReadOnlyList<CommitteeAgendaElsewhereDto> UndecidedElsewhere
@@ -147,7 +162,15 @@ public sealed record CommitteeAgendaPreviewDto(
     bool TraineeHasCurriculum,
     IReadOnlyList<CommitteeAgendaLineDto> Lines,
     IReadOnlyList<CommitteeAgendaElsewhereDto> RoutedElsewhere,
-    IReadOnlyList<string> DecidedInWindow);
+    IReadOnlyList<string> DecidedInWindow)
+{
+    /// <summary>
+    /// Whether the panel decides any EPA on the trainee's curriculum, due now or not (T131 slice 5): scheduling refuses an
+    /// entrustment-only review before a panel that decides none, and the preview says so first. True unless the planner
+    /// says otherwise.
+    /// </summary>
+    public bool PanelDecidesAnything { get; init; } = true;
+}
 
 /// <summary>The one reading of where a decision on an EPA stands in its window. (T131 slice 4)</summary>
 public static class CommitteeAgendaStatus

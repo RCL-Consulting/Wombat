@@ -9,6 +9,10 @@ public sealed class CommitteeDecisionConfiguration : IEntityTypeConfiguration<Co
     public void Configure(EntityTypeBuilder<CommitteeDecision> builder)
     {
         builder.ToTable("CommitteeDecisions");
+
+        // Null on an entrustment-only review's decision, which records no progression category (T131 slice 5). Which a
+        // decision carries depends on its review's type, a rule across two tables that CommitteeReview holds.
+        builder.Property(entity => entity.Category).IsRequired(false);
         builder.Property(entity => entity.Rationale).HasMaxLength(4000).IsRequired();
         builder.Property(entity => entity.Conditions).HasMaxLength(4000);
         builder.Property(entity => entity.DecidedByChairUserId).HasMaxLength(450).IsRequired();

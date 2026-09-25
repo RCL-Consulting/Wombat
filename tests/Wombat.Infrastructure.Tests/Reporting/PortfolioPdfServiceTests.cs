@@ -331,7 +331,29 @@ public sealed class PortfolioPdfServiceTests
             .Should().Be("Thandi Zulu (chair), Anna Botha (external)");
     }
 
-    private static CommitteeReview SeedRatifiedReview(ApplicationDbContext db)
+    /// <summary>
+    /// An entrustment-only review's decision records no progression category, and the portfolio still exports it, saying
+    /// what the review decided instead of a blank. (T131 slice 5)
+    /// </summary>
+    [Fact]
+    public async Task AnEntrustmentOnlyReview_IsExported_AndItsDecisionReadsAsEntrustmentOnly()
+    {
+        await using var db = SeededDb();
+        SeedRatifiedReview(db, CommitteeReviewType.EntrustmentOnly);
+        var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var data = await LoadAsync(db);
+        var exported = await service.GenerateAsync(request, CancellationToken.None);
+
+        var decision = data.CommitteeReviews.Should().ContainSingle().Subject.GetCurrentDecision()!;
+        decision.Category.Should().BeNull();
+        CommitteeSectionComponent.DecisionLine(decision).Should().Be("Entrustment decisions only");
+        exported.PdfBytes.Should().NotBeEmpty();
+    }
+
+    private static CommitteeReview SeedRatifiedReview(
+        ApplicationDbContext db, CommitteeReviewType type = CommitteeReviewType.AnnualProgression)
     {
         db.Set<WombatIdentityUser>().AddRange(
             new WombatIdentityUser { Id = "chair-1", FirstName = "Thandi", LastName = "Zulu" },
@@ -362,10 +384,13 @@ public sealed class PortfolioPdfServiceTests
             TraineeUserId = "trainee-1",
             ReviewPeriodFrom = new DateOnly(2029, 1, 1),
             ReviewPeriodTo = new DateOnly(2029, 10, 31),
-            ScheduledOn = new DateOnly(2029, 11, 18)
+            ScheduledOn = new DateOnly(2029, 11, 18),
+            ReviewType = type
         };
         review.Start([], "chair-1", sitting);
-        review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", sitting, members);
+        review.RecordDecision(
+            type == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
+            "On track.", null, "chair-1", sitting, members);
         review.Ratify("chair-1", sitting);
 
         db.Set<DecisionPanel>().Add(panel);

@@ -142,6 +142,12 @@ public static class CommitteeAgendaText
             return ["This trainee follows no curriculum, so the review will have no agenda."];
         }
 
+        // T131 slice 5: the scheduling handler refuses an entrustment-only review here, with the same reason.
+        if (!preview.PanelDecidesAnything)
+        {
+            return ["This panel decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have nothing to decide."];
+        }
+
         if (preview.Lines.Count == 0)
         {
             return [$"No EPA this panel decides is due for {preview.PeriodLabel}."];

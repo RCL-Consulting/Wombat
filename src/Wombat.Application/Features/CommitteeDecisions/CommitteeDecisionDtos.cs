@@ -57,6 +57,20 @@ public sealed record CommitteeReviewListItemDto(
     public string PeriodLabel => $"{AcademicYear} S{Semester}";
 
     /// <summary>
+    /// Whether the review's decision records a progression category: false for an entrustment-only review (T131 slice 5),
+    /// whose <see cref="CurrentDecisionCategory" /> is null once decided as well as before.
+    /// </summary>
+    public bool DecidesProgression => CommitteeReviewTypes.DecidesProgression(ReviewType);
+
+    /// <summary>
+    /// Whether the committee has recorded its decision: a summative review that is decided, ratified, under appeal or
+    /// final. Said apart from <see cref="CurrentDecisionCategory" />, which is null on an entrustment-only review's
+    /// decision too (T131 slice 5).
+    /// </summary>
+    public bool HasDecision => !IsFormative && State is CommitteeReviewState.Decided or CommitteeReviewState.Ratified
+        or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;
+
+    /// <summary>
     /// Whose review it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
     /// schedule's Trainee column (T142). Filled by <c>ListReviewsForPanelQuery</c> in one lookup for the page. Null from
     /// the trainee's own list and the chair's, which do not show it, and from scheduling.
@@ -64,9 +78,13 @@ public sealed record CommitteeReviewListItemDto(
     public string? TraineeName { get; init; }
 }
 
+/// <param name="Category">
+/// The progression outcome, or null on an entrustment-only review's decision, whose decision is the STARs staged at it
+/// (T131 slice 5).
+/// </param>
 public sealed record CommitteeDecisionDto(
     int Id,
-    CommitteeDecisionCategory Category,
+    CommitteeDecisionCategory? Category,
     string Rationale,
     string? Conditions,
     DateTime DecidedOn,
@@ -181,6 +199,13 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>The period the review sits for: "2026 S1".</summary>
     public string PeriodLabel => $"{AcademicYear} S{Semester}";
+
+    /// <summary>
+    /// Whether the review's decision records a progression category (T131 slice 5): false for an entrustment-only review,
+    /// whose decision is the STARs staged at it. The page's decision and remit forms ask for a category only when true,
+    /// which is when the handlers require one.
+    /// </summary>
+    public bool DecidesProgression => CommitteeReviewTypes.DecidesProgression(ReviewType);
 
     /// <summary>
     /// The review's agenda (T131 slice 4). Filled by <c>GetCommitteeReviewByIdQuery</c>, through the review's read ladder.

@@ -14,16 +14,22 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <param name="Lines">The cadence lines the review's panel decides at this sitting, in code order. Unattached.</param>
 /// <param name="RoutedElsewhere">The EPAs due in the period that a panel sitting as a College committee decides instead.</param>
 /// <param name="DecidedInWindow">The codes of EPAs this panel decides that a STAR already decided in their window.</param>
+/// <param name="PanelDecidesAnything">
+/// Whether any of the trainee's in-force curriculum items routes to this panel, with a cadence or without, due or not: whether
+/// a sitting before it could decide anything at all. An entrustment-only review is not scheduled where it could not (T131
+/// slice 5), since its decision is what its agenda holds.
+/// </param>
 internal sealed record AgendaPlan(
     bool TraineeHasCurriculum,
     IReadOnlyList<CommitteeAgendaLine> Lines,
     IReadOnlyList<CommitteeAgendaElsewhereDto> RoutedElsewhere,
-    IReadOnlyList<string> DecidedInWindow)
+    IReadOnlyList<string> DecidedInWindow,
+    bool PanelDecidesAnything)
 {
-    public static readonly AgendaPlan Empty = new(false, [], [], []);
+    public static readonly AgendaPlan Empty = new(false, [], [], [], false);
 
     /// <summary>The plan for a panel the trainee is no longer eligible for: nothing, and nothing about anyone else.</summary>
-    public static readonly AgendaPlan Stranded = new(true, [], [], []);
+    public static readonly AgendaPlan Stranded = new(true, [], [], [], false);
 }
 
 /// <summary>
@@ -91,17 +97,19 @@ internal static class AgendaPlanner
             return AgendaPlan.Stranded;
         }
 
+        // Every admitted item, so the plan can say whether this panel decides anything for the trainee; only those with a
+        // cadence are planned.
         var items = await StarCurriculum.AdmittedItems(dbContext, context.CurriculumId, context.Trainee.InstitutionId)
-            .Where(item => item.DecisionCadence != null)
             .Select(item => new PlannableItem(
                 item.Id,
                 item.EpaId,
                 item.Epa.Code,
                 item.Epa.Title,
-                item.DecisionCadence!.Value,
+                item.DecisionCadence,
                 item.DecisionBodyKey,
                 item.DecisionIsOpportunistic))
             .ToListAsync(cancellationToken);
+        var panelDecidesAnything = items.Any(item => DecisionRouting.RoutesTo(item.BodyKey, panel, context.Trainee, context.Panels));
 
         var recorded = await RecordedLinesAsync(dbContext, traineeUserId, sitting.Year, cancellationToken);
         var institutionId = context.Trainee.InstitutionId;
@@ -110,9 +118,12 @@ internal static class AgendaPlanner
         var elsewhere = new List<CommitteeAgendaElsewhereDto>();
         var decided = new List<string>();
 
-        foreach (var item in items.OrderBy(item => item.Code, StringComparer.Ordinal).ThenBy(item => item.EpaId))
+        foreach (var item in items
+                     .Where(item => item.Cadence is not null)
+                     .OrderBy(item => item.Code, StringComparer.Ordinal)
+                     .ThenBy(item => item.EpaId))
         {
-            var window = QuotaWindow.For(item.Cadence, sitting.End, context.ProgrammeStart);
+            var window = QuotaWindow.For(item.Cadence!.Value, sitting.End, context.ProgrammeStart);
             if (!CommitteeAgendaLine.IsDueAt(window, sitting))
             {
                 continue;
@@ -162,7 +173,7 @@ internal static class AgendaPlanner
             }
         }
 
-        return new AgendaPlan(true, lines, elsewhere, decided);
+        return new AgendaPlan(true, lines, elsewhere, decided, panelDecidesAnything);
     }
 
     /// <summary>
@@ -286,7 +297,7 @@ internal static class AgendaPlanner
         int EpaId,
         string Code,
         string Title,
-        QuotaPeriod Cadence,
+        QuotaPeriod? Cadence,
         string? BodyKey,
         bool IsOpportunistic);
 

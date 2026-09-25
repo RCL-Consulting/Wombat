@@ -33,9 +33,10 @@
       <tr>
         <td>@item.PanelName</td>
         <td>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</td>
-        <td>@(item.ReviewType == CommitteeReviewType.PreGraduation ? "Pre-graduation" : "Annual progression")</td>
+        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
         <td>@item.State</td>
-        <td>@(item.CurrentDecisionCategory?.ToString() ?? "Pending")</td>
+        @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
+        <td>@CommitteeDecisionWording.OutcomeLabel(item)</td>
         <td class="actions-cell">
           <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenReviewAsync(item.Id)">View</button>
         </td>
@@ -49,13 +50,19 @@
   <section class="detail-card">
     <h3>Review detail</h3>
     <p><strong>Panel:</strong> @_selectedReview.PanelName</p>
+    <p id="my-review-type"><strong>Type:</strong> @CommitteeDecisionWording.ReviewTypeLabel(_selectedReview.ReviewType)</p>
     <p><strong>State:</strong> @_selectedReview.State</p>
 
     @if (_selectedReview.Decisions.Count > 0)
     {
       var current = _selectedReview.Decisions[0];
       <article class="detail-card detail-card--compact">
-        <h4>@current.Category</h4>
+        <h4 id="current-decision-outcome">@CommitteeDecisionWording.OutcomeLabel(current.Category)</h4>
+        @* T131 slice 5: an entrustment-only review's decision is its STARs; said, so no outcome reads as missing. *@
+        @if (!_selectedReview.DecidesProgression)
+        {
+          <p id="entrustment-only-note" class="muted">@EntrustmentOnlyNote(_selectedReview)</p>
+        }
         <p>@current.Rationale</p>
         @* T165: a committee's decision says who took it: this decision's own sitting, which for a decision an appeal
            remitted is whoever sat for the appeal. *@
@@ -199,6 +206,25 @@
 
   private static bool IsRatified(CommitteeReviewState state)
     => state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;
+
+  // The agenda is named only where the page shows it: once ratified, and only when it holds a line. A decision an appeal
+  // remitted replaced the committee's reasoning and changed no STAR, which is said too (T131 slice 5).
+  private static string EntrustmentOnlyNote(CommitteeReviewDetailDto review)
+  {
+    var sentences = new List<string> { CommitteeDecisionWording.EntrustmentOnlyForTheTrainee };
+
+    if (review.Decisions is [{ SupersedesDecisionId: not null }, ..])
+    {
+      sentences.Add(CommitteeDecisionWording.EntrustmentOnlyRemittedForTheTrainee);
+    }
+
+    if (IsRatified(review.State) && review.Agenda is { Lines.Count: > 0 })
+    {
+      sentences.Add(CommitteeDecisionWording.EntrustmentOnlySeeTheAgenda);
+    }
+
+    return string.Join(" ", sentences);
+  }
 
   private sealed class AppealFormModel
   {

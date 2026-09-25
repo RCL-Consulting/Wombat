@@ -23,10 +23,15 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// sit on it now (<see cref="PanelSeat" />) and none of whom is the trainee under review. It stays in the clear too; who
 /// took a decision is part of what the audit entry is for.
 /// </para>
+/// <para>
+/// <c>Category</c> is the progression outcome, and follows the review's type (T131 slice 5): a progression review's
+/// decision needs one, and an entrustment-only review's takes none, because its decision is the STARs staged at it.
+/// <see cref="CommitteeReview.CategoryRefusal" /> refuses either mismatch before anything changes.
+/// </para>
 /// </remarks>
 public sealed record RecordCommitteeDecisionCommand(
     int ReviewId,
-    CommitteeDecisionCategory Category,
+    CommitteeDecisionCategory? Category,
     [property: Redact] string Rationale,
     [property: Redact] string? Conditions,
     IReadOnlyList<string> PresentUserIds,
@@ -37,6 +42,7 @@ public sealed class RecordCommitteeDecisionCommandValidator : AbstractValidator<
     public RecordCommitteeDecisionCommandValidator()
     {
         RuleFor(command => command.ReviewId).GreaterThan(0);
+        RuleFor(command => command.Category).IsInEnum();
         RuleFor(command => command.Rationale).NotEmpty().MaximumLength(4000);
         RuleFor(command => command.Conditions).MaximumLength(4000);
         RuleFor(command => command.PresentUserIds)

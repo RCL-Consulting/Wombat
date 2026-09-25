@@ -44,6 +44,13 @@ public sealed class CommitteeReview
     public DateOnly ScheduledOn { get; set; }
     public bool IsFormative { get; set; }
     public CommitteeReviewType ReviewType { get; set; } = CommitteeReviewType.AnnualProgression;
+
+    /// <summary>
+    /// Whether the review's decision records a progression category: false for an entrustment-only review, whose decision
+    /// is the STARs staged at it (T131 slice 5). Read from the review's own type, fixed when it was scheduled.
+    /// </summary>
+    public bool DecidesProgression => CommitteeReviewTypes.DecidesProgression(ReviewType);
+
     public CommitteeReviewState State { get; private set; } = CommitteeReviewState.Scheduled;
     public DateTime? StartedOn { get; private set; }
     public string? StartedByUserId { get; private set; }
@@ -231,7 +238,48 @@ public sealed class CommitteeReview
                 "The committee's decision cannot be recorded yet: " +
                 OutstandingClosingLinesReason(outstanding.Select(line => line.EpaCode).ToArray()));
         }
+
+        // T131 slice 5: an entrustment-only review's decision is what its agenda holds, so one with nothing on it has
+        // decided nothing.
+        if (EmptyAgendaRefusal() is { } empty)
+        {
+            throw new InvalidOperationException("The committee's decision cannot be recorded yet: " + empty);
+        }
     }
+
+    /// <summary>
+    /// The refusal for an entrustment-only review with nothing on its agenda (T131 slice 5): the sentence the record refusal
+    /// and the page's disabled Record button share.
+    /// </summary>
+    public const string NothingOnTheAgenda =
+        "Nothing is on this entrustment-only review's agenda, so it has decided nothing. Stage a decision on an EPA this " +
+        "panel decides for the trainee.";
+
+    /// <summary>
+    /// Why this review's decision cannot be recorded for want of an agenda, or null when it can: an entrustment-only review
+    /// decides what its agenda holds, and records no category, so with nothing on its agenda its decision would be a
+    /// rationale about nothing. (T131 slice 5)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The agenda is the exact test. Staging a decision always leaves a line (the EPA's cadence line, or the chair's line
+    /// staging adds), and deferring needs one; a staged decision removed takes its chair's line with it. A line nothing
+    /// was staged on is still a decision when it closes (Deferred, or NotDecided where the College makes it optional).
+    /// </para>
+    /// <para>
+    /// A progression review is never refused by it: its decision is its category. Nor is a formative review, which takes
+    /// no decision. Scheduling refuses an entrustment-only review before a panel that decides nothing on the trainee's
+    /// curriculum, so the case left is a sitting whose EPAs were all decided earlier in the window, where the chair
+    /// stages the one being re-decided.
+    /// </para>
+    /// <para>
+    /// Asked when the decision is recorded, the committee's act, and not again at ratify. A decided review cannot go back
+    /// to stage anything, and the one way its agenda empties afterwards is T167's exception, a staged STAR removed because
+    /// it could never be issued: refusing ratify then would leave the review decided for good, holding its period's seat.
+    /// </para>
+    /// </remarks>
+    public string? EmptyAgendaRefusal()
+        => IsFormative || DecidesProgression || AgendaLines.Count > 0 ? null : NothingOnTheAgenda;
 
     /// <summary>
     /// Why a review with these closing lines outstanding cannot be ratified, or its decision recorded: the one sentence the
@@ -280,6 +328,35 @@ public sealed class CommitteeReview
     /// <summary>The refusal for an agenda on a formative review.</summary>
     public const string FormativeHasNoAgenda = "A formative review carries no agenda: it issues no entrustment decision.";
 
+    /// <summary>The refusal for a progression review's decision with no category (T131 slice 5).</summary>
+    public const string ProgressionNeedsACategory =
+        "This review decides the trainee's progression, so its decision records a progression category. Choose one.";
+
+    /// <summary>The refusal for an entrustment-only review's decision with a category (T131 slice 5, O4).</summary>
+    public const string EntrustmentOnlyRecordsNoCategory =
+        "This review decides entrustment only: its decision is the entrustment decisions staged at it, and it records no " +
+        "progression category.";
+
+    /// <summary>
+    /// Why a decision with <paramref name="category" /> cannot be this review's, or null when it can: a progression review's
+    /// decision records one of the categories, an entrustment-only review's none (T131 slice 5). Asked when a decision is
+    /// recorded or remitted, before anything changes, and of the current decision when the review is ratified.
+    /// </summary>
+    public string? CategoryRefusal(CommitteeDecisionCategory? category)
+    {
+        if (!DecidesProgression)
+        {
+            return category is null ? null : EntrustmentOnlyRecordsNoCategory;
+        }
+
+        return category switch
+        {
+            null => ProgressionNeedsACategory,
+            { } value when !Enum.IsDefined(value) => "Choose a progression category from the list.",
+            _ => null
+        };
+    }
+
     private void DemandAddableCadenceLines(IReadOnlyCollection<CommitteeAgendaLine> lines)
     {
         if (lines.Count == 0)
@@ -323,7 +400,7 @@ public sealed class CommitteeReview
     /// a refusal thrown after a mutation would commit it.
     /// </remarks>
     public CommitteeDecision RecordDecision(
-        CommitteeDecisionCategory category,
+        CommitteeDecisionCategory? category,
         string rationale,
         string? conditions,
         string actorUserId,
@@ -343,6 +420,12 @@ public sealed class CommitteeReview
         }
 
         DemandQuorumPresent(present, actorUserId, recorderIsTheChair: true);
+
+        // T131 slice 5: a progression review records a category, an entrustment-only review none.
+        if (CategoryRefusal(category) is { } categoryRefusal)
+        {
+            throw new InvalidOperationException(categoryRefusal);
+        }
 
         // Built, and so validated, before the review is touched.
         var decision = CommitteeDecision.Create(category, rationale, conditions, actorUserId, utcNow, present, GetCurrentDecision()?.Id);
@@ -461,9 +544,10 @@ public sealed class CommitteeReview
 
     /// <summary>
     /// Refuses, without changing anything, unless the review can be ratified now: a summative review, decided, with a
-    /// decision whose recorded attendance holds a quorum (T165). The ratify handler runs it before it reads or checks the
-    /// staged entrustment decisions and before its first mutation, so a refusal names the real reason and nothing is
-    /// issued (T131); <see cref="Ratify" /> runs it again.
+    /// decision whose recorded attendance holds a quorum (T165) and which is the kind the review's type takes (T131 slice
+    /// 5): a progression category on a progression review, none on an entrustment-only one. The ratify handler runs it
+    /// before it reads or checks the staged entrustment decisions and before its first mutation, so a refusal names the
+    /// real reason and nothing is issued (T131); <see cref="Ratify" /> runs it again.
     /// </summary>
     public void DemandRatifiable()
     {
@@ -477,16 +561,26 @@ public sealed class CommitteeReview
             throw new InvalidOperationException("Only decided reviews can be ratified.");
         }
 
-        if (GetCurrentDecision() is null)
-        {
-            throw new InvalidOperationException("A review cannot be ratified without a decision.");
-        }
+        var current = GetCurrentDecision()
+            ?? throw new InvalidOperationException("A review cannot be ratified without a decision.");
 
         // T165: a decision one person took is not a committee's. Refused before anything changes, so a refused ratify
         // stamps nothing and its handler issues no STAR.
         if (QuorumShortfall() is { } shortfall)
         {
             throw new InvalidOperationException(shortfall);
+        }
+
+        // T131 slice 5: ratify branches on the type. An entrustment-only review ratifies a decision with no category, a
+        // progression review only one with a category. Recording holds both, so this refuses only a decision stored
+        // otherwise: a progression review is never ratified with its outcome unrecorded.
+        if (CategoryRefusal(current.Category) is not null)
+        {
+            throw new InvalidOperationException(DecidesProgression
+                ? "This review decides the trainee's progression, but its decision records no progression category, so " +
+                  "it cannot be ratified."
+                : "This review decides entrustment only, but its decision records a progression category, so it cannot " +
+                  "be ratified.");
         }
     }
 
@@ -510,7 +604,9 @@ public sealed class CommitteeReview
 
     /// <summary>
     /// Resolves the open appeal. Upheld and Dismissed leave the committee's decision standing; Remitted replaces it with
-    /// a decision the appeal body takes, and like every committee decision that one records who was present. (T165)
+    /// a decision the appeal body takes, and like every committee decision that one records who was present (T165) and is
+    /// the kind the review's type takes: a progression category on a progression review, none on an entrustment-only one
+    /// (T131 slice 5).
     /// </summary>
     /// <param name="present">
     /// Remitted only: the panel members who sat for the replacement decision, held to the quorum the review's own
@@ -541,9 +637,15 @@ public sealed class CommitteeReview
         CommitteeDecision? replacement = null;
         if (outcome == CommitteeAppealOutcome.Remitted)
         {
-            if (!remittedCategory.HasValue || string.IsNullOrWhiteSpace(remittedRationale))
+            if (string.IsNullOrWhiteSpace(remittedRationale))
             {
                 throw new InvalidOperationException("A remitted appeal must record the replacement decision.");
+            }
+
+            // T131 slice 5: the replacement takes a category on a progression review, and none on an entrustment-only one.
+            if (CategoryRefusal(remittedCategory) is { } categoryRefusal)
+            {
+                throw new InvalidOperationException(categoryRefusal);
             }
 
             if (present is null)
@@ -555,7 +657,7 @@ public sealed class CommitteeReview
 
             // Built, and so validated, before the appeal or the review is touched.
             replacement = CommitteeDecision.Create(
-                remittedCategory.Value,
+                remittedCategory,
                 remittedRationale,
                 remittedConditions,
                 actorUserId,

@@ -20,8 +20,12 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// (T194 item 1). A global Administrator is told when an id names no panel.
 /// </para>
 /// <para>
-/// A change reaches only what is decided afterwards. Reviews already under way keep the routing their agenda recorded
-/// (Decision 3); there is nothing to strand before slice 4 adds the agenda.
+/// A change reaches only reviews scheduled afterwards, and it is refused while the panel holds a review that is scheduled,
+/// in progress, or decided and awaiting ratification (T131 slice 5), naming it. Such a review took its type from the
+/// panel's body when it was scheduled (<see cref="CommitteeReviewTypes" />), and its agenda is planned again at Start from
+/// the panel as it is then: a general panel tagged as the neonatal CCC would hold a progression review whose Start adds the
+/// committee's EPAs, and a neonatal panel made general an entrustment-only review where the rule allows none. A ratified
+/// review, under appeal or final, keeps its type and agenda, and changing the tag changes nothing about it.
 /// </para>
 /// <para>
 /// Every check runs before the one mutation, and there is one save: the audit pipeline saves the request's context from
@@ -78,6 +82,23 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
         var body = await DecisionPanelBodies.DemandAsync(
             _dbContext, request.DecisionBodyKey, panel.InstitutionId, panel.SpecialityId, panel.Id, cancellationToken);
 
+        // T131 slice 5: not under a review that is still open (see the remarks). Read before the one mutation.
+        if (!string.Equals(DecisionBody.NormalizeKey(panel.DecisionBodyKey), body?.Key, StringComparison.Ordinal))
+        {
+            var open = await _dbContext.Set<CommitteeReview>()
+                .AsNoTracking()
+                .Where(review => review.PanelId == panel.Id && OpenStates.Contains(review.State))
+                .OrderBy(review => review.Id)
+                .Select(review => new { review.Id, review.AcademicYear, review.Semester, review.State })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (open is not null)
+            {
+                throw new InvalidOperationException(
+                    ReviewStillOpen(open.Id, new AcademicPeriod(open.AcademicYear, open.Semester), open.State));
+            }
+        }
+
         panel.DecisionBodyKey = body?.Key;
 
         try
@@ -100,4 +121,22 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
 
         return DecisionPanelBodies.ToDetailDto(panel, body?.Name);
     }
+
+    /// <summary>The states of a review whose type and agenda still follow the panel's body (see the remarks).</summary>
+    private static readonly CommitteeReviewState[] OpenStates =
+        [CommitteeReviewState.Scheduled, CommitteeReviewState.InProgress, CommitteeReviewState.Decided];
+
+    /// <summary>The refusal naming the first open review before the panel. (T131 slice 5)</summary>
+    internal static string ReviewStillOpen(int reviewId, AcademicPeriod period, CommitteeReviewState state)
+        => $"Review #{reviewId} ({period}, {StateLabel(state)}) still sits before this panel. What a review decides, and its " +
+           "agenda, follow the College committee the panel sat as when it was scheduled, so the panel keeps what it sits as " +
+           "until its open reviews are ratified, or closed if formative.";
+
+    private static string StateLabel(CommitteeReviewState state) => state switch
+    {
+        CommitteeReviewState.Scheduled => "scheduled",
+        CommitteeReviewState.InProgress => "in progress",
+        CommitteeReviewState.Decided => "decided, not yet ratified",
+        _ => state.ToString()
+    };
 }

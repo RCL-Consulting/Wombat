@@ -1203,6 +1203,17 @@ trainee (Dr Mahlangu) lodges an appeal that the panel chair (Dr Zulu) resolves.
 > `Each semester` for PAED-001, 002, 004, 005, 010 and 012, `Each academic year` for the other nine; `Decided as rotation
 > or opportunity allows` ticked on 008, 009 and 013; decision body `Neonatal team Clinical Competency Committee` on 004
 > and 005.
+>
+> **T131 slice 5 note (2026-09-24): a College committee decides entrustment only.** KGK has no neonatal panel, so every
+> Act 4 review is a general one and records a progression category as below. Where an institution has a panel sitting as
+> the neonatal CCC, a review before it is an **entrustment-only review**: the scheduling form's Review type offers only
+> `Entrustment-only review`, the Decision card asks for no category (its decision is the STARs staged at it), ratify
+> issues those STARs, and the trainee's reviews read `Entrustment decisions only` rather than a category or `Pending`. A
+> general panel's semester-1 sitting may also be entrustment-only; its semester-2 sitting, the one in this act, decides
+> progression, and the form does not offer `Entrustment-only review` for it. In Step 4.5 the Category select opens on
+> `Select a category…`: choose each trainee's category, since recording without one is refused. A remit on an
+> entrustment-only review changes no STAR it issued. A panel's `Decides for` cannot change while a review before it is
+> scheduled, in progress or awaiting ratification.
 
 **Act 4 goal:**
 1. 5 `CommitteeReview` rows scheduled (one per trainee), each for 2026 S2 and each with its agenda.
@@ -1339,7 +1350,7 @@ Gap: Trainee surface is `/committee/my-reviews` (not the guessed `/portfolio/rev
 ### Step 4.10 — The panel chair resolves the appeal
 Role: Dr Thandi Zulu (panel **chair**) — appeal resolution is `DemandAppealResolverAccess` (chair or external member, or global Administrator), **not** an InstitutionalAdmin power (F-4A-2/A1). *(For independence, a program may prefer the **external** member, Dr van Rensburg, to resolve.)*
 Route: `/committee/reviews/{id}` → Appeals section → select `Outcome` → `Resolve appeal`.
-Action: Read the appeal text. Decide: in this scenario, **uphold the referral** but reduce its scope to a 3-month re-review instead of 6-month. Select outcome `Remitted`, set replacement category `InadequateProgressAdditionalTraining` with a rationale recording the reduced re-review window, click `Resolve appeal`.
+Action: Read the appeal text. Decide: in this scenario, **uphold the referral** but reduce its scope to a 3-month re-review instead of 6-month. Select outcome `Remitted`, set replacement category `Inadequate Progress — Additional Training` (the select opens on `Select a category…`; T131 slice 5 names the categories in words) with a rationale recording the reduced re-review window, click `Resolve appeal`.
 Expected: Appeal disposed; review reaches a terminal state; trainee can see the outcome.
 Actual (2026-06-01): Outcome `Remitted` with a replacement decision. Review state → `Final`. A new `CommitteeDecision` was written with `SupersedesDecisionId` = the original referral decision; the appeal shows `(Remitted)`. DB-verified.
 Gap: Scenario originally cast Mbatha here; corrected to chair per A1. Outcome vocabulary is `Upheld / Dismissed / Remitted` — "uphold the referral but change the window" maps to **Remitted** with a replacement decision (selecting Remitted reveals replacement category + rationale fields). Note: the chair who recorded/ratified the decision also resolved the appeal — a program wanting independence should route this to the external member instead.

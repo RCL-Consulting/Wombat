@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.CommitteeDecisions;
 
 namespace Wombat.Infrastructure.Reporting;
@@ -89,6 +90,12 @@ internal static class CommitteeSectionComponent
 
             column.Item().Text(text =>
             {
+                text.Span("Type: ").FontSize(9).Bold();
+                text.Span(CommitteeDecisionWording.ReviewTypeLabel(review.ReviewType)).FontSize(9);
+            });
+
+            column.Item().Text(text =>
+            {
                 text.Span("Status: ").FontSize(9).Bold();
                 text.Span(review.State.ToString()).FontSize(9);
             });
@@ -99,7 +106,7 @@ internal static class CommitteeSectionComponent
                 column.Item().PaddingTop(4).Text(text =>
                 {
                     text.Span("Decision: ").FontSize(9).Bold();
-                    text.Span(FormatCategory(currentDecision.Category)).FontSize(9);
+                    text.Span(DecisionLine(currentDecision)).FontSize(9);
                 });
 
                 column.Item().Text(text =>
@@ -138,15 +145,10 @@ internal static class CommitteeSectionComponent
         });
     }
 
-    private static string FormatCategory(CommitteeDecisionCategory category) => category switch
-    {
-        CommitteeDecisionCategory.SatisfactoryProgress => "Satisfactory Progress",
-        CommitteeDecisionCategory.SatisfactoryWithObservations => "Satisfactory with Observations",
-        CommitteeDecisionCategory.InadequateProgressAdditionalTraining => "Inadequate Progress — Additional Training",
-        CommitteeDecisionCategory.InadequateProgressRepeat => "Inadequate Progress — Repeat",
-        CommitteeDecisionCategory.ReleaseFromTraining => "Release from Training",
-        CommitteeDecisionCategory.OutcomeDeferred => "Outcome Deferred",
-        CommitteeDecisionCategory.Graduate => "Graduate (programme complete)",
-        _ => category.ToString()
-    };
+    /// <summary>
+    /// The decision's outcome as the portfolio prints it: its progression category in words, or, for an entrustment-only
+    /// review's decision, which records none, that it decided entrustment only (T131 slice 5). Never a blank.
+    /// </summary>
+    internal static string DecisionLine(CommitteeDecision decision)
+        => CommitteeDecisionWording.OutcomeLabel(decision.Category);
 }
