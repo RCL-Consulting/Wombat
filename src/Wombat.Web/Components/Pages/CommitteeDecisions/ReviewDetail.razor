@@ -884,24 +884,42 @@
   /// the external members, by name, as the chair's note names the chair (T213 review). The trainee sees the same people
   /// named as present at their decision.
   /// </summary>
+  /// <remarks>
+  /// Only those who can act (<see cref="CommitteeReviewDetailDto.AppealBody" />, T237): each may sit on the panel now,
+  /// so never someone who holds Trainee, whom the resolve handler refuses (T194). Before T237 the note named every
+  /// external member, a trainee seated as one included, and told the trainee so on their own appeal. Where no one on
+  /// the appeal body can act, it says so and what unblocks it, rather than name nobody.
+  /// </remarks>
   private string AppealBodyNote
   {
     get
     {
-      var members = _review?.PanelMembers ?? [];
-      var chair = members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
-      var externals = members
+      var body = _review?.AppealBody ?? [];
+      var chair = body.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
+      var externals = body
         .Where(member => member.Role == DecisionPanelMemberRole.External)
         .Select(member => member.DisplayName)
         .ToArray();
 
-      var body = new List<string> { chair is null ? "the panel's chair" : $"the panel's chair, {chair.DisplayName}," };
-      if (externals.Length > 0)
+      if (chair is null && externals.Length == 0)
       {
-        body.Add($"its external member{(externals.Length == 1 ? string.Empty : "s")}, {JoinWithAnd(externals)}");
+        return "Only the appeal body, the panel's chair or an external member, can resolve the appeal, and none of them " +
+               "can act now. A panel administrator must seat a chair who can.";
       }
 
-      return $"Only the appeal body can resolve the appeal: {JoinWithAnd(body).TrimEnd(',')}.";
+      var parts = new List<string>();
+      if (chair is not null)
+      {
+        parts.Add($"the panel's chair, {chair.DisplayName},");
+      }
+
+      if (externals.Length > 0)
+      {
+        parts.Add($"{(chair is null ? "the panel's" : "its")} external member{(externals.Length == 1 ? string.Empty : "s")}, " +
+                  JoinWithAnd(externals));
+      }
+
+      return $"Only the appeal body can resolve the appeal: {JoinWithAnd(parts).TrimEnd(',')}.";
     }
   }
 

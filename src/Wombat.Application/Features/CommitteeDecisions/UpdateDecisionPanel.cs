@@ -66,7 +66,8 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
         }
 
         // T165: the panel as saved holds only people who may sit on it now, the members it already had included: an
-        // erased, deactivated or departed member is taken off, not carried over. Before the members are touched.
+        // erased, deactivated or departed member, or one who holds Trainee (T237), in any seat, is taken off, not carried
+        // over. Before the members are touched.
         await PanelSeat.DemandMembersAsync(_users, panel.InstitutionId, request.Members, cancellationToken);
 
         panel.Members.Clear();

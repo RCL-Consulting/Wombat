@@ -898,18 +898,27 @@ of its panel, a coordinator of the panel's institution or an Administrator (T194
 reads the review without a seat is not offered it, and `#chair-actions-note` reads "Only the panel's members, and the
 coordinators of its institution, can start this review." None of the three flags is ever true for someone who holds
 Trainee, whatever seat or role they hold beside it (T185's rung, asked by `WorksOnPanel` and by the seat predicates since
-the T194 review): a trainee who sits on the panel that reviews them reads their own review once it is ratified, and is
-offered neither the chair's controls nor the resolve form on it. The chair alone is offered the decision form and Record decision
+the T194 review): a trainee seated on the panel that reviews them before they held Trainee reads their own review once it
+is ratified, and is offered neither the chair's controls nor the resolve form on it. Since T237 no one who holds Trainee
+is seated at all (see **The panel form**). The chair alone is offered the decision form and Record decision
 (while the review is in progress), Ratify and its reason (once decided), Close review, the staging form, Remove, and the
 agenda's Stage, Defer and Reinstate. The appeal body alone (the chair or an external member) is offered the
 resolve-appeal form, and only while the review is under appeal: a form is never shown with empty fields and no button.
+It is offered only to a member of the appeal body who may sit on the panel now (`PanelSeat.AppealBodyAt`, the list the
+note below names, T237), which the resolve handler demands too; a chair or external member who has since lost the
+CommitteeMember role, moved institution or been deactivated reads the note instead, which does not name them.
 These are hidden from everyone else, not disabled: T107's disabled button is for an action the reader may take but
 cannot complete yet, and nobody else may take these. Instead a `.muted` sentence in the Review card
 (`#chair-actions-note`) names the chair and what only the chair can do in the review's state ("Only the panel's chair,
 Thandi Zulu, can ratify the committee's decision."; on a decided review it also names removing a staged decision that no
 longer fits and deferring a line that keeps the review from being ratified, where either is open), and under appeal the
 Appeals card names who resolves it (`#appeal-body-note`: "Only the appeal body can resolve the appeal: the panel's
-chair, Thandi Zulu, and its external member, Anna Botha."). A Decision card with no decision and no form says "No
+chair, Thandi Zulu, and its external member, Anna Botha."). It names only those who can act, the query's `AppealBody`
+(T237): the chair and external members who may sit on the panel now (`PanelSeat`), never someone who holds Trainee, and
+the same for every reader, the trainee on their own appeal included. A chair who cannot act is left out ("…: the
+panel's external member, Anna Botha."), and where no one can, it says so: "Only the appeal body, the panel's chair or an
+external member, can resolve the appeal, and none of them can act now. A panel administrator must seat a chair who
+can." A Decision card with no decision and no form says "No
 decision has been recorded yet." (`#no-decision-note`) rather than stand as a bare heading. When the review's trainee no
 longer trains at the panel's institution, Start and the chair's controls are offered to nobody (a global Administrator
 excepted, whom the check does not refuse), no `#chair-actions-note` is shown, and a warning `Alert` with no role
@@ -963,7 +972,17 @@ panel would accept from the caller, read from `GetDecisionPanelFormOptionsQuery`
 institutional administrator both scopes and the speciality list; a speciality or sub-speciality administrator the
 Speciality scope and only their own speciality. Speciality is selected first where it is offered. Where nothing is, the
 page shows no form: a `detail-card--empty` card (`#panel-none-creatable`) headed "Create panel" says in a `.muted`
-paragraph that they cannot create a panel, and who can.
+paragraph that they cannot create a panel, and who can. Every seat's picker (Chair, Members, External members) offers
+exactly the people the panel may seat, `ListPanelMemberCandidatesQuery` by `PanelSeat`, the rule panel create and
+update enforce: active committee members at the panel's institution who do not hold Trainee (T165, T237). The Members
+help text ends "Only active committee members at the panel's institution who are not trainees are listed.", and the
+External members help text says the same of its list and that external members sit with the chair on the appeal body. A
+stored
+member who can no longer sit is not listed and not sent back: a standing warning `Alert` (`Role=""`) above the form
+says so before the save ("1 member of this panel can no longer sit on it, so is not listed below: only an active
+committee member at its institution who is not a trainee can. Saving takes that member off the panel."). A stored chair
+who cannot sit leaves the Chair select on "Select chair", so the form cannot be saved until another chair is chosen:
+Save shows "Choose a chair." in the validation summary.
 
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
 roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a

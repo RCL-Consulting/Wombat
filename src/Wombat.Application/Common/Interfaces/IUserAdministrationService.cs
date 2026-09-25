@@ -19,6 +19,24 @@ public interface IUserAdministrationService
             .Where(user => wanted.Contains(user.UserId))
             .ToDictionary(user => user.UserId, user => $"{user.FirstName} {user.LastName}".Trim(), StringComparer.Ordinal);
     }
+
+    /// <summary>
+    /// Which of exactly the users asked about hold <paramref name="role" />. A user who does not exist, or does not hold
+    /// it, is left out. The default implementation reads the role's whole listing; the real service overrides it with one
+    /// query by id, so asking about a panel's few candidates does not load every holder of the role. (T237)
+    /// </summary>
+    async Task<IReadOnlySet<string>> WhichHoldRoleAsync(
+        IReadOnlyCollection<string> userIds,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        return (await ListUsersInRoleAsync(role, cancellationToken))
+            .Select(user => user.UserId)
+            .Where(wanted.Contains)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
     Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default);
     Task UpdateScopeAsync(
         string userId,

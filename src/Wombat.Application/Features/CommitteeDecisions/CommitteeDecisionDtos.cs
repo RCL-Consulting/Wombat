@@ -257,9 +257,12 @@ public sealed record CommitteeReviewDetailDto(
     public bool CallerMayStart { get; init; }
 
     /// <summary>
-    /// Whether the caller sits on the panel's appeal body, as its chair or an external member, and so may resolve an
-    /// appeal (T213): the predicate resolving demands (<c>CommitteeDecisionAuthorization.ResolvesAppeals</c>). Filled by
-    /// <c>GetCommitteeReviewByIdQuery</c>; false from everywhere else.
+    /// Whether the caller sits on the panel's appeal body, as its chair or an external member, and may act from that seat
+    /// now, and so may resolve an appeal (T213, T237): the two checks resolving demands, the seat
+    /// (<c>CommitteeDecisionAuthorization.ResolvesAppeals</c>) and being on the appeal body that can act
+    /// (<c>PanelSeat.AppealBodyAt</c>, the list <see cref="AppealBody" /> names). So a reader offered the resolve form is
+    /// always among those the appeal-body note would name, and one who holds the seat but may no longer sit reads the
+    /// note instead. Filled by <c>GetCommitteeReviewByIdQuery</c>; false from everywhere else.
     /// </summary>
     public bool CallerResolvesAppeals { get; init; }
 
@@ -287,17 +290,30 @@ public sealed record CommitteeReviewDetailDto(
             if (chair is not { MaySit: true })
             {
                 return "The panel's chair cannot be recorded as present: only an active committee member at the " +
-                       "panel's institution can, and never the trainee under review. A panel administrator must name " +
-                       "another chair.";
+                       "panel's institution who is not a trainee can, and never the trainee under review. A panel " +
+                       "administrator must name another chair.";
             }
 
             return PanelMembers.Count(member => member.MaySit) < CommitteeReview.Quorum
                 ? "Only the chair can be recorded as present: a decision needs the chair and at least one other, each an " +
-                  "active committee member at the panel's institution and none the trainee under review. A panel " +
-                  "administrator must add a member."
+                  "active committee member at the panel's institution who is not a trainee, and none the trainee under " +
+                  "review. A panel administrator must add a member."
                 : null;
         }
     }
+
+    /// <summary>
+    /// Who can resolve the appeal now, chair first: the panel's Chair and External members who may sit on it now
+    /// (<c>PanelSeat.AppealBodyAt</c>: an active committee member at the panel's institution who is not a trainee), and
+    /// never the trainee under review. The resolve handler demands the caller is on this list, and the note that tells a
+    /// reader not offered the resolve form who resolves the appeal names only these (T237): before T237 it named every
+    /// External member, a trainee seated as one included, who since T194 cannot act, and it said so to the trainee on
+    /// their own appeal. Filled by <c>GetCommitteeReviewByIdQuery</c> while the review is under appeal, for every reader,
+    /// the trainee included, and empty on the query's copy of a review in any other state. A command's answer carries the
+    /// page's own copy over (<see cref="WithNamesFrom" />), so it can be stale there once the answer has left the appeal;
+    /// the page reads it only under appeal.
+    /// </summary>
+    public IReadOnlyList<CommitteePersonDto> AppealBody { get; init; } = [];
 
     /// <summary>
     /// Why the decision cannot be ratified for want of a quorum, or null when it can (<c>CommitteeReview.QuorumShortfall</c>,
@@ -334,7 +350,8 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>
     /// This review, named from an earlier copy of it: the trainee's name, the names of the panel and of those present at
-    /// each decision, which panel members may sit, and what the caller may do at it (T213).
+    /// each decision, which panel members may sit, who can resolve an appeal, and what the caller may do at it (T213,
+    /// T237).
     /// </summary>
     /// <remarks>
     /// A command answers with the review from the lookup-free mapper, which names nobody, seats nobody and knows no caller
@@ -374,6 +391,7 @@ public sealed record CommitteeReviewDetailDto(
             CallerMayStart = earlier.CallerMayStart,
             CallerResolvesAppeals = earlier.CallerResolvesAppeals,
             TraineeElsewhere = earlier.TraineeElsewhere,
+            AppealBody = earlier.AppealBody,
             PanelMembers = PanelMembers
                 .Select(Named)
                 .Select(member => member with { MaySit = member.MaySit || seated.Contains(member.UserId) })
@@ -398,9 +416,9 @@ public sealed record CommitteePersonDto(string UserId, DecisionPanelMemberRole R
 
     /// <summary>
     /// A panel member only: whether they may be recorded as present at this review now, an active committee member at
-    /// the panel's institution who is not the trainee under review (<c>PanelSeat</c>, T165). Filled by
-    /// <c>GetCommitteeReviewByIdQuery</c> while the review can still take a decision; false everywhere else, so nobody is
-    /// offered as present on the strength of a copy that never asked.
+    /// the panel's institution who is not a trainee and not the trainee under review (<c>PanelSeat</c>, T165, T237).
+    /// Filled by <c>GetCommitteeReviewByIdQuery</c> while the review can still take a decision; false everywhere else,
+    /// so nobody is offered as present on the strength of a copy that never asked.
     /// </summary>
     public bool MaySit { get; init; }
 

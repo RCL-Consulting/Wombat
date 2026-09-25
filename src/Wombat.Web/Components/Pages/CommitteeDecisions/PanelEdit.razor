@@ -26,12 +26,12 @@
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="" LoadError="@_loadError">
   @if (_unseatable > 0)
   {
-    @* T165. A member who can no longer sit (erased, deactivated, moved, or no longer a committee member) is not offered,
-       so saving takes them off; said before the save, not after it. *@
+    @* T165. A member who can no longer sit (erased, deactivated, moved, no longer a committee member, or since T237 a
+       holder of Trainee) is not offered, so saving takes them off; said before the save, not after it. *@
     <Alert Kind="warning" Role="">
-      @_unseatable member@(_unseatable == 1 ? " of this panel is" : "s of this panel are") no longer an active committee
-      member at its institution, so @(_unseatable == 1 ? "is" : "are") not listed below. Saving takes
-      @(_unseatable == 1 ? "that member" : "them") off the panel.
+      @_unseatable member@(_unseatable == 1 ? " of this panel" : "s of this panel") can no longer sit on it, so
+      @(_unseatable == 1 ? "is" : "are") not listed below: only an active committee member at its institution who is
+      not a trainee can. Saving takes @(_unseatable == 1 ? "that member" : "them") off the panel.
     </Alert>
   }
   <div class="details-grid">
@@ -293,10 +293,11 @@
   private const string MembersHelpText =
     "Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically. A panel needs at least " +
     "one member or external member besides the chair: no committee decision is one person's. Only active committee " +
-    "members at the panel's institution are listed.";
+    "members at the panel's institution who are not trainees are listed.";
 
   private const string ExternalsHelpText =
-    "External examiners selected from the CommitteeMember pool. Cross-institution externals are not yet supported.";
+    "External examiners, who sit with the chair on the panel's appeal body. Only active committee members at the " +
+    "panel's institution who are not trainees are listed: cross-institution externals are not yet supported.";
 
   /// <summary>
   /// Whether the caller may create a panel of this scope (T194): the institution-wide one when the options say so, a
@@ -359,9 +360,10 @@
       : null;
 
   /// <summary>
-  /// The people this panel may seat (<c>PanelSeat</c>, T165), for the panel's institution: an Administrator's choice on a
-  /// new panel, the stored one on an existing panel, and anyone else's own. Anyone selected who is not among them is taken
-  /// out of the selection and counted, so the form never sends a member the save refuses.
+  /// The people this panel may seat (<c>PanelSeat</c>, T165; never someone who holds Trainee, T237), offered by every
+  /// seat's picker, the Chair's, the Members' and the External members', for the panel's institution: an Administrator's
+  /// choice on a new panel, the stored one on an existing panel, and anyone else's own. Anyone selected who is not among
+  /// them is taken out of the selection and counted, so the form never sends a member the save refuses.
   /// </summary>
   private async Task LoadCandidatesAsync(System.Security.Claims.ClaimsPrincipal user)
   {
@@ -486,7 +488,9 @@
     public int? InstitutionId { get; set; }
     public int? SpecialityId { get; set; }
 
-    [Required]
+    // Said as a sentence, not as "The ChairUserId field is required.": the Chair select is left empty when the stored
+    // chair can no longer sit (T165, T237), so this is a message the page expects to show.
+    [Required(ErrorMessage = "Choose a chair.")]
     public string ChairUserId { get; set; } = string.Empty;
 
     public HashSet<string> MemberUserIds { get; set; } = new(StringComparer.Ordinal);

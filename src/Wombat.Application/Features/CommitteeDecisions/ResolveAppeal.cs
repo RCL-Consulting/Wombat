@@ -89,17 +89,25 @@ public sealed class ResolveAppealCommandHandler : IRequestHandler<ResolveAppealC
         // moved keeps their recourse. The review's trainee was held to the panel's institution when it was ratified.
         // (T182; CommitteeTraineeScope)
         review = CommitteeDecisionAuthorization.DemandAppealBodyReview(request.Principal, review);
+        var resolverUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
+
+        // T237: and acts from that seat only while they may sit at the review now (PanelSeat), the rule the page's
+        // appeal-body note names people by, so the note and this gate agree on who can resolve the appeal. The seat check
+        // above reads claims, which cannot say whether the caller is still an active committee member at the panel's
+        // institution, nor rule out the trainee under review once they no longer hold Trainee.
+        var eligible = await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken);
+        PanelSeat.DemandSitsOnAppealBody(review, resolverUserId, eligible);
 
         // T165: a remitted appeal replaces the committee's decision, so the replacement is held to what any committee
         // decision is: a quorum of the panel present, each of whom may sit now and none the trainee. Checked here and in
         // the domain before ResolveAppeal changes anything: the audit pipeline saves the request's context from its catch.
         var present = request.Outcome == CommitteeAppealOutcome.Remitted
-            ? await PanelSeat.DemandPresentAsync(_users, review, request.PresentUserIds, cancellationToken)
+            ? PanelSeat.DemandPresent(review, request.PresentUserIds, eligible)
             : null;
 
         review.ResolveAppeal(
             request.Outcome,
-            CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal),
+            resolverUserId,
             DateTime.UtcNow,
             request.RemittedCategory,
             request.RemittedRationale,

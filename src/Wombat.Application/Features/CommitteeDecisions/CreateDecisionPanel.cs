@@ -75,8 +75,9 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
             throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.DecisionBodyNeedsInstitutionalAdmin);
         }
 
-        // T165: each member must be someone who may sit (an active committee member at the panel's institution), the
-        // rule the picker lists by and a decision's attendance is held to. Before the panel is built.
+        // T165: each member must be someone who may sit (an active committee member at the panel's institution who is not
+        // a trainee, T237), in any seat, the rule the picker lists by and a decision's attendance is held to. Before the
+        // panel is built.
         await PanelSeat.DemandMembersAsync(_users, institutionId, request.Members, cancellationToken);
 
         // The body named, and its slot at this institution free (T131); null for a general panel. Reads only, so it runs

@@ -25,7 +25,8 @@ public sealed record ListPanelMemberCandidatesQuery(ClaimsPrincipal Principal, i
 /// <remarks>
 /// Lists by <see cref="PanelSeat" />, the rule panel create and update enforce, so the picker cannot offer someone the
 /// save refuses. Before T165 it listed every CommitteeMember holder, deactivated accounts included, and an
-/// Administrator was offered every institution's.
+/// Administrator was offered every institution's. Before T237 it listed a committee member who also holds Trainee, for
+/// any seat, the Chair's included, where since T194 they cannot act.
 /// </remarks>
 public sealed class ListPanelMemberCandidatesQueryHandler : IRequestHandler<ListPanelMemberCandidatesQuery, IReadOnlyList<PanelMemberCandidateDto>>
 {

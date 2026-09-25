@@ -39,12 +39,17 @@ public sealed class CommitteeQuorumHandlerTests
     private const int EvidenceOnSecondEpa = 41;
     private const string Trainee = "trainee-1";
 
+    /// <summary>A committee member at the panel's institution who also holds Trainee: the trainees' representative (T237).</summary>
+    private const string TraineeRepresentative = "trainee-rep-1";
+
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
     /// <summary>
     /// The user store: the panel's three members, each an active committee member at the panel's institution, and the
-    /// people who are not what a seat needs: deactivated, without the CommitteeMember role, or at another institution. An
-    /// erased member's pseudonym and a forged id are in the store as nobody.
+    /// people who are not what a seat needs: deactivated, without the CommitteeMember role, at another institution, or
+    /// holding Trainee beside CommitteeMember (T237). An erased member's pseudonym and a forged id are in the store as
+    /// nobody. The directory's role listing answers as the real one does, each record carrying only the role it was
+    /// listed by, so the trainee representative's committee-member record never says they hold Trainee.
     /// </summary>
     private readonly FakeUserDirectory _directory =
         FakeUserDirectory.CommitteeMembersAt(InstitutionId, "chair-1", "member-1", "external-1")
@@ -54,7 +59,10 @@ public sealed class CommitteeQuorumHandlerTests
             .With(new UserIdentityDetails(
                 "assessor-1", "assessor@test", "Only", "Assessor", InstitutionId, [], [], [WombatRoles.Assessor]))
             .With(new UserIdentityDetails(
-                "elsewhere-1", "moved@test", "Moved", "Elsewhere", OtherInstitutionId, [], [], [WombatRoles.CommitteeMember]));
+                "elsewhere-1", "moved@test", "Moved", "Elsewhere", OtherInstitutionId, [], [], [WombatRoles.CommitteeMember]))
+            .With(new UserIdentityDetails(
+                TraineeRepresentative, "rep@test", "Demo", "Trainee", InstitutionId, [], [],
+                [WombatRoles.CommitteeMember, WombatRoles.Trainee]));
 
     // ─── Panel composition ───────────────────────────────────────────────────
 
@@ -136,7 +144,8 @@ public sealed class CommitteeQuorumHandlerTests
         { "a forged id", "nobody-at-all" },
         { "a deactivated committee member", "deactivated-1" },
         { "someone who holds no CommitteeMember role", "assessor-1" },
-        { "a committee member at another institution", "elsewhere-1" }
+        { "a committee member at another institution", "elsewhere-1" },
+        { "a committee member who holds Trainee", TraineeRepresentative }
     };
 
     [Theory]
@@ -213,6 +222,282 @@ public sealed class CommitteeQuorumHandlerTests
         forInstitutionalAdmin.Select(candidate => candidate.UserId).Should().BeEquivalentTo("chair-1", "member-1", "external-1");
     }
 
+    // ─── No one who holds Trainee sits, in any seat (T237) ────────────────────
+
+    /// <summary>
+    /// Each seat with the trainee representative in it, and the rest of a panel that would otherwise be accepted. Since
+    /// T194 someone who holds Trainee acts from no seat (<c>CommitteeDecisionAuthorization.HoldsSeat</c>), so a panel
+    /// that seated one as its Chair had no working chair, and one seated anywhere could be counted towards a quorum.
+    /// </summary>
+    public static TheoryData<DecisionPanelMemberRole, DecisionPanelMemberInput[]> PanelsSeatingATrainee => new()
+    {
+        {
+            DecisionPanelMemberRole.Chair,
+            [Input(TraineeRepresentative, DecisionPanelMemberRole.Chair), Input("member-1", DecisionPanelMemberRole.Member)]
+        },
+        {
+            DecisionPanelMemberRole.Member,
+            [Input("chair-1", DecisionPanelMemberRole.Chair), Input(TraineeRepresentative, DecisionPanelMemberRole.Member)]
+        },
+        {
+            DecisionPanelMemberRole.External,
+            [
+                Input("chair-1", DecisionPanelMemberRole.Chair), Input("member-1", DecisionPanelMemberRole.Member),
+                Input(TraineeRepresentative, DecisionPanelMemberRole.External)
+            ]
+        }
+    };
+
+    [Theory]
+    [MemberData(nameof(PanelsSeatingATrainee))]
+    public async Task CreatingAPanel_SeatingSomeoneWhoHoldsTrainee_InAnySeat_IsRefused_AndNothingIsWritten(
+        DecisionPanelMemberRole seat, DecisionPanelMemberInput[] members)
+    {
+        // Straight to the handler, as a crafted request would come: the form never offers them.
+        await using var db = await SeededDbAsync();
+        var panels = await db.DecisionPanels.CountAsync();
+        var seats = await db.Set<DecisionPanelMember>().CountAsync();
+
+        var act = () => new CreateDecisionPanelCommandHandler(db, Directory()).Handle(
+            new CreateDecisionPanelCommand(
+                "Second CCC", DecisionPanelScope.Institution, InstitutionId, null, members, TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>(seat.ToString())).Which.Message.Should().Be(PanelSeat.NotEligible);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        await using var read = CreateDb();
+        (await read.DecisionPanels.CountAsync()).Should().Be(panels, seat.ToString());
+        (await read.Set<DecisionPanelMember>().CountAsync()).Should().Be(seats, seat.ToString());
+    }
+
+    [Theory]
+    [MemberData(nameof(PanelsSeatingATrainee))]
+    public async Task UpdatingAPanel_ToSeatSomeoneWhoHoldsTrainee_InAnySeat_IsRefused_AndTheMembersAreUnchanged(
+        DecisionPanelMemberRole seat, DecisionPanelMemberInput[] members)
+    {
+        await using var db = await SeededDbAsync();
+        var before = await PanelMembersAsync();
+
+        var act = () => new UpdateDecisionPanelCommandHandler(db, Directory()).Handle(
+            new UpdateDecisionPanelCommand(PanelId, members, TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>(seat.ToString())).Which.Message.Should().Be(PanelSeat.NotEligible);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await PanelMembersAsync()).Should().Equal(before, seat.ToString());
+    }
+
+    [Fact]
+    public async Task UpdatingAPanel_ThatKeepsAMemberGivenTraineeSinceJoining_IsRefused_AndDroppingThemIsAccepted()
+    {
+        // Seated before they held Trainee: the panel's next save takes them off, as the form does, and a save that keeps
+        // them is refused like any other (T165's rule: the panel as saved holds only people who may sit on it now).
+        await using var db = await SeededDbAsync(extraMember: TraineeRepresentative, extraRole: DecisionPanelMemberRole.External);
+        var before = await PanelMembersAsync();
+
+        var keep = () => new UpdateDecisionPanelCommandHandler(db, Directory()).Handle(
+            new UpdateDecisionPanelCommand(
+                PanelId,
+                [
+                    Input("chair-1", DecisionPanelMemberRole.Chair), Input("member-1", DecisionPanelMemberRole.Member),
+                    Input("external-1", DecisionPanelMemberRole.External),
+                    Input(TraineeRepresentative, DecisionPanelMemberRole.External)
+                ],
+                TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        (await keep.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(PanelSeat.NotEligible);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await PanelMembersAsync()).Should().Equal(before);
+
+        await new UpdateDecisionPanelCommandHandler(db, Directory()).Handle(
+            new UpdateDecisionPanelCommand(
+                PanelId,
+                [
+                    Input("chair-1", DecisionPanelMemberRole.Chair), Input("member-1", DecisionPanelMemberRole.Member),
+                    Input("external-1", DecisionPanelMemberRole.External)
+                ],
+                TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        (await PanelMembersAsync()).Should().Equal("chair-1:Chair", "external-1:External", "member-1:Member");
+    }
+
+    [Fact]
+    public async Task ThePanelPicker_OffersNoOneWhoHoldsTrainee_ForAnySeat()
+    {
+        // The form's Chair, Members and External members selects all list these candidates: one picker, one rule, the
+        // rule the save enforces.
+        var picker = new ListPanelMemberCandidatesQueryHandler(Directory());
+
+        var forAdministrator = await picker.Handle(
+            new ListPanelMemberCandidatesQuery(TestPrincipals.Administrator(), InstitutionId), CancellationToken.None);
+        var forInstitutionalAdmin = await picker.Handle(
+            new ListPanelMemberCandidatesQuery(TestPrincipals.InstitutionalAdmin(InstitutionId)), CancellationToken.None);
+
+        forAdministrator.Select(candidate => candidate.UserId).Should().NotContain(TraineeRepresentative)
+            .And.BeEquivalentTo("chair-1", "member-1", "external-1");
+        forInstitutionalAdmin.Select(candidate => candidate.UserId).Should().NotContain(TraineeRepresentative);
+    }
+
+    [Fact]
+    public async Task TheReview_DoesNotOfferAsPresent_AMemberWhoHoldsTrainee()
+    {
+        await using var db = await SeededDbAsync(extraMember: TraineeRepresentative);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+
+        review.PanelMembers.Single(person => person.UserId == TraineeRepresentative).MaySit.Should().BeFalse();
+        review.PanelMembers.Where(person => person.MaySit).Select(person => person.UserId)
+            .Should().BeEquivalentTo("chair-1", "member-1", "external-1");
+    }
+
+    [Fact]
+    public async Task APanelChairedBySomeoneWhoHoldsTrainee_SaysItsChairCannotBeRecordedAsPresent()
+    {
+        // A chair given Trainee after being seated: the chair's actions refuse them (T194), so the page says the panel
+        // cannot decide until another chair is named, rather than offer a Record that refuses.
+        await using var db = await SeededDbAsync();
+        var panel = await db.DecisionPanels.Include(entity => entity.Members).SingleAsync(entity => entity.Id == PanelId);
+        panel.Members.Single(member => member.Role == DecisionPanelMemberRole.Chair).UserId = TraineeRepresentative;
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, TestPrincipals.InRole(WombatRoles.CommitteeMember, "member-1", InstitutionId)),
+            CancellationToken.None);
+
+        review.PanelShortfall.Should().StartWith("The panel's chair cannot be recorded as present");
+    }
+
+    /// <summary>The readers of a review under appeal who are not offered the resolve form, and so read the note.</summary>
+    public static TheoryData<string> WhoReadsTheAppealBodyNote => new() { "member", "trainee" };
+
+    [Theory]
+    [MemberData(nameof(WhoReadsTheAppealBodyNote))]
+    public async Task UnderAppeal_TheAppealBody_IsTheChairAndTheExternalsWhoCanAct_NeverOneWhoHoldsTrainee(string who)
+    {
+        // The committee chain's browser check (T237's note): an external member who holds Trainee was named in the
+        // appeal-body note, to the trainee on their own appeal too, though since T194 they cannot resolve it.
+        await using var db = await AppealedDbAsync(extraMember: TraineeRepresentative, extraRole: DecisionPanelMemberRole.External);
+        var reader = who == "trainee"
+            ? TestPrincipals.Trainee(Trainee, InstitutionId)
+            : TestPrincipals.InRole(WombatRoles.CommitteeMember, "member-1", InstitutionId);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, reader), CancellationToken.None);
+
+        review.State.Should().Be(CommitteeReviewState.UnderAppeal);
+        review.AppealBody.Select(person => $"{person.UserId}:{person.Role}")
+            .Should().Equal(["chair-1:Chair", "external-1:External"], who);
+        review.PanelMembers.Should().Contain(person => person.UserId == TraineeRepresentative, "they still hold the seat");
+    }
+
+    [Fact]
+    public async Task BeforeAnAppeal_NoAppealBodyIsNamed()
+    {
+        await using var db = await RatifiedDbAsync();
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+
+        review.AppealBody.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Appeal-body seats whose holder may not sit at the review now, with the claims they would act with: the seat is
+    /// theirs and their claims still say CommitteeMember, as a circuit that signed in before the change would, and only the
+    /// user store says they cannot sit. (The T237 review: the note named people by the store's rule while the resolve
+    /// handler let them act on the seat alone, so a de-roled chair could dismiss an appeal the note said no one could.)
+    /// </summary>
+    public static TheoryData<string, string, int> AppealSeatsWhoseHolderCannotSitNow => new()
+    {
+        { "a chair who is no longer a committee member", "assessor-1", InstitutionId },
+        { "an external member who moved to another institution", "elsewhere-1", OtherInstitutionId },
+        { "a deactivated external member", "deactivated-1", InstitutionId }
+    };
+
+    [Theory]
+    [MemberData(nameof(AppealSeatsWhoseHolderCannotSitNow))]
+    public async Task UnderAppeal_ASeatOnTheAppealBodyWhoseHolderCannotSitNow_IsNotOfferedTheResolveForm_AndResolvingIsRefused(
+        string who, string userId, int claimedInstitutionId)
+    {
+        var asChair = userId == "assessor-1";
+        await using var db = await AppealedDbAsync(
+            extraMember: asChair ? null : userId,
+            extraRole: DecisionPanelMemberRole.External);
+        if (asChair)
+        {
+            var panel = await db.DecisionPanels.Include(entity => entity.Members).SingleAsync(entity => entity.Id == PanelId);
+            panel.Members.Single(member => member.Role == DecisionPanelMemberRole.Chair).UserId = userId;
+            await SaveAndClearAsAuditPipelineWouldAsync(db);
+        }
+
+        var caller = TestPrincipals.InRole(WombatRoles.CommitteeMember, userId, claimedInstitutionId);
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, caller), CancellationToken.None);
+
+        review.CallerResolvesAppeals.Should().BeFalse(who);
+        review.AppealBody.Select(person => person.UserId).Should().NotContain(userId, who)
+            .And.Contain("external-1", $"{who}: the note names who can act");
+
+        await AssertResolvingIsRefusedAsync(db, caller, who);
+    }
+
+    [Fact]
+    public async Task UnderAppeal_TheTraineeUnderReview_SeatedOnTheAppealBodyAfterLosingTrainee_CannotResolveTheirOwnAppeal()
+    {
+        // Seated as an external member once they no longer held Trainee, which the panel's save allows, since it knows no
+        // review: the seat check reads only claims, which no longer say Trainee, so until the T237 review they could uphold
+        // their own appeal. The store now holds them as an active committee member at the panel's institution, so only the
+        // "never the trainee under review" arm of the rule stands in the way.
+        await using var db = await AppealedDbAsync(extraMember: Trainee, extraRole: DecisionPanelMemberRole.External);
+        var directory = FakeUserDirectory.CommitteeMembersAt(InstitutionId, "chair-1", "member-1", "external-1", Trainee);
+        var caller = TestPrincipals.InRole(WombatRoles.CommitteeMember, Trainee, InstitutionId);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, directory).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, caller), CancellationToken.None);
+
+        review.CallerResolvesAppeals.Should().BeFalse();
+        review.AppealBody.Select(person => $"{person.UserId}:{person.Role}").Should().Equal("chair-1:Chair", "external-1:External");
+
+        await AssertResolvingIsRefusedAsync(db, caller, "the trainee under review", directory);
+    }
+
+    /// <summary>
+    /// Dismissing, upholding and remitting (with the chair present) are each refused with the seat's refusal, and after
+    /// the save the audit pipeline makes from its catch the store is as it was: the appeal open, the review under appeal.
+    /// </summary>
+    private async Task AssertResolvingIsRefusedAsync(
+        ApplicationDbContext db, ClaimsPrincipal caller, string who, IUserAdministrationService? directory = null)
+    {
+        var before = await SnapshotAsync();
+        var userId = caller.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
+        foreach (var outcome in new[] { CommitteeAppealOutcome.Dismissed, CommitteeAppealOutcome.Upheld, CommitteeAppealOutcome.Remitted })
+        {
+            db.ChangeTracker.Clear();
+            var resolve = () => new ResolveAppealCommandHandler(db, directory ?? Directory()).Handle(
+                new ResolveAppealCommand(
+                    ReviewId,
+                    outcome,
+                    outcome == CommitteeAppealOutcome.Remitted ? CommitteeDecisionCategory.SatisfactoryProgress : null,
+                    outcome == CommitteeAppealOutcome.Remitted ? "Conditions lifted on appeal." : null,
+                    null,
+                    outcome == CommitteeAppealOutcome.Remitted ? ["chair-1", userId] : null,
+                    caller),
+                CancellationToken.None);
+
+            (await resolve.Should().ThrowAsync<UnauthorizedAccessException>($"{who}: {outcome}"))
+                .Which.Message.Should().Be(PanelSeat.MayNotResolveFromSeat);
+            await SaveAndClearAsAuditPipelineWouldAsync(db);
+            (await SnapshotAsync()).Should().BeEquivalentTo(before, $"{who}: {outcome}");
+        }
+
+        before.Review.Should().StartWith(nameof(CommitteeReviewState.UnderAppeal));
+        before.Appeals.Should().ContainSingle().Which.Should().EndWith("::", "the appeal is still open");
+    }
+
     // ─── Recording the decision, and who was present ─────────────────────────
 
     [Fact]
@@ -267,6 +552,7 @@ public sealed class CommitteeQuorumHandlerTests
         { "no longer a committee member", "assessor-1" },
         { "moved to another institution", "elsewhere-1" },
         { "erased: the id is a pseudonym", "erased-7f3a" },
+        { "given the Trainee role since joining", TraineeRepresentative },
         { "the trainee under review", Trainee }
     };
 
@@ -938,7 +1224,9 @@ public sealed class CommitteeQuorumHandlerTests
     // ─── Fixture ─────────────────────────────────────────────────────────────
 
     /// <param name="extraMember">A fourth panel member, as the panel holds them: someone who may not sit, for a refusal.</param>
-    private async Task<ApplicationDbContext> SeededDbAsync(string? extraMember = null)
+    /// <param name="extraRole">The seat the fourth member holds.</param>
+    private async Task<ApplicationDbContext> SeededDbAsync(
+        string? extraMember = null, DecisionPanelMemberRole extraRole = DecisionPanelMemberRole.Member)
     {
         var db = CreateDb();
 
@@ -971,7 +1259,7 @@ public sealed class CommitteeQuorumHandlerTests
         };
         if (extraMember is not null)
         {
-            members.Add(new DecisionPanelMember { UserId = extraMember, Role = DecisionPanelMemberRole.Member });
+            members.Add(new DecisionPanelMember { UserId = extraMember, Role = extraRole });
         }
 
         db.DecisionPanels.Add(new DecisionPanel
@@ -1018,18 +1306,20 @@ public sealed class CommitteeQuorumHandlerTests
         return db;
     }
 
-    private async Task<ApplicationDbContext> RatifiedDbAsync()
+    private async Task<ApplicationDbContext> RatifiedDbAsync(
+        string? extraMember = null, DecisionPanelMemberRole extraRole = DecisionPanelMemberRole.Member)
     {
-        var db = await SeededDbAsync();
+        var db = await SeededDbAsync(extraMember, extraRole);
         await RecordAsync(db, Chair(), "chair-1", "member-1");
         await RatifyAsync(db, Chair());
         db.ChangeTracker.Clear();
         return db;
     }
 
-    private async Task<ApplicationDbContext> AppealedDbAsync()
+    private async Task<ApplicationDbContext> AppealedDbAsync(
+        string? extraMember = null, DecisionPanelMemberRole extraRole = DecisionPanelMemberRole.Member)
     {
-        var db = await RatifiedDbAsync();
+        var db = await RatifiedDbAsync(extraMember, extraRole);
         await new LodgeAppealCommandHandler(db).Handle(
             new LodgeAppealCommand(ReviewId, "The conditions are disproportionate.", TestPrincipals.Trainee(Trainee, InstitutionId)),
             CancellationToken.None);

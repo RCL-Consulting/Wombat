@@ -469,6 +469,12 @@ internal static class CommitteeDecisionAuthorization
     /// <see cref="DemandAppealBodyReview" /> demands and the review page's offer of the resolve form reads
     /// (<see cref="CommitteeReviewDetailDto.CallerResolvesAppeals" />). (T165, T213)
     /// </summary>
+    /// <remarks>
+    /// The seat, from the caller's claims. Acting from it also takes being on the appeal body that can act now, read from
+    /// the user store (<see cref="PanelSeat.AppealBodyAt" />, T237), which the resolve handler demands next and the page's
+    /// offer reads too: a Chair or External member who has lost the CommitteeMember role, moved away or been deactivated
+    /// holds the seat but resolves nothing.
+    /// </remarks>
     public static bool ResolvesAppeals(ClaimsPrincipal principal, DecisionPanel panel)
         => HoldsSeat(principal, panel, role => role is DecisionPanelMemberRole.Chair or DecisionPanelMemberRole.External);
 
@@ -477,18 +483,20 @@ internal static class CommitteeDecisionAuthorization
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A trainee may hold CommitteeMember and sit on a panel (<see cref="PanelSeat" />), as the trainees' representative,
-    /// and be recorded present at a peer's review. They do not act on a review from the seat, whichever seat it is: the
-    /// trainee rung (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185) is asked first, as the read ladder and
-    /// Start ask it (<see cref="WorksOnPanel" />). Until the T194 review it was not: a Trainee seated as the Chair could
-    /// record, ratify and stage on a peer's review the page refused them, and one seated as the Chair or an External member
-    /// of the panel that reviews them was offered, and could use, the resolve form on their own appeal, since the page
-    /// shows a trainee their own review under appeal: they could dismiss it, or remit it and write the replacement
-    /// decision with two others named present.
+    /// Nobody who holds Trainee acts on a review from a seat, whichever seat it is: the trainee rung
+    /// (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185) is asked first, as the read ladder and Start ask it
+    /// (<see cref="WorksOnPanel" />). Until the T194 review it was not: a Trainee seated as the Chair could record, ratify
+    /// and stage on a peer's review the page refused them, and one seated as the Chair or an External member of the panel
+    /// that reviews them was offered, and could use, the resolve form on their own appeal, since the page shows a trainee
+    /// their own review under appeal: they could dismiss it, or remit it and write the replacement decision with two
+    /// others named present.
     /// </para>
     /// <para>
-    /// So a panel whose Chair holds Trainee has no one who can take the chair's actions until another chair is seated.
-    /// That was already so on the page, which never showed such a chair a review before ratification.
+    /// Since T237 nobody who holds Trainee is seated either (<see cref="PanelSeat" />, the same rung read from the user
+    /// store): the panel form does not offer them, and panel create and update refuse them in any seat. The rung is still
+    /// asked here for a member given Trainee after they were seated, whom the panel's next save takes off: until then a
+    /// panel whose Chair holds Trainee has no one who can take the chair's actions, and its review page says the chair
+    /// cannot be recorded as present (<see cref="CommitteeReviewDetailDto.PanelShortfall" />).
     /// </para>
     /// </remarks>
     private static bool HoldsSeat(ClaimsPrincipal principal, DecisionPanel panel, Func<DecisionPanelMemberRole, bool> role)
@@ -523,7 +531,8 @@ internal static class CommitteeDecisionAuthorization
     /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairedReview" />).
     /// Until T165 an Administrator with no seat on the panel could dismiss a trainee's appeal, or remit it and write the
     /// replacement decision alone, which every page then showed beside the original sitting's attendance. The review's
-    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. The resolve handler then demands that the
+    /// caller may act from the seat now (<see cref="PanelSeat.DemandSitsOnAppealBody" />, T237).
     /// </remarks>
     public static CommitteeReview DemandAppealBodyReview(ClaimsPrincipal principal, CommitteeReview? review)
     {

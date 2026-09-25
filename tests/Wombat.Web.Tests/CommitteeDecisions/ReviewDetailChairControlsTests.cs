@@ -125,9 +125,52 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     {
         SignInAs("member-1");
         var review = Review(CommitteeReviewState.UnderAppeal, callerChairs: false);
-        var cut = Render(review with { PanelMembers = review.PanelMembers.Where(person => person.UserId != "external-1").ToArray() });
+        var cut = Render(review with
+        {
+            PanelMembers = review.PanelMembers.Where(person => person.UserId != "external-1").ToArray(),
+            AppealBody = review.AppealBody.Where(person => person.UserId != "external-1").ToArray()
+        });
 
         Text(cut.Find("#appeal-body-note")).Should().Be("Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu.");
+    }
+
+    [Fact]
+    public void UnderAppeal_TheAppealBodyNote_NamesNoExternalMemberWhoCannotAct()
+    {
+        // T237. The committee chain's browser check: a trainee seated as External (before T237 refused the seat) was
+        // named here, to the trainee on their own appeal too, though since T194 they cannot resolve it. The note names
+        // the appeal body the query says can act, not every External seat on the panel.
+        SignInAs("member-1");
+        var review = Review(CommitteeReviewState.UnderAppeal, callerChairs: false);
+        var cut = Render(review with
+        {
+            PanelMembers = [.. review.PanelMembers, Person("rep-1", DecisionPanelMemberRole.External, "Demo Trainee")]
+        });
+
+        Text(cut.Find("#appeal-body-note")).Should().Be(
+            "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, Anna Botha.");
+    }
+
+    [Fact]
+    public void UnderAppeal_WhenTheChairCannotAct_TheNoteNamesTheExternalMembersAlone()
+    {
+        SignInAs("member-1");
+        var review = Review(CommitteeReviewState.UnderAppeal, callerChairs: false);
+        var cut = Render(review with { AppealBody = review.AppealBody.Where(person => person.UserId != "chair-1").ToArray() });
+
+        Text(cut.Find("#appeal-body-note")).Should().Be(
+            "Only the appeal body can resolve the appeal: the panel's external member, Anna Botha.");
+    }
+
+    [Fact]
+    public void UnderAppeal_WhenNoOneOnTheAppealBodyCanAct_TheNoteSaysSo_AndNamesNobody()
+    {
+        SignInAs("member-1");
+        var cut = Render(Review(CommitteeReviewState.UnderAppeal, callerChairs: false) with { AppealBody = [] });
+
+        Text(cut.Find("#appeal-body-note")).Should().Be(
+            "Only the appeal body, the panel's chair or an external member, can resolve the appeal, and none of them can " +
+            "act now. A panel administrator must seat a chair who can.");
     }
 
     // ─── Each form only in the state its handler takes it (T213 review) ──────
@@ -455,7 +498,15 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
                 Person("chair-1", DecisionPanelMemberRole.Chair, "Thandi Zulu"),
                 Person("member-1", DecisionPanelMemberRole.Member, "Priya Naidoo"),
                 Person("external-1", DecisionPanelMemberRole.External, "Anna Botha")
-            ]
+            ],
+            // Who can resolve the appeal, as the query fills it: only under appeal (T237).
+            AppealBody = state == CommitteeReviewState.UnderAppeal
+                ?
+                [
+                    Person("chair-1", DecisionPanelMemberRole.Chair, "Thandi Zulu"),
+                    Person("external-1", DecisionPanelMemberRole.External, "Anna Botha")
+                ]
+                : []
         };
 
     private static CommitteePersonDto Person(string userId, DecisionPanelMemberRole role, string name)

@@ -326,7 +326,7 @@ public static class TraineeScopeResolver
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Users hold several roles, and a registrar can sit on the committee as the trainees' representative, coordinate a
+    /// Users hold several roles, and a registrar can hold CommitteeMember as the trainees' representative, coordinate a
     /// rotation, or administer the system. The rule is that none of those seats reads, or acts on, a peer's record. It
     /// is asked FIRST, before any role that would admit the caller, by every surface that answers about other trainees:
     /// </para>
@@ -353,7 +353,10 @@ public static class TraineeScopeResolver
     /// offered, on every review, their own included, whatever seat they hold on its panel;</item>
     /// <item>running MSF campaigns (<c>MsfCampaignRules.RunsNoCampaigns</c> and <c>IsKeptFromCampaignsAbout</c>, T224):
     /// every campaign command, the campaign page and list, which say so and offer no create, and the report of any
-    /// campaign but the caller's own released one.</item>
+    /// campaign but the caller's own released one;</item>
+    /// <item>seating a decision panel (<c>PanelSeat</c>, T237), asked of the people named rather than of the caller
+    /// (<see cref="HoldersAsync" />): the panel form's pickers leave out anyone who holds Trainee, panel create and update
+    /// refuse them in any seat, and a decision cannot record one as present.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,
@@ -367,6 +370,29 @@ public static class TraineeScopeResolver
     {
         ArgumentNullException.ThrowIfNull(principal);
         return principal.IsInRole(WombatRoles.Trainee);
+    }
+
+    /// <summary>
+    /// Which of <paramref name="userIds" /> <see cref="ActsAsTrainee" /> would answer yes for, read from the user store:
+    /// the same rung (the Trainee role), asked of people who are not the caller, whose claims are not to hand. (T237)
+    /// </summary>
+    /// <remarks>
+    /// Who may sit on a decision panel asks it (<c>PanelSeat</c>): the seat predicates refuse anyone who holds Trainee
+    /// (<c>CommitteeDecisionAuthorization.HoldsSeat</c>, the T194 review), so a panel that seated one would hold a chair
+    /// or an appeal body that cannot act, and a quorum that counts someone who cannot. A user record from a role listing
+    /// carries only the role it was listed by, never the user's others, so this asks the store's role links
+    /// (<see cref="IUserAdministrationService.WhichHoldRoleAsync" />) rather than any record's
+    /// <see cref="UserIdentityDetails.Roles" />, and only about the people named, not every trainee in the country.
+    /// </remarks>
+    public static Task<IReadOnlySet<string>> HoldersAsync(
+        IUserAdministrationService users,
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(users);
+        ArgumentNullException.ThrowIfNull(userIds);
+
+        return users.WhichHoldRoleAsync(userIds, WombatRoles.Trainee, cancellationToken);
     }
 
     // ─── Who stands over a trainee ──────────────────────────────────────────

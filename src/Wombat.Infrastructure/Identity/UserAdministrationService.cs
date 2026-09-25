@@ -76,6 +76,37 @@ public sealed class UserAdministrationService : IUserAdministrationService
         return users.ToDictionary(user => user.Id, user => $"{user.FirstName} {user.LastName}".Trim(), StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// One query over the role links of exactly the users asked about, never the role's whole listing: who may sit on a
+    /// decision panel asks it of the committee members at one institution, and would otherwise load every trainee in the
+    /// country with their scopes on each review page (T237).
+    /// </summary>
+    public async Task<IReadOnlySet<string>> WhichHoldRoleAsync(
+        IReadOnlyCollection<string> userIds,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        if (userIds.Count == 0)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        var ids = userIds.Distinct(StringComparer.Ordinal).ToArray();
+        var normalizedRole = _userManager.NormalizeName(role);
+        var holders = await _dbContext.UserRoles
+            .AsNoTracking()
+            .Where(link => ids.Contains(link.UserId))
+            .Join(
+                _dbContext.Roles.Where(entity => entity.NormalizedName == normalizedRole),
+                link => link.RoleId,
+                entity => entity.Id,
+                (link, _) => link.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return holders.ToHashSet(StringComparer.Ordinal);
+    }
+
     public async Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
     {
         var users = await LoadUsersQuery()

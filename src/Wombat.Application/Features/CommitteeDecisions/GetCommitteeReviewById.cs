@@ -54,7 +54,15 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                 .Prepend(review.TraineeUserId),
             cancellationToken);
 
-        var seated = await SeatedAsync(review, request.Principal, cancellationToken);
+        // Who may sit on the panel now (PanelSeat), read once and only where the page uses it: the present list while the
+        // review can still take a decision, the appeal body's note under appeal, and whether a caller seated on the appeal
+        // body may act from the seat, which resolving demands (T237).
+        var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel);
+        var eligible = MayStillDecide(review) || review.State == CommitteeReviewState.UnderAppeal || holdsAppealSeat
+            ? await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken)
+            : null;
+        var seated = Seated(review, request.Principal, eligible);
+        var callerUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         // T213 review. Starting the review and every chair's action also demand that its trainee still trains at the
         // panel's institution, so the page is told when that fails for this caller, by the same predicate, and offers none
@@ -79,8 +87,15 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             // exactly the people its handler lets use it.
             CallerChairs = CommitteeDecisionAuthorization.Chairs(request.Principal, review.Panel),
             CallerMayStart = CommitteeDecisionAuthorization.WorksOnPanel(request.Principal, review.Panel),
-            CallerResolvesAppeals = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel),
+            // The seat, and acting from it now: the two checks the resolve handler demands, in its order (T237).
+            CallerResolvesAppeals = holdsAppealSeat &&
+                                    eligible is not null &&
+                                    PanelSeat.AppealBodyAt(review, eligible).Any(member =>
+                                        string.Equals(member.UserId, callerUserId, StringComparison.Ordinal)),
             TraineeElsewhere = traineeElsewhere,
+            AppealBody = AppealBodyOf(review, eligible)
+                .Select(person => person with { Name = names.NameOf(person.UserId) })
+                .ToArray(),
             PanelMembers = detail.PanelMembers
                 .Select(person => person with
                 {
@@ -98,35 +113,53 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
     }
 
     /// <summary>
+    /// Whether the review can still take a decision: a summative review not yet decided, or under appeal, whose remit
+    /// records a replacement.
+    /// </summary>
+    private static bool MayStillDecide(CommitteeReview review)
+        => !review.IsFormative &&
+           review.State is CommitteeReviewState.Scheduled
+               or CommitteeReviewState.InProgress
+               or CommitteeReviewState.UnderAppeal;
+
+    /// <summary>
     /// The panel members who may be recorded as present at this review now (<see cref="PanelSeat" />, T165): the ones
     /// the record-decision and remit forms offer, by the rule recording enforces. Asked only while the review can still
     /// take a decision, a summative review not yet decided or under appeal, and never for the trainee whose review it
     /// is: who may sit on their panel is the panel's business.
     /// </summary>
-    private async Task<IReadOnlySet<string>> SeatedAsync(
+    private static IReadOnlySet<string> Seated(
         CommitteeReview review,
         System.Security.Claims.ClaimsPrincipal principal,
-        CancellationToken cancellationToken)
+        IReadOnlyDictionary<string, Common.Interfaces.UserIdentityDetails>? eligible)
     {
-        var mayStillDecide = !review.IsFormative &&
-                             review.State is CommitteeReviewState.Scheduled
-                                 or CommitteeReviewState.InProgress
-                                 or CommitteeReviewState.UnderAppeal;
         var askedByTheTrainee = string.Equals(
             principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
             review.TraineeUserId,
             StringComparison.Ordinal);
 
-        if (!mayStillDecide || askedByTheTrainee)
+        if (eligible is null || !MayStillDecide(review) || askedByTheTrainee)
         {
             return new HashSet<string>(StringComparer.Ordinal);
         }
 
-        var eligible = await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken);
-        return review.Panel.Members
+        return PanelSeat.SittingAt(review, eligible)
             .Select(member => member.UserId)
-            .Where(userId => eligible.ContainsKey(userId) &&
-                             !string.Equals(userId, review.TraineeUserId, StringComparison.Ordinal))
             .ToHashSet(StringComparer.Ordinal);
     }
+
+    /// <summary>
+    /// Who can resolve the appeal now (<see cref="CommitteeReviewDetailDto.AppealBody" />, T237): the appeal body that can
+    /// act (<see cref="PanelSeat.AppealBodyAt" />), the one list the resolve handler also demands the caller is on. Only
+    /// under appeal, and for every reader: the note it feeds tells the trainee too who resolves their appeal, and must name
+    /// nobody who cannot.
+    /// </summary>
+    private static IReadOnlyList<CommitteePersonDto> AppealBodyOf(
+        CommitteeReview review,
+        IReadOnlyDictionary<string, Common.Interfaces.UserIdentityDetails>? eligible)
+        => eligible is null || review.State != CommitteeReviewState.UnderAppeal
+            ? []
+            : PanelSeat.AppealBodyAt(review, eligible)
+                .Select(member => new CommitteePersonDto(member.UserId, member.Role))
+                .ToArray();
 }

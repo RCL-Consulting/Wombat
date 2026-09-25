@@ -73,8 +73,9 @@ public sealed class PanelEditSeatTests : TestContext
         _sender.Received.OfType<ListPanelMemberCandidatesQuery>().Should().ContainSingle()
             .Which.InstitutionId.Should().Be(InstitutionA, "the panel's own institution, not the Administrator's none");
         System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-warning").TextContent, @"\s+", " ").Trim()
-            .Should().Be("1 member of this panel is no longer an active committee member at its institution, so is not " +
-                         "listed below. Saving takes that member off the panel.");
+            .Should().Be("1 member of this panel can no longer sit on it, so is not listed below: only an active " +
+                         "committee member at its institution who is not a trainee can. Saving takes that member off the " +
+                         "panel.");
         cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse(
             "it says what the page is, on every visit; a live region would read it out each time (T193)");
 
