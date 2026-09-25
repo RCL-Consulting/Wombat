@@ -1,11 +1,12 @@
 ---
 id: T241
 title: Integration test hygiene: schema-admin connections share the pool and can exhaust connections, and two package references are unused
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T241 — Integration test hygiene: schema-admin connections share the pool and can exhaust connections, and two package references are unused
@@ -32,10 +33,26 @@ helpers, used by every class. Remove the two unused references and, if nothing e
 
 ## Verification
 
-- [ ] The Integration suite passes, and `grep -rn "new NpgsqlConnection(_baseConnectionString)" tests` finds nothing
+- [x] The Integration suite passes, and `grep -rn "new NpgsqlConnection(_baseConnectionString)" tests` finds nothing
       outside the helper.
-- [ ] `dotnet list package --include-transitive` shows no Testcontainers or SSH.NET.
+- [x] `dotnet list package --include-transitive` shows no Testcontainers or SSH.NET.
 
 ## Related
 
 T227.
+
+---
+
+## As built — 2026-09-25 (`e9305b5`, `bfe2725`)
+
+- **One shared helper.** `TestDatabase` and `TestSchemas` resolve the server, open schema-admin connections, name and
+  drop `it_<guid>` schemas, and hold T227's catalog helpers. Every integration test class uses them.
+- **Pooling.** A schema's connections are pooled until the schema is dropped, then cleared, so a run no longer uses up
+  Windows' local ports.
+- **The scan.** A test fails on any class that opens `new NpgsqlConnection(_baseConnectionString)` or builds its own
+  `NpgsqlConnectionStringBuilder`.
+- **Packages.** `Testcontainers.PostgreSql`, `Respawn` and the SSH.NET pin are removed.
+- **Classes merged since.** The classes that landed after the lane (T247, T248, T253, T254) were converted at merge.
+
+Master's Integration suite passed 290 of 290 on its first run, with no 53300 failures. HANDOVER.md and CLAUDE.md now say
+how integration tests run.

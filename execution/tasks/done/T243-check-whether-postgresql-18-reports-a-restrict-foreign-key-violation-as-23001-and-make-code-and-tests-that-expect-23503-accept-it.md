@@ -1,11 +1,12 @@
 ---
 id: T243
 title: Check whether PostgreSQL 18 reports a RESTRICT foreign-key violation as 23001, and make code and tests that expect 23503 accept it
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T243 — Check whether PostgreSQL 18 reports a RESTRICT foreign-key violation as 23001, and make code and tests that expect 23503 accept it
@@ -36,8 +37,23 @@ Four foreign-key tests expect SQLSTATE 23503, and PostgreSQL 18.6 reportedly ret
 
 ## Verification
 
-- [ ] Both codes are handled wherever a foreign-key violation is translated. Tests.
+- [x] Both codes are handled wherever a foreign-key violation is translated. Tests.
 
 ## Related
 
 T223, T232.
+
+---
+
+## As built — 2026-09-25 (`6f104f2`)
+
+- **The fact.** Dev's server is PostgreSQL 16.10. `ForeignKeySqlStatePostgresTests` records the SQLSTATE a RESTRICT
+  violation gives. The lane also ran the full Integration suite on a `postgres:18` container, and it passed.
+- **One helper.** Every foreign-key check goes through `PostgresErrors` (`IsForeignKeyViolation`, which accepts 23503
+  and 23001 and reads the whole exception chain). An architecture test (`ForeignKeyErrorCodeTests`) fails on any other
+  type in `src` that names either code, including through Npgsql's constants.
+- **The drift check** prints the database version on its own line.
+
+No UI, so there is no browser check.
+
+**Filed:** [T275] (move dev to PostgreSQL 18; read production's version).
