@@ -1,11 +1,12 @@
 ---
 id: T199
 title: Polish from the batch-C browser check: a missing space, a raw validator message, EPA ids in the PDF, and no way to withdraw a campaign
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T199 — Polish from the batch-C browser check: a missing space, a raw validator message, EPA ids in the PDF, and no way to withdraw a campaign
@@ -31,8 +32,32 @@ created: 2026-09-24
 
 ## Verification
 
-- [ ] Each item is fixed, with a bUnit test or a browser check recorded here.
+- [x] Each item is fixed, with a bUnit test or a browser check recorded here.
 
 ## Related
 
 T158, T182, T169, T173.
+
+---
+
+## As built — 2026-09-25 (`8ac2eb6`, `317670c`)
+
+1. **The curriculum items page:** "…end-of-life care (inactive: not in force)", with the space.
+2. **The panel form's Institution scope:** a friendly refusal, "Institution-scoped panels require an institution.", not
+   the raw validator string.
+3. **The portfolio PDF** prints the EPA's code and title, the assessor's name and the campaign's name, not ids.
+4. **Deactivate** is not offered on an inactive EPA (also T196).
+5. **Withdraw.** A campaign under review can be withdrawn from the list and the page, in the words it was confirmed in,
+   and a raced release says why.
+
+bUnit, handler and PDF text tests.
+
+Browser on dev (scripted Chrome, master `e22d58b`): items 1–5 passed, including the closed-campaign dialog wording and
+the T173 count moving with each withdrawal.
+
+**Found and fixed (`317670c`).** A release refused because the campaign had been withdrawn in another tab still
+committed an MSF evidence record (activity 52 on dev). `MsfCampaign.Release` judged the state only after the evidence was
+staged, and the audit pipeline commits a refusal that is not a refused save. The handler now refuses a withdrawn or
+released campaign with `CampaignChanged`, before staging anything. A handler test, mutation-checked, covers both cases,
+and the suites pass (7,467).
+
