@@ -223,7 +223,9 @@ public sealed class UserAdministrationTests
             new SetUserLockoutCommand("self-id", true, TestPrincipals.InstitutionalAdmin(InstitutionA, userId: "self-id")),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        // Since T278 a refusal of the caller's own account is a permission refusal, given before the lookup, and a
+        // reactivation is refused as a lock is (UserAdministrationSelfAndTraineeTests).
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("*your own*");
         users.LockoutCalls.Should().BeEmpty();
     }
@@ -314,59 +316,5 @@ public sealed class UserAdministrationTests
             new Institution { Id = InstitutionA, Name = "Institution A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "Institution B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
         db.SaveChanges();
-    }
-
-    private sealed class RecordingUserAdministrationService : IUserAdministrationService
-    {
-        private readonly Dictionary<string, UserIdentityDetails> _users = new(StringComparer.Ordinal);
-
-        public List<(string UserId, string Role)> AddRoleCalls { get; } = new();
-        public List<(string UserId, string Role)> RemoveRoleCalls { get; } = new();
-        public List<(string UserId, string Password)> ResetPasswordCalls { get; } = new();
-        public List<(string UserId, bool Locked)> LockoutCalls { get; } = new();
-
-        public void Add(UserIdentityDetails user) => _users[user.UserId] = user;
-
-        public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.FromResult(_users.TryGetValue(userId, out var user) ? user : null);
-
-        public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(_users.Values.Where(user => user.Roles.Contains(role)).ToArray());
-
-        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(_users.Values.ToArray());
-
-        public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-
-        public Task UpdateScopeAsync(string userId, int institutionId, IReadOnlyCollection<int> specialityIds, IReadOnlyCollection<int> subSpecialityIds, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-
-        public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-
-        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-        {
-            AddRoleCalls.Add((userId, role));
-            return Task.CompletedTask;
-        }
-
-        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-        {
-            RemoveRoleCalls.Add((userId, role));
-            return Task.CompletedTask;
-        }
-
-        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
-        {
-            ResetPasswordCalls.Add((userId, newPassword));
-            return Task.CompletedTask;
-        }
-
-        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
-        {
-            LockoutCalls.Add((userId, locked));
-            return Task.CompletedTask;
-        }
     }
 }

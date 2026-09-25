@@ -5,171 +5,200 @@
 
 <PageTitle>@Title</PageTitle>
 
-<PageHeader Title="@Title" Subtitle="Roles, password reset, lockout, and pending-invitation cleanup for a single user.">
+<PageHeader Title="@Title" Subtitle="@Subtitle">
   <Actions>
     <a class="btn btn-outline btn-sm" href="/admin/users">Back to users</a>
   </Actions>
 </PageHeader>
 
-@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a removed role's
-   Remove is gone, Lock out and Reactivate replace each other, Revoke goes with the invitations, and Add role and Reset
-   password are disabled once their input is cleared. A refusal leaves the focus where it was, except a refused reset:
-   the password is cleared either way, which disables Reset password. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_actionError))
-  {
-    <Alert Kind="danger">@_actionError</Alert>
-  }
+@* T278. Someone who holds Trainee beside a role that administers users opens nobody, their own account included: every
+   Users read and command refuses them first. So nothing is read for them, and the page says why in the words the
+   handlers refuse with. Standing page content: an info Alert, which carries no role. *@
+@if (_traineeNote is not null)
+{
+  <Alert Kind="info" Id="user-trainee-note">@_traineeNote</Alert>
+}
+else
+{
+  @* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a removed role's
+     Remove is gone, Lock out and Reactivate replace each other, Revoke goes with the invitations, and Add role and Reset
+     password are disabled once their input is cleared. A refusal leaves the focus where it was, except a refused reset:
+     the password is cleared either way, which disables Reset password. *@
+  <ActionResult @ref="_result">
+    @if (!string.IsNullOrWhiteSpace(_actionError))
+    {
+      <Alert Kind="danger">@_actionError</Alert>
+    }
 
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-</ActionResult>
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+      <Alert Kind="success">@_statusMessage</Alert>
+    }
+  </ActionResult>
 
-<StatePanel IsLoading="_loading" IsEmpty="@(_user is null)" EmptyTitle="User unavailable" EmptyBody="The user could not be found or is outside your scope." LoadError="@_loadError">
-  @if (_user is not null)
-  {
-    <div class="details-grid">
-      <section class="detail-card">
-        <h3>Account summary</h3>
-        <dl class="detail-list">
-          <dt>Name</dt><dd>@($"{_user.FirstName} {_user.LastName}")</dd>
-          <dt>Email</dt><dd>@_user.Email</dd>
-          <dt>Institution</dt><dd>@(_user.InstitutionName ?? "Global (no institution)")</dd>
-          <dt>Status</dt><dd>@(_user.IsLockedOut ? "Locked out" : "Active")</dd>
-        </dl>
-      </section>
+  <StatePanel IsLoading="_loading" IsEmpty="@(_user is null)" EmptyTitle="User unavailable" EmptyBody="The user could not be found or is outside your scope." LoadError="@_loadError">
+    @if (_user is not null)
+    {
+      @* T278. Nobody changes their own roles, lockout or password here, the Administrator included: the handlers refuse
+         it, so on the caller's own account none of them is offered, and this says why. Standing page content: an info
+         Alert, which carries no role. Revoking the invitations addressed to their email is still offered: an invitation
+         to an account that exists cannot be accepted, so revoking it changes nothing about the account. *@
+      @if (IsOwnAccount)
+      {
+        <Alert Kind="info" Id="user-own-account-note">@UserAdministrationRules.OwnAccountNote <a href="/account/change-password">Change your password</a> from your account.</Alert>
+      }
 
-      <section class="detail-card">
-        <h3>Roles</h3>
-        @if (_user.Roles.Count == 0)
-        {
-          <p class="muted">This user has no roles.</p>
-        }
-        else
-        {
-          <ul class="stack-list">
-            @foreach (var role in _user.Roles)
-            {
-              <li>
-                <span>@role</span>
-                @if (CanModifyRole(role))
-                {
-                  @* T239: named by the role it removes; every role's button read "Remove". *@
-                  <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove the {role} role")" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
-                }
-                else
-                {
-                  <span class="muted">System-managed</span>
-                }
-              </li>
-            }
-          </ul>
-        }
+      <div class="details-grid">
+        <section class="detail-card">
+          <h3>Account summary</h3>
+          <dl class="detail-list">
+            <dt>Name</dt><dd>@($"{_user.FirstName} {_user.LastName}")</dd>
+            <dt>Email</dt><dd>@_user.Email</dd>
+            <dt>Institution</dt><dd>@(_user.InstitutionName ?? "Global (no institution)")</dd>
+            <dt>Status</dt><dd>@(_user.IsLockedOut ? "Locked out" : "Active")</dd>
+          </dl>
+        </section>
 
-        <h4 style="margin-top: 1.5rem;">Add role</h4>
-        <div class="form-grid form-grid--wide">
-          <FormField Label="Role" InputId="add-role-select">
-            <select id="add-role-select" class="form-select" @bind="_addRoleSelection">
-              <option value="">Select role</option>
-              @foreach (var role in AddableRoles)
+        <section class="detail-card">
+          <h3>Roles</h3>
+          @if (_user.Roles.Count == 0)
+          {
+            <p class="muted">This user has no roles.</p>
+          }
+          else
+          {
+            <ul class="stack-list">
+              @foreach (var role in _user.Roles)
               {
-                <option value="@role">@role</option>
+                <li>
+                  <span>@role</span>
+                  @* T278: on the caller's own account no role has a Remove, and the note above says why. *@
+                  @if (!IsOwnAccount)
+                  {
+                    if (CanModifyRole(role))
+                    {
+                      @* T239: named by the role it removes; every role's button read "Remove". *@
+                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove the {role} role")" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
+                    }
+                    else
+                    {
+                      <span class="muted">System-managed</span>
+                    }
+                  }
+                </li>
               }
-            </select>
-          </FormField>
-        </div>
-        <FormActions>
-          <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(AddRoleAction) || string.IsNullOrWhiteSpace(_addRoleSelection))" aria-disabled="@InFlight.AriaDisabled(Running(AddRoleAction))" @onclick="AddRoleAsync">Add role</button>
-        </FormActions>
-      </section>
+            </ul>
+          }
 
-      <section class="detail-card">
-        <h3>Reset password</h3>
-        <p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
-        <div class="form-grid form-grid--wide">
-          <FormField Label="New password" InputId="reset-password-input">
-            <div class="password-wrapper">
-              <input id="reset-password-input" type="password" class="form-control" autocomplete="new-password" @bind="_newPassword" @bind:event="oninput" minlength="8" />
-              <PasswordToggleButton For="reset-password-input" />
+          @if (!IsOwnAccount)
+          {
+            <h4 style="margin-top: 1.5rem;">Add role</h4>
+            <div class="form-grid form-grid--wide">
+              <FormField Label="Role" InputId="add-role-select">
+                <select id="add-role-select" class="form-select" @bind="_addRoleSelection">
+                  <option value="">Select role</option>
+                  @foreach (var role in AddableRoles)
+                  {
+                    <option value="@role">@role</option>
+                  }
+                </select>
+              </FormField>
             </div>
-          </FormField>
-        </div>
-        <FormActions>
-          <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
-        </FormActions>
-      </section>
+            <FormActions>
+              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(AddRoleAction) || string.IsNullOrWhiteSpace(_addRoleSelection))" aria-disabled="@InFlight.AriaDisabled(Running(AddRoleAction))" @onclick="AddRoleAsync">Add role</button>
+            </FormActions>
+          }
+        </section>
 
-      <section class="detail-card">
-        <h3>Lockout</h3>
-        @if (_user.IsLockedOut)
+        @if (!IsOwnAccount)
         {
-          <p>This user is currently locked out and cannot sign in.</p>
-          <FormActions>
-            <button type="button" class="btn btn-primary" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
-          </FormActions>
-        }
-        else if (CanLockoutUser)
-        {
-          @* T284: what a lock does beyond sign-in, since T102, T165, T240, T268 and T284 made it mean "not working here
-             now" (PanelSeat, NomineeDirectory, ReminderRecipientPolicy, TraineeScopeResolver's current trainee).
-             UserDetailLockCardTests checks the card names each. The dashboards are named, not "the dashboards": the
-             institution dashboard's Users card counts accounts by role, locked or not (T284 review). *@
-          <p>Locking out the user prevents sign-in immediately. Until they are reactivated:</p>
-          <ul id="lockout-effects">
-            <li>They sit on no committee panel.</li>
-            <li>They are not a current trainee. No committee review or feedback campaign can be started about them, a draft feedback campaign about them cannot be opened, and the programme's lists of its trainees leave them out: the speciality, sub-speciality and committee dashboards' trainee targets and counts, feedback coverage, decisions due, and the weekly digest's inactive trainees.</li>
-            <li>They are sent no activity reminders or weekly digests.</li>
-            <li>They cannot be named as an activity's assessor.</li>
-          </ul>
-          <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
-          <FormActions>
-            <button type="button" class="btn btn-danger" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
-          </FormActions>
-        }
-        else
-        {
-          <p class="muted">Global administrators cannot be locked out from this surface.</p>
-        }
-      </section>
+          <section class="detail-card">
+            <h3>Reset password</h3>
+            <p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+            <div class="form-grid form-grid--wide">
+              <FormField Label="New password" InputId="reset-password-input">
+                <div class="password-wrapper">
+                  <input id="reset-password-input" type="password" class="form-control" autocomplete="new-password" @bind="_newPassword" @bind:event="oninput" minlength="8" />
+                  <PasswordToggleButton For="reset-password-input" />
+                </div>
+              </FormField>
+            </div>
+            <FormActions>
+              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
+            </FormActions>
+          </section>
 
-      <section class="detail-card">
-        <h3>Pending invitations</h3>
-        @if (_user.PendingInvitations.Count == 0)
-        {
-          <p class="muted">No active invitations are outstanding for this email.</p>
+          <section class="detail-card">
+            <h3>Lockout</h3>
+            @if (_user.IsLockedOut)
+            {
+              <p>This user is currently locked out and cannot sign in.</p>
+              <FormActions>
+                <button type="button" class="btn btn-primary" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
+              </FormActions>
+            }
+            else if (CanLockoutUser)
+            {
+              @* T284: what a lock does beyond sign-in, since T102, T165, T240, T268 and T284 made it mean "not working here
+                 now" (PanelSeat, NomineeDirectory, ReminderRecipientPolicy, TraineeScopeResolver's current trainee).
+                 UserDetailLockCardTests checks the card names each. The dashboards are named, not "the dashboards": the
+                 institution dashboard's Users card counts accounts by role, locked or not (T284 review). *@
+              <p>Locking out the user prevents sign-in immediately. Until they are reactivated:</p>
+              <ul id="lockout-effects">
+                <li>They sit on no committee panel.</li>
+                <li>They are not a current trainee. No committee review or feedback campaign can be started about them, a draft feedback campaign about them cannot be opened, and the programme's lists of its trainees leave them out: the speciality, sub-speciality and committee dashboards' trainee targets and counts, feedback coverage, decisions due, and the weekly digest's inactive trainees.</li>
+                <li>They are sent no activity reminders or weekly digests.</li>
+                <li>They cannot be named as an activity's assessor.</li>
+              </ul>
+              <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
+              <FormActions>
+                <button type="button" class="btn btn-danger" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
+              </FormActions>
+            }
+            else
+            {
+              <p class="muted">Global administrators cannot be locked out from this surface.</p>
+            }
+          </section>
         }
-        else
-        {
-          <DataTable TItem="UserPendingInvitationDto" Items="_user.PendingInvitations" Caption="Pending invitations for this email">
-            <HeaderRow>
-              <tr>
-                <th>Role</th>
-                <th>Institution / College</th>
-                <th>Speciality</th>
-                <th>Issued</th>
-                <th>Expires</th>
-              </tr>
-            </HeaderRow>
-            <Row Context="invitation">
-              <tr>
-                <td>@invitation.TargetRole</td>
-                <td>@invitation.ScopeName</td>
-                <td>@(invitation.SpecialityName ?? "—")</td>
-                <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
-              </tr>
-            </Row>
-          </DataTable>
-          <FormActions>
-            <button type="button" class="btn btn-danger" disabled="@OtherInFlight(RevokeAction)" aria-disabled="@InFlight.AriaDisabled(Running(RevokeAction))" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
-          </FormActions>
-        }
-      </section>
-    </div>
-  }
-</StatePanel>
+
+        <section class="detail-card">
+          <h3>Pending invitations</h3>
+          @if (_user.PendingInvitations.Count == 0)
+          {
+            <p class="muted">No active invitations are outstanding for this email.</p>
+          }
+          else
+          {
+            <DataTable TItem="UserPendingInvitationDto" Items="_user.PendingInvitations" Caption="Pending invitations for this email">
+              <HeaderRow>
+                <tr>
+                  <th>Role</th>
+                  <th>Institution / College</th>
+                  <th>Speciality</th>
+                  <th>Issued</th>
+                  <th>Expires</th>
+                </tr>
+              </HeaderRow>
+              <Row Context="invitation">
+                <tr>
+                  <td>@invitation.TargetRole</td>
+                  <td>@invitation.ScopeName</td>
+                  <td>@(invitation.SpecialityName ?? "—")</td>
+                  <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                  <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
+                </tr>
+              </Row>
+            </DataTable>
+            <FormActions>
+              <button type="button" class="btn btn-danger" disabled="@OtherInFlight(RevokeAction)" aria-disabled="@InFlight.AriaDisabled(Running(RevokeAction))" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
+            </FormActions>
+          }
+        </section>
+      </div>
+    }
+  </StatePanel>
+}
 
 @code {
   [Parameter] public string UserId { get; set; } = string.Empty;
@@ -201,17 +230,36 @@
   private string _addRoleSelection = string.Empty;
   private string _newPassword = string.Empty;
   private bool _callerIsAdministrator;
-  private string? _callerUserId;
+  private System.Security.Claims.ClaimsPrincipal? _caller;
+
+  /// <summary>Why nothing is shown: the caller holds Trainee beside a role that administers users (T278); else null.</summary>
+  private string? _traineeNote;
 
   private string Title => _user is null ? "User" : $"{_user.FirstName} {_user.LastName}";
+
+  /// <summary>
+  /// What the page offers (T278): none to someone who holds Trainee beside a role that administers users, whom it offers
+  /// nothing; on the caller's own account, what is there, which is no role, lockout or password change; else all of it.
+  /// </summary>
+  private string? Subtitle => _traineeNote is not null
+    ? null
+    : IsOwnAccount
+      ? "Your own account's summary, roles and pending invitations."
+      : "Roles, password reset, lockout, and pending-invitation cleanup for a single user.";
+
+  /// <summary>
+  /// Whether the user shown is the caller. Their roles, lockout and password are not offered: the handlers refuse a
+  /// change to any of them by the same rule (<see cref="UserAdministrationRules.IsCaller" />, T278).
+  /// </summary>
+  private bool IsOwnAccount => _user is not null && _caller is not null && UserAdministrationRules.IsCaller(_caller, _user.UserId);
 
   private IEnumerable<string> AddableRoles
     => UserAdministrationRules.AssignableRoles.Where(role => _user is null || !_user.Roles.Contains(role, StringComparer.Ordinal));
 
+  /// <remarks>The caller's own account shows no lockout card at all (<see cref="IsOwnAccount" />).</remarks>
   private bool CanLockoutUser
     => _user is not null
-       && !_user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal)
-       && !string.Equals(_callerUserId, _user.UserId, StringComparison.Ordinal);
+       && !_user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal);
 
   private bool CanModifyRole(string role)
     => UserAdministrationRules.IsAssignableRole(role)
@@ -230,13 +278,22 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _caller = authState.User;
       _callerIsAdministrator = authState.User.IsAdministrator();
-      _callerUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+      // Asked before anything is read, as the handlers refuse before they look anything up (T278).
+      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+      if (_traineeNote is not null)
+      {
+        _user = null;
+        return;
+      }
+
       _user = await Sender.Send(new GetUserByIdQuery(UserId, authState.User));
     }
     catch (Exception exception)
     {
-      _loadError = exception.Message;
+      _loadError = RefusalText.Of(exception);
     }
     finally
     {
@@ -269,7 +326,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
     finally
     {

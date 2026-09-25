@@ -27,8 +27,15 @@ public sealed class RevokePendingInvitationsForEmailCommandHandler : IRequestHan
         _dbContext = dbContext;
     }
 
+    /// <remarks>
+    /// Someone who holds Trainee revokes nothing, and is refused before anything is read (T278,
+    /// <see cref="UserAdministrationRules.DemandUserAdministration" />). The caller's own email is not refused
+    /// (<see cref="UserAdministrationRules.IsCaller" />).
+    /// </remarks>
     public async Task<int> Handle(RevokePendingInvitationsForEmailCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         var normalisedEmail = request.Email.Trim();
 
         var invitations = await _dbContext.Set<Invitation>()

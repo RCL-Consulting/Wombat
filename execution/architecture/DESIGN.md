@@ -1478,6 +1478,22 @@ sentence; the list of panels and who decides each EPA stay in view. Its empty ca
 scheduling reviews." only to someone who may create one; otherwise "No decision panel runs at your institution yet.", or
 to a global Administrator, who belongs to no institution and lists every panel, "No decision panel has been created yet."
 
+**Nobody who holds Trainee administers a user, and nobody changes their own account** (T278). Every Users read and
+command refuses someone who holds Trainee beside a role that administers users (the Administrator's included, T185's
+rung) before anything is looked up (`UserAdministrationRules.DemandUserAdministration`), and both Users pages ask the
+same rule before they send anything (`TraineeNoteOnUserPages`, read off `MayAdministerUsers`, so page and handler cannot
+drift). Such a caller is shown no table, filter, name or button, only a standing info `Alert` (no role) saying "You hold
+the Trainee role, so you cannot view or change user accounts, including your own.": `#users-trainee-note` on the list
+(`/admin/users`), `#user-trainee-note` on the user page (`/admin/users/{id}`), which is titled "User". Neither page then
+has a subtitle: theirs promise roles, passwords, lockout and access, which is what the page withholds. Nobody, the
+Administrator included, changes their own roles, lockout or password there (`UserAdministrationRules.IsCaller`, refused
+by `DemandNotCaller` before the lookup). On the caller's own account the user page lists their roles with no Remove (and
+no "System-managed", which means something else), shows no Add role, Reset password or Lockout card, and says why in a
+standing info `Alert` (`#user-own-account-note`) that ends in a link, "Change your password", to
+`/account/change-password`, which asks for the current password. Its subtitle reads "Your own account's summary, roles
+and pending invitations.". Revoking the pending invitations to their own email is still offered: an invitation to an
+email that has an account cannot be accepted. Both pages show a refusal or a failed load through `RefusalText.Of`.
+
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
 roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a
 committee member or anyone who also holds Trainee, is not offered "Schedule review", and a link that names a panel

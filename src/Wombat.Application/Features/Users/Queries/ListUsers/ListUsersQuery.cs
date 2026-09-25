@@ -20,12 +20,14 @@ public sealed class ListUsersQueryHandler : IRequestHandler<ListUsersQuery, IRea
         _dbContext = dbContext;
     }
 
+    /// <remarks>
+    /// Someone who holds Trainee lists nobody, whatever other role they hold, and is refused before anything is read
+    /// (T278, <see cref="UserAdministrationRules.DemandUserAdministration" />). The Users page asks the same rule first and
+    /// sends nothing (<see cref="UserAdministrationRules.TraineeNoteOnUserPages" />).
+    /// </remarks>
     public async Task<IReadOnlyList<UserSummaryDto>> Handle(ListUsersQuery request, CancellationToken cancellationToken)
     {
-        if (!request.Principal.IsAdministrator() && !request.Principal.IsInstitutionalAdmin())
-        {
-            throw new UnauthorizedAccessException("You do not have permission to list users.");
-        }
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
 
         var users = await _userAdministrationService.ListAllUsersAsync(cancellationToken);
         var query = users.AsEnumerable();

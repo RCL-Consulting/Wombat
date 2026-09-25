@@ -27,8 +27,17 @@ public sealed class AddRoleToUserCommandHandler : IRequestHandler<AddRoleToUserC
         _userAdministrationService = userAdministrationService;
     }
 
+    /// <remarks>
+    /// Every refusal comes before the role is written (T278): who the caller is (<see cref="UserAdministrationRules.DemandUserAdministration" />,
+    /// then <see cref="UserAdministrationRules.DemandNotCaller" />) before anything is looked up, then the role, then the
+    /// user's scope. The write is the service's own save, and a refused command leaves nothing for the audit pipeline's
+    /// save to commit.
+    /// </remarks>
     public async Task Handle(AddRoleToUserCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+        UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnRolesNotChangeable);
+
         if (!UserAdministrationRules.IsAssignableRole(request.Role))
         {
             throw new InvalidOperationException(

@@ -39,8 +39,16 @@ public sealed class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserP
         _userAdministrationService = userAdministrationService;
     }
 
+    /// <remarks>
+    /// Every refusal comes before the password is written (T278): who the caller is before anything is looked up, then the
+    /// user. The caller's own password is refused: a reset here asks for no current password, so an administrator's
+    /// session left open was enough to take the account. They change it on the Change password page, which asks for it.
+    /// </remarks>
     public async Task Handle(ResetUserPasswordCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+        UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnPasswordNotResettable);
+
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The user could not be found.");
 

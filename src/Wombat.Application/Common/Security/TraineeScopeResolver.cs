@@ -558,7 +558,12 @@ public static class TraineeScopeResolver
     /// <item>administering a decision panel (<c>CommitteeDecisionAuthorization.MayAdministerPanels</c> and
     /// <c>PanelReachAsync</c>, T256): creating or changing a panel, opening one to change it, the panel form's offer and
     /// pickers, the panel list's Edit, and saying which College committee a panel sits as, which such a caller is refused,
-    /// and not offered, for every panel, the one that reviews them included.</item>
+    /// and not offered, for every panel, the one that reviews them included;</item>
+    /// <item>administering users (<c>UserAdministrationRules.MayAdministerUsers</c>, T278): listing and opening users, and
+    /// changing anyone's roles, lockout, password or pending invitations, which such a caller is refused, and the Users
+    /// pages say so and offer nothing, their own account included. Nobody else changes their own roles, lockout or
+    /// password there either (<c>UserAdministrationRules.IsCaller</c>), so no one removes their own Trainee role
+    /// there.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,
@@ -566,6 +571,11 @@ public static class TraineeScopeResolver
     /// opens and lists a peer's activities one by one. Closing that is its own change, because every activity list and
     /// the parity test move with it; until then the portfolio export, which climbs <see cref="MayReadAsync" />, refuses
     /// what the per-activity gate admits.
+    /// </para>
+    /// <para>
+    /// NOT yet trainee-profile administration (<c>/admin/trainees</c>): a Trainee who also holds InstitutionalAdmin still
+    /// opens a peer's profile, and Mark complete on their own profile (<c>CompleteTraineeProfileCommand</c>) removes
+    /// their own Trainee role, the lever T278 closed on the Users pages. Found in the T278 review, left to its own change.
     /// </para>
     /// </remarks>
     public static bool ActsAsTrainee(ClaimsPrincipal principal)

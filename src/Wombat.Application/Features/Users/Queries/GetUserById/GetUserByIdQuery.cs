@@ -21,12 +21,14 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
         _dbContext = dbContext;
     }
 
+    /// <remarks>
+    /// Someone who holds Trainee opens nobody, themselves included, whatever other role they hold, and is refused before
+    /// the id is looked up (T278, <see cref="UserAdministrationRules.DemandUserAdministration" />), so the refusal says
+    /// nothing about the id. The user page asks the same rule first and sends nothing.
+    /// </remarks>
     public async Task<UserDetailDto?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        if (!request.Principal.IsAdministrator() && !request.Principal.IsInstitutionalAdmin())
-        {
-            throw new UnauthorizedAccessException("You do not have permission to view users.");
-        }
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
 
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)

@@ -27,8 +27,17 @@ public sealed class RemoveRoleFromUserCommandHandler : IRequestHandler<RemoveRol
         _userAdministrationService = userAdministrationService;
     }
 
+    /// <remarks>
+    /// Every refusal comes before the role is removed (T278): who the caller is (<see cref="UserAdministrationRules.DemandUserAdministration" />,
+    /// then <see cref="UserAdministrationRules.DemandNotCaller" />) before anything is looked up, then the role, then the
+    /// user's scope. Until T278 a Trainee who also held InstitutionalAdmin could remove their own Trainee role here, and
+    /// with it every trainee-first refusal (T185, T256).
+    /// </remarks>
     public async Task Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+        UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnRolesNotChangeable);
+
         if (!UserAdministrationRules.IsAssignableRole(request.Role))
         {
             throw new InvalidOperationException(

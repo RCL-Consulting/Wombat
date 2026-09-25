@@ -26,8 +26,16 @@ public sealed class SetUserLockoutCommandHandler : IRequestHandler<SetUserLockou
         _userAdministrationService = userAdministrationService;
     }
 
+    /// <remarks>
+    /// Every refusal comes before the lockout is written (T278): who the caller is before anything is looked up, then the
+    /// user. The caller's own account is refused either way, a lock or a reactivation: until T278 only a lock was, and
+    /// only after the lookup.
+    /// </remarks>
     public async Task Handle(SetUserLockoutCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+        UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnLockoutNotChangeable);
+
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The user could not be found.");
 
@@ -40,12 +48,6 @@ public sealed class SetUserLockoutCommandHandler : IRequestHandler<SetUserLockou
             && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this user.");
-        }
-
-        var callerUserId = request.Principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (request.Locked && string.Equals(callerUserId, request.UserId, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException("You cannot lock out your own account.");
         }
 
         await _userAdministrationService.SetLockoutAsync(request.UserId, request.Locked, cancellationToken);

@@ -5,56 +5,75 @@
 
 <PageTitle>Users</PageTitle>
 
-<PageHeader Title="Users" Subtitle="Manage roles, passwords, and access for all users across the institutions you administer." />
+<PageHeader Title="Users" Subtitle="@Subtitle" />
 
-<StatePanel IsLoading="_loading" IsEmpty="@(FilteredUsers.Count == 0 && string.IsNullOrWhiteSpace(_filter))" EmptyTitle="No users" EmptyBody="No user accounts exist within your scope." LoadError="@_loadError">
-  <div class="detail-card">
-    <div class="form-grid form-grid--wide">
-      <FormField Label="Filter" InputId="users-filter">
-        <input id="users-filter" type="search" class="form-control" placeholder="Search by name or email" @bind="_filter" @bind:event="oninput" />
-      </FormField>
+@* T278. Someone who holds Trainee beside a role that administers users lists nobody and opens nobody, their own account
+   included: every Users read and command refuses them first. So nothing is read for them, and the page says why in the
+   words the handlers refuse with. Standing page content, there on every visit: an info Alert, which carries no role. *@
+@if (_traineeNote is not null)
+{
+  <Alert Kind="info" Id="users-trainee-note">@_traineeNote</Alert>
+}
+else
+{
+  <StatePanel IsLoading="_loading" IsEmpty="@(FilteredUsers.Count == 0 && string.IsNullOrWhiteSpace(_filter))" EmptyTitle="No users" EmptyBody="No user accounts exist within your scope." LoadError="@_loadError">
+    <div class="detail-card">
+      <div class="form-grid form-grid--wide">
+        <FormField Label="Filter" InputId="users-filter">
+          <input id="users-filter" type="search" class="form-control" placeholder="Search by name or email" @bind="_filter" @bind:event="oninput" />
+        </FormField>
+      </div>
+
+      @if (FilteredUsers.Count == 0)
+      {
+        <div class="detail-card detail-card--empty-compact">No users match the current filter.</div>
+      }
+      else
+      {
+        var rowNames = RowNames.Distinct(
+          FilteredUsers, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
+        <DataTable TItem="UserSummaryDto" Items="FilteredUsers" Caption="Users">
+          <HeaderRow>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Institution</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="user">
+            <tr>
+              <td>@($"{user.FirstName} {user.LastName}")</td>
+              <td>@user.Email</td>
+              <td>@(user.InstitutionName ?? "Global")</td>
+              <td>@string.Join(", ", user.Roles)</td>
+              <td>@(user.IsLockedOut ? "Locked out" : "Active")</td>
+              @* T239: named by the user, and their email where two share a name. *@
+              <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")" aria-label="@($"Manage {rowNames[user.UserId]}")">Manage</a></td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
     </div>
-
-    @if (FilteredUsers.Count == 0)
-    {
-      <div class="detail-card detail-card--empty-compact">No users match the current filter.</div>
-    }
-    else
-    {
-      var rowNames = RowNames.Distinct(
-        FilteredUsers, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
-      <DataTable TItem="UserSummaryDto" Items="FilteredUsers" Caption="Users">
-        <HeaderRow>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Institution</th>
-            <th>Roles</th>
-            <th>Status</th>
-            <th><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </HeaderRow>
-        <Row Context="user">
-          <tr>
-            <td>@($"{user.FirstName} {user.LastName}")</td>
-            <td>@user.Email</td>
-            <td>@(user.InstitutionName ?? "Global")</td>
-            <td>@string.Join(", ", user.Roles)</td>
-            <td>@(user.IsLockedOut ? "Locked out" : "Active")</td>
-            @* T239: named by the user, and their email where two share a name. *@
-            <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")" aria-label="@($"Manage {rowNames[user.UserId]}")">Manage</a></td>
-          </tr>
-        </Row>
-      </DataTable>
-    }
-  </div>
-</StatePanel>
+  </StatePanel>
+}
 
 @code {
   private IReadOnlyList<UserSummaryDto> _users = [];
   private bool _loading = true;
   private string? _loadError;
   private string _filter = string.Empty;
+  private string? _traineeNote;
+
+  /// <summary>
+  /// What the page offers. None to someone who holds Trainee beside a role that administers users (T278): it offers them
+  /// nothing, and the note says why, so a subtitle promising roles, passwords and access would say what it withholds.
+  /// </summary>
+  private string? Subtitle => _traineeNote is not null
+    ? null
+    : "Manage roles, passwords, and access for all users across the institutions you administer.";
 
   private IReadOnlyList<UserSummaryDto> FilteredUsers
   {
@@ -79,11 +98,17 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+      if (_traineeNote is not null)
+      {
+        return;
+      }
+
       _users = await Sender.Send(new ListUsersQuery(authState.User));
     }
     catch (Exception exception)
     {
-      _loadError = exception.Message;
+      _loadError = RefusalText.Of(exception);
     }
     finally
     {
