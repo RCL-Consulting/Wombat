@@ -1274,7 +1274,7 @@ Gap:
 Role: Dr Zulu (Chair)
 Route: per review
 Action: On each review's detail page, click `Start review` (per T045's verification — that's the transition the committee panel uses).
-Expected: State flips from `Scheduled` to `InProgress`. The Decision form panel becomes active (per T045's populated ReviewDetail observation).
+Expected: State flips from `Scheduled` to "In progress" (T250: states read as words). The Decision form panel becomes active (per T045's populated ReviewDetail observation).
 The Review card reads "Sits for 2026 S2". The **Agenda** card, above the staging form, lists fifteen EPAs with window
 `2026 S2` or `2026`. Twelve are `Due` ("Must be decided at this sitting, or deferred with a reason"), and EPAs 8, 9 and 13
 are `As opportunity allows`. Each line shows how many snapshot items are about its EPA.
@@ -1340,7 +1340,7 @@ Gap: Scenario originally cast Mbatha here; corrected to chair per A1. STAR PDF g
 Role: Dr Nomsa Mahlangu (Trainee)
 Route: `/committee/my-reviews` → `View` on the ratified review → fill `Appeal reason` → `Lodge appeal`.
 Action: Open the review, enter the appeal reason ("Single DOPS reflects start-of-year skill level. Stalled Mini-CEX was an assessor-side scheduling issue, not trainee-side. Request reconsideration; 3 additional Mini-CEX assessments submitted in the last 30 days."), click `Lodge appeal`.
-Expected: Appeal saved. Review state flips from `Ratified` to `UnderAppeal`.
+Expected: Appeal saved. Review state flips from "Ratified" to "Under appeal" (T250).
 Before lodging (T131 slice 4): the review detail shows an **Agenda** table of the EPAs the review was there to decide,
 each with its outcome. The deferred ones read `Deferred` with "The committee's reason: Not at a decision point this
 year" under the badge; PAED-008, 009 and 013 read `Not decided`. The table stays in view after the appeal is lodged.

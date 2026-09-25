@@ -39,3 +39,11 @@ created: 2026-09-25
 ## Related
 
 T237, T182.
+
+Notes, 2026-09-25 (committee chain 3's reviews):
+- `ReviewDetail` keeps offering the chair's controls after a refused click, until a reload. The page returns on error
+  without re-reading (the T142 design); re-read the review after a refusal (T256 review).
+- On `PanelEdit`, choosing a member as chair leaves the stored chair offered unselected under Members, so Save drops
+  them or refuses with the quorum message. Say so in the line, or move the stored chair to Members (T257 review).
+- `PanelsList` does not say why New panel is missing for a panel administrator who can create nothing. Reuse
+  `PanelEdit`'s NoneCreatable through `DecisionPanelFormOptionsDto` (T245 review).
