@@ -50,3 +50,6 @@ T234, T222, T206, T239.
 
 Note, 2026-09-25 (the H1 browser check): on `/admin/invitations`, after revoking the invitation just issued, the result
 area still shows its "Share this registration link…" panel with the now-dead link, beside "Invitation revoked.".
+
+Note, 2026-09-25 (the T253 review): the entrustment scales list's Delete also shows `exception.Message` rather than
+`RefusalText.Of`.

@@ -496,9 +496,10 @@ and lets the legacy world be retired by deactivation rather than by migration.
 
 **D25 — [T110]: are "O-R Scale" and "Paed General Entrustment Scale" the same ladder? — CLOSED 2026-09-20, by
 deletion ([T110]'s amendment; marked here 2026-09-24).** W-006 removed "Paed General Entrustment Scale", which was
-operator data. Two scales remain, `O-R Scale` and the CPSA ladder, and the generic seeds bind by exact name
-(`"scale_key": "O-R Scale"`). The stable slug stays unbuilt, with no task. Inferred: it is not needed, because
-renaming a scale is refused while a published schema names it (`UpdateEntrustmentScaleCommandHandler.cs:42-43`).
+operator data. Two scales remain, `O-R Scale` and the CPSA ladder. **Superseded 2026-09-25 by [T253]:** the stable
+slug is built. Seeds bind a scale by its seed key (`"scale_key": "seed:cpsa:scale:v11.1"`), one resolver accepts an id,
+a seed key or a name, a migration rewrote every stored name binding to a seed key or id, and a rename is allowed but
+warns if a published form still binds by the old name. A scale any published schema binds cannot be deleted.
 The ⚠ below is spent: [T110] and [T123] d1 both shipped. The question as it stood:
 `DataSeeder.cs:123-127` seeds O-R as Observe only / Direct supervision / Indirect supervision / Independent
 / Supervises others; the browser-made scale in `scenario-paediatrics.md:160-166` is the same five rungs.
