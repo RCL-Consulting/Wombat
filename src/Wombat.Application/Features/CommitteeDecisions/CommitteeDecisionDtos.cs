@@ -124,7 +124,8 @@ public sealed record CommitteeAppealDto(
 /// <param name="RatingLabel">The rung as a clinician reads it ("3a"), else the bare ordinal.</param>
 /// <param name="ObservedOn">When the encounter happened.</param>
 /// <param name="ObservedOnDeclared">
-/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the filing day (T161).
+/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the day the activity was
+/// created (T161, T197).
 /// </param>
 /// <param name="SourceState">The activity's workflow state, or the campaign's state, when the review started.</param>
 /// <param name="SourceFinished">

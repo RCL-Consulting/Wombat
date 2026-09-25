@@ -198,7 +198,7 @@ public sealed class MsfEvidenceFanOutTests
                 "msf_cpsa", TraineeUserId, CoordinatorUserId, "record", [MsfPayload(campaign.Id, new DateOnly(2026, 9, 26))], Coordinator()));
 
         (await stage.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Be("Feedback window closed: The encounter date cannot be after today (2026-09-25).");
+            .Which.Message.Should().Be("Feedback window closed: The date cannot be after today (2026-09-25).");
         db.ChangeTracker.Entries()
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .Should().BeEmpty("the caller's audit save would commit anything staged");

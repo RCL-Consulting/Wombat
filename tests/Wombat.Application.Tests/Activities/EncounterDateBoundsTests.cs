@@ -45,6 +45,7 @@ public sealed class EncounterDateBoundsTests
     private const int CreditingReturnableTypeId = 5;
     private const int ResearchOutputTypeId = 6;
     private const int JournalClubTypeId = 7;
+    private const int PortfolioReviewTypeId = 8;
 
     private const int EpaId = 5000;
 
@@ -78,7 +79,7 @@ public sealed class EncounterDateBoundsTests
         var message = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(Today.AddDays(1)))));
 
-        message.Should().Be($"Date observed: The encounter date cannot be after today ({Iso(Today)}).");
+        message.Should().Be($"Date observed: The date cannot be after today ({Iso(Today)}).");
         await AssertNoActivitiesAsync(options);
     }
 
@@ -116,7 +117,7 @@ public sealed class EncounterDateBoundsTests
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(ProgrammeStart.AddDays(-1)))));
 
         message.Should().Be(
-            $"Date observed: The encounter date cannot be before the trainee's programme started ({Iso(ProgrammeStart)}).");
+            $"Date observed: The date cannot be before the trainee's programme started ({Iso(ProgrammeStart)}).");
         await AssertNoActivitiesAsync(options);
     }
 
@@ -375,7 +376,22 @@ public sealed class EncounterDateBoundsTests
         var message = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(ResearchOutputTypeId, TraineeId, ResearchOutput(Today.AddDays(1)))));
 
-        message.Should().Be($"Date: The encounter date cannot be after today ({Iso(Today)}).");
+        message.Should().Be($"Date: The date cannot be after today ({Iso(Today)}).");
+        await AssertNoActivitiesAsync(options);
+    }
+
+    [Fact]
+    public async Task APortfolioReview_DatedTomorrow_IsRefusedUnderItsOwnFieldsLabel_NotAsAnEncounterDate()
+    {
+        // T197: the date the gate judges is whatever the type calls it. A portfolio review is dated by the last day of
+        // its period, and the refusal read "Review period to: The encounter date cannot be after today" there.
+        var options = await SeededAsync();
+
+        var message = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
+            CreateInput(PortfolioReviewTypeId, TraineeId, PortfolioReview(Today.AddDays(1)))));
+
+        message.Should().Be($"Review period to: The date cannot be after today ({Iso(Today)}).");
+        message.Should().NotContainEquivalentOf("encounter");
         await AssertNoActivitiesAsync(options);
     }
 
@@ -453,7 +469,7 @@ public sealed class EncounterDateBoundsTests
 
         var refused = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(SouthAfricanDayAtLateEvening.AddDays(1)))), clock);
-        refused.Should().Be($"Date observed: The encounter date cannot be after today ({Iso(SouthAfricanDayAtLateEvening)}).");
+        refused.Should().Be($"Date observed: The date cannot be after today ({Iso(SouthAfricanDayAtLateEvening)}).");
     }
 
     [Fact]
@@ -529,6 +545,16 @@ public sealed class EncounterDateBoundsTests
           "activity_date": "{{Iso(activityDate)}}",
           "trainee_role": "first_author",
           "abstract": "A retrospective review."
+        }
+        """;
+
+    /// <summary>A portfolio review request for the half-year ending <paramref name="periodTo" />.</summary>
+    private static string PortfolioReview(DateOnly periodTo) => $$"""
+        {
+          "epa_id": {{EpaId}},
+          "assessor_user_id": "{{AssessorId}}",
+          "period_from": "{{Iso(periodTo.AddMonths(-6))}}",
+          "period_to": "{{Iso(periodTo)}}"
         }
         """;
 
@@ -687,6 +713,10 @@ public sealed class EncounterDateBoundsTests
         db.ActivityTypes.Add(PublishedType(
             JournalClubTypeId, "journal_club", ReadSeed("journal_club", "schema.json"),
             ReadSeed("journal_club", "workflow.json"), ReadSeed("journal_club", "credit.json"), wbaToolKey: null));
+        db.ActivityTypes.Add(PublishedType(
+            PortfolioReviewTypeId, "portfolio_review_cpsa", ReadSeed("portfolio_review_cpsa", "schema.json"),
+            ReadSeed("portfolio_review_cpsa", "workflow.json"), ReadSeed("portfolio_review_cpsa", "credit.json"),
+            wbaToolKey: null));
 
         await db.SaveChangesAsync();
         return options;

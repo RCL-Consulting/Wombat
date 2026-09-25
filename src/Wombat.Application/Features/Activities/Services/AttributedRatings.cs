@@ -14,7 +14,7 @@ namespace Wombat.Application.Features.Activities.Services;
 /// <param name="EpaId">The EPA stamped on the activity (<c>Activity.EpaId</c>, T137).</param>
 /// <param name="Rating">The ordinal the assessor recorded.</param>
 /// <param name="AssessorUserId">Who rated it.</param>
-/// <param name="ObservedOn">The encounter date (T119); the filing day when nobody stated one.</param>
+/// <param name="ObservedOn">The encounter date (T119); the day the activity was created when nobody stated one.</param>
 /// <param name="ObservedOnDeclared">Whether a clinician stated <paramref name="ObservedOn" /> (T161, D28).</param>
 /// <param name="Source">The evidence source the type's instrument belongs to (<see cref="RatedTypeVerdict.SourceBucket" />).</param>
 /// <param name="RatedScaleId">

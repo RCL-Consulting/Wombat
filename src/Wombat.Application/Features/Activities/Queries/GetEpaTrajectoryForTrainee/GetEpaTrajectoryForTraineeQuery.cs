@@ -69,10 +69,10 @@ public sealed record TrajectoryPointDto(
     int ActivityId,
     DateOnly ObservedOn,
     /// <summary>
-    /// False when nobody stated when the encounter happened and <see cref="ObservedOn" /> is only the filing day
-    /// (<c>ObservedOnSource == CreatedOn</c>). The point still sits there, the same date the window selects on, but the
-    /// chart must not present it as a clinical date (T161, D28; <c>EncounterDate.Label</c>). No default, so a new
-    /// call site cannot silently report every point as dated.
+    /// False when nobody stated when the encounter happened and <see cref="ObservedOn" /> is only the day the activity
+    /// was created (<c>ObservedOnSource == CreatedOn</c>). The point still sits there, the same date the window selects
+    /// on, but the chart must not present it as a clinical date (T161, D28; <c>EncounterDate.Label</c>). No default,
+    /// so a new call site cannot silently report every point as dated.
     /// </summary>
     bool ObservedOnDeclared,
     int Rating,
@@ -162,8 +162,8 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
 
         // The x-axis is the encounter date the clinician stated, which is what this chart has always claimed to plot
         // and never did: it plotted CreatedOn, the audit clock. (T119) Where nobody stated one (ObservedOnSource ==
-        // CreatedOn) the point still sits on the filing day, and says so: the chart's tooltip and table mark it as
-        // undated evidence (T161, D28, T119 D4). RatingLabel is filled in below, once the EPA's pinned ladder is known.
+        // CreatedOn) the point still sits on the day it was created, and says so: the chart's tooltip and table mark it
+        // as undated evidence (T161, D28, T119 D4). RatingLabel is filled in below, once the EPA's pinned ladder is known.
         var rawPoints = ratings
             .Select(rating => (rating.EpaId, Point: new TrajectoryPointDto(
                 rating.ActivityId,

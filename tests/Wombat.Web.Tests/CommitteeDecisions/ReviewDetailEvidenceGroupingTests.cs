@@ -74,12 +74,12 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
     }
 
     [Fact]
-    public void AnUndatedLine_SaysItsDateIsTheFilingDay()
+    public void AnUndatedLine_SaysItsDateWasNotRecorded_AndGivesTheDayItWasCreated()
     {
         var cut = RenderPage(Review(
             Line(1, 101, 7, "PAED-001", "Acute admission", "Mini-CEX", rating: "3a", declared: false)));
 
-        EpaArticle(cut, 7).TextContent.Should().Contain("2026-02-10 (filed; no encounter date)");
+        EpaArticle(cut, 7).TextContent.Should().Contain("not recorded (created 2026-02-10)");
     }
 
     [Fact]

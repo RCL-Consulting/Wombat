@@ -31,6 +31,11 @@ namespace Wombat.Infrastructure.Activities;
 /// <c>SchemaValidator</c>'s shape, against the date field, so the form's author reads it as one.
 /// </para>
 /// <para>
+/// The refusal's words are neutral ("The date cannot be after today"), never "the encounter date" (T197): the date field
+/// is whatever the type calls it (a portfolio review's "Review period to", an MSF release's "Feedback window closed"),
+/// and the message is always shown behind that field's own label (<c>ActivityService.ThrowIfInvalid</c>).
+/// </para>
+/// <para>
 /// Lateness is not this class's business: D15 never refuses a late filing (<see cref="EncounterDatePolicy" />).
 /// Every read is awaited before the caller's first mutation, and the profile is read untracked, so a refusal leaves
 /// the request's DbContext clean for the audit pipeline's save.
@@ -74,7 +79,7 @@ internal static class EncounterDateGate
             [
                 new ActivityValidationErrorDto(
                     field,
-                    $"The encounter date cannot be after today ({Format(today)}).",
+                    $"The date cannot be after today ({Format(today)}).",
                     "after_today")
             ];
         }
@@ -91,7 +96,7 @@ internal static class EncounterDateGate
             [
                 new ActivityValidationErrorDto(
                     field,
-                    $"The encounter date cannot be before the trainee's programme started ({Format(profile.ProgrammeStartDate)}).",
+                    $"The date cannot be before the trainee's programme started ({Format(profile.ProgrammeStartDate)}).",
                     "before_programme")
             ];
         }

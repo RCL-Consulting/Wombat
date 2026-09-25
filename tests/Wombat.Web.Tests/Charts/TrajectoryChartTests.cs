@@ -369,10 +369,10 @@ public sealed class TrajectoryChartTests : TestContext
         rows[1].TextContent.Should().Contain("2026-02-01").And.Contain("4").And.Contain("Conversation");
     }
 
-    // ---- T161, D28: a point nobody dated sits on its filing day, and says so ----
+    // ---- T161, D28, T197: a point nobody dated sits on the day it was created, and says so ----
 
     [Fact]
-    public void AnUndatedPoint_IsMarkedAsFiledOnThatDay_InItsTooltipAndInTheTable()
+    public void AnUndatedPoint_IsMarkedNotRecorded_WithTheDayItWasCreated_InItsTooltipAndInTheTable()
     {
         var points = new[]
         {
@@ -384,11 +384,11 @@ public sealed class TrajectoryChartTests : TestContext
 
         cut.FindAll("circle.trajectory-chart-dot title")
             .Select(title => title.TextContent.Split(" · ")[0])
-            .Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+            .Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
 
         cut.FindAll("table.visually-hidden tbody tr")
             .Select(row => row.QuerySelector("td")!.TextContent)
-            .Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+            .Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
     }
 
     [Fact]

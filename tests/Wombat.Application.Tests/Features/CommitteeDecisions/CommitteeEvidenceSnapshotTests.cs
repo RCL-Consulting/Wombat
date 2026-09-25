@@ -57,7 +57,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         line.SourceState.Should().Be("completed");
         line.Summary.Should().Contain("EPA PAED-001").And.Contain("CCA").And.Contain("rated 3a")
             .And.Contain("encounter 2026-02-10;").And.Contain("State: completed")
-            .And.NotContain("no encounter date");
+            .And.NotContain("not recorded");
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public sealed class CommitteeEvidenceSnapshotTests
     }
 
     [Fact]
-    public async Task AnUndatedActivity_IsMarkedAsItsFilingDay()
+    public async Task AnUndatedActivity_IsMarkedNotRecorded_WithTheDayItWasCreated()
     {
         await using var db = CreateDb();
         await SeedAsync(db);
@@ -99,7 +99,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         line.ObservedOn.Should().Be(EncounterDay);
         line.ObservedOnDeclared.Should().BeFalse();
         // The one wording of an undated encounter (T161, D28): the page's Encounter column and the trajectory say the same.
-        line.Summary.Should().Contain("encounter 2026-02-10 (filed; no encounter date);")
+        line.Summary.Should().Contain("encounter not recorded (created 2026-02-10);")
             .And.NotContain("encounter 2026-02-10;");
     }
 

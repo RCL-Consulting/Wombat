@@ -317,13 +317,13 @@ public sealed class PortfolioEpaProgressTests
                 ("Semester 1, 2026", "2 of 3, 1 short; 2 at the minimum level when observed"),
                 ("Semester 2, 2025", "3 of 3, met; 3 at the minimum level when observed"),
                 ("Semester 1, 2025", "1 of 3, 2 short; 1 at the minimum level when observed"),
-                ("Rated observations", "2 from 2 assessors; latest 3a, 2026-08-12"));
+                ("Rated observations", "2 from 2 assessors; latest 3a, encounter 2026-08-12"));
 
         // No curriculum item, so no pinned ladder: the rating is the bare ordinal, as the progress page's chart draws it.
         EpaProgressSectionComponent.DetailLines(progress.Rows.Single(row => row.EpaCode == "PAED-009"), progress)
             .Should().Equal(
                 ("Target", "none: this EPA is not in the trainee's curriculum"),
-                ("Rated observations", "1 from 1 assessor; latest 3, 2026-05-05"));
+                ("Rated observations", "1 from 1 assessor; latest 3, encounter 2026-05-05"));
     }
 
     // ─── The per-EPA section: rated observations ─────────────────────────────
@@ -380,7 +380,7 @@ public sealed class PortfolioEpaProgressTests
 
         var paed001 = (await LoadAsync(db)).EpaProgress.Rows.Single(row => row.EpaCode == "PAED-001").Ratings;
 
-        paed001.LatestObservedOn.Should().Be("2026-08-12 (filed; no encounter date)");
+        paed001.LatestObservedOn.Should().Be("not recorded (created 2026-08-12)");
     }
 
     // ─── The printed PDF ─────────────────────────────────────────────────────
@@ -484,7 +484,7 @@ public sealed class PortfolioEpaProgressTests
         text.Should().ContainInConsecutiveOrder(
             "PAED-009", "Not in this curriculum",
             "Target:", "none: this EPA is not in the trainee's curriculum",
-            "Rated observations:", "1 from 1 assessor; latest 3, 2026-05-05");
+            "Rated observations:", "1 from 1 assessor; latest 3, encounter 2026-05-05");
     }
 
     // ─── The section's wording ───────────────────────────────────────────────
@@ -555,10 +555,10 @@ public sealed class PortfolioEpaProgressTests
     {
         EpaProgressSectionComponent.RatingsLine(PortfolioEpaRatings.None).Should().Be("none in this export");
         EpaProgressSectionComponent.RatingsLine(new PortfolioEpaRatings(4, 2, "3a", false, "2026-08-12"))
-            .Should().Be("4 from 2 assessors; latest 3a, 2026-08-12");
+            .Should().Be("4 from 2 assessors; latest 3a, encounter 2026-08-12");
         EpaProgressSectionComponent.RatingsLine(
-                new PortfolioEpaRatings(1, 1, "4", true, "2026-08-12 (filed; no encounter date)"))
-            .Should().Be("1 from 1 assessor; latest 4 (on a different scale), 2026-08-12 (filed; no encounter date)");
+                new PortfolioEpaRatings(1, 1, "4", true, "not recorded (created 2026-08-12)"))
+            .Should().Be("1 from 1 assessor; latest 4 (on a different scale), encounter not recorded (created 2026-08-12)");
     }
 
     [Fact]

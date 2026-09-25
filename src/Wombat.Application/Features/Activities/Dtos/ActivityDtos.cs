@@ -112,7 +112,8 @@ public sealed record ActivityDto(
     int? EpaId,
     int? CurriculumItemId,
     // When the encounter happened (Activity.ObservedOn, T119), and whether anyone stated it. False means it is only
-    // the filing day, and the page must say so rather than show it as a clinical date (T161, D28; EncounterDate).
+    // the day the activity was created, and the page must say so rather than show it as a clinical date (T161, D28,
+    // T197; EncounterDate).
     DateOnly ObservedOn,
     bool ObservedOnDeclared,
     DateTime CreatedOn,
@@ -161,8 +162,8 @@ public sealed record ActivityDetailDto(
 /// When the encounter happened (<c>Activity.ObservedOn</c>, T119), not when the paperwork was filed.
 /// </param>
 /// <param name="ObservedOnDeclared">
-/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the filing day. A list must
-/// not present that as a clinical fact.
+/// False when nobody stated an encounter date and <paramref name="ObservedOn" /> is only the day the activity was
+/// created. A list must not present that as a clinical fact.
 /// </param>
 /// <param name="CreditedItemCount">
 /// The T108 outcome of the LATEST transition on which credit was evaluated: null when credit was never evaluated (the

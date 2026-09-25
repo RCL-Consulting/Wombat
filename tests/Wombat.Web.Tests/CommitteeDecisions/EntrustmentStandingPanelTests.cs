@@ -141,7 +141,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         cell.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/31");
         Text(cell.QuerySelector("a")!.TextContent).Should().Be("3b — open this PAED-001 rating");
         cell.QuerySelectorAll("div").Select(line => Text(line.TextContent)).Should().Equal(
-            "2026-03-20 (filed; no encounter date)",
+            "not recorded (created 2026-03-20)",
             "Direct observation; at or above the target");
     }
 

@@ -217,7 +217,12 @@ internal static class EpaProgressSectionComponent
             : $" so far; {period.Shortfall} more by {QuotaText.LongDate(period.NominalEnd)}";
     }
 
-    /// <summary>"4 from 2 assessors; latest 3a, 2026-08-12", or "none in this export".</summary>
+    /// <summary>
+    /// "4 from 2 assessors; latest 3a, encounter 2026-08-12", or "none in this export". The date is named as the
+    /// encounter's, as the committee's evidence summary names it: an undated one reads "encounter not recorded (created
+    /// 2026-08-12)" (<see cref="Wombat.Application.Features.Activities.Dtos.EncounterDate.Label" />, T197), which a bare
+    /// "latest 3a, not recorded" would leave reading as though the rating were.
+    /// </summary>
     internal static string RatingsLine(PortfolioEpaRatings ratings)
     {
         if (ratings.Observations == 0)
@@ -228,6 +233,7 @@ internal static class EpaProgressSectionComponent
         var assessors = ratings.DistinctAssessors == 1 ? "1 assessor" : $"{ratings.DistinctAssessors} assessors";
         // An off-ladder point was rated on a different scale from this EPA's, so its label is not a rung here (T123 D30).
         var scale = ratings.LatestOffLadder ? " (on a different scale)" : string.Empty;
-        return $"{ratings.Observations} from {assessors}; latest {ratings.LatestLabel}{scale}, {ratings.LatestObservedOn}";
+        return $"{ratings.Observations} from {assessors}; " +
+               $"latest {ratings.LatestLabel}{scale}, encounter {ratings.LatestObservedOn}";
     }
 }

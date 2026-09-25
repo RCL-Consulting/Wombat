@@ -24,8 +24,9 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.Activities;
 
 /// <summary>
-/// T161, D28: wherever a page shows an activity's date as its encounter date, a date nobody stated is marked as the
-/// filing day, in the wording the activity lists use (T137, <see cref="EncounterDate.Label" />).
+/// T161, D28: wherever a page shows an activity's date as its encounter date, a date nobody stated is marked as not
+/// recorded, with the day the activity was created, in the wording the activity lists use (T137, T197,
+/// <see cref="EncounterDate.Label" />).
 /// </summary>
 /// <remarks>
 /// The seeds that reach this are <c>reflective_note</c> and <c>qi_project</c>, which declare no date field, and any
@@ -46,11 +47,11 @@ public sealed class UndatedEncounterDateTests : TestContext
     }
 
     [Fact]
-    public void TheActivityPage_MarksAnUndatedActivitysDateAsItsFilingDay()
+    public void TheActivityPage_SaysAnUndatedActivitysDateWasNotRecorded_AndGivesTheDayItWasCreated()
     {
         var cut = RenderActivityView(Reflection(new DateOnly(2026, 3, 20), declared: false));
 
-        Text(cut.Find("#activity-encounter-date")).Should().Be("Encounter date: 2026-03-20 (filed; no encounter date)");
+        Text(cut.Find("#activity-encounter-date")).Should().Be("Encounter date: not recorded (created 2026-03-20)");
     }
 
     [Fact]
@@ -74,7 +75,7 @@ public sealed class UndatedEncounterDateTests : TestContext
 
         var cut = RenderComponent<MyProgress>();
 
-        TrajectoryTableDates(cut).Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+        TrajectoryTableDates(cut).Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
     }
 
     /// <summary>
@@ -120,10 +121,10 @@ public sealed class UndatedEncounterDateTests : TestContext
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 5));
 
-        TrajectoryTableDates(cut).Should().Equal("2026-01-15", "2026-03-20 (filed; no encounter date)");
+        TrajectoryTableDates(cut).Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
     }
 
-    /// <summary>One EPA's trajectory: a rating with a stated encounter date, then one sitting on its filing day.</summary>
+    /// <summary>One EPA's trajectory: a rating with a stated encounter date, then one sitting on the day it was created.</summary>
     private static EpaTrajectoryDto OneDatedOneUndated() => new(
         7, "EPA-07", "Emergency triage", null, null, [],
         [

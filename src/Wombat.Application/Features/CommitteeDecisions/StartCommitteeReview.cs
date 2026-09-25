@@ -192,7 +192,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     ///   names, falling back to the ordinal. It is read in every state and printed beside the state: a snapshot shows a
     ///   declined rating as declined, where the sampling report leaves it out (D44).</item>
     ///   <item><b>The encounter date</b> is <c>Activity.ObservedOn</c> (T119) with its source, so a date nobody stated is
-    ///   shown as the filing day it is (T161), not as a clinical fact.</item>
+    ///   shown as the day the activity was created (T161, T197), not as a clinical fact.</item>
     /// </list>
     /// <para>
     /// Each is also written into <see cref="CommitteeEvidence.Summary" />, so the line reads on its own wherever the

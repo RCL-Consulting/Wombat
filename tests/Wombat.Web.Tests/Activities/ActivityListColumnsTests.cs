@@ -76,7 +76,7 @@ public sealed class ActivityListColumnsTests : TestContext
 
         var dates = Column(cut, BodyRows(cut), "Encounter date");
         dates[0].Should().Be("2026-03-10");
-        dates[1].Should().Be("2026-03-20 (filed; no encounter date)", "nobody stated when it happened, so it must not read as a clinical date");
+        dates[1].Should().Be("not recorded (created 2026-03-20)", "nobody stated when it happened, so it must not read as a clinical date");
 
         cut.FindAll("th").Select(header => header.TextContent.Trim()).Should().NotContain("Updated");
         cut.Markup.Should().NotContain(":44", "the audit clock (06:44 UTC) is no longer a column, in any time zone");
@@ -99,7 +99,7 @@ public sealed class ActivityListColumnsTests : TestContext
 
         var rows = BodyRows(cut);
         Column(cut, rows, "EPA").Should().Equal("PAED-004 — Resuscitate a child", "—");
-        Column(cut, rows, "Encounter date").Should().Equal("2026-03-11", "2026-03-12 (filed; no encounter date)");
+        Column(cut, rows, "Encounter date").Should().Equal("2026-03-11", "not recorded (created 2026-03-12)");
 
         // The inbox keeps its subject and its waiting clock.
         cut.FindAll("th").Select(header => header.TextContent.Trim()).Should().Contain(["Subject", "Updated"]);

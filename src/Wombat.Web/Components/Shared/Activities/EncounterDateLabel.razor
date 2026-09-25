@@ -1,6 +1,7 @@
 @* When an activity's encounter happened (T137, from T119's ObservedOn): a list cell, and the activity page's summary
-   (T161). A date nobody stated is only the day the form was filed, and it says so rather than passing the audit clock
-   off as a clinical fact. The wording is EncounterDate.Label, shared with the trajectory and the portfolio PDF (D28).
+   (T161). A date nobody stated is only the day the form was created, and it says so ("not recorded (created …)", T197)
+   rather than passing the audit clock off as a clinical fact. The wording is EncounterDate.Label, shared with the
+   trajectory, the portfolio PDF and the committee's evidence summary (D28).
    It is visible text, not a tooltip: a keyboard, touch or screen-reader user never sees a title. *@
 <span class="@(Declared ? null : "muted")">@EncounterDate.Label(ObservedOn, Declared)</span>
 

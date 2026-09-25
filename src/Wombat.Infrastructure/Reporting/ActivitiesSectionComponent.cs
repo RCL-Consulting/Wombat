@@ -77,7 +77,7 @@ internal static class ActivitiesSectionComponent
                 // sorted on, so a reader cannot be shown a row whose printed date sits outside the
                 // period on the cover page. (T119)
                 //
-                // Where nobody stated one (ObservedOnSource.CreatedOn) the date is only the filing day,
+                // Where nobody stated one (ObservedOnSource.CreatedOn) the date is only the day it was created,
                 // and the line says so in the wording every other surface uses (T161, D28). Sized to its
                 // text: the qualified date does not fit the fixed 100pt the bare one did.
                 row.AutoItem().AlignRight().Text(EncounterDateText(activity))
