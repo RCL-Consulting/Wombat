@@ -82,6 +82,55 @@ public sealed class GetCurriculumProgressForTraineeTests
     }
 
     [Fact]
+    public async Task EachWindowSaysWhetherItsLastEncounterDateWasStated()
+    {
+        // T219. The page marks an undated last encounter, so the read model says which it is, per window. This
+        // semester's row is undated; last semester's is stated.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 2, lastObservedOn: new DateOnly(2026, 6, 30));
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1, lastObservedOn: new DateOnly(2026, 8, 12), declared: false);
+        db.SaveChanges();
+
+        var item = (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-001");
+
+        (item.Current.LastObservedOn, item.Current.LastObservedOnDeclared).Should().Be(((DateOnly?)new DateOnly(2026, 8, 12), false));
+        (item.Previous!.LastObservedOn, item.Previous.LastObservedOnDeclared).Should().Be(((DateOnly?)new DateOnly(2026, 6, 30), true));
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, true)]
+    public async Task AnAcademicYearsLastEncounter_IsStatedOnlyIfTheLaterSemestersIs(
+        bool firstSemesterDeclared, bool secondSemesterDeclared, bool expected)
+    {
+        // T219. A year is two semester rows, and its last encounter is the later row's. So whether it was stated is
+        // that row's flag, not the earlier row's, and not "either row's".
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, YearItemId, 2026, 1, counts: 1, lastObservedOn: new DateOnly(2026, 3, 10), declared: firstSemesterDeclared);
+        AddRow(db, YearItemId, 2026, 2, counts: 1, lastObservedOn: new DateOnly(2026, 7, 2), declared: secondSemesterDeclared);
+        db.SaveChanges();
+
+        var item = (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-002");
+
+        item.Current.Name.Should().Be("2026 academic year", "guard");
+        (item.Current.LastObservedOn, item.Current.LastObservedOnDeclared).Should().Be(((DateOnly?)new DateOnly(2026, 7, 2), expected));
+    }
+
+    [Fact]
+    public async Task AWindowWithNothingCredited_HasNoLastEncounter_AndSoNothingStated()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.SaveChanges();
+
+        var item = (await Read(db)).Items.Single(entry => entry.EpaCode == "PAED-001");
+
+        (item.Current.LastObservedOn, item.Current.LastObservedOnDeclared).Should().Be(((DateOnly?)null, false));
+    }
+
+    [Fact]
     public async Task ChangingAnItemsWindowRereadsTheSameRows_WithNoRebuild()
     {
         // D41: storage is per semester whatever the item says, so an administrator switching an item from
@@ -507,7 +556,8 @@ public sealed class GetCurriculumProgressForTraineeTests
         int semester,
         int counts,
         int reached = 0,
-        DateOnly? lastObservedOn = null)
+        DateOnly? lastObservedOn = null,
+        bool declared = true)
         => db.CurriculumItemProgresses.Add(new CurriculumItemProgress
         {
             CurriculumItemId = curriculumItemId,
@@ -517,6 +567,7 @@ public sealed class GetCurriculumProgressForTraineeTests
             CountsSoFar = counts,
             MinimumLevelReachedCount = reached,
             LastObservedOn = lastObservedOn,
+            LastObservedOnDeclared = lastObservedOn is not null && declared,
             LastUpdated = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
         });
 

@@ -533,10 +533,10 @@ public sealed class ActivityService : IActivityService
 
         // The date the stamp below will write. ObservationDateResolver is the one implementation of "what date
         // did this happen", and Stamp is nothing but Resolve assigned to the entity.
-        var (observedOn, _) = ObservationDateResolver.Resolve(activity, schema, mergedDataJson);
+        var (observedOn, source) = ObservationDateResolver.Resolve(activity, schema, mergedDataJson);
 
         return await _creditApplier.PlanAsync(
-            new CreditSubject(activity.SubjectUserId, observedOn, mergedDataJson),
+            new CreditSubject(activity.SubjectUserId, observedOn, source == ObservationDateSource.Declared, mergedDataJson),
             // Deliberately carries no WbaToolKey (T122). Credit does not re-check the EPA→tool allow-list (D20): the
             // write path already did, and an allow-list edited since must not take back credit a trainee earned.
             new ActivityType

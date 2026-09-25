@@ -4,7 +4,8 @@ namespace Wombat.Application.Features.Activities.Dtos;
 
 /// <summary>
 /// The one wording of an activity's encounter date, wherever a surface shows it as one: the activity lists ([T137]),
-/// the trajectory, the activity page, the portfolio PDF ([T161], D28), and the committee's evidence summary.
+/// the trajectory, the activity page, the portfolio PDF ([T161], D28), the committee's evidence summary, and the last
+/// encounter on My progress, read from the progress row (<c>CurriculumItemProgress.LastObservedOnDeclared</c>, [T219]).
 /// </summary>
 /// <remarks>
 /// <para>

@@ -25,6 +25,10 @@ namespace Wombat.Infrastructure.Persistence;
 /// surfaces would contradict each other.
 /// </para>
 /// <para>
+/// T219's migration empties the table again, for the same reason: its new column (whether each row's last encounter
+/// date was stated) can only be computed by replaying the credit, and this is what replays it.
+/// </para>
+/// <para>
 /// <b>When it fires.</b> Only when the table holds no rows AND some transition records that it credited at
 /// least one item. In normal operation that state is unreachable: once anything has credited, there is a
 /// row. The one other way to reach it is deleting every curriculum item a trainee was credited against.

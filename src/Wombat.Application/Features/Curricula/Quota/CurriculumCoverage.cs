@@ -120,7 +120,8 @@ public static class CurriculumCoverageReader
                     row.Semester,
                     row.CountsSoFar,
                     row.MinimumLevelReachedCount,
-                    row.LastObservedOn)
+                    row.LastObservedOn,
+                    row.LastObservedOnDeclared)
             })
             .ToListAsync(cancellationToken);
 

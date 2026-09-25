@@ -120,6 +120,7 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
                 CountsSoFar = p.CountsSoFar,
                 MinimumLevelReachedCount = p.MinimumLevelReachedCount,
                 LastObservedOn = p.LastObservedOn,
+                LastObservedOnDeclared = p.LastObservedOnDeclared,
                 LastUpdated = p.LastUpdated
             })
             .ToListAsync(cancellationToken);
@@ -273,6 +274,10 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
         public int CountsSoFar { get; set; }
         public int MinimumLevelReachedCount { get; set; }
         public DateOnly? LastObservedOn { get; set; }
+
+        /// <summary>False when <see cref="LastObservedOn" /> is only the day a form was created, not a stated date (T219).</summary>
+        public bool LastObservedOnDeclared { get; set; }
+
         public DateTime LastUpdated { get; set; }
     }
 

@@ -71,6 +71,26 @@ public sealed class CurriculumItemProgress
     /// </remarks>
     public DateOnly? LastObservedOn { get; set; }
 
+    /// <summary>
+    /// Whether <see cref="LastObservedOn" /> is a date somebody stated (T219): true when a completion this row counts
+    /// on that date recorded its encounter date (<c>Activity.ObservedOnSource</c> is <c>Declared</c>). False when every
+    /// such completion's date is only the day its form was created, and false on a row nothing has credited yet.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A reader shows <see cref="LastObservedOn" /> as the last encounter. An undated one must say so ("not recorded
+    /// (created …)", <c>EncounterDate.Label</c>, T197), and the date alone cannot tell the two apart. The row keeps no
+    /// link to the completion the date came from (<see cref="LastActivityId" /> is the completion that most recently
+    /// moved the row, which is a different one whenever encounters are filed out of order), so the flag is stored.
+    /// </para>
+    /// <para>
+    /// Two completions on the same latest date, one dated and one not: the date is stated, because an encounter is
+    /// known to have happened on it. So the value depends on the set of completions, never on the order they were
+    /// credited in, and a rebuild reproduces it exactly, as it does <see cref="LastObservedOn" />.
+    /// </para>
+    /// </remarks>
+    public bool LastObservedOnDeclared { get; set; }
+
     public DateTime LastUpdated { get; set; }
     public string CreditedActivityKeysJson { get; set; } = "[]";
 
@@ -78,6 +98,23 @@ public sealed class CurriculumItemProgress
 
     /// <summary>True when this row is the bucket for <paramref name="period" />.</summary>
     public bool IsIn(AcademicPeriod period) => AcademicYear == period.Year && Semester == period.Semester;
+
+    /// <summary>
+    /// Counts one more credited encounter towards <see cref="LastObservedOn" /> and <see cref="LastObservedOnDeclared" />:
+    /// a later date replaces both, and the same date is stated if either encounter stated it (T219).
+    /// </summary>
+    public void NoteEncounter(DateOnly observedOn, bool declared)
+    {
+        if (LastObservedOn is not { } last || observedOn > last)
+        {
+            LastObservedOn = observedOn;
+            LastObservedOnDeclared = declared;
+        }
+        else if (observedOn == last)
+        {
+            LastObservedOnDeclared |= declared;
+        }
+    }
 }
 
 /// <summary>

@@ -2,10 +2,15 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Npgsql;
+using Wombat.Application.Audit;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula;
@@ -45,6 +50,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
     private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
 
     private const string T130Migration = "20260923082939_T130_AcademicPeriodQuota";
+    private const string T219Migration = "20260925031231_T219_LastEncounterDeclared";
     private const string LastMigrationBeforeT130 = "20260921071752_T121_MsfEvidenceRecordedPerEpa";
     private const string NaturalKeyIndex = "UX_CurriculumItemProgresses_Item_Trainee_Period";
     private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
@@ -139,7 +145,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             SELECT table_name, column_name, data_type, is_nullable, column_default
             FROM information_schema.columns
             WHERE table_schema = $1
-              AND ((table_name = 'CurriculumItemProgresses' AND column_name IN ('AcademicYear', 'Semester', 'LastObservedOn'))
+              AND ((table_name = 'CurriculumItemProgresses' AND column_name IN ('AcademicYear', 'Semester', 'LastObservedOn', 'LastObservedOnDeclared'))
                 OR (table_name = 'CurriculumItems' AND column_name = 'QuotaPeriod'))
             """,
             reader => (
@@ -156,6 +162,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             .Should().Equal(
                 ("CurriculumItemProgresses", "AcademicYear", "integer", "NO", (string?)null),
                 ("CurriculumItemProgresses", "LastObservedOn", "date", "YES", (string?)null),
+                // T219: never null, and false until a credit says otherwise.
+                ("CurriculumItemProgresses", "LastObservedOnDeclared", "boolean", "NO", "false"),
                 ("CurriculumItemProgresses", "Semester", "integer", "NO", (string?)null),
                 ("CurriculumItems", "QuotaPeriod", "integer", "NO", "0"));
 
@@ -449,10 +457,10 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         incremental.Should().Equal(
             new ProgressSnapshot(fixture.Paed001.ItemId, TraineeUserId, 2026, 1, CountsSoFar: 2, MinimumLevelReachedCount: 2,
                 ScaleMismatchCount: 0, UnverifiedLevelCount: 2, LastActivityId: c,
-                LastObservedOn: new DateOnly(2026, 3, 10), CreditedActivityKeys: Keys(a, c)),
+                LastObservedOn: new DateOnly(2026, 3, 10), LastObservedOnDeclared: true, CreditedActivityKeys: Keys(a, c)),
             new ProgressSnapshot(fixture.Paed001.ItemId, TraineeUserId, 2026, 2, CountsSoFar: 1, MinimumLevelReachedCount: 0,
                 ScaleMismatchCount: 0, UnverifiedLevelCount: 1, LastActivityId: b,
-                LastObservedOn: new DateOnly(2026, 8, 4), CreditedActivityKeys: Keys(b)));
+                LastObservedOn: new DateOnly(2026, 8, 4), LastObservedOnDeclared: true, CreditedActivityKeys: Keys(b)));
 
         await using (var db = NewContext(fixture.Schema))
         {
@@ -479,6 +487,144 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 .ToListAsync();
 
             completions.Should().HaveCount(3).And.OnlyContain(stamp => stamp.CreditedItemCount == 1 && stamp.CreditScaleMismatchCount == 0);
+        }
+    }
+
+    [Fact]
+    public async Task T219Migration_OnAPopulatedDatabase_EmptiesProgress_AndAddsTheStatedFlag()
+    {
+        // T219's migration empties the table rather than backfill the flag: a backfill would have to redo the credit
+        // rule in SQL, and the column's default (false) would mark every stated last encounter as undated. The DELETE
+        // acts only on an existing database, since a fresh one has no rows when migrations run, so it is rehearsed on a
+        // schema stopped just before T219 and given a row in the old shape. The migration before it is looked up, not
+        // named, so a migration merged later with an earlier timestamp cannot leave this test stopping short of it.
+        var schema = await CreateSchemaAsync();
+
+        await using (var db = NewContext(schema))
+        {
+            var migrations = db.Database.GetMigrations().ToList();
+            migrations.Should().Contain(T219Migration);
+            await db.GetService<IMigrator>().MigrateAsync(migrations[migrations.IndexOf(T219Migration) - 1]);
+            (await db.Database.GetPendingMigrationsAsync()).First().Should().Be(T219Migration);
+        }
+
+        int itemId;
+        await using (var connection = await OpenAsync(schema))
+        {
+            var collegeId = await InsertAsync(connection,
+                """INSERT INTO "Colleges" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('College of Paediatricians of South Africa', 'CPSA', TIMESTAMPTZ '2026-01-01 00:00:00+00', TRUE) RETURNING "Id" """);
+            var specialityId = await InsertAsync(connection,
+                """INSERT INTO "Specialities" ("CollegeId", "Name", "IsActive") VALUES ($1, 'Paediatrics', TRUE) RETURNING "Id" """,
+                collegeId);
+            var subSpecialityId = await InsertAsync(connection,
+                """INSERT INTO "SubSpecialities" ("SpecialityId", "Name", "IsActive") VALUES ($1, 'Paediatrics', TRUE) RETURNING "Id" """,
+                specialityId);
+            var epaId = await InsertEpaAsync(connection, subSpecialityId, "PAED-001", owningInstitutionId: null);
+            var curriculumId = await InsertCurriculumAsync(connection, subSpecialityId, PaediatricCurriculumName, "11.1");
+            itemId = await InsertCurriculumItemAsync(connection, curriculumId, epaId, requiredCount: 3, owningInstitutionId: null);
+        }
+
+        await InsertProgressRowAsync(schema, itemId, "trainee-legacy", 2026, semester: 2);
+
+        (await ColumnCountAsync(schema, "LastObservedOnDeclared")).Should().Be(0, "guard: the schema is in the pre-T219 shape");
+        (await ScalarAsync<long>(schema, """SELECT COUNT(*) FROM "CurriculumItemProgresses" """))
+            .Should().Be(1, "guard: there is a row for the migration to delete");
+
+        await using (var db = NewContext(schema))
+        {
+            await db.Database.MigrateAsync();
+            (await db.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
+        }
+
+        (await ScalarAsync<long>(schema, """SELECT COUNT(*) FROM "CurriculumItemProgresses" """))
+            .Should().Be(0, "no row may be left holding a flag nobody computed; the startup rebuild regenerates them");
+        (await ColumnCountAsync(schema, "LastObservedOnDeclared")).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task AnUndatedLastEncounter_OnPostgres_IsRecordedAndRead_AndTheStartupRebuildReproducesIt()
+    {
+        // T219 end to end on the real provider. Four completions, credited one per context in filing order as the live
+        // path does:
+        //  - PAED-001, semester 2: a stated encounter on 4 August, then an undated one created on 20 August. The last
+        //    encounter is 20 August, and it was not stated.
+        //  - PAED-008 (one a year): an undated one created on 10 March (semester 1), then a stated one on 2 July
+        //    (semester 2). The 2026 academic year reads both rows, and its last encounter, 2 July, was stated.
+        // Then the table is emptied, as the migration empties it, and the startup bootstrapper refills it. The refill
+        // must be exactly what the live path wrote.
+        var fixture = await ArrangePaediatricTraineeAsync();
+
+        int yearUndated, stated, yearStated, undated;
+        await using (var db = NewContext(fixture.Schema))
+        {
+            yearUndated = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed008.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 3, 10), filedOn: new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc),
+                source: ObservationDateSource.CreatedOn);
+            stated = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 8, 4), filedOn: new DateTime(2026, 8, 5, 9, 0, 0, DateTimeKind.Utc));
+            yearStated = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed008.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 7, 2), filedOn: new DateTime(2026, 8, 10, 9, 0, 0, DateTimeKind.Utc));
+            undated = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 8, 20), filedOn: new DateTime(2026, 8, 20, 9, 0, 0, DateTimeKind.Utc),
+                source: ObservationDateSource.CreatedOn);
+        }
+
+        foreach (var activityId in new[] { yearUndated, stated, yearStated, undated })
+        {
+            (await CreditInFreshContextAsync(fixture.Schema, activityId)).UpdatedRows.Should().ContainSingle();
+        }
+
+        // What ActivityService stamps beside the credit, and what the bootstrapper reads to know a rebuild is due.
+        await ExecuteAsync(fixture.Schema, """UPDATE "ActivityTransitions" SET "CreditedItemCount" = 1 WHERE "TransitionKey" = 'complete'""");
+
+        IReadOnlyList<ProgressSnapshot> incremental;
+        await using (var db = NewContext(fixture.Schema))
+        {
+            incremental = await SnapshotsAsync(db);
+        }
+
+        incremental.Select(row => (row.CurriculumItemId, row.Semester, row.CreditedActivityKeys, row.LastObservedOn, row.LastObservedOnDeclared))
+            .Should().BeEquivalentTo(new[]
+            {
+                (fixture.Paed001.ItemId, 2, Keys(stated, undated), (DateOnly?)new DateOnly(2026, 8, 20), false),
+                (fixture.Paed008.ItemId, 1, Keys(yearUndated), (DateOnly?)new DateOnly(2026, 3, 10), false),
+                (fixture.Paed008.ItemId, 2, Keys(yearStated), (DateOnly?)new DateOnly(2026, 7, 2), true),
+            });
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            // The reader's SQL carries the flag, and the year window takes the later row's.
+            var summary = await new GetCurriculumProgressForTraineeQueryHandler(db)
+                .Handle(new GetCurriculumProgressForTraineeQuery(TraineeUserId, TraineePrincipal(TraineeUserId), AsOf), CancellationToken.None);
+
+            var paed001 = summary!.Items.Single(item => item.EpaCode == "PAED-001").Current;
+            (paed001.Count, paed001.LastObservedOn, paed001.LastObservedOnDeclared)
+                .Should().Be((2, (DateOnly?)new DateOnly(2026, 8, 20), false));
+
+            var paed008 = summary.Items.Single(item => item.EpaCode == "PAED-008").Current;
+            (paed008.Name, paed008.Count, paed008.LastObservedOn, paed008.LastObservedOnDeclared)
+                .Should().Be(("2026 academic year", 2, (DateOnly?)new DateOnly(2026, 7, 2), true));
+        }
+
+        await ExecuteAsync(fixture.Schema, """DELETE FROM "CurriculumItemProgresses" """);
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            var bootstrapper = new CurriculumProgressBootstrapper(
+                db,
+                new RebuildingSender(db),
+                new SystemAuditContext(),
+                Options.Create(new WombatOptions()),
+                NullLogger<CurriculumProgressBootstrapper>.Instance);
+
+            var result = await bootstrapper.RunAsync();
+            result.Should().NotBeNull("the table is empty and four completions record credit");
+            result!.ActivitiesReplayed.Should().Be(4);
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            (await SnapshotsAsync(db)).Should().Equal(incremental);
         }
     }
 
@@ -776,7 +922,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         int epaId,
         int score,
         DateOnly observedOn,
-        DateTime filedOn)
+        DateTime filedOn,
+        ObservationDateSource source = ObservationDateSource.Declared)
     {
         var activity = new Activity
         {
@@ -788,8 +935,10 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             DataJson = $$"""{ "epa_id": {{epaId}}, "score": {{score}} }""",
             CreatedOn = filedOn.AddHours(-1),
             UpdatedOn = filedOn,
+            // An undated activity's ObservedOn is its created day on the South African calendar (T219): the caller
+            // passes that day, and the source says it is not a stated date.
             ObservedOn = observedOn,
-            ObservedOnSource = ObservationDateSource.Declared,
+            ObservedOnSource = source,
             InstitutionId = fixture.InstitutionId
         };
 
@@ -858,6 +1007,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 row.UnverifiedLevelCount,
                 row.LastActivityId,
                 row.LastObservedOn,
+                row.LastObservedOnDeclared,
                 Canonical(row.CreditedActivityKeysJson)))
             .ToList();
     }
@@ -887,6 +1037,55 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             "IntegrationTest",
             ClaimTypes.Name,
             ClaimTypes.Role));
+
+    private async Task<long> ColumnCountAsync(string schema, string column)
+        => await ScalarAsync<long>(
+            schema,
+            """
+            SELECT COUNT(*) FROM information_schema.columns
+            WHERE table_schema = $1 AND table_name = 'CurriculumItemProgresses' AND column_name = $2
+            """,
+            schema,
+            column);
+
+    /// <summary>
+    /// The one command <see cref="CurriculumProgressBootstrapper" /> sends, handled as MediatR would hand it over, on the
+    /// bootstrapper's own context.
+    /// </summary>
+    private sealed class RebuildingSender(ApplicationDbContext db) : ISender
+    {
+        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            var command = (RebuildCurriculumProgressCommand)(object)request;
+            var result = await new RebuildCurriculumProgressCommandHandler(db, new CreditApplier(db)).Handle(command, cancellationToken);
+            return (TResponse)(object)result;
+        }
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+            where TRequest : IRequest
+            => throw new NotSupportedException();
+
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+    }
+
+    /// <summary>No HTTP request at startup: the bootstrapper declares its own actor.</summary>
+    private sealed class SystemAuditContext : IAuditContextProvider
+    {
+        public string? UserId { get; private set; }
+        public string? UserDisplay { get; private set; }
+        public string? IpAddress => null;
+        public string? UserAgent => null;
+        public int? InstitutionId => null;
+        public void DeclareInstitution(int institutionId) { }
+        public void DeclareActor(string userId, string display) => (UserId, UserDisplay) = (userId, display);
+    }
 
     private async Task InsertProgressRowAsync(string schema, int itemId, string traineeUserId, int academicYear, int semester)
         => await ExecuteAsync(
@@ -1088,6 +1287,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         int UnverifiedLevelCount,
         int? LastActivityId,
         DateOnly? LastObservedOn,
+        bool LastObservedOnDeclared,
         string CreditedActivityKeys);
 
     // Copied from RebuildCurriculumProgressTests: credit the EPA the activity names, gated on "score", which

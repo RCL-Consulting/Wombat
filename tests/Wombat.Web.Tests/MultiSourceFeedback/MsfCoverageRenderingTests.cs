@@ -375,7 +375,7 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
         TraineeCurriculumProgressDto Item(int epaId, string code) => new(
             100 + epaId, epaId, code, $"{code} title", QuotaPeriod.Semester, 3,
             new QuotaWindowDto("Semester 2, 2026", "July to November", new(2026, 7, 1), new(2026, 11, 30),
-                QuotaWindowStatus.Counting, 1, 3, false, 2, 33, 1, new DateOnly(2026, 8, 1), null, null),
+                QuotaWindowStatus.Counting, 1, 3, false, 2, 33, 1, new DateOnly(2026, 8, 1), true, null, null),
             null, 3, "3a", null);
 
         return new TraineeCurriculumProgressSummaryDto(

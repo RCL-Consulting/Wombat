@@ -170,6 +170,39 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// The access report's curriculum-progress entries say whether each last encounter date was stated, since the date
+    /// alone cannot tell a stated one from the day a form was created (T219).
+    /// </summary>
+    [Fact]
+    public async Task TheAccessReport_SaysWhetherEachLastEncounterDateWasStated()
+    {
+        await using var db = SeededDb();
+        db.Set<CurriculumItemProgress>().AddRange(
+            new CurriculumItemProgress
+            {
+                CurriculumItemId = 1, TraineeUserId = "trainee-1", AcademicYear = 2026, Semester = 1, CountsSoFar = 1,
+                LastObservedOn = new DateOnly(2026, 3, 10), LastObservedOnDeclared = true
+            },
+            new CurriculumItemProgress
+            {
+                CurriculumItemId = 1, TraineeUserId = "trainee-1", AcademicYear = 2026, Semester = 2, CountsSoFar = 1,
+                LastObservedOn = new DateOnly(2026, 8, 20), LastObservedOnDeclared = false
+            });
+        await db.SaveChangesAsync();
+
+        var export = await new Wombat.Infrastructure.DataRights.AccessReportBuilder(db, new PortfolioPdfService(db, new MsfAggregationService()))
+            .BuildAsync("trainee-1", CancellationToken.None);
+
+        using var zip = new System.IO.Compression.ZipArchive(new MemoryStream(export.ZipBytes), System.IO.Compression.ZipArchiveMode.Read);
+        await using var json = zip.GetEntry("data-export.json")!.Open();
+        using var document = await System.Text.Json.JsonDocument.ParseAsync(json);
+        document.RootElement.GetProperty("curriculumProgress").EnumerateArray()
+            .Select(row => (row.GetProperty("lastObservedOn").GetString(), row.GetProperty("lastObservedOnDeclared").GetBoolean()))
+            .OrderBy(row => row.Item1)
+            .Should().Equal(("2026-03-10", true), ("2026-08-20", false));
+    }
+
+    /// <summary>
     /// The MSF section says which declared EPAs the campaign recorded from its evidence rows, as the committee snapshot,
     /// the coverage grid and the campaign report have it, not from the per-EPA stamp. A campaign released before the
     /// stamp existed has its rows and a null stamp, and printed every EPA "(not recorded)" beside the activities section

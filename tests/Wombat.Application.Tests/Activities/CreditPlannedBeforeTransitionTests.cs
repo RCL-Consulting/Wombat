@@ -128,11 +128,105 @@ public sealed class CreditPlannedBeforeTransitionTests
         (row.AcademicYear, row.Semester).Should().Be((2026, 2), "the encounter the completion recorded is 1 August");
         row.CountsSoFar.Should().Be(1);
         row.LastObservedOn.Should().Be(new DateOnly(2026, 8, 1));
+        row.LastObservedOnDeclared.Should().BeTrue("the completion stated its encounter date (T219)");
         row.CreditedActivityKeysJson.Should().Be($$"""["{{draft.Id}}:complete"]""");
     }
 
-    private static ActivityService Service(ApplicationDbContext db, ICreditApplier creditApplier)
-        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator());
+    [Fact]
+    public async Task AnUndatedCompletion_CreditsTheDayItsFormWasCreated_AndTheRowSaysTheDateWasNotStated()
+    {
+        // T219. The plan is built before the stamp, so it takes "was the date stated" from the same resolution the
+        // stamp is about to write, as it takes the date. Nobody filled the encounter date in, so the date is the day
+        // the form was created on the South African calendar: created at 23:30 UTC on 19 August, which is already
+        // 20 August there.
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db, encounterDateRequired: false);
+
+        var clock = new FixedClock(new DateTimeOffset(2026, 8, 19, 23, 30, 0, TimeSpan.Zero));
+        var service = Service(db, new CreditApplier(db), clock);
+        var principal = Principal("trainee-1");
+
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", $$"""{ "epa_id": {{CreditedEpaId}}, "score": 4 }""", principal),
+            CancellationToken.None);
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Activities.SingleAsync(entity => entity.Id == draft.Id);
+        (stored.CurrentState, stored.ObservedOn, stored.ObservedOnSource)
+            .Should().Be(("completed", new DateOnly(2026, 8, 20), ObservationDateSource.CreatedOn), "guard: an undated completion");
+
+        var row = (await verify.CurriculumItemProgresses.AsNoTracking().ToListAsync()).Should().ContainSingle().Subject;
+        (row.AcademicYear, row.Semester, row.CountsSoFar).Should().Be((2026, 2, 1));
+        row.LastObservedOn.Should().Be(new DateOnly(2026, 8, 20));
+        row.LastObservedOnDeclared.Should().BeFalse("nobody stated the date; it is only the day the form was created");
+    }
+
+    [Theory]
+    [InlineData(null, "\"2026-08-01\"", 2026, 8, 1, true)]
+    [InlineData("\"2026-03-10\"", "null", 2026, 8, 20, false)]
+    public async Task ACompletionThatChangesWhetherTheDateIsStated_RecordsWhatItWrites_NotWhatTheDraftSaid(
+        string? draftDate, string completionDate, int year, int month, int day, bool declared)
+    {
+        // T219 review. The plan is built before the stamp, while the entity still carries the draft's
+        // ObservedOnSource, so the flag must come from the resolution of the MERGED data, as the date does. Both
+        // directions: an undated draft whose completion states the date is stated; a dated draft whose completion
+        // clears it is only the day the form was created (20 August in South Africa, from 23:30 UTC on 19 August).
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db, encounterDateRequired: false);
+
+        var clock = new FixedClock(new DateTimeOffset(2026, 8, 19, 23, 30, 0, TimeSpan.Zero));
+        var service = Service(db, new CreditApplier(db), clock);
+        var principal = Principal("trainee-1");
+
+        var draftData = draftDate is null
+            ? $$"""{ "epa_id": {{CreditedEpaId}}, "score": 4 }"""
+            : $$"""{ "epa_id": {{CreditedEpaId}}, "score": 4, "observed_on": {{draftDate}} }""";
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", draftData, principal),
+            CancellationToken.None);
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        (await db.Activities.SingleAsync(entity => entity.Id == draft.Id)).ObservedOnSource
+            .Should().Be(declared ? ObservationDateSource.CreatedOn : ObservationDateSource.Declared,
+                "guard: the submitted draft says the opposite of what the completion will write");
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, $$"""{ "observed_on": {{completionDate}} }""", null),
+            CancellationToken.None);
+
+        var expectedDate = new DateOnly(year, month, day);
+        var expectedSource = declared ? ObservationDateSource.Declared : ObservationDateSource.CreatedOn;
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Activities.SingleAsync(entity => entity.Id == draft.Id);
+        (stored.CurrentState, stored.ObservedOn, stored.ObservedOnSource)
+            .Should().Be(("completed", expectedDate, expectedSource), "guard: the completion's patch was written");
+
+        var row = (await verify.CurriculumItemProgresses.AsNoTracking().ToListAsync()).Should().ContainSingle().Subject;
+        row.LastObservedOn.Should().Be(expectedDate);
+        row.LastObservedOnDeclared.Should().Be(declared, "the row records the date the completion wrote, and whether it was stated");
+    }
+
+    private static ActivityService Service(ApplicationDbContext db, ICreditApplier creditApplier, TimeProvider? clock = null)
+        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator(), clock);
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 
     private static string DataObservedOn(string isoDate)
         => $$"""{ "epa_id": {{CreditedEpaId}}, "score": 4, "observed_on": "{{isoDate}}" }""";
@@ -179,7 +273,8 @@ public sealed class CreditPlannedBeforeTransitionTests
         }
     }
 
-    private static void Seed(ApplicationDbContext db)
+    /// <param name="encounterDateRequired">False lets the form be filed with no encounter date at all (T219).</param>
+    private static void Seed(ApplicationDbContext db, bool encounterDateRequired = true)
     {
         db.Epas.Add(new Epa { Id = CreditedEpaId, SubSpecialityId = 1, Code = "EPA-1", Title = "Take a history" });
 
@@ -206,7 +301,7 @@ public sealed class CreditPlannedBeforeTransitionTests
         });
 
         // The observation date comes from the form (T119), so the completion can move it.
-        const string schemaJson = """
+        var schemaJson = $$"""
             {
               "version": 1,
               "observation_date_field": "observed_on",
@@ -217,7 +312,7 @@ public sealed class CreditPlannedBeforeTransitionTests
                   "fields": [
                     { "key": "epa_id", "type": "epa", "label": "EPA", "required": true },
                     { "key": "score", "type": "number", "label": "Score", "required": true },
-                    { "key": "observed_on", "type": "date", "label": "Date observed", "required": true }
+                    { "key": "observed_on", "type": "date", "label": "Date observed", "required": {{(encounterDateRequired ? "true" : "false")}} }
                   ]
                 }
               ]

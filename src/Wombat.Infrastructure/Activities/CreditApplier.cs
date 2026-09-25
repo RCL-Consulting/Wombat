@@ -109,7 +109,7 @@ public sealed class CreditApplier : ICreditApplier
 
         if (credits.Count == 0)
         {
-            return new CreditPlan(subject.SubjectUserId, subject.ObservedOn, credits, []);
+            return new CreditPlan(subject.SubjectUserId, subject.ObservedOn, subject.ObservedOnDeclared, credits, []);
         }
 
         // Every row the trainee has on every candidate item, in EVERY semester, not only the one the
@@ -136,7 +136,7 @@ public sealed class CreditApplier : ICreditApplier
             .Where(row => progressSet.Entry(row).State != EntityState.Deleted)
             .ToList();
 
-        return new CreditPlan(traineeUserId, subject.ObservedOn, credits, existingRows);
+        return new CreditPlan(traineeUserId, subject.ObservedOn, subject.ObservedOnDeclared, credits, existingRows);
     }
 
     public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity)
@@ -230,12 +230,11 @@ public sealed class CreditApplier : ICreditApplier
                     break;
             }
 
-            // The latest ENCOUNTER this bucket counts. It is what a reader shows as "last encounter", and unlike
-            // LastUpdated a rebuild reproduces it exactly.
-            if (progress.LastObservedOn is null || plan.ObservedOn > progress.LastObservedOn)
-            {
-                progress.LastObservedOn = plan.ObservedOn;
-            }
+            // The latest ENCOUNTER this bucket counts, and whether anybody stated that date (T219). It is what a
+            // reader shows as "last encounter", marked when the date is only the day a form was created. Unlike
+            // LastUpdated a rebuild reproduces both exactly: the rule is a maximum, with a tie stated if either
+            // encounter stated it, so the order of the credits does not matter.
+            progress.NoteEncounter(plan.ObservedOn, plan.ObservedOnDeclared);
 
             progress.LastActivityId = completedActivity.Id;
             progress.LastUpdated = DateTime.UtcNow;

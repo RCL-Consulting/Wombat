@@ -16,6 +16,10 @@ namespace Wombat.Application.Features.Curricula.Quota;
 /// encounter date, T073). It is a share of the encounters, not of the target.
 /// </param>
 /// <param name="LastObservedOn">The latest encounter credited in this window.</param>
+/// <param name="LastObservedOnDeclared">
+/// Whether somebody stated <paramref name="LastObservedOn" />. False means it is only the day a form was created, which
+/// a reader marks with <c>EncounterDate.Label</c> ("not recorded (created …)", T219).
+/// </param>
 /// <param name="FirstCountedName">When the target is waived, the first window the trainee is held to.</param>
 /// <param name="FirstCountedOn">The first day of that window.</param>
 public sealed record QuotaWindowDto(
@@ -31,6 +35,7 @@ public sealed record QuotaWindowDto(
     int PercentOfTarget,
     int MinimumLevelReachedCount,
     DateOnly? LastObservedOn,
+    bool LastObservedOnDeclared,
     string? FirstCountedName,
     DateOnly? FirstCountedOn)
 {
@@ -54,6 +59,7 @@ public sealed record QuotaWindowDto(
             tally.PercentOfTarget,
             tally.MinimumLevelReachedCount,
             tally.LastObservedOn,
+            tally.LastObservedOnDeclared,
             tally.Applies ? null : QuotaText.FirstCountedName(tally.Window),
             tally.Applies ? null : tally.Window.FirstCountedPeriod?.Start);
 }
@@ -232,7 +238,8 @@ public static class TraineeQuotaProgressReader
                     row.Semester,
                     row.CountsSoFar,
                     row.MinimumLevelReachedCount,
-                    row.LastObservedOn))
+                    row.LastObservedOn,
+                    row.LastObservedOnDeclared))
                 .ToListAsync(cancellationToken);
 
         var rungs = await EntrustmentRungLabels.LoadAsync(dbContext, items.Select(item => item.ScaleId), cancellationToken);

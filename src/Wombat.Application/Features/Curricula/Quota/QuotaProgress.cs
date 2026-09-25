@@ -14,23 +14,31 @@ public static class QuotaCalendar
 }
 
 /// <summary>One stored semester bucket, reduced to what the quota reads.</summary>
+/// <param name="LastObservedOnDeclared">Whether <paramref name="LastObservedOn" /> was stated (T219).</param>
 public sealed record QuotaProgressRow(
     int CurriculumItemId,
     int AcademicYear,
     int Semester,
     int CountsSoFar,
     int MinimumLevelReachedCount,
-    DateOnly? LastObservedOn);
+    DateOnly? LastObservedOn,
+    bool LastObservedOnDeclared);
 
 /// <summary>What a trainee has, against what is asked, in one window.</summary>
 /// <param name="Target">The item's <see cref="CurriculumItem.RequiredCount" />, which is a target per window (D18).</param>
 /// <param name="Count">Credited encounters in the window's semesters. It is shown even when the target is waived.</param>
+/// <param name="LastObservedOn">The latest encounter credited in the window's semesters.</param>
+/// <param name="LastObservedOnDeclared">
+/// Whether somebody stated that date, rather than it being the day a form was created (T219). False when
+/// <paramref name="LastObservedOn" /> is null.
+/// </param>
 public sealed record QuotaWindowTally(
     QuotaWindow Window,
     int Target,
     int Count,
     int MinimumLevelReachedCount,
-    DateOnly? LastObservedOn)
+    DateOnly? LastObservedOn,
+    bool LastObservedOnDeclared)
 {
     /// <summary>The target applies: the trainee is neither exempt (D14) nor not yet started.</summary>
     public bool Applies => Window.Status == QuotaWindowStatus.Counting;
@@ -123,12 +131,19 @@ public static class QuotaProgressCalculator
     {
         var covered = rows.Where(row => window.Covers(row.AcademicYear, row.Semester)).ToList();
 
+        // An academic year is two semester rows. Its last encounter is the later of theirs, and on a tie it is stated
+        // if either row's is: the rule CurriculumItemProgress.NoteEncounter applies within one row (T219).
+        var lastObservedOn = covered.Max(row => row.LastObservedOn);
+        var lastObservedOnDeclared = lastObservedOn is { } last &&
+                                     covered.Any(row => row.LastObservedOn == last && row.LastObservedOnDeclared);
+
         return new QuotaWindowTally(
             window,
             target,
             covered.Sum(row => row.CountsSoFar),
             covered.Sum(row => row.MinimumLevelReachedCount),
-            covered.Max(row => row.LastObservedOn));
+            lastObservedOn,
+            lastObservedOnDeclared);
     }
 }
 

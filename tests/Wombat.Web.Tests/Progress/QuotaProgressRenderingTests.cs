@@ -79,7 +79,9 @@ public sealed class QuotaProgressRenderingTests : TestContext
         Text(card).Should().Contain("2 more by 30 November 2026.",
             "semester 2 closes on the College's 30 November, not on the 31 December the resolver folds into it");
         Text(card).Should().Contain("At the minimum level when observed: 1 of 1.");
-        Text(card).Should().Contain("Last encounter 12 Aug 2026.");
+        Text(card).Should().Contain("Last encounter date: 2026-08-12.",
+            "a stated date reads as the encounter date alone, in EncounterDate.Label's words (T219)");
+        Text(card).Should().NotContain("not recorded");
         Text(card).Should().Contain("Target: 3 per semester (6 a year).");
         Text(card).Should().Contain("Minimum now 3a.");
 
@@ -138,6 +140,33 @@ public sealed class QuotaProgressRenderingTests : TestContext
         bar.GetAttribute("aria-valuemax").Should().Be("1");
         bar.GetAttribute("aria-valuenow").Should().Be("0");
         bar.GetAttribute("aria-label").Should().Be("PAED-011: 0 of 1 in 2026");
+    }
+
+    [Fact]
+    public void AnUndatedLastEncounter_IsMarkedAsTheDayItsFormWasCreated()
+    {
+        // T219 (split from T197). The latest encounter this semester was filed with no encounter date, so the date the
+        // progress row holds is only the day its form was created. Printed bare, it passes the audit clock off as a
+        // clinical fact; it reads in EncounterDate.Label's words instead, the sentence naming the date so that "not
+        // recorded" cannot read as though the encounter were not. The item beside it, whose date was stated, is not
+        // marked, and neither is its own previous-semester line, which prints no date.
+        var cut = RenderMyProgress(Summary(
+            AsOf,
+            programmeStart: new(2025, 1, 1),
+            stage: 2,
+            [
+                Item(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3,
+                    Counting(Semester2Of2026, count: 2, target: 3, minimumReached: 2, lastObservedOn: new(2026, 9, 10), lastObservedOnDeclared: false)),
+                Item(6, "PAED-006", "Managing long-term health conditions (LTHCs)", QuotaPeriod.Semester, 2,
+                    Counting(Semester2Of2026, count: 1, target: 2, minimumReached: 1, lastObservedOn: new(2026, 9, 1)))
+            ]));
+
+        var undated = Text(ItemCard(cut, "PAED-001"));
+        undated.Should().Contain("Last encounter date: not recorded (created 2026-09-10).");
+        undated.Should().NotContain("10 Sep 2026", "the created day must not also be printed as though it were the encounter");
+
+        Text(ItemCard(cut, "PAED-006")).Should().Contain("Last encounter date: 2026-09-01.");
+        Text(ItemCard(cut, "PAED-006")).Should().NotContain("not recorded");
     }
 
     [Fact]
@@ -782,7 +811,8 @@ public sealed class QuotaProgressRenderingTests : TestContext
         QuotaWindowDto? previous = null)
         => new(id, EpaId: id, code, title, period, target, current, previous, EffectiveMinimumLevelOrder: 3, EffectiveMinimumLevelLabel: "3a", TrainingYearChangedOn: null);
 
-    private static QuotaWindowDto Counting(WindowShape window, int count, int target, int minimumReached = 0, DateOnly? lastObservedOn = null)
+    private static QuotaWindowDto Counting(
+        WindowShape window, int count, int target, int minimumReached = 0, DateOnly? lastObservedOn = null, bool lastObservedOnDeclared = true)
         => new(
             window.Name,
             window.Months,
@@ -796,6 +826,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
             PercentOfTarget: Math.Min(100, count * 100 / target),
             minimumReached,
             lastObservedOn,
+            LastObservedOnDeclared: lastObservedOn is not null && lastObservedOnDeclared,
             FirstCountedName: null,
             FirstCountedOn: null);
 
@@ -813,6 +844,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
             PercentOfTarget: 0,
             MinimumLevelReachedCount: count,
             LastObservedOn: count > 0 ? window.Start.AddDays(10) : null,
+            LastObservedOnDeclared: count > 0,
             firstCountedName,
             firstCountedOn);
 
@@ -830,6 +862,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
             PercentOfTarget: 0,
             MinimumLevelReachedCount: 0,
             LastObservedOn: null,
+            LastObservedOnDeclared: false,
             firstCountedName,
             firstCountedOn);
 

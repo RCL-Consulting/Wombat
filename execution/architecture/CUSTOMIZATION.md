@@ -429,7 +429,7 @@ Query patterns:
 
 - "All activities for trainee X of type Y" — indexed.
 - "All activities of type Y with field `reasoning` at or above 4" — GIN-indexed.
-- "Curriculum progress for trainee X" — reads the trainee's `CurriculumItemProgress` rows, one per (item, semester), which `CreditApplier` writes at each terminal transition, and reads them against each item's per-window target through one shared read model (`QuotaProgressCalculator`, T130). It never re-queries Activities: the tally is the materialisation, and `RebuildCurriculumProgressCommand` is the one thing that recomputes it from the activities.
+- "Curriculum progress for trainee X" — reads the trainee's `CurriculumItemProgress` rows, one per (item, semester), which `CreditApplier` writes at each terminal transition, and reads them against each item's per-window target through one shared read model (`QuotaProgressCalculator`, T130). It never re-queries Activities: the tally is the materialisation, and `RebuildCurriculumProgressCommand` is the one thing that recomputes it from the activities. So a row also carries what a reader needs about its last encounter: the date (`LastObservedOn`) and whether anybody stated it (`LastObservedOnDeclared`, T219), because an undated activity's date is only the day its form was created and My progress marks it as such (`EncounterDate.Label`). On a tie the date is stated if either encounter stated it, so a rebuild reproduces the flag whatever order it replays in.
 
 Reports that aggregate across all activities in an institution will be the slow case. Acceptable for now; accelerate with materialised views if needed.
 

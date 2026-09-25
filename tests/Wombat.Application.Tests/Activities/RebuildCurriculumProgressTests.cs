@@ -226,10 +226,12 @@ public sealed class RebuildCurriculumProgressTests
             [
                 new Snapshot(NationalItemId, "trainee-1", 2026, 1, CountsSoFar: 2, MinimumLevelReachedCount: 1,
                     ScaleMismatchCount: 0, UnverifiedLevelCount: 2, LastActivityId: 200,
-                    LastObservedOn: new DateOnly(2026, 4, 1), CreditedActivityKeysJson: """["200:complete","201:complete"]"""),
+                    LastObservedOn: new DateOnly(2026, 4, 1), LastObservedOnDeclared: true,
+                    CreditedActivityKeysJson: """["200:complete","201:complete"]"""),
                 new Snapshot(NationalItemId, "trainee-1", 2026, 2, CountsSoFar: 1, MinimumLevelReachedCount: 1,
                     ScaleMismatchCount: 0, UnverifiedLevelCount: 1, LastActivityId: 202,
-                    LastObservedOn: new DateOnly(2026, 8, 4), CreditedActivityKeysJson: """["202:complete"]""")
+                    LastObservedOn: new DateOnly(2026, 8, 4), LastObservedOnDeclared: true,
+                    CreditedActivityKeysJson: """["202:complete"]""")
             ],
             "guard: the baseline itself must be two semester buckets, each credited by the encounters observed in it");
 
@@ -244,6 +246,63 @@ public sealed class RebuildCurriculumProgressTests
         {
             (await SnapshotsAsync(verify)).Should().Equal(incremental);
         }
+    }
+
+    [Fact]
+    public async Task Rebuild_WritesWhetherEachLastEncounterWasStated_FromTheActivities_NotFromTheStoredRow()
+    {
+        // T219. A progress row keeps whether its last encounter's date was stated, because it keeps no link to the
+        // completion that date came from. Semester 1's latest encounter (5 May) is undated, so its date is only the day
+        // its form was created. Semester 2's latest date (4 August) has two encounters, one stated and one not, so it
+        // is stated; the undated one is filed later, so a replay that let the last credit overwrite a tie would say
+        // otherwise. The stored rows carry the opposite flags. A rebuild writes both from the activities.
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 150, observedOn: new DateOnly(2026, 3, 10));
+            // Created 2026-05-05 with no encounter date: ObservedOn is that day, and says so.
+            AddCompletedActivity(seed, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 141, source: ObservationDateSource.CreatedOn);
+            AddCompletedActivity(seed, activityId: 202, subjectUserId: "trainee-1", score: 4, daysAgo: 50, observedOn: new DateOnly(2026, 8, 4));
+            // Created 2026-08-04, the day of 202's stated encounter, and replayed after it (filed at the same moment,
+            // and the replay breaks the tie by id).
+            AddCompletedActivity(seed, activityId: 203, subjectUserId: "trainee-1", score: 4, daysAgo: 50, source: ObservationDateSource.CreatedOn);
+
+            seed.CurriculumItemProgresses.AddRange(
+                StaleRow(id: 910, semester: 1, new DateOnly(2026, 5, 5), declared: true, """["200:complete","201:complete"]"""),
+                StaleRow(id: 911, semester: 2, new DateOnly(2026, 8, 4), declared: false, """["202:complete","203:complete"]"""));
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var result = await Rebuild(db);
+            (result.ProgressRowsWritten, result.ProgressRowsRemoved).Should().Be((2, 0));
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            (await SnapshotsAsync(verify)).Select(row => (row.Semester, row.LastObservedOn, row.LastObservedOnDeclared))
+                .Should().Equal(
+                    (1, (DateOnly?)new DateOnly(2026, 5, 5), false),
+                    (2, (DateOnly?)new DateOnly(2026, 8, 4), true));
+        }
+
+        static CurriculumItemProgress StaleRow(int id, int semester, DateOnly lastObservedOn, bool declared, string keys) => new()
+        {
+            Id = id,
+            CurriculumItemId = NationalItemId,
+            TraineeUserId = "trainee-1",
+            AcademicYear = 2026,
+            Semester = semester,
+            CountsSoFar = 2,
+            MinimumLevelReachedCount = 2,
+            LastObservedOn = lastObservedOn,
+            LastObservedOnDeclared = declared,
+            LastUpdated = Now.AddDays(-30),
+            CreditedActivityKeysJson = keys
+        };
     }
 
     [Fact]
@@ -318,6 +377,8 @@ public sealed class RebuildCurriculumProgressTests
                 MinimumLevelReachedCount = 5,
                 LastActivityId = 200,
                 LastObservedOn = new DateOnly(2026, 6, 15),
+                // Not what the replay of activity 200 writes (its date is stated), so the rollback has something to undo.
+                LastObservedOnDeclared = false,
                 LastUpdated = Now.AddDays(-100),
                 CreditedActivityKeysJson = """["200:complete"]"""
             });
@@ -334,6 +395,12 @@ public sealed class RebuildCurriculumProgressTests
             db.ChangeTracker.Entries<CurriculumItemProgress>()
                 .Where(entry => entry.State != EntityState.Unchanged)
                 .Should().BeEmpty("the audit pipeline's catch saves this context, so nothing may be left dirty");
+
+            // The tracked row holds what was loaded, the stated flag included (T219): the replay set it, and nothing the
+            // replay wrote may outlive the rollback.
+            var tracked = db.CurriculumItemProgresses.Local.Should().ContainSingle().Subject;
+            (tracked.CountsSoFar, tracked.LastObservedOn, tracked.LastObservedOnDeclared)
+                .Should().Be((5, (DateOnly?)new DateOnly(2026, 6, 15), false));
 
             await db.SaveChangesAsync();
         }
@@ -660,8 +727,8 @@ public sealed class RebuildCurriculumProgressTests
 
     /// <summary>
     /// Everything a replay is supposed to reproduce, compared as one value. LastUpdated is deliberately absent:
-    /// it is an audit clock and a replay rewrites it. LastObservedOn is present, because it is what a reader
-    /// shows and it must survive a rebuild exactly.
+    /// it is an audit clock and a replay rewrites it. LastObservedOn and LastObservedOnDeclared are present, because
+    /// they are what a reader shows and they must survive a rebuild exactly (T219).
     /// </summary>
     private sealed record Snapshot(
         int CurriculumItemId,
@@ -674,6 +741,7 @@ public sealed class RebuildCurriculumProgressTests
         int UnverifiedLevelCount,
         int? LastActivityId,
         DateOnly? LastObservedOn,
+        bool LastObservedOnDeclared,
         string CreditedActivityKeysJson)
     {
         public static Snapshot Of(CurriculumItemProgress row)
@@ -688,6 +756,7 @@ public sealed class RebuildCurriculumProgressTests
                 row.UnverifiedLevelCount,
                 row.LastActivityId,
                 row.LastObservedOn,
+                row.LastObservedOnDeclared,
                 row.CreditedActivityKeysJson);
     }
 
@@ -808,7 +877,8 @@ public sealed class RebuildCurriculumProgressTests
         int score,
         int daysAgo,
         int activityTypeId = CreditingTypeId,
-        DateOnly? observedOn = null)
+        DateOnly? observedOn = null,
+        ObservationDateSource source = ObservationDateSource.Declared)
     {
         var filedOn = Now.AddDays(-daysAgo);
 
@@ -826,7 +896,8 @@ public sealed class RebuildCurriculumProgressTests
             // T119: the encounter date, which is what the stage minimum is selected by. Set alongside
             // CreatedOn rather than left at default, because default(DateOnly) is 0001-01-01 and falls
             // before every programme start.
-            ObservedOn = observedOn ?? DateOnly.FromDateTime(filedOn)
+            ObservedOn = observedOn ?? DateOnly.FromDateTime(filedOn),
+            ObservedOnSource = source
         };
 
         activity.Transitions.Add(new ActivityTransition

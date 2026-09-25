@@ -29,17 +29,26 @@ public sealed record CreditApplicationResult(
 }
 
 /// <summary>
-/// The three facts about an activity that credit depends on. They are passed explicitly rather than read off
-/// the entity, so that <see cref="ICreditApplier.PlanAsync" /> can run BEFORE the transition mutates the
-/// activity, using the data and the date the transition is about to write.
+/// The facts about an activity that credit depends on. They are passed explicitly rather than read off the entity,
+/// so that <see cref="ICreditApplier.PlanAsync" /> can run BEFORE the transition mutates the activity, using the data
+/// and the date the transition is about to write.
 /// </summary>
-public sealed record CreditSubject(string SubjectUserId, DateOnly ObservedOn, string DataJson)
+/// <param name="ObservedOnDeclared">
+/// Whether <paramref name="ObservedOn" /> was stated (<c>ObservationDateSource.Declared</c>) rather than being the day
+/// the activity was created. Credit does not depend on it; the progress row records it beside the date, so a reader
+/// can mark an undated last encounter (T219). No default: every caller says which it is.
+/// </param>
+public sealed record CreditSubject(string SubjectUserId, DateOnly ObservedOn, bool ObservedOnDeclared, string DataJson)
 {
     /// <summary>The subject, date and data an activity already carries: for a replay, or for a caller that has already transitioned it.</summary>
     public static CreditSubject Of(Activity activity)
     {
         ArgumentNullException.ThrowIfNull(activity);
-        return new CreditSubject(activity.SubjectUserId, activity.ObservedOn, activity.DataJson);
+        return new CreditSubject(
+            activity.SubjectUserId,
+            activity.ObservedOn,
+            activity.ObservedOnSource == ObservationDateSource.Declared,
+            activity.DataJson);
     }
 }
 
@@ -56,13 +65,15 @@ public sealed record PlannedCredit(int CurriculumItemId, int Amount, LevelCompar
 /// included so the dedupe can look across buckets: an activity credits an item at most once, whichever
 /// semester it lands in.
 /// </remarks>
+/// <param name="ObservedOnDeclared">The subject's <see cref="CreditSubject.ObservedOnDeclared" />, carried to the rows (T219).</param>
 public sealed record CreditPlan(
     string TraineeUserId,
     DateOnly ObservedOn,
+    bool ObservedOnDeclared,
     IReadOnlyList<PlannedCredit> Credits,
     IReadOnlyList<CurriculumItemProgress> ExistingRows)
 {
-    public static CreditPlan Nothing { get; } = new(string.Empty, default, [], []);
+    public static CreditPlan Nothing { get; } = new(string.Empty, default, false, [], []);
 }
 
 public interface ICreditApplier

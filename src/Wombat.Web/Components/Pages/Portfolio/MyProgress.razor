@@ -296,7 +296,10 @@
           }
           @if (current.LastObservedOn is { } last)
           {
-            <text> Last encounter @QuotaText.ShortDate(last).</text>
+            @* T219: a date nobody stated is only the day its form was created, and says so in EncounterDate.Label's
+               words, as the trajectory below and the activity pages do. The sentence names the date itself, so "not
+               recorded" cannot read as though the encounter were not. *@
+            <text> Last encounter date: @EncounterDate.Label(last, current.LastObservedOnDeclared).</text>
           }
         </p>
       }

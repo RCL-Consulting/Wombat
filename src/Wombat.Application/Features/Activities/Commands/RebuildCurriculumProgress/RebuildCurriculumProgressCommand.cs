@@ -57,9 +57,9 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// <b>Callers (T130).</b> The Administrator page <c>/admin/curriculum-progress</c>, behind a
 /// confirmation; and <c>CurriculumProgressBootstrapper</c> at startup, which runs it once when the
 /// progress table is empty but completions have credited. The T130 migration empties the table on every
-/// existing database, so without that second caller every trainee would read zero until somebody found
-/// the button. The command is atomic, refuses anyone who is not a global <c>Administrator</c>, can be
-/// aimed at a single trainee, and hands back a count of everything it moved.
+/// existing database, and so does T219's, so without that second caller every trainee would read zero
+/// until somebody found the button. The command is atomic, refuses anyone who is not a global
+/// <c>Administrator</c>, can be aimed at a single trainee, and hands back a count of everything it moved.
 /// </para>
 /// </remarks>
 /// <param name="Principal">
@@ -384,6 +384,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
         int UnverifiedLevelCount,
         int? LastActivityId,
         DateOnly? LastObservedOn,
+        bool LastObservedOnDeclared,
         DateTime LastUpdated,
         string CreditedActivityKeysJson)
     {
@@ -396,6 +397,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 row.UnverifiedLevelCount,
                 row.LastActivityId,
                 row.LastObservedOn,
+                row.LastObservedOnDeclared,
                 row.LastUpdated,
                 row.CreditedActivityKeysJson);
 
@@ -413,6 +415,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             row.UnverifiedLevelCount = 0;
             row.LastActivityId = null;
             row.LastObservedOn = null;
+            row.LastObservedOnDeclared = false;
             row.CreditedActivityKeysJson = "[]";
         }
 
@@ -425,6 +428,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             row.UnverifiedLevelCount = UnverifiedLevelCount;
             row.LastActivityId = LastActivityId;
             row.LastObservedOn = LastObservedOn;
+            row.LastObservedOnDeclared = LastObservedOnDeclared;
             row.LastUpdated = LastUpdated;
             row.CreditedActivityKeysJson = CreditedActivityKeysJson;
         }

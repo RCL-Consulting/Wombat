@@ -536,6 +536,95 @@ public sealed class CreditApplierTests
         semester2.CreditedActivityKeysJson.Should().Be("""["101:complete"]""");
     }
 
+    // ─── T219: whether the last encounter's date was stated ─────────────────────
+    //
+    // A reader shows LastObservedOn as the last encounter, and an undated one must say it is only the day a form was
+    // created. The row keeps no link to the completion the date came from, so it records the flag beside the date.
+
+    [Fact]
+    public async Task ApplyAsync_RecordsWhetherTheLastEncounterDateWasStated_AndOnlyALaterEncounterReplacesIt()
+    {
+        await using var dbContext = CreateDbContext();
+        SeedCurriculum(dbContext, programmeStart: new DateOnly(2025, 4, 14));
+        var applier = new CreditApplier(dbContext);
+
+        async Task<(DateOnly? LastObservedOn, bool Declared)> CreditAsync(DateOnly observedOn, int activityId, ObservationDateSource source)
+        {
+            await applier.ApplyAsync(CompletedActivityObservedOn(observedOn, activityId, source: source), CreateActivityType(), CancellationToken.None);
+            await dbContext.SaveChangesAsync();
+            var row = (await StoredRowsAsync(dbContext)).Should().ContainSingle("every encounter here is in semester 2 of 2026").Subject;
+            return (row.LastObservedOn, row.LastObservedOnDeclared);
+        }
+
+        (await CreditAsync(new DateOnly(2026, 8, 4), 100, ObservationDateSource.Declared))
+            .Should().Be(((DateOnly?)new DateOnly(2026, 8, 4), true));
+
+        (await CreditAsync(new DateOnly(2026, 8, 20), 101, ObservationDateSource.CreatedOn))
+            .Should().Be(((DateOnly?)new DateOnly(2026, 8, 20), false), "the latest date is only the day a form was created");
+
+        (await CreditAsync(new DateOnly(2026, 8, 10), 102, ObservationDateSource.Declared))
+            .Should().Be(((DateOnly?)new DateOnly(2026, 8, 20), false), "an earlier encounter, although stated, is not the last one");
+
+        (await CreditAsync(new DateOnly(2026, 9, 1), 103, ObservationDateSource.Declared))
+            .Should().Be(((DateOnly?)new DateOnly(2026, 9, 1), true));
+
+        (await CreditAsync(new DateOnly(2026, 9, 5), 104, ObservationDateSource.CreatedOn))
+            .Should().Be(((DateOnly?)new DateOnly(2026, 9, 5), false));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ApplyAsync_TwoEncountersOnTheLastDate_OneStated_IsStated_WhicheverIsCreditedFirst(bool statedFirst)
+    {
+        // An encounter is known to have happened on that date, so the date is stated. The answer must not depend on the
+        // order the two were credited in, or a rebuild (which replays in filing order) could disagree with the live
+        // path. Each completion arrives in its own context, as in production.
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            SeedCurriculum(seed, programmeStart: new DateOnly(2025, 4, 14));
+        }
+
+        var sameDay = new DateOnly(2026, 8, 20);
+        var order = statedFirst
+            ? new[] { (Id: 100, Source: ObservationDateSource.Declared), (Id: 101, Source: ObservationDateSource.CreatedOn) }
+            : new[] { (Id: 100, Source: ObservationDateSource.CreatedOn), (Id: 101, Source: ObservationDateSource.Declared) };
+
+        foreach (var (id, source) in order)
+        {
+            await using var db = new ApplicationDbContext(options);
+            await new CreditApplier(db).ApplyAsync(CompletedActivityObservedOn(sameDay, id, source: source), CreateActivityType(), CancellationToken.None);
+            await db.SaveChangesAsync();
+        }
+
+        await using var verify = new ApplicationDbContext(options);
+        var row = (await StoredRowsAsync(verify)).Should().ContainSingle().Subject;
+        row.CountsSoFar.Should().Be(2, "guard: both were credited");
+        (row.LastObservedOn, row.LastObservedOnDeclared).Should().Be(((DateOnly?)sameDay, true));
+    }
+
+    [Fact]
+    public async Task PlanAsync_CarriesWhetherTheSubjectsDateWasStated()
+    {
+        // The live path plans BEFORE the transition stamps the activity, so the plan takes the flag from the subject it
+        // is given, not from the entity; a replay's subject reads it off the entity's ObservedOnSource.
+        await using var dbContext = CreateDbContext();
+        SeedCurriculum(dbContext, programmeStart: new DateOnly(2025, 4, 14));
+        var applier = new CreditApplier(dbContext);
+
+        var undated = CompletedActivityObservedOn(new DateOnly(2026, 8, 20), source: ObservationDateSource.CreatedOn);
+        CreditSubject.Of(undated).ObservedOnDeclared.Should().BeFalse();
+        (await applier.PlanAsync(CreditSubject.Of(undated), CreateActivityType(), CancellationToken.None))
+            .ObservedOnDeclared.Should().BeFalse();
+
+        var dated = CompletedActivityObservedOn(new DateOnly(2026, 8, 20));
+        CreditSubject.Of(dated).ObservedOnDeclared.Should().BeTrue();
+        (await applier.PlanAsync(CreditSubject.Of(dated), CreateActivityType(), CancellationToken.None))
+            .ObservedOnDeclared.Should().BeTrue();
+    }
+
     [Fact]
     public async Task ApplyAsync_CreditsAnEncounterBeforeTheProgrammeStartAndOneInAnExemptPeriod()
     {
@@ -669,7 +758,7 @@ public sealed class CreditApplierTests
             row.TraineeUserId == "trainee-1" && row.CurriculumItemId == 4000 && row.AcademicYear == 2026 && row.Semester == 1);
 
         var plan = await new CreditApplier(dbContext).PlanAsync(
-            new CreditSubject("trainee-1", new DateOnly(2026, 8, 3), """{ "epa_id": 5000, "score": 4 }"""),
+            new CreditSubject("trainee-1", new DateOnly(2026, 8, 3), ObservedOnDeclared: true, """{ "epa_id": 5000, "score": 4 }"""),
             CreateActivityType(),
             CancellationToken.None);
 
@@ -732,7 +821,7 @@ public sealed class CreditApplierTests
             .Should().BeSameAs(CreditPlan.Nothing);
 
         var unmatched = await applier.PlanAsync(
-            new CreditSubject("trainee-1", new DateOnly(2026, 3, 10), """{ "epa_id": 9999, "score": 4 }"""),
+            new CreditSubject("trainee-1", new DateOnly(2026, 3, 10), ObservedOnDeclared: true, """{ "epa_id": 9999, "score": 4 }"""),
             CreateActivityType(),
             CancellationToken.None);
         unmatched.Credits.Should().BeEmpty();
@@ -777,7 +866,8 @@ public sealed class CreditApplierTests
         int activityId = 100,
         DateOnly? observedOn = null,
         DateTime? createdOn = null,
-        DateTime? completedAt = null)
+        DateTime? completedAt = null,
+        ObservationDateSource source = ObservationDateSource.Declared)
         => new()
         {
             Id = activityId,
@@ -785,6 +875,7 @@ public sealed class CreditApplierTests
             CurrentState = "completed",
             DataJson = dataJson,
             ObservedOn = observedOn ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            ObservedOnSource = source,
             CreatedOn = createdOn ?? default,
             Transitions =
             [
@@ -800,13 +891,19 @@ public sealed class CreditApplierTests
     /// A completion whose encounter, filing and completion all happen on one FIXED day (T130). Every clock the
     /// applier could read is pinned, so a period assertion cannot pass or fail by the day the suite runs.
     /// </summary>
-    private static Activity CompletedActivityObservedOn(DateOnly observedOn, int activityId = 100, int score = 4)
+    /// <remarks>
+    /// With <paramref name="source" /> <c>CreatedOn</c> it is an undated completion (T219): its <c>ObservedOn</c> is the
+    /// day its form was created, which is the day this fixture creates it on.
+    /// </remarks>
+    private static Activity CompletedActivityObservedOn(
+        DateOnly observedOn, int activityId = 100, int score = 4, ObservationDateSource source = ObservationDateSource.Declared)
         => CreateCompletedActivity(
             $$"""{ "epa_id": 5000, "score": {{score}} }""",
             activityId,
             observedOn,
             createdOn: observedOn.ToDateTime(new TimeOnly(9, 0), DateTimeKind.Utc),
-            completedAt: observedOn.ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc));
+            completedAt: observedOn.ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc),
+            source: source);
 
     private static DbContextOptions<ApplicationDbContext> NewDatabase()
         => new DbContextOptionsBuilder<ApplicationDbContext>()

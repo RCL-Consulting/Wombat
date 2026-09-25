@@ -603,7 +603,7 @@ public sealed class PortfolioEpaProgressTests
     private static QuotaWindowDto Period(
         QuotaPeriod kind, DateOnly inPeriod, DateOnly programmeStart, int count, int target, int reached)
         => QuotaWindowDto.From(new QuotaWindowTally(
-            QuotaWindow.For(kind, inPeriod, programmeStart), target, count, reached, LastObservedOn: null));
+            QuotaWindow.For(kind, inPeriod, programmeStart), target, count, reached, LastObservedOn: null, LastObservedOnDeclared: false));
 
     private static TraineeCurriculumProgressDto Item(QuotaPeriod kind, int target)
     {
