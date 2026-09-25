@@ -166,7 +166,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var handler = new UpdateEpaCommandHandler(db, new PlanningFails(), new FixedClock(ReactivatedAt));
+            var handler = new UpdateEpaCommandHandler(db, new PlanningFails(), new EpaCreditLock(db), new FixedClock(ReactivatedAt));
             var reactivate = () => handler.Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
             await reactivate.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
@@ -192,7 +192,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new FixedClock(DeactivatedAt.AddDays(20)))
+            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(DeactivatedAt.AddDays(20)))
                 .Handle(Update(NationalEpaId, isActive: false, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
         }
 
@@ -209,7 +209,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new FixedClock(DeactivatedAt))
+            var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(DeactivatedAt))
                 .Handle(Update(NationalEpaId, isActive: false, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
             result.Epa.IsActive.Should().BeFalse();
@@ -269,7 +269,7 @@ public sealed class EpaReactivationCreditTests
         await AddUncreditedActivityAsync(options, 202, NonCreditingTypeId, "completed", during.AddHours(2));
 
         await using var db = new ApplicationDbContext(options);
-        var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new FixedClock(ReactivatedAt))
+        var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt))
             .Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
         result.CompletionsCredited.Should().Be(1);
@@ -283,14 +283,14 @@ public sealed class EpaReactivationCreditTests
         DbContextOptions<ApplicationDbContext> options, int epaId, ClaimsPrincipal principal, DateTime? at = null)
     {
         await using var db = new ApplicationDbContext(options);
-        await new DeactivateEpaCommandHandler(db, new FixedClock(at ?? DeactivatedAt))
+        await new DeactivateEpaCommandHandler(db, new EpaCreditLock(db), new FixedClock(at ?? DeactivatedAt))
             .Handle(new DeactivateEpaCommand(epaId, principal), CancellationToken.None);
     }
 
     private static async Task<UpdateEpaResult> ReactivateAsync(DbContextOptions<ApplicationDbContext> options, int epaId, ClaimsPrincipal principal)
     {
         await using var db = new ApplicationDbContext(options);
-        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new FixedClock(ReactivatedAt))
+        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt))
             .Handle(Update(epaId, isActive: true, principal), CancellationToken.None);
     }
 

@@ -84,6 +84,11 @@ public sealed class Epa
     /// Takes the EPA out of force from <paramref name="utcNow" />. A no-op on an EPA that is already inactive, which keeps
     /// the moment its pause began (see <see cref="DeactivatedOn" />).
     /// </summary>
+    /// <remarks>
+    /// The caller holds the EPA for a change (<c>IEpaCreditLock.HoldForChangeAsync</c>, T230) from before it reads the
+    /// EPA until its save commits, and reads <paramref name="utcNow" /> only once it holds it. Without the hold a
+    /// completion in flight can keep credit a rebuild takes away (<c>EpaPauseWritePathTests</c> enforces it).
+    /// </remarks>
     /// <returns>True when this call deactivated it.</returns>
     public bool Deactivate(DateTime utcNow)
     {
@@ -101,6 +106,11 @@ public sealed class Epa
     /// Puts the EPA back in force and ends its pause. The caller credits the completions filed during the pause
     /// (<see cref="DeactivatedOn" />, read before this call), because the credit rule no longer tells them apart.
     /// </summary>
+    /// <remarks>
+    /// The caller holds the EPA for a change (<c>IEpaCreditLock.HoldForChangeAsync</c>, T230) from before it reads the
+    /// EPA and the paused completions until its save commits. Without the hold a completion in flight is missed by both
+    /// and stays uncredited (<c>EpaPauseWritePathTests</c> enforces it).
+    /// </remarks>
     /// <returns>True when this call reactivated it.</returns>
     public bool Reactivate()
     {

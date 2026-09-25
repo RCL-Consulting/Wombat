@@ -28,16 +28,23 @@ public sealed record GetEntrustmentScaleByIdQuery(int Id) : IRequest<Entrustment
 public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaCommand>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IEpaCreditLock _epaCreditLock;
     private readonly TimeProvider _timeProvider;
 
-    public DeactivateEpaCommandHandler(IApplicationDbContext dbContext, TimeProvider? timeProvider = null)
+    public DeactivateEpaCommandHandler(IApplicationDbContext dbContext, IEpaCreditLock epaCreditLock, TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
+        _epaCreditLock = epaCreditLock;
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task Handle(DeactivateEpaCommand request, CancellationToken cancellationToken)
     {
+        // T230. Held before the EPA is read and the moment is taken, until the save commits: a completion that already
+        // judged the EPA in force commits first, so its moment falls before this pause begins, as a rebuild judges it;
+        // one that comes after waits, and reads the pause. See UpdateEpaCommandHandler.
+        await using var hold = await _epaCreditLock.HoldForChangeAsync(request.Id, cancellationToken);
+
         var epa = await _dbContext.Set<Epa>()
             .Include(entity => entity.SubSpeciality)
             .ThenInclude(subSpeciality => subSpeciality.Speciality)
@@ -59,6 +66,7 @@ public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaC
 
         epa.Deactivate(_timeProvider.GetUtcNow().UtcDateTime);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await hold.CommitAsync(cancellationToken);
     }
 }
 

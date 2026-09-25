@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -220,8 +221,147 @@ public sealed class CreditPlannedBeforeTransitionTests
         row.LastObservedOnDeclared.Should().Be(declared, "the row records the date the completion wrote, and whether it was stated");
     }
 
-    private static ActivityService Service(ApplicationDbContext db, ICreditApplier creditApplier, TimeProvider? clock = null)
-        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator(), clock);
+    [Fact]
+    public async Task TheCompletion_HoldsTheEpaItsCreditJudges_BeforeItPlans_AndCommitsAfterItsSave()
+    {
+        // T230. The order is the guarantee: the plan reads whether the EPA is in force, so it must read under the hold, and
+        // the hold must last until the save has committed. EpaCreditRacePostgresTests drives the races themselves.
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db);
+
+        var events = new List<string>();
+        var service = Service(db, new RecordingPlanner(new CreditApplier(db), db, events), epaCreditLock: new RecordingLock(db, events));
+        var principal = Principal("trainee-1");
+
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", DataObservedOn("2026-03-10"), principal),
+            CancellationToken.None);
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        events.Should().Equal(["hold []", "commit (saved: True)"], "a move that credits nothing holds nothing");
+        events.Clear();
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        events.Should().Equal([$"hold [{CreditedEpaId}]", "plan", "commit (saved: True)"]);
+    }
+
+    [Fact]
+    public async Task AFailureTakingTheEpaHold_LeavesTheActivityUntransitioned_WithNothingForTheAuditSaveToCommit()
+    {
+        // T230. The hold is taken among the reads, before the first mutation: a lock that cannot be had (a dropped
+        // connection, a cancellation while waiting) must leave nothing for the audit pipeline's catch to commit.
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db);
+
+        var service = Service(db, new CreditApplier(db), epaCreditLock: new FailingLock());
+        var principal = Principal("trainee-1");
+
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", DataObservedOn("2026-03-10"), principal),
+            CancellationToken.None);
+
+        var submit = async () => await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+        await submit.Should().NotThrowAsync("guard: a move that credits nothing asks for no EPA");
+
+        var complete = async () => await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, """{ "observed_on": "2026-08-01" }""", null),
+            CancellationToken.None);
+
+        await complete.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
+
+        db.ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Should().BeEmpty("the audit pipeline's catch saves this context, so anything dirty here would be committed");
+
+        // What the audit pipeline's catch does next: save the same context.
+        (await db.SaveChangesAsync()).Should().Be(0);
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Activities.Include(entity => entity.Transitions).SingleAsync(entity => entity.Id == draft.Id);
+        (stored.CurrentState, stored.ObservedOn).Should().Be(("submitted", new DateOnly(2026, 3, 10)));
+        stored.Transitions.Should().HaveCount(2);
+        (await verify.CurriculumItemProgresses.CountAsync()).Should().Be(0);
+    }
+
+    private static ActivityService Service(
+        ApplicationDbContext db, ICreditApplier creditApplier, TimeProvider? clock = null, IEpaCreditLock? epaCreditLock = null)
+        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator(), clock, epaCreditLock);
+
+    /// <summary>Writes down what it is asked to hold, and whether the save had gone through when it was committed.</summary>
+    private sealed class RecordingLock(ApplicationDbContext db, List<string> events) : IEpaCreditLock
+    {
+        public Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("A completion never holds an EPA for a change.");
+
+        public Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
+        {
+            events.Add($"hold [{string.Join(", ", epaIds)}]");
+            return Task.FromResult<IEpaCreditHold>(new Hold(db, events));
+        }
+
+        private sealed class Hold(ApplicationDbContext db, List<string> events) : IEpaCreditHold
+        {
+            public Task CommitAsync(CancellationToken cancellationToken)
+            {
+                events.Add($"commit (saved: {!db.ChangeTracker.HasChanges()})");
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
+
+    /// <summary>A lock that cannot be had.</summary>
+    private sealed class FailingLock : IEpaCreditLock
+    {
+        public Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public async Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            if (epaIds.Count == 0)
+            {
+                return new NothingHeld();
+            }
+
+            throw new InvalidOperationException("induced failure while taking the EPA hold");
+        }
+
+        private sealed class NothingHeld : IEpaCreditHold
+        {
+            public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
+
+    /// <summary>The real planner, noting when it plans.</summary>
+    private sealed class RecordingPlanner(ICreditApplier inner, ApplicationDbContext db, List<string> events) : ICreditApplier
+    {
+        public Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
+        {
+            db.ChangeTracker.HasChanges().Should().BeFalse("the plan runs before the first mutation");
+            events.Add("plan");
+            return inner.PlanAsync(subject, activityType, cancellationToken);
+        }
+
+        public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity) => inner.Apply(plan, completedActivity);
+
+        public Task<CreditApplicationResult> ApplyAsync(
+            Activity completedActivity, ActivityType activityType, CancellationToken cancellationToken = default)
+            => inner.ApplyAsync(completedActivity, activityType, cancellationToken);
+    }
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {

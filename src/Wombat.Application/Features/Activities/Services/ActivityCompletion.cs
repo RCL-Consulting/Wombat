@@ -6,7 +6,7 @@ namespace Wombat.Application.Features.Activities.Services;
 
 /// <summary>
 /// Whether an activity is finished: its state is a terminal state of its PINNED workflow, the point where credit fires
-/// (<c>ActivityService.PlanCreditIfTerminalAsync</c>, D44). The one answer the committee sampling report, the
+/// (<c>ActivityService.CreditSubjectIfTerminal</c>, D44). The one answer the committee sampling report, the
 /// entrustment trajectory (<see cref="RatedEvidenceProfile" />, T135), the portfolio export's summary (T169) and the
 /// assessor and trainee dashboards (T203) share.
 /// </summary>

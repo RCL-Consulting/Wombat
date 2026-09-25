@@ -28,10 +28,16 @@ public sealed class ActivityService : IActivityService
     private readonly ICreditApplier _creditApplier;
     private readonly IFieldPermissionEvaluator _fieldPermissionEvaluator;
     private readonly TimeProvider _timeProvider;
+    private readonly IEpaCreditLock _epaCreditLock;
 
     /// <param name="timeProvider">
     /// The clock every write takes its instant from, and so the South African "today" the encounter date is judged
     /// against (T160). Optional so that a caller without one gets the system clock; a test passes a fixed one.
+    /// </param>
+    /// <param name="epaCreditLock">
+    /// Holds the EPAs a completion's credit judges until its save commits (T230). Optional, and a caller without one
+    /// gets the real lock on <paramref name="dbContext" />, never one that does nothing: it already does nothing on any
+    /// provider but PostgreSQL.
     /// </param>
     public ActivityService(
         IApplicationDbContext dbContext,
@@ -39,7 +45,8 @@ public sealed class ActivityService : IActivityService
         IWorkflowEvaluator workflowEvaluator,
         ICreditApplier creditApplier,
         IFieldPermissionEvaluator fieldPermissionEvaluator,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        IEpaCreditLock? epaCreditLock = null)
     {
         _dbContext = dbContext;
         _schemaValidator = schemaValidator;
@@ -47,6 +54,7 @@ public sealed class ActivityService : IActivityService
         _creditApplier = creditApplier;
         _fieldPermissionEvaluator = fieldPermissionEvaluator;
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _epaCreditLock = epaCreditLock ?? new EpaCreditLock(dbContext);
     }
 
     private DateTime UtcNow() => _timeProvider.GetUtcNow().UtcDateTime;
@@ -469,7 +477,16 @@ public sealed class ActivityService : IActivityService
         // reads as "never evaluated". Planning first means that from ApplyTransition to SaveChanges nothing
         // awaits and nothing can fail. The plan is built from the data and the encounter date the transition
         // is about to write, because the entity does not carry them yet.
-        var creditPlan = await PlanCreditIfTerminalAsync(activity, version, schema, workflow, transition, mergedDataJson, utcNow, cancellationToken);
+        var creditSubject = CreditSubjectIfTerminal(activity, version, schema, workflow, transition, mergedDataJson, utcNow);
+
+        // T230. Whether each EPA is in force is read in the plan, under a shared lock on the EPA held until the save below
+        // commits, so the EPA's deactivation or reactivation cannot commit in between: it waits for this save, or this
+        // plan waits for it and reads what it wrote. See IEpaCreditLock for the two races that closes. Taken here, among
+        // the reads, before the first mutation: a hold that fails leaves nothing for the audit pipeline's catch to commit,
+        // and one disposed on the way out rolls back and leaves no transaction open for that catch to write into.
+        await using var epaHold = await HoldEpasCreditJudgesAsync(creditSubject, version, cancellationToken);
+
+        var creditPlan = creditSubject is null ? null : await PlanCreditAsync(creditSubject, version, cancellationToken);
 
         // T137. Resolved here, with the other reads, and assigned below with the date stamp. It reads the MERGED data,
         // so a trainee who corrects the EPA in the submit's own patch moves the stamp with it.
@@ -498,28 +515,28 @@ public sealed class ActivityService : IActivityService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await epaHold.CommitAsync(cancellationToken);
         return Map(activity);
     }
 
     /// <summary>
-    /// The credit a move into a terminal state will apply, gathered without mutating anything, or null when
-    /// the move is not into a terminal state or the pinned version credits nothing.
+    /// What a move into a terminal state will be credited as, or null when the move is not into a terminal state or the
+    /// pinned version credits nothing. Reads nothing.
     /// </summary>
     /// <remarks>
-    /// The one credit entry point on the live path. Forking it was the option T121 rejected: each fork would
-    /// then need its own copy of the scale resolution, the stage resolution, the dedupe key namespace and the
-    /// T108 stamp, and the second copy is the one that gets forgotten. <see cref="StageCompletedAsync" />
+    /// The one credit entry point on the live path, with <see cref="PlanCreditAsync" />. Forking it was the option T121
+    /// rejected: each fork would then need its own copy of the scale resolution, the stage resolution, the dedupe key
+    /// namespace and the T108 stamp, and the second copy is the one that gets forgotten. <see cref="StageCompletedAsync" />
     /// deliberately does not credit at all.
     /// </remarks>
-    private async Task<CreditPlan?> PlanCreditIfTerminalAsync(
+    private static CreditSubject? CreditSubjectIfTerminal(
         Activity activity,
         ActivityTypeVersion version,
         FormSchema schema,
         Workflow workflow,
         WorkflowTransition transition,
         string mergedDataJson,
-        DateTime utcNow,
-        CancellationToken cancellationToken)
+        DateTime utcNow)
     {
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
 
@@ -538,13 +555,39 @@ public sealed class ActivityService : IActivityService
 
         // Credited at the instant the transition is stamped with, so a rebuild, which judges each completion at its
         // transition's time, finds the same EPAs in force as this move did (T196).
-        return await _creditApplier.PlanAsync(
-            new CreditSubject(
-                activity.SubjectUserId,
-                observedOn,
-                source == ObservationDateSource.Declared,
-                mergedDataJson,
-                utcNow),
+        return new CreditSubject(
+            activity.SubjectUserId,
+            observedOn,
+            source == ObservationDateSource.Declared,
+            mergedDataJson,
+            utcNow);
+    }
+
+    /// <summary>
+    /// Holds the EPAs <paramref name="subject" />'s credit will judge, until the caller commits the hold after its save
+    /// (T230). A hold on nothing when there is no credit to plan, or it would match no item.
+    /// </summary>
+    /// <remarks>
+    /// The EPAs are those of every item the directives match, in force or not (<c>CreditTargetResolver.EpasJudgedAsync</c>),
+    /// read before the lock: the lock is on the EPA row, and what the plan reads after it is whether the EPA is in force.
+    /// </remarks>
+    private async Task<IEpaCreditHold> HoldEpasCreditJudgesAsync(
+        CreditSubject? subject,
+        ActivityTypeVersion version,
+        CancellationToken cancellationToken)
+    {
+        var epaIds = subject is null
+            ? []
+            : await CreditTargetResolver.EpasJudgedAsync(
+                _dbContext, version.CreditRulesJson, subject.SubjectUserId, subject.ObservedOn, subject.DataJson, cancellationToken);
+
+        return await _epaCreditLock.HoldForCreditAsync(epaIds, cancellationToken);
+    }
+
+    /// <summary>The credit <paramref name="subject" /> will apply, gathered without mutating anything.</summary>
+    private Task<CreditPlan> PlanCreditAsync(CreditSubject subject, ActivityTypeVersion version, CancellationToken cancellationToken)
+        => _creditApplier.PlanAsync(
+            subject,
             // Deliberately carries no WbaToolKey (T122). Credit does not re-check the EPA→tool allow-list (D20): the
             // write path already did, and an allow-list edited since must not take back credit a trainee earned.
             new ActivityType
@@ -556,7 +599,6 @@ public sealed class ActivityService : IActivityService
                 SchemaJson = version.SchemaJson
             },
             cancellationToken);
-    }
 
     /// <summary>
     /// Applies a credit plan and stamps the outcome onto the transition that caused it. Synchronous: it runs

@@ -25,6 +25,12 @@ namespace Wombat.Application.Features.Curricula;
 /// (<c>UpdateEpaCommandHandler</c>, via <c>ResumedEpaCredit</c>), which is what makes one timestamp enough history.
 /// </para>
 /// <para>
+/// On the live path the in-force read is made under a shared lock on the EPA, held until the completion's save commits,
+/// and the EPA's deactivation or reactivation holds it exclusively and takes its moment under it (T230,
+/// <c>IEpaCreditLock</c>). So neither can commit between a completion's read and its save, and the live outcome is the
+/// one a rebuild writes.
+/// </para>
+/// <para>
 /// The moment is the completion's, not the encounter's. It is the moment the live path judges, so a rebuild reproduces
 /// the live outcome: an encounter observed before the deactivation but completed after it was paused live, and a rebuild
 /// judged on the encounter date would credit it.

@@ -123,7 +123,7 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task UpdateEpa_CollegeAdmin_RejectsOtherCollegeEpa()
     {
-        var handler = new UpdateEpaCommandHandler(_db, new CreditApplier(_db));
+        var handler = new UpdateEpaCommandHandler(_db, new CreditApplier(_db), new EpaCreditLock(_db));
         var act = () => handler.Handle(
             new UpdateEpaCommand(_collegeBEpaId, _collegeBSubSpecialityId, "EPA-B", "Renamed", null, null, EpaCategory.Core, true, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
@@ -133,7 +133,7 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DeactivateEpa_CollegeAdmin_RejectsOtherCollegeEpa()
     {
-        var handler = new DeactivateEpaCommandHandler(_db);
+        var handler = new DeactivateEpaCommandHandler(_db, new EpaCreditLock(_db));
         var act = () => handler.Handle(
             new DeactivateEpaCommand(_collegeBEpaId, TestPrincipals.CollegeAdmin(_collegeAId)),
             CancellationToken.None);
@@ -156,7 +156,7 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task UpdateEpa_InstitutionalAdmin_RejectsNationalEpa()
     {
-        var handler = new UpdateEpaCommandHandler(_db, new CreditApplier(_db));
+        var handler = new UpdateEpaCommandHandler(_db, new CreditApplier(_db), new EpaCreditLock(_db));
         var act = () => handler.Handle(
             new UpdateEpaCommand(_collegeAEpaId, _collegeASubSpecialityId, "EPA-A", "x", null, null, EpaCategory.Core, true, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
@@ -166,7 +166,7 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DeactivateEpa_InstitutionalAdmin_CanDeactivateOwnLocalExtra()
     {
-        var handler = new DeactivateEpaCommandHandler(_db);
+        var handler = new DeactivateEpaCommandHandler(_db, new EpaCreditLock(_db));
         await handler.Handle(
             new DeactivateEpaCommand(_localEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
@@ -177,7 +177,7 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DeactivateEpa_InstitutionalAdmin_RejectsOtherInstitutionLocalExtra()
     {
-        var handler = new DeactivateEpaCommandHandler(_db);
+        var handler = new DeactivateEpaCommandHandler(_db, new EpaCreditLock(_db));
         var act = () => handler.Handle(
             new DeactivateEpaCommand(_localEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId + 999)),
             CancellationToken.None);

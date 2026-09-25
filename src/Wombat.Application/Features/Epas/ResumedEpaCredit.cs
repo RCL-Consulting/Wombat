@@ -33,13 +33,11 @@ namespace Wombat.Application.Features.Epas;
 /// gets a count.
 /// </para>
 /// <para>
-/// <b>Two races it does not close</b> (T196 review), each one request wide. A completion that reads the EPA as inactive,
-/// and saves after this reactivation has read its candidates, is stamped zero and is in no plan: it stays uncredited
-/// until an Administrator rebuild, which after the reactivation finds every moment in force. And a completion that read
-/// the EPA as active just before a deactivation committed, but whose moment falls after <see cref="Epa.DeactivatedOn" />,
-/// keeps live credit a rebuild while the EPA is inactive takes away; the reactivation that ends the pause restores it,
-/// either way. Closing them needs the completion's save to conflict with the EPA's, which neither writes; no lock is
-/// taken for a window this narrow.
+/// <b>Races with a completion (T230).</b> The reactivation holds the EPA exclusively from before it reads it until its save
+/// commits (<c>IEpaCreditLock</c>), and a completion holds the EPAs its credit judges shared until its own save commits.
+/// So a completion that read the EPA as inactive has committed before <see cref="LoadCandidatesAsync" /> runs, and is
+/// among the candidates; and one that has not read it yet waits for this save, and reads the EPA as active. Before T230
+/// the first kind could save after the candidates were read, and stayed uncredited until an Administrator rebuild.
 /// </para>
 /// </remarks>
 internal sealed class ResumedEpaCredit

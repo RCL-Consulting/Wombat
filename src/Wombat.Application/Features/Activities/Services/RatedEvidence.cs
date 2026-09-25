@@ -61,7 +61,7 @@ public readonly record struct RatedEvidenceReading(
 /// </para>
 /// <para>
 /// <b>Which rows are evidence (D44):</b> those whose state is a terminal state of the pinned workflow, the point where
-/// credit fires (<c>ActivityService.PlanCreditIfTerminalAsync</c>): <c>completed</c> for the assessor-rated seeds and
+/// credit fires (<c>ActivityService.CreditSubjectIfTerminal</c>): <c>completed</c> for the assessor-rated seeds and
 /// <c>recorded</c> for <c>msf_cpsa</c>. Every current seed makes <c>declined</c> and <c>cancelled</c> non-terminal dead
 /// ends, so there a rating an assessor wrote and then declined is not evidence. A version that marks them terminal (the
 /// generic seeds before <c>c33c14b</c> did) counts them, exactly as it credits them. A type with no workflow falls back

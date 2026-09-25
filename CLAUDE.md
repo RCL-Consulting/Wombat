@@ -197,7 +197,9 @@ Runtime services in Infrastructure:
   in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered and is on no progress page,
   and its credit is paused, not cancelled (D48, T196). Credit and the rebuild judge each completion at its own moment
   against `Epa.DeactivatedOn`; reactivating an EPA credits what was completed during the pause. Change the flag only
-  through `Epa.Deactivate`/`Reactivate`. Every picker, credit and progress reader applies it; the tool gate, the
+  through `Epa.Deactivate`/`Reactivate`, under `IEpaCreditLock.HoldForChangeAsync` taken before the EPA is read and
+  committed with the save, reading the deactivation's moment only once it is held (T230; `EpaPauseWritePathTests`
+  enforces the hold). Every picker, credit and progress reader applies it; the tool gate, the
   curriculum editor and scale-reference checks do not.
 - `ToolPermissionGate` — the write-path half of the EPA→tool allow-list (T122, D20): refuses an activity whose
   instrument (`ActivityType.WbaToolKey`) the matched curriculum item's `PermittedToolsJson` does not name, judged per

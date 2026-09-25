@@ -379,14 +379,40 @@ as a target (`CurriculumItemsInForce.InForce`). It does not refuse filing, and i
   version whose rules declare `counts_for`, in a state such a version ends in, and moved since the pause began
   (`ResumedEpaCredit.LoadCandidatesAsync`). A unique-index refusal at its save is told apart by reading back: a duplicate
   code says so, and anything else is a progress row another save opened first ("Save again").
-- **Two one-request races are left open**, and a rebuild reconciles both: a completion that read the EPA as inactive
-  and saved after the reactivation read its candidates stays uncredited; one that read it as active just before a
-  deactivation committed, but completed after `DeactivatedOn`, keeps live credit a rebuild while inactive removes. Closing
-  them needs the completion's save to conflict with the EPA's, and neither writes the other.
+- **A completion and its EPA's deactivation or reactivation are serialised on the EPA's row** (T230, `IEpaCreditLock`,
+  `EpaCreditLock`), so each race ends with the credit a rebuild would write. The live completion
+  (`ActivityService.TransitionAsync`) holds the EPAs its credit judges `FOR SHARE`, from before the plan reads whether
+  they are in force until its save commits (`CreditTargetResolver.EpasJudgedAsync` names them: every item the
+  directives match, in force or not). `DeactivateEpaCommandHandler` and `UpdateEpaCommandHandler` hold the EPA
+  `FOR NO KEY UPDATE` before they read it, take the deactivation's moment under it, and commit with it. Whichever comes
+  second waits and then runs on what the first committed. A reactivation that waited for a completion finds it among its
+  candidates; a completion that waited for a reactivation reads the EPA as active; a deactivation that waited takes a
+  moment after the completion's; a completion that waited for a deactivation reads the pause, and judges its own moment
+  against it (a moment taken before the deactivation's still credits). Completions never wait for one another (shared
+  locks). An optimistic token on the EPA row was rejected: a completion would have had to write the row, so every two
+  completions on one national EPA would have conflicted. Not `FOR UPDATE` either: it also conflicts with the
+  `FOR KEY SHARE` a foreign-key check takes, so every insert naming the EPA (a curriculum item, an entrustment decision,
+  a pending one, an MSF campaign's EPA) would wait while a reactivation plans its paused completions. The hold is a
+  `READ COMMITTED` transaction on the request's own context, and does nothing on any provider but PostgreSQL.
+  `EpaCreditRacePostgresTests` drives each race from two connections.
+- **A wait is bounded by the command timeout** (Npgsql's 30 seconds; nothing in Wombat sets another, nor a
+  `lock_timeout`). A hold that gives up refuses the request with a busy message (`EpaCreditLock.CreditBusy` on a
+  completion, `ChangeBusy` on the EPA's edit page) instead of Npgsql's "Exception while reading from stream". Nothing
+  was changed, because every caller takes its hold before its first mutation, so the audit pipeline's catch commits only
+  its own row. A server `lock_timeout` or `statement_timeout`, if an operator sets one, is refused the same way.
+- **What the hold does not cover.** The Administrator rebuild takes no hold: one racing a reactivation meets it on the
+  progress rows' `xmin` token or unique index, and one of the two is refused ("run again" / "Save again"). An item
+  added to the curriculum between `EpasJudgedAsync` and the plan is judged without a hold; a curriculum edit already
+  calls for a rebuild. A deactivation or reactivation waits for every completion on its EPA that is in flight when it
+  arrives, and longer if more keep arriving, up to the command timeout above. And the ordering rests on one clock: a
+  completion takes its moment before it holds the EPA and a deactivation after, so two application servers would need
+  clocks that agree to within a request.
 - **One timestamp is the whole history.** Every earlier pause was closed by a reactivation that credited it, so only the
   current pause holds anything back. Deactivating an EPA that is already inactive keeps the moment its pause began.
   `CK_Epas_DeactivatedOn` keeps `IsActive` and `DeactivatedOn` in step; change them through `Epa.Deactivate` and
-  `Epa.Reactivate`. `IsActive` is init-only, so a stored EPA's flag cannot be set any other way.
+  `Epa.Reactivate`, and only under `IEpaCreditLock.HoldForChangeAsync`, taken before the EPA is read and committed with
+  the save, with the deactivation's moment read once it is held (`EpaPauseWritePathTests` fails a caller that takes no
+  hold). `IsActive` is init-only, so a stored EPA's flag cannot be set any other way.
 - **An activity already filed against it keeps its EPA**, shown as "(no longer in use)" in its option list
   (`EpaOptionLabel`), because the pickers offer only EPAs in force. My activities and the Inbox mark it the same way
   (T231): `ActivitySummaryDto.EpaInForce` carries the flag the picker reads (`Epa.IsActive`, judged now), and

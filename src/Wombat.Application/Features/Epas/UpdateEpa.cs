@@ -49,12 +49,18 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly ICreditApplier _creditApplier;
+    private readonly IEpaCreditLock _epaCreditLock;
     private readonly TimeProvider _timeProvider;
 
-    public UpdateEpaCommandHandler(IApplicationDbContext dbContext, ICreditApplier creditApplier, TimeProvider? timeProvider = null)
+    public UpdateEpaCommandHandler(
+        IApplicationDbContext dbContext,
+        ICreditApplier creditApplier,
+        IEpaCreditLock epaCreditLock,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _creditApplier = creditApplier;
+        _epaCreditLock = epaCreditLock;
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
@@ -68,6 +74,13 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
 
     public async Task<UpdateEpaResult> Handle(UpdateEpaCommand request, CancellationToken cancellationToken)
     {
+        // T230. Held before the EPA is read, and until the save below commits, so no completion's credit can judge the EPA
+        // in between: one that already holds it is waited for, and is then among the candidates a reactivation reads; one
+        // that comes after waits for this save and reads what it wrote. The deactivation's moment is read under it too, so
+        // every completion it let credit has an earlier moment, as a rebuild judges. Before the authorization check, which
+        // needs the EPA read; a refused caller holds it only until the throw disposes the hold.
+        await using var hold = await _epaCreditLock.HoldForChangeAsync(request.Id, cancellationToken);
+
         var epa = await _dbContext.Set<Epa>()
             .Include(entity => entity.SubSpeciality)
             .ThenInclude(subSpeciality => subSpeciality.Speciality)
@@ -142,7 +155,8 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         }
         catch (DbUpdateConcurrencyException exception)
         {
-            // A completion credited one of the same progress rows while this save was being made (the rows' xmin token).
+            // Something moved one of the same progress rows while this save was being made (the rows' xmin token). Not a
+            // completion on this EPA, which waits for the hold above (T230): an Administrator rebuild, which takes none.
             // The audit pipeline discards a refused save (T201), so nothing was written.
             throw new InvalidOperationException(ProgressChanged, exception);
         }
@@ -150,9 +164,13 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         {
             // Two unique indexes can refuse this save: the EPA's code within its sub-speciality, and, on a reactivation, a
             // progress row's (item, trainee, semester), when another save opened the same row after this one read the table
-            // (a second reactivation of the same EPA, say). Which one is read back, as ScheduleCommitteeReview does, rather
-            // than parsed out of a provider exception this layer cannot see. Before the T196 review every refusal was
-            // reported as a duplicate code. The refusal stays underneath, so the audit pipeline drops the save (T201).
+            // (a rebuild, say; a second reactivation of the same EPA now waits for the hold above, T230). Which one is read
+            // back, as ScheduleCommitteeReview does, rather than parsed out of a provider exception this layer cannot see.
+            // Before the T196 review every refusal was reported as a duplicate code. The refusal stays underneath, so the
+            // audit pipeline drops the save (T201).
+            //
+            // Under the hold (T230) the read-back runs in its transaction, which EF rolled back to the savepoint it takes
+            // before a save in a transaction of the caller's, so the refusal has not left it unusable.
             if (await CodeTakenAsync(epa, cancellationToken))
             {
                 throw new InvalidOperationException(DuplicateCode, exception);
@@ -160,6 +178,8 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
 
             throw new InvalidOperationException(ProgressChanged, exception);
         }
+
+        await hold.CommitAsync(cancellationToken);
 
         return new UpdateEpaResult(
             new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, subSpeciality.CollegeName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn),

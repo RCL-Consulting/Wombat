@@ -87,6 +87,47 @@ internal static class CreditTargetResolver
         => (await ResolveCurriculumItemsWithSourceAsync(dbContext, matchRule, data, trainee, inForceAt, cancellationToken)).Items;
 
     /// <summary>
+    /// The EPAs whose standing a completion's credit judges (T230): the EPA of every item its directives match on the
+    /// trainee's curriculum, in force or not, as <see cref="CreditApplier.PlanAsync" /> matches them.
+    /// </summary>
+    /// <remarks>
+    /// What the live path holds before it plans (<c>IEpaCreditLock.HoldForCreditAsync</c>), so the in-force read in the
+    /// plan cannot be overtaken by the EPA's deactivation or reactivation. Read with every item, in force or not, because
+    /// an EPA the plan finds inactive is exactly the one a reactivation may be about to change.
+    /// </remarks>
+    public static async Task<IReadOnlyList<int>> EpasJudgedAsync(
+        IApplicationDbContext dbContext,
+        string creditRulesJson,
+        string subjectUserId,
+        DateOnly observedOn,
+        string dataJson,
+        CancellationToken cancellationToken)
+    {
+        var rules = CreditRulesParser.Parse(creditRulesJson);
+        if (rules.CountsFor.Count == 0)
+        {
+            return [];
+        }
+
+        var trainee = await ResolveTraineeAsync(dbContext, subjectUserId, observedOn, cancellationToken);
+        if (trainee is null)
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(dataJson);
+        var epaIds = new SortedSet<int>();
+        foreach (var directive in rules.CountsFor)
+        {
+            var items = await ResolveCurriculumItemsAsync(
+                dbContext, directive.CurriculumItemMatchRule, document.RootElement, trainee, inForceAt: null, cancellationToken);
+            epaIds.UnionWith(items.Select(item => item.EpaId));
+        }
+
+        return [.. epaIds];
+    }
+
+    /// <summary>
     /// The items a directive matches, and the schema field whose value produced the match: the
     /// <c>curriculum_item_field</c>, the <c>epa_field</c>, or null for a literal <c>curriculum_item_id</c>.
     /// </summary>

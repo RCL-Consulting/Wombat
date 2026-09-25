@@ -106,6 +106,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
         services.AddScoped<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
         services.AddScoped<ICreditApplier, CreditApplier>();
+        // T230: a completion's credit and its EPA's deactivation or reactivation are serialised on the EPA's row.
+        services.AddScoped<IEpaCreditLock, EpaCreditLock>();
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddScoped<IPortfolioPdfService, PortfolioPdfService>();
