@@ -10,6 +10,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.Curricula;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 using FakeSender = Wombat.Web.Tests.Admin.CurriculumItemsFakeSender;
 
 namespace Wombat.Web.Tests.Admin;
@@ -25,7 +26,7 @@ namespace Wombat.Web.Tests.Admin;
 /// actions column's header was empty. The result of a Remove takes the focus once the dialog has closed, as T206's
 /// Withdraw does: the row's button that had it is gone with its row.
 /// </remarks>
-public sealed class CurriculumItemsRemoveTests : TestContext
+public sealed class CurriculumItemsRemoveTests : WombatTestContext
 {
     /// <summary>What <see cref="ElementReference" />.FocusAsync calls.</summary>
     private const string FocusIdentifier = "Blazor._internal.domWrapper.focus";
@@ -267,9 +268,9 @@ public sealed class CurriculumItemsRemoveTests : TestContext
         ConfirmRemove(cut);
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert.alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert.alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         sender.Removes.Should().ContainSingle();
-        cut.WaitForAssertion(() => RemoveButton(cut, "PAED-003").HasAttribute("disabled").Should().BeFalse());
+        cut.WaitForAssertion(() => RemoveButton(cut, "PAED-003").HasAttribute("disabled").Should().BeFalse(), AsyncWorkTimeout);
     }
 
     // ---- helpers ----

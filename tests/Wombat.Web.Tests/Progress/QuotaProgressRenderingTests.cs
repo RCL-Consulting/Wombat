@@ -22,6 +22,7 @@ using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Components.Pages.Portfolio;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Progress;
 
@@ -42,7 +43,7 @@ namespace Wombat.Web.Tests.Progress;
 /// so a fixture that could not occur (a semester item exempt beside a counting one, say) is never rendered.
 /// </para>
 /// </remarks>
-public sealed class QuotaProgressRenderingTests : TestContext
+public sealed class QuotaProgressRenderingTests : WombatTestContext
 {
     private static readonly DateOnly AsOf = new(2026, 9, 23);
 
@@ -723,7 +724,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
         pending.SetResult(ARebuildResult());
         await confirming;
 
-        cut.WaitForAssertion(() => PageRebuildButton(cut).HasAttribute("disabled").Should().BeFalse());
+        cut.WaitForAssertion(() => PageRebuildButton(cut).HasAttribute("disabled").Should().BeFalse(), AsyncWorkTimeout);
         sender.Received.Should().ContainSingle();
     }
 

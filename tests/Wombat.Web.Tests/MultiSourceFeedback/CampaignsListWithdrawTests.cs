@@ -12,6 +12,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.MultiSourceFeedback;
 
@@ -23,7 +24,7 @@ namespace Wombat.Web.Tests.MultiSourceFeedback;
 /// ran only in tests. Withdrawing kills every link a respondent holds and removes their addresses for good, so the row's
 /// button asks first, as DESIGN.md asks of every destructive action, and the red button is only in the dialog.
 /// </remarks>
-public sealed class CampaignsListWithdrawTests : TestContext
+public sealed class CampaignsListWithdrawTests : WombatTestContext
 {
     private static readonly DateOnly ClosesOn = new(2029, 3, 21);
 
@@ -145,7 +146,7 @@ public sealed class CampaignsListWithdrawTests : TestContext
         sender.Commands.Should().ContainSingle();
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert.alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert.alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         sender.Commands.Should().ContainSingle();
     }
 

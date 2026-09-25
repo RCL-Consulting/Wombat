@@ -2,8 +2,10 @@ namespace Wombat.Domain.Audit;
 
 /// <summary>
 /// Append-only record of a consequential action taken in the system.
-/// Id uses Guid.CreateVersion7() — time-sortable, eliminates the need for
-/// secondary ordering on OccurredAt when paginating by PK.
+/// Order entries by OccurredAt. Id is no substitute: it is a Guid.CreateVersion7(), ordered only to the millisecond with
+/// the rest random, so two entries written in the same millisecond sort by Id either way (T244). OccurredAt can tie as
+/// well: two requests can start in the same clock tick, and Postgres keeps only microseconds. So a reader that pages, or
+/// stops at a count, must order by OccurredAt then Id. The order within a tie is then arbitrary, but the same on every read.
 /// </summary>
 public sealed class AuditEntry
 {

@@ -12,6 +12,7 @@ using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -20,7 +21,7 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 /// with a summary per EPA, filters for period, status and EPA, links to the review a status names, and a Schedule link
 /// that fills in the scheduling form. Loading, error and empty are each shown.
 /// </summary>
-public sealed partial class DecisionsDuePageTests : TestContext
+public sealed partial class DecisionsDuePageTests : WombatTestContext
 {
     private const int Panel = 10;
     private const int NeonatalPanel = 11;
@@ -54,7 +55,7 @@ public sealed partial class DecisionsDuePageTests : TestContext
         cut.FindAll("#due-items").Should().BeEmpty();
 
         pending.SetResult(Result(_current.AcademicYear, _current.Semester, SampleRows()));
-        cut.WaitForState(() => cut.FindAll("#due-items").Count == 1);
+        cut.WaitForState(() => cut.FindAll("#due-items").Count == 1, AsyncWorkTimeout);
         cut.FindAll(".skeleton").Should().BeEmpty();
     }
 

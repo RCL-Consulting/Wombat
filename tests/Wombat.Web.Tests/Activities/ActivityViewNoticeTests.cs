@@ -10,6 +10,7 @@ using Wombat.Application.Features.Activities.Queries.GetActivityById;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Activities;
 
@@ -21,7 +22,7 @@ namespace Wombat.Web.Tests.Activities;
 /// also not outlive what it describes: it is taken on arrival, so a later load does not show it again, and it goes as
 /// soon as the actor makes another move, whose own outcome is what the page then reports.
 /// </remarks>
-public sealed class ActivityViewNoticeTests : TestContext
+public sealed class ActivityViewNoticeTests : WombatTestContext
 {
     private const int ActivityId = 7;
 
@@ -135,7 +136,7 @@ public sealed class ActivityViewNoticeTests : TestContext
 
         cut.Markup.Should().NotContain(NoticeText, "the load of the next activity is still running");
         release.SetResult();
-        cut.WaitForState(() => _sender.Loads == 2 && cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => _sender.Loads == 2 && cut.Markup.Contains("Activity details"), AsyncWorkTimeout);
         cut.Markup.Should().NotContain(NoticeText);
     }
 

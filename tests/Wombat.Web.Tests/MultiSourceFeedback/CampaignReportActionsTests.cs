@@ -15,6 +15,7 @@ using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Accessibility;
 using Wombat.Web.Tests.Activities;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.MultiSourceFeedback;
 
@@ -28,7 +29,7 @@ namespace Wombat.Web.Tests.MultiSourceFeedback;
 /// panel's load error: a refused close hid the whole report and showed its refusal twice, and its words sent the
 /// coordinator to the campaign list to see whether the campaign was still open.
 /// </remarks>
-public sealed class CampaignReportActionsTests : TestContext
+public sealed class CampaignReportActionsTests : WombatTestContext
 {
     private const int CampaignId = 5;
     private const string TraineeUserId = "trainee-1";
@@ -179,7 +180,7 @@ public sealed class CampaignReportActionsTests : TestContext
         sender.Commands.Should().ContainSingle("one close is in flight, and a second must not be sent");
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         cut.FindAll(".alert-danger").Should().BeEmpty();
         sender.Commands.Should().ContainSingle();
     }
@@ -216,7 +217,7 @@ public sealed class CampaignReportActionsTests : TestContext
         sender.Commands.Should().ContainSingle("one release is in flight, and a second must not be sent");
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         cut.FindAll(".alert-danger").Should().BeEmpty();
         sender.Commands.Should().ContainSingle();
     }

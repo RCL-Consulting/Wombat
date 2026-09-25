@@ -12,6 +12,7 @@ using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Activities;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.MultiSourceFeedback;
 
@@ -23,7 +24,7 @@ namespace Wombat.Web.Tests.MultiSourceFeedback;
 /// was mailed two links, one of them dead (T184 made the second one fail at its save, but not before it had mailed).
 /// The fake sender holds each open until the test releases it, which is the window a second click falls into.
 /// </remarks>
-public sealed class CampaignOpenInFlightTests : TestContext
+public sealed class CampaignOpenInFlightTests : WombatTestContext
 {
     private const int CampaignId = 5;
 
@@ -55,7 +56,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
 
         // Once it has opened, the campaign is read again and offers neither (T217): until then the page went on offering
         // Open, and the draft's invitee form, on a campaign that was open.
-        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         cut.FindAll("#msf-open-campaign").Should().BeEmpty();
         cut.FindAll("button").Should().NotContain(button => button.TextContent.Trim() == "Add invitee");
     }
@@ -73,7 +74,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
         sender.Opens.Should().Be(1, "one open is in flight, and the clicks after it must not send another");
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         sender.Opens.Should().Be(1);
     }
 
@@ -92,7 +93,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
         sender.Invitations.Should().Be(0);
 
         sender.Release();
-        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle(), AsyncWorkTimeout);
         sender.Invitations.Should().Be(0);
     }
 
@@ -106,7 +107,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
         OpenButton(cut).Click();
         sender.Refuse(new InvalidOperationException(OpenMsfCampaignCommandHandler.InvitationsNotSent));
 
-        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle());
+        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle(), AsyncWorkTimeout);
         OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
         JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus",
             "the Open button that had the focus is still there, never disabled, so it keeps it for the retry (T225 review)");

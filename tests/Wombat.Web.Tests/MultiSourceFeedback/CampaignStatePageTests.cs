@@ -16,6 +16,7 @@ using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Accessibility;
 using Wombat.Web.Tests.Activities;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.MultiSourceFeedback;
 
@@ -27,7 +28,7 @@ namespace Wombat.Web.Tests.MultiSourceFeedback;
 /// Until T217 the page showed the draft's invitee form and its Open button in every state and was never read again, so a
 /// campaign just opened still read "Add invitees, then open the campaign", offered Open, and showed nobody invited.
 /// </remarks>
-public sealed class CampaignStatePageTests : TestContext
+public sealed class CampaignStatePageTests : WombatTestContext
 {
     private const int CampaignId = 7;
 
@@ -506,7 +507,7 @@ public sealed class CampaignStatePageTests : TestContext
             .Should().Be(1, "the dialog is not asked for again while the withdraw runs");
 
         sender.Release();
-        cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Withdrawn"));
+        cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Withdrawn"), AsyncWorkTimeout);
         sender.Commands.Should().ContainSingle();
         cut.FindAll(".alert-danger").Should().BeEmpty();
         cut.FindAll(".alert-success").Should().ContainSingle();
@@ -540,7 +541,7 @@ public sealed class CampaignStatePageTests : TestContext
         JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "wombatDialog.showModal");
 
         sender.Release();
-        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."));
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."), AsyncWorkTimeout);
         cut.FindAll(".alert-danger").Should().BeEmpty();
         sender.Commands.Should().ContainSingle();
         BodyRows(cut.Find("table")).Should().Equal(["Peer doctor | 4"]);

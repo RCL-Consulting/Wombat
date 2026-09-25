@@ -71,7 +71,9 @@ public sealed class MsfInvitationAddressOnceTests
         }
 
         await using var read = CreateDb();
-        var rows = await read.AuditEntries.AsNoTracking().OrderBy(entry => entry.Id).ToListAsync();
+        // In the order they happened, which is OccurredAt, as the audit log orders them. Not Id: a version 7 id is ordered
+        // only to the millisecond, and two adds in the same millisecond sorted either way (T244).
+        var rows = await read.AuditEntries.AsNoTracking().OrderBy(entry => entry.OccurredAt).ToListAsync();
         rows.Select(row => row.Success).Should().Equal(true, false);
         rows[1].ErrorMessage.Should().Be(AddMsfInvitationCommandHandler.AlreadyInvited);
     }

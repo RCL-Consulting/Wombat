@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Shared.Activities;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Activities;
 
@@ -25,7 +26,7 @@ namespace Wombat.Web.Tests.Activities;
 /// list of everyone who could have been.
 /// </para>
 /// </remarks>
-public sealed class NomineePickerTests : TestContext
+public sealed class NomineePickerTests : WombatTestContext
 {
     // Two user fields with different roles, plus an EPA field, so each assertion can say which call is which.
     private const string SchemaJson = """
@@ -553,7 +554,7 @@ public sealed class NomineePickerTests : TestContext
         gated.FirstLoad.SetResult([new ActivityCatalogueOption("at-42", "Dr Forty-Two")]);
 
         // The first load's completion renders once more; after it, the form must still show the second load's list.
-        cut.WaitForState(() => cut.RenderCount > rendersBefore);
+        cut.WaitForState(() => cut.RenderCount > rendersBefore, AsyncWorkTimeout);
         AssessorOptionValues(cut).Should().Equal(["", "at-43"], "the older load finished last, but its list is stale");
     }
 
@@ -576,7 +577,7 @@ public sealed class NomineePickerTests : TestContext
 
         var rendersBefore = cut.RenderCount;
         gated.FirstLoad.SetResult([new ActivityCatalogueOption("assessor-9", "Dr Nine")]);
-        cut.WaitForState(() => cut.RenderCount > rendersBefore);
+        cut.WaitForState(() => cut.RenderCount > rendersBefore, AsyncWorkTimeout);
 
         cut.Markup.Should().NotContain("Not available");
         cut.FindAll("#assessor_user_id option").Single(option => option.HasAttribute("selected"))

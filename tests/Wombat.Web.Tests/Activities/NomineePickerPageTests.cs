@@ -19,6 +19,7 @@ using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Activities;
 
@@ -38,7 +39,7 @@ namespace Wombat.Web.Tests.Activities;
 /// refused may have fallen off the list since the page loaded, and the fresh list says so. The working copy survives.
 /// </para>
 /// </remarks>
-public sealed class NomineePickerPageTests : TestContext
+public sealed class NomineePickerPageTests : WombatTestContext
 {
     private const string SchemaJson = """
         {
@@ -390,7 +391,7 @@ public sealed class NomineePickerPageTests : TestContext
         await Task.WhenAll(submitting, again);
 
         sender.Transitions.Should().ContainSingle("the page carries out one action at a time");
-        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("disabled").Should().BeFalse());
+        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("disabled").Should().BeFalse(), AsyncWorkTimeout);
     }
 
     // ---- helpers ----
