@@ -106,10 +106,12 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
     : IRequestHandler<GetSamplingConcentrationWarningsQuery, SamplingConcentrationReportDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public GetSamplingConcentrationWarningsQueryHandler(IApplicationDbContext dbContext)
+    public GetSamplingConcentrationWarningsQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<SamplingConcentrationReportDto> Handle(
@@ -124,7 +126,7 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         // Bunching is a question about clinical practice — was this trainee only ever watched by one
         // assessor, in one narrow stretch of the period? — so the window selects on the encounter date

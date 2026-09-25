@@ -35,10 +35,12 @@ public sealed class GetCommitteeAgendaQueryValidator : AbstractValidator<GetComm
 public sealed class GetCommitteeAgendaQueryHandler : IRequestHandler<GetCommitteeAgendaQuery, CommitteeAgendaDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public GetCommitteeAgendaQueryHandler(IApplicationDbContext dbContext)
+    public GetCommitteeAgendaQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeAgendaDto> Handle(GetCommitteeAgendaQuery request, CancellationToken cancellationToken)
@@ -53,7 +55,7 @@ public sealed class GetCommitteeAgendaQueryHandler : IRequestHandler<GetCommitte
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         return await CommitteeAgendaReader.ReadAsync(
             _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);

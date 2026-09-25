@@ -138,7 +138,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
 
         refreshed.EvidenceItems.Single(item => item.ActivityId == activity.Id).SourceStateLabel.Should().Be("completed");
@@ -159,7 +159,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         activity.ObservedOn = new DateOnly(2026, 3, 1);
         await db.SaveChangesAsync();
 
-        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
 
         var line = refreshed.EvidenceItems.Single(item => item.ActivityId == activity.Id);
@@ -476,7 +476,7 @@ public sealed class CommitteeEvidenceSnapshotTests
 
         activity.DataJson = Rated(3, assessor: "assessor-b");
         await db.SaveChangesAsync();
-        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
 
         refreshed.EvidenceItems.Single(item => item.ActivityId == activity.Id).AssessorUserId
@@ -556,7 +556,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         => $$"""{ "epa_id": 7, "assessor_user_id": "{{assessor}}", "observed_on": "2026-02-10", "overall_level": {{level}} }""";
 
     private static async Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext db)
-        => await new StartCommitteeReviewCommandHandler(db).Handle(
+        => await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StartCommitteeReviewCommand(ReviewId, Chair()), CancellationToken.None);
 
     private static ClaimsPrincipal Chair()

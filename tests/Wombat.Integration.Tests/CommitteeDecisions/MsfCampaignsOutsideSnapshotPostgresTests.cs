@@ -10,6 +10,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.CommitteeDecisions;
 
@@ -116,7 +117,7 @@ public sealed class MsfCampaignsOutsideSnapshotPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                var started = await new StartCommitteeReviewCommandHandler(db).Handle(
+                var started = await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new StartCommitteeReviewCommand(reviewId, Chair(host)),
                     CancellationToken.None);
                 started.EvidenceItems.Where(item => item.MsfCampaignId is not null).Select(item => item.MsfCampaignId)
@@ -148,7 +149,7 @@ public sealed class MsfCampaignsOutsideSnapshotPostgresTests : IAsyncLifetime
     }
 
     private static Task<MsfCampaignsOutsideSnapshotDto> CountAsync(ApplicationDbContext db, int reviewId, int institutionId)
-        => new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+        => new CountMsfCampaignsOutsideSnapshotQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new CountMsfCampaignsOutsideSnapshotQuery(reviewId, Chair(institutionId)),
             CancellationToken.None);
 

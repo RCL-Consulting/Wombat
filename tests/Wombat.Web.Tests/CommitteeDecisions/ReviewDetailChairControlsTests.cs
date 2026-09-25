@@ -358,7 +358,7 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         });
 
         Text(cut.Find("#chair-actions-note"))
-            .Should().Be("Only the panel's members, and the coordinators of its institution, can start this review.");
+            .Should().Be(WhoCanStart);
         Text(cut.Find("#chair-cannot-act-note")).Should().Be(TheChairMayNotAct);
     }
 
@@ -422,18 +422,26 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         cut.FindAll("#trainee-elsewhere-note").Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Who can start a scheduled review, said to a reader not offered Start: a member counts only while they may sit on the
+    /// panel (T279), so a member who reads the review some other way is not told that they can.
+    /// </summary>
+    private const string WhoCanStart =
+        "Only the coordinators of the panel's institution, and those of its members who are active committee members " +
+        "there, can start this review.";
+
     [Fact]
     public void AScheduledReview_IsNotOfferedToStart_ToAReaderTheHandlerRefuses_AndSaysWhoCan()
     {
         // T194. An institutional administrator reads every review at their institution, but starting one is for the
-        // panel's members and the institution's coordinators (CommitteeDecisionAuthorization.WorksOnPanel). Before T194
-        // they were offered Start, and the click was refused.
+        // panel's members who may sit on it and the institution's coordinators (CommitteeDecisionAuthorization.WorksOnReview,
+        // T279). Before T194 they were offered Start, and the click was refused.
         SignInAs("instadmin-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with { CallerMayStart = false });
 
         Buttons(cut).Should().NotContain("Start review");
         Text(cut.Find("#chair-actions-note"))
-            .Should().Be("Only the panel's members, and the coordinators of its institution, can start this review.");
+            .Should().Be(WhoCanStart);
     }
 
     [Fact]

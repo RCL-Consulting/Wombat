@@ -19,12 +19,14 @@ public static class CommitteeReviewReadAccess
 {
     /// <summary>
     /// The reviews among <paramref name="reviews" /> this principal may read, as the review page decides. Each review's
-    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. <paramref name="users" /> answers who may sit
+    /// on a panel, which a member's seat admits them only while they may (T279).
     /// </summary>
     public static Task<IReadOnlyList<CommitteeReview>> ReadableAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         ClaimsPrincipal principal,
         IReadOnlyCollection<CommitteeReview> reviews,
         CancellationToken cancellationToken)
-        => CommitteeDecisionAuthorization.ReadableReviewsAsync(dbContext, principal, reviews, cancellationToken);
+        => CommitteeDecisionAuthorization.ReadableReviewsAsync(dbContext, users, principal, reviews, cancellationToken);
 }

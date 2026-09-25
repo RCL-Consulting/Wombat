@@ -11,6 +11,13 @@ namespace Wombat.Infrastructure.Identity;
 /// Adds roles for matching groups, removes SSO-assigned roles that no longer match,
 /// and never touches manually-assigned roles.
 /// </summary>
+/// <remarks>
+/// A sign-in that changes the account's roles or scopes changes its security stamp too, as an administrator's change does
+/// (<see cref="SessionRevalidation" />), so the sessions the account has open elsewhere end at their next check rather than
+/// keep the roles the provider has just taken away: a circuit keeps the claims it opened with until its check fails. The
+/// sign-in in progress is issued after this, with the new stamp. Until the T279 review the mapper added and removed roles
+/// without it.
+/// </remarks>
 public sealed class SsoGroupMapper
 {
     private readonly UserManager<WombatIdentityUser> _userManager;
@@ -78,6 +85,9 @@ public sealed class SsoGroupMapper
         // Roles to remove: currently SSO-assigned but no longer desired
         var rolesToRemove = currentSsoRoles.Except(desiredRoles, StringComparer.Ordinal).ToList();
 
+        // Whether the account's roles or scopes, which its sessions' claims carry, change here.
+        var changed = false;
+
         // Add new roles
         foreach (var role in rolesToAdd)
         {
@@ -93,6 +103,8 @@ public sealed class SsoGroupMapper
                         role, user.Id, string.Join("; ", result.Errors.Select(e => e.Code)));
                     continue;
                 }
+
+                changed = true;
             }
 
             _dbContext.UserRoleAssignments.Add(new UserRoleAssignment
@@ -115,7 +127,8 @@ public sealed class SsoGroupMapper
 
             if (!hasManualAssignment)
             {
-                await _userManager.RemoveFromRoleAsync(user, role);
+                var removed = await _userManager.RemoveFromRoleAsync(user, role);
+                changed |= removed.Succeeded;
             }
 
             // Remove the SSO tracking record regardless
@@ -124,14 +137,31 @@ public sealed class SsoGroupMapper
         }
 
         // Apply speciality/sub-speciality scopes from matched mappings
-        await ApplyScopesAsync(user, providerKey, externalGroupIds, mappings, cancellationToken);
+        changed |= await ApplyScopesAsync(user, providerKey, externalGroupIds, mappings, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // Ends the account's other sessions at their next check (see the remarks). A refusal (the account changed
+        // elsewhere since it was read) is logged and the sign-in goes ahead: the roles are already saved, and a cookie's
+        // check builds its claims again from them. The account is read again first, so neither the cookie about to be
+        // issued nor a later save carries the stamp that was refused.
+        if (changed)
+        {
+            var stamped = await _userManager.UpdateSecurityStampAsync(user);
+            if (!stamped.Succeeded)
+            {
+                await _dbContext.Entry(user).ReloadAsync(cancellationToken);
+                _logger.LogWarning(
+                    "SSO sign-in changed the roles or scopes of user '{UserId}', but its security stamp could not be changed: {Errors}",
+                    user.Id, string.Join("; ", stamped.Errors.Select(e => e.Code)));
+            }
+        }
 
         return (await _userManager.GetRolesAsync(user)).ToList();
     }
 
-    private async Task ApplyScopesAsync(
+    /// <summary>Adds the scopes the matched mappings name; true when any was added.</summary>
+    private async Task<bool> ApplyScopesAsync(
         WombatIdentityUser user,
         string providerKey,
         IReadOnlyList<string> externalGroupIds,
@@ -152,8 +182,10 @@ public sealed class SsoGroupMapper
             .Select(s => s.SpecialityId)
             .ToListAsync(cancellationToken);
 
+        var added = false;
         foreach (var specialityId in desiredSpecialityIds.Except(existingSpecialityIds))
         {
+            added = true;
             _dbContext.UserSpecialityScopes.Add(new WombatIdentityUserSpecialityScope
             {
                 UserId = user.Id,
@@ -175,11 +207,14 @@ public sealed class SsoGroupMapper
 
         foreach (var subSpecialityId in desiredSubSpecialityIds.Except(existingSubSpecialityIds))
         {
+            added = true;
             _dbContext.UserSubSpecialityScopes.Add(new WombatIdentityUserSubSpecialityScope
             {
                 UserId = user.Id,
                 SubSpecialityId = subSpecialityId
             });
         }
+
+        return added;
     }
 }

@@ -59,7 +59,7 @@ public sealed class CommitteeReviewReadLadderTests
         var reviewId = await SeedReviewAsync(db);
         await StagePendingAsync(db, reviewId);
 
-        var pending = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+        var pending = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListPendingEntrustmentDecisionsForReviewQuery(
                 reviewId, Principal("member-1", WombatRoles.CommitteeMember, HostInstitution)),
             CancellationToken.None);
@@ -76,7 +76,7 @@ public sealed class CommitteeReviewReadLadderTests
         var reviewId = await SeedReviewAsync(db);
         await StagePendingAsync(db, reviewId);
 
-        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListPendingEntrustmentDecisionsForReviewQuery(reviewId, Principal("stranger-1")),
             CancellationToken.None);
 
@@ -90,7 +90,7 @@ public sealed class CommitteeReviewReadLadderTests
         var reviewId = await SeedReviewAsync(db);
         await StagePendingAsync(db, reviewId);
 
-        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListPendingEntrustmentDecisionsForReviewQuery(
                 reviewId, Principal("coord-2", WombatRoles.Coordinator, OtherInstitution)),
             CancellationToken.None);
@@ -107,7 +107,7 @@ public sealed class CommitteeReviewReadLadderTests
         var reviewId = await SeedReviewAsync(db);
         await StagePendingAsync(db, reviewId);
 
-        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+        var act = () => new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListPendingEntrustmentDecisionsForReviewQuery(
                 reviewId, Principal("trainee-1", WombatRoles.Trainee, HostInstitution)),
             CancellationToken.None);

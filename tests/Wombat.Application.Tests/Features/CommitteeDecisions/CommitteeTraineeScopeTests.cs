@@ -484,16 +484,17 @@ public sealed class CommitteeTraineeScopeTests
     {
         await using var db = await SeededDbAsync();
 
-        // member-a sits on panel A, so every role's own reach lists panel A's reviews: a member's through the seat.
+        // member-a sits on panel A, so every role's own reach lists panel A's review of a peer: a member's through the
+        // seat. Not member-a's own review through the seat: the trainee under review never sits at it (T279, PanelSeat).
         var peers = await SeedReviewForAsync(db, "Ratify", PaedsAtA);
-        var own = await SeedReviewForAsync(db, "Start", "member-a");
+        _ = await SeedReviewForAsync(db, "Start", "member-a");
         var registrar = TraineeWho(role, "member-a");
 
         (await ListAsync(db, registrar)).Should().BeEmpty($"{role} who also holds Trainee");
 
         var control = await ListAsync(db, WithoutTrainee(registrar));
         control.Select(review => review.Id).Should().Contain(
-            [peers, own], $"the same {role} without the Trainee role lists panel A's reviews");
+            peers, $"the same {role} without the Trainee role lists panel A's reviews");
         var peersRow = control.Single(review => review.Id == peers);
         peersRow.TraineeName.Should().Be("Palesa Paeds");
         peersRow.CurrentDecisionCategory.Should().Be(
@@ -595,8 +596,10 @@ public sealed class CommitteeTraineeScopeTests
             "Surgery SpecialityAdmin of A" => [reviews.SurgeryOnA],
             // The trainee who moved to B is B's now, but A's panel holds that review: B's administrator does not read A's.
             "SpecialityAdmin of B" or "Coordinator of B" => [reviews.PaedsOnB],
-            // A seat is read wherever the panel is: whoever may start a review on it may read it (the T194 review).
-            "B's external member, since moved to A" => [reviews.PaedsOnB],
+            // A seat admits its holder only while they may sit on the panel, at the panel's institution (T279): B's external
+            // member has moved to A, so neither starts nor reads B's reviews. Until T279 a seat was read wherever its
+            // holder now was (the T194 review).
+            "B's external member, since moved to A" => Array.Empty<int>(),
             "Administrator" => reviews.All,
             _ => Array.Empty<int>()
         };
@@ -708,15 +711,15 @@ public sealed class CommitteeTraineeScopeTests
         _ = read switch
         {
             "Review" => await OpenAsync(db, principal, reviewId),
-            "Agenda" => await new GetCommitteeAgendaQueryHandler(db).Handle(
+            "Agenda" => await new GetCommitteeAgendaQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetCommitteeAgendaQuery(reviewId, principal, new DateOnly(2027, 1, 8)), CancellationToken.None),
-            "Sampling" => await new GetSamplingConcentrationWarningsQueryHandler(db).Handle(
+            "Sampling" => await new GetSamplingConcentrationWarningsQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetSamplingConcentrationWarningsQuery(reviewId, principal), CancellationToken.None),
-            "MsfOutsideSnapshot" => await new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+            "MsfOutsideSnapshot" => await new CountMsfCampaignsOutsideSnapshotQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new CountMsfCampaignsOutsideSnapshotQuery(reviewId, principal), CancellationToken.None),
-            "Pending" => await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+            "Pending" => await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new ListPendingEntrustmentDecisionsForReviewQuery(reviewId, principal), CancellationToken.None),
-            "StarEpaOptions" => (object)await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+            "StarEpaOptions" => (object)await new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new ListStarEpaOptionsForReviewQuery(reviewId, principal), CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(read), read, null)
         };
@@ -1072,7 +1075,7 @@ public sealed class CommitteeTraineeScopeTests
     {
         _ = command switch
         {
-            "Start" => await new StartCommitteeReviewCommandHandler(db).Handle(
+            "Start" => await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new StartCommitteeReviewCommand(reviewId, principal), CancellationToken.None),
             "Record" => await new RecordCommitteeDecisionCommandHandler(db, Committee).Handle(
                 new RecordCommitteeDecisionCommand(
@@ -1463,7 +1466,13 @@ public sealed class CommitteeTraineeScopeTests
             User(LeftA, "Lindiwe", "Left", InstitutionA),
             User(NoProfile, "Noma", "Profile", InstitutionA),
             User(NoLongerTraineeAtA, "Nolwazi", "Former", InstitutionA, WombatRoles.Assessor),
-            User(LockedAtA, "Lwazi", "Locked", InstitutionA) with { IsLockedOut = true, IsDeactivated = true }
+            User(LockedAtA, "Lwazi", "Locked", InstitutionA) with { IsLockedOut = true, IsDeactivated = true },
+            // Panel A's members, who may sit on it (T279: a seat admits its holder to the panel's reviews only while they
+            // may), and B's external member, who has since moved to A and so may no longer sit on B's panel.
+            User("chair-a", "Chipo", "Chair", InstitutionA, WombatRoles.CommitteeMember),
+            User("member-a", "Musa", "Member", InstitutionA, WombatRoles.CommitteeMember),
+            User("external-a", "Esther", "External", InstitutionA, WombatRoles.CommitteeMember),
+            User("external-b", "Ebo", "Moved", InstitutionA, WombatRoles.CommitteeMember)
         ];
 
         private static UserIdentityDetails User(

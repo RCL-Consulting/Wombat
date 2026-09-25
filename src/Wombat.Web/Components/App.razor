@@ -72,7 +72,8 @@
     /// parse error, the fallback policy having answered <c>/_blazor/initializers</c> with the sign-in page's HTML;
     /// with that endpoint opened, as a failed negotiation. Every page such a visitor reaches is <c>[AllowAnonymous]</c>,
     /// and none ever had a circuit, so static takes nothing from them. What such a page may rely on is in DESIGN.md
-    /// (§ Account / auth page).
+    /// (§ Account / auth page). A circuit whose sign-in ends (SessionRevalidatingAuthenticationStateProvider) is left at
+    /// once by a full page load (EndedSessionExit, the T279 review), so an anonymous circuit is never kept either.
     /// </para>
     /// <para>
     /// "Signed in" is the test the hub's fallback policy makes (<c>DenyAnonymousAuthorizationRequirement</c>: any

@@ -195,7 +195,8 @@ internal static class AgendaLineCommands
             .Include(entity => entity.AgendaLines)
             .SingleOrDefaultAsync(entity => entity.Id == reviewId, cancellationToken);
 
-        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(principal, review, users, cancellationToken);
+        (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
+            dbContext, principal, review, users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(dbContext, principal, review, cancellationToken);
 
         if (review.IsFormative)

@@ -71,7 +71,7 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
                 .ToListAsync(cancellationToken);
 
             var readable = (await CommitteeDecisionAuthorization.ReadableReviewsAsync(
-                    _dbContext, request.Principal, candidates, cancellationToken))
+                    _dbContext, _users, request.Principal, candidates, cancellationToken))
                 .Select(review => review.Id)
                 .ToArray();
             if (readable.Length == 0)

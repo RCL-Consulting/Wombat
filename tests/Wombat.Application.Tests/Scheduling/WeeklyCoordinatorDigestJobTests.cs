@@ -153,7 +153,7 @@ public sealed class WeeklyCoordinatorDigestJobTests
     public async Task AReview_IsListedByItsPanelsInstitution()
     {
         // A's trainee comes before B's panel. It is B's panel's review: B's coordinator opens it on the reviews page, and
-        // A's does not (CommitteeDecisionAuthorization.WorksOnPanel), so the digest lists it to B only.
+        // A's does not (CommitteeDecisionAuthorization.WorksOnReview), so the digest lists it to B only.
         var (provider, emailSender) = BuildServices();
         await SeedAsync(provider, db =>
         {
@@ -530,7 +530,8 @@ public sealed class WeeklyCoordinatorDigestJobTests
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>();
 
-        // The real user store, as the host registers it: whether a trainee is current is asked of it (T284).
+        // The real user store, as the host registers it: whether a trainee is current is asked of it (T284), and the
+        // review read ladder asks who may sit on a panel of whoever holds a seat on it (T279).
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
         return (services.BuildServiceProvider(), emailSender);

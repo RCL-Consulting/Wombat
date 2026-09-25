@@ -82,10 +82,12 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
     : IRequestHandler<CountMsfCampaignsOutsideSnapshotQuery, MsfCampaignsOutsideSnapshotDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public CountMsfCampaignsOutsideSnapshotQueryHandler(IApplicationDbContext dbContext)
+    public CountMsfCampaignsOutsideSnapshotQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<MsfCampaignsOutsideSnapshotDto> Handle(
@@ -100,7 +102,7 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         // The ladder's trainee arm comes first and admits only the trainee's own ratified review, so reaching here
         // in the role means this is the subject reading about themselves.

@@ -65,7 +65,7 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
         // (D46). And a chair who may sit at the review now (T256): ratifying issues the staged STARs, so a chair who has
         // lost the CommitteeMember role, moved or been deactivated issues none.
         (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
-            request.Principal, review, _users, cancellationToken);
+            _dbContext, request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         // The review's state, and (T165) the decision's recorded attendance, which must hold a quorum: the chair and at

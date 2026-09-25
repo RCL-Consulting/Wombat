@@ -197,7 +197,7 @@ public sealed class DownloadEntrustmentCertificateTests
         dbContext.CommitteeReviews.Add(review);
         await dbContext.SaveChangesAsync();
 
-        var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
+        var startHandler = new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         await startHandler.Handle(new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
         // The window held no activity, so the snapshot line the STAR rests on is written here (D38, T131).

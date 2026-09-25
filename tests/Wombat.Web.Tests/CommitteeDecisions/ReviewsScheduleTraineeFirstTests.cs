@@ -288,7 +288,11 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     /// </summary>
     private sealed class HandlerSender(Func<ApplicationDbContext> createDb) : IScopedSender
     {
-        private readonly FakeUserDirectory _users = new FakeUserDirectory((Peer, "Palesa Paeds")).WithTrainees(Peer);
+        // The registrar sits on panel A and may sit on it: a seat admits its holder to the panel's reviews only while they
+        // may (T279).
+        private readonly FakeUserDirectory _users = new FakeUserDirectory((Peer, "Palesa Paeds"))
+            .WithTrainees(Peer)
+            .WithCommitteeMembers(InstitutionA, "chair-a", Registrar);
 
         public List<object> Received { get; } = [];
 

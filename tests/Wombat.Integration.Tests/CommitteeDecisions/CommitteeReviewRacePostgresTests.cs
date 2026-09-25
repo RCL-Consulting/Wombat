@@ -782,7 +782,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
 
         await using (var db = NewContext(schema))
         {
-            await new StartCommitteeReviewCommandHandler(db).Handle(new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
+            await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
         }
 
         int lineA, lineB, pendingId;

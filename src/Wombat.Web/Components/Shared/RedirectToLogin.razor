@@ -1,10 +1,22 @@
+@using Wombat.Web.Security
 @inject NavigationManager Navigation
+@inject EndedSessionExit EndedSession
 
 @code {
+  // Rendered where the router meets a visitor who is not signed in. Rendered statically (a request), it sends them to
+  // the sign-in page, coming back here. In a circuit, the visitor was signed in when the circuit opened (App.razor gives
+  // nobody else one), so their session has just ended (SessionRevalidatingAuthenticationStateProvider): the tab leaves
+  // the circuit by a full page load through SessionEnd, never to a sign-in page inside the old circuit, whose form would
+  // post the old user's antiforgery token and be refused with a bare 400 (the T279 review).
   protected override void OnInitialized()
   {
-    var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
-    var target = string.IsNullOrWhiteSpace(relative) ? "/" : $"/{relative}";
+    if (RendererInfo.IsInteractive)
+    {
+      EndedSession.Leave();
+      return;
+    }
+
+    var target = EndedSessionExit.CurrentPath(Navigation);
     Navigation.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(target)}", forceLoad: false);
   }
 }

@@ -49,6 +49,9 @@ public sealed class SsoGroupMapperTests
                 return IdentityResult.Success;
             });
 
+        userManager.Setup(m => m.UpdateSecurityStampAsync(It.IsAny<WombatIdentityUser>()))
+            .ReturnsAsync(IdentityResult.Success);
+
         return userManager;
     }
 
@@ -76,6 +79,8 @@ public sealed class SsoGroupMapperTests
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
         db.UserRoleAssignments.Should().ContainSingle(a =>
             a.UserId == "user-1" && a.Role == WombatRoles.Trainee && a.Source == RoleAssignmentSource.Sso);
+        userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once,
+            "a role added ends the account's other sessions at their next check (the T279 review)");
     }
 
     [Fact]
@@ -132,6 +137,8 @@ public sealed class SsoGroupMapperTests
         var roles = await mapper.ApplyAsync(user, "uct", ["unrelated-group"]);
 
         userManager.Verify(m => m.AddToRoleAsync(It.IsAny<WombatIdentityUser>(), It.IsAny<string>()), Times.Never);
+        userManager.Verify(m => m.UpdateSecurityStampAsync(It.IsAny<WombatIdentityUser>()), Times.Never,
+            "nothing the account's sessions carry changed, so none of them is ended");
     }
 
     [Fact]
@@ -190,6 +197,8 @@ public sealed class SsoGroupMapperTests
         userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Trainee), Times.Once);
         db.UserRoleAssignments.Should().NotContain(a =>
             a.UserId == "user-5" && a.Role == WombatRoles.Trainee && a.Source == RoleAssignmentSource.Sso);
+        userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once,
+            "a role the provider took away is taken from the account's open sessions too (the T279 review)");
     }
 
     [Fact]
@@ -238,6 +247,49 @@ public sealed class SsoGroupMapperTests
         // Manual record is still there
         db.UserRoleAssignments.Should().ContainSingle(a =>
             a.UserId == "user-6" && a.Role == WombatRoles.Coordinator && a.Source == RoleAssignmentSource.Manual);
+        // The account still holds the role, so its sessions' claims are still true, and none of them is ended.
+        userManager.Verify(m => m.UpdateSecurityStampAsync(It.IsAny<WombatIdentityUser>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Apply_AScopeAddedForARoleAlreadyHeld_ChangesTheStamp_AndARepeatChangesNothing()
+    {
+        // A scope is carried by the session's claims as a role is, so a scope the provider's groups add ends the account's
+        // other sessions too (the T279 review). Signing in again with the same groups changes nothing, and ends nothing.
+        await using var db = CreateDb();
+        db.SsoGroupRoleMappings.Add(new SsoGroupRoleMapping
+        {
+            ProviderKey = "uct",
+            ExternalGroupId = "group-1",
+            ExternalGroupDisplayName = "Paediatrics",
+            WombatRole = WombatRoles.Trainee,
+            InstitutionId = 1,
+            SpecialityId = 42
+        });
+        db.UserRoleAssignments.Add(new UserRoleAssignment
+        {
+            UserId = "user-8",
+            Role = WombatRoles.Trainee,
+            Source = RoleAssignmentSource.Sso,
+            ProviderKey = "uct",
+            AssignedOn = DateTime.UtcNow.AddDays(-1)
+        });
+        await db.SaveChangesAsync();
+
+        var userManager = CreateUserManagerMock();
+        var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
+        var user = new WombatIdentityUser { Id = "user-8", InstitutionId = 1 };
+
+        await mapper.ApplyAsync(user, "uct", ["group-1"]);
+
+        userManager.Verify(m => m.AddToRoleAsync(It.IsAny<WombatIdentityUser>(), It.IsAny<string>()), Times.Never,
+            "guard: the role was already the account's, so only the scope is new");
+        db.UserSpecialityScopes.Should().ContainSingle(scope => scope.UserId == "user-8" && scope.SpecialityId == 42);
+        userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once);
+
+        await mapper.ApplyAsync(user, "uct", ["group-1"]);
+
+        userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once, "the second sign-in changed nothing");
     }
 
     [Fact]

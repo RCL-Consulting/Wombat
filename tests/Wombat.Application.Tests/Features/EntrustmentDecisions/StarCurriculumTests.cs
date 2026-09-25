@@ -373,7 +373,7 @@ public sealed class StarCurriculumTests
         => TestPrincipals.InRole(WombatRoles.CommitteeMember, "chair-1", HostInstitution);
 
     private static Task<IReadOnlyList<StarEpaOptionDto>> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+        => new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListStarEpaOptionsForReviewQuery(ReviewId, principal), CancellationToken.None);
 
     private static Task<PendingEntrustmentDecisionDto> StageAsync(

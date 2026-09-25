@@ -433,15 +433,28 @@ public sealed class CommitteeQuorumHandlerTests
             await SaveAndClearAsAuditPipelineWouldAsync(db);
         }
 
+        // Since T279 the seat admits its holder to the review only while they may sit at it: one who may not, and holds no
+        // other role that reads it, reads nothing, and is told nothing about the id, not even that they hold a seat.
         var caller = TestPrincipals.InRole(WombatRoles.CommitteeMember, userId, claimedInstitutionId);
-        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+        var read = () => new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, caller), CancellationToken.None);
+
+        (await read.Should().ThrowAsync<UnauthorizedAccessException>(who))
+            .Which.Message.Should().Be("The committee review could not be found among the reviews you can view.");
+        await AssertResolvingIsRefusedAsync(db, caller, who, expectedRefusal: NotAmongTheAppealsYouResolve);
+
+        // The same seat's holder who reads the review as a coordinator of the panel's institution, as they signed in
+        // before the change: the page offers no resolve form and names who can act, and resolving gives the seat's own
+        // refusal, which tells them nothing the page does not.
+        var coordinator = TestPrincipals.InRoles([WombatRoles.CommitteeMember, WombatRoles.Coordinator], userId, InstitutionId);
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, coordinator), CancellationToken.None);
 
         review.CallerResolvesAppeals.Should().BeFalse(who);
         review.AppealBody.Select(person => person.UserId).Should().NotContain(userId, who)
             .And.Contain("external-1", $"{who}: the note names who can act");
 
-        await AssertResolvingIsRefusedAsync(db, caller, who);
+        await AssertResolvingIsRefusedAsync(db, coordinator, who);
     }
 
     [Fact]
@@ -452,24 +465,46 @@ public sealed class CommitteeQuorumHandlerTests
         // their own appeal. The store now holds them as an active committee member at the panel's institution, so only the
         // "never the trainee under review" arm of the rule stands in the way.
         await using var db = await AppealedDbAsync(extraMember: Trainee, extraRole: DecisionPanelMemberRole.External);
+        // Since T279 the seat admits its holder to the review only while they may sit at it, and the trainee under review
+        // never does: through the seat they read their own review no more than they resolve its appeal.
         var directory = FakeUserDirectory.CommitteeMembersAt(InstitutionId, "chair-1", "member-1", "external-1", Trainee);
         var caller = TestPrincipals.InRole(WombatRoles.CommitteeMember, Trainee, InstitutionId);
 
-        var review = await new GetCommitteeReviewByIdQueryHandler(db, directory).Handle(
+        var read = () => new GetCommitteeReviewByIdQueryHandler(db, directory).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, caller), CancellationToken.None);
+
+        (await read.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().Be("The committee review could not be found among the reviews you can view.");
+        await AssertResolvingIsRefusedAsync(
+            db, caller, "the trainee under review", directory, expectedRefusal: NotAmongTheAppealsYouResolve);
+
+        // Reading it as a coordinator of the panel's institution, the page names the appeal body without them, and the
+        // resolve handler gives the seat's own refusal.
+        var coordinator = TestPrincipals.InRoles([WombatRoles.CommitteeMember, WombatRoles.Coordinator], Trainee, InstitutionId);
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, directory).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, coordinator), CancellationToken.None);
 
         review.CallerResolvesAppeals.Should().BeFalse();
         review.AppealBody.Select(person => $"{person.UserId}:{person.Role}").Should().Equal("chair-1:Chair", "external-1:External");
 
-        await AssertResolvingIsRefusedAsync(db, caller, "the trainee under review", directory);
+        await AssertResolvingIsRefusedAsync(db, coordinator, "the trainee under review", directory);
     }
 
+    /// <summary>The one refusal of a review id whose appeals the caller does not resolve (T194 item 1).</summary>
+    private const string NotAmongTheAppealsYouResolve =
+        "The committee review could not be found among the reviews whose appeals you resolve.";
+
     /// <summary>
-    /// Dismissing, upholding and remitting (with the chair present) are each refused with the seat's refusal, and after
-    /// the save the audit pipeline makes from its catch the store is as it was: the appeal open, the review under appeal.
+    /// Dismissing, upholding and remitting (with the chair present) are each refused with the seat's refusal, or with
+    /// <paramref name="expectedRefusal" /> where one is given, and after the save the audit pipeline makes from its catch
+    /// the store is as it was: the appeal open, the review under appeal.
     /// </summary>
     private async Task AssertResolvingIsRefusedAsync(
-        ApplicationDbContext db, ClaimsPrincipal caller, string who, IUserAdministrationService? directory = null)
+        ApplicationDbContext db,
+        ClaimsPrincipal caller,
+        string who,
+        IUserAdministrationService? directory = null,
+        string expectedRefusal = PanelSeat.MayNotResolveFromSeat)
     {
         var before = await SnapshotAsync();
         var userId = caller.FindFirst(ClaimTypes.NameIdentifier)!.Value;
@@ -489,7 +524,7 @@ public sealed class CommitteeQuorumHandlerTests
                 CancellationToken.None);
 
             (await resolve.Should().ThrowAsync<UnauthorizedAccessException>($"{who}: {outcome}"))
-                .Which.Message.Should().Be(PanelSeat.MayNotResolveFromSeat);
+                .Which.Message.Should().Be(expectedRefusal, $"{who}: {outcome}");
             await SaveAndClearAsAuditPipelineWouldAsync(db);
             (await SnapshotAsync()).Should().BeEquivalentTo(before, $"{who}: {outcome}");
         }
@@ -661,7 +696,7 @@ public sealed class CommitteeQuorumHandlerTests
         (await db.Epas.SingleAsync(epa => epa.Id == SecondEpaId)).Deactivate(DateTime.MinValue);
         await SaveAndClearAsAuditPipelineWouldAsync(db);
 
-        var listed = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+        var listed = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, Chair()), CancellationToken.None);
         listed.Single(pending => pending.Id == stale.Id).NoLongerFits.Should().Contain("PAED-008");
         listed.Single(pending => pending.Id == fitting.Id).NoLongerFits.Should().BeNull();
@@ -845,7 +880,8 @@ public sealed class CommitteeQuorumHandlerTests
 
         await ResolveAsync(db, External(), CommitteeAppealOutcome.Remitted, "chair-1", "external-1");
 
-        var users = new FakeUserDirectory(("chair-1", "Thandi Zulu"), ("member-1", "Priya Naidoo"), ("external-1", "Anna Botha"));
+        var users = new FakeUserDirectory(("chair-1", "Thandi Zulu"), ("member-1", "Priya Naidoo"), ("external-1", "Anna Botha"))
+            .WithCommitteeMembers(InstitutionId, "chair-1", "member-1", "external-1");
         var review = await new GetCommitteeReviewByIdQueryHandler(db, users).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
 
@@ -881,7 +917,8 @@ public sealed class CommitteeQuorumHandlerTests
         await using var db = await SeededDbAsync();
         await RecordAsync(db, Chair(), "chair-1", "external-1");
         var users = new FakeUserDirectory(
-            (Trainee, "Lerato Molefe"), ("chair-1", "Thandi Zulu"), ("member-1", "Priya Naidoo"), ("external-1", "Anna Botha"));
+                (Trainee, "Lerato Molefe"), ("chair-1", "Thandi Zulu"), ("member-1", "Priya Naidoo"), ("external-1", "Anna Botha"))
+            .WithCommitteeMembers(InstitutionId, "chair-1", "member-1", "external-1");
 
         var review = await new GetCommitteeReviewByIdQueryHandler(db, users).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
@@ -928,7 +965,7 @@ public sealed class CommitteeQuorumHandlerTests
         db.Set<CommitteeDecisionAttendee>().RemoveRange(db.Set<CommitteeDecisionAttendee>());
         await SaveAndClearAsAuditPipelineWouldAsync(db);
 
-        var review = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
             new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
 
         review.QuorumShortfall.Should().Be("Nobody was recorded as present when this decision was recorded. " + CommitteeReview.QuorumRule);

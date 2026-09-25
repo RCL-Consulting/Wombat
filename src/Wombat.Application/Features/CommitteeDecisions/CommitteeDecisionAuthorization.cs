@@ -446,10 +446,18 @@ internal static class CommitteeDecisionAuthorization
             : TraineeListsNoReview;
 
     /// <summary>
-    /// Whether the caller works on this panel's reviews: a global Administrator, a Coordinator of the panel's institution,
-    /// or a member of the panel, and in every case not someone who holds Trainee. Who may start a review
-    /// (<see cref="DemandStartableReview" />), and one of the read ladder's last two rungs (<see cref="MayReadReview" />).
+    /// Whether the caller works on this review now: a global Administrator, a Coordinator of the panel's institution, or a
+    /// member of its panel who may sit at it now (<see cref="PanelSeat.SittingAt" />, T237's one rule), and in every case
+    /// not someone who holds Trainee. Who may start a review (<see cref="DemandStartableReviewAsync" />), whom the review
+    /// page offers Start (<see cref="CommitteeReviewDetailDto.CallerMayStart" />), and one of the read ladder's last two
+    /// rungs (<see cref="MayReadReview" />).
     /// </summary>
+    /// <param name="eligible">
+    /// Who may sit on the review's panel now (<see cref="PanelSeat.EligibleAsync" />). A caller who holds no seat on the
+    /// panel, or is answered by an arm before the seat's, is answered the same whatever it holds, so the gates read it only
+    /// where the seat can decide (<see cref="EligibleWhereTheSeatDecidesAsync" />) and pass <see cref="NotRead" />
+    /// elsewhere.
+    /// </param>
     /// <remarks>
     /// <para>
     /// A Coordinator supports the programmes of ONE institution, so they reach the panels their own institution runs, not
@@ -464,11 +472,24 @@ internal static class CommitteeDecisionAuthorization
     /// whole review the page would not show them. The chair's actions and the appeal body ask the same rung
     /// (<see cref="HoldsSeat" />).
     /// </para>
+    /// <para>
+    /// <b>A seat counts only while its holder may sit at the review</b> (T279), read from the user store: an active
+    /// committee member at the panel's institution who does not hold Trainee, and never the trainee under review. The seat
+    /// alone reads the caller's claims, which cannot say whether they still are, and a circuit's claims are frozen for its
+    /// life. Until T279 a member who had lost the CommitteeMember role, moved to another institution or been deactivated
+    /// could still read the panel's reviews and their frozen evidence, and start one, which freezes the trainee's evidence
+    /// snapshot and agenda: the chair's actions had been held to the rule since T256 and the appeal body since T237, but
+    /// Start and the read were not. A member of the panel now works on its reviews exactly when they could be seated on it.
+    /// </para>
     /// </remarks>
-    public static bool WorksOnPanel(ClaimsPrincipal principal, DecisionPanel panel)
+    public static bool WorksOnReview(
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        IReadOnlyDictionary<string, UserIdentityDetails> eligible)
     {
         ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(panel);
+        ArgumentNullException.ThrowIfNull(review);
+        ArgumentNullException.ThrowIfNull(eligible);
 
         if (TraineeScopeResolver.ActsAsTrainee(principal))
         {
@@ -480,14 +501,53 @@ internal static class CommitteeDecisionAuthorization
             return true;
         }
 
-        if (principal.IsInRole(WombatRoles.Coordinator) && CoordinatesInstitution(principal, panel.InstitutionId))
+        if (principal.IsInRole(WombatRoles.Coordinator) && CoordinatesInstitution(principal, review.Panel.InstitutionId))
         {
             return true;
         }
 
         var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return !string.IsNullOrEmpty(userId) &&
-               panel.Members.Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal));
+               PanelSeat.SittingAt(review, eligible)
+                   .Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Who may sit on a panel, when it was not read because it could not change the answer
+    /// (<see cref="EligibleWhereTheSeatDecidesAsync" />): nobody.
+    /// </summary>
+    internal static readonly IReadOnlyDictionary<string, UserIdentityDetails> NotRead =
+        new Dictionary<string, UserIdentityDetails>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Whether <see cref="WorksOnReview" /> can turn on who may sit on this panel: the caller holds a seat on it, from their
+    /// claims, and neither holds Trainee (every seat's first rung, <see cref="HoldsSeat" />) nor is a global Administrator,
+    /// whom the arms before the seat's answer. For anyone else the user store is not asked. (T279)
+    /// </summary>
+    private static bool TheSeatMayDecide(ClaimsPrincipal principal, DecisionPanel panel)
+        => !principal.IsInRole(WombatRoles.Administrator) && HoldsSeat(principal, panel, _ => true);
+
+    /// <summary>
+    /// Who may sit on each panel among <paramref name="reviews" />' on which the caller holds a seat, by the panel's
+    /// institution (<see cref="PanelSeat.EligibleAsync" />, one read per institution); no entry for an institution where the
+    /// seat cannot decide (<see cref="TheSeatMayDecide" />). Reads only. (T279)
+    /// </summary>
+    private static async Task<IReadOnlyDictionary<int, IReadOnlyDictionary<string, UserIdentityDetails>>> EligibleWhereTheSeatDecidesAsync(
+        IUserAdministrationService users,
+        ClaimsPrincipal principal,
+        IEnumerable<CommitteeReview> reviews,
+        CancellationToken cancellationToken)
+    {
+        var eligible = new Dictionary<int, IReadOnlyDictionary<string, UserIdentityDetails>>();
+        foreach (var institutionId in reviews
+                     .Where(review => TheSeatMayDecide(principal, review.Panel))
+                     .Select(review => review.Panel.InstitutionId)
+                     .Distinct())
+        {
+            eligible[institutionId] = await PanelSeat.EligibleAsync(users, institutionId, cancellationToken);
+        }
+
+        return eligible;
     }
 
     /// <summary>
@@ -515,20 +575,23 @@ internal static class CommitteeDecisionAuthorization
     /// was scheduled. The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.
     /// </para>
     /// <para>
-    /// It reads only (where the review's trainee trains, and only for a speciality administrator), so it can be asked
-    /// before anything is changed.
+    /// It reads only (where the review's trainee trains, and only for a speciality administrator; who may sit on the panel,
+    /// and only for a caller who holds a seat on it, T279), so it can be asked before anything is changed.
     /// </para>
     /// </remarks>
     public static async Task<CommitteeReview> DemandReviewAccessAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         ClaimsPrincipal principal,
         CommitteeReview? review,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
         ArgumentNullException.ThrowIfNull(principal);
 
-        if (review is null || (await ReadableReviewsAsync(dbContext, principal, [review], cancellationToken)).Count == 0)
+        if (review is null ||
+            (await ReadableReviewsAsync(dbContext, users, principal, [review], cancellationToken)).Count == 0)
         {
             throw new UnauthorizedAccessException(ReviewNotReadableByCaller);
         }
@@ -545,16 +608,19 @@ internal static class CommitteeDecisionAuthorization
     /// <remarks>
     /// Where each review's trainee trains is read only for a caller whose rung asks it (a speciality or sub-speciality
     /// administrator, <see cref="ReadsReviewsByTrainee" />), in one resolve for every review however many there are
-    /// (<see cref="TraineeScopeResolver.ResolveManyAsync" />, three queries at most). Each review's
-    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// (<see cref="TraineeScopeResolver.ResolveManyAsync" />, three queries at most). Who may sit on a panel is read only
+    /// for a caller who holds a seat on it, once per panel institution (<see cref="EligibleWhereTheSeatDecidesAsync" />,
+    /// T279). Each review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.
     /// </remarks>
     public static async Task<IReadOnlyList<CommitteeReview>> ReadableReviewsAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         ClaimsPrincipal principal,
         IReadOnlyCollection<CommitteeReview> reviews,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(reviews);
 
@@ -562,18 +628,50 @@ internal static class CommitteeDecisionAuthorization
             ? await TraineeScopeResolver.ResolveManyAsync(
                 dbContext, reviews.Select(review => review.TraineeUserId), cancellationToken)
             : new Dictionary<string, TraineeScope>(StringComparer.Ordinal);
+        var eligible = await EligibleWhereTheSeatDecidesAsync(users, principal, reviews, cancellationToken);
 
         return reviews
-            .Where(review => MayReadReview(principal, review, trainees.GetValueOrDefault(review.TraineeUserId)))
+            .Where(review => MayReadReview(
+                principal,
+                review,
+                trainees.GetValueOrDefault(review.TraineeUserId),
+                eligible.GetValueOrDefault(review.Panel.InstitutionId) ?? NotRead))
             .ToList();
+    }
+
+    /// <summary>
+    /// Whether the caller may read this review, by the read ladder (<see cref="MayReadReview" />), when who may sit on its
+    /// panel has already been read (<paramref name="eligible" />, <see cref="PanelSeat.EligibleAsync" />). Where the
+    /// review's trainee trains is read only for a caller whose rung asks it. Reads only. The seat refusals ask it, so that
+    /// only someone who may read the review is told that they hold a seat on its panel (T279).
+    /// </summary>
+    internal static async Task<bool> MayReadReviewAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        IReadOnlyDictionary<string, UserIdentityDetails> eligible,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(review);
+        ArgumentNullException.ThrowIfNull(eligible);
+
+        var trainee = ReadsReviewsByTrainee(principal)
+            ? (await TraineeScopeResolver.ResolveManyAsync(dbContext, [review.TraineeUserId], cancellationToken))
+                .GetValueOrDefault(review.TraineeUserId)
+            : null;
+
+        return MayReadReview(principal, review, trainee, eligible);
     }
 
     /// <summary>
     /// Whether the caller may read this review, given where its trainee trains (<paramref name="trainee" />, their
     /// preferred profile, <see cref="TraineeScopeResolver.ResolveAsync" />; null when they hold none, or when the caller's
-    /// rung does not ask it). Asked only through <see cref="DemandReviewAccessAsync" /> and
-    /// <see cref="ReadableReviewsAsync" />, which resolve the trainee as the rung needs, so no caller can hand it a scope
-    /// read some other way.
+    /// rung does not ask it) and who may sit on its panel (<paramref name="eligible" />, or <see cref="NotRead" /> where the
+    /// seat cannot decide). Asked only through <see cref="DemandReviewAccessAsync" />, <see cref="ReadableReviewsAsync" />
+    /// and <see cref="MayReadReviewAsync" />, which read both as the rungs need, so no caller can hand it a scope read
+    /// some other way.
     /// </summary>
     /// <remarks>
     /// <list type="number">
@@ -581,15 +679,20 @@ internal static class CommitteeDecisionAuthorization
     /// alongside an oversight role is still a trainee about their own record, and must not read a panel's working notes on
     /// someone else through the wider role. They read their own review once it is ratified, and nothing else.</item>
     /// <item>A global Administrator reads every review.</item>
-    /// <item>Whoever works on the panel (<see cref="WorksOnPanel" />): its members, wherever they now are, and the
-    /// coordinators of its institution. So whoever may start, chair or resolve an appeal on a review may read it (the T194
-    /// review: a member who had moved institution was admitted to Start and refused the review it had just
-    /// started).</item>
+    /// <item>Whoever works on the review (<see cref="WorksOnReview" />): the members of its panel who may sit at it now,
+    /// and the coordinators of its institution. So whoever may start, chair or resolve an appeal on a review may read it
+    /// (the T194 review: a member who had moved institution was admitted to Start and refused the review it had just
+    /// started). Since T279 a member who may no longer sit at it (moved, no longer a committee member, deactivated, given
+    /// Trainee, or the trainee under review) reads it through this rung no more, as they no longer start it.</item>
     /// <item>A role that schedules reviews, over the reviews it could have scheduled (<see cref="InSchedulingReach" />,
     /// T182's scope, T218).</item>
     /// </list>
     /// </remarks>
-    private static bool MayReadReview(ClaimsPrincipal principal, CommitteeReview review, TraineeScope? trainee)
+    private static bool MayReadReview(
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        TraineeScope? trainee,
+        IReadOnlyDictionary<string, UserIdentityDetails> eligible)
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(review);
@@ -604,7 +707,7 @@ internal static class CommitteeDecisionAuthorization
             return true;
         }
 
-        return WorksOnPanel(principal, review.Panel) || InSchedulingReach(principal, review.Panel, trainee);
+        return WorksOnReview(principal, review, eligible) || InSchedulingReach(principal, review.Panel, trainee);
     }
 
     /// <summary>
@@ -678,7 +781,7 @@ internal static class CommitteeDecisionAuthorization
 
     /// <summary>
     /// Whether a rung of the read ladder can reach this caller through the panel's institution rather than a seat on the
-    /// panel: an InstitutionalAdmin, a Coordinator (<see cref="WorksOnPanel" /> and <see cref="InSchedulingReach" />), a
+    /// panel: an InstitutionalAdmin, a Coordinator (<see cref="WorksOnReview" /> and <see cref="InSchedulingReach" />), a
     /// SpecialityAdmin or a SubSpecialityAdmin (<see cref="InSchedulingReach" />, which asks it first). For anyone else,
     /// a committee member who holds none of them, only a seat admits, wherever the panel is. (T218 review)
     /// </summary>
@@ -713,17 +816,44 @@ internal static class CommitteeDecisionAuthorization
         "The committee review could not be found among the reviews you can start.";
 
     /// <summary>
-    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller works on its
-    /// panel (<see cref="WorksOnPanel" />). An unknown id and another panel's review get the one refusal; the review's
-    /// state is judged only after this. The review page offers Start by the same predicate
-    /// (<see cref="CommitteeReviewDetailDto.CallerMayStart" />). (T194 item 1)
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller works on it now
+    /// (<see cref="WorksOnReview" />): a member of its panel only while they may sit at it (T279). An unknown id, another
+    /// panel's review and a review whose panel seats the caller but where they may not sit now get the one refusal; the
+    /// review's state is judged only after this. The review page offers Start by the same predicate
+    /// (<see cref="CommitteeReviewDetailDto.CallerMayStart" />). (T194 item 1, T279)
     /// </summary>
-    /// <remarks>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</remarks>
-    public static CommitteeReview DemandStartableReview(ClaimsPrincipal principal, CommitteeReview? review)
+    /// <remarks>
+    /// <para>
+    /// Starting freezes the trainee's evidence snapshot and the review's agenda, so a start by someone who no longer
+    /// belongs on the panel decides what the panel will weigh. Who may sit is read from the user store, only for a caller
+    /// who holds a seat on the panel and whom no arm before the seat's admits. Reads only: the start handler calls this
+    /// before it changes anything, and the audit pipeline saves the request's context from its catch.
+    /// </para>
+    /// <para>
+    /// The seat's holder who may not sit gets the one refusal, not a sentence of their own as the chair's holder is given
+    /// (<see cref="DemandChairedReviewAsync" />): they may not read the review either, and the one refusal says nothing about
+    /// the id.
+    /// </para>
+    /// <para>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</para>
+    /// </remarks>
+    public static async Task<CommitteeReview> DemandStartableReviewAsync(
+        ClaimsPrincipal principal,
+        CommitteeReview? review,
+        IUserAdministrationService users,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(users);
 
-        if (review is null || !WorksOnPanel(principal, review.Panel))
+        if (review is null)
+        {
+            throw new UnauthorizedAccessException(ReviewNotStartableByCaller);
+        }
+
+        var eligible = TheSeatMayDecide(principal, review.Panel)
+            ? await PanelSeat.EligibleAsync(users, review.Panel.InstitutionId, cancellationToken)
+            : NotRead;
+        if (!WorksOnReview(principal, review, eligible))
         {
             throw new UnauthorizedAccessException(ReviewNotStartableByCaller);
         }
@@ -778,18 +908,23 @@ internal static class CommitteeDecisionAuthorization
     /// <para>
     /// Two steps, in this order. The seat, from the caller's claims, gives the one refusal and reads nothing: so an id's
     /// existence is never confirmed to someone who holds no Chair seat on its panel. Then acting from the seat now, read
-    /// from the user store (T256): only the Chair seat's holder is told that the seat is theirs but they may not act from
-    /// it, which tells them nothing they cannot read on the review page. Reads only: every handler calls this before it
-    /// changes anything, and the audit pipeline saves the request's context from its catch.
+    /// from the user store (T256): the Chair seat's holder who may read the review is told that the seat is theirs but
+    /// they may not act from it, which tells them nothing they cannot read on the review page. Since T279 a chair who may
+    /// not sit at the review reads it only through another rung of the ladder (a coordinator of its institution, say), so
+    /// one who reads it through none gets the one refusal: told the seat's sentence, they would learn that the id names a
+    /// review of their panel. Reads only: every handler calls this before it changes anything, and the audit pipeline
+    /// saves the request's context from its catch.
     /// </para>
     /// <para>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</para>
     /// </remarks>
     public static async Task<(CommitteeReview Review, IReadOnlyDictionary<string, UserIdentityDetails> Eligible)> DemandChairedReviewAsync(
+        IApplicationDbContext dbContext,
         ClaimsPrincipal principal,
         CommitteeReview? review,
         IUserAdministrationService users,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(users);
 
@@ -801,10 +936,44 @@ internal static class CommitteeDecisionAuthorization
         var eligible = await PanelSeat.EligibleAsync(users, review.Panel.InstitutionId, cancellationToken);
         if (!Chairs(principal, review, eligible))
         {
-            throw new UnauthorizedAccessException(PanelSeat.MayNotChairFromSeat);
+            throw new UnauthorizedAccessException(
+                await MayReadReviewAsync(dbContext, principal, review, eligible, cancellationToken)
+                    ? PanelSeat.MayNotChairFromSeat
+                    : ReviewNotChairedByCaller);
         }
 
         return (review, eligible);
+    }
+
+    /// <summary>
+    /// Refuses a caller who holds a seat on the review's appeal body (<see cref="DemandAppealBodyReview" />, asked first)
+    /// but may not resolve its appeal from it now (<see cref="PanelSeat.AppealBodyAt" />, T237). Their refusal is the
+    /// seat's own sentence (<see cref="PanelSeat.MayNotResolveFromSeat" />) only if they may read the review; otherwise
+    /// the one refusal, which says nothing about the id (T279, as <see cref="DemandChairedReviewAsync" /> answers the
+    /// chair). Reads only: the resolve handler calls it before it changes anything.
+    /// </summary>
+    /// <param name="eligible">Who may sit on the review's panel now (<see cref="PanelSeat.EligibleAsync" />).</param>
+    public static async Task DemandResolvesFromSeatAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        IReadOnlyDictionary<string, UserIdentityDetails> eligible,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(review);
+        ArgumentNullException.ThrowIfNull(eligible);
+
+        if (PanelSeat.SitsOnAppealBody(review, GetRequiredUserId(principal), eligible))
+        {
+            return;
+        }
+
+        throw new UnauthorizedAccessException(
+            await MayReadReviewAsync(dbContext, principal, review, eligible, cancellationToken)
+                ? PanelSeat.MayNotResolveFromSeat
+                : ReviewNotResolvableByCaller);
     }
 
     /// <summary>
@@ -879,7 +1048,7 @@ internal static class CommitteeDecisionAuthorization
     /// <para>
     /// Nobody who holds Trainee acts on a review from a seat, whichever seat it is: the trainee rung
     /// (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185) is asked first, as the read ladder and Start ask it
-    /// (<see cref="WorksOnPanel" />). Until the T194 review it was not: a Trainee seated as the Chair could record, ratify
+    /// (<see cref="WorksOnReview" />). Until the T194 review it was not: a Trainee seated as the Chair could record, ratify
     /// and stage on a peer's review the page refused them, and one seated as the Chair or an External member of the panel
     /// that reviews them was offered, and could use, the resolve form on their own appeal, since the page shows a trainee
     /// their own review under appeal: they could dismiss it, or remit it and write the replacement decision with two
@@ -895,7 +1064,8 @@ internal static class CommitteeDecisionAuthorization
     /// <para>
     /// The seat, from claims, is only half of acting from it: the chair's actions and the appeal body also demand that the
     /// caller may sit at the review now, read from the user store (<see cref="Chairs" />, T256;
-    /// <see cref="PanelSeat.DemandSitsOnAppealBody" />, T237).
+    /// <see cref="DemandResolvesFromSeatAsync" />, T237). Starting a review and reading it through a seat demand the same
+    /// (<see cref="WorksOnReview" />, T279).
     /// </para>
     /// </remarks>
     private static bool HoldsSeat(ClaimsPrincipal principal, DecisionPanel panel, Func<DecisionPanelMemberRole, bool> role)
@@ -931,7 +1101,7 @@ internal static class CommitteeDecisionAuthorization
     /// Until T165 an Administrator with no seat on the panel could dismiss a trainee's appeal, or remit it and write the
     /// replacement decision alone, which every page then showed beside the original sitting's attendance. The review's
     /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. The resolve handler then demands that the
-    /// caller may act from the seat now (<see cref="PanelSeat.DemandSitsOnAppealBody" />, T237).
+    /// caller may act from the seat now (<see cref="DemandResolvesFromSeatAsync" />, T237).
     /// </remarks>
     public static CommitteeReview DemandAppealBodyReview(ClaimsPrincipal principal, CommitteeReview? review)
     {

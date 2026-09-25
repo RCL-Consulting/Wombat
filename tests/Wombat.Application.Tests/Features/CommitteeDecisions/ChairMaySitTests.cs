@@ -37,6 +37,11 @@ namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 /// check that ran after a mutation would have the refusal commit it. The control runs the same request past a chair who
 /// may sit, and reads back what the action wrote: so each refusal is the gate's, not a fixture the action could not run on.
 /// </para>
+/// <para>
+/// Since T279 a seat admits its holder to the review itself only while they may sit at it, so a chair who may not reads
+/// it only through another rung of the read ladder. The seat's own refusal and the page's note are said to such a chair
+/// who also coordinates at the panel's institution; a chair who reads it no other way is given the one refusal.
+/// </para>
 /// </remarks>
 public sealed class ChairMaySitTests
 {
@@ -98,8 +103,32 @@ public sealed class ChairMaySitTests
 
     [Theory]
     [MemberData(nameof(EveryActionOfEveryChairWhoMayNotSit))]
-    public async Task AChairWhoMayNotSitNow_IsRefusedTheAction_WithTheSeatsRefusal_AndNothingIsWritten(string action, string condition)
+    public async Task AChairWhoMayNotSitNow_ButReadsTheReviewAsACoordinator_IsRefusedTheAction_WithTheSeatsRefusal_AndNothingIsWritten(
+        string action, string condition)
     {
+        // The seat's own sentence is said only to a chair who may still read the review, here through the coordinator's
+        // rung (T279): it tells them nothing the review page does not.
+        await using var db = await SeededDbAsync();
+        var reviewId = await SeedReviewForAsync(db, action);
+        var before = await SnapshotAsync();
+        var because = $"{action}: the chair {condition}";
+
+        var act = () => RunAsync(db, action, reviewId, DirectoryWhereTheChair(condition), ChairWhoAlsoCoordinates());
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>(because))
+            .Which.Message.Should().Be(PanelSeat.MayNotChairFromSeat, because);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await SnapshotAsync()).Should().Equal(before, because);
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryActionOfEveryChairWhoMayNotSit))]
+    public async Task AChairWhoMayNotSitNow_AndReadsTheReviewNoOtherWay_IsRefusedTheAction_WithTheOneRefusal_AndNothingIsWritten(
+        string action, string condition)
+    {
+        // Since T279 a seat admits its holder to the review only while they may sit at it, so a chair who may not, and
+        // holds no other role that reads it, cannot read it. Told the seat's sentence, they would learn that the id names a
+        // review of their panel (T194 item 1): they are given the one refusal instead.
         await using var db = await SeededDbAsync();
         var reviewId = await SeedReviewForAsync(db, action);
         var before = await SnapshotAsync();
@@ -108,7 +137,7 @@ public sealed class ChairMaySitTests
         var act = () => RunAsync(db, action, reviewId, DirectoryWhereTheChair(condition));
 
         (await act.Should().ThrowAsync<UnauthorizedAccessException>(because))
-            .Which.Message.Should().Be(PanelSeat.MayNotChairFromSeat, because);
+            .Which.Message.Should().Be("The committee review could not be found among the reviews you chair.", because);
         await SaveAndClearAsAuditPipelineWouldAsync(db);
         (await SnapshotAsync()).Should().Equal(before, because);
     }
@@ -213,12 +242,30 @@ public sealed class ChairMaySitTests
         await using var db = await SeededDbAsync();
         var reviewId = await SeedReviewAsync(db, state);
 
+        // A chair who may not sit reads the review only through another rung since T279: here, as a coordinator.
         foreach (var condition in ConditionsWhereTheChairMayNotSit)
         {
-            var review = await ReadAsync(db, reviewId, Chair(), DirectoryWhereTheChair(condition));
+            var review = await ReadAsync(db, reviewId, ChairWhoAlsoCoordinates(), DirectoryWhereTheChair(condition));
 
             review.CallerChairs.Should().BeFalse($"{state}: the chair {condition}");
             review.ChairCannotAct.Should().Be(PanelSeat.MayNotChairFromSeat, $"{state}: the chair {condition}");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StatesWithAChairsActionOpenOrToCome))]
+    public async Task AChairWhoMayNotSit_AndReadsTheReviewNoOtherWay_IsRefusedThePage_WithTheOneRefusal(CommitteeReviewState? state)
+    {
+        // T279: the seat admits its holder to the review only while they may sit at it.
+        await using var db = await SeededDbAsync();
+        var reviewId = await SeedReviewAsync(db, state);
+
+        foreach (var condition in ConditionsWhereTheChairMayNotSit)
+        {
+            var read = () => ReadAsync(db, reviewId, Chair(), DirectoryWhereTheChair(condition));
+
+            (await read.Should().ThrowAsync<UnauthorizedAccessException>($"{state}: the chair {condition}"))
+                .Which.Message.Should().Be("The committee review could not be found among the reviews you can view.");
         }
     }
 
@@ -259,7 +306,7 @@ public sealed class ChairMaySitTests
         await using var db = await SeededDbAsync();
         var reviewId = await SeedReviewAsync(db, CommitteeReviewState.Ratified);
 
-        var review = await ReadAsync(db, reviewId, Chair(), DirectoryWhereTheChair("was deactivated"));
+        var review = await ReadAsync(db, reviewId, ChairWhoAlsoCoordinates(), DirectoryWhereTheChair("was deactivated"));
 
         review.CallerChairs.Should().BeFalse();
         review.ChairCannotAct.Should().BeNull();
@@ -318,6 +365,13 @@ public sealed class ChairMaySitTests
 
     /// <summary>The chair as they signed in: CommitteeMember at the panel's institution.</summary>
     private static ClaimsPrincipal Chair() => TestPrincipals.InRole(WombatRoles.CommitteeMember, ChairUserId, InstitutionA);
+
+    /// <summary>
+    /// The chair as they signed in, holding Coordinator at the panel's institution too: a role that reads every review of
+    /// the institution's panels whether or not its holder may sit on them (T279).
+    /// </summary>
+    private static ClaimsPrincipal ChairWhoAlsoCoordinates()
+        => TestPrincipals.InRoles([WombatRoles.CommitteeMember, WombatRoles.Coordinator], ChairUserId, InstitutionA);
 
     private static async Task RunAsync(
         ApplicationDbContext db, string action, int reviewId, IUserAdministrationService users, ClaimsPrincipal? caller = null)

@@ -44,7 +44,7 @@ public sealed class ProgramDefaultScaleTests
         await using var db = SeededDb(defaultScaleId: ScaleB);
         var reviewId = await AddInProgressReviewAsync(db);
 
-        var result = await new ListStarEpaOptionsForReviewQueryHandler(db)
+        var result = await new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db))
             .Handle(new ListStarEpaOptionsForReviewQuery(reviewId, TestPrincipals.Administrator()), CancellationToken.None);
 
         result.Should().ContainSingle().Which.ScaleId.Should().Be(ScaleB);
@@ -56,7 +56,7 @@ public sealed class ProgramDefaultScaleTests
         await using var db = SeededDb(defaultScaleId: null);
         var reviewId = await AddInProgressReviewAsync(db);
 
-        var result = await new ListStarEpaOptionsForReviewQueryHandler(db)
+        var result = await new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db))
             .Handle(new ListStarEpaOptionsForReviewQuery(reviewId, TestPrincipals.Administrator()), CancellationToken.None);
 
         result.Should().ContainSingle().Which.ScaleId.Should().BeNull();

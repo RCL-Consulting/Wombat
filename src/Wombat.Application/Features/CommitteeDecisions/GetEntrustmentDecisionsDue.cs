@@ -512,8 +512,9 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
     /// Says, row by row, whether the caller may open the reviews a row names, the one its status is about and the one
     /// holding its seat: the review's own read ladder, in its set form
     /// (<see cref="CommitteeDecisionAuthorization.ReadableReviewsAsync" />), asked of each review rather than copied, so
-    /// the page links only to a review that will open. One query for every review named, and one resolve of their
-    /// trainees where the ladder asks where they train (a speciality administrator's, T218).
+    /// the page links only to a review that will open. One query for every review named, one resolve of their trainees
+    /// where the ladder asks where they train (a speciality administrator's, T218), and one read of who may sit on the
+    /// panels of each institution where the caller holds a seat (T279).
     /// </summary>
     private async Task<List<EntrustmentDecisionDueDto>> LinkReviewsAsync(
         ClaimsPrincipal principal,
@@ -538,7 +539,7 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             .ToListAsync(cancellationToken);
 
         var readable = (await CommitteeDecisionAuthorization.ReadableReviewsAsync(
-                _dbContext, principal, reviews, cancellationToken))
+                _dbContext, _users, principal, reviews, cancellationToken))
             .Select(review => review.Id)
             .ToHashSet();
 

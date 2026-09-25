@@ -125,7 +125,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
                     }
 
                     var institutionId = recipient.GetInstitutionId()!.Value;
-                    var digest = await DigestForAsync(dbContext, facts, recipient, institutionId, cancellationToken);
+                    var digest = await DigestForAsync(dbContext, users, facts, recipient, institutionId, cancellationToken);
 
                     var email = CoordinatorDigestEmail.Build(
                         coordinator.Email!,
@@ -238,6 +238,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
     /// </summary>
     private static async Task<Digest> DigestForAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         DigestFacts facts,
         ClaimsPrincipal recipient,
         int institutionId,
@@ -272,7 +273,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             .Where(review => review.Panel.InstitutionId == institutionId)
             .ToList();
         var readableReviews = await CommitteeReviewReadAccess.ReadableAsync(
-            dbContext, recipient, reviewsAtInstitution, cancellationToken);
+            dbContext, users, recipient, reviewsAtInstitution, cancellationToken);
 
         var committeeReviewsThisWeek = readableReviews
             .OrderBy(review => review.ScheduledOn)

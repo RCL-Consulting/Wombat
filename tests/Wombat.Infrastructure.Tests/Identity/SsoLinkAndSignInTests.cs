@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Options;
 using Wombat.Domain.Audit;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 
@@ -100,6 +101,8 @@ public sealed class SsoLinkAndSignInTests : IDisposable
     private ExternalLoginHandler Handler => _scope.ServiceProvider.GetRequiredService<ExternalLoginHandler>();
 
     private ApplicationDbContext Db => _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    private SignInManager<WombatIdentityUser> SignIns => _scope.ServiceProvider.GetRequiredService<SignInManager<WombatIdentityUser>>();
 
     // ---- linking --------------------------------------------------------------------------------------------------
 
@@ -426,6 +429,66 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         result.Succeeded.Should().BeFalse();
         result.ErrorMessage.Should().Be(ExternalLoginHandler.WrongInstitutionMessage);
         _authentication.SignedInUserIds.Should().BeEmpty();
+    }
+
+    // ---- the roles a sign-in syncs end the account's other sessions (the T279 review) --------------------------------
+
+    [Fact]
+    public async Task ASignInWhoseGroupsTakeARoleAway_EndsTheSessionsSignedInBefore_AndIssuesTheNewStamp()
+    {
+        // A circuit keeps the claims it opened with until its check fails, and the check fails only on a changed stamp. An
+        // SSO sign-in in one browser that takes the Assessor role away must reach a tab open in another; until the T279
+        // review the mapper changed the roles and left the stamp, so that tab went on with the role.
+        var user = await LinkedUserAsync("naidoo@kgk.test", ProviderInstitutionId, "idp-subject-1");
+        await MapGroupAsync("kgk-assessors", WombatRoles.Assessor);
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1", groups: ["kgk-assessors"]), null, null))
+            .Succeeded.Should().BeTrue();
+        (await Users.IsInRoleAsync(user, WombatRoles.Assessor)).Should().BeTrue("guard: the group gave the role");
+        var before = _authentication.SignedInPrincipals.Last();
+        (await SignIns.ValidateSecurityStampAsync(before)).Should().NotBeNull("guard: that sign-in's session is current");
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1", groups: []), null, null))
+            .Succeeded.Should().BeTrue();
+
+        (await Users.IsInRoleAsync(user, WombatRoles.Assessor)).Should().BeFalse("guard: the provider took the role away");
+        (await SignIns.ValidateSecurityStampAsync(before)).Should().BeNull(
+            "the session signed in with the role ends at its next check");
+        (await SignIns.ValidateSecurityStampAsync(_authentication.SignedInPrincipals.Last())).Should().NotBeNull(
+            "the sign-in that made the change is issued with the new stamp");
+    }
+
+    [Fact]
+    public async Task ASignInWhoseGroupsGiveARole_EndsTheSessionsSignedInBefore()
+    {
+        var user = await LinkedUserAsync("naidoo@kgk.test", ProviderInstitutionId, "idp-subject-1");
+        await MapGroupAsync("kgk-committee", WombatRoles.CommitteeMember);
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1"), null, null)).Succeeded.Should().BeTrue();
+        var before = _authentication.SignedInPrincipals.Last();
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1", groups: ["kgk-committee"]), null, null))
+            .Succeeded.Should().BeTrue();
+
+        (await Users.IsInRoleAsync(user, WombatRoles.CommitteeMember)).Should().BeTrue("guard: the group gave the role");
+        (await SignIns.ValidateSecurityStampAsync(before)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ASignInThatChangesNoRole_LeavesTheSessionsSignedInBefore()
+    {
+        // The control: the same groups again, so nothing the sessions carry has changed, and none of them is ended.
+        await LinkedUserAsync("naidoo@kgk.test", ProviderInstitutionId, "idp-subject-1");
+        await MapGroupAsync("kgk-assessors", WombatRoles.Assessor);
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1", groups: ["kgk-assessors"]), null, null))
+            .Succeeded.Should().BeTrue();
+        var before = _authentication.SignedInPrincipals.Last();
+
+        (await Handler.HandleCallbackAsync(External("naidoo@kgk.test", "idp-subject-1", groups: ["kgk-assessors"]), null, null))
+            .Succeeded.Should().BeTrue();
+
+        (await SignIns.ValidateSecurityStampAsync(before)).Should().NotBeNull();
     }
 
     // ---- the email a sign-in syncs, and the account it provisions (T155) -------------------------------------------
@@ -771,6 +834,26 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         (await Users.AddToRoleAsync(user, role)).Succeeded.Should().BeTrue();
     }
 
+    /// <summary>The provider's group <paramref name="groupId" /> gives <paramref name="role" />, which exists.</summary>
+    private async Task MapGroupAsync(string groupId, string role)
+    {
+        var roles = _scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!await roles.RoleExistsAsync(role))
+        {
+            (await roles.CreateAsync(new IdentityRole(role))).Succeeded.Should().BeTrue();
+        }
+
+        Db.SsoGroupRoleMappings.Add(new SsoGroupRoleMapping
+        {
+            ProviderKey = ProviderKey,
+            ExternalGroupId = groupId,
+            ExternalGroupDisplayName = groupId,
+            WombatRole = role,
+            InstitutionId = ProviderInstitutionId
+        });
+        await Db.SaveChangesAsync();
+    }
+
     private async Task<WombatIdentityUser> LinkedUserAsync(
         string email, int institutionId, string subject, string providerKey = ProviderKey)
     {
@@ -789,9 +872,11 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         string? name = null,
         string? emailVerified = null,
         string providerKey = ProviderKey,
-        string verifiedClaim = "email_verified")
+        string verifiedClaim = "email_verified",
+        IReadOnlyList<string>? groups = null)
     {
         var claims = new List<Claim> { new(ClaimTypes.Email, email), new(ClaimTypes.NameIdentifier, subject) };
+        claims.AddRange((groups ?? []).Select(group => new Claim("groups", group)));
         if (name is not null)
         {
             claims.Add(new Claim(ClaimTypes.Name, name));
@@ -820,12 +905,16 @@ public sealed class SsoLinkAndSignInTests : IDisposable
     {
         public List<string> SignedInUserIds { get; } = [];
 
+        /// <summary>The principal each cookie was built with: the session a sign-in opened.</summary>
+        public List<ClaimsPrincipal> SignedInPrincipals { get; } = [];
+
         /// <summary>The user name each cookie was built with.</summary>
         public List<string?> SignedInUserNames { get; } = [];
 
         public Task SignInAsync(HttpContext context, string? scheme, ClaimsPrincipal principal, AuthenticationProperties? properties)
         {
             SignedInUserIds.Add(principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "?");
+            SignedInPrincipals.Add(principal);
             SignedInUserNames.Add(principal.FindFirstValue(ClaimTypes.Name));
             return Task.CompletedTask;
         }

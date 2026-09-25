@@ -84,7 +84,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
             firstReviewId = await ScheduleAsync(schema, panelId, hostId, 2026, 1);
             await using (var db = NewContext(schema))
             {
-                await new StartCommitteeReviewCommandHandler(db).Handle(
+                await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new StartCommitteeReviewCommand(firstReviewId, Chair()), CancellationToken.None);
             }
 

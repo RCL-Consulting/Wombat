@@ -31,10 +31,12 @@ public sealed class StartCommitteeReviewCommandValidator : AbstractValidator<Sta
 public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCommitteeReviewCommand, CommitteeReviewDetailDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public StartCommitteeReviewCommandHandler(IApplicationDbContext dbContext)
+    public StartCommitteeReviewCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeReviewDetailDto> Handle(StartCommitteeReviewCommand request, CancellationToken cancellationToken)
@@ -50,8 +52,10 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // Authorise first: an unknown review and one of a panel the caller does not work on get the one refusal, before
-        // the review's state is said (T194 item 1).
-        review = CommitteeDecisionAuthorization.DemandStartableReview(request.Principal, review);
+        // the review's state is said (T194 item 1). A member of the panel works on it only while they may sit at it, read
+        // from the user store: a start freezes the evidence and the agenda (T279).
+        review = await CommitteeDecisionAuthorization.DemandStartableReviewAsync(
+            request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         var actorUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);

@@ -9,8 +9,9 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// Who may sit on a decision panel, and so be counted towards a decision's quorum: an active holder of the
 /// CommitteeMember role at the panel's institution who does not hold Trainee. The one rule the panel picker lists, panel
 /// create and update enforce, the review page offers as present, recording a decision enforces, the appeal body is
-/// named by and must meet to resolve an appeal (<see cref="AppealBodyAt" />), and the chair must meet to take any of the
-/// chair's actions (<c>CommitteeDecisionAuthorization.Chairs</c>). (T165, D46, T237, T256)
+/// named by and must meet to resolve an appeal (<see cref="AppealBodyAt" />), the chair must meet to take any of the
+/// chair's actions (<c>CommitteeDecisionAuthorization.Chairs</c>), and a member must meet to start the panel's reviews or
+/// read them through their seat (<c>CommitteeDecisionAuthorization.WorksOnReview</c>). (T165, D46, T237, T256, T279)
 /// </summary>
 /// <remarks>
 /// <para>
@@ -31,7 +32,7 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </para>
 /// <para>
 /// <b>Never someone who holds Trainee</b> (<see cref="TraineeScopeResolver.HoldersAsync" />, T237), whatever seat: the
-/// rung every seat predicate asks first (<c>CommitteeDecisionAuthorization.HoldsSeat</c> and <c>WorksOnPanel</c>, the
+/// rung every seat predicate asks first (<c>CommitteeDecisionAuthorization.HoldsSeat</c> and <c>WorksOnReview</c>, the
 /// T194 review, after T185). Until T237 a trainee who held CommitteeMember could be seated as the trainees'
 /// representative, and so as the Chair or an External member, where since T194 they cannot act: a panel chaired by one
 /// had no working chair, and a quorum could count a member who cannot act. The picker now leaves them out and a save
@@ -55,8 +56,9 @@ public static class PanelSeat
         "Only an active committee member at the panel's institution who is not a trainee can be recorded as present.";
 
     /// <summary>
-    /// The refusal of someone on the appeal body who may not sit at the review now (<see cref="DemandSitsOnAppealBody" />).
-    /// They hold a seat on its panel, so may read the review, and the refusal tells them nothing they cannot see.
+    /// The refusal of someone on the appeal body who may not sit at the review now (<see cref="SitsOnAppealBody" />). Said
+    /// only to one who may read the review, so it tells them nothing they cannot see; one who may not is given the one
+    /// refusal (<c>CommitteeDecisionAuthorization.DemandResolvesFromSeatAsync</c>, T279).
     /// </summary>
     public const string MayNotResolveFromSeat =
         "You sit on this panel's appeal body but cannot resolve its appeals now: only an active committee member at the " +
@@ -65,8 +67,8 @@ public static class PanelSeat
     /// <summary>
     /// The refusal of the holder of a review's Chair seat who may not sit at the review now: every chair's action gives it
     /// (<c>CommitteeDecisionAuthorization.DemandChairedReviewAsync</c>), and the review page says it to them where the
-    /// chair's controls would be (<c>CommitteeReviewDetailDto.ChairCannotAct</c>). They hold the seat, so may read the
-    /// review, and the refusal tells them nothing they cannot see. (T256)
+    /// chair's controls would be (<c>CommitteeReviewDetailDto.ChairCannotAct</c>). Said only to one who may read the review,
+    /// so it tells them nothing they cannot see; a chair who may not is given the one refusal (T256, T279).
     /// </summary>
     public const string MayNotChairFromSeat =
         "You chair this panel but cannot take the chair's actions now: only an active committee member at the panel's " +
@@ -138,7 +140,7 @@ public static class PanelSeat
     /// <summary>
     /// The appeal body that can act at this review now, chair first: its panel's Chair and External members among those
     /// who may sit at it (<see cref="SittingAt" />). The one list the review page's appeal-body note names and resolving an
-    /// appeal demands the caller is on (<see cref="DemandSitsOnAppealBody" />), so the note never leaves out someone who
+    /// appeal demands the caller is on (<see cref="SitsOnAppealBody" />), so the note never leaves out someone who
     /// can resolve the appeal, nor names someone who cannot. (T237)
     /// </summary>
     public static IReadOnlyList<DecisionPanelMember> AppealBodyAt(
@@ -151,9 +153,10 @@ public static class PanelSeat
             .ToArray();
 
     /// <summary>
-    /// Refuses a caller who holds a seat on the appeal body but may not sit at this review now (<see cref="AppealBodyAt" />):
+    /// Whether this user is on the appeal body that can act at this review now (<see cref="AppealBodyAt" />): not
     /// deactivated, moved to another institution, no longer a committee member, given Trainee since signing in, or the
-    /// trainee under review. Reads only: the resolve handler calls it before it changes anything. (T237)
+    /// trainee under review. What resolving an appeal demands after the seat
+    /// (<c>CommitteeDecisionAuthorization.DemandResolvesFromSeatAsync</c>). (T237)
     /// </summary>
     /// <remarks>
     /// The seat predicate alone (<c>CommitteeDecisionAuthorization.ResolvesAppeals</c>) reads the caller's claims, and a
@@ -162,17 +165,11 @@ public static class PanelSeat
     /// every other reader who resolves it, filled by this rule, left them out; and a former trainee seated on the panel
     /// that reviewed them could uphold their own appeal.
     /// </remarks>
-    /// <exception cref="UnauthorizedAccessException">The caller may not resolve the appeal from their seat now.</exception>
-    public static void DemandSitsOnAppealBody(
+    public static bool SitsOnAppealBody(
         CommitteeReview review,
         string userId,
         IReadOnlyDictionary<string, UserIdentityDetails> eligible)
-    {
-        if (!AppealBodyAt(review, eligible).Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal)))
-        {
-            throw new UnauthorizedAccessException(MayNotResolveFromSeat);
-        }
-    }
+        => AppealBodyAt(review, eligible).Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal));
 
     /// <summary>
     /// The half of the rule a committee member's own record answers: not deactivated, at the panel's institution, and
@@ -209,7 +206,7 @@ public static class PanelSeat
     /// <param name="eligible">
     /// Who may sit on the review's panel now (<see cref="EligibleAsync" />), read once by the caller for its own gate too:
     /// the chair's (<c>CommitteeDecisionAuthorization.DemandChairedReviewAsync</c>, T256) when recording a decision, the
-    /// appeal body's (<see cref="DemandSitsOnAppealBody" />, T237) when resolving an appeal.
+    /// appeal body's (<see cref="SitsOnAppealBody" />, T237) when resolving an appeal.
     /// </param>
     /// <exception cref="InvalidOperationException">Someone named may not be recorded as present.</exception>
     public static IReadOnlyCollection<DecisionPanelMember> DemandPresent(

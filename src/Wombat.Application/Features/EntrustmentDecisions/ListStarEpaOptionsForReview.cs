@@ -36,10 +36,12 @@ public sealed class ListStarEpaOptionsForReviewQueryHandler
     : IRequestHandler<ListStarEpaOptionsForReviewQuery, IReadOnlyList<StarEpaOptionDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListStarEpaOptionsForReviewQueryHandler(IApplicationDbContext dbContext)
+    public ListStarEpaOptionsForReviewQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<StarEpaOptionDto>> Handle(
@@ -54,7 +56,7 @@ public sealed class ListStarEpaOptionsForReviewQueryHandler
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         return await StarCurriculum.ListAsync(_dbContext, review.TraineeUserId, cancellationToken);
     }

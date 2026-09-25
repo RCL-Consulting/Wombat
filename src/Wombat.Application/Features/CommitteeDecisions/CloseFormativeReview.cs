@@ -44,7 +44,7 @@ public sealed class CloseFormativeReviewCommandHandler : IRequestHandler<CloseFo
         // formative flag or state is said (T194 item 1). The chair alone, with no Administrator bypass (T165, D46), and only
         // while they may sit at the review (T256).
         (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
-            request.Principal, review, _users, cancellationToken);
+            _dbContext, request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
         review.Close(CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal), DateTime.UtcNow);
 

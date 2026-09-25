@@ -285,11 +285,14 @@ public sealed record CommitteeReviewDetailDto(
     public string? ChairCannotAct { get; init; }
 
     /// <summary>
-    /// Whether the caller may start this review, once it is scheduled: a member of its panel, a Coordinator of the panel's
-    /// institution, or a global Administrator (T194). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate
-    /// starting demands (<c>CommitteeDecisionAuthorization.WorksOnPanel</c>), so the review page offers Start to exactly
-    /// the people the handler lets start it: an InstitutionalAdmin who reads the review without a seat on its panel is not
-    /// offered it. Starting also demands the trainee check (<see cref="TraineeElsewhere" />). False from everywhere else.
+    /// Whether the caller may start this review: it is scheduled, and they are a member of its panel who may sit at it now
+    /// (an active committee member at the panel's institution who is not a trainee, and never the trainee under review,
+    /// T279), a Coordinator of the panel's institution, or a global Administrator (T194). Filled by
+    /// <c>GetCommitteeReviewByIdQuery</c> with the predicate starting demands
+    /// (<c>CommitteeDecisionAuthorization.WorksOnReview</c>), so the review page offers Start to exactly the people the
+    /// handler lets start it: an InstitutionalAdmin who reads the review without a seat on its panel is not offered it.
+    /// Starting also demands the trainee check (<see cref="TraineeElsewhere" />). False in every other state, where
+    /// nobody may start it, and from everywhere else.
     /// </summary>
     public bool CallerMayStart { get; init; }
 

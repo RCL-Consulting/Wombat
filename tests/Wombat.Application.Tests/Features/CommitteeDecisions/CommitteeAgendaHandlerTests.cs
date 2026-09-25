@@ -1323,7 +1323,7 @@ public sealed class CommitteeAgendaHandlerTests
     private static async Task StartAsync(ApplicationDbContext db, int reviewId)
     {
         var chair = await ChairOfAsync(db, reviewId);
-        await new StartCommitteeReviewCommandHandler(db).Handle(new StartCommitteeReviewCommand(reviewId, chair), CancellationToken.None);
+        await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(new StartCommitteeReviewCommand(reviewId, chair), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
 
@@ -1501,7 +1501,7 @@ public sealed class CommitteeAgendaHandlerTests
     private static async Task<CommitteeAgendaDto> AgendaAsync(
         ApplicationDbContext db, int reviewId, ClaimsPrincipal? principal = null, DateOnly? today = null)
     {
-        var agenda = await new GetCommitteeAgendaQueryHandler(db).Handle(
+        var agenda = await new GetCommitteeAgendaQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeAgendaQuery(reviewId, principal ?? TestPrincipals.Administrator(), today ?? Today),
             CancellationToken.None);
         db.ChangeTracker.Clear();

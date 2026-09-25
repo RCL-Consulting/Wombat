@@ -858,7 +858,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     /// <summary>Starts the review, then writes one snapshot line per EPA: the window held no activity to freeze.</summary>
     private static async Task StartWithEvidenceAsync(ApplicationDbContext db, int reviewId)
     {
-        await new StartCommitteeReviewCommandHandler(db).Handle(new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
+        await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
         db.ChangeTracker.Clear();
 
         foreach (var (code, epaId) in Epas)
@@ -893,7 +893,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     /// <summary>Defers every closing line nothing is staged on, as the chair does for the EPAs the sitting will not decide.</summary>
     private static async Task DeferAllOutstandingAsync(ApplicationDbContext db, int reviewId)
     {
-        var agenda = await new GetCommitteeAgendaQueryHandler(db).Handle(
+        var agenda = await new GetCommitteeAgendaQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeAgendaQuery(reviewId, TestPrincipals.Administrator(), Today), CancellationToken.None);
         db.ChangeTracker.Clear();
 

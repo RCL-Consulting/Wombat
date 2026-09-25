@@ -9,6 +9,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -26,7 +27,7 @@ public sealed class SamplingConcentrationWarningsTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeFalse();
@@ -48,7 +49,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, cbd, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeTrue();
@@ -75,7 +76,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, miniCex, "trainee-1", "assessor-c", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
@@ -98,7 +99,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, cbd, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
@@ -124,7 +125,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, miniCex, "trainee-1", "assessor-d", 7, new DateTime(2026, 2, 15, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.AnyWarning.Should().BeFalse();
@@ -145,7 +146,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, miniCex, "trainee-1", "assessor-b", 7, new DateTime(2026, 4, 15, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(0);
@@ -162,7 +163,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, reflectiveNote, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(0);
@@ -183,7 +184,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, miniCex, subject: "trainee-1", assessor: "assessor-a", epaId: 7, createdOn: new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var act = () => handler.Handle(
             new GetSamplingConcentrationWarningsQuery(reviewId, Principal("stranger-1")), CancellationToken.None);
 
@@ -198,7 +199,7 @@ public sealed class SamplingConcentrationWarningsTests
         await using var dbContext = CreateDbContext();
         var reviewId = await SeedReviewAsync(dbContext);
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var act = () => handler.Handle(
             new GetSamplingConcentrationWarningsQuery(
                 reviewId, Principal("coord-2", WombatRoles.Coordinator, OtherInstitution)),
@@ -223,7 +224,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, miniCex, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(
             new GetSamplingConcentrationWarningsQuery(
                 reviewId, Principal("external-1", WombatRoles.CommitteeMember, OtherInstitution)),
@@ -248,7 +249,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, cbd, "trainee-1", "assessor-b", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), HostInstitution);
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(
             new GetSamplingConcentrationWarningsQuery(
                 reviewId, Principal("member-1", WombatRoles.CommitteeMember, HostInstitution)),
@@ -280,7 +281,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, cbd, "trainee-1", "assessor-c", 7, new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc), OtherInstitution);
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(
             new GetSamplingConcentrationWarningsQuery(
                 reviewId, Principal("member-1", WombatRoles.CommitteeMember, HostInstitution)),
@@ -384,7 +385,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, cbdCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 10, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(3, "every CPSA tool is rated evidence");
@@ -410,7 +411,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, custom, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(2, "a declared rating counts even under an unfamiliar key");
@@ -432,7 +433,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, second, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7)
@@ -455,7 +456,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, dopsCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
@@ -480,7 +481,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, builderMade, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         var warning = report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Subject;
@@ -505,7 +506,7 @@ public sealed class SamplingConcentrationWarningsTests
         AddActivity(dbContext, dopsCpsa, subject: "trainee-1", assessor: "assessor-b", epaId: 7, createdOn: new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
         await dbContext.SaveChangesAsync();
 
-        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext);
+        var handler = new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var report = await handler.Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
 
         report.TotalRatedActivities.Should().Be(2, "both schemas declare a rating");

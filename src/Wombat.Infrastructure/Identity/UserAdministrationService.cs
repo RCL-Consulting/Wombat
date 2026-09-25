@@ -215,10 +215,26 @@ public sealed class UserAdministrationService : IUserAdministrationService
             _dbContext.UserLogins.RemoveRange(logins);
         }
 
-        user.InstitutionId = institutionId;
-
         var desiredSpecialityIds = specialityIds.Distinct().OrderBy(id => id).ToArray();
         var desiredSubSpecialityIds = subSpecialityIds.Distinct().OrderBy(id => id).ToArray();
+
+        // The institution and the scopes are claims every sign-in carries (WombatUserClaimsPrincipalFactory), and gates
+        // read them from the claims. So a change to them changes the security stamp, in this one save, as a change of roles
+        // does: every session already signed in to the account is signed out within SessionRevalidation.Interval, rather
+        // than working on at the old institution for as long as its cookie or circuit lives (T279). A save that changes
+        // neither leaves the stamp, and so the account's sessions, alone.
+        var scopeChanged = user.InstitutionId != institutionId ||
+                           !user.SpecialityScopes.Select(scope => scope.SpecialityId).Distinct().Order()
+                               .SequenceEqual(desiredSpecialityIds) ||
+                           !user.SubSpecialityScopes.Select(scope => scope.SubSpecialityId).Distinct().Order()
+                               .SequenceEqual(desiredSubSpecialityIds);
+        if (scopeChanged)
+        {
+            user.SecurityStamp = Guid.NewGuid().ToString();
+            user.ConcurrencyStamp = Guid.NewGuid().ToString();
+        }
+
+        user.InstitutionId = institutionId;
 
         SyncScopes(
             user.SpecialityScopes,

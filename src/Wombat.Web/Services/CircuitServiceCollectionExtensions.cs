@@ -1,3 +1,5 @@
+using Wombat.Web.Security;
+
 namespace Wombat.Web.Services;
 
 /// <summary>
@@ -19,6 +21,9 @@ public static class CircuitServiceCollectionExtensions
 
         // /activities/new hands /activities/{id} what became of the activity it just created (T127).
         services.AddScoped<ActivityNotices>();
+
+        // A circuit whose sign-in has ended leaves by a full page load, once (the T279 review).
+        services.AddScoped<EndedSessionExit>();
 
         return services;
     }

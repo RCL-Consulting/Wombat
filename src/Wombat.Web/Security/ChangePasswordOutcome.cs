@@ -73,7 +73,8 @@ public static class ChangePasswordOutcome
     /// <summary>
     /// What the sign-in page says for <see cref="SignInOutcome.SessionEnded" />: a session that had already ended when it
     /// asked for a change. Its cookie carried a security stamp the account no longer has (a lock, a change made in another
-    /// browser, a change of roles). No change is made, and the cookie is taken away rather than issued again.
+    /// browser, a change of roles). No change is made, and the cookie is taken away rather than issued again. The same
+    /// words follow a tab whose circuit found its sign-in ended (<see cref="SessionEnd" />, the T279 review).
     /// </summary>
     public const string SessionEndedMessage = "Your session has ended. Please sign in again.";
 

@@ -68,6 +68,9 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>();
+
+            // Whether a trainee is current is asked of the user store (T284), and the review read ladder asks who may sit
+            // on a panel of whoever holds a seat on it (T279).
             services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
             await using var root = services.BuildServiceProvider();

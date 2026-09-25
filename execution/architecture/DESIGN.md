@@ -1326,13 +1326,18 @@ issued, since ratifying issues every staged decision.
 **The chair's controls** (T213). The review page offers each control to exactly the people its handler lets use it,
 in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller may do:
 `CallerChairs`, `CallerResolvesAppeals` and `CallerMayStart`, computed by the predicates the handlers demand
-(`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnPanel`), and `TraineeElsewhere`, the trainee check
-every chair's action and Start also demand (`CommitteeTraineeScope`). Start is offered on a scheduled review to a member
-of its panel, a coordinator of the panel's institution or an Administrator (T194); an institutional, speciality or
-sub-speciality administrator who reads the review without a seat (T218) is not offered it, and `#chair-actions-note`
-reads "Only the panel's members, and the coordinators of its institution, can start this review." None of the three
+(`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnReview`), and `TraineeElsewhere`, the trainee check
+every chair's action and Start also demand (`CommitteeTraineeScope`). Start is offered on a scheduled review, and only
+then, to a member of its panel who may sit on it now (`PanelSeat.SittingAt`, T279: an active committee member at the
+panel's institution who is not a trainee, and never the trainee under review), a coordinator of the panel's institution
+or an Administrator (T194); an institutional, speciality or sub-speciality administrator who reads the review without a
+seat (T218), or through their role while their seat no longer counts, is not offered it, and `#chair-actions-note` reads
+"Only the coordinators of the panel's institution, and those of its members who are active committee members there, can
+start this review." A member who may no longer sit (lost the CommitteeMember role, moved institution, deactivated, given
+Trainee) reads the review through their seat no more than they start it (T279): the page, its sibling reads and the
+committee reviews list refuse or leave it out, with the one refusal. None of the three
 flags is ever true for someone who holds Trainee, whatever seat or role they hold beside it (T185's rung, asked by
-`WorksOnPanel` and by the seat predicates since the T194 review): a trainee seated on the panel that reviews them before
+`WorksOnReview` and by the seat predicates since the T194 review): a trainee seated on the panel that reviews them before
 they held Trainee reads their own review once it is ratified, and is offered neither the chair's controls nor the
 resolve form on it. Since T237 no one who holds Trainee is seated at all (see **The panel form**). The chair alone is
 offered the decision form and Record decision (while the review is in progress), Ratify and its reason (once decided),
@@ -1378,15 +1383,20 @@ look into it (D46).
 before it looks at anything else, and gives an id that names nothing the same sentence as one out of the caller's reach,
 before any state check. Each gate has one sentence, which the page prints as it is (`RefusalText.Of`): "The committee
 review could not be found among the reviews you can view." (the review page and its sibling reads, a trainee's own review
-before ratification included), "…you can start.", "…you chair." (every chair's action), "…whose appeals you resolve.",
+before ratification included, and since T279 a member whose seat no longer counts), "…you can start." (the same
+member, T279), "…you chair." (every chair's action), "…whose appeals you resolve.",
 and "…among your own ratified reviews." (lodging an appeal). A panel id gets its own gate's sentence ("You can only
 manage panels in your institution.", or the scheduling refusal). Only who may act at all is said before the lookup,
 because it says nothing about the id: "Only trainees can lodge appeals.", "You are not allowed to manage committee
 panels.", "You hold the Trainee role, so you cannot create or change a decision panel, including one that reviews you."
 (T256, to someone who holds Trainee beside a role that manages panels), "Only an institutional administrator can say
 which College committee a panel sits as.", or T216's scheduling refusals. The seat refusals come after the one refusal,
-and only to the seat's holder, who can read the review: "You sit on this panel's appeal body but cannot resolve its
-appeals now: …" (T237) and "You chair this panel but cannot take the chair's actions now: …" (T256).
+and only to the seat's holder who can read the review: "You sit on this panel's appeal body but cannot resolve its
+appeals now: …" (T237) and "You chair this panel but cannot take the chair's actions now: …" (T256). Since T279 a seat
+whose holder may not sit no longer lets them read the review, so such a holder who reads it through no other role (a
+coordinator of the panel's institution, say) is given the one refusal: the seat's sentence would tell them that the id
+names a review of their panel. The review page's `#chair-cannot-act-note` is said to the chair only where they can read
+it.
 
 **The trainee's own reviews** (`/committee/my-reviews`). The list's Period column names the period the review sat for,
 then its evidence window in a `.muted` span, as the schedule does: "2026 S2 · 2026-01-01 to 2026-12-31" (T212). The
@@ -1879,6 +1889,25 @@ an endpoint's policy. So everything on an `[AllowAnonymous]` page must work as p
 minimal-API endpoint (as sign-in, register and forgot-password do), and `wombat.js` for any behaviour. `@onclick`,
 `@bind`, `OnAfterRenderAsync` and JS interop do nothing there.
 
+**A circuit whose account has changed is signed out within a minute** (T279). The circuit's sign-in is checked every
+`SessionRevalidation.Interval` (`SessionRevalidatingAuthenticationStateProvider`); after a lock, an erasure, or a change
+of roles, institution or scope, the circuit becomes anonymous and **the tab leaves it by a full page load** of
+`/account/session-ended` (`SessionEnd`), never by navigation inside it (the T279 review). Two components send it, once
+between them (`EndedSessionExit`, scoped to the circuit): `LeaveEndedSession`, rendered in `Routes.razor` outside the
+router, the moment the sign-in ends on any page, and `RedirectToLogin` when it is rendered interactively; rendered
+statically, `RedirectToLogin` still redirects to the sign-in page. The endpoint asks the account itself, whatever the
+cookie's age: a session it no longer accepts, or cannot check, is signed out and sent to
+`/account/login?error=SessionEnded&returnUrl=…`, which loads signed out, static, with a form and an antiforgery token of
+its own, and says "Your session has ended. Please sign in again." in its danger `Alert`, named by both fields as every
+sign-in refusal is. Signing in comes back to the page the tab was on. A session the account still accepts (signed in
+again in another tab) goes straight back there. Until the review the sign-in page rendered inside the old circuit, and
+its form posted the antiforgery token the circuit was given on its first page, naming the old user; the cookie was
+refused at the post, so antiforgery refused the token and the endpoint answered a bare 400. A form inside a circuit
+cannot outlive the sign-in it was rendered for, so a page must never keep a circuit going once it is anonymous.
+
+A fault in the minute's check (the database restarting) is logged and asked again at the next interval; only the third
+in a row signs the circuit out, so a restart does not send every open tab to the sign-in page at once.
+
 The same page is **interactive for a signed-in visitor** unless it carries `[ExcludeFromInteractiveRouting]`. So a page
 that posts back to itself (`@formname` + `[SupplyParameterFromForm]`) runs two ways. Signed out, the submit is an HTTP
 post that the pipeline sees. Signed in, it is an `@onsubmit` event in the circuit: there is no post, so
@@ -1903,8 +1932,8 @@ redirect back carries `?status=updated`, or a code for each refusal (`?error=Pas
 The page chooses the words (`ChangePasswordOutcome`), so a crafted link cannot put its own text in the page's alert.
 
 An endpoint that issues the cookie again checks the session first (T265 review). The stamp validator looks at a cookie
-once in thirty minutes, so until then a session that has already ended (an administrator's lock, a password changed in
-another browser, a change of roles) still reaches the endpoint. `SignInManager.ValidateSecurityStampAsync` refuses it,
+once a minute (`SessionRevalidation`, T279; thirty minutes before it), so until then a session that has already ended
+(an administrator's lock, a password changed in another browser, a change of roles) still reaches the endpoint. `SignInManager.ValidateSecurityStampAsync` refuses it,
 and the endpoint signs it out rather than hand it the new stamp, which would keep it alive past the lock. A password
 such an endpoint checks is checked as the sign-in page checks one: `CheckPasswordSignInAsync` with
 `lockoutOnFailure: true`, under the sign-in throttle (`LoginRateLimitPolicy`), whose refusal goes back to the form the

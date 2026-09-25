@@ -39,7 +39,11 @@ public static class SignInOutcome
     /// <summary>Identity's lockout refused the account.</summary>
     public const string LockedOut = "LockedOut";
 
-    /// <summary>A change of password was asked for by a session that had already ended (T265 review).</summary>
+    /// <summary>
+    /// The session had ended: a change of password was asked for by a session that already had (T265 review), or a tab's
+    /// circuit found its sign-in ended and the browser's session was signed out (<see cref="SessionEnd" />, the T279
+    /// review).
+    /// </summary>
     public const string SessionEnded = "SessionEnded";
 
     /// <summary>The password was changed, but the sign-in cookie could not be issued again (T265).</summary>

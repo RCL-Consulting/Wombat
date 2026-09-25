@@ -8,6 +8,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -354,7 +355,7 @@ public sealed class MsfCampaignsOutsideSnapshotTests
         await using var db = CreateDbContext();
         await SeedReviewAsync(db);
 
-        var act = () => new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+        var act = () => new CountMsfCampaignsOutsideSnapshotQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new CountMsfCampaignsOutsideSnapshotQuery(999, Chair),
             CancellationToken.None);
 
@@ -366,12 +367,12 @@ public sealed class MsfCampaignsOutsideSnapshotTests
     private static ClaimsPrincipal Chair => Principal("chair-1", [WombatRoles.CommitteeMember], HostInstitution);
 
     private static Task<MsfCampaignsOutsideSnapshotDto> CountAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+        => new CountMsfCampaignsOutsideSnapshotQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, principal),
             CancellationToken.None);
 
     private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext db, int reviewId = ReviewId)
-        => new StartCommitteeReviewCommandHandler(db).Handle(
+        => new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new StartCommitteeReviewCommand(reviewId, Chair),
             CancellationToken.None);
 

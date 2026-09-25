@@ -133,8 +133,8 @@
       <FormActions>
         @* T213 review: Start demands, as every chair's action does, that the trainee still trains at the panel's institution
            (TraineeElsewhere); when that fails for this reader it is not offered, and #trainee-elsewhere-note says why.
-           T194: it is offered only to someone its handler lets start the review (CallerMayStart): a member of the panel,
-           a coordinator of its institution, or an Administrator. An institutional administrator who reads the review
+           T194: it is offered only to someone its handler lets start the review (CallerMayStart): a member of the panel
+           who may sit on it now (T279), a coordinator of its institution, or an Administrator. An institutional administrator who reads the review
            without a seat is not; #chair-actions-note says who can. *@
         @if (_review.State == CommitteeReviewState.Scheduled && _review.CallerMayStart && _review.TraineeElsewhere is null)
         {
@@ -923,8 +923,10 @@
 
       if (_review is { State: CommitteeReviewState.Scheduled, CallerMayStart: false })
       {
-        // T194: Start is not the chair's alone, but it is not every reader's either.
-        return "Only the panel's members, and the coordinators of its institution, can start this review.";
+        // T194: Start is not the chair's alone, but it is not every reader's either. A member counts only while they may
+        // sit on the panel (T279), so a member who reads the review some other way is not told that they can.
+        return "Only the coordinators of the panel's institution, and those of its members who are active committee " +
+               "members there, can start this review.";
       }
 
       if (_review.ChairCannotAct is not null)

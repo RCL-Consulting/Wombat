@@ -10,6 +10,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -1366,7 +1367,7 @@ public sealed class SamplingEvidenceStateAndAttributionTests
         """;
 
     private static async Task<SamplingConcentrationReportDto> ReportAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => await new GetSamplingConcentrationWarningsQueryHandler(db)
+        => await new GetSamplingConcentrationWarningsQueryHandler(db, FakeUserDirectory.PanelMembersOf(db))
             .Handle(new GetSamplingConcentrationWarningsQuery(ReviewId, principal), CancellationToken.None);
 
     private static ClaimsPrincipal Administrator() => Principal("admin-1", WombatRoles.Administrator);

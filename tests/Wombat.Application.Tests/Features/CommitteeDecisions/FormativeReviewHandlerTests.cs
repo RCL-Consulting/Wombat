@@ -167,7 +167,7 @@ public sealed class FormativeReviewHandlerTests
         dbContext.CommitteeReviews.Add(review);
         await dbContext.SaveChangesAsync();
 
-        var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
+        var startHandler = new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         await startHandler.Handle(new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
         return review.Id;

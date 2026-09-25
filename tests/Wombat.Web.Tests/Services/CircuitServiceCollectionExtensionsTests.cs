@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Web.Security;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Services;
@@ -11,14 +12,16 @@ namespace Wombat.Web.Tests.Services;
 /// <remarks>
 /// A wrong lifetime fails quietly. Transient, and <see cref="ActivityNotices" /> hands <c>/activities/{id}</c> a
 /// different instance from the one <c>/activities/new</c> posted to, so a refused submit lands on its draft without the
-/// word that it was saved (T127). Singleton, and one user's notice can be taken by another user's circuit. Every bUnit
-/// test registers the service itself, so none of them would notice either.
+/// word that it was saved (T127). Singleton, and one user's notice can be taken by another user's circuit, and the first
+/// circuit whose sign-in ended would leave for every other: <see cref="EndedSessionExit" /> leaves once (the T279 review).
+/// Every bUnit test registers the service itself, so none of them would notice either.
 /// </remarks>
 public sealed class CircuitServiceCollectionExtensionsTests
 {
     [Theory]
     [InlineData(typeof(ActivityNotices))]
     [InlineData(typeof(IScopedSender))]
+    [InlineData(typeof(EndedSessionExit))]
     public void TheService_IsRegisteredOnce_AndScoped(Type serviceType)
     {
         var services = new ServiceCollection().AddWombatCircuitServices();

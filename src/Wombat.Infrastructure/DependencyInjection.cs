@@ -83,6 +83,10 @@ public static class DependencyInjection
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
         });
 
+        // The cookie's security stamp is checked against the account within a minute, not Identity's thirty, so a lock, an
+        // erasure or a change of roles or scope ends the sessions already signed in within a minute (T279).
+        services.Configure<SecurityStampValidatorOptions>(SessionRevalidation.Configure);
+
         // The external cookie holds an institutional sign-in between the provider's callback and the account it signs in
         // or is linked to (T156). See ExternalSignInCookie.
         services.Configure<CookieAuthenticationOptions>(IdentityConstants.ExternalScheme, ExternalSignInCookie.Configure);

@@ -43,7 +43,7 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // administrator's rung also reads where the trainee trains (T218).
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         // T142. The trainee by name, looked up only once the caller has passed the review ladder above. T165 adds the
         // panel's members and those recorded as present at each decision, in the same one lookup.
@@ -66,7 +66,8 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // Who may sit on the panel now (PanelSeat), read once and only where the page uses it: the present list while the
         // review can still take a decision, the appeal body's note under appeal, whether a caller seated on the appeal
         // body may act from the seat, which resolving demands (T237), and whether the panel's chair may take the chair's
-        // actions, which each of them demands (T256), in every state one of them is open or about to be.
+        // actions, which each of them demands (T256), in every state one of them is open or about to be; and whether a
+        // member may start it, in the one state Start takes (T279).
         var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel);
         var eligible = MayStillDecide(review) || review.State == CommitteeReviewState.UnderAppeal || holdsAppealSeat || actionOpen
             ? await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken)
@@ -92,7 +93,10 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             ChairCannotAct = actionOpen && eligible is not null
                 ? ChairCannotActOf(review, request.Principal, eligible, names)
                 : null,
-            CallerMayStart = CommitteeDecisionAuthorization.WorksOnPanel(request.Principal, review.Panel),
+            // Start's own predicate, and only in the one state it takes: a member of the panel only while they may sit (T279).
+            CallerMayStart = review.State == CommitteeReviewState.Scheduled &&
+                             eligible is not null &&
+                             CommitteeDecisionAuthorization.WorksOnReview(request.Principal, review, eligible),
             // The seat, and acting from it now: the two checks the resolve handler demands, in its order (T237).
             CallerResolvesAppeals = holdsAppealSeat &&
                                     eligible is not null &&

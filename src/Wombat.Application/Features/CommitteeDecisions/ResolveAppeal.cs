@@ -94,9 +94,11 @@ public sealed class ResolveAppealCommandHandler : IRequestHandler<ResolveAppealC
         // T237: and acts from that seat only while they may sit at the review now (PanelSeat), the rule the page's
         // appeal-body note names people by, so the note and this gate agree on who can resolve the appeal. The seat check
         // above reads claims, which cannot say whether the caller is still an active committee member at the panel's
-        // institution, nor rule out the trainee under review once they no longer hold Trainee.
+        // institution, nor rule out the trainee under review once they no longer hold Trainee. The seat's own refusal only
+        // to one who may still read the review; anyone else is given the one refusal (T279).
         var eligible = await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken);
-        PanelSeat.DemandSitsOnAppealBody(review, resolverUserId, eligible);
+        await CommitteeDecisionAuthorization.DemandResolvesFromSeatAsync(
+            _dbContext, request.Principal, review, eligible, cancellationToken);
 
         // T165: a remitted appeal replaces the committee's decision, so the replacement is held to what any committee
         // decision is: a quorum of the panel present, each of whom may sit now and none the trainee. Checked here and in

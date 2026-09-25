@@ -123,13 +123,13 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                await new StartCommitteeReviewCommandHandler(db).Handle(
+                await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new StartCommitteeReviewCommand(reviewId, Chair()), CancellationToken.None);
             }
 
             await using (var db = NewContext(schema))
             {
-                var review = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                var review = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new GetCommitteeReviewByIdQuery(reviewId, Chair()), CancellationToken.None);
 
                 var line = review.EvidenceItems.Should().ContainSingle(item => item.ActivityId == activityId).Subject;
@@ -156,7 +156,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 agenda.Lines.Where(agendaLine => !agendaLine.IsClosing)
                     .Should().OnlyContain(agendaLine => agendaLine.Status == CommitteeAgendaLineStatus.DueByYearEnd);
 
-                var options = await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+                var options = await new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                     new ListStarEpaOptionsForReviewQuery(reviewId, Chair()), CancellationToken.None);
                 options.Should().HaveCount(15, "the v11.1 curriculum's national core");
                 options.Should().OnlyContain(option => option.ScaleId == ladderId, "every v11.1 item is pinned to the v11.1 ladder");

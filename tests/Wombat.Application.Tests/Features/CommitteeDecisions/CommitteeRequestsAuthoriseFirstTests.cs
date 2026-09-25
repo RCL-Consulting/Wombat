@@ -204,7 +204,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
             _ => Member(who, InstitutionA)
         };
 
-        var detail = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var detail = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
             new GetCommitteeReviewByIdQuery(reviewId, caller), CancellationToken.None);
         await RunAsync(db, "Start", reviewId, caller);
 
@@ -309,23 +309,29 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     }
 
     [Fact]
-    public async Task AnInstitutionalAdminSeatedOnAnotherInstitutionsPanel_ReadsTheReviewStartAdmitsThemTo()
+    public async Task AMemberOfAsPanelWhoMovedToB_AndAdministersItThere_NeitherStartsNorReadsTheReview()
     {
-        // A member of A's panel who moved to B and administers it there. Start admits them as a member (WorksOnPanel);
-        // until the T194 review the read ladder's InstitutionalAdmin arm asked only their own institution, and refused
-        // them the review they had just started.
+        // A member of A's panel who moved to B and administers it there. Until T279 Start admitted them on the seat alone
+        // (the T194 review then let the read ladder admit them too, so as not to refuse the review they had just started).
+        // A seat now counts only while its holder may sit on the panel, at the panel's institution (PanelSeat.SittingAt):
+        // they start nothing and read nothing, and the one refusal says nothing about the id.
         await using var db = await SeededDbAsync();
         var reviewId = await SeedReviewAsync(db, CommitteeReviewState.Scheduled);
+        var before = await SnapshotAsync();
         var moved = TestPrincipals.InstitutionalAdmin(InstitutionB, "member-a");
+        var users = FakeUserDirectory.CommitteeMembersAt(InstitutionA, "chair-a", "external-a")
+            .WithCommitteeMembers(InstitutionB, "member-a");
 
-        var detail = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
-            new GetCommitteeReviewByIdQuery(reviewId, moved), CancellationToken.None);
-        await RunAsync(db, "Start", reviewId, moved);
-        var started = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
-            new GetCommitteeReviewByIdQuery(reviewId, moved), CancellationToken.None);
+        var read = await RefusalAsync(() => new GetCommitteeReviewByIdQueryHandler(db, users).Handle(
+            new GetCommitteeReviewByIdQuery(reviewId, moved), CancellationToken.None));
+        var start = await RefusalAsync(() => new StartCommitteeReviewCommandHandler(db, users).Handle(
+            new StartCommitteeReviewCommand(reviewId, moved), CancellationToken.None));
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
 
-        detail.CallerMayStart.Should().BeTrue();
-        started.State.Should().Be(CommitteeReviewState.InProgress);
+        read.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(OneRefusal("GetById"));
+        start.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(OneRefusal("Start"));
+        (await SnapshotAsync()).Should().BeEquivalentTo(before);
+        (await ReviewStateAsync(reviewId)).Should().Be(CommitteeReviewState.Scheduled);
     }
 
     /// <summary>The same sign-in with the Trainee role beside its own.</summary>
@@ -398,7 +404,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
         var users = FakeUserDirectory.CommitteeMembersAt(InstitutionA, "chair-a", "member-a", "external-a");
         _ = request switch
         {
-            "Start" => await new StartCommitteeReviewCommandHandler(db).Handle(
+            "Start" => await new StartCommitteeReviewCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new StartCommitteeReviewCommand(reviewId, principal), CancellationToken.None),
             "Record" => await new RecordCommitteeDecisionCommandHandler(db, users).Handle(
                 new RecordCommitteeDecisionCommand(
@@ -424,17 +430,17 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
                 new DeferAgendaLineCommand(reviewId, 1, "Not yet observed.", principal), CancellationToken.None),
             "Reinstate" => await new ReinstateAgendaLineCommandHandler(db, users).Handle(
                 new ReinstateAgendaLineCommand(reviewId, 1, principal), CancellationToken.None),
-            "GetById" => await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+            "GetById" => await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetCommitteeReviewByIdQuery(reviewId, principal), CancellationToken.None),
-            "Agenda" => await new GetCommitteeAgendaQueryHandler(db).Handle(
+            "Agenda" => await new GetCommitteeAgendaQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetCommitteeAgendaQuery(reviewId, principal), CancellationToken.None),
-            "MsfOutsideSnapshot" => await new CountMsfCampaignsOutsideSnapshotQueryHandler(db).Handle(
+            "MsfOutsideSnapshot" => await new CountMsfCampaignsOutsideSnapshotQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new CountMsfCampaignsOutsideSnapshotQuery(reviewId, principal), CancellationToken.None),
-            "Sampling" => await new GetSamplingConcentrationWarningsQueryHandler(db).Handle(
+            "Sampling" => await new GetSamplingConcentrationWarningsQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetSamplingConcentrationWarningsQuery(reviewId, principal), CancellationToken.None),
-            "PendingDecisions" => await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(
+            "PendingDecisions" => await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new ListPendingEntrustmentDecisionsForReviewQuery(reviewId, principal), CancellationToken.None),
-            "StarEpaOptions" => (object)await new ListStarEpaOptionsForReviewQueryHandler(db).Handle(
+            "StarEpaOptions" => (object)await new ListStarEpaOptionsForReviewQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new ListStarEpaOptionsForReviewQuery(reviewId, principal), CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(request), request, null)
         };

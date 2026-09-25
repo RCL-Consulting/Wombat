@@ -36,10 +36,12 @@ public sealed class ListPendingEntrustmentDecisionsForReviewQueryHandler
     : IRequestHandler<ListPendingEntrustmentDecisionsForReviewQuery, IReadOnlyList<PendingEntrustmentDecisionDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListPendingEntrustmentDecisionsForReviewQueryHandler(IApplicationDbContext dbContext)
+    public ListPendingEntrustmentDecisionsForReviewQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<IReadOnlyList<PendingEntrustmentDecisionDto>> Handle(ListPendingEntrustmentDecisionsForReviewQuery request, CancellationToken cancellationToken)
@@ -52,7 +54,7 @@ public sealed class ListPendingEntrustmentDecisionsForReviewQueryHandler
 
         // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
-            _dbContext, request.Principal, review, cancellationToken);
+            _dbContext, _users, request.Principal, review, cancellationToken);
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .AsNoTracking()

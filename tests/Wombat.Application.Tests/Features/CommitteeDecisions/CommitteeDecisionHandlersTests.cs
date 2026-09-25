@@ -22,7 +22,7 @@ public sealed class CommitteeDecisionHandlersTests
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewAsync(dbContext);
 
-        var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
+        var startHandler = new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         var started = await startHandler.Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
@@ -37,7 +37,7 @@ public sealed class CommitteeDecisionHandlersTests
         activity.UpdatedOn = DateTime.UtcNow.AddDays(1);
         await dbContext.SaveChangesAsync();
 
-        var refreshed = await new GetCommitteeReviewByIdQueryHandler(dbContext, FakeUserDirectory.Empty).Handle(
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new GetCommitteeReviewByIdQuery(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
@@ -183,7 +183,7 @@ public sealed class CommitteeDecisionHandlersTests
         dbContext.MsfCampaigns.Add(CreateCampaignClosingInWindow(51, state));
         await dbContext.SaveChangesAsync();
 
-        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+        var started = await new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
@@ -204,7 +204,7 @@ public sealed class CommitteeDecisionHandlersTests
         dbContext.MsfCampaigns.Add(CreateCampaignClosingInWindow(51, MsfCampaignState.Released));
         await dbContext.SaveChangesAsync();
 
-        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+        var started = await new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
@@ -262,7 +262,7 @@ public sealed class CommitteeDecisionHandlersTests
         });
         await dbContext.SaveChangesAsync();
 
-        var started = await new StartCommitteeReviewCommandHandler(dbContext).Handle(
+        var started = await new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 
@@ -277,7 +277,7 @@ public sealed class CommitteeDecisionHandlersTests
         await using var dbContext = CreateDbContext();
         var review = await SeedReviewAsync(dbContext);
 
-        var startHandler = new StartCommitteeReviewCommandHandler(dbContext);
+        var startHandler = new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));
         await startHandler.Handle(new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])), CancellationToken.None);
 
         var committee = FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1", "external-1");
@@ -337,7 +337,7 @@ public sealed class CommitteeDecisionHandlersTests
     }
 
     private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext dbContext, CommitteeReview review)
-        => new StartCommitteeReviewCommandHandler(dbContext).Handle(
+        => new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 

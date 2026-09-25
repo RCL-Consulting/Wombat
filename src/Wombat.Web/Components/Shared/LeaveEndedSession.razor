@@ -1,0 +1,45 @@
+@using Wombat.Web.Security
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject EndedSessionExit EndedSession
+
+@* Renders nothing. In a circuit, the moment its sign-in ends (SessionRevalidatingAuthenticationStateProvider), the tab
+   leaves it by a full page load through SessionEnd, whatever page it is on (EndedSessionExit, the T279 review). On a page
+   the circuit may no longer see, RedirectToLogin asks the same; on one open to anyone (the sign-in page itself, the
+   not-found page) only this does, so no tab is left in an anonymous circuit, with a form carrying the old user's
+   antiforgery token. Rendered statically it does nothing: a request has no circuit to leave. *@
+
+@code {
+  private bool _listening;
+
+  protected override void OnInitialized()
+  {
+    if (!RendererInfo.IsInteractive)
+    {
+      return;
+    }
+
+    AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    _listening = true;
+  }
+
+  private void OnAuthenticationStateChanged(Task<AuthenticationState> state) => _ = LeaveIfSignedOutAsync(state);
+
+  private async Task LeaveIfSignedOutAsync(Task<AuthenticationState> state)
+  {
+    // "Signed in" as App.razor and the hub's fallback policy judge it: any identity authenticated.
+    var user = (await state).User;
+    if (!user.Identities.Any(identity => identity.IsAuthenticated))
+    {
+      await InvokeAsync(EndedSession.Leave);
+    }
+  }
+
+  public void Dispose()
+  {
+    if (_listening)
+    {
+      AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+  }
+}

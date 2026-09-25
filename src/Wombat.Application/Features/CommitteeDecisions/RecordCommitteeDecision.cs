@@ -86,7 +86,7 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
         // actions that take a decision (D46). And a chair who may sit at the review now (T256), read from the user store
         // once, for the attendance below too.
         (review, var eligible) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
-            request.Principal, review, _users, cancellationToken);
+            _dbContext, request.Principal, review, _users, cancellationToken);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         // Every check, the domain's own included, runs before RecordDecision changes anything: the audit pipeline saves

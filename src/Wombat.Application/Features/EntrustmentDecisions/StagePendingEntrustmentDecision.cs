@@ -101,7 +101,7 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
         // 1-2. Authorise first: an unknown review and one the caller does not chair get the one refusal, before anything
         // about the review, its state included, is said (T194 item 1). And a chair who may sit at the review now (T256).
         (review, _) = await CommitteeDecisionAuthorization.DemandChairedReviewAsync(
-            request.Principal, review, _users, cancellationToken);
+            _dbContext, request.Principal, review, _users, cancellationToken);
 
         // 3. The trainee still trains at the panel's institution (T182).
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);

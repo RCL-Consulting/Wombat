@@ -13,6 +13,7 @@ using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Web.Components;
 using Wombat.Web.Security;
+using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Hosting;
 
@@ -89,6 +90,10 @@ internal sealed class AppTestHost : IAsyncDisposable
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
         builder.Services.AddCascadingAuthenticationState();
         builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
+        // The circuit's own services, as Program.cs registers them: Routes.razor renders LeaveEndedSession, which injects
+        // EndedSessionExit, on every page (the T279 review).
+        builder.Services.AddWombatCircuitServices();
 
         // The real policies, fallback included: every endpoint requires a signed-in user unless it opts out. The cookie
         // scheme stands in for Identity's (AddInfrastructure needs a database) and challenges the way it does, with a

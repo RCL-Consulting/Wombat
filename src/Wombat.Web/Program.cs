@@ -75,7 +75,10 @@ if (ssoOptions?.Providers is { Count: > 0 } providers)
 }
 
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
+// A circuit's sign-in is checked against the account every minute, as the cookie's is between requests, so a lock, an
+// erasure or a change of roles reaches a tab already open (T279). See SessionRevalidation.
+builder.Services.AddScoped<AuthenticationStateProvider, SessionRevalidatingAuthenticationStateProvider>();
 builder.Services.AddWombatCircuitServices();
 builder.Services.AddHttpContextAccessor();
 
@@ -464,9 +467,9 @@ app.MapPost("/account/link-external/submit", async (
 // the circuit had changed the password, would do it for any cookie still inside the stamp validator's interval, a stolen
 // one included, and hand it the new stamp: the change would not end the session it was made to end.
 //
-// For the same reason the session itself is checked first. The stamp validator looks at a cookie once in thirty minutes,
-// so between its checks a session that has already ended (an administrator's lock, a change made in another browser, a
-// change of roles) still reaches this endpoint. Such a session is signed out, not issued a cookie carrying the new stamp,
+// For the same reason the session itself is checked first. The stamp validator looks at a cookie once a minute
+// (SessionRevalidation, T279), so between its checks a session that has already ended (an administrator's lock, a change
+// made in another browser, a change of roles) still reaches this endpoint. Such a session is signed out, not issued a cookie carrying the new stamp,
 // which would have kept it alive past the lock for as long as it was used (T265 review).
 //
 // The current password is checked as the sign-in page checks it: with Identity's lockout, and under the sign-in throttle.
@@ -584,6 +587,17 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
 // answered 405 with an empty page (T265 review).
 app.MapGet(ChangePasswordOutcome.SubmitPath, () => Results.LocalRedirect(ChangePasswordOutcome.PagePath))
     .RequireAuthorization();
+
+// Where a tab goes, by a full page load, once its circuit's sign-in has ended (SessionEnd, the T279 review): a session the
+// account no longer accepts is signed out here, whatever the cookie's age, and sent to the sign-in page, which loads
+// signed out and says the session has ended; a session the account still accepts goes back to the page it was on. Open to
+// anyone, because by now the browser's cookie may already have been refused.
+app.MapGet(SessionEnd.Path, (
+    HttpContext httpContext,
+    SignInManager<WombatIdentityUser> signInManager,
+    ILoggerFactory loggerFactory,
+    [FromQuery] string? returnUrl) => SessionEnd.HandleAsync(httpContext, signInManager, loggerFactory, returnUrl))
+.AllowAnonymous();
 
 app.MapPost("/account/logout", async (
     SignInManager<WombatIdentityUser> signInManager,

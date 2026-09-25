@@ -57,7 +57,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
     [Fact]
     public async Task ChangingAPassword_IssuesTheSignInCookieAgain_SoTheUserStaysSignedIn_AndTheOldCookieIsRefused()
     {
-        // The security stamp checked on every request, not once in thirty minutes (Identity's default), so a stale
+        // The security stamp checked on every request, not once a minute (SessionRevalidation, T279), so a stale
         // cookie is refused at once rather than at the next check.
         await using var app = _host.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero)));
@@ -209,7 +209,8 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
     [Fact]
     public async Task ASessionEndedByLockingTheAccount_CannotChangeThePassword_AndStaysEnded()
     {
-        // Identity's own interval: the stamp is checked once in thirty minutes, on a clock the test moves.
+        // The app's own interval: the stamp is checked once a minute (SessionRevalidation, T279), on a clock the test
+        // moves.
         var clock = new MovableClock();
         await using var app = _host.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             services.Configure<SecurityStampValidatorOptions>(options => options.TimeProvider = clock)));
@@ -238,7 +239,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             // Past the check, neither the cookie the browser now holds nor the one from before signs anyone in. Until the
             // T265 review the change went through, the cookie was issued again with the new stamp, and the session outlived
             // the lock, sliding on for as long as it was used.
-            clock.MoveForward(TimeSpan.FromMinutes(31));
+            clock.MoveForward(SessionRevalidation.Interval + TimeSpan.FromSeconds(5));
             (await SignedInAsync(browser)).Should().BeFalse("a locked account's session ends at the next check, change or no change");
             (await SignedInAsync(app, cookieBefore)).Should().BeFalse();
 
@@ -274,7 +275,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             var stamp = await StampAsync(email);
 
-            // Inside the validator's thirty minutes the second browser still loads the page. It knows the new password, as
+            // Inside the validator's minute the second browser still loads the page. It knows the new password, as
             // anyone who watched it typed would; its change would hand its ended session the new stamp.
             using var submit = await PostTheFormAsync(second, NewPassword, "Another-Pa55word!", "Another-Pa55word!");
 
