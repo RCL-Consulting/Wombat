@@ -61,6 +61,8 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         var cut = RenderPage(Completion(creditedItemCount: 0));
 
         cut.Markup.Should().Contain("alert-warning");
+        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse(
+            "it is standing page content, there on every visit, not news to announce (T193)");
         cut.Markup.Should().Contain("counted towards no curriculum requirement");
         cut.Markup.Should().Contain("or was not in use at the time",
             "a completion against a deactivated EPA credits nothing too (T158), and the warning is how it is explained");
@@ -100,6 +102,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         var cut = RenderPage(Completion(creditedItemCount: 1, creditScaleMismatchCount: 1));
 
         cut.Markup.Should().Contain("alert-warning");
+        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse("standing page content (T193)");
         cut.Markup.Should().Contain("different entrustment scale");
         cut.Markup.Should().NotContain("counted towards no curriculum requirement",
             "volume did count — this is a different failure from T108's");

@@ -303,8 +303,19 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 
 - Every form is inside a `.form-container`. Every form's submit/cancel cluster is a `.form-actions` row at the bottom.
 - `<FormField>` wraps a `<label for="…">` + input slot + `.validation-message` target. Its help text carries the id
-  `FormField.HelpTextId(InputId)` (`{InputId}-help`); the input in the slot is the caller's, so the caller names it
-  with `aria-describedby` (T205, the MSF comment boxes).
+  `FieldHelp.Id(InputId)` (`{InputId}-help`). The input in the slot is the caller's markup, which a component cannot
+  change, so **a caller that gives a field `HelpText` names it on the input**:
+  `aria-describedby="@FieldHelp.DescribedBy("x", helpText)"`, or `@FieldHelp.Id("x")` when the help is constant.
+  `DescribedBy` lists the help first, then any other region that describes the input (a warning, a refusal), and is
+  null when there is nothing, so the attribute is left off. `FieldHelp` is its own class because every page also imports
+  the schema's `FormField`. A literal id passed to it is the field's own `InputId`. `FieldHelp.Id` keeps only
+  characters an id list can carry (`FieldHelp.IdPart`), because an activity form's input id is a free-text field key;
+  build any other id that is named in an id list from a key the same way. `FormFieldHelpTextLinkTests` scans every
+  caller (T193; T205 did the MSF comment boxes).
+- **Help goes in `HelpText`, never into the slot.** A bare `<small class="muted">` or `<p class="form-hint">` under the
+  input is read by no screen reader. A line that does belong in the slot (the curriculum editor's "Suggested because …")
+  has an id, and the control names it after its help. A group's help (a `<fieldset>` of checkboxes or rows) has an id
+  the fieldset names. The same scan fails on help written into a slot (T193).
 - Inputs default to `.form-control`. Selects use `.form-select` (never native unstyled).
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
@@ -435,14 +446,26 @@ T019 introduces a small builder-specific extension to the shared system:
 .field-warning               /* inline NON-blocking warning under a field, input accepted as typed: --warning-bg, --warning-color left stripe, body text, .85rem (T160 late filing) */
 ```
 
+- `<Alert>` is announced by its kind unless the caller names a `Role` (T193). `danger` is `role="alert"`, so a refusal
+  that appears after Submit is read at once; `warning` and `success` are `role="status"`, because nearly every one
+  reports what an action did; `info` has none. Name one where the kind's default is wrong:
+  - a refusal shown as a warning is `Role="alert"` (the MSF page's refused link; the activity page's refused-submit
+    notice, which arrives with the page already filled, where a `status` is often not read);
+  - a warning or success that is **standing page content**, there on every visit (a banner, "credited nothing", a
+    suppressed category), is `Role=""`, which renders none, or it is read out each time the page finishes loading.
+  - Never hand-write `<div class="alert …">`: it skips the default.
+- **An alert already on the page when it loads is not reliably announced**, whatever its role. When a page reloads with
+  a refusal and puts focus in a field (sign-in, link account), give the `Alert` an `Id` and have the field name it with
+  `aria-describedby`, so the refusal is read with the field.
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
 - Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead.
 - A field's warning and its predicted refusal never show together. When the page can tell the server will refuse what is
   typed (an encounter date before the trainee's programme started, T192), the field says so as a `.validation-message`
   in place of any `.field-warning`, whose "can still be filed" would contradict it. Both sit in one `role="status"`
-  region under the field, present before anything is typed, which the input names with `aria-describedby`. While the
-  refusal is predicted the input also carries `aria-invalid="true"` and `.input-validation-error`; a warning alone marks
-  nothing, since what it warns of is accepted. It is a hint: the server's refusal stays the rule.
+  region under the field, present before anything is typed, which the input names with `aria-describedby`, after its
+  help text (`FieldHelp.DescribedBy`, § Form system). While the refusal is predicted the input also carries
+  `aria-invalid="true"` and `.input-validation-error`; a warning alone marks nothing, since what it warns of is
+  accepted. It is a hint: the server's refusal stays the rule.
 
 ## Skeleton loaders
 
@@ -707,6 +730,13 @@ Used in the Administrator dashboard system-health card to show service status at
 ## Accessibility
 
 - Every form field has a `<label for="…">` tying to the input's `id`.
+- A field's help text has an id, and its input names it with `aria-describedby`, help first (§ Form system, T193).
+- A sign-in field says what it holds: the email is `autocomplete="username"` and the password
+  `autocomplete="current-password"`. A password being set is `autocomplete="new-password"`: register, change password,
+  and an administrator's reset, where the browser would otherwise offer the administrator's own password (T193).
+- A refused sign-in (`?error=`) is named by the email and password fields' `aria-describedby`, and a refused link by
+  the password field's: the page reloads with focus in the field, and the alert alone is not announced (§ Alerts,
+  validation, empty states).
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
 - `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
@@ -841,9 +871,9 @@ Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metri
 ```
 <div class="account-form-container">
   <h2>Sign in</h2>
-  @if (Error is not null) { <div class="alert alert-danger">@Error</div> }
+  @if (Error is not null) { <Alert Kind="danger" Id="login-error">@Error</Alert> }   @* role="alert" by default *@
   <form method="post" action="/account/login/submit">
-    <div class="mb-3"> label + .form-control </div>
+    <div class="mb-3"> label + .form-control with its autocomplete token, aria-describedby="login-error" on a refusal </div>
     …
     <button type="submit" class="btn btn-primary">Sign in</button>
   </form>

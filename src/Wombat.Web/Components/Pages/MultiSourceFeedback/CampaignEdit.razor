@@ -34,7 +34,7 @@
            learner-feedback evidence, not multi-source feedback. *@
         <FormField Label="Kind" InputId="msf-template-kind" Required="true"
                    HelpText="Learner feedback is answered only by people the trainee taught, and is recorded as learner feedback, not as multi-source feedback.">
-          <InputSelect id="msf-template-kind" class="form-select" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
+          <InputSelect id="msf-template-kind" class="form-select" aria-describedby="@FieldHelp.Id("msf-template-kind")" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
             <option value="@MsfTemplateKind.Msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</option>
             <option value="@MsfTemplateKind.LearnerFeedback">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</option>
           </InputSelect>
@@ -95,7 +95,7 @@
           </FormField>
           <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
                      HelpText="@MinimumCategoriesHelp">
-            <InputNumber id="msf-min-category-count" class="form-control" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
+            <InputNumber id="msf-min-category-count" class="form-control" aria-describedby="@FieldHelp.Id("msf-min-category-count")" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
           </FormField>
           @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
              names the group (DESIGN.md § Form system, T147). *@
@@ -165,7 +165,7 @@
           {
             <FormField Label="Teaching context" InputId="msf-teaching-context" Required="true"
                        HelpText="Where this learner was taught, for example a ward round or a student tutorial. Describe the session, never a person. Type it the same way for each learner of one group: the report counts how many distinct contexts responded. Only this campaign's report names them; the trainee and the committee see the count.">
-              <InputText id="msf-teaching-context" class="form-control" maxlength="200" @bind-Value="_invitee.TeachingContext" />
+              <InputText id="msf-teaching-context" class="form-control" maxlength="200" aria-describedby="@FieldHelp.Id("msf-teaching-context")" @bind-Value="_invitee.TeachingContext" />
             </FormField>
           }
         </div>

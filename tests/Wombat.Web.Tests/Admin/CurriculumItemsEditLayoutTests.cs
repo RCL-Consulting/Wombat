@@ -148,6 +148,65 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
         edit.Single(field => field.Name == "Completion window (months)").Help.Should().StartWith("Only used to suggest");
     }
 
+    // ---- Every help is read with its field (T193) ----
+
+    [Theory]
+    [InlineData(Ladder.Pinned)]
+    [InlineData(Ladder.Unpinned)]
+    public void EveryFieldsHelp_IsNamedFirst_ByItsControl_OrByItsGroup(Ladder ladder)
+    {
+        // The help was written into FormField's slot as a bare <small>, which nothing named, so a screen reader read
+        // "Target, spin button" and never what a target is.
+        var cut = RenderPage(Catalogue(ladder));
+
+        BeginEdit(cut, "PAED-001");
+
+        foreach (var grid in new[] { cut.Find("tbody td[colspan] .form-grid"), cut.Find(".form-container .form-grid") })
+        {
+            var helped = HelpedFieldsOf(cut, grid);
+            helped.Select(field => field.Name).Should().Equal(
+                "EPA required", "Target", "Per", "Decision cadence", "Decided by",
+                "Opportunistic Decided as rotation or opportunity allows", "Entrustment scale",
+                "Minimum by training year", "Completion window (months)", "Tools");
+
+            foreach (var (name, help, described) in helped)
+            {
+                help.Id.Should().NotBeNullOrEmpty($"the help of {name} has an id to be named by");
+                DescribedBy(described).FirstOrDefault().Should().Be(help.Id, $"{name} names its help, first");
+            }
+        }
+
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(Ladder.Pinned, "curriculum-item-scale-help curriculum-item-scale-reason")]
+    [InlineData(Ladder.Unpinned, "curriculum-item-scale-help")]
+    public void TheAddFormsScale_NamesWhyItWasSuggested_WhileItIs(Ladder ladder, string describedBy)
+    {
+        // Pinned: every sibling shares v11.1, so the Add form starts on it and says why. Unpinned: no suggestion.
+        var cut = RenderPage(Catalogue(ladder));
+
+        cut.Find("#curriculum-item-scale").GetAttribute("aria-describedby").Should().Be(describedBy);
+        if (ladder == Ladder.Pinned)
+        {
+            cut.Find("#curriculum-item-scale-reason").TextContent.Should().StartWith("Suggested because");
+        }
+
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheStandingWarning_IsNotALiveRegion()
+    {
+        // It is there on every visit. As a status it would be read out each time the page finished loading (T193).
+        var cut = RenderPage(Catalogue(Ladder.Pinned));
+
+        var warning = cut.Find(".alert.alert-warning");
+        warning.TextContent.Should().Contain("A target and its period are read live.");
+        warning.HasAttribute("role").Should().BeFalse();
+    }
+
     [Fact]
     public void TheItemsTable_UsesTheCompactCellPadding()
     {
@@ -258,12 +317,41 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
             var name = title.LocalName == "label"
                 ? NameOf(cut, title.GetAttribute("for")!)
                 : Collapse(title.TextContent);
-            var help = group.Children
-                .Where(child => child.LocalName is "small" or "p" && child.ClassList.Contains("muted"))
-                .Select(child => Collapse(child.TextContent))
-                .FirstOrDefault(text => !text.StartsWith("Suggested because", StringComparison.Ordinal));
-            return (name, help);
+            var help = HelpElementOf(group);
+            return (name, help is null ? null : Collapse(help.TextContent));
         }).ToList();
+
+    /// <summary>
+    /// The fields of a form grid that carry help, each with its help element and the element that must name it: the
+    /// control its label is for, or the fieldset its legend names.
+    /// </summary>
+    private static IReadOnlyList<(string Name, IElement Help, IElement Described)> HelpedFieldsOf(
+        IRenderedComponent<CurriculumItemsEdit> cut, IElement grid)
+        => grid.Children.Select(field =>
+        {
+            var group = field.LocalName == "fieldset" ? field : field.QuerySelector("fieldset") ?? field;
+            var title = group.QuerySelector("label, legend")!;
+            var (name, described) = title.LocalName == "label"
+                ? (NameOf(cut, title.GetAttribute("for")!), cut.Find($"#{title.GetAttribute("for")}"))
+                : (Collapse(title.TextContent), group);
+            return (Name: name, Help: HelpElementOf(group), Described: described);
+        })
+        .Where(field => field.Help is not null)
+        .Select(field => (field.Name, field.Help!, field.Described))
+        .ToList();
+
+    /// <summary>
+    /// A field's help: the first muted line under it that is not the Add form's note on why it starts on a ladder.
+    /// FormField renders its help as <c>small.page-subtitle</c>; a group's is a <c>p.muted</c> under its legend.
+    /// </summary>
+    private static IElement? HelpElementOf(IElement group)
+        => group.Children
+            .Where(child => child.LocalName is "small" or "p" &&
+                            (child.ClassList.Contains("muted") || child.ClassList.Contains("page-subtitle")))
+            .FirstOrDefault(child => !Collapse(child.TextContent).StartsWith("Suggested because", StringComparison.Ordinal));
+
+    private static IReadOnlyList<string> DescribedBy(IElement element)
+        => (element.GetAttribute("aria-describedby") ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
     private static string Collapse(string text)
         => string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));

@@ -68,7 +68,7 @@ public sealed partial class MsfRespondPageHostingTests
 
         // Each comment box names its help text, which says the comment may reach the trainee as written (T205 review).
         var commentId = $"msf-q{FakeRespondSender.CommentQuestionId}";
-        var help = document.GetElementById(FormField.HelpTextId(commentId))!;
+        var help = document.GetElementById(FieldHelp.Id(commentId))!;
         document.GetElementById(commentId)!.GetAttribute("aria-describedby").Should().Be(help.Id);
         help.TextContent.Should().Contain($"may be shown to {FakeRespondSender.TraineeName} word for word")
             .And.Contain("leave out anything that would identify you");

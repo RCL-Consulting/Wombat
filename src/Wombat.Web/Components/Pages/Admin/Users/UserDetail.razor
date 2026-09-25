@@ -84,7 +84,7 @@
         <div class="form-grid form-grid--wide">
           <FormField Label="New password" InputId="reset-password-input">
             <div class="password-wrapper">
-              <input id="reset-password-input" type="password" class="form-control" @bind="_newPassword" @bind:event="oninput" minlength="8" />
+              <input id="reset-password-input" type="password" class="form-control" autocomplete="new-password" @bind="_newPassword" @bind:event="oninput" minlength="8" />
               <PasswordToggleButton For="reset-password-input" />
             </div>
           </FormField>

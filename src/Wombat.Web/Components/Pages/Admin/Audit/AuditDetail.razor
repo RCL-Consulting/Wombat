@@ -20,11 +20,11 @@
 }
 else if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-  <div class="alert alert-danger">@_errorMessage</div>
+  <Alert Kind="danger">@_errorMessage</Alert>
 }
 else if (_entry is null)
 {
-  <div class="alert alert-warning">Audit entry not found.</div>
+  <Alert Kind="warning">Audit entry not found.</Alert>
 }
 else
 {

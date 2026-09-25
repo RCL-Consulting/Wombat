@@ -75,21 +75,21 @@
             <ValidationMessage For="() => _model.Qualifications" />
           </FormField>
 
-          <FormField Label="Assessor training status" InputId="assessor-training-status" Required="true">
-            <InputSelect id="assessor-training-status" class="form-select" @bind-Value="_model.TrainingStatus">
+          <FormField Label="Assessor training status" InputId="assessor-training-status" Required="true"
+                     HelpText="Faculty-development lifecycle. In-training assessors may assess under supervision.">
+            <InputSelect id="assessor-training-status" class="form-select" aria-describedby="@FieldHelp.Id("assessor-training-status")" @bind-Value="_model.TrainingStatus">
               <option value="@AssessorTrainingStatus.NotStarted">Not started</option>
               <option value="@AssessorTrainingStatus.InTraining">In training</option>
               <option value="@AssessorTrainingStatus.Provisional">Provisional (awaiting sign-off)</option>
               <option value="@AssessorTrainingStatus.Trained">Trained</option>
             </InputSelect>
-            <small class="muted">Faculty-development lifecycle. In-training assessors may assess under supervision.</small>
           </FormField>
 
           @if (_model.TrainingStatus is AssessorTrainingStatus.Provisional or AssessorTrainingStatus.Trained)
           {
-            <FormField Label="Assessor training completed" InputId="assessor-training-completed">
-              <InputDate id="assessor-training-completed" class="form-control" @bind-Value="_model.TrainingCompletedOn" />
-              <small class="muted">Date the assessor completed assessor training. Leave blank if unrecorded.</small>
+            <FormField Label="Assessor training completed" InputId="assessor-training-completed"
+                       HelpText="Date the assessor completed assessor training. Leave blank if unrecorded.">
+              <InputDate id="assessor-training-completed" class="form-control" aria-describedby="@FieldHelp.Id("assessor-training-completed")" @bind-Value="_model.TrainingCompletedOn" />
             </FormField>
           }
         </div>

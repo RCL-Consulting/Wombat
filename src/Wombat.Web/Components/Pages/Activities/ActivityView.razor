@@ -17,8 +17,11 @@
 
 @if (_notice is not null)
 {
-  @* What became of an activity filed moments ago on /activities/new, handed over with the navigation (T127). *@
-  <Alert Kind="@_notice.Kind">@_notice.Message</Alert>
+  @* What became of an activity filed moments ago on /activities/new, handed over with the navigation (T127). It arrives
+     with the page, already filled, and a status region that arrives filled is often not read; an alert is. A warning here
+     is the submit's refusal, so it is an alert (T193). A success keeps the kind's polite status: the header says the new
+     state as well. *@
+  <Alert Kind="@_notice.Kind" Role="@(_notice.Kind == "warning" ? "alert" : null)">@_notice.Message</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_actionError))
@@ -32,7 +35,7 @@
      credited one at every surface in the product. This is the one place a clinician is certain to
      look. It cannot fire on an activity type that credits nothing by design: the server only
      records a count at all when the pinned version declares a non-empty `counts_for`. *@
-  <Alert Kind="warning">
+  <Alert Kind="warning" Role="">
     This activity is complete, but it counted towards no curriculum requirement. The EPA it was
     recorded against is most likely not part of this trainee's curriculum, or was not in use at the time.
     The record is kept. If it should have counted, raise it with the programme administrator.
@@ -46,7 +49,7 @@
      where the same number means a different amount of supervision. Refusing the comparison is the
      safe answer, and saying so is the honest one — an unexplained shortfall on the progress page is
      how a registrar reaches the end of a year believing a requirement was met. *@
-  <Alert Kind="warning">
+  <Alert Kind="warning" Role="">
     This activity counted towards the required number of observations, but not towards the
     supervision level. The rating was recorded on a different entrustment scale from the one this
     trainee's curriculum requirement uses, so the two levels are not comparable. Please raise it with

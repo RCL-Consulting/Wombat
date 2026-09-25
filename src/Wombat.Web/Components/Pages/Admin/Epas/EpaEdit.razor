@@ -70,19 +70,12 @@
 
         @if (!IsNew)
         {
-          @* T158. The help text is the checkbox's description, not only text beside it: FormField's HelpText names no
-             control, so it is written here with an id the checkbox points at. *@
-          <FormField Label="Status" InputId="epa-active">
+          @* T158. The help text is the checkbox's description, not only text beside it (T193: FormField gives it the id). *@
+          <FormField Label="Status" InputId="epa-active" HelpText="@ActiveHelpText">
             <div class="form-check">
-              <InputCheckbox id="epa-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="epa-active-help" />
+              <InputCheckbox id="epa-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id("epa-active")" />
               <label for="epa-active">Active</label>
             </div>
-            <small id="epa-active-help" class="page-subtitle">
-              An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard.
-              Evidence already recorded against it is kept. An activity completed against it while it is inactive counts
-              towards nothing, and still does after the EPA is reactivated unless an administrator rebuilds curriculum
-              progress.
-            </small>
           </FormField>
         }
       </div>
@@ -123,6 +116,11 @@
   private bool _saving;
 
   private bool IsNew => !Id.HasValue;
+
+  private const string ActiveHelpText =
+    "An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard. " +
+    "Evidence already recorded against it is kept. An activity completed against it while it is inactive counts " +
+    "towards nothing, and still does after the EPA is reactivated unless an administrator rebuilds curriculum progress.";
 
   private IEnumerable<LookupOption> SubSpecialityOptions =>
     from subSpeciality in _subSpecialities

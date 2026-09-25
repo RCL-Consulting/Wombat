@@ -68,7 +68,7 @@
 
 @if (!string.IsNullOrWhiteSpace(_actionMessage))
 {
-  <div class="alert @(_actionSuccess ? "alert-success" : "alert-danger")">@_actionMessage</div>
+  <Alert Kind="@(_actionSuccess ? "success" : "danger")">@_actionMessage</Alert>
 }
 
 @code {

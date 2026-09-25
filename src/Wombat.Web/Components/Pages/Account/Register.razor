@@ -25,7 +25,7 @@
       <AntiforgeryToken />
       <div class="mb-3">
         <label for="register-email">Email</label>
-        <input id="register-email" class="form-control" type="email" value="@_preview.Email" disabled />
+        <input id="register-email" class="form-control" type="email" value="@_preview.Email" autocomplete="username" disabled />
       </div>
 
       <div class="mb-3">
@@ -40,13 +40,13 @@
 
       <div class="mb-3 password-wrapper">
         <label for="register-password">Password</label>
-        <input id="register-password" class="form-control" type="password" name="Password" required />
+        <input id="register-password" class="form-control" type="password" name="Password" autocomplete="new-password" required />
         <PasswordToggleButton For="register-password" />
       </div>
 
       <div class="mb-3 password-wrapper">
         <label for="register-confirm-password">Confirm password</label>
-        <input id="register-confirm-password" class="form-control" type="password" name="ConfirmPassword" required />
+        <input id="register-confirm-password" class="form-control" type="password" name="ConfirmPassword" autocomplete="new-password" required />
         <PasswordToggleButton For="register-confirm-password" />
       </div>
 

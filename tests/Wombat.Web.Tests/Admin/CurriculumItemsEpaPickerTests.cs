@@ -88,7 +88,7 @@ public sealed class CurriculumItemsEpaPickerTests : TestContext
 
         cut.Find("#edit-epa").GetAttribute("value").Should().Be("2");
         cut.FindAll("#edit-epa-refused").Should().BeEmpty("the stored EPA is one the item can name");
-        cut.Find("#edit-epa").HasAttribute("aria-describedby").Should().BeFalse();
+        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help", "its help, and no refusal");
     }
 
     [Fact]
@@ -103,12 +103,15 @@ public sealed class CurriculumItemsEpaPickerTests : TestContext
 
         cut.Find("#edit-epa-refused").TextContent.Should().Be(
             "PAED-001 is not one of the EPAs this item can name, so none is selected. Choose one before saving.");
-        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-refused");
+        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help edit-epa-refused",
+            "its help first, then the refusal (T193), in the order they are shown");
+        cut.Markup.IndexOf("id=\"edit-epa-help\"", StringComparison.Ordinal).Should().BeLessThan(
+            cut.Markup.IndexOf("id=\"edit-epa-refused\"", StringComparison.Ordinal), "the help is shown first too");
 
         cut.Find("#edit-epa").Change("2");
 
         cut.FindAll("#edit-epa-refused").Should().BeEmpty("the EPA now chosen is one the item can name");
-        cut.Find("#edit-epa").HasAttribute("aria-describedby").Should().BeFalse();
+        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help");
     }
 
     [Fact]
@@ -137,9 +140,9 @@ public sealed class CurriculumItemsEpaPickerTests : TestContext
 
         foreach (var id in new[] { "curriculum-item-epa", "edit-epa" })
         {
-            var help = cut.Find($"#{id}").ParentElement!.QuerySelector("small.muted");
-            help.Should().NotBeNull($"#{id} carries its help");
-            help!.TextContent.Should().StartWith("Lists only the EPAs this item can name");
+            // The select names its help (T193), so the help is found the way a screen reader finds it.
+            var help = cut.Find($"#{cut.Find($"#{id}").GetAttribute("aria-describedby")!.Split(' ')[0]}");
+            help.TextContent.Should().StartWith("Lists only the EPAs this item can name", $"#{id} carries its help");
         }
     }
 

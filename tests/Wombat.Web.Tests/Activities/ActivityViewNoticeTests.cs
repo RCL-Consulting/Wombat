@@ -86,6 +86,28 @@ public sealed class ActivityViewNoticeTests : TestContext
     }
 
     [Fact]
+    public void ARefusedSubmit_IsAnAlert_SoItIsReadAsThePageArrives()
+    {
+        // T193. The notice arrives with the page, already filled. A status region that arrives filled is often not read;
+        // an alert is, and this one is a refusal the author has to act on.
+        Notices.Post(ActivityId, "warning", NoticeText);
+
+        var cut = RenderPage();
+
+        cut.Find(".alert-warning").GetAttribute("role").Should().Be("alert");
+    }
+
+    [Fact]
+    public void ASuccessfulSubmit_IsAStatus()
+    {
+        Notices.Post(ActivityId, "success", "Submitted. It is now Requested.");
+
+        var cut = RenderPage();
+
+        cut.Find(".alert-success").GetAttribute("role").Should().Be("status");
+    }
+
+    [Fact]
     public void ANoticeForAnActivityThatDoesNotLoad_IsTakenButNotShown()
     {
         // Null is "no such activity" and "not yours" alike (T101). Nothing is said about it beyond the empty state.

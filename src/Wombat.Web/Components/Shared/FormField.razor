@@ -12,7 +12,8 @@
 
   @if (!string.IsNullOrWhiteSpace(HelpText))
   {
-    <small class="page-subtitle" id="@HelpTextId(InputId)">@HelpText</small>
+    @* The input is the caller's, so the caller links it: aria-describedby="@FieldHelp.DescribedBy(...)" (T193). *@
+    <small class="page-subtitle" id="@FieldHelp.Id(InputId)">@HelpText</small>
   }
 
   @if (ValidationContent is not null)
@@ -22,15 +23,15 @@
 </div>
 
 @code {
-  /// <summary>
-  /// The id of a field's help text, for its input to name with <c>aria-describedby</c> (DESIGN.md: help text is linked
-  /// to its input). The input is the caller's, so the caller links it.
-  /// </summary>
-  public static string HelpTextId(string inputId) => $"{inputId}-help";
-
   [Parameter, EditorRequired] public string Label { get; set; } = default!;
   [Parameter, EditorRequired] public string InputId { get; set; } = default!;
+
+  /// <summary>
+  /// Text under the input, rendered with the id <see cref="FieldHelp.Id" />. The input in <see cref="ChildContent" /> must
+  /// name it: <c>aria-describedby="@FieldHelp.DescribedBy(inputId, helpText)"</c>.
+  /// </summary>
   [Parameter] public string? HelpText { get; set; }
+
   [Parameter] public bool Required { get; set; }
   [Parameter] public bool FullWidth { get; set; }
   [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;

@@ -193,13 +193,13 @@ public sealed class MsfRespondPageTests : TestContext
         var cut = Render(sender);
         var commentId = $"msf-q{FakeRespondSender.CommentQuestionId}";
 
-        cut.Find($"#{commentId}").GetAttribute("aria-describedby").Should().Be(FormField.HelpTextId(commentId), "guard: before");
+        cut.Find($"#{commentId}").GetAttribute("aria-describedby").Should().Be(FieldHelp.Id(commentId), "guard: before");
         cut.Find($"#msf-q{FakeRespondSender.ScaleQuestionId}-3").Change("3");
         cut.Find("form").Submit();
 
         var comment = cut.Find($"#{commentId}");
         comment.GetAttribute("aria-invalid").Should().Be("true");
-        comment.GetAttribute("aria-describedby").Should().Be($"{FormField.HelpTextId(commentId)} {MsfRespond.ErrorSummaryId}");
+        comment.GetAttribute("aria-describedby").Should().Be($"{FieldHelp.Id(commentId)} {MsfRespond.ErrorSummaryId}");
         comment.ClassList.Should().Contain("input-validation-error");
         cut.Find($"#{MsfRespond.ErrorSummaryId}").TextContent.Trim().Should().Be("Too long.");
         cut.Find("fieldset").HasAttribute("aria-describedby").Should().BeFalse("the rating is not the question at fault");

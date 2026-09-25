@@ -29,7 +29,7 @@
 <StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@_loadError">
   @if (_curriculum is not null)
   {
-    <Alert Kind="warning">
+    <Alert Kind="warning" Role="">
       A target and its period are read live. Changing one changes what every trainee on this curriculum is measured
       against, in every institution that has adopted it, including periods that have already closed. A tool list is
       checked when an activity is filed and submitted, and never takes back credit already earned.
@@ -140,69 +140,68 @@
                     <fieldset>
                       <legend>Edit @item.EpaCode</legend>
                       <div class="form-grid form-grid--wide">
-                        <FormField Label="EPA" InputId="edit-epa" Required="true" FullWidth="true">
-                          <InputSelect id="edit-epa" class="form-select" TValue="int" @bind-Value="_editModel.EpaId"
-                                       aria-describedby="@(EditEpaOffered ? null : "edit-epa-refused")">
-                            @foreach (var epa in _editEpas)
+                        <FormField Label="EPA" InputId="edit-epa" Required="true" FullWidth="true" HelpText="@EpaHelp">
+                          <ChildContent>
+                            <InputSelect id="edit-epa" class="form-select" TValue="int" @bind-Value="_editModel.EpaId"
+                                         aria-describedby="@FieldHelp.DescribedBy("edit-epa", EpaHelp, EditEpaOffered ? null : "edit-epa-refused")">
+                              @foreach (var epa in _editEpas)
+                              {
+                                <option value="@epa.Id">@EpaOptionText(epa)</option>
+                              }
+                            </InputSelect>
+                          </ChildContent>
+                          <ValidationContent>
+                            @* T195. A stored EPA the item cannot name is not among the options, so the select shows none
+                               selected, and Save is refused for an EPA the operator cannot see. Say so before they press it.
+                               Under the help, as the select names them (T193). *@
+                            @if (!EditEpaOffered)
                             {
-                              <option value="@epa.Id">@EpaOptionText(epa)</option>
+                              <div id="edit-epa-refused" class="validation-message">@item.EpaCode is not one of the EPAs this item can name, so none is selected. Choose one before saving.</div>
                             }
-                          </InputSelect>
-                          <small class="muted">@EpaHelp</small>
-                          @* T195. A stored EPA the item cannot name is not among the options, so the select shows none
-                             selected, and Save is refused for an EPA the operator cannot see. Say so before they press it. *@
-                          @if (!EditEpaOffered)
-                          {
-                            <div id="edit-epa-refused" class="validation-message">@item.EpaCode is not one of the EPAs this item can name, so none is selected. Choose one before saving.</div>
-                          }
+                          </ValidationContent>
                         </FormField>
 
-                        <FormField Label="Target" InputId="edit-count">
-                          <InputNumber id="edit-count" class="form-control" @bind-Value="_editModel.RequiredCount" />
-                          <small class="muted">@TargetHelp</small>
+                        <FormField Label="Target" InputId="edit-count" HelpText="@TargetHelp">
+                          <InputNumber id="edit-count" aria-describedby="@FieldHelp.Id("edit-count")" class="form-control" @bind-Value="_editModel.RequiredCount" />
                         </FormField>
 
-                        <FormField Label="Per" InputId="edit-period">
-                          <InputSelect id="edit-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_editModel.QuotaPeriod">
+                        <FormField Label="Per" InputId="edit-period" HelpText="@PeriodHelp">
+                          <InputSelect id="edit-period" aria-describedby="@FieldHelp.Id("edit-period")" class="form-select" TValue="QuotaPeriod" @bind-Value="_editModel.QuotaPeriod">
                             <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
                             <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
                           </InputSelect>
-                          <small class="muted">@PeriodHelp</small>
                         </FormField>
 
-                        <FormField Label="Decision cadence" InputId="edit-decision-cadence">
-                          <InputSelect id="edit-decision-cadence" class="form-select" TValue="QuotaPeriod?"
+                        <FormField Label="Decision cadence" InputId="edit-decision-cadence" HelpText="@DecisionCadenceHelp">
+                          <InputSelect id="edit-decision-cadence" aria-describedby="@FieldHelp.Id("edit-decision-cadence")" class="form-select" TValue="QuotaPeriod?"
                                        @bind-Value="_editModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_editModel)">
                             <option value="">No published cadence</option>
                             <option value="@QuotaPeriod.Semester">Each semester</option>
                             <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
                           </InputSelect>
-                          <small class="muted">@DecisionCadenceHelp</small>
                         </FormField>
 
-                        <FormField Label="Decided by" InputId="edit-decision-body">
-                          <InputSelect id="edit-decision-body" class="form-select" TValue="string" @bind-Value="_editModel.DecisionBodyKey">
+                        <FormField Label="Decided by" InputId="edit-decision-body" HelpText="@DecisionBodyHelp">
+                          <InputSelect id="edit-decision-body" aria-describedby="@FieldHelp.Id("edit-decision-body")" class="form-select" TValue="string" @bind-Value="_editModel.DecisionBodyKey">
                             <option value="">The trainee's general panel</option>
                             @foreach (var body in _decisionBodies)
                             {
                               <option value="@body.Key">@body.Name</option>
                             }
                           </InputSelect>
-                          <small class="muted">@DecisionBodyHelp</small>
                         </FormField>
 
-                        <FormField Label="Opportunistic" InputId="edit-decision-opportunistic">
+                        <FormField Label="Opportunistic" InputId="edit-decision-opportunistic" HelpText="@DecisionOpportunisticHelp">
                           <div class="form-check">
-                            <input id="edit-decision-opportunistic" class="form-check-input" type="checkbox"
+                            <input id="edit-decision-opportunistic" aria-describedby="@FieldHelp.Id("edit-decision-opportunistic")" class="form-check-input" type="checkbox"
                                    checked="@_editModel.DecisionIsOpportunistic" disabled="@(_editModel.DecisionCadence is null)"
                                    @onchange="args => _editModel.DecisionIsOpportunistic = args.Value is true" />
                             <label for="edit-decision-opportunistic">Decided as rotation or opportunity allows</label>
                           </div>
-                          <small class="muted">@DecisionOpportunisticHelp</small>
                         </FormField>
 
-                        <FormField Label="Entrustment scale" InputId="edit-scale">
-                          <InputSelect id="edit-scale" class="form-select" TValue="int?"
+                        <FormField Label="Entrustment scale" InputId="edit-scale" HelpText="@ScaleHelp">
+                          <InputSelect id="edit-scale" class="form-select" TValue="int?" aria-describedby="@FieldHelp.Id("edit-scale")"
                                        @bind-Value="_editModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_editModel)">
                             <option value="">Not pinned</option>
                             @foreach (var scale in _scales)
@@ -210,7 +209,6 @@
                               <option value="@scale.Id">@scale.Name</option>
                             }
                           </InputSelect>
-                          <small class="muted">@ScaleHelp</small>
                         </FormField>
 
                         <FormField Label="Minimum level" InputId="edit-minimum" Required="true">
@@ -221,18 +219,17 @@
                           <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
                         </div>
 
-                        <FormField Label="Completion window (months)" InputId="edit-window">
-                          <InputNumber id="edit-window" class="form-control" @bind-Value="_editModel.WindowMonths" />
-                          <small class="muted">@WindowHelp</small>
+                        <FormField Label="Completion window (months)" InputId="edit-window" HelpText="@WindowHelp">
+                          <InputNumber id="edit-window" aria-describedby="@FieldHelp.Id("edit-window")" class="form-control" @bind-Value="_editModel.WindowMonths" />
                         </FormField>
 
                         <FormField Label="Weight" InputId="edit-weight">
                           <InputNumber id="edit-weight" class="form-control" @bind-Value="_editModel.Weight" />
                         </FormField>
 
-                        <fieldset class="full-width">
+                        <fieldset class="full-width" aria-describedby="edit-tools-help">
                           <legend>Tools</legend>
-                          <p class="muted">@ToolsHelp</p>
+                          <p id="edit-tools-help" class="muted">@ToolsHelp</p>
                           <div class="check-grid">
                             @foreach (var tool in ToolOptions(_editModel))
                             {
@@ -285,62 +282,58 @@
 
         <div class="form-grid form-grid--wide">
           @* Full width here and in the edit row: v11.1's EPA titles run to over a hundred characters. *@
-          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true">
-            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" @bind-Value="_addModel.EpaId">
+          <FormField Label="EPA" InputId="curriculum-item-epa" Required="true" FullWidth="true" HelpText="@EpaHelp">
+            <InputSelect id="curriculum-item-epa" class="form-select" TValue="int" aria-describedby="@FieldHelp.Id("curriculum-item-epa")" @bind-Value="_addModel.EpaId">
               @foreach (var epa in _addEpas)
               {
                 <option value="@epa.Id">@EpaOptionText(epa)</option>
               }
             </InputSelect>
-            <small class="muted">@EpaHelp</small>
           </FormField>
 
-          <FormField Label="Target" InputId="curriculum-item-count">
-            <InputNumber id="curriculum-item-count" class="form-control" @bind-Value="_addModel.RequiredCount" />
-            <small class="muted">@TargetHelp</small>
+          <FormField Label="Target" InputId="curriculum-item-count" HelpText="@TargetHelp">
+            <InputNumber id="curriculum-item-count" aria-describedby="@FieldHelp.Id("curriculum-item-count")" class="form-control" @bind-Value="_addModel.RequiredCount" />
           </FormField>
 
-          <FormField Label="Per" InputId="curriculum-item-period">
-            <InputSelect id="curriculum-item-period" class="form-select" TValue="QuotaPeriod" @bind-Value="_addModel.QuotaPeriod">
+          <FormField Label="Per" InputId="curriculum-item-period" HelpText="@PeriodHelp">
+            <InputSelect id="curriculum-item-period" aria-describedby="@FieldHelp.Id("curriculum-item-period")" class="form-select" TValue="QuotaPeriod" @bind-Value="_addModel.QuotaPeriod">
               <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(DateTime.UtcNow.Year))</option>
               <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(DateTime.UtcNow.Year))</option>
             </InputSelect>
-            <small class="muted">@PeriodHelp</small>
           </FormField>
 
-          <FormField Label="Decision cadence" InputId="curriculum-item-decision-cadence">
-            <InputSelect id="curriculum-item-decision-cadence" class="form-select" TValue="QuotaPeriod?"
+          <FormField Label="Decision cadence" InputId="curriculum-item-decision-cadence" HelpText="@DecisionCadenceHelp">
+            <InputSelect id="curriculum-item-decision-cadence" aria-describedby="@FieldHelp.Id("curriculum-item-decision-cadence")" class="form-select" TValue="QuotaPeriod?"
                          @bind-Value="_addModel.DecisionCadence" @bind-Value:after="() => OnDecisionCadenceChanged(_addModel)">
               <option value="">No published cadence</option>
               <option value="@QuotaPeriod.Semester">Each semester</option>
               <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
             </InputSelect>
-            <small class="muted">@DecisionCadenceHelp</small>
           </FormField>
 
-          <FormField Label="Decided by" InputId="curriculum-item-decision-body">
-            <InputSelect id="curriculum-item-decision-body" class="form-select" TValue="string" @bind-Value="_addModel.DecisionBodyKey">
+          <FormField Label="Decided by" InputId="curriculum-item-decision-body" HelpText="@DecisionBodyHelp">
+            <InputSelect id="curriculum-item-decision-body" aria-describedby="@FieldHelp.Id("curriculum-item-decision-body")" class="form-select" TValue="string" @bind-Value="_addModel.DecisionBodyKey">
               <option value="">The trainee's general panel</option>
               @foreach (var body in _decisionBodies)
               {
                 <option value="@body.Key">@body.Name</option>
               }
             </InputSelect>
-            <small class="muted">@DecisionBodyHelp</small>
           </FormField>
 
-          <FormField Label="Opportunistic" InputId="curriculum-item-decision-opportunistic">
+          <FormField Label="Opportunistic" InputId="curriculum-item-decision-opportunistic" HelpText="@DecisionOpportunisticHelp">
             <div class="form-check">
-              <input id="curriculum-item-decision-opportunistic" class="form-check-input" type="checkbox"
+              <input id="curriculum-item-decision-opportunistic" aria-describedby="@FieldHelp.Id("curriculum-item-decision-opportunistic")" class="form-check-input" type="checkbox"
                      checked="@_addModel.DecisionIsOpportunistic" disabled="@(_addModel.DecisionCadence is null)"
                      @onchange="args => _addModel.DecisionIsOpportunistic = args.Value is true" />
               <label for="curriculum-item-decision-opportunistic">Decided as rotation or opportunity allows</label>
             </div>
-            <small class="muted">@DecisionOpportunisticHelp</small>
           </FormField>
 
-          <FormField Label="Entrustment scale" InputId="curriculum-item-scale">
+          @{ var addScaleReason = AddScaleReason(); }
+          <FormField Label="Entrustment scale" InputId="curriculum-item-scale" HelpText="@ScaleHelp">
             <InputSelect id="curriculum-item-scale" class="form-select" TValue="int?"
+                         aria-describedby="@FieldHelp.DescribedBy("curriculum-item-scale", ScaleHelp, addScaleReason is null ? null : AddScaleReasonId)"
                          @bind-Value="_addModel.ScaleId" @bind-Value:after="() => OnScaleChanged(_addModel)">
               <option value="">Not pinned</option>
               @foreach (var scale in _scales)
@@ -348,11 +341,10 @@
                 <option value="@scale.Id">@scale.Name</option>
               }
             </InputSelect>
-            @if (AddScaleReason() is string reason)
+            @if (addScaleReason is not null)
             {
-              <small class="muted">Suggested because @reason.</small>
+              <small id="@AddScaleReasonId" class="muted">Suggested because @addScaleReason.</small>
             }
-            <small class="muted">@ScaleHelp</small>
           </FormField>
 
           <FormField Label="Minimum level" InputId="curriculum-item-level" Required="true">
@@ -363,9 +355,8 @@
             <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
           </div>
 
-          <FormField Label="Completion window (months)" InputId="curriculum-item-window">
-            <InputNumber id="curriculum-item-window" class="form-control" @bind-Value="_addModel.WindowMonths" />
-            <small class="muted">@WindowHelp</small>
+          <FormField Label="Completion window (months)" InputId="curriculum-item-window" HelpText="@WindowHelp">
+            <InputNumber id="curriculum-item-window" aria-describedby="@FieldHelp.Id("curriculum-item-window")" class="form-control" @bind-Value="_addModel.WindowMonths" />
           </FormField>
 
           <FormField Label="Weight" InputId="curriculum-item-weight">
@@ -373,9 +364,9 @@
           </FormField>
 
           @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
-          <fieldset class="full-width">
+          <fieldset class="full-width" aria-describedby="add-tools-help">
             <legend>Tools</legend>
-            <p class="muted">@ToolsHelp</p>
+            <p id="add-tools-help" class="muted">@ToolsHelp</p>
             <div class="check-grid">
               @foreach (var tool in ToolOptions(_addModel))
               {
@@ -448,6 +439,7 @@
   private const string DecisionCadenceHelp = "How often a committee takes the entrustment decision on this EPA (Annexure B). Separate from the target: an EPA observed each semester may be decided once a year. With no cadence the EPA is never due, but a committee can still decide it.";
   private const string DecisionBodyHelp = "The committee the College names to decide this EPA instead of the trainee's general panel, such as the neonatal CCC for paediatric EPAs 4 and 5.";
   private const string DecisionOpportunisticHelp = "For an EPA the College has decided as rotation or opportunity allows, such as paediatric EPAs 8, 9 and 13: its decision is never overdue. Needs a decision cadence.";
+  private const string AddScaleReasonId = "curriculum-item-scale-reason";
   private const string ToolsHelp = "The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.";
 
   protected override async Task OnParametersSetAsync()

@@ -58,7 +58,7 @@
 @if (_samplingReport is { AnyWarning: true })
 {
   var unattributed = _samplingReport.UnattributedRatedActivities;
-  <Alert Kind="warning" Dismissible="true">
+  <Alert Kind="warning" Role="" Dismissible="true">
     <div>
       <h3>Sampling concentration warnings</h3>
       <p class="muted">
@@ -168,7 +168,7 @@
            should weigh that, not be stopped by it. Read from the frozen snapshot, so it says what the panel weighed. *@
         @if (_review.ChairRatedEveryLine is { } chairAssessor)
         {
-          <Alert Kind="warning">
+          <Alert Kind="warning" Role="">
             <div>
               <h4>The chair rated all of this evidence</h4>
               <p>
@@ -322,7 +322,7 @@
             <ValidationSummary class="validation-summary-errors" />
             <div class="form-grid">
               <FormField Label="EPA" InputId="pending-epa" Required="true" HelpText="The EPAs on the trainee's curriculum.">
-                <InputSelect id="pending-epa" class="form-select" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged" @ref="_pendingEpaSelect">
+                <InputSelect id="pending-epa" class="form-select" aria-describedby="@FieldHelp.Id("pending-epa")" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged" @ref="_pendingEpaSelect">
                   <option value="0">Select an EPA…</option>
                   @foreach (var epa in _starEpas)
                   {
@@ -331,7 +331,7 @@
                 </InputSelect>
               </FormField>
               <FormField Label="Authorised level" InputId="pending-level" Required="true" HelpText="@LevelHelpText">
-                <InputSelect id="pending-level" class="form-select" @bind-Value="_pending.AuthorisedLevelId">
+                <InputSelect id="pending-level" class="form-select" aria-describedby="@FieldHelp.Id("pending-level")" @bind-Value="_pending.AuthorisedLevelId">
                   <option value="0">@(SelectedStarEpa is null ? "Select an EPA first…" : "Select a level…")</option>
                   @foreach (var scale in LevelScales)
                   {
@@ -1442,7 +1442,7 @@
               <div class="form-grid">
                 <FormField Label="Why the committee is deferring it" InputId="deferral-reason" Required="true" FullWidth="true"
                            HelpText="Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.">
-                  <InputTextArea id="deferral-reason" class="form-control" @bind-Value="deferral.Reason" @ref="_deferralReason" />
+                  <InputTextArea id="deferral-reason" class="form-control" aria-describedby="@FieldHelp.Id("deferral-reason")" @bind-Value="deferral.Reason" @ref="_deferralReason" />
                 </FormField>
               </div>
               <FormActions>

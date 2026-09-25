@@ -23,9 +23,11 @@
       Enter your current password to link your institutional sign-in.
     </p>
 
+    @* A refused link reloads this page, and focus goes straight to the password, so the password names the refusal: an
+       alert already there when the page loads is not reliably announced (T193). *@
     @if (!string.IsNullOrWhiteSpace(Error))
     {
-      <Alert Kind="danger">@Error</Alert>
+      <Alert Kind="danger" Id="@ErrorId">@Error</Alert>
     }
 
     <form method="post" action="/account/link-external/submit">
@@ -34,7 +36,7 @@
       <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
       <div class="mb-3 password-wrapper">
         <label for="link-password">Password</label>
-        <input id="link-password" class="form-control" type="password" name="Password" required autofocus />
+        <input id="link-password" class="form-control" type="password" name="Password" autocomplete="current-password" required autofocus aria-describedby="@ErrorReference" />
         <PasswordToggleButton For="link-password" />
       </div>
       <FormActions>
@@ -51,6 +53,10 @@
 
   [SupplyParameterFromQuery(Name = "error")]
   public string? Error { get; set; }
+
+  private const string ErrorId = "link-error";
+
+  private string? ErrorReference => string.IsNullOrWhiteSpace(Error) ? null : ErrorId;
 
   private bool _loaded;
 

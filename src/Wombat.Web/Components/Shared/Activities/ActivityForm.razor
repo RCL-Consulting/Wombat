@@ -37,7 +37,7 @@ else if (_schema is not null)
               // A multi-choice field is several controls, and a file field (not wired: a seed holds a document as a link, D34) or an unsupported type
               // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
               // instead (DESIGN.md § Form system, T177), its help text announced with the group.
-              var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : $"{field.Key}-help";
+              var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : FieldHelp.Id(field.Key);
 
               <fieldset class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@helpId">
                 <legend>
@@ -96,23 +96,23 @@ else if (_schema is not null)
                 case FieldType.Text:
                 case FieldType.Signature:
                 case FieldType.ProcedureRef:
-                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.LongText:
-                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
+                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
                   break;
                 case FieldType.Number:
                 case FieldType.Likert:
                 case FieldType.Rating:
-                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Date:
-                  <input id="@field.Key" class="@(PredictsRefusal(field.Key) ? "form-control input-validation-error" : "form-control")" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@(NoticesFilingDate(field.Key) ? FilingDateNoticeId(field.Key) : null)" aria-invalid="@(PredictsRefusal(field.Key) ? "true" : null)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="@(PredictsRefusal(field.Key) ? "form-control input-validation-error" : "form-control")" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@(PredictsRefusal(field.Key) ? "true" : null)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Choice:
                 case FieldType.Epa:
                 case FieldType.User:
-                  <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                  <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                     <option value="">Select…</option>
                     @foreach (var option in GetOptions(field))
                     {
@@ -124,7 +124,7 @@ else if (_schema is not null)
                   var scaleOptions = GetOptions(field);
                   if (scaleOptions.Count > 0)
                   {
-                    <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                    <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                       <option value="">Select…</option>
                       @foreach (var option in scaleOptions)
                       {
@@ -134,7 +134,7 @@ else if (_schema is not null)
                   }
                   else
                   {
-                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   }
                   break;
               }
@@ -381,7 +381,8 @@ else if (_schema is not null)
        string.Equals(_schema.ObservationDateField, key, StringComparison.Ordinal) &&
        !IsFieldLocked(key);
 
-  private static string FilingDateNoticeId(string key) => $"{key}-filing-notice";
+  // Named in the date's aria-describedby, so built as the help's id is: a key is free text (T193).
+  private static string FilingDateNoticeId(string key) => $"{FieldHelp.IdPart(key)}-filing-notice";
 
   /// <summary>
   /// <see cref="ProgrammeStartsOn" /> when the typed encounter date is before it, which the server refuses (T192);
@@ -404,6 +405,14 @@ else if (_schema is not null)
 
   // The server's refusal prints the start as an ISO date, so the hint does too: the two read as the same fact.
   private static string IsoDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+  /// <summary>
+  /// What a field's control names with <c>aria-describedby</c> (T193): its help text, which <c>FormField</c> renders with
+  /// an id but cannot link itself, then the filing-date notice's live region while the field has one (T160, T192). Null
+  /// when neither is there, so no control names an element that does not exist.
+  /// </summary>
+  private string? DescribedBy(Wombat.Domain.Activities.Schema.FormField field)
+    => FieldHelp.DescribedBy(field.Key, field.HelpText, NoticesFilingDate(field.Key) ? FilingDateNoticeId(field.Key) : null);
 
   /// <summary>
   /// How many days before <see cref="FiledOn" /> the typed encounter date is, when that makes the filing late (T160, D15);

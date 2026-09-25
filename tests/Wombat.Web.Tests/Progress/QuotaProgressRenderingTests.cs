@@ -543,6 +543,7 @@ public sealed class QuotaProgressRenderingTests : TestContext
         Text(cut.Find(".alert.alert-warning")).Should()
             .Contain("While an EPA is inactive, a rebuild removes the progress its item had earned")
             .And.Contain("Reactivate the EPA and rebuild again to restore them.");
+        cut.Find(".alert.alert-warning").HasAttribute("role").Should().BeFalse("standing page content (T193)");
         Text(cut.Find("dialog")).Should().Contain("An EPA that is inactive now keeps none of its progress.");
     }
 

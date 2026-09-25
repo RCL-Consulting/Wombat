@@ -58,7 +58,7 @@
             </FormField>
 
             <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="Leave this empty to derive it from the curriculum window.">
-              <InputDate id="expected-completion-date" class="form-control" @bind-Value="_model.ExpectedCompletionDate" />
+              <InputDate id="expected-completion-date" class="form-control" aria-describedby="@FieldHelp.Id("expected-completion-date")" @bind-Value="_model.ExpectedCompletionDate" />
             </FormField>
           </div>
 
@@ -66,7 +66,7 @@
           {
             <div class="form-grid form-grid--wide">
               <FormField Label="Completion date" InputId="completion-date" HelpText="Records graduation: archives the profile and removes the Trainee role.">
-                <InputDate id="completion-date" class="form-control" @bind-Value="_model.CompletionDate" />
+                <InputDate id="completion-date" class="form-control" aria-describedby="@FieldHelp.Id("completion-date")" @bind-Value="_model.CompletionDate" />
               </FormField>
             </div>
           }

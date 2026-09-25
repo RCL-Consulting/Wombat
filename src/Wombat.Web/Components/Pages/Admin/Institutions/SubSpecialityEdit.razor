@@ -43,15 +43,15 @@
 
         @if (!IsNew)
         {
-          <FormField Label="Default entrustment scale" InputId="sub-speciality-scale" FullWidth="true">
-            <InputSelect id="sub-speciality-scale" class="form-select" @bind-Value="_model.DefaultEntrustmentScaleId">
+          <FormField Label="Default entrustment scale" InputId="sub-speciality-scale" FullWidth="true"
+                     HelpText="Committee STARs for this programme's trainees are limited to this scale's levels.">
+            <InputSelect id="sub-speciality-scale" class="form-select" aria-describedby="@FieldHelp.Id("sub-speciality-scale")" @bind-Value="_model.DefaultEntrustmentScaleId">
               <option value="">No default — offer every scale</option>
               @foreach (var scale in _scales)
               {
                 <option value="@scale.Id">@scale.Name</option>
               }
             </InputSelect>
-            <p class="form-hint">Committee STARs for this programme's trainees are limited to this scale's levels.</p>
           </FormField>
 
           <FormField Label="Status" InputId="sub-speciality-active">

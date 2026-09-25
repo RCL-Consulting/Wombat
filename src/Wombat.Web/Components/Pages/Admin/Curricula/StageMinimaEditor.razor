@@ -3,9 +3,9 @@
    stored that is not a year and a rung is listed, never dropped, and the page will not save until it is removed
    (see StageMinimaDraft). *@
 
-<fieldset>
+<fieldset aria-describedby="@HelpId">
   <legend>Minimum by training year</legend>
-  <p class="muted">
+  <p id="@HelpId" class="muted">
     A trainee in a year listed here is measured against that year's rung instead of the minimum level. A year not
     listed uses the minimum level.
   </p>
@@ -67,6 +67,9 @@
   [Parameter] public EventCallback OnChanged { get; set; }
 
   private string RowId(StageMinimumRow row) => $"{IdPrefix}-stage-{row.Year}";
+
+  // The group's help, named by the fieldset, so it is read with the legend (T193).
+  private string HelpId => $"{IdPrefix}-year-minima-help";
 
   private Task SetLevelAsync(StageMinimumRow row, int? level)
   {

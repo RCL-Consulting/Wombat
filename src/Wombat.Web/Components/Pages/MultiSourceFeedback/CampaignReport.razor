@@ -47,7 +47,7 @@
         <h3>Evidence for</h3>
         @if (_report.CoveredEpas.Count == 0)
         {
-          <Alert Kind="warning">This campaign names no EPA, so releasing it will record no evidence on the trainee's portfolio.</Alert>
+          <Alert Kind="warning" Role="">This campaign names no EPA, so releasing it will record no evidence on the trainee's portfolio.</Alert>
         }
         else
         {
@@ -78,7 +78,7 @@
         <h3>Coordinator actions</h3>
         @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
         {
-          <Alert Kind="warning">@BlockedReason(_report)</Alert>
+          <Alert Kind="warning" Role="">@BlockedReason(_report)</Alert>
         }
         <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
           <DataAnnotationsValidator />
@@ -90,7 +90,7 @@
           {
             <FormField Label="Supervision level this feedback supports" InputId="msf-level"
                        HelpText="Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate below - never an average of respondent scores.">
-              <InputSelect id="msf-level" class="form-select" @bind-Value="_review.EntrustmentLevel">
+              <InputSelect id="msf-level" class="form-select" aria-describedby="@FieldHelp.Id("msf-level")" @bind-Value="_review.EntrustmentLevel">
                 <option value="">Not stated</option>
                 @foreach (var rung in _levelOptions)
                 {
@@ -119,7 +119,7 @@
         <h3>@category.Category</h3>
         @if (category.IsSuppressed)
         {
-          <Alert Kind="warning">Insufficient responses in this category. Results are suppressed.</Alert>
+          <Alert Kind="warning" Role="">Insufficient responses in this category. Results are suppressed.</Alert>
         }
         else
         {

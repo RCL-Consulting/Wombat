@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using AngleSharp.Dom;
 using Bunit;
 using Bunit.TestDoubles;
@@ -29,37 +28,25 @@ public sealed class ActivityFormLabelTests : TestContext
 
     // ---- the seed corpus ----
 
-    public static TheoryData<string> SeedKeys
-    {
-        get
-        {
-            var data = new TheoryData<string>();
-            foreach (var seedKey in SeedKeysWithASchema())
-            {
-                data.Add(seedKey);
-            }
-
-            return data;
-        }
-    }
+    public static TheoryData<string> SeedKeys => SeedSchemas.KeysAsTheoryData();
 
     [Fact]
     public void TheSeedCorpusReachesThisProject_WithAMultiChoiceAndAFileField_SoTheTheoryIsNotVacuous()
     {
         // If the output copy of the seed folders ever stops reaching this test project, the theory below would pass
         // with no rows. The two seeds named here carry the two field types the defect lived in.
-        SeedKeysWithASchema().Should().HaveCountGreaterThanOrEqualTo(19)
+        SeedSchemas.Keys().Should().HaveCountGreaterThanOrEqualTo(19)
             .And.Contain(["cca_cpsa", "research_output", "mini_cex_cpsa"]);
 
-        FieldsOf("cca_cpsa").Should().Contain(field => field.Type == FieldType.MultiChoice);
-        FieldsOf("research_output").Should().Contain(field => field.Type == FieldType.File);
+        SeedSchemas.Fields("cca_cpsa").Should().Contain(field => field.Type == FieldType.MultiChoice);
+        SeedSchemas.Fields("research_output").Should().Contain(field => field.Type == FieldType.File);
     }
 
     [Theory]
     [MemberData(nameof(SeedKeys))]
     public void ASeededForm_EveryLabelAndDescriptionNamesARealElement(string seedKey)
     {
-        var cut = RenderForm(EveryFieldVisible(ReadSeedSchema(seedKey)));
+        var cut = RenderForm(SeedSchemas.EveryFieldVisible(SeedSchemas.Schema(seedKey)));
 
         IdReferences.Broken(cut).Should().BeEmpty("every label on the '{0}' form must name a real control", seedKey);
     }
@@ -70,9 +57,9 @@ public sealed class ActivityFormLabelTests : TestContext
     {
         // The check above passes on a form that renders no labels at all, so each field is also shown to be named:
         // by a label on its one control, or by the legend of its group.
-        var cut = RenderForm(EveryFieldVisible(ReadSeedSchema(seedKey)));
+        var cut = RenderForm(SeedSchemas.EveryFieldVisible(SeedSchemas.Schema(seedKey)));
 
-        foreach (var field in FieldsOf(seedKey))
+        foreach (var field in SeedSchemas.Fields(seedKey))
         {
             NameOf(cut, field).Should().Contain(field.Label, "'{0}.{1}' must be named on the form", seedKey, field.Key);
         }
@@ -272,40 +259,4 @@ public sealed class ActivityFormLabelTests : TestContext
             .FirstOrDefault(candidate => candidate.TextContent.Contains(field.Label, StringComparison.Ordinal));
         return legend?.TextContent ?? string.Empty;
     }
-
-    /// <summary>
-    /// The schema with every <c>show_if</c> removed. The labels are what is checked, not visibility, and a field a
-    /// condition hides from an empty form would otherwise escape the check.
-    /// </summary>
-    private static string EveryFieldVisible(string schemaJson)
-    {
-        var root = JsonNode.Parse(schemaJson)!.AsObject();
-        foreach (var section in root["sections"]!.AsArray().Select(node => node!.AsObject()))
-        {
-            section.Remove("show_if");
-            foreach (var field in section["fields"]!.AsArray().Select(node => node!.AsObject()))
-            {
-                field.Remove("show_if");
-            }
-        }
-
-        return root.ToJsonString();
-    }
-
-    private static IReadOnlyList<SchemaField> FieldsOf(string seedKey)
-        => FormSchemaParser.Parse(ReadSeedSchema(seedKey)).Sections.SelectMany(section => section.Fields).ToList();
-
-    private static IEnumerable<string> SeedKeysWithASchema()
-        => Directory.EnumerateDirectories(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds"))
-            .Select(Path.GetFileName)
-            .Select(seedKey => seedKey!)
-            .Where(seedKey => File.Exists(SeedSchemaPath(seedKey)))
-            .Order(StringComparer.Ordinal)
-            .ToList();
-
-    private static string ReadSeedSchema(string seedKey)
-        => File.ReadAllText(SeedSchemaPath(seedKey));
-
-    private static string SeedSchemaPath(string seedKey)
-        => Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", seedKey, "schema.json");
 }

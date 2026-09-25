@@ -425,10 +425,8 @@
   private bool IsAtFault(int questionId) => _questionAtFault == questionId;
 
   /// <summary>A comment box is described by its help text, and by the refusal when it is the question at fault.</summary>
-  private string CommentDescribedBy(string inputId, int questionId)
-    => IsAtFault(questionId) ? $"{HelpTextId(inputId)} {ErrorSummaryId}" : HelpTextId(inputId);
-
-  private static string HelpTextId(string inputId) => Wombat.Web.Components.Shared.FormField.HelpTextId(inputId);
+  private string? CommentDescribedBy(string inputId, int questionId)
+    => FieldHelp.DescribedBy(inputId, CommentHelpText, IsAtFault(questionId) ? ErrorSummaryId : null);
 
   private bool IsChosen(int questionId, int value)
     => Fields!.Scale.TryGetValue(questionId, out var chosen) &&

@@ -93,7 +93,7 @@
              vocabulary no longer holds is still listed, so it can be seen and withdrawn. *@
           <FormField Label="This tool is" InputId="type-wba-tool"
                      HelpText="Choosing an instrument lets each curriculum item's tool list decide which EPAs this form can be filed against. 'Not a WBA instrument' leaves it unrestricted. Takes effect when you save the draft, not when you publish, and discarding the draft does not undo it. On a seeded type, publish or discard that draft afterwards, or seed updates stop reaching the type.">
-            <select id="type-wba-tool" class="form-select" @bind="_wbaToolKey">
+            <select id="type-wba-tool" class="form-select" aria-describedby="@FieldHelp.Id("type-wba-tool")" @bind="_wbaToolKey">
               <option value="">Not a WBA instrument</option>
               @foreach (var tool in WbaToolOptions)
               {
@@ -149,7 +149,7 @@
                Credit that reads an EPA field must read this one, and a save says so if it does not. *@
             <FormField Label="EPA field" InputId="evidence-epa-field"
                        HelpText="The field naming the EPA this activity is evidence for. It is shown on activity lists, and credit rules that match on an EPA field must use this one.">
-              <select id="evidence-epa-field" class="form-select"
+              <select id="evidence-epa-field" class="form-select" aria-describedby="@FieldHelp.Id("evidence-epa-field")"
                       value="@(_builderSchema.EvidenceEpaField ?? string.Empty)"
                       @onchange="OnEvidenceEpaFieldChanged">
                 <option value="">None — this form is about no single EPA</option>
@@ -266,7 +266,7 @@
                     @* A User field offers the people of the trainee's institution who hold this role; the server checks
                        the same (T102). It has no options of its own. *@
                     <FormField Label="Names a" InputId="field-role" HelpText="Who this field may name: someone at the trainee's institution holding this role.">
-                      <select id="field-role" class="form-select" @bind="selectedField.NomineeRole">
+                      <select id="field-role" class="form-select" aria-describedby="@FieldHelp.Id("field-role")" @bind="selectedField.NomineeRole">
                         <option value="">Assessor (default)</option>
                         @foreach (var role in NomineeRoleChoices(selectedField.NomineeRole))
                         {
@@ -281,7 +281,7 @@
                        (T191); a bare line is its own label. The help text says so, since nothing else on the page does. *@
                     <FormField Label="Options" InputId="field-options" FullWidth="true"
                                HelpText="One option per line; a comma is part of the option. Write value | Label to show a label: the form shows the label, and the activity stores the value.">
-                      <textarea id="field-options" class="form-control" rows="4" aria-describedby="@Wombat.Web.Components.Shared.FormField.HelpTextId("field-options")" @bind="selectedField.OptionsText"></textarea>
+                      <textarea id="field-options" class="form-control" rows="4" aria-describedby="@FieldHelp.Id("field-options")" @bind="selectedField.OptionsText"></textarea>
                     </FormField>
                     <FormField Label="Catalogue key" InputId="field-catalogue">
                       <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />
@@ -290,7 +290,7 @@
                   @if (selectedField.Type == FieldType.Scale)
                   {
                     <FormField Label="Entrustment scale" InputId="field-scale" HelpText="Levels of the chosen scale render as the rating dropdown at runtime.">
-                      <select id="field-scale" class="form-select" @bind="selectedField.ScaleKey">
+                      <select id="field-scale" class="form-select" aria-describedby="@FieldHelp.Id("field-scale")" @bind="selectedField.ScaleKey">
                         <option value="">Select…</option>
                         @foreach (var scale in _entrustmentScales)
                         {

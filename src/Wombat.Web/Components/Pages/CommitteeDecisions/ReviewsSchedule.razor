@@ -36,7 +36,7 @@
           </InputSelect>
         </FormField>
         <FormField Label="Trainee" InputId="review-trainee" Required="true" HelpText="@TraineeHelpText">
-          <InputSelect id="review-trainee" class="form-select" @bind-Value="_model.TraineeUserId" @bind-Value:after="LoadPreviewAsync" disabled="@(_model.PanelId is null)">
+          <InputSelect id="review-trainee" class="form-select" aria-describedby="@FieldHelp.DescribedBy("review-trainee", TraineeHelpText)" @bind-Value="_model.TraineeUserId" @bind-Value:after="LoadPreviewAsync" disabled="@(_model.PanelId is null)">
             <option value="">Select trainee</option>
             @foreach (var trainee in _trainees)
             {
@@ -48,7 +48,7 @@
            evidence window below, which stays editable: the window is what the snapshot reads, the period is what the
            committee decides for, and neither is derived from the other. *@
         <FormField Label="Period" InputId="review-period" Required="true" HelpText="The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.">
-          <InputSelect id="review-period" class="form-select" @bind-Value="_model.PeriodKey" @bind-Value:after="OnPeriodChangedAsync">
+          <InputSelect id="review-period" class="form-select" aria-describedby="@FieldHelp.Id("review-period")" @bind-Value="_model.PeriodKey" @bind-Value:after="OnPeriodChangedAsync">
             @foreach (var period in _periods)
             {
               <option value="@period.Key">@period.Label</option>
@@ -68,7 +68,7 @@
            other: entrustment-only before a College committee, and never at a general panel's semester-2 sitting. *@
         <FormField Label="Review type" InputId="review-type" Required="true" HelpText="@ReviewTypeHelpText">
           <InputSelect id="review-type" class="form-select" @bind-Value="_model.ReviewType"
-                       aria-describedby="@(ReviewTypeHelpText is null ? null : Wombat.Web.Components.Shared.FormField.HelpTextId("review-type"))">
+                       aria-describedby="@FieldHelp.DescribedBy("review-type", ReviewTypeHelpText)">
             @foreach (var type in AllowedTypes)
             {
               <option value="@type">@CommitteeDecisionWording.ReviewTypeLabel(type)</option>

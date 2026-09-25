@@ -73,6 +73,8 @@ public sealed class PanelEditSeatTests : TestContext
         System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-warning").TextContent, @"\s+", " ").Trim()
             .Should().Be("1 member of this panel is no longer an active committee member at its institution, so is not " +
                          "listed below. Saving takes that member off the panel.");
+        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse(
+            "it says what the page is, on every visit; a live region would read it out each time (T193)");
 
         // The members' own form: an Administrator also sees the College committee form above it (T131 slice 3).
         cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null).Submit();

@@ -1,6 +1,6 @@
 @if (!_dismissed)
 {
-  <div class="alert alert-@Kind" role="@Role">
+  <div id="@Id" class="alert alert-@Kind" role="@EffectiveRole">
     @if (Dismissible)
     {
       <div class="actions-cell">
@@ -23,10 +23,31 @@
   [Parameter] public bool Dismissible { get; set; }
 
   /// <summary>
-  /// An ARIA role, when the alert is a message that must be announced as it appears ("alert" for a refusal). Omitted
-  /// by default: most alerts are page content present from the first render, and a role would announce them all.
+  /// The alert's id, for a control that names it with <c>aria-describedby</c>. A refusal already on the page when it
+  /// loads is not announced by its role, so the field that takes focus names it instead (the sign-in page, T193).
+  /// </summary>
+  [Parameter] public string? Id { get; set; }
+
+  /// <summary>
+  /// The alert's ARIA role. Left null, it follows <see cref="Kind" /> (T193): a danger alert is an <c>alert</c>, so a
+  /// refusal that appears after a click is announced at once; a warning and a success are a <c>status</c>, announced when
+  /// the reader is next idle, because nearly every one reports what an action did. An info alert has none. A caller that
+  /// knows better says so: a refusal shown as a warning is an <c>alert</c>, and a warning or success that is standing
+  /// page content, there on every visit, takes an empty string, which renders no role at all.
   /// </summary>
   [Parameter] public string? Role { get; set; }
+
+  private string? EffectiveRole => Role switch
+  {
+    null => Kind switch
+    {
+      "danger" => "alert",
+      "warning" or "success" => "status",
+      _ => null
+    },
+    _ when string.IsNullOrWhiteSpace(Role) => null,
+    _ => Role
+  };
 
   private void Dismiss() => _dismissed = true;
 }
