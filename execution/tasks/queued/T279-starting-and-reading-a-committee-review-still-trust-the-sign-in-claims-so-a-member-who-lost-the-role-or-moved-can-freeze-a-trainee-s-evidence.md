@@ -36,3 +36,8 @@ chair's actions. Consider shortening the security-stamp revalidation interval, o
 ## Related
 
 T256, T237, T194.
+
+Note, 2026-09-25 (the lifecycle browser check): an erased user's open session outlived the erasure by about 30 minutes.
+No `SecurityStampValidatorOptions.ValidationInterval` is set, so Identity's default applies, and the old cookie still
+opened `/`, `/account/data-rights` and `/portfolio/progress` with the full Trainee nav. Set a short app-wide interval
+(1–5 minutes), or revalidate on each circuit start. That also closes most of this task's stale-claims window.

@@ -45,3 +45,7 @@ erasure.
 ## Related
 
 T258, T238, T026, T207.
+
+Notes, 2026-09-25 (the lifecycle browser check): erasure also leaves the person's address in two places:
+- `Invitations.Email`, on the invitation addressed to them. The executor rewrites only invitations the person issued.
+- `DataRightsRequests.RequesterDisplayName`, which `/admin/data-rights` shows after completion.

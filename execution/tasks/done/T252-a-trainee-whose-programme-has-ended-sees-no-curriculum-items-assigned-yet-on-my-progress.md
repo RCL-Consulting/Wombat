@@ -1,11 +1,12 @@
 ---
 id: T252
 title: A trainee whose programme has ended sees "No curriculum items assigned yet" on My progress
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T252 — A trainee whose programme has ended sees "No curriculum items assigned yet" on My progress
@@ -33,8 +34,30 @@ does.
 
 ## Verification
 
-- [ ] An ended trainee's My progress shows their periods with D49's wording. bUnit and a handler test.
+- [x] An ended trainee's My progress shows their periods with D49's wording. bUnit and a handler test.
 
 ## Related
 
 T209, D49, T166.
+
+---
+
+## As built — 2026-09-25 (`e91a8a8`)
+
+A trainee whose programme has ended sees My progress read-only, for the profile they ended on:
+- a notice at the top saying the programme ended, and when;
+- a "Your programme" card;
+- periods newest first, with D49's marker;
+- each card's MSF line and period failures, and no progress bars.
+
+Home says the same. Handler and bUnit tests.
+
+Browser on dev (scripted Chrome, master `f19417d`; `pg_dump -n public` first, at `recovery/pre-t258-migration.dump`): instadmin deactivated the dev trainee with a last day of 2026-08-20.
+- **My progress** read "Your programme ended on 20 August 2026. This page is your record of it and is read-only…". The
+  periods read "Semester 2, 2026 · no target (your programme ended part-way through) · 10 recorded" and "Semester 1,
+  2026 · 2 of 3, 1 short". Every card had an MSF line, and there were 0 progress bars.
+- **Home** read "…no target applies to you any more…".
+- **With the end day nulled by SQL**, the page read "Wombat did not record the day it ended…".
+- **Restored by SQL:** the page is byte-identical to the baseline.
+
+**Found:** encounters after the last day still count. Filed as [T281], with a default adopted.

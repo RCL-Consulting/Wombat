@@ -51,3 +51,6 @@ T226, T198, T188.
 
 Note, 2026-09-25 (the H1 browser check): on `/msf/campaigns/4` at 1000px, the only card sits in the narrow column of
 the page's two-column grid (223px wide, 447px empty beside it), and its table scrolls 143px inside.
+
+Note, 2026-09-25 (the lifecycle browser check): the trainee's data-rights table shows UTC times with no zone label
+("12:58" for 14:58 SAST). Show South African time, or label the zone.
