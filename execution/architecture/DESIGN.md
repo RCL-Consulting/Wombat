@@ -171,7 +171,7 @@ Copy `MainLayout.razor.css` from ClinicAssist with the class names unchanged. On
 
 - Brand row at the top: the mark (`/brand/wombat-mark.svg`, an `<img>`, § Logo & brand assets) and the `Wombat`
   wordmark.
-- Nav items are `<NavLink class="nav-link">` inside `<div class="nav-item px-3">`. Home, My Account, Data Rights and
+- Nav items are `<NavLink class="nav-link">` inside `<div class="nav-item">`. Home, My Account, Data Rights and
   Logout are written out; the role links come from `Sections` in `NavMenu.razor`'s `@code`, a list of (roles, links)
   rendered inside the signed-in `<AuthorizeView>` (T178). Each page is declared once there, so it has one label and one
   icon wherever it is offered.
@@ -180,6 +180,10 @@ Copy `MainLayout.razor.css` from ClinicAssist with the class names unchanged. On
   `.nav-item ::deep .icon` rule — **no Bootstrap Icons font**. A role link names its icon in its `Sections` entry.
 - Logout is a `<form action="/account/logout" method="post">` with an `AntiforgeryToken`, rendered as a full-width `.nav-logout-button`.
 - Mobile: a checkbox-backed `.navbar-toggler` controls visibility. No JavaScript.
+- Every class in `NavMenu.razor` is `NavMenu.razor.css`'s or app.css's (T266). The Blazor template's Bootstrap classes
+  (`ps-3`, `navbar`, `navbar-dark` and a `container-fluid` wrapper on the brand row, `flex-column` on the nav, `px-3` on
+  each item) styled nothing, since Wombat loads no Bootstrap, and are gone. Measured on a static copy, the items are where
+  they were; the brand is 2px lower, now centred in its 68px row, as its wrapper's line box no longer holds it up.
 
 The nav item list is role-driven. Each row is what that role alone sees, in menu order; `…` in the "Everyone signed in"
 row is where the role's own links go. `NavMenuAuthorizationTests` renders the nav for every row and fails when the two
@@ -381,7 +385,9 @@ the column was a row of blank cells there; now it is left out. A line with no ac
 blank either, as above: its cell says why in a `.muted` span. In progress that is a staged line, "Staged below", where
 its decision is removed; on a decided review, "Fixed with the recorded decision" (T226 review). A cell's buttons sit in a
 `div.actions-cell` inside the `<td>`, never `td.actions-cell`: a table cell made a flex box is no longer a table cell,
-and its border no longer meets its row's.
+and its border no longer meets its row's. Every list page's buttons are in one since T266 (nine had `td.actions-cell`), and
+every actions column's header is the `.visually-hidden` "Actions" below (26 headers on 24 pages were an empty `<th>`).
+`Design/TableColumnClassTests` fails on either.
 
 **Row actions on the curriculum items page** (T222) follow § Button system: Edit and Remove are `.btn .btn-sm
 .btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and, where the row names its
@@ -551,7 +557,7 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
 .scale-choices    /* one radio per line for a rating scale's points, lowest first (T205) */
 .workflow-action-reasons /* list under a workflow action row: why a disabled action cannot be taken (T107) */
-.stage-minima     /* two-column grid: training year | rung picker, one row per year (T125 curriculum minima) */
+.stage-minima     /* grid: training year | rung picker (up to 18rem, floor 0, T266) | Remove, one row per year (T125) */
 ```
 
 **Rules:**
@@ -741,7 +747,15 @@ T019 introduces a small builder-specific extension to the shared system:
 ```
 
 - `.tab-bar` sits directly below `PageHeader` inside the surrounding `.form-container`.
-- `.builder-two-col` is `grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr)` with the normal `var(--space-lg)` gap and collapses to a single column below `900px`.
+- `.builder-two-col` is `grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr)` with the normal `var(--space-lg)`
+  gap, and collapses to one column by the width of **its card**, not the viewport's (T266). The card, the `.form-container`
+  whose direct child it is, is a size container (`container: builder / inline-size`, selected by
+  `:has(> .builder-two-col)`), and under 46.5rem of it, the two columns' own minimum (320 + 400 + 24px), the columns stack.
+  The sidebar, the gutter and the card's padding take 372px of the viewport, so the viewport's 900px said nothing: until
+  T266 the page scrolled sideways by 158px at 901px, 109px at 950px and 59px at 1000px, and up to 1115px the columns ran
+  into the card's padding. Now they stack up to 1115px and stand side by side from 1116px (a 744px card). Each column's
+  content keeps to its track (`min-width: 0`). `Design/NarrowLayoutTests` pins the rules, and
+  `ActivityTypeBuilderLayoutTests` the columns' place as the card's child.
 - The left column uses stacked `.detail-card` sections and field rows. The right column is always the live preview rendered by the shared `ActivityForm.razor`.
 - New builder affordances still reuse the existing button, card, form, alert, and validation classes. The builder does not get its own parallel design language.
 
@@ -779,7 +793,9 @@ T019 introduces a small builder-specific extension to the shared system:
   `aria-describedby`, so the refusal is read with the field. A refusal that names fields gives its `Alert` an `Id` the
   same way, and every field it names points at it (the activity pages, T263, § Form system).
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
-- Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead.
+- Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead. The
+  entrustment decisions list and an audit entry were its last uses, until T266; `PageShapeSmokeTests` scans every page
+  for it.
 - A field's warning and its predicted refusal never show together. When the page can tell the server will refuse what is
   typed (an encounter date before the trainee's programme started, T192), the field says so as a `.validation-message`
   in place of any `.field-warning`, whose "can still be filed" would contradict it. Both sit in one `role="status"`
@@ -820,8 +836,34 @@ T019 introduces a small builder-specific extension to the shared system:
 .badge-declined  /* --danger-bg bg, --danger-color text */
 ```
 
-Used on activity state indicators in dashboard list cards and activity tables. The class is the state's key and the
-text is its label (T220): `<span class="badge badge-submitted">Awaiting supervisor</span>`.
+Used on activity state indicators in dashboard list cards and activity tables. The state picks the class and the text is
+its label (T220, T266): `<span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>`
+renders `<span class="badge badge-submitted">Awaiting supervisor</span>`.
+
+**One helper names every badge class** (T266): `BadgeFor` (Components/Shared). A page writes
+`class="badge @BadgeFor.…(…)"` and never a `badge-` class of its own; `Design/DefinedClassTests` fails on one named
+anywhere else (written out, glued to an expression, or interpolated: `$"badge-{key}"`), and holds every value each
+`BadgeFor` method can return to app.css; `Design/BadgeForStatusTableTests` pins each status's tint below, one row per
+enum member, so a swapped tint or a new status fails. Until T266 eight pages wore `badge-success`, `-danger`,
+`-warning`, `-info` and `-primary`, none of them defined, and the dashboards `badge-{state key}`, tinted for five of the
+fifteen keys the seeded workflows use.
+
+- `BadgeFor.State(BadgeState)` is the five: `Draft` grey, `Submitted` blue, `Accepted` amber, `Completed` green,
+  `Declined` red.
+- `BadgeFor.ActivityState(key, isFinished)` is the dashboards' activity states. Done is green, and done is a terminal
+  state of the activity's **pinned** workflow (`ActivityCompletion`, D44), which the dashboard queries send as
+  `IsFinished`; never a key's name. `teaching_session` finishes in `accepted`, which on a Mini-CEX is a supervisor's work
+  in hand: by the key alone a finished teaching session was amber on the assessor's Recent decisions (T266 review).
+  `declined`, `rejected` and `cancelled` are red, even where a version makes them terminal. Of the rest, `submitted` and
+  `requested` (waiting on a supervisor) are blue and `accepted` amber. Any other key, a draft or a state an institution's
+  own workflow names, is grey: the badge's words, the state's label, say what it is, and grey claims nothing. The trainee's
+  inbox holds no finished work, so it passes `false`.
+- `AgendaLine`, `AgendaElsewhere`, `DecisionDue`, `MsfCampaign` and `EntrustmentDecision` are the tables in this file.
+- `DataRightsRequest`: submitted blue, under review amber, approved and completed green, rejected red, withdrawn grey.
+  `JobRun`: running amber, succeeded green, failed red. `AuditResult`: done green, failed red.
+- `Standing` is the comparison badges below.
+- A category or a type (the audit log's category, a data rights request's type) is not a state, so it is not a badge: its
+  words stand alone, as on the requester's own data rights page.
 
 A status that is not an activity state is mapped onto these five in C#, never written as `badge-{status}`: app.css
 defines no other. The entrustment decisions list did that, and all four of its STAR statuses were untinted pills (T226
@@ -1106,7 +1148,7 @@ trainee's page admits Coordinator as well as Trainee and Administrator, so that 
 page it is sent to. The nav still offers MSF Reports to Trainee alone.
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
-and the report print too. Its badge is `MsfCampaignText.StateBadge`:
+and the report print too. Its badge is `BadgeFor.MsfCampaign`:
 
 | Campaign state | Badge |
 |---|---|
@@ -1585,8 +1627,8 @@ history, the activity lists, the dashboards' badges, the committee's evidence sn
 the label the query carried from the activity's pinned workflow (`CurrentStateLabel`, `FromStateLabel`, `ToStateLabel`,
 `TransitionLabel`, `FinalStateLabel`, `SourceStateLabel`), so a page names a state as the refusals and notices on it do
 (T189): "Awaiting supervisor", not `submitted`. A move is named as its button is ("Sign Off"). Razor never works a label
-out. The key appears only as a badge's colour class (`badge-@item.CurrentState`), and as text only where the pinned
-workflow cannot name it.
+out. The key appears only as what picks a badge's colour (`BadgeFor.ActivityState(item.CurrentState, item.IsFinished)`,
+§ Badges), and as text only where the pinned workflow cannot name it.
 
 **A committee review's state is shown by its label, never by the enum's name** (T250). The schedule, the review page,
 the trainee's own reviews and the portfolio PDF print one label per state, `CommitteeDecisionWording.StateLabel`, which
@@ -1639,6 +1681,15 @@ else
   <section class="detail-card"> main body </section>
 </div>
 ```
+
+A details grid whose second card comes and goes with the page's state can give a lone card the whole row:
+`.details-grid--lone-spans` (`> .detail-card:only-child` spans `1 / -1`, T266). The grid's first column is its narrow
+third, so a lone card sat there with the rest of the row empty: the MSF campaign page, whose Quick template card is only
+on the create page, showed a campaign's card 223px wide at 1000px, in a 694px row, with its invitees table scrolling 143px
+inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs,
+My progress's trajectories) one card should look like each of several, and a lone trajectory chart, which scales with
+its width, would stand three times as tall; on My MSF reports the list would jump from the whole row to a third of it
+when a report is selected.
 
 ### Form page
 
@@ -1884,7 +1935,7 @@ body, h1..h5, .page-subtitle
 .state-panel-title, .state-panel-copy, .skeleton, @keyframes skeleton-pulse
 
 /* ── Utilities ─────────────────────────────────────── */
-.shadow, .text-center, .mb-3, .visually-hidden
+.shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
 
 /* ── Accessibility ────────────────────────────────── */
 fieldset, fieldset legend
@@ -1895,6 +1946,17 @@ When a new section is needed (say `/* ── Badges ── */`), add its heading
 ## Non-negotiables
 
 - One `app.css`. One design system. Component-scoped `.razor.css` only for the layout shell and NavMenu.
+- **Every class a page names is defined** (T266): by app.css, or by the component's own `.razor.css`, or it is `reload`
+  on the error banner, which blazor.web.js reads and nothing styles. A class the framework puts on at run time
+  (`NavLink`'s `active`, an input's `invalid`) is not in a page's markup; a page that wrote one itself would be styling by
+  it, so it must be defined. A class nothing defines styles nothing, silently. `Design/DefinedClassTests` reads every
+  `class="…"` in every `.razor` file as Razor writes it (the words written out, the literals an `@(…)` can put there, and a
+  word glued to an expression or an interpolation hole as the start of a class) and fails on any other. The start of a
+  class passes only when it is a whole class itself (`form-select{InvalidClass}`), or in the one file whose expression a
+  test holds to app.css (`Alert.razor`'s `alert-@Kind`, by the Alert-kind test, which reads a written-out `Kind` and the
+  literals of a `Kind="@(…)"`): never because some defined class starts with it, which let `$"badge badge-{key}"` through
+  (T266 review). An allowance the scan does not need fails it too. A class a method returns is out of its sight, which is
+  why badges come from `BadgeFor` alone.
 - No raw hex colours outside `:root`. No raw spacing outside the `--space-*` scale.
 - No `<table class="table">`. Use `.clinic-table` wrapped in `.table-container`.
 - Every list page renders loading / empty / error explicitly via `StatePanel` or equivalent.

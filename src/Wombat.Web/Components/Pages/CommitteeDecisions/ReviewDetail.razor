@@ -530,8 +530,10 @@
                      (_review.State == CommitteeReviewState.InProgress ||
                       (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null)))
                 {
-                  @* T239: named by the EPA whose staged decision it removes; a review stages one decision an EPA. *@
-                  <button type="button" class="btn btn-link" disabled="@OtherInFlight(RemoveAction(pending.Id))"
+                  @* T239: named by the EPA whose staged decision it removes; a review stages one decision an EPA. A row's
+                     action is .btn .btn-sm .btn-outline (DESIGN.md § Button system). It was .btn-link, which app.css does
+                     not define (T266). *@
+                  <button type="button" class="btn btn-sm btn-outline" disabled="@OtherInFlight(RemoveAction(pending.Id))"
                           aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(pending.Id)))"
                           aria-label="@($"Remove the staged decision on {pending.EpaCode}")"
                           @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
@@ -1890,7 +1892,7 @@
                     <th scope="row">@line.EpaCode — @line.EpaTitle</th>
                     <td>@line.WindowLabel</td>
                     <td>
-                      <span class="badge @CommitteeAgendaText.BadgeClass(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
+                      <span class="badge @BadgeFor.AgendaLine(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
                       @if (detail is not null)
                       {
                         <div class="muted">@detail</div>
@@ -1985,7 +1987,7 @@
               <li id="@($"agenda-elsewhere-{line.EpaId}")">
                 <strong>@line.EpaCode — @line.EpaTitle</strong>
                 <span>@line.PanelName · @line.WindowLabel</span>
-                <span class="badge @CommitteeAgendaText.ElsewhereBadgeClass(line.Status)">@CommitteeAgendaText.ElsewhereLabel(line.Status)</span>
+                <span class="badge @BadgeFor.AgendaElsewhere(line.Status)">@CommitteeAgendaText.ElsewhereLabel(line.Status)</span>
               </li>
             }
           </ul>

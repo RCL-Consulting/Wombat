@@ -33,6 +33,42 @@ public sealed partial class TableColumnClassTests
     }
 
     [Fact]
+    public void NoTableCell_IsItselfARowsButtonCluster()
+    {
+        // A row's buttons sit in a div.actions-cell inside the cell, never td.actions-cell (DESIGN.md § Table system): a
+        // cell made a flex box is no longer a table cell, and its border no longer meets its row's. Nine list pages had
+        // td.actions-cell until T266.
+        var web = Path.Combine(SolutionRoot(), "src", "Wombat.Web");
+        var cells = Directory.EnumerateFiles(web, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(path => TableCell().Matches(File.ReadAllText(path))
+                .Select(cell => (File: Path.GetRelativePath(web, path), Tag: cell.Value)))
+            .ToList();
+
+        cells.Where(cell => ActionsCellClass().IsMatch(cell.Tag))
+            .Select(cell => $"{cell.File}: {cell.Tag}")
+            .Should().BeEmpty("the cluster is a div inside the cell");
+        ActionsCellClass().IsMatch("""<td class="actions-cell">""").Should().BeTrue("guard: the pattern sees one");
+        ActionsCellClass().IsMatch("""<td class="col-actions">""").Should().BeFalse();
+    }
+
+    [Fact]
+    public void EveryHeaderCell_NamesItsColumn()
+    {
+        // An actions column's header is a visually hidden "Actions", never an empty <th> (DESIGN.md § Table system): a
+        // header names the cells under it, and a screen reader reads each button's cell by it. Until T266, 26 headers on
+        // 24 pages were empty.
+        var web = Path.Combine(SolutionRoot(), "src", "Wombat.Web");
+        var empty = Directory.EnumerateFiles(web, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(path => EmptyHeaderCell().Matches(File.ReadAllText(path))
+                .Select(cell => $"{Path.GetRelativePath(web, path)}: {cell.Value}"))
+            .ToList();
+
+        empty.Should().BeEmpty("""an actions column's header is <th><span class="visually-hidden">Actions</span></th>""");
+        EmptyHeaderCell().IsMatch("<th></th>").Should().BeTrue("guard: the pattern sees one");
+        EmptyHeaderCell().IsMatch("<th scope=\"col\">\n  </th>").Should().BeTrue("guard: and one spread over lines");
+    }
+
+    [Fact]
     public void TheScan_FindsAStyledCell_AndPassesAClassedOne()
     {
         // The scan's own rule, shown failing, so a scan that matched nothing would not pass every page.
@@ -153,6 +189,14 @@ public sealed partial class TableColumnClassTests
 
     [GeneratedRegex(@"\sstyle\s*=")]
     private static partial Regex StyleAttribute();
+
+    /// <summary>A cell tag whose class list names <c>actions-cell</c>.</summary>
+    [GeneratedRegex(@"\sclass\s*=\s*""[^""]*(?<![\w-])actions-cell(?![\w-])")]
+    private static partial Regex ActionsCellClass();
+
+    /// <summary>A header cell with nothing in it but white space.</summary>
+    [GeneratedRegex(@"<th\b[^>]*>\s*</th>")]
+    private static partial Regex EmptyHeaderCell();
 
     [GeneratedRegex(@"^width: \d+(\.\d+)?%$")]
     private static partial Regex PercentWidth();

@@ -14,11 +14,13 @@
   </Actions>
 </PageHeader>
 
-<div class="filter-bar">
-  <div class="filter-row">
-    <div class="filter-field">
-      <label>Category</label>
-      <select class="form-control" @bind="_filterCategory">
+@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields. Until T266 it was a
+   filter-bar, -row and -field, none of which app.css defines, so the fields stacked full width with no card round them. *@
+<div class="search-container shadow">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="audit-category">Category</label>
+      <select id="audit-category" class="form-select" @bind="_filterCategory">
         <option value="">All</option>
         @foreach (var cat in Enum.GetValues<AuditCategory>())
         {
@@ -26,29 +28,29 @@
         }
       </select>
     </div>
-    <div class="filter-field">
-      <label>Action</label>
-      <input class="form-control" type="text" placeholder="e.g. CreateInstitutionCommand" @bind="_filterAction" />
+    <div class="search-field">
+      <label for="audit-action">Action</label>
+      <input id="audit-action" class="form-control" type="text" placeholder="e.g. CreateInstitutionCommand" @bind="_filterAction" />
     </div>
-    <div class="filter-field">
-      <label>Actor user ID</label>
-      <input class="form-control" type="text" @bind="_filterActorUserId" />
+    <div class="search-field">
+      <label for="audit-actor">Actor user ID</label>
+      <input id="audit-actor" class="form-control" type="text" @bind="_filterActorUserId" />
     </div>
-    <div class="filter-field">
-      <label>Subject type</label>
-      <input class="form-control" type="text" placeholder="e.g. CommitteeReview" @bind="_filterSubjectType" />
+    <div class="search-field">
+      <label for="audit-subject-type">Subject type</label>
+      <input id="audit-subject-type" class="form-control" type="text" placeholder="e.g. CommitteeReview" @bind="_filterSubjectType" />
     </div>
-    <div class="filter-field">
-      <label>From (UTC)</label>
-      <input class="form-control" type="datetime-local" @bind="_filterFrom" />
+    <div class="search-field">
+      <label for="audit-from">From (UTC)</label>
+      <input id="audit-from" class="form-control" type="datetime-local" @bind="_filterFrom" />
     </div>
-    <div class="filter-field">
-      <label>To (UTC)</label>
-      <input class="form-control" type="datetime-local" @bind="_filterTo" />
+    <div class="search-field">
+      <label for="audit-to">To (UTC)</label>
+      <input id="audit-to" class="form-control" type="datetime-local" @bind="_filterTo" />
     </div>
-    <div class="filter-field">
-      <label>Result</label>
-      <select class="form-control" @bind="_filterSuccess">
+    <div class="search-field">
+      <label for="audit-result">Result</label>
+      <select id="audit-result" class="form-select" @bind="_filterSuccess">
         <option value="">All</option>
         <option value="true">Success only</option>
         <option value="false">Failures only</option>
@@ -81,7 +83,8 @@
       <Row Context="entry">
         <tr>
           <td><code>@entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</code></td>
-          <td><span class="badge @CategoryBadgeClass(entry.Category)">@entry.Category</span></td>
+          @* A category is not a state, so it is not a badge (DESIGN.md § Badges). *@
+          <td>@entry.Category</td>
           <td>
             <span class="text-sm">@entry.Action</span>
           </td>
@@ -107,14 +110,7 @@
             }
           </td>
           <td>
-            @if (entry.Success)
-            {
-              <span class="badge badge-success">OK</span>
-            }
-            else
-            {
-              <span class="badge badge-danger">FAILED</span>
-            }
+            <span class="badge @BadgeFor.AuditResult(entry.Success)">@(entry.Success ? "OK" : "FAILED")</span>
           </td>
           <td>
             @* T239: named by its row, what was done and when, and by whom where two entries share both. *@
@@ -124,11 +120,13 @@
       </Row>
     </DataTable>
 
-    <div class="pagination-row">
-      <span class="text-muted text-sm">
+    @* The pager's own classes (DESIGN.md § Pager). The page size is fixed here, so it is not PagerControls, which offers
+       one. *@
+    <div class="pager">
+      <span class="pager-info">
         Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
       </span>
-      <div class="pagination-controls">
+      <div class="pager-actions">
         <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
         <span class="text-sm">Page @_page</span>
         <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
@@ -210,13 +208,4 @@
     _page++;
     await LoadAsync();
   }
-
-  private static string CategoryBadgeClass(AuditCategory category) => category switch
-  {
-    AuditCategory.Authentication => "badge-info",
-    AuditCategory.Permission => "badge-warning",
-    AuditCategory.DataRights => "badge-danger",
-    AuditCategory.Committee => "badge-primary",
-    _ => ""
-  };
 }

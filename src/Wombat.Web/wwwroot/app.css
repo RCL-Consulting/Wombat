@@ -492,12 +492,16 @@ h1[tabindex="-1"]:focus {
   margin: 0;
 }
 
-/* Rows of a label, one control and a Remove button, aligned in three columns (T125's minimum by training year). */
+/* Rows of a label, one control and a Remove button, aligned in three columns (T125's minimum by training year). The
+   control's column asks for up to 18rem, and takes whatever the year and the button leave it: its floor is 0 (T266).
+   With a 10rem floor the rows ran past the Add form's content edge into its padding, by 9px at 641px and 16px at 360px,
+   and out of the card at 320px, where the page scrolled 7px. The picker is now 93px wide at 641px, 116px at 390px and
+   still 288px (18rem) from 1000px. Measured in headless Chrome on a static copy of the form, with no scrollbar. */
 .stage-minima {
   align-items: center;
   display: grid;
   gap: var(--space-sm) var(--space-md);
-  grid-template-columns: fit-content(12rem) minmax(10rem, 18rem) max-content;
+  grid-template-columns: fit-content(12rem) minmax(0, 18rem) max-content;
   margin-bottom: var(--space-sm);
 }
 
@@ -1038,10 +1042,32 @@ textarea[aria-invalid="true"] {
   color: var(--surface-color);
 }
 
+/* The builder's editor rail and live preview (T019). Two columns need 320px + 400px + the gap, 46.5rem, of the room the
+   builder's own card gives them, which the viewport does not say: the sidebar, the page's gutter and the card's padding
+   take 372px of it. So the card is a size container, and the columns collapse by its width (T266). Until T266 they
+   collapsed by a (max-width: 900px) media query, so from 901px the two columns were wider than the card: the page
+   scrolled sideways by 158px at 901px, 109px at 950px and 59px at 1000px, and up to 1115px the columns ran into the
+   card's padding (16px at 1100px). Now they stand one above the other up to 1115px and side by side from 1116px, a 744px
+   card. Measured in headless Chrome on a static copy of the Form tab, with no scrollbar. Each column's content keeps to
+   its track rather than widen it. */
+.form-container:has(> .builder-two-col) {
+  container: builder / inline-size;
+}
+
 .builder-two-col {
   display: grid;
   gap: var(--space-lg);
   grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr);
+}
+
+.builder-two-col > * {
+  min-width: 0;
+}
+
+@container builder (width < 46.5rem) {
+  .builder-two-col {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ── Details grid ─────────────────────────────────── */
@@ -1058,12 +1084,19 @@ textarea[aria-invalid="true"] {
   min-width: 0;
 }
 
+/* Opt-in: a details grid whose second card comes and goes with the page's state gives a lone card the whole row (T266).
+   The grid's first column is its narrow one, so a lone card sat in a third of the row with the rest empty beside it: on
+   /msf/campaigns/{id} at 1000px, a 223px card in a 694px row, and its invitees table scrolled 143px inside it; at
+   1280px, 317px of 974px. With the modifier the card is 694px at 1000px and the table does not scroll. Not on every
+   details grid (T266 review): on a grid of like cards (My authorisations' STARs, My progress's trajectories) one card
+   should look like each of several, and a lone trajectory chart, which scales with its width, would stand three times as
+   tall; and on My MSF reports the list would jump from the whole row to a third of it when a report is selected. */
+.details-grid--lone-spans > .detail-card:only-child {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 900px) {
   .details-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .builder-two-col {
     grid-template-columns: 1fr;
   }
 
@@ -1188,6 +1221,20 @@ textarea[aria-invalid="true"] {
 
 .font-mono {
   font-family: Consolas, "Courier New", monospace;
+}
+
+/* A block of stored text shown verbatim, such as an audit entry's JSON payload (T266). Long lines wrap, and a long token
+   breaks, rather than widen the card. */
+.code-block {
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding: var(--space-md);
+  white-space: pre-wrap;
 }
 
 .list-unstyled {

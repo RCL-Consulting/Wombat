@@ -37,7 +37,8 @@
   }
 </div>
 
-<div class="details-grid">
+@* details-grid--lone-spans: once the campaign exists its card is the grid's only one, and takes the whole row (T266). *@
+<div class="details-grid details-grid--lone-spans">
   @* The Quick template card only where a campaign is being created (T225): a template is chosen at create, and a
      campaign that exists already has its questionnaire. Until T225 it sat beside every campaign's own card. Only for
      someone who runs campaigns (T248): creating a template is running campaigns, and the command refuses anyone else in
@@ -176,7 +177,7 @@
               <div><dt>Template</dt><dd>@setup.TemplateName (@MsfEvidenceKinds.Describe(setup.Kind))</dd></div>
               <div>
                 <dt>State</dt>
-                <dd><span id="msf-campaign-state" class="badge @MsfCampaignText.StateBadge(setup.State)">@MsfCampaignText.State(setup.State)</span></dd>
+                <dd><span id="msf-campaign-state" class="badge @BadgeFor.MsfCampaign(setup.State)">@MsfCampaignText.State(setup.State)</span></dd>
               </div>
               <div><dt>Response window</dt><dd>@setup.OpensOn.ToString("yyyy-MM-dd") to @setup.ClosesOn.ToString("yyyy-MM-dd")</dd></div>
             </dl>

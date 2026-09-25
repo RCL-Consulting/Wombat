@@ -128,7 +128,7 @@ else
               }
             </td>
             <td>
-              <span class="badge @BadgeClass(epa.YearStatus)">@StatusWords(epa.YearStatus)</span>
+              <span class="badge @BadgeFor.Standing(epa.YearStatus)">@StatusWords(epa.YearStatus)</span>
               @if (epa.YearStatus == EntrustmentStandingStatus.NotComparable)
               {
                 <div class="muted text-sm">@NotComparableReason(epa, epa.Decision?.OtherLadderName)</div>
@@ -245,13 +245,6 @@ else
     EntrustmentStandingStatus.Below => "Below",
     EntrustmentStandingStatus.NoDecision => "No decision",
     _ => "Not comparable"
-  };
-
-  private static string BadgeClass(EntrustmentStandingStatus status) => status switch
-  {
-    EntrustmentStandingStatus.AtOrAbove => "badge-standing-met",
-    EntrustmentStandingStatus.Below => "badge-standing-below",
-    _ => "badge-standing-none"
   };
 
   private static string ExitWords(EntrustmentStandingStatus status) => status switch

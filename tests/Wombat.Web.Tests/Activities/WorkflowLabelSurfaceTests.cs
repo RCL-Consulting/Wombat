@@ -125,12 +125,15 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
         Services.AddSingleton<IScopedSender>(new FakeSender().On<GetTraineeDashboardSummaryQuery>(_ => new TraineeDashboardSummaryDto(
             null,
             [new ActivityInboxItem(41, "Clinical Audit (Paediatrics)", "draft", "Draft", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))],
-            [new RecentActivityItem(42, "Clinical Audit (Paediatrics)", "submitted", "Awaiting supervisor", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))],
+            [
+                new RecentActivityItem(42, "Clinical Audit (Paediatrics)", "submitted", "Awaiting supervisor", IsFinished: false, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
+                new RecentActivityItem(44, "Teaching session", "accepted", "Accepted", IsFinished: true, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
+            ],
             [],
             IsPendingTrainee: false)));
 
         var cut = RenderComponent<TraineeDashboard>();
-        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 3);
 
         var inbox = BadgeFor(cut, 41);
         Text(inbox).Should().Be("Draft");
@@ -138,7 +141,10 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
 
         var recent = BadgeFor(cut, 42);
         Text(recent).Should().Be("Awaiting supervisor");
-        recent.ClassList.Should().Contain("badge-submitted", "the colour class is the state's key");
+        recent.ClassList.Should().Contain("badge-submitted", "the state's key picks the colour");
+
+        // A teaching session finishes in "accepted": done, so green, not a supervisor's work in hand (D44, T266 review).
+        BadgeFor(cut, 44).ClassList.Should().Contain("badge-completed").And.NotContain("badge-accepted");
     }
 
     [Fact]
@@ -149,14 +155,24 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
         Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
             0,
             [],
-            [new RecentDecisionItem(43, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc))])));
+            [
+                new RecentDecisionItem(43, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", IsFinished: true, new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc)),
+                new RecentDecisionItem(45, "Teaching session", "Thandi Nkosi", "accepted", "Accepted", IsFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
+                new RecentDecisionItem(46, "Mini-CEX", "Thandi Nkosi", "declined", "Declined", IsFinished: false, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
+            ])));
 
         var cut = RenderComponent<AssessorDashboard>();
-        cut.WaitForState(() => cut.FindAll(".badge").Count >= 1);
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 3);
 
         var badge = BadgeFor(cut, 43);
         Text(badge).Should().Be("Signed off");
-        badge.ClassList.Should().Contain("badge-signed_off");
+        // One of the badges app.css defines (BadgeFor, T266): badge-signed_off, which it does not, was an untinted pill.
+        badge.ClassList.Should().Contain("badge-completed").And.NotContain("badge-signed_off");
+
+        // Done is the pinned workflow's terminal state, not the key's name (D44): a finished teaching session, which ends
+        // in "accepted", was amber, the tint of work in hand (T266 review). A declined request is red.
+        BadgeFor(cut, 45).ClassList.Should().Contain("badge-completed").And.NotContain("badge-accepted");
+        BadgeFor(cut, 46).ClassList.Should().Contain("badge-declined");
     }
 
     /// <summary>
@@ -181,7 +197,7 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
 
         var onTime = BadgeFor(cut, 44);
         Text(onTime).Should().Be("Accepted for observation");
-        onTime.ClassList.Should().Contain("badge-accepted", "the colour class is the state's key");
+        onTime.ClassList.Should().Contain("badge-accepted", "every item on the card is in accepted");
         Text(BadgeFor(cut, 45)).Should().Be("Overdue");
     }
 

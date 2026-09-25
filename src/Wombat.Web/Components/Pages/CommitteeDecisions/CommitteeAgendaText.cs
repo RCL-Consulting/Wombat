@@ -25,20 +25,6 @@ public static class CommitteeAgendaText
         _ => status.ToString()
     };
 
-    /// <summary>
-    /// The badge a status wears (DESIGN.md § Badges, "Committee agenda"): the three shades of "still due" share the draft
-    /// badge and are told apart by their label, and so do the two of "decided".
-    /// </summary>
-    public static string BadgeClass(CommitteeAgendaLineStatus status) => status switch
-    {
-        CommitteeAgendaLineStatus.Staged => "badge-submitted",
-        CommitteeAgendaLineStatus.Decided => "badge-completed",
-        CommitteeAgendaLineStatus.DecidedElsewhere => "badge-completed",
-        CommitteeAgendaLineStatus.Deferred => "badge-accepted",
-        CommitteeAgendaLineStatus.NotDecided => "badge-declined",
-        _ => "badge-draft"
-    };
-
     /// <summary>What a line's status means for this sitting, said under its badge; null where the badge says it all.</summary>
     /// <param name="reviewState">
     /// The review's state. A line decided elsewhere and still due is said to be open to staging only while the review is in
@@ -115,16 +101,6 @@ public static class CommitteeAgendaText
         CommitteeAgendaElsewhereStatus.Deferred => "Deferred",
         CommitteeAgendaElsewhereStatus.Missed => "Missed",
         _ => "Not yet decided"
-    };
-
-    /// <summary>The badge another panel's decision wears; "Missed" is computed, never stored, and wears the declined badge.</summary>
-    public static string ElsewhereBadgeClass(CommitteeAgendaElsewhereStatus status) => status switch
-    {
-        CommitteeAgendaElsewhereStatus.Decided => "badge-completed",
-        CommitteeAgendaElsewhereStatus.OnAgenda => "badge-submitted",
-        CommitteeAgendaElsewhereStatus.Deferred => "badge-accepted",
-        CommitteeAgendaElsewhereStatus.Missed => "badge-declined",
-        _ => "badge-draft"
     };
 
     /// <summary>"PAED-004", "PAED-004 and PAED-005", "PAED-001, PAED-002 and PAED-004".</summary>

@@ -113,6 +113,7 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
                 names.NameOf(a.SubjectUserId),
                 a.CurrentState,
                 PinnedWorkflows.StateLabel(workflows[(a.ActivityTypeId, a.SchemaVersion)], a.CurrentState),
+                IsFinished(a),
                 a.UpdatedOn))
             .ToList();
 

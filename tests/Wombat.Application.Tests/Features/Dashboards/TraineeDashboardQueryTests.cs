@@ -117,6 +117,28 @@ public sealed class TraineeDashboardQueryTests
     }
 
     [Fact]
+    public async Task ARecentActivity_SaysWhetherItsPinnedWorkflowIsFinished()
+    {
+        // The badge on Recent activities is green when finished (T266 review), by the test the inbox uses (D44): an
+        // accepted teaching session is done and an accepted Mini-CEX is not; a discussed reflective exercise is done on
+        // version 1 and not on version 2, where a sign-off follows.
+        await using var db = CreateDb();
+        SeedFinishingTypes(db);
+        AddOwn(db, 1, TeachingTypeId, version: 1, "accepted", "{}");
+        AddOwn(db, 2, WbaTypeId, version: 1, "accepted", "{}");
+        AddOwn(db, 3, ReflectiveTypeId, version: 1, "discussed", "{}");
+        AddOwn(db, 4, ReflectiveTypeId, version: 2, "discussed", "{}");
+        AddOwn(db, 5, WbaTypeId, version: 1, "declined", "{}");
+        await db.SaveChangesAsync();
+
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
+
+        result.RecentActivities.Select(item => (item.ActivityId, item.IsFinished))
+            .Should().BeEquivalentTo([(1, true), (2, false), (3, true), (4, false), (5, false)]);
+    }
+
+    [Fact]
     public async Task AnotherTraineesActivities_AreInNoneOfTheLists()
     {
         // The architecture test's exemption for this handler rests on its rows being the caller's own

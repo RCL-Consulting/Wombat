@@ -36,7 +36,7 @@
                 <span>@decision.ExpiresOn.Value.ToString("d MMMM yyyy")</span>
                 @if (IsExpiringSoon(decision.ExpiresOn.Value))
                 {
-                  <span class="badge badge-warning">Expires in @((decision.ExpiresOn.Value.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber)) days</span>
+                  <span class="badge @BadgeFor.State(BadgeState.Accepted)">Expires in @((decision.ExpiresOn.Value.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber)) days</span>
                 }
               }
               else

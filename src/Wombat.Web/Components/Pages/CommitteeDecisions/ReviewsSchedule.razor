@@ -81,8 +81,10 @@
           </InputSelect>
         </FormField>
         <FormField Label="Formative only" InputId="review-formative">
-          <label class="checkbox-label">
-            <InputCheckbox id="review-formative" @bind-Value="_model.IsFormative" @bind-Value:after="LoadPreviewAsync" />
+          @* A checkbox and its words on one line (DESIGN.md § Form system's .form-check); the words stay in its label, so
+             they are part of its name. It was .checkbox-label, which app.css does not define (T266). *@
+          <label class="form-check">
+            <InputCheckbox id="review-formative" class="form-check-input" @bind-Value="_model.IsFormative" @bind-Value:after="LoadPreviewAsync" />
             <span>Formative review — closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins.</span>
           </label>
         </FormField>

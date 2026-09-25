@@ -82,6 +82,61 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
+    public void TheBuilder_AnswersToItsOwnCardsWidth_NotTheViewports()
+    {
+        // T266. The builder's two columns need 320px + 400px + the gap, 46.5rem, of the room its card gives them. They
+        // collapsed at a viewport of 900px, but the sidebar, the gutter and the card's padding take 372px of the viewport,
+        // so from 901px to 1115px the columns were wider than the card, and the page scrolled sideways (158px at 901px,
+        // 59px at 1000px; measured in Chrome on a static copy, app.css has the numbers).
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".form-container:has(> .builder-two-col)").Declarations
+            .Should().Contain("container: builder / inline-size");
+        var two = Rule(rules, string.Empty, ".builder-two-col");
+        two.Declarations.Should().Contain("grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr)");
+
+        // The threshold is the two columns' own minimum: 320 + 400 + the 24px gap = 744px = 46.5rem.
+        var one = Rule(rules, "@container builder (width < 46.5rem)", ".builder-two-col");
+        one.Declarations.Should().Contain("grid-template-columns: minmax(0, 1fr)");
+        one.Index.Should().BeGreaterThan(two.Index, "the two selectors are equally specific, so the narrow rule comes later");
+        Rule(rules, string.Empty, ".builder-two-col > *").Declarations.Should().Contain("min-width: 0",
+            "a column's content keeps to its track rather than widen it");
+
+        rules.Where(rule => rule.AtRule.StartsWith("@media", StringComparison.Ordinal) && Selectors(rule).Contains(".builder-two-col"))
+            .Should().BeEmpty("the viewport does not say how wide the builder's card is");
+    }
+
+    [Fact]
+    public void TheMinimaByTrainingYear_GiveTheirPickerWhatTheRowLeaves()
+    {
+        // T266. With a 10rem floor on the picker's column the rows ran past the Add form's content edge at 641px and
+        // 360px, and out of its card at 320px. The picker still asks for up to 18rem, and gets it from 1000px.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".stage-minima").Declarations
+            .Should().Contain("grid-template-columns: fit-content(12rem) minmax(0, 18rem) max-content");
+    }
+
+    [Fact]
+    public void ADetailsGridOfOneCard_GivesItTheWholeRow_WhereThePageAsksForIt()
+    {
+        // T266. The grid's first column is its narrow third, so a lone card sat in it with the rest of the row empty: on
+        // /msf/campaigns/{id} at 1000px, a 223px card with 447px of nothing beside it, and its table scrolled inside it.
+        // Only where the page opts in (T266 review): unscoped, it also stretched a lone STAR and a lone trajectory chart,
+        // and made My MSF reports' list jump to a third of the row when a report was selected.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        var grid = Rule(rules, string.Empty, ".details-grid");
+        grid.Declarations.Should().Contain("grid-template-columns: 1fr 2fr");
+        Rule(rules, string.Empty, ".details-grid--lone-spans > .detail-card:only-child").Declarations.Should().Contain("grid-column: 1 / -1");
+        rules.Where(rule => Selectors(rule).Any(selector => selector.StartsWith(".details-grid >", StringComparison.Ordinal)
+                && selector.Contains(":only-child", StringComparison.Ordinal)))
+            .Should().BeEmpty("a lone card on every details grid is not what every page wants");
+        File.ReadAllText(WebFile("Components", "Pages", "MultiSourceFeedback", "CampaignEdit.razor"))
+            .Should().Contain("""<div class="details-grid details-grid--lone-spans">""");
+    }
+
+    [Fact]
     public void EveryTable_IsAClinicTable_WhoseClassesAppCssDefines()
     {
         // The entrustment decisions list was class="data-table", which app.css does not define: it rendered unstyled, and

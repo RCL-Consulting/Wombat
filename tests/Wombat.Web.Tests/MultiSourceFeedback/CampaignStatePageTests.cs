@@ -105,6 +105,12 @@ public sealed class CampaignStatePageTests : WombatTestContext
         cut.FindAll("#msf-template-kind, #msf-template-name, #msf-template-scale, #msf-template-comment").Should().BeEmpty();
         cut.FindAll("button").Select(Text).Should().NotContain("Add template");
         sender.Queries.Should().NotContain(nameof(ListMsfTemplatesQuery), "nothing on the page lists them");
+
+        // The campaign's card is the details grid's only card, which the grid's modifier gives the whole row (T266): it
+        // sat in the grid's narrow first column, 223px wide at 1000px with 447px empty beside it.
+        var grid = cut.Find(".details-grid");
+        grid.ClassList.Should().Contain("details-grid--lone-spans");
+        grid.Children.Should().ContainSingle().Which.Matches(".detail-card:only-child").Should().BeTrue();
     }
 
     [Fact]
@@ -116,6 +122,7 @@ public sealed class CampaignStatePageTests : WombatTestContext
         var cut = RenderComponent<CampaignEdit>();
 
         cut.FindAll("h3").Select(Text).Should().Equal("Quick template", "Create campaign");
+        cut.Find(".details-grid").Children.Should().HaveCount(2, "the two cards share the grid's row, as before T266");
         cut.Find("#msf-template-name");
         cut.FindAll("#msf-template-id option").Select(Text).Should().Equal("Select template", "Annual MSF");
     }

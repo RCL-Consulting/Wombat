@@ -312,7 +312,7 @@ public sealed class DashboardLinkAuthorizationTests
             GetAssessorDashboardSummaryQuery => new AssessorDashboardSummaryDto(
                 2,
                 [new AcceptedActivityItem(52, "Mini-CEX", "Thandi Nkosi", "Accepted", When, IsOverdue: false)],
-                [new RecentDecisionItem(53, "Mini-CEX", "Thandi Nkosi", "completed", "Completed", When)]),
+                [new RecentDecisionItem(53, "Mini-CEX", "Thandi Nkosi", "completed", "Completed", IsFinished: true, When)]),
             GetTraineeDashboardSummaryQuery query => Trainee(
                 pending: query.Principal.IsInRole(WombatRoles.PendingTrainee) && !query.Principal.IsInRole(WombatRoles.Trainee)),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
@@ -322,7 +322,7 @@ public sealed class DashboardLinkAuthorizationTests
             => new(
                 pending ? null : Targets(),
                 [new ActivityInboxItem(54, "Mini-CEX", "draft", "Draft", When)],
-                [new RecentActivityItem(55, "Mini-CEX", "submitted", "Submitted", When)],
+                [new RecentActivityItem(55, "Mini-CEX", "submitted", "Submitted", IsFinished: false, When)],
                 [new UpcomingDeadlineItem(56, "Mini-CEX", "Due", new DateOnly(2026, 3, 27))],
                 IsPendingTrainee: pending);
 

@@ -95,4 +95,30 @@ public sealed class PageShapeSmokeTests : TestContext
 
         cut.Find(".dashboard-grid .detail-card").Should().NotBeNull();
     }
+
+    [Fact]
+    public void NoPage_SaysLoadingAsText()
+    {
+        // "No more 'Loading…' plain text — that pattern is dead" (DESIGN.md § Alerts, validation, empty states): a list or
+        // detail page's loading state is StatePanel's skeletons. The entrustment decisions page and an audit entry said
+        // "Loading…" until T266, and a failed read left it there under the error.
+        var web = Path.Combine(SolutionRoot(), "src", "Wombat.Web");
+        var pages = Directory.EnumerateFiles(web, "*.razor", SearchOption.AllDirectories).ToList();
+
+        pages.Should().HaveCountGreaterThanOrEqualTo(100, "guard: the scan finds the pages");
+        pages.Where(path => System.Text.RegularExpressions.Regex.IsMatch(File.ReadAllText(path), @">\s*Loading(…|\.\.\.)\s*<"))
+            .Select(path => Path.GetRelativePath(web, path))
+            .Should().BeEmpty("a page's loading state is StatePanel's");
+    }
+
+    private static string SolutionRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && directory.GetFiles("Wombat.sln").Length == 0)
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName ?? throw new InvalidOperationException("Could not find Wombat.sln.");
+    }
 }

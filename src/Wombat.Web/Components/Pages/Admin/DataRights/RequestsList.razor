@@ -14,11 +14,13 @@
   </Actions>
 </PageHeader>
 
-<div class="filter-bar">
-  <div class="filter-row">
-    <div class="filter-field">
-      <label>Type</label>
-      <select class="form-control" @bind="_filterType">
+@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields. Until T266 it was a
+   filter-bar, -row and -field, none of which app.css defines. *@
+<div class="search-container shadow">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="data-rights-type">Type</label>
+      <select id="data-rights-type" class="form-select" @bind="_filterType">
         <option value="">All</option>
         @foreach (var type in Enum.GetValues<DataRightsRequestType>())
         {
@@ -26,9 +28,9 @@
         }
       </select>
     </div>
-    <div class="filter-field">
-      <label>Status</label>
-      <select class="form-control" @bind="_filterStatus">
+    <div class="search-field">
+      <label for="data-rights-status">Status</label>
+      <select id="data-rights-status" class="form-select" @bind="_filterStatus">
         <option value="">All</option>
         @foreach (var status in Enum.GetValues<DataRightsRequestStatus>())
         {
@@ -56,8 +58,10 @@
         <tr>
           <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
           <td>@req.RequesterDisplayName</td>
-          <td><span class="badge @TypeBadge(req.Type)">@req.Type</span></td>
-          <td><span class="badge @StatusBadge(req.Status)">@req.Status</span></td>
+          @* A request's type is not a state, so it is not a badge (DESIGN.md § Badges): the words say it, as on the
+             requester's own page. *@
+          <td>@req.Type</td>
+          <td><span class="badge @BadgeFor.DataRightsRequest(req.Status)">@req.Status</span></td>
           <td>
             @* T239: named by its row: the request's type, who made it, and when. *@
             <a class="btn btn-outline btn-sm" href="/admin/data-rights/@req.Id"
@@ -67,11 +71,13 @@
       </Row>
     </DataTable>
 
-    <div class="pagination-row">
-      <span class="text-muted text-sm">
+    @* The pager's own classes (DESIGN.md § Pager). The page size is fixed here, so it is not PagerControls, which offers
+       one. *@
+    <div class="pager">
+      <span class="pager-info">
         Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
       </span>
-      <div class="pagination-controls">
+      <div class="pager-actions">
         <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
         <span class="text-sm">Page @_page</span>
         <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
@@ -137,22 +143,4 @@
     await LoadAsync();
   }
 
-  private static string TypeBadge(DataRightsRequestType type) => type switch
-  {
-    DataRightsRequestType.Erasure => "badge-danger",
-    DataRightsRequestType.Rectification => "badge-warning",
-    DataRightsRequestType.Access or DataRightsRequestType.Export => "badge-info",
-    _ => ""
-  };
-
-  private static string StatusBadge(DataRightsRequestStatus status) => status switch
-  {
-    DataRightsRequestStatus.Submitted => "badge-info",
-    DataRightsRequestStatus.UnderReview => "badge-warning",
-    DataRightsRequestStatus.Approved => "badge-success",
-    DataRightsRequestStatus.Rejected => "badge-danger",
-    DataRightsRequestStatus.Completed => "badge-success",
-    DataRightsRequestStatus.Withdrawn => "",
-    _ => ""
-  };
 }

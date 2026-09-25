@@ -89,7 +89,7 @@
   </section>
 </div>
 
-<h3 class="section-heading">Your requests</h3>
+<h3>Your requests</h3>
 
 <StatePanel IsLoading="_loadingRequests" IsEmpty="@(_requests is not null && _requests.Count == 0)" EmptyTitle="No requests" EmptyBody="You have not submitted any data rights requests yet.">
   @if (_requests is not null && _requests.Count > 0)
@@ -107,7 +107,7 @@
         <tr>
           <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
           <td>@req.Type</td>
-          <td><span class="badge @StatusBadge(req.Status)">@req.Status</span></td>
+          <td><span class="badge @BadgeFor.DataRightsRequest(req.Status)">@req.Status</span></td>
           <td>
             @if (req.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
             {
@@ -308,15 +308,4 @@
       _withdrawingId = null;
     }
   }
-
-  private static string StatusBadge(DataRightsRequestStatus status) => status switch
-  {
-    DataRightsRequestStatus.Submitted => "badge-info",
-    DataRightsRequestStatus.UnderReview => "badge-warning",
-    DataRightsRequestStatus.Approved => "badge-success",
-    DataRightsRequestStatus.Rejected => "badge-danger",
-    DataRightsRequestStatus.Completed => "badge-success",
-    DataRightsRequestStatus.Withdrawn => "",
-    _ => ""
-  };
 }

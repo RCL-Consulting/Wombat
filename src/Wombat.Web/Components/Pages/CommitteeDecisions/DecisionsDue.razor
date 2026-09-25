@@ -142,7 +142,7 @@ else
                 <td>@item.EpaCode — @item.EpaTitle</td>
                 <td>@item.WindowLabel</td>
                 <td>
-                  <span class="badge @DecisionsDueText.BadgeClass(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
+                  <span class="badge @BadgeFor.DecisionDue(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
                   <div class="muted">@DecisionsDueText.Detail(item)</div>
                 </td>
                 <td>

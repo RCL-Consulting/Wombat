@@ -41,22 +41,16 @@
   </FormActions>
 </section>
 
-@if (_decisions is null)
-{
-  <p class="muted">Loading…</p>
-}
-else if (_decisions.Count == 0)
-{
-  <section class="detail-card">
-    <p>No entrustment decisions match the current filter.</p>
-  </section>
-}
-else
-{
-  var decisionNames = DecisionNames(_decisions);
+@* The list page's three states are StatePanel's (DESIGN.md § Alerts, validation, empty states): skeletons while the list
+   is read, its danger alert when the read fails, and its empty card. Until T266 the page said "Loading…" as text, and a
+   failed read left it there, under the error. *@
+<StatePanel IsLoading="@(_decisions is null && _loadError is null)" LoadError="@_loadError"
+            IsEmpty="@(_decisions is { Count: 0 })"
+            EmptyTitle="No entrustment decisions" EmptyBody="No entrustment decisions match the current filter.">
+  @{ var decisionNames = DecisionNames(_decisions!); }
   @* A list table (DESIGN.md § Table system): a clinic-table in its container, which scrolls sideways on a narrow screen
-     rather than widen the page. Until T226 it was class="data-table", which app.css does not define: the table was
-     unstyled and, at 390px, 133px wider than the screen. *@
+     rather than widen the page. Until T226 it was a table class app.css does not define: the table was unstyled and, at
+     390px, 133px wider than the screen. *@
   <div class="table-container shadow">
     <table class="clinic-table">
       <thead>
@@ -72,7 +66,7 @@ else
         </tr>
       </thead>
       <tbody>
-        @foreach (var decision in _decisions)
+        @foreach (var decision in _decisions!)
         {
           <tr>
             <td>@decision.TraineeName</td>
@@ -81,7 +75,7 @@ else
             <td>@decision.AuthorisedLevelLabel</td>
             <td class="col-fit">@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
             <td class="col-fit">@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
-            <td><span class="badge @StatusBadge(decision.Status)">@decision.Status</span></td>
+            <td><span class="badge @BadgeFor.EntrustmentDecision(decision.Status)">@decision.Status</span></td>
             <td>
               <div class="actions-cell">
                 @* T239: each named by the decision it acts on: whose, which EPA, and when it was issued. *@
@@ -99,7 +93,7 @@ else
       </tbody>
     </table>
   </div>
-}
+</StatePanel>
 
 @if (_revokingDecision is not null)
 {
@@ -137,6 +131,11 @@ else
       decision => $", level {decision.AuthorisedLevelLabel}");
 
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
+
+  // A failed read of the list, which StatePanel shows in the list's place.
+  private string? _loadError;
+
+  // A refused download or revocation, shown above the filter while the list stays in view.
   private string? _error;
   private string? _status;
   private string _traineeFilter = string.Empty;
@@ -149,32 +148,20 @@ else
     await LoadAsync();
   }
 
-  /// <summary>
-  /// A STAR's status as one of the badges app.css defines (DESIGN.md § Badges). It was <c>badge-{status}</c>, and app.css
-  /// defines none of <c>badge-active</c>, <c>-expired</c>, <c>-revoked</c> or <c>-superseded</c>, so every status was an
-  /// untinted pill (T226 review). In force is the completed tint; lapsed, the warning tint, since the EPA wants deciding
-  /// again; revoked, the declined tint; superseded by a later STAR, neutral. The word says which.
-  /// </summary>
-  private static string StatusBadge(EntrustmentDecisionStatus status) => status switch
-  {
-    EntrustmentDecisionStatus.Active => "badge-completed",
-    EntrustmentDecisionStatus.Expired => "badge-accepted",
-    EntrustmentDecisionStatus.Revoked => "badge-declined",
-    _ => "badge-draft"
-  };
-
   private async Task LoadAsync()
   {
     try
     {
       _error = null;
+      _loadError = null;
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var trainee = string.IsNullOrWhiteSpace(_traineeFilter) ? null : _traineeFilter.Trim();
       _decisions = await Sender.Send(new ListEntrustmentDecisionsForAdminQuery(trainee, _statusFilter, authState.User));
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      // In its own words, never a validator's log line (DESIGN.md § Alerts, T213).
+      _loadError = RefusalText.Of(exception);
     }
   }
 
@@ -195,7 +182,7 @@ else
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 
@@ -232,7 +219,7 @@ else
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 }

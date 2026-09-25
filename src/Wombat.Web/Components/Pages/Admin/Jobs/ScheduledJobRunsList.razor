@@ -13,31 +13,36 @@
   </Actions>
 </PageHeader>
 
-<div class="form-row" style="margin-bottom: var(--space-4); display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap;">
-  <div>
-    <label class="form-label">Job key</label>
-    <input type="text" class="form-input" @bind="_filterKey" @bind:event="oninput" placeholder="Filter by key..." style="max-width: 200px;" />
+@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields, its button in a
+   form-actions row. Until T266 it was a form-row of form-label and form-input, none of which app.css defines, laid out
+   by an inline style whose spacing tokens (--space-3, --space-4) :root does not define either. *@
+<div class="search-container shadow">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="job-runs-key">Job key</label>
+      <input id="job-runs-key" type="text" class="form-control" @bind="_filterKey" @bind:event="oninput" placeholder="Filter by key..." />
+    </div>
+    <div class="search-field">
+      <label for="job-runs-status">Status</label>
+      <select id="job-runs-status" class="form-select" @bind="_filterStatus">
+        <option value="">All</option>
+        <option value="Succeeded">Succeeded</option>
+        <option value="Failed">Failed</option>
+        <option value="Running">Running</option>
+      </select>
+    </div>
+    <div class="search-field">
+      <label for="job-runs-from">From</label>
+      <input id="job-runs-from" type="date" class="form-control" @bind="_filterFrom" />
+    </div>
+    <div class="search-field">
+      <label for="job-runs-to">To</label>
+      <input id="job-runs-to" type="date" class="form-control" @bind="_filterTo" />
+    </div>
   </div>
-  <div>
-    <label class="form-label">Status</label>
-    <select class="form-input" @bind="_filterStatus" style="max-width: 150px;">
-      <option value="">All</option>
-      <option value="Succeeded">Succeeded</option>
-      <option value="Failed">Failed</option>
-      <option value="Running">Running</option>
-    </select>
-  </div>
-  <div>
-    <label class="form-label">From</label>
-    <input type="date" class="form-input" @bind="_filterFrom" style="max-width: 160px;" />
-  </div>
-  <div>
-    <label class="form-label">To</label>
-    <input type="date" class="form-input" @bind="_filterTo" style="max-width: 160px;" />
-  </div>
-  <div>
-    <button class="btn btn-primary" @onclick="LoadRunsAsync">Filter</button>
-  </div>
+  <FormActions>
+    <button type="button" class="btn btn-primary" @onclick="LoadRunsAsync">Filter</button>
+  </FormActions>
 </div>
 
 <StatePanel IsLoading="@(_runs is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_runs?.Count == 0)" EmptyTitle="No runs found" EmptyBody="No job runs match the selected filters.">
@@ -61,7 +66,7 @@
           <td>@run.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
           <td>@(run.FinishedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</td>
           <td>@FormatDuration(run.StartedAt, run.FinishedAt)</td>
-          <td><span class="badge @StatusBadgeClass(run.Status)">@run.Status</span></td>
+          <td><span class="badge @BadgeFor.JobRun(run.Status)">@run.Status</span></td>
           <td>@(run.TriggeredBy ?? "scheduler")</td>
           <td>
             @if (!string.IsNullOrWhiteSpace(run.ErrorMessage))
@@ -104,14 +109,6 @@
       _errorMessage = ex.Message;
     }
   }
-
-  private static string StatusBadgeClass(string status) => status switch
-  {
-    "Succeeded" => "badge-success",
-    "Failed" => "badge-danger",
-    "Running" => "badge-warning",
-    _ => ""
-  };
 
   private static string FormatDuration(DateTime started, DateTime? finished)
   {

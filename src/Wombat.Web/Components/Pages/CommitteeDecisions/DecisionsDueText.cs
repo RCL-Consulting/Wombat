@@ -37,19 +37,6 @@ public static class DecisionsDueText
         _ => status.ToString()
     };
 
-    /// <summary>
-    /// The badge a status wears (DESIGN.md § Badges, "Decisions due"): the agenda's badges, with every shade of "still to
-    /// be decided, nothing wrong yet" on the draft badge, and every one that needs a decision taken again on the declined.
-    /// </summary>
-    public static string BadgeClass(EntrustmentDecisionDueStatus status) => status switch
-    {
-        EntrustmentDecisionDueStatus.Decided => "badge-completed",
-        EntrustmentDecisionDueStatus.Scheduled => "badge-submitted",
-        EntrustmentDecisionDueStatus.Deferred => "badge-accepted",
-        EntrustmentDecisionDueStatus.Missed or EntrustmentDecisionDueStatus.Revoked => "badge-declined",
-        _ => "badge-draft"
-    };
-
     /// <summary>What a status means for the trainee, said under its badge.</summary>
     public static string Detail(EntrustmentDecisionDueDto item)
     {

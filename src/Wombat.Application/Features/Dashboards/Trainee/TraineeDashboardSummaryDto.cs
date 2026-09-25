@@ -14,7 +14,10 @@ public sealed record TraineeDashboardSummaryDto(
     IReadOnlyList<UpcomingDeadlineItem> UpcomingDeadlines,
     bool IsPendingTrainee);
 
-/// <param name="CurrentState">The stored state key: the badge's colour class.</param>
+/// <param name="CurrentState">
+/// The stored state key: the badge's colour. Every item is unfinished (the inbox leaves finished work out), so the key
+/// alone decides it.
+/// </param>
 /// <param name="CurrentStateLabel">
 /// The state as the activity's pinned workflow labels it, the key only when that workflow does not declare it: the
 /// badge's text (T220).
@@ -26,16 +29,22 @@ public sealed record ActivityInboxItem(
     string CurrentStateLabel,
     DateTime UpdatedOn);
 
-/// <param name="CurrentState">The stored state key: the badge's colour class.</param>
+/// <param name="CurrentState">The stored state key: with <paramref name="IsFinished" />, the badge's colour.</param>
 /// <param name="CurrentStateLabel">
 /// The state as the activity's pinned workflow labels it, the key only when that workflow does not declare it: the
 /// badge's text (T220).
+/// </param>
+/// <param name="IsFinished">
+/// Whether the state is a terminal state of the activity's pinned workflow (<c>ActivityCompletion</c>, D44): the badge is
+/// green when it is, whatever the key is called, so a finished teaching session, which ends in <c>accepted</c>, is not
+/// badged as work in hand (T266 review).
 /// </param>
 public sealed record RecentActivityItem(
     int ActivityId,
     string ActivityTypeName,
     string CurrentState,
     string CurrentStateLabel,
+    bool IsFinished,
     DateTime CreatedOn);
 
 public sealed record UpcomingDeadlineItem(

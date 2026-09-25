@@ -39,8 +39,8 @@
           <dt>Requester</dt><dd>@_request.RequesterDisplayName</dd>
           <dt>User ID</dt><dd><code class="text-sm">@_request.RequesterUserId</code></dd>
           <dt>Submitted</dt><dd><code>@_request.RequestedOn.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
-          <dt>Type</dt><dd><span class="badge @TypeBadge(_request.Type)">@_request.Type</span></dd>
-          <dt>Status</dt><dd><span class="badge @StatusBadge(_request.Status)">@_request.Status</span></dd>
+          <dt>Type</dt><dd>@_request.Type</dd>
+          <dt>Status</dt><dd><span class="badge @BadgeFor.DataRightsRequest(_request.Status)">@_request.Status</span></dd>
           <dt>Reason</dt><dd>@_request.Reason</dd>
         </dl>
       </div>
@@ -189,23 +189,4 @@
       _rejecting = false;
     }
   }
-
-  private static string TypeBadge(DataRightsRequestType type) => type switch
-  {
-    DataRightsRequestType.Erasure => "badge-danger",
-    DataRightsRequestType.Rectification => "badge-warning",
-    DataRightsRequestType.Access or DataRightsRequestType.Export => "badge-info",
-    _ => ""
-  };
-
-  private static string StatusBadge(DataRightsRequestStatus status) => status switch
-  {
-    DataRightsRequestStatus.Submitted => "badge-info",
-    DataRightsRequestStatus.UnderReview => "badge-warning",
-    DataRightsRequestStatus.Approved => "badge-success",
-    DataRightsRequestStatus.Rejected => "badge-danger",
-    DataRightsRequestStatus.Completed => "badge-success",
-    DataRightsRequestStatus.Withdrawn => "",
-    _ => ""
-  };
 }

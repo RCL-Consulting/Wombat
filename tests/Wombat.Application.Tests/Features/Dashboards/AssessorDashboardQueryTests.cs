@@ -47,6 +47,9 @@ public sealed class AssessorDashboardQueryTests
         // A discussed reflective exercise, an accepted teaching session and a recorded MSF row are all finished; the
         // literal "completed" saw none of them.
         result.RecentDecisions.Select(item => item.ActivityId).Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
+        // Each says whether it is finished, by the same test, for its badge (T266 review): the declined and cancelled
+        // requests are decisions but not finished work, and the teaching session's "accepted" is.
+        result.RecentDecisions.Where(item => item.IsFinished).Select(item => item.ActivityId).Should().BeEquivalentTo([1, 2, 3, 4]);
         // The teaching session finishes in "accepted", so it is not an assessment still needing action.
         result.AcceptedActivities.Select(item => item.ActivityId).Should().Equal(7);
         result.PendingRequestCount.Should().Be(1);

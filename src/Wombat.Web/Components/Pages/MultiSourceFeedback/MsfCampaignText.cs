@@ -147,18 +147,4 @@ public static class MsfCampaignText
             MsfCampaignState.Withdrawn => "Withdrawn",
             _ => state.ToString()
         };
-
-    /// <summary>
-    /// The state's badge (DESIGN.md § Badges): a draft is grey, an open campaign blue, one closed and under review amber,
-    /// a released one green, and a withdrawn one red. (T217)
-    /// </summary>
-    public static string StateBadge(MsfCampaignState state)
-        => state switch
-        {
-            MsfCampaignState.Open => "badge-submitted",
-            MsfCampaignState.Closed or MsfCampaignState.UnderReview => "badge-accepted",
-            MsfCampaignState.Released => "badge-completed",
-            MsfCampaignState.Withdrawn => "badge-declined",
-            _ => "badge-draft"
-        };
 }

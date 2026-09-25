@@ -100,8 +100,9 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                @* The badge's colour is the state's key; its words are the state's label (T220). *@
-                <span class="badge badge-@item.CurrentState">@item.CurrentStateLabel</span>
+                @* The badge's colour is the state's key, mapped onto a badge app.css defines (BadgeFor, T266); its words are
+                   the state's label (T220). The inbox holds no finished work, so none of these is done. *@
+                <span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>
               </li>
             }
           </ul>
@@ -123,7 +124,8 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="badge badge-@item.CurrentState">@item.CurrentStateLabel</span>
+                @* Green when the pinned workflow is finished, whatever its last state is called (D44, T266 review). *@
+                <span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>
               </li>
             }
           </ul>

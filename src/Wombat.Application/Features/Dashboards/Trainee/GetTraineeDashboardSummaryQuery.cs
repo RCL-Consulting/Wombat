@@ -100,7 +100,12 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         var recentActivities = recent
             .Select(a => new RecentActivityItem(
-                a.Id, a.TypeName, a.CurrentState, StateLabel(a.ActivityTypeId, a.SchemaVersion, a.CurrentState), a.CreatedOn))
+                a.Id,
+                a.TypeName,
+                a.CurrentState,
+                StateLabel(a.ActivityTypeId, a.SchemaVersion, a.CurrentState),
+                finishedStates[(a.ActivityTypeId, a.SchemaVersion)].Contains(a.CurrentState),
+                a.CreatedOn))
             .ToList();
 
         var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));

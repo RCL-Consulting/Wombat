@@ -40,7 +40,7 @@
           <td>
             @if (job.LastRunStatus is not null)
             {
-              <span class="badge @StatusBadgeClass(job.LastRunStatus)">@job.LastRunStatus</span>
+              <span class="badge @BadgeFor.JobRun(job.LastRunStatus)">@job.LastRunStatus</span>
             }
             else
             {
@@ -185,12 +185,4 @@
       _inFlight = null;
     }
   }
-
-  private static string StatusBadgeClass(string status) => status switch
-  {
-    "Succeeded" => "badge-success",
-    "Failed" => "badge-danger",
-    "Running" => "badge-warning",
-    _ => ""
-  };
 }

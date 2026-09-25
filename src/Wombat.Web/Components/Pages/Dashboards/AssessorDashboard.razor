@@ -33,9 +33,9 @@
                 @* Whose it is, by name, as the coordinator's cards say it (T250). The link's name starts with its visible
                    label and names the trainee, so three Mini-CEX links are not three links called "Mini-CEX". *@
                 <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                @* Every item here is in `accepted`, the badge's colour class; its words are the state's label, or that the
-                   work is overdue (T220). *@
-                <span class="badge badge-accepted">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
+                @* Every item here is in `accepted`, so its badge is the accepted one (BadgeFor, T266); its words are the
+                   state's label, or that the work is overdue (T220). *@
+                <span class="badge @BadgeFor.ActivityState("accepted", isFinished: false)">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
               </li>
             }
           </ul>
@@ -54,8 +54,9 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                @* The badge's colour is the state's key; its words are the state's label (T220). *@
-                <span class="badge badge-@item.FinalState">@item.FinalStateLabel</span>
+                @* Green when the pinned workflow is finished, whatever its last state is called (D44), red when declined or
+                   cancelled (BadgeFor, T266); its words are the state's label (T220). *@
+                <span class="badge @BadgeFor.ActivityState(item.FinalState, item.IsFinished)">@item.FinalStateLabel</span>
               </li>
             }
           </ul>

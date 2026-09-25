@@ -27,7 +27,7 @@ public sealed class AssessorDashboardSubjectNameTests : TestContext
         Services.AddSingleton<IScopedSender>(new Sender(new AssessorDashboardSummaryDto(
             0,
             [new AcceptedActivityItem(44, "Mini-CEX", "Thandi Nkosi", "Accepted", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)],
-            [new RecentDecisionItem(43, "Mini-CEX", "Sipho Dlamini", "completed", "Completed", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))])));
+            [new RecentDecisionItem(43, "Mini-CEX", "Sipho Dlamini", "completed", "Completed", IsFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))])));
     }
 
     [Fact]

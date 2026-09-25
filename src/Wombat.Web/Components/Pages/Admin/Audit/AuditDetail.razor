@@ -14,82 +14,69 @@
   </Actions>
 </PageHeader>
 
-@if (_entry is null && string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <p class="text-muted">Loading…</p>
-}
-else if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
-else if (_entry is null)
-{
-  <Alert Kind="warning">Audit entry not found.</Alert>
-}
-else
-{
-  <div class="details-grid">
-    <div class="detail-card">
-      <h3>Event</h3>
-      <dl class="detail-list">
-        <dt>When (UTC)</dt><dd><code>@_entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff")</code></dd>
-        <dt>Category</dt><dd>@_entry.Category</dd>
-        <dt>Action</dt><dd><code>@_entry.Action</code></dd>
-        <dt>Result</dt>
-        <dd>
-          @if (_entry.Success)
-          {
-            <span class="badge badge-success">Success</span>
-          }
-          else
-          {
-            <span class="badge badge-danger">Failed</span>
-            @if (_entry.ErrorMessage is not null)
+@* StatePanel's three states (DESIGN.md § Alerts, validation, empty states): skeletons while the entry is read, its danger
+   alert when the read fails, and its empty card for an id that names no entry the caller can view. Until T266 the page
+   said "Loading…" as text. *@
+<StatePanel IsLoading="@(!_loaded)" LoadError="@_errorMessage" IsEmpty="@(_entry is null)"
+            EmptyTitle="Audit entry not found" EmptyBody="No audit entry with this id is among those you can view.">
+  @if (_entry is not null)
+  {
+    <div class="details-grid">
+      <div class="detail-card">
+        <h3>Event</h3>
+        <dl class="detail-list">
+          <dt>When (UTC)</dt><dd><code>@_entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff")</code></dd>
+          <dt>Category</dt><dd>@_entry.Category</dd>
+          <dt>Action</dt><dd><code>@_entry.Action</code></dd>
+          <dt>Result</dt>
+          <dd>
+            <span class="badge @BadgeFor.AuditResult(_entry.Success)">@(_entry.Success ? "Success" : "Failed")</span>
+            @if (!_entry.Success && _entry.ErrorMessage is not null)
             {
               <div class="text-sm text-muted mt-1">@_entry.ErrorMessage</div>
             }
-          }
-        </dd>
-      </dl>
-    </div>
-
-    <div class="detail-card">
-      <h3>Actor</h3>
-      <dl class="detail-list">
-        <dt>User ID</dt><dd>@(_entry.ActorUserId ?? "—")</dd>
-        <dt>Display name</dt><dd>@(_entry.ActorDisplay ?? "—")</dd>
-        <dt>IP address</dt><dd>@(_entry.ActorIpAddress ?? "—")</dd>
-      </dl>
-    </div>
-
-    @if (_entry.SubjectType is not null)
-    {
-      <div class="detail-card">
-        <h3>Subject</h3>
-        <dl class="detail-list">
-          <dt>Type</dt><dd>@_entry.SubjectType</dd>
-          <dt>ID</dt><dd>@(_entry.SubjectId?.ToString() ?? "—")</dd>
-          @if (_entry.InstitutionId is not null)
-          {
-            <dt>Institution ID</dt><dd>@_entry.InstitutionId</dd>
-          }
-          @if (_entry.SpecialityId is not null)
-          {
-            <dt>Speciality ID</dt><dd>@_entry.SpecialityId</dd>
-          }
+          </dd>
         </dl>
       </div>
-    }
-  </div>
 
-  @if (_isAdmin)
-  {
-    <div class="detail-card mt-4">
-      <h3>Payload (raw JSON)</h3>
-      <pre class="code-block">@_entry.SummaryJson</pre>
+      <div class="detail-card">
+        <h3>Actor</h3>
+        <dl class="detail-list">
+          <dt>User ID</dt><dd>@(_entry.ActorUserId ?? "—")</dd>
+          <dt>Display name</dt><dd>@(_entry.ActorDisplay ?? "—")</dd>
+          <dt>IP address</dt><dd>@(_entry.ActorIpAddress ?? "—")</dd>
+        </dl>
+      </div>
+
+      @if (_entry.SubjectType is not null)
+      {
+        <div class="detail-card">
+          <h3>Subject</h3>
+          <dl class="detail-list">
+            <dt>Type</dt><dd>@_entry.SubjectType</dd>
+            <dt>ID</dt><dd>@(_entry.SubjectId?.ToString() ?? "—")</dd>
+            @if (_entry.InstitutionId is not null)
+            {
+              <dt>Institution ID</dt><dd>@_entry.InstitutionId</dd>
+            }
+            @if (_entry.SpecialityId is not null)
+            {
+              <dt>Speciality ID</dt><dd>@_entry.SpecialityId</dd>
+            }
+          </dl>
+        </div>
+      }
     </div>
+
+    @if (_isAdmin)
+    {
+      <div class="detail-card mt-4">
+        <h3>Payload (raw JSON)</h3>
+        <pre class="code-block">@_entry.SummaryJson</pre>
+      </div>
+    }
   }
-}
+</StatePanel>
 
 @code {
   [Parameter]
@@ -98,6 +85,7 @@ else
   private AuditEntryDto? _entry;
   private string? _errorMessage;
   private bool _isAdmin;
+  private bool _loaded;
 
   protected override async Task OnInitializedAsync()
   {
@@ -110,7 +98,11 @@ else
     }
     catch (Exception ex)
     {
-      _errorMessage = ex.Message;
+      _errorMessage = RefusalText.Of(ex);
+    }
+    finally
+    {
+      _loaded = true;
     }
   }
 }
