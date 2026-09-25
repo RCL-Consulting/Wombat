@@ -21,7 +21,7 @@ answers, and a P3 polish backlog.
   - **The rest are P3:** polish, accessibility, and design debt.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153 and T171. The College message (12 questions,
   each with Wombat's interim answer) is drafted in `knowledge/college-message-2026-09.md`.
-- **T159:** the paediatric runbook is retargeted onto the seeded catalogue. The replay on a fresh dev database is next.
+- **T159 done:** the runbook is retargeted, and Acts 1–2 replayed on a fresh database (`wombat_t159`); gaps are T291.
 
 ## Blockers
 
@@ -30,9 +30,6 @@ answers, and a P3 polish backlog.
 
 ## Next
 
-- **Replay T159 on a fresh dev database:** `pg_dump` first, then drop, migrate and seed. The runbook's steps 1.11–1.12
-  need an Administrator. The planned stand-in is an SQL insert of KGK, with instadmin moved there briefly to invite
-  Mbatha.
 - **T157, the deploy (operator).**
   - Take a `pg_dump` first. The migrations since the 16 September build are many, and T130, T219 and T281 empty the
     progress table for the bootstrapper to refill.

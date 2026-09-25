@@ -19,8 +19,8 @@ The operator: "Not deploying yet, we need to get the EPA stream completed", then
     answer);
   - STATE, rewritten;
   - DOMAIN.md, HANDOVER.md and CLAUDE.md, each corrected where the work showed them wrong.
-- **T159:** the runbook is retargeted and merged. The replay of Acts 1–2 on a separate database (`wombat_t159`) is
-  running, and was approved by the operator.
+- **T159 done:** the runbook is retargeted, and Acts 1–2 replayed cleanly on a fresh, separate database (`wombat_t159`,
+  operator-approved). The snapshot is `recovery/t159-post-act2.dump`, and the replay's small gaps are filed as T291.
 
 ### For the operator
 
@@ -45,7 +45,8 @@ The operator: "Not deploying yet, we need to get the EPA stream completed", then
   progress:
   - `UPDATE "TraineeProfiles" SET "IsActive"=true,"DeactivatedOn"=NULL,"CompletedOn"=NULL WHERE "Id"=1;`
   - `DELETE FROM "CurriculumItemProgresses";`
-- **Snapshots:** `recovery/pre-*.dump`, one before each migration batch; the newest is `pre-t283-t281-migrations`.
+- **Snapshots:** `recovery/pre-*.dump`, one before each migration batch, and `t159-post-act2.dump`. The dev app runs on
+  its own database; `wombat_t159` holds the replay.
 - **Dev accounts:** trainee, assessor, committee, committee2, coordinator, instadmin and collegeadmin (DevUserSeeder).
   The passwords of users created in the session are in `pwd_DO_NOT_COMMIT.txt` only.
 - **Dev runs PostgreSQL 16; production runs 18** (T275).

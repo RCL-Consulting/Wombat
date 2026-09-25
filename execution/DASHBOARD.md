@@ -6,11 +6,8 @@
 |---|---|---|---|---|
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
-| queued | [T117](tasks/queued/T117-weekly-digest-mails-a-cross-institution-roster.md) | P2 | The weekly coordinator digest emails every coordinator the same nation |  |
-| queued | [T155](tasks/queued/T155-sso-sign-in-rewrites-an-account-s-email-from-an-unverified-claim-and-can-re-key-it-onto-another-person-s-address.md) | P2 | SSO sign-in rewrites an account's email from an unverified claim, and  |  |
-| queued | [T194](tasks/queued/T194-committee-commands-reveal-which-reviews-and-panels-exist-and-a-panel-s-speciality-is-never-checked-against-the-trainee.md) | P2 | Committee commands reveal which reviews and panels exist, and a panel' |  |
-| queued | [T213](tasks/queued/T213-committee-races-and-wording-left-by-the-t131-t165-merge-remove-can-race-record-record-has-no-friendly-concurrency-refusal.md) | P2 | Committee races and wording left by the T131/T165 merge: Remove can ra |  |
-| queued | [T215](tasks/queued/T215-the-agenda-planner-ignores-stars-that-no-agenda-line-records-so-an-epa-already-decided-comes-up-as-due-again.md) | P2 | The agenda planner ignores STARs that no agenda line records, so an EP |  |
+| queued | [T288](tasks/queued/T288-an-institutionaladmin-can-create-an-sso-group-mapping-that-grants-roles-to-another-institution-s-users.md) | P2 | An InstitutionalAdmin can create an SSO group mapping that grants role |  |
+| queued | [T289](tasks/queued/T289-the-assessor-profile-form-lets-a-trainee-admin-move-a-panel-chair-and-lets-an-admin-pull-an-assessor-from-another-institution.md) | P2 | The assessor-profile form lets a trainee-admin move a panel chair, and |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -22,34 +19,32 @@
 | queued | [T115](tasks/queued/T115-isinrole-extension-is-dead-code.md) | P3 | `ClaimsPrincipalExtensions.IsInRole` never executes, and every `role:` |  |
 | queued | [T116](tasks/queued/T116-unstampable-activity-has-no-owner.md) | P3 | An activity whose scope cannot be resolved has no one who can move it |  |
 | queued | [T139](tasks/queued/T139-the-v11-1-items-are-seeded-with-a-12-month-window-and-max-windowmonths-gives-a-four-year-registrar-a-one-year-completion-date.md) | P3 | The v11.1 items are seeded with a 12-month window, and max(WindowMonth | sonnet |
-| queued | [T145](tasks/queued/T145-the-legacy-formepalink-admin-screen-maps-instruments-to-epas-and-restricts-nothing.md) | P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restr | sonnet |
 | queued | [T146](tasks/queued/T146-a-crediting-activity-type-from-another-discipline-can-credit-a-trainee-s-curriculum.md) | P3 | A crediting activity type from another discipline can credit a trainee | opus |
-| queued | [T151](tasks/queued/T151-the-assessor-nudge-job-emails-deactivated-and-opted-out-nominees.md) | P3 | The assessor nudge job emails deactivated and opted-out nominees |  |
 | queued | [T152](tasks/queued/T152-a-supervisor-based-at-another-institution-cannot-be-named-on-a-trainee-s-assessment.md) | P3 | A supervisor based at another institution cannot be named on a trainee |  |
 | queued | [T153](tasks/queued/T153-a-trainee-who-has-left-an-institution-still-files-new-activities-there-and-is-shown-its-staff-to-nominate.md) | P3 | A trainee who has left an institution still files new activities there |  |
-| queued | [T156](tasks/queued/T156-login-hardening-leftovers-a-24-throttle-that-counts-successes-account-enumeration-and-a-sliding-external-cookie.md) | P3 | Login hardening leftovers: a /24 throttle that counts successes, accou |  |
-| queued | [T159](tasks/queued/T159-retarget-the-paediatric-scenario-runbook-scenario-paediatrics-md-acts-1-2-onto-the-seeded-v11-1-catalogue.md) | P3 | Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts |  |
 | queued | [T170](tasks/queued/T170-the-candidate-s-milestone-self-assessment-and-learning-plan-page-8-s-fourth-information-source-have-no-instrument.md) | P3 | The candidate's milestone self-assessment and learning plan, page 8's  |  |
 | queued | [T171](tasks/queued/T171-an-activity-pinned-to-a-superseded-version-cannot-be-re-pinned-to-the-current-one.md) | P3 | An activity pinned to a superseded version cannot be re-pinned to the  |  |
-| queued | [T178](tasks/queued/T178-design-md-s-nav-table-is-stale-for-several-roles-and-placeholderpage-still-maps-pages-that-exist.md) | P3 | DESIGN.md's nav table is stale for several roles, and PlaceholderPage  |  |
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
-| queued | [T187](tasks/queued/T187-a-sub-speciality-s-default-entrustment-scale-is-reset-by-the-catalogue-seeder-on-every-boot.md) | P3 | A sub-speciality's default entrustment scale is reset by the catalogue |  |
-| queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
 | queued | [T190](tasks/queued/T190-page-titles-follow-no-common-pattern.md) | P3 | Page titles follow no common pattern |  |
-| queued | [T196](tasks/queued/T196-reactivating-an-epa-does-not-re-credit-what-was-filed-while-it-was-inactive-and-a-rebuild-while-inactive-drops-earned-credit.md) | P3 | Reactivating an EPA does not re-credit what was filed while it was ina |  |
-| queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
-| queued | [T199](tasks/queued/T199-polish-from-the-batch-c-browser-check-a-missing-space-a-raw-validator-message-epa-ids-in-the-pdf-and-no-way-to-withdraw-a-campaign.md) | P3 | Polish from the batch-C browser check: a missing space, a raw validato |  |
-| queued | [T209](tasks/queued/T209-a-graduate-s-last-partial-period-and-a-deactivated-trainee-s-later-periods-print-as-short-with-no-rule-for-partial-ends.md) | P3 | A graduate's last partial period, and a deactivated trainee's later pe |  |
-| queued | [T210](tasks/queued/T210-staff-cannot-see-across-a-programme-which-trainees-an-msf-covered-this-semester.md) | P3 | Staff cannot see across a programme which trainees an MSF covered this |  |
-| queued | [T211](tasks/queued/T211-curriculum-pages-a-collegeadmin-sees-edit-on-another-institution-s-local-items-and-an-institutionaladmin-s-curriculum-list-links-to-a-404.md) | P3 | Curriculum pages: a CollegeAdmin sees Edit on another institution's lo |  |
-| queued | [T212](tasks/queued/T212-review-page-leftovers-the-pending-list-stays-after-ratify-picker-labels-lack-a-space-and-certificate-glyphs-extract-as-u-fffd.md) | P3 | Review page leftovers: the pending list stays after ratify, picker lab |  |
-| queued | [T216](tasks/queued/T216-a-user-who-is-both-trainee-and-coordinator-can-schedule-and-preview-a-peer-s-committee-review.md) | P3 | A user who is both Trainee and Coordinator can schedule and preview a  |  |
-| queued | [T217](tasks/queued/T217-the-msf-campaign-page-does-not-change-after-the-campaign-opens-it-still-offers-open-and-shows-no-invitees.md) | P3 | The MSF campaign page does not change after the campaign opens: it sti |  |
-| queued | [T218](tasks/queued/T218-a-coordinator-s-committee-review-list-is-empty-and-a-ratified-review-still-shows-empty-decision-inputs.md) | P3 | A Coordinator's committee review list is empty, and a ratified review  |  |
-| queued | [T219](tasks/queued/T219-my-progress-shows-a-trainee-s-last-encounter-unmarked-when-that-date-was-never-stated.md) | P3 | My progress shows a trainee's last encounter unmarked when that date w |  |
-| queued | [T220](tasks/queued/T220-activity-pages-lists-and-dashboards-show-workflow-state-and-move-keys-not-their-labels.md) | P3 | Activity pages, lists and dashboards show workflow state and move keys |  |
+| queued | [T242](tasks/queued/T242-decide-what-happens-when-the-college-adds-nationally-an-epa-that-an-institution-already-holds-as-its-own-curriculum-item.md) | P3 | Decide what happens when the College adds nationally an EPA that an in |  |
+| queued | [T259](tasks/queued/T259-decisions-due-names-the-panel-an-epa-routes-to-not-the-panel-the-holding-review-sits-before.md) | P3 | Decisions-due names the panel an EPA routes to, not the panel the hold |  |
+| queued | [T260](tasks/queued/T260-committee-admin-pages-a-stale-can-no-longer-sit-warning-after-a-panel-save-and-the-revocation-button-stays-disabled-until-its-reason-loses-focus.md) | P3 | Committee admin pages: a stale can-no-longer-sit warning after a panel |  |
+| queued | [T264](tasks/queued/T264-destructive-admin-actions-red-in-row-buttons-with-no-confirmation-identical-row-action-names-and-pagers-that-drop-the-focus.md) | P3 | Destructive admin actions: red in-row buttons with no confirmation, id |  |
+| queued | [T270](tasks/queued/T270-msf-page-polish-from-1-responses-on-the-report-the-draft-address-table-at-390px-and-a-withdrawn-draft-s-responded-column.md) | P3 | MSF page polish: "from 1 responses" on the report, the draft address t |  |
+| queued | [T271](tasks/queued/T271-a-scale-delete-and-a-publish-binding-that-scale-can-race-and-the-builder-shows-a-seed-key-binding-as-select.md) | P3 | A scale delete and a publish binding that scale can race, and the buil |  |
+| queued | [T272](tasks/queued/T272-failed-saves-across-admin-handlers-every-failure-reported-as-already-exists-raw-ef-text-on-two-pages-and-msf-questions-with-no-scale-foreign-key.md) | P3 | Failed saves across admin handlers: every failure reported as "already |  |
+| queued | [T273](tasks/queued/T273-the-committee-review-page-s-sampling-list-and-staged-star-lines-do-not-mark-an-epa-that-is-no-longer-in-force.md) | P3 | The committee review page's sampling list and staged STAR lines do not |  |
+| queued | [T274](tasks/queued/T274-mailing-jobs-one-recipient-s-failure-stops-the-run-for-everyone-after-them-and-the-decision-expiry-notices-still-reach-locked-accounts.md) | P3 | Mailing jobs: one recipient's failure stops the run for everyone after |  |
+| queued | [T275](tasks/queued/T275-dev-and-the-integration-tests-run-on-postgresql-16-while-production-runs-18.md) | P3 | Dev and the integration tests run on PostgreSQL 16 while production ru |  |
+| queued | [T276](tasks/queued/T276-erasure-leftovers-in-flight-activities-still-credit-the-pseudonym-nominee-ids-in-activity-data-are-not-rewritten-and-records-created-during-an-erasure-escape-it.md) | P3 | Erasure leftovers: in-flight activities still credit the pseudonym, no |  |
+| queued | [T277](tasks/queued/T277-the-audit-log-s-default-window-moves-between-pages-and-the-access-report-cuts-at-500-without-saying-so.md) | P3 | The audit log's default window moves between pages, and the access rep |  |
+| queued | [T280](tasks/queued/T280-accessibility-leftovers-trainee-dashboard-links-named-only-by-instrument-the-alert-s-dismiss-button-named-and-the-review-pdf-leaving-out-a-review-under-appeal.md) | P3 | Accessibility leftovers: trainee dashboard links named only by instrum |  |
+| queued | [T286](tasks/queued/T286-account-leftovers-a-password-change-writes-no-audit-row-institutional-sign-in-links-cannot-be-listed-or-removed-and-emails-are-unique-only-by-check.md) | P3 | Account leftovers: a password change writes no audit row, institutiona |  |
+| queued | [T287](tasks/queued/T287-sign-in-hardening-second-pass-the-lockout-reply-tells-a-locked-account-apart-the-app-cookies-lack-host-and-the-api-host-has-no-forwarded-headers.md) | P3 | Sign-in hardening, second pass: the lockout reply tells a locked accou |  |
+| queued | [T290](tasks/queued/T290-trainee-first-and-existence-leftovers-completing-your-own-profile-invitations-the-users-commands-refusals-and-two-committee-queries-that-read-claims.md) | P3 | Trainee-first and existence leftovers: completing your own profile, in |  |
+| queued | [T291](tasks/queued/T291-admin-pages-offer-what-they-then-refuse-found-by-the-t159-replay-edit-on-national-epas-back-to-colleges-and-a-first-save-s-status.md) | P3 | Admin pages offer what they then refuse, found by the T159 replay: Edi |  |
 
-Done: 163 task(s).
+Done: 200 task(s).
 
 ## From STATE.md
 
@@ -57,17 +52,17 @@ Done: 163 task(s).
 Cap: 60 lines. `harness.py lint` enforces it; `harness.py trim` moves the overflow into `log/`.
 This is a reset point, not a diary.
 ## Focus
-Wombat is **deployed but not in service** — scenario data only, no real trainees. The live
-workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operational hardening.
+Wombat is **deployed but not in service**: scenario data only, no real trainees. **The CPSA Paediatric EPA v11.1
+stream is built** (EPA-PROGRAMME § 2A, re-baselined 2026-09-25). What remains is the operator's deploy, the College's
+answers, and a P3 polish backlog.
 ## Now
-- Nothing in `in_progress/`. 40 queued, 1 blocked. **One P1:** T157 — production runs the 16 September build (last
 
 ## Recent commits
 
 ```
-9c01829 docs(execution): close T191, T192, T189 and T193 (browser-verified); T197 closes with its last item split to T219; file T220
-850de24 docs(execution): handoff progress
-2561f07 fix(web): refusals are announced, help text is linked to its input, and sign-in fields say what they are (T193)
-7e52344 fix(activities): refusals read as sentences and name transitions and states by label (T189)
-960d738 fix(activities): the late-filing warning never contradicts a pre-programme refusal; an undated date is named as the encounter's where nothing else says so (T192, T197 review)
+722abb9f docs(execution): close T159 (Acts 1–2 replayed on a fresh database); file the replay's admin-page gaps
+b2b3eca4 docs(runbook): Acts 1–2 replayed on a fresh database (T159)
+493bd521 docs(execution): handoff for the operator (the stream built; T157 checks, P2s before real users, dev state)
+7acce2f3 docs(execution): close T199 (browser-verified; the release-after-withdraw defect fixed in 317670c)
+74036de4 docs(execution): close the final batch (T261, T263, T266, T188, T285, T282, T284, T283, T278, T279, T281; browser-verified)
 ```
