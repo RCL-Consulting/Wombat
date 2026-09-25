@@ -625,12 +625,13 @@ public sealed class RebuildCurriculumProgressTests
     }
 
     /// <summary>
-    /// T158. A rebuild replays through the same resolver as the live path, under the rule as it stands. While the EPA is
-    /// deactivated its item is not in force, so the replay reproduces no row for it and the completion is stamped zero.
-    /// After reactivation the next rebuild restores both.
+    /// T196, D48. A rebuild judges each completion at its own moment, the transition credit is recorded against, so while
+    /// an EPA is deactivated it keeps the credit earned before the deactivation and credits nothing completed since. Before
+    /// T196 it judged every completion against the catalogue as it stood that day, and dropped the earned credit with the
+    /// paused. Once the EPA is back in force every moment is, and the paused completion is credited too.
     /// </summary>
     [Fact]
-    public async Task Rebuild_WhileTheEpaIsDeactivated_CreditsNothing_AndAfterReactivationRestoresTheCredit()
+    public async Task Rebuild_WhileTheEpaIsDeactivated_KeepsTheCreditEarnedBeforeIt_AndCreditsNothingCompletedSince()
     {
         var options = NewDatabase();
 
@@ -638,61 +639,122 @@ public sealed class RebuildCurriculumProgressTests
         {
             Seed(seed);
             AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 100);
+            AddCompletedActivity(seed, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 50);
+            await seed.SaveChangesAsync();
+
+            // Between the two completions.
+            (await seed.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).Deactivate(Now.AddDays(-60));
             await seed.SaveChangesAsync();
         }
 
         await using (var db = new ApplicationDbContext(options))
         {
-            (await Rebuild(db)).ProgressRowsWritten.Should().Be(1);
-        }
-
-        await using (var deactivate = new ApplicationDbContext(options))
-        {
-            (await deactivate.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = false;
-            await deactivate.SaveChangesAsync();
-        }
-
-        await using (var db = new ApplicationDbContext(options))
-        {
             var result = await Rebuild(db);
 
-            result.ActivitiesReplayed.Should().Be(1, "credit was evaluated, and matched nothing");
-            result.CreditApplications.Should().Be(0);
-            result.ProgressRowsWritten.Should().Be(0);
-            result.ProgressRowsRemoved.Should().Be(1);
-        }
-
-        await using (var verify = new ApplicationDbContext(options))
-        {
-            verify.CurriculumItemProgresses.Should().BeEmpty();
-            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
-                .CreditedItemCount.Should().Be(0);
-        }
-
-        await using (var reactivate = new ApplicationDbContext(options))
-        {
-            (await reactivate.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).IsActive = true;
-            await reactivate.SaveChangesAsync();
-        }
-
-        await using (var db = new ApplicationDbContext(options))
-        {
-            var result = await Rebuild(db);
-
+            result.ActivitiesReplayed.Should().Be(2, "credit was evaluated for both");
             result.CreditApplications.Should().Be(1);
             result.ProgressRowsWritten.Should().Be(1);
         }
 
         await using (var verify = new ApplicationDbContext(options))
         {
-            var row = await verify.CurriculumItemProgresses.SingleAsync();
-            row.CurriculumItemId.Should().Be(NationalItemId);
-            row.CountsSoFar.Should().Be(1);
-            row.CreditedActivityKeysJson.Should().Be("""["200:complete"]""");
-            (await verify.ActivityTransitions.SingleAsync(t => t.ActivityId == 200 && t.TransitionKey == "complete"))
-                .CreditedItemCount.Should().Be(1);
+            (await verify.CurriculumItemProgresses.SingleAsync()).CreditedActivityKeysJson.Should().Be(
+                """["200:complete"]""", "the credit earned while the EPA was in force survives a rebuild while it is inactive");
+            (await CompletionStampAsync(verify, 200)).Should().Be(1);
+            (await CompletionStampAsync(verify, 201)).Should().Be(0, "completed during the pause, so its credit waits");
+        }
+
+        await using (var reactivate = new ApplicationDbContext(options))
+        {
+            (await reactivate.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).Reactivate();
+            await reactivate.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            (await Rebuild(db)).CreditApplications.Should().Be(2);
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            (await verify.CurriculumItemProgresses.Select(row => row.CreditedActivityKeysJson).ToListAsync())
+                .Should().BeEquivalentTo("""["200:complete"]""", """["201:complete"]""");
+            (await CompletionStampAsync(verify, 201)).Should().Be(1);
         }
     }
+
+    /// <summary>
+    /// T196. The moment is the completion's, not the encounter's: the live path judges the EPA when the activity completes,
+    /// so an encounter observed before the deactivation but completed after it was paused live, and a rebuild that judged
+    /// the encounter date would credit what the live path did not.
+    /// </summary>
+    [Fact]
+    public async Task Rebuild_JudgesTheCompletionsMoment_NotTheEncounterDate()
+    {
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(
+                seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 50,
+                observedOn: DateOnly.FromDateTime(Now.AddDays(-70)));
+            await seed.SaveChangesAsync();
+
+            (await seed.Epas.SingleAsync(epa => epa.Id == CreditedEpaId)).Deactivate(Now.AddDays(-60));
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            (await Rebuild(db)).CreditApplications.Should().Be(0);
+        }
+
+        await using var verify = new ApplicationDbContext(options);
+        verify.CurriculumItemProgresses.Should().BeEmpty();
+        (await CompletionStampAsync(verify, 200)).Should().Be(0);
+    }
+
+    /// <summary>
+    /// T196: why one timestamp is enough. Deactivated, reactivated, deactivated again: the rebuild credits everything
+    /// completed before the current pause, including what was completed during the first one, because the reactivation
+    /// that closed the first pause credited it. Only the current pause holds anything back.
+    /// </summary>
+    [Fact]
+    public async Task Rebuild_AfterASecondDeactivation_HoldsBackOnlyTheCurrentPause()
+    {
+        var options = NewDatabase();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            Seed(seed);
+            AddCompletedActivity(seed, activityId: 200, subjectUserId: "trainee-1", score: 4, daysAgo: 100);
+            AddCompletedActivity(seed, activityId: 201, subjectUserId: "trainee-1", score: 4, daysAgo: 80);
+            AddCompletedActivity(seed, activityId: 202, subjectUserId: "trainee-1", score: 4, daysAgo: 40);
+            await seed.SaveChangesAsync();
+
+            var epa = await seed.Epas.SingleAsync(entity => entity.Id == CreditedEpaId);
+            epa.Deactivate(Now.AddDays(-90));
+            epa.Reactivate();
+            epa.Deactivate(Now.AddDays(-60));
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            (await Rebuild(db)).CreditApplications.Should().Be(2);
+        }
+
+        await using var verify = new ApplicationDbContext(options);
+        (await verify.CurriculumItemProgresses.Select(row => row.CreditedActivityKeysJson).ToListAsync())
+            .SelectMany(json => System.Text.Json.JsonSerializer.Deserialize<string[]>(json)!)
+            .Should().BeEquivalentTo("200:complete", "201:complete");
+        (await CompletionStampAsync(verify, 202)).Should().Be(0);
+    }
+
+    private static async Task<int?> CompletionStampAsync(ApplicationDbContext db, int activityId)
+        => (await db.ActivityTransitions.SingleAsync(transition =>
+            transition.ActivityId == activityId && transition.TransitionKey == "complete")).CreditedItemCount;
 
     [Fact]
     public async Task Rebuild_RefusesACallerWhoIsNotAnAdministrator()

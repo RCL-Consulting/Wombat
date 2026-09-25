@@ -23,7 +23,8 @@ namespace Wombat.Infrastructure.Activities;
 /// <para>
 /// It answers with the credit engine's own resolver (<see cref="CreditTargetResolver" />). That covers the same
 /// profile, the same curriculum and owner scoping, the same string-or-number parse, and the same fall-through from
-/// <c>curriculum_item_field</c> to <c>epa_field</c>. So an item the gate passes is exactly an item credit can land on.
+/// <c>curriculum_item_field</c> to <c>epa_field</c>. So an item the gate passes is exactly an item credit can land on,
+/// now or once a deactivated EPA is reactivated (see below).
 /// It is the authority where the picker is not: a literal <c>curriculum_item_id</c> rule, a rule mixing
 /// <c>curriculum_item_field</c> with <c>epa_field</c>, or an <c>epa_field</c> that is not an <c>epa</c>-typed field.
 /// The picker narrows none of those. Since T137 the last two can no longer be saved or published
@@ -49,12 +50,15 @@ namespace Wombat.Infrastructure.Activities;
 ///   today, and refusing would turn this gate into a curriculum-membership check that neither D20 nor D21 decided.
 ///   The boundary this leaves is recorded: a profile created or re-pointed after submission is not re-checked
 ///   when the activity completes, because credit never re-litigates (D20).</item>
-///   <item>An EPA that is deactivated. Its item is not in force, so the resolver matches nothing, exactly as for an
-///   EPA with no item (T158). The picker does not offer it, so only a stored value or a forged id reaches here. The
-///   boundary is the one above: an EPA reactivated after the gate last judged the activity is not re-checked when
-///   it completes, so it can credit a tool its list forbids (pinned by
-///   <c>ToolPermissionGateTests.T158Boundary_AnEpaReactivatedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited</c>).</item>
 /// </list>
+/// </para>
+/// <para>
+/// What it does NOT let through, since T196: an instrument the list of a deactivated EPA forbids. A deactivated EPA pauses
+/// credit (D48), and reactivating it credits every completion filed during the pause, so the gate judges the item the
+/// activity will be credited under whether or not its EPA is in force now. Being out of force is never itself a refusal
+/// (D48 rejected that as a curriculum-membership check): a permitted instrument files, and its credit waits for the
+/// reactivation. Before T196 the gate read only items in force, so an EPA deactivated at the hand-on and reactivated
+/// before completion credited a tool its list forbids (the T158 boundary, now closed).
 /// </para>
 /// </remarks>
 internal static class ToolPermissionGate
@@ -114,8 +118,12 @@ internal static class ToolPermissionGate
                 continue;
             }
 
+            // Every item the target names, in force or not (D48, T196). An EPA that is deactivated pauses credit, and
+            // reactivating it credits what was filed meanwhile, so its item is where this activity's credit will land.
+            // Judged here, the instrument cannot reach it through a pause. Not in force is never itself a refusal: that
+            // would make this a curriculum-membership check, which D48 rejected.
             var (items, matchedFieldKey) = await CreditTargetResolver.ResolveCurriculumItemsWithSourceAsync(
-                dbContext, targets[index], document.RootElement, trainee, cancellationToken);
+                dbContext, targets[index], document.RootElement, trainee, inForceAt: null, cancellationToken);
 
             foreach (var item in items.Where(item => seen.Add(item.Id)))
             {

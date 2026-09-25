@@ -9,7 +9,11 @@ public sealed class EpaConfiguration : IEntityTypeConfiguration<Epa>
 {
     public void Configure(EntityTypeBuilder<Epa> builder)
     {
-        builder.ToTable("Epas");
+        // T196: an EPA is inactive exactly when it records when its pause began. Credit is judged against that moment
+        // (Epa.InForceAt), so an inactive EPA with no moment, or an active one with a stale one, would credit wrongly.
+        builder.ToTable("Epas", table => table.HasCheckConstraint(
+            "CK_Epas_DeactivatedOn",
+            "(\"IsActive\" AND \"DeactivatedOn\" IS NULL) OR (NOT \"IsActive\" AND \"DeactivatedOn\" IS NOT NULL)"));
         builder.Property(entity => entity.Code).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.Title).HasMaxLength(200).IsRequired();
         builder.Property(entity => entity.Domain).HasMaxLength(200);

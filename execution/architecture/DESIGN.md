@@ -223,6 +223,9 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   Its result is an `Alert` with `Role="status"` (done) or `Role="alert"` (refused) inside a `.action-result` region
   (`tabindex="-1"`), which takes the focus in `OnAfterRenderAsync`, after the dialog has closed: the row's button may be
   gone, and while the modal is open nothing outside it can take the focus (T206 review).
+- The same holds on a form page whose confirmed action removes the button that opened the dialog: Deactivate on the EPA
+  page is offered only on an active EPA, so once it deactivates, its result takes the focus (T196 review). An action
+  that leaves its button, such as a refused deactivation or a Save, leaves the focus on it.
 
 ## Table system
 

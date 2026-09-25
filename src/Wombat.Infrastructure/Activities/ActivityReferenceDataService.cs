@@ -289,10 +289,18 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     /// Guarantees that whatever is already stored in the field stays in the option list.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// An <c>epa</c> field renders as a <c>select</c>. An option list that omits the stored value does
     /// not merely narrow a choice — it renders the field as an unset "Select…" and erases recorded
     /// evidence from the page, on the read-only render as much as the editable one. Every encounter
     /// filed against an EPA outside the subject's curriculum before this fix is exactly that case.
+    /// </para>
+    /// <para>
+    /// A stored EPA that is deactivated is labelled "(no longer in use)" (D48, T196). Both arms above offer only EPAs in
+    /// force, so this is the one place an inactive EPA enters an activity's option list. Its credit is paused, not
+    /// refused, so the value stays valid and the activity can move on; the label says why it is not offered to anyone
+    /// else.
+    /// </para>
     /// </remarks>
     private async Task<IReadOnlyList<ActivityCatalogueOption>> WithStoredValueAsync(
         List<ActivityCatalogueOption> options,
@@ -310,9 +318,7 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         var stored = await _dbContext.Set<Epa>()
             .AsNoTracking()
             .Where(epa => epa.Id == storedEpaId)
-            .Select(epa => new ActivityCatalogueOption(
-                epa.Id.ToString(),
-                epa.Code + " — " + epa.Title))
+            .Select(epa => new { epa.Id, epa.Code, epa.Title, epa.IsActive })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (stored is null)
@@ -320,7 +326,9 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return options;
         }
 
-        options.Add(stored);
+        options.Add(new ActivityCatalogueOption(
+            stored.Id.ToString(CultureInfo.InvariantCulture),
+            EpaOptionLabel.For(stored.Code, stored.Title, stored.IsActive)));
         return options.OrderBy(option => option.Label, StringComparer.Ordinal).ToList();
     }
 

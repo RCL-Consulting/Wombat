@@ -60,9 +60,9 @@
     {
       <Alert Kind="info">
         @(inactive.Count == 1
-          ? $"{inactive[0]} is inactive, so its item is not in force: no trainee can file against it, it takes no credit, and no progress page or dashboard shows it."
-          : $"{string.Join(", ", inactive)} are inactive, so their items are not in force: no trainee can file against them, they take no credit, and no progress page or dashboard shows them.")
-        Reactivating an EPA on its own page brings its item back.
+          ? $"{inactive[0]} is inactive, so its item is not in force: no trainee can choose it for a new activity, its credit is paused, and no progress page or dashboard shows it."
+          : $"{string.Join(", ", inactive)} are inactive, so their items are not in force: no trainee can choose them for a new activity, their credit is paused, and no progress page or dashboard shows them.")
+        Reactivating an EPA on its own page brings its item back, and credits what was completed against it meanwhile.
       </Alert>
     }
 

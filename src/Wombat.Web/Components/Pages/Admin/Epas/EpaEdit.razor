@@ -13,15 +13,20 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What a save or a deactivation did. It takes the focus after the Deactivate button deactivates the EPA, because that
+   button is then gone and the focus would fall to the page when the dialog closes (T196 review; DESIGN.md § Button
+   system). Every other action leaves its own button, and the focus with it. *@
+<div @ref="_result" class="action-result" tabindex="-1">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</div>
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
   <div class="form-container">
@@ -82,7 +87,9 @@
 
       <FormActions>
         <a class="btn btn-outline" href="/admin/epas">Cancel</a>
-        @if (!IsNew)
+        @* T196. Deactivate is offered only on an EPA that is active as stored; an inactive one is reactivated by ticking
+           Active and saving. *@
+        @if (!IsNew && _storedIsActive)
         {
           <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@_saving">Deactivate</button>
         }
@@ -93,13 +100,15 @@
 </StatePanel>
 
 @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system). Since T158 deactivating an EPA takes
-   its items off every progress page and stops their credit, in every institution that has adopted the curriculum. *@
+   its items off every progress page and pauses their credit, in every institution that has adopted the curriculum.
+   Two actions deactivate, the Deactivate button and saving with Active unticked (T196), and both open this dialog. *@
 <ConfirmDialog @ref="_confirmDeactivate"
                Title="Deactivate this EPA?"
-               Body="It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. An activity completed against it while it is inactive counts towards nothing. You can reactivate it on this page."
+               Body="It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page."
                ConfirmLabel="Deactivate"
                DangerAction="true"
-               OnConfirm="DeactivateAsync" />
+               OnConfirm="ConfirmDeactivationAsync"
+               OnCancel="CancelDeactivation" />
 
 @code {
   [Parameter]
@@ -107,6 +116,12 @@
 
   private readonly EpaFormModel _model = new();
   private ConfirmDialog? _confirmDeactivate;
+  private ElementReference _result;
+
+  // The Deactivate button deactivated the EPA and is gone: its result takes the focus after the next render.
+  private bool _focusResult;
+
+  internal ElementReference ResultRegion => _result;
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
@@ -115,12 +130,20 @@
   private bool _loading;
   private bool _saving;
 
+  // What the database says, as against the checkbox, which the user can untick without saving.
+  private bool _storedIsActive = true;
+
+  // Whether the open dialog was opened by Save (with Active unticked) rather than by the Deactivate button: confirming
+  // it then saves every edit on the form, not only the deactivation.
+  private bool _saveOnConfirm;
+
   private bool IsNew => !Id.HasValue;
 
   private const string ActiveHelpText =
     "An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard. " +
-    "Evidence already recorded against it is kept. An activity completed against it while it is inactive counts " +
-    "towards nothing, and still does after the EPA is reactivated unless an administrator rebuilds curriculum progress.";
+    "Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity " +
+    "completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating " +
+    "it credits those activities.";
 
   private IEnumerable<LookupOption> SubSpecialityOptions =>
     from subSpeciality in _subSpecialities
@@ -162,6 +185,7 @@
       _model.RequiredKnowledgeSkills = epa.RequiredKnowledgeSkills;
       _model.Category = epa.Category;
       _model.IsActive = epa.IsActive;
+      _storedIsActive = epa.IsActive;
     }
     catch (Exception exception)
     {
@@ -173,7 +197,23 @@
     }
   }
 
+  /// <summary>
+  /// Save, unless it would deactivate the EPA: unticking Active and saving is the same action as the Deactivate button, so
+  /// it asks the same question first (T196), and the dialog's confirm saves.
+  /// </summary>
   private async Task SaveAsync()
+  {
+    if (!IsNew && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
+    {
+      _saveOnConfirm = true;
+      await _confirmDeactivate.ShowAsync();
+      return;
+    }
+
+    await SaveCoreAsync();
+  }
+
+  private async Task SaveCoreAsync()
   {
     _saving = true;
     _errorMessage = null;
@@ -182,18 +222,24 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      EpaDto epa;
 
       if (IsNew)
       {
-        epa = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, authState.User));
-        Navigation.NavigateTo($"/admin/epas/{epa.Id}", forceLoad: true);
+        var created = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, authState.User));
+        Navigation.NavigateTo($"/admin/epas/{created.Id}", forceLoad: true);
         return;
       }
 
-      epa = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive, authState.User));
-      _model.IsActive = epa.IsActive;
-      _statusMessage = "EPA saved.";
+      var wasActive = _storedIsActive;
+      var result = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive, authState.User));
+      _model.IsActive = result.Epa.IsActive;
+      _storedIsActive = result.Epa.IsActive;
+      _statusMessage = (wasActive, result.Epa.IsActive) switch
+      {
+        (false, true) => ReactivatedMessage(result.CompletionsCredited),
+        (true, false) => "EPA saved and deactivated.",
+        _ => "EPA saved."
+      };
     }
     catch (Exception exception)
     {
@@ -205,13 +251,37 @@
     }
   }
 
+  /// <summary>What reactivating credited: the activities completed against the EPA while it was inactive (T196, D48).</summary>
+  private static string ReactivatedMessage(int completionsCredited) => completionsCredited switch
+  {
+    0 => "EPA reactivated. No activity was completed against it while it was inactive, so no progress changed.",
+    1 => "EPA reactivated. 1 activity completed against it while it was inactive now counts towards progress.",
+    _ => $"EPA reactivated. {completionsCredited} activities completed against it while it was inactive now count towards progress."
+  };
+
   private async Task AskDeactivateAsync()
   {
+    _saveOnConfirm = false;
     if (_confirmDeactivate is not null)
     {
       await _confirmDeactivate.ShowAsync();
     }
   }
+
+  private async Task ConfirmDeactivationAsync()
+  {
+    if (_saveOnConfirm)
+    {
+      _saveOnConfirm = false;
+      await SaveCoreAsync();
+      return;
+    }
+
+    await DeactivateAsync();
+  }
+
+  // Cancelling leaves Active unticked on the form, unsaved; Save asks again.
+  private void CancelDeactivation() => _saveOnConfirm = false;
 
   private async Task DeactivateAsync()
   {
@@ -224,7 +294,9 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new DeactivateEpaCommand(Id!.Value, authState.User));
       _model.IsActive = false;
+      _storedIsActive = false;
       _statusMessage = "EPA deactivated.";
+      _focusResult = true;
     }
     catch (Exception exception)
     {
@@ -233,6 +305,21 @@
     finally
     {
       _saving = false;
+    }
+  }
+
+  /// <remarks>
+  /// After a deactivation through the button, the focus moves once the browser has acknowledged the render that follows
+  /// it. By then the dialog is closed: ConfirmDialog asks the browser to close it as soon as the deactivation returns,
+  /// and while a modal dialog is open nothing outside it can take the focus (as on the MSF campaign pages, T206 review).
+  /// A refused deactivation leaves the button, and the dialog hands the focus back to it.
+  /// </remarks>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult)
+    {
+      _focusResult = false;
+      await _result.FocusAsync();
     }
   }
 

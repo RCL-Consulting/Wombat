@@ -61,7 +61,7 @@ public sealed class CreditApplierTests
     {
         await using var dbContext = CreateDbContext();
         SeedCurriculum(dbContext);
-        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).IsActive = false;
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).Deactivate(DateTime.MinValue);
         await dbContext.SaveChangesAsync();
 
         var activityType = new ActivityType
@@ -77,7 +77,7 @@ public sealed class CreditApplierTests
         whileInactive.UpdatedRows.Should().BeEmpty("the EPA is deactivated, so its item takes no new credit");
         dbContext.CurriculumItemProgresses.Should().BeEmpty();
 
-        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).IsActive = true;
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 5000)).Reactivate();
         await dbContext.SaveChangesAsync();
 
         var onceActive = await applier.ApplyAsync(CreateCompletedActivity(data, activityId: 101), activityType, CancellationToken.None);
@@ -758,7 +758,12 @@ public sealed class CreditApplierTests
             row.TraineeUserId == "trainee-1" && row.CurriculumItemId == 4000 && row.AcademicYear == 2026 && row.Semester == 1);
 
         var plan = await new CreditApplier(dbContext).PlanAsync(
-            new CreditSubject("trainee-1", new DateOnly(2026, 8, 3), ObservedOnDeclared: true, """{ "epa_id": 5000, "score": 4 }"""),
+            new CreditSubject(
+                "trainee-1",
+                new DateOnly(2026, 8, 3),
+                ObservedOnDeclared: true,
+                """{ "epa_id": 5000, "score": 4 }""",
+                new DateTime(2026, 8, 3, 9, 0, 0, DateTimeKind.Utc)),
             CreateActivityType(),
             CancellationToken.None);
 
@@ -821,7 +826,12 @@ public sealed class CreditApplierTests
             .Should().BeSameAs(CreditPlan.Nothing);
 
         var unmatched = await applier.PlanAsync(
-            new CreditSubject("trainee-1", new DateOnly(2026, 3, 10), ObservedOnDeclared: true, """{ "epa_id": 9999, "score": 4 }"""),
+            new CreditSubject(
+                "trainee-1",
+                new DateOnly(2026, 3, 10),
+                ObservedOnDeclared: true,
+                """{ "epa_id": 9999, "score": 4 }""",
+                new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc)),
             CreateActivityType(),
             CancellationToken.None);
         unmatched.Credits.Should().BeEmpty();

@@ -187,7 +187,7 @@ public sealed class StarCurriculumTests
     public async Task ADeactivatedEpa_IsNotOffered_AndStagingItIsRefused_AndWritesNothing()
     {
         await using var db = await SeededDbAsync();
-        (await db.Epas.SingleAsync(epa => epa.Id == UnpinnedCoreEpa)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == UnpinnedCoreEpa)).Deactivate(DateTime.MinValue);
         await SaveAndClearAsync(db);
 
         (await ListAsync(db, Chair())).Select(option => option.Code).Should().Equal("PAED-001", "PAED-003");
@@ -230,7 +230,7 @@ public sealed class StarCurriculumTests
                 (await db.CurriculumItems.SingleAsync(item => item.EpaId == PinnedCoreEpa)).ScaleId = ProgrammeLadder;
                 break;
             case "the EPA is deactivated":
-                (await db.Epas.SingleAsync(epa => epa.Id == PinnedCoreEpa)).IsActive = false;
+                (await db.Epas.SingleAsync(epa => epa.Id == PinnedCoreEpa)).Deactivate(DateTime.MinValue);
                 break;
             case "the trainee changes curriculum":
                 (await db.TraineeProfiles.SingleAsync()).CurriculumId = OtherCurriculumId;
@@ -262,7 +262,7 @@ public sealed class StarCurriculumTests
         await StageAsync(db, PinnedCoreEpa, RungOf(PinnedLadder, 3));
         await StageAsync(db, UnpinnedCoreEpa, RungOf(ProgrammeLadder, 3));
         await RecordDecisionAsync(db);
-        (await db.Epas.SingleAsync(epa => epa.Id == UnpinnedCoreEpa)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == UnpinnedCoreEpa)).Deactivate(DateTime.MinValue);
         await SaveAndClearAsync(db);
 
         var act = () => RatifyOnlyAsync(db);

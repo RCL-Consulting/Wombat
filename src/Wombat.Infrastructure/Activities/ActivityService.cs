@@ -469,7 +469,7 @@ public sealed class ActivityService : IActivityService
         // reads as "never evaluated". Planning first means that from ApplyTransition to SaveChanges nothing
         // awaits and nothing can fail. The plan is built from the data and the encounter date the transition
         // is about to write, because the entity does not carry them yet.
-        var creditPlan = await PlanCreditIfTerminalAsync(activity, version, schema, workflow, transition, mergedDataJson, cancellationToken);
+        var creditPlan = await PlanCreditIfTerminalAsync(activity, version, schema, workflow, transition, mergedDataJson, utcNow, cancellationToken);
 
         // T137. Resolved here, with the other reads, and assigned below with the date stamp. It reads the MERGED data,
         // so a trainee who corrects the EPA in the submit's own patch moves the stamp with it.
@@ -518,6 +518,7 @@ public sealed class ActivityService : IActivityService
         Workflow workflow,
         WorkflowTransition transition,
         string mergedDataJson,
+        DateTime utcNow,
         CancellationToken cancellationToken)
     {
         var targetState = workflow.States.Single(state => string.Equals(state.Key, transition.To, StringComparison.Ordinal));
@@ -535,8 +536,15 @@ public sealed class ActivityService : IActivityService
         // did this happen", and Stamp is nothing but Resolve assigned to the entity.
         var (observedOn, source) = ObservationDateResolver.Resolve(activity, schema, mergedDataJson);
 
+        // Credited at the instant the transition is stamped with, so a rebuild, which judges each completion at its
+        // transition's time, finds the same EPAs in force as this move did (T196).
         return await _creditApplier.PlanAsync(
-            new CreditSubject(activity.SubjectUserId, observedOn, source == ObservationDateSource.Declared, mergedDataJson),
+            new CreditSubject(
+                activity.SubjectUserId,
+                observedOn,
+                source == ObservationDateSource.Declared,
+                mergedDataJson,
+                utcNow),
             // Deliberately carries no WbaToolKey (T122). Credit does not re-check the EPA→tool allow-list (D20): the
             // write path already did, and an allow-list edited since must not take back credit a trainee earned.
             new ActivityType

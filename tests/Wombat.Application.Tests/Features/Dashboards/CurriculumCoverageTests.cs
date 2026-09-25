@@ -556,7 +556,7 @@ public sealed class CurriculumCoverageTests
 
         foreach (var epa in db.Epas.Where(epa => epa.Id == SemesterEpa || epa.Id == 2))
         {
-            epa.IsActive = false;
+            epa.Deactivate(DateTime.UtcNow);
         }
 
         db.SaveChanges();
@@ -571,7 +571,7 @@ public sealed class CurriculumCoverageTests
 
         foreach (var epa in db.Epas)
         {
-            epa.IsActive = true;
+            epa.Reactivate();
         }
 
         db.SaveChanges();

@@ -461,60 +461,41 @@ public sealed class ToolPermissionGateTests
     }
 
     [Fact]
-    public async Task T158_ADeactivatedEpa_IsAcceptedLikeAnEpaWithNoItem_AndCreditsNothing()
+    public async Task D48_ADeactivatedEpa_IsNotRefusedForBeingInactive_AndItsCreditIsPaused()
     {
-        // The gate and credit share CreditTargetResolver, which reads only items in force. A deactivated EPA's item is
-        // not in force, so to both it is an EPA with no item: nothing is credited, so there is nothing to protect.
-        // The picker does not offer it, so only a forged id or a stored value reaches here. The boundary this leaves, an
-        // EPA reactivated after the gate last judged the activity, is pinned by the T158Boundary test below.
+        // D48: deactivating an EPA pauses its credit; it does not refuse filing. PAED-005's list names CBD, so a CBD filed
+        // against it while it is deactivated is created, submitted and completed. The gate judged the instrument and
+        // nothing else, and the completion credits nothing and is stamped zero until the EPA is reactivated, which credits
+        // it (EpaReactivationCreditTests).
         var options = NewDatabase();
         await SeedAsync(options);
-        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: false);
+        await DeactivateEpaAsync(options, ForbiddingEpaId);
 
-        var created = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId);
+        var created = await CreateAsync(options, CbdTypeId, ForbiddingEpaId);
         await TransitionAsync(options, created.Id, "submit", TraineeId);
-        await TransitionAsync(options, created.Id, "complete", AssessorId, """{ "overall_level": 4 }""");
+        var completed = await TransitionAsync(options, created.Id, "complete", AssessorId, """{ "overall_level": 4 }""");
 
-        (await ProgressRowsAsync(options)).Should().BeEmpty("a deactivated EPA takes no credit");
+        completed.CurrentState.Should().Be("completed");
+        (await ProgressRowsAsync(options)).Should().BeEmpty("a deactivated EPA's credit is paused");
         (await StoredAsync(options, created.Id)).Transitions
             .Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(0);
-
-        // Guard: active again, PAED-005 forbids Mini-CEX, so the acceptance above was the deactivation and not a gate
-        // that is off for this EPA.
-        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: true);
-        await AssertNowForbiddenAsync(options, MiniCexTypeId, ForbiddingEpaId);
     }
 
     [Fact]
-    public async Task T158Boundary_AnEpaReactivatedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited()
+    public async Task D48_ADeactivatedEpa_IsStillHeldToItsToolList_SoAReactivationCannotCreditAForbiddenTool()
     {
-        // KNOWN BEHAVIOUR, pinned deliberately: the D20 boundary below, reached through T158. Filed and handed on while
-        // PAED-005 was deactivated, the gate saw an EPA with no item in force and passed it. The EPA is reactivated
-        // before the assessor completes; an unchanged target is not re-judged once the author has handed it on, and
-        // credit never re-litigates (D20), so CreditApplier credits PAED-005 with a tool its list forbids. If this test
-        // starts failing, the boundary has moved (a gate that refuses an EPA not in force at the hand-on would close
-        // it): that needs a decision in EPA-PROGRAMME, not a test edit.
+        // T196 closes the T158 boundary. The gate used to read only items in force, so a Mini-CEX filed against PAED-005
+        // while it was deactivated passed, and once the EPA was reactivated it credited a tool the list forbids. A
+        // reactivation now credits everything filed during the pause, so the gate judges the item whether or not its EPA is
+        // in force. The refusal is the instrument's own message, not a refusal for being inactive: D48 rejected that.
         var options = NewDatabase();
         await SeedAsync(options);
-        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: false);
+        await DeactivateEpaAsync(options, ForbiddingEpaId);
 
-        var request = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId);
-        await TransitionAsync(options, request.Id, "submit", TraineeId);
-
-        await SetEpaActiveAsync(options, ForbiddingEpaId, isActive: true);
-
-        // Guard: in force again, PAED-005 forbids Mini-CEX, so what follows is the boundary and not a gate that is off
-        // for this EPA.
         await AssertNowForbiddenAsync(options, MiniCexTypeId, ForbiddingEpaId);
 
-        var completed = await TransitionAsync(options, request.Id, "complete", AssessorId, """{ "overall_level": 4 }""");
-
-        completed.CurrentState.Should().Be("completed");
-        var row = (await ProgressRowsAsync(options)).Should().ContainSingle().Subject;
-        row.CurriculumItemId.Should().Be(ForbiddingItemId, "PAED-005 forbids Mini-CEX, and it is credited all the same");
-        row.CountsSoFar.Should().Be(1);
-        (await StoredAsync(options, request.Id)).Transitions
-            .Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(1);
+        await using var db = new ApplicationDbContext(options);
+        db.Activities.Should().BeEmpty("the refused create wrote nothing");
     }
 
     [Fact]
@@ -1060,10 +1041,11 @@ public sealed class ToolPermissionGateTests
         await db.SaveChangesAsync();
     }
 
-    private static async Task SetEpaActiveAsync(DbContextOptions<ApplicationDbContext> options, int epaId, bool isActive)
+    /// <summary>What deactivating an EPA does, in its own request: it is out of force from now (T196).</summary>
+    private static async Task DeactivateEpaAsync(DbContextOptions<ApplicationDbContext> options, int epaId)
     {
         await using var db = new ApplicationDbContext(options);
-        (await db.Epas.SingleAsync(epa => epa.Id == epaId)).IsActive = isActive;
+        (await db.Epas.SingleAsync(epa => epa.Id == epaId)).Deactivate(DateTime.UtcNow);
         await db.SaveChangesAsync();
     }
 

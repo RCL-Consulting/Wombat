@@ -37,6 +37,36 @@ public sealed class ActivityReferenceDataServiceTests
     }
 
     [Fact]
+    public async Task GetEpaOptions_AStoredEpaThatIsNoLongerInForce_IsOfferedBack_LabelledNoLongerInUse()
+    {
+        // T196, D48. The pickers offer only EPAs in force, so a deactivated EPA reaches an activity's option list only as
+        // the value it stores. It stays on the record (the stored-value rule), and says why nobody else is offered it.
+        // An EPA in force that is merely outside the caller's scope is not labelled: it is in use.
+        await using var db = CreateDb();
+        db.Epas.Add(new Epa { Id = 1, SubSpecialityId = 1, Code = "PAED-001", Title = "Admission", IsActive = true });
+        db.Epas.Add(new Epa { Id = 3, SubSpecialityId = 2, Code = "OTHER-001", Title = "Out of scope", IsActive = true });
+        var retired = new Epa { Id = 4, SubSpecialityId = 1, Code = "PAED-099", Title = "Retired" };
+        retired.Deactivate(new DateTime(2026, 5, 1, 8, 0, 0, DateTimeKind.Utc));
+        db.Epas.Add(retired);
+        await db.SaveChangesAsync();
+
+        var service = new ActivityReferenceDataService(db);
+        var principal = Principal(subSpecialityIds: [1]);
+
+        var withRetired = await service.GetEpaOptionsAsync(principal, new EpaOptionScope(null, NarrowToCreditable: false, CurrentValue: "4"));
+
+        withRetired.Select(option => (option.Value, option.Label)).Should().BeEquivalentTo(new[]
+        {
+            ("1", "PAED-001 — Admission"),
+            ("4", "PAED-099 — Retired (no longer in use)")
+        });
+
+        var withOutOfScope = await service.GetEpaOptionsAsync(principal, new EpaOptionScope(null, NarrowToCreditable: false, CurrentValue: "3"));
+
+        withOutOfScope.Single(option => option.Value == "3").Label.Should().Be("OTHER-001 — Out of scope");
+    }
+
+    [Fact]
     public async Task GetEpaOptions_AdministratorSeesAllActive()
     {
         await using var db = CreateDb();

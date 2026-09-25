@@ -60,6 +60,9 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress.RebuildCurriculumProgressCommandHandler"] =
             "Replays every activity to rebuild curriculum credit. Returns a count; no activity row reaches a caller.",
 
+        ["Wombat.Application.Features.Epas.UpdateEpaCommandHandler"] =
+            "Reactivating an EPA credits the completions filed while it was inactive (T196, D48), as the rebuild would. Reads activities only on reactivation, after the EPA-owner check (CollegeAdmin or owning InstitutionalAdmin), and only completions that could hold paused credit: pinned to rules that credit, in a terminal state, with a transition since the pause began (ResumedEpaCredit.LoadCandidatesAsync). Returns the EPA and a count; no activity row reaches a caller.",
+
         ["Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQueryHandler"] =
             "Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of. Narrower than the read rule by construction.",
 

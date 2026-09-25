@@ -192,7 +192,7 @@ public sealed class GetCurriculumProgressForTraineeTests
         AddRow(db, SemesterItemId, 2026, 2, counts: 3, reached: 3, lastObservedOn: new DateOnly(2026, 8, 12));
         db.SaveChanges();
 
-        db.Epas.Single(epa => epa.Id == 1).IsActive = false;
+        db.Epas.Single(epa => epa.Id == 1).Deactivate(DateTime.MinValue);
         db.SaveChanges();
 
         var retired = await Read(db);
@@ -205,7 +205,7 @@ public sealed class GetCurriculumProgressForTraineeTests
         retired.HasYearItems.Should().BeTrue();
         retired.YearTargetsApplying.Should().Be(1);
 
-        db.Epas.Single(epa => epa.Id == 1).IsActive = true;
+        db.Epas.Single(epa => epa.Id == 1).Reactivate();
         db.SaveChanges();
 
         var restored = await Read(db);

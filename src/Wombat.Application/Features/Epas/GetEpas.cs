@@ -19,13 +19,21 @@ public sealed record GetEpaByIdQuery(int Id, ClaimsPrincipal Principal) : IReque
 public sealed record GetEntrustmentScalesListQuery() : IRequest<IReadOnlyList<EntrustmentScaleDto>>;
 public sealed record GetEntrustmentScaleByIdQuery(int Id) : IRequest<EntrustmentScaleDto?>;
 
+/// <summary>
+/// Takes an EPA out of force from now (T158). Its credit is paused, not cancelled (D48): progress it earned while in
+/// force is kept, even by a rebuild, and what is completed against it from now counts once it is reactivated
+/// (<see cref="UpdateEpaCommandHandler" />). Deactivating an EPA that is already inactive changes nothing, so the moment
+/// its pause began stands (T196).
+/// </summary>
 public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaCommand>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly TimeProvider _timeProvider;
 
-    public DeactivateEpaCommandHandler(IApplicationDbContext dbContext)
+    public DeactivateEpaCommandHandler(IApplicationDbContext dbContext, TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task Handle(DeactivateEpaCommand request, CancellationToken cancellationToken)
@@ -49,7 +57,7 @@ public sealed class DeactivateEpaCommandHandler : IRequestHandler<DeactivateEpaC
             throw new UnauthorizedAccessException("You do not have permission to deactivate this EPA.");
         }
 
-        epa.IsActive = false;
+        epa.Deactivate(_timeProvider.GetUtcNow().UtcDateTime);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

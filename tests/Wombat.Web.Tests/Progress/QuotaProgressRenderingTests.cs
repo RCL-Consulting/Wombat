@@ -563,17 +563,33 @@ public sealed class QuotaProgressRenderingTests : TestContext
     }
 
     [Fact]
-    public void TheRebuildPage_WarnsThatAnInactiveEpaLosesItsProgress_BeforeTheOperatorConfirms()
+    public void TheRebuildPage_SaysAnInactiveEpaKeepsItsProgress_AndNoLongerWarnsItIsLost()
     {
-        // T158. Deactivating an EPA deletes nothing; a rebuild while it is inactive is the one step that does. The
-        // operator must read that on the page and again in the dialog, before the rebuild runs.
+        // T196, D48. Until T196 a rebuild while an EPA was inactive removed the progress it had earned, and this page
+        // warned of it. The rebuild now judges each completion at its own moment, so it loses nothing; the page says when
+        // a paused completion counts instead, and the dialog no longer threatens the loss.
         var cut = RenderRebuildPage(new FakeSender());
 
-        Text(cut.Find(".alert.alert-warning")).Should()
-            .Contain("While an EPA is inactive, a rebuild removes the progress its item had earned")
-            .And.Contain("Reactivate the EPA and rebuild again to restore them.");
-        cut.Find(".alert.alert-warning").HasAttribute("role").Should().BeFalse("standing page content (T193)");
-        Text(cut.Find("dialog")).Should().Contain("An EPA that is inactive now keeps none of its progress.");
+        cut.FindAll(".alert.alert-warning").Should().BeEmpty("a rebuild no longer removes an inactive EPA's progress");
+        cut.Markup.Should()
+            .Contain("An inactive EPA keeps the progress it earned while it was active.")
+            .And.Contain("reactivating it credits those activities without a rebuild");
+        Text(cut.Find("dialog")).Should().Contain("An inactive EPA keeps the progress it earned while it was active.")
+            .And.NotContain("keeps none of its progress");
+    }
+
+    [Fact]
+    public void TheRebuildPage_SaysItCreditsAgainstTodaysCurriculum_AndJudgesOnlyAnEpasPauseAsOfTheCompletion()
+    {
+        // T196 review. A rebuild reads today's items, targets and scale pins; that is what makes it the repair after a
+        // curriculum edit. Only whether an EPA was active is judged as of the completion. The page said the opposite:
+        // "against the curriculum as it stood when the activity was completed".
+        var cut = RenderRebuildPage(new FakeSender());
+
+        var text = Text(cut.Find(".form-container"));
+        text.Should().Contain("A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels.")
+            .And.Contain("Only whether an EPA was active is judged as of when the activity was completed.")
+            .And.NotContain("as it stood when the activity was completed");
     }
 
     [Fact]

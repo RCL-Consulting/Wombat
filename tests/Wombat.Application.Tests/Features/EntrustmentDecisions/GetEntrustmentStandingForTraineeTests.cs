@@ -279,7 +279,7 @@ public sealed class GetEntrustmentStandingForTraineeTests
                 Item(3, "PAED-003", exitOrder: 5, owningInstitutionId: OtherInstitution),
                 Item(4, "PAED-004", exitOrder: 5)
             ]);
-        (await db.Epas.SingleAsync(epa => epa.Id == 4)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == 4)).Deactivate(DateTime.MinValue);
         await db.SaveChangesAsync();
 
         var standing = await ReadAsync(db, Self());

@@ -30,17 +30,42 @@ public sealed record CreditApplicationResult(
 
 /// <summary>
 /// The facts about an activity that credit depends on. They are passed explicitly rather than read off the entity,
-/// so that <see cref="ICreditApplier.PlanAsync" /> can run BEFORE the transition mutates the activity, using the data
-/// and the date the transition is about to write.
+/// so that <see cref="ICreditApplier.PlanAsync" /> can run BEFORE the transition mutates the activity, using the data,
+/// the encounter date and the moment the transition is about to write.
 /// </summary>
 /// <param name="ObservedOnDeclared">
 /// Whether <paramref name="ObservedOn" /> was stated (<c>ObservationDateSource.Declared</c>) rather than being the day
 /// the activity was created. Credit does not depend on it; the progress row records it beside the date, so a reader
 /// can mark an undated last encounter (T219). No default: every caller says which it is.
 /// </param>
-public sealed record CreditSubject(string SubjectUserId, DateOnly ObservedOn, bool ObservedOnDeclared, string DataJson)
+/// <param name="CreditedAt">
+/// The moment of credit: the time of the transition credit is recorded against (UTC). Only curriculum items whose EPA was
+/// in force at that moment are credited (<c>CurriculumItemsInForce.InForceAt</c>, T196), so a replay judges an EPA's
+/// pause as the live path did. It is the only thing judged as of that moment: the items themselves, their targets and
+/// their scale pins are read as they stand.
+/// </param>
+public sealed record CreditSubject(
+    string SubjectUserId,
+    DateOnly ObservedOn,
+    bool ObservedOnDeclared,
+    string DataJson,
+    DateTime CreditedAt)
 {
-    /// <summary>The subject, date and data an activity already carries: for a replay, or for a caller that has already transitioned it.</summary>
+    /// <summary>
+    /// Set only when an EPA is reactivated (T196, D48): credit this EPA's items and no others, as in force whatever the
+    /// catalogue said at <see cref="CreditedAt" />. The completion was paused because the EPA was inactive; its other
+    /// items were judged when it completed, and credit never re-litigates them.
+    /// </summary>
+    public int? ResumedEpaId { get; init; }
+
+    /// <summary>
+    /// The subject, date and data an activity already carries, credited at its newest transition: for a replay, or for a
+    /// caller that has already transitioned it.
+    /// </summary>
+    /// <remarks>
+    /// The newest transition is the one credit is recorded against: <c>CreditApplier</c> builds its dedupe key from it and
+    /// the rebuild stamps it, by the same selection.
+    /// </remarks>
     public static CreditSubject Of(Activity activity)
     {
         ArgumentNullException.ThrowIfNull(activity);
@@ -48,7 +73,15 @@ public sealed record CreditSubject(string SubjectUserId, DateOnly ObservedOn, bo
             activity.SubjectUserId,
             activity.ObservedOn,
             activity.ObservedOnSource == ObservationDateSource.Declared,
-            activity.DataJson);
+            activity.DataJson,
+            CreditedAtOf(activity));
+    }
+
+    /// <summary>The time of the transition credit is recorded against, or the activity's last update when it has none.</summary>
+    public static DateTime CreditedAtOf(Activity activity)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        return CreditReplay.CreditedTransition(activity)?.OccurredOn ?? activity.UpdatedOn;
     }
 }
 

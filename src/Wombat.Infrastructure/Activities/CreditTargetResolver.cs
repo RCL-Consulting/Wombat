@@ -24,8 +24,9 @@ namespace Wombat.Infrastructure.Activities;
 /// </para>
 /// <para>
 /// The EPA picker applies the same profile pick through <see cref="PickProfileAsync" />, so the three cannot choose
-/// different curricula for a user who somehow holds two profiles. It applies the same
-/// <see cref="CurriculumItemsInForce" /> predicate too, so an EPA it does not offer is one credit cannot land on (T158).
+/// different curricula for a user who somehow holds two profiles. It applies the <see cref="CurriculumItemsInForce" />
+/// predicate too, so an EPA it does not offer is one a completion now cannot credit (T158). The gate does not: it judges
+/// the instrument on an EPA's item whether or not the EPA is in force (D48, T196).
 /// </para>
 /// </remarks>
 internal static class CreditTargetResolver
@@ -81,8 +82,9 @@ internal static class CreditTargetResolver
         CurriculumItemMatchRule matchRule,
         JsonElement data,
         TraineeContext trainee,
+        DateTime? inForceAt,
         CancellationToken cancellationToken)
-        => (await ResolveCurriculumItemsWithSourceAsync(dbContext, matchRule, data, trainee, cancellationToken)).Items;
+        => (await ResolveCurriculumItemsWithSourceAsync(dbContext, matchRule, data, trainee, inForceAt, cancellationToken)).Items;
 
     /// <summary>
     /// The items a directive matches, and the schema field whose value produced the match: the
@@ -93,23 +95,33 @@ internal static class CreditTargetResolver
     /// items, rather than re-derived by the caller. The precedence includes the fall-through from an unparseable
     /// <c>curriculum_item_field</c> to <c>epa_field</c>.
     /// </remarks>
+    /// <param name="inForceAt">
+    /// Credit's moment: only items in force then are matched (<see cref="CurriculumItemsInForce.InForceAt" />, T158,
+    /// T196). Null matches every item, in force or not: the tool gate, which judges the instrument against the item a
+    /// paused completion will be credited under once its EPA is reactivated (D48), and that reactivation's own plan.
+    /// </param>
     public static async Task<(IReadOnlyList<CurriculumItem> Items, string? MatchedFieldKey)> ResolveCurriculumItemsWithSourceAsync(
         IApplicationDbContext dbContext,
         CurriculumItemMatchRule matchRule,
         JsonElement data,
         TraineeContext trainee,
+        DateTime? inForceAt,
         CancellationToken cancellationToken)
     {
         // Every match is confined to the trainee's adopted curriculum version (national core) plus their
         // own institution's local extras. This prevents credit leaking across curriculum versions or
         // onto another institution's local items that happen to share an EPA. (T091 phase 4.)
         //
-        // And to items in force (T158). A deactivated EPA is not offered by the picker and is no target on any
-        // progress page, so it takes no credit either: a completion while it is inactive matches nothing, and the
-        // transition is stamped zero. Here rather than in CreditApplier, so the tool gate reads it the same way: an
-        // inactive EPA is, to both, an EPA with no item on the trainee's curriculum.
-        var scoped = dbContext.Set<CurriculumItem>()
-            .InForce()
+        // And, for credit, to items in force at the moment of credit (T158, T196). A deactivated EPA is not offered by
+        // the picker and is no target on any progress page, so a completion while it is inactive matches nothing and
+        // the transition is stamped zero; a replay of a completion from before the deactivation still matches it.
+        IQueryable<CurriculumItem> items = dbContext.Set<CurriculumItem>();
+        if (inForceAt is { } moment)
+        {
+            items = items.InForceAt(moment);
+        }
+
+        var scoped = items
             .Where(entity => entity.CurriculumId == trainee.CurriculumId
                 && (entity.OwningInstitutionId == null || entity.OwningInstitutionId == trainee.InstitutionId));
 

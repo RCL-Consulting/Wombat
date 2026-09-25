@@ -6,8 +6,6 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Activities.Credit;
-using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.Curricula;
 
 namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
@@ -52,6 +50,16 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// the activity was credited, rows the replay no longer reproduces are removed and the right ones are
 /// written. The key is <see cref="CurriculumItemProgressKey" />, the same definition
 /// <c>CreditApplier</c> looks rows up by.
+/// </para>
+/// <para>
+/// <b>Deactivated EPAs (T196, D48).</b> Whether a completion's EPA was in force is judged at the completion's
+/// own moment, the transition credit is recorded against (<see cref="CreditSubject.Of" />), not on the day the
+/// rebuild runs. So a rebuild while an EPA is inactive keeps the credit it earned while in force, and credits
+/// nothing completed during its pause, exactly as the live path did. Before T196 it dropped the lot. That is the
+/// one thing judged as of the completion: which items the curriculum holds, their targets and their scale pins
+/// are read as they stand today, which is what makes a rebuild the repair tool after a curriculum edit.
+/// Reactivating the EPA credits the paused completions itself (<c>ResumedEpaCredit</c>), so this page is no
+/// longer the only way to restore them.
 /// </para>
 /// <para>
 /// <b>Callers (T130).</b> The Administrator page <c>/admin/curriculum-progress</c>, behind a
@@ -152,16 +160,9 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
 
         var activities = await activityQuery.ToListAsync(cancellationToken);
 
-        // Replayed in filing order, not encounter order. The tallies themselves are order-independent,
-        // but LastActivityId is not: it means "the completion that most recently moved this row", and
-        // the live path writes it in the order transitions happened. Replaying in that same order is
-        // what makes a rebuild reproduce the incremental path exactly rather than approximately.
-        var replayOrder = activities
-            .OrderBy(activity => activity.Transitions.Count == 0
-                ? activity.CreatedOn
-                : activity.Transitions.Max(transition => transition.OccurredOn))
-            .ThenBy(activity => activity.Id)
-            .ToList();
+        // Replayed in filing order, not encounter order (CreditReplay.InFilingOrder). Replaying in the order the live path
+        // wrote LastActivityId is what makes a rebuild reproduce the incremental path exactly rather than approximately.
+        var replayOrder = CreditReplay.InFilingOrder(activities);
 
         var creditedKeys = new HashSet<CurriculumItemProgressKey>();
         var stamps = new List<(ActivityTransition Transition, int CreditedItemCount, int ScaleMismatchCount)>();
@@ -177,42 +178,19 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
 
             foreach (var activity in replayOrder)
             {
-                var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(version => version.Version == activity.SchemaVersion);
-                if (pinnedVersion is null)
+                // A terminal state of the pinned workflow, under pinned rules that declare credit, with the pinned
+                // schema, as the live path passes them (CreditReplay.PinnedCreditingType).
+                var pinnedType = CreditReplay.PinnedCreditingType(activity);
+                if (pinnedType is null)
                 {
                     continue;
                 }
 
-                var workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
-                var state = workflow.States.SingleOrDefault(candidate =>
-                    string.Equals(candidate.Key, activity.CurrentState, StringComparison.Ordinal));
-
-                if (state is null || !state.Terminal)
-                {
-                    continue;
-                }
-
-                // The same `counts_for` gate the live path checks BEFORE calling the applier
-                // (ActivityService.TransitionAsync). Checking it here rather than reading a zero out of
-                // the result is what keeps the stamp below three-valued: a reflective note, journal
-                // club, procedure log, QI project, research output or teaching session declares an
-                // empty counts_for, was never evaluated, and must stay null rather than be flagged as
-                // having credited nothing.
-                if (!DeclaresCredit(pinnedVersion.CreditRulesJson))
-                {
-                    continue;
-                }
-
-                var credited = await _creditApplier.ApplyAsync(
-                    activity,
-                    new ActivityType
-                    {
-                        CreditRulesJson = pinnedVersion.CreditRulesJson,
-                        // Same pinned schema the live path passes, so a replay reaches the same scale bindings
-                        // and therefore the same credit as the original completion did (T109).
-                        SchemaJson = pinnedVersion.SchemaJson
-                    },
-                    cancellationToken);
+                // Whether each EPA was in force is judged at the completion's own moment (CreditSubject.Of: its newest
+                // transition), so an EPA deactivated since keeps the credit it earned while it was in force, and one
+                // deactivated before the completion gives none (T196, D48). Only that: the items the directive matches,
+                // their targets and their scale pins are the curriculum as it stands today.
+                var credited = await _creditApplier.ApplyAsync(activity, pinnedType, cancellationToken);
 
                 activitiesReplayed++;
                 creditApplications += credited.UpdatedRows.Count;
@@ -231,9 +209,7 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
                 // CreditApplier.GetCreditKey uses to build the dedupe key. That is not a coincidence to
                 // be tidied away: the stamp has to land on the transition the credit was recorded
                 // against, or the two records describe different moves.
-                var creditedTransition = activity.Transitions
-                    .OrderByDescending(transition => transition.OccurredOn)
-                    .FirstOrDefault();
+                var creditedTransition = CreditReplay.CreditedTransition(activity);
 
                 if (creditedTransition is not null)
                 {
@@ -308,10 +284,6 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
             ProgressRowsRemoved: removedRows.Count,
             TransitionsStamped: stamps.Count);
     }
-
-    private static bool DeclaresCredit(string creditRulesJson)
-        => !string.IsNullOrWhiteSpace(creditRulesJson) &&
-           CreditRulesParser.Parse(creditRulesJson).CountsFor.Count > 0;
 
     /// <summary>
     /// Puts the DbContext back so that nothing the rebuild did is written by a later save, which the audit

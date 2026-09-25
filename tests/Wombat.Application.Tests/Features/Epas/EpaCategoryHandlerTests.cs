@@ -6,6 +6,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Epas;
@@ -50,12 +51,12 @@ public sealed class EpaCategoryHandlerTests
         db.Epas.Add(new Epa { Id = 9, SubSpecialityId = 1, Code = "EPA-09", Title = "Nine", IsActive = true });
         await db.SaveChangesAsync();
 
-        var handler = new UpdateEpaCommandHandler(db);
+        var handler = new UpdateEpaCommandHandler(db, new CreditApplier(db));
         var result = await handler.Handle(
             new UpdateEpaCommand(9, 1, "EPA-09", "Nine", null, null, EpaCategory.Elective, true, TestPrincipals.Administrator()),
             CancellationToken.None);
 
-        result.Category.Should().Be(EpaCategory.Elective);
+        result.Epa.Category.Should().Be(EpaCategory.Elective);
     }
 
     [Fact]

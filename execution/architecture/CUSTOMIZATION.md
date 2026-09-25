@@ -339,9 +339,43 @@ catalogue), or null for "any instrument". It is checked against the activity typ
   trainee profile and an EPA with no item are all unrestricted. An institution's own types are therefore unrestricted
   until someone picks an instrument for them in the builder ("This tool is").
 - **One resolver:** the gate asks `CreditTargetResolver`, the credit engine's own item resolution, so it can never
-  refuse or pass a different item from the one credit lands on.
+  refuse or pass a different item from the one credit lands on. It asks for every item a target names, in force or not
+  (D48, T196): a deactivated EPA's credit is paused, not cancelled, so its item is where the credit lands once the EPA
+  is reactivated. Not being in force is never itself a refusal.
 - **Seeds:** the catalogue stamps lists and seeded types' keys on CREATE only. An existing database got them from the
   T122 migration; afterwards, a difference from the catalogue is logged as a startup warning, never written.
+
+### A deactivated EPA pauses credit (T158, T196, D48)
+
+Deactivating an EPA takes its curriculum items out of force: the pickers stop offering it and no progress page lists it
+as a target (`CurriculumItemsInForce.InForce`). It does not refuse filing, and it does not cancel credit:
+
+- **Credit is judged at the moment of credit**, the time of the transition credit is recorded against (the newest, the
+  one `CreditApplier` builds its dedupe key from). An item is in force at that moment when its EPA is active, or the
+  moment falls before `Epa.DeactivatedOn` (`CurriculumItemsInForce.InForceAt`, `Epa.InForceAt`). A completion while the
+  EPA is inactive credits nothing and is stamped `CreditedItemCount = 0`, so the T108 warning explains it.
+- **The rebuild judges each completion at its own moment** (`CreditSubject.Of`), so a rebuild while an EPA is inactive
+  keeps the credit earned while it was in force and credits nothing completed since. It is the completion's moment, not
+  the encounter's, because that is what the live path judged: a rebuild must reproduce it. Only the pause is judged as
+  of that moment: which items the curriculum holds, their targets and their scale pins are today's, which is what makes
+  the rebuild the repair after a curriculum edit.
+- **Reactivating credits what was filed during the pause** (`UpdateEpaCommandHandler`, `ResumedEpaCredit`), for whoever
+  may reactivate the EPA (a CollegeAdmin for a national EPA, the owning InstitutionalAdmin for a local one), with no
+  Administrator rebuild. It credits the reactivated EPA's items only, adds to each completion's stamp, and writes what a
+  rebuild would. Every read happens before the first mutation. It reads only completions that could credit: pinned to a
+  version whose rules declare `counts_for`, in a state such a version ends in, and moved since the pause began
+  (`ResumedEpaCredit.LoadCandidatesAsync`). A unique-index refusal at its save is told apart by reading back: a duplicate
+  code says so, and anything else is a progress row another save opened first ("Save again").
+- **Two one-request races are left open**, and a rebuild reconciles both: a completion that read the EPA as inactive
+  and saved after the reactivation read its candidates stays uncredited; one that read it as active just before a
+  deactivation committed, but completed after `DeactivatedOn`, keeps live credit a rebuild while inactive removes. Closing
+  them needs the completion's save to conflict with the EPA's, and neither writes the other.
+- **One timestamp is the whole history.** Every earlier pause was closed by a reactivation that credited it, so only the
+  current pause holds anything back. Deactivating an EPA that is already inactive keeps the moment its pause began.
+  `CK_Epas_DeactivatedOn` keeps `IsActive` and `DeactivatedOn` in step; change them through `Epa.Deactivate` and
+  `Epa.Reactivate`. `IsActive` is init-only, so a stored EPA's flag cannot be set any other way.
+- **An activity already filed against it keeps its EPA**, shown as "(no longer in use)" in its option list
+  (`EpaOptionLabel`), because the pickers offer only EPAs in force.
 
 ## Rendering
 

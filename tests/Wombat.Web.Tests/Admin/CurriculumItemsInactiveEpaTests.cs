@@ -17,7 +17,7 @@ namespace Wombat.Web.Tests.Admin;
 /// </summary>
 /// <remarks>
 /// The editor reads items as records, so an item whose EPA is deactivated stays in its table. Since T158 that item is
-/// on no progress page and takes no credit. Unmarked, it reads as a live target that no trainee can see, and the admin
+/// on no progress page and its credit is paused (T196, D48). Unmarked, it reads as a live target that no trainee can see, and the admin
 /// has nothing to tell them why.
 /// </remarks>
 public sealed class CurriculumItemsInactiveEpaTests : TestContext
@@ -44,8 +44,8 @@ public sealed class CurriculumItemsInactiveEpaTests : TestContext
 
         var notice = cut.FindAll(".alert.alert-info").Should().ContainSingle().Subject;
         Text(notice).Should().StartWith("PAED-002 is inactive, so its item is not in force:")
-            .And.Contain("no trainee can file against it, it takes no credit")
-            .And.Contain("Reactivating an EPA on its own page brings its item back.");
+            .And.Contain("no trainee can choose it for a new activity, its credit is paused")
+            .And.Contain("Reactivating an EPA on its own page brings its item back, and credits what was completed against it meanwhile.");
     }
 
     [Fact]

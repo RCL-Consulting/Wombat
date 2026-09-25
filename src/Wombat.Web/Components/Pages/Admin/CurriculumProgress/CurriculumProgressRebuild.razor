@@ -24,13 +24,17 @@
     trainee's figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing
     changes. It also runs by itself at startup whenever the stored tallies are empty but completions have credited.
   </p>
-  @* T158. The rebuild replays credit under the curriculum as it stands, and an item whose EPA is inactive is not in
-     force. Deactivating alone deletes nothing, so this page is the one place an inactive EPA's history is lost. *@
-  <Alert Kind="warning" Role="">
-    A rebuild credits against the curriculum as it stands today. While an EPA is inactive, a rebuild removes the
-    progress its item had earned and records every completion against it as counting towards nothing, including
-    completions from when it was active. Reactivate the EPA and rebuild again to restore them.
-  </Alert>
+  @* T196, D48. Until T196 a rebuild judged every EPA as active or not on the day it ran, so a rebuild while an EPA was
+     inactive removed the progress it had earned, and this was a warning. The rebuild now judges whether each
+     completion's EPA was active at the completion's own moment, so it loses nothing; what is left to say is when a
+     paused completion counts. Only that is judged as of the completion: the items, targets and minimum levels are
+     today's (T196 review). *@
+  <p class="muted">
+    A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only
+    whether an EPA was active is judged as of when the activity was completed. An inactive EPA keeps the progress it
+    earned while it was active. An activity completed against it since it was deactivated counts once the EPA is
+    reactivated, and reactivating it credits those activities without a rebuild.
+  </p>
 
   <FormActions>
     <button type="button" class="btn btn-primary" disabled="@_running" @onclick="AskAsync">
@@ -53,7 +57,7 @@
 
 <ConfirmDialog @ref="_confirm"
                Title="Rebuild curriculum progress?"
-               Body="Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. An EPA that is inactive now keeps none of its progress. It is safe to run more than once, and if it fails nothing changes."
+               Body="Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. An inactive EPA keeps the progress it earned while it was active. It is safe to run more than once, and if it fails nothing changes."
                ConfirmLabel="Rebuild progress"
                OnConfirm="RebuildAsync" />
 

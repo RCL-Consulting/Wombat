@@ -194,9 +194,11 @@ Runtime services in Infrastructure:
   `subject|creator`, which reproduces pre-T070 behaviour, so a type declaring nothing is unchanged.
 - `CreditApplier` — matches completed activities to curriculum items and applies credit. Which items an activity
   would credit is `CreditTargetResolver`, the one implementation shared with the tool gate below. It reads only items
-  in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered, takes no credit, and is on
-  no progress page. Every picker, credit and progress reader applies it; the curriculum editor and scale-reference
-  checks do not.
+  in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered and is on no progress page,
+  and its credit is paused, not cancelled (D48, T196). Credit and the rebuild judge each completion at its own moment
+  against `Epa.DeactivatedOn`; reactivating an EPA credits what was completed during the pause. Change the flag only
+  through `Epa.Deactivate`/`Reactivate`. Every picker, credit and progress reader applies it; the tool gate, the
+  curriculum editor and scale-reference checks do not.
 - `ToolPermissionGate` — the write-path half of the EPA→tool allow-list (T122, D20): refuses an activity whose
   instrument (`ActivityType.WbaToolKey`) the matched curriculum item's `PermittedToolsJson` does not name, judged per
   credit directive: at create; on a change of target wherever credit can still follow; and for an unchanged target only

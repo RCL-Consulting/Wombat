@@ -244,7 +244,14 @@ public sealed class EpaOptionCreditScopeTests
         // what retiring a superseded catalogue leaves behind.
         foreach (var epa in await db.Epas.ToListAsync())
         {
-            epa.IsActive = epa.Id == OtherCurriculumEpaId;
+            if (epa.Id == OtherCurriculumEpaId)
+            {
+                epa.Reactivate();
+            }
+            else
+            {
+                epa.Deactivate(DateTime.MinValue);
+            }
         }
 
         await db.SaveChangesAsync();
@@ -446,7 +453,7 @@ public sealed class EpaOptionCreditScopeTests
         // Before: DOPS is permitted on the core item only.
         (await CreditableFor(db, "registrar-1", "dops")).Should().BeEquivalentTo([AdoptedEpaId.ToString()]);
 
-        (await db.Epas.SingleAsync(epa => epa.Id == AdoptedEpaId)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == AdoptedEpaId)).Deactivate(DateTime.MinValue);
         await db.SaveChangesAsync();
 
         var offered = await CreditableFor(db, "registrar-1", "dops");

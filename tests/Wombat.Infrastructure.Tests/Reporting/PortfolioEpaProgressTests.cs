@@ -239,8 +239,8 @@ public sealed class PortfolioEpaProgressTests
         var miniCex = db.ActivityTypes.Single(type => type.Key == "mini_cex_cpsa");
         AddRated(db, 110, miniCex, "completed", epaId: 2, "assessor-a", rating: 3, new DateOnly(2026, 7, 1));
         AddRated(db, 111, miniCex, "completed", epaId: 3, "assessor-a", rating: 3, new DateOnly(2026, 7, 2));
-        db.Epas.Single(epa => epa.Id == 2).IsActive = false;
-        db.Epas.Single(epa => epa.Id == 3).IsActive = false;
+        db.Epas.Single(epa => epa.Id == 2).Deactivate(DateTime.MinValue);
+        db.Epas.Single(epa => epa.Id == 3).Deactivate(DateTime.MinValue);
         Save(db);
 
         var progress = (await LoadAsync(db)).EpaProgress;

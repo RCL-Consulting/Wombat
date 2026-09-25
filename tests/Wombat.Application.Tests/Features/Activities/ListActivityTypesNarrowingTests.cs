@@ -176,7 +176,7 @@ public sealed class ListActivityTypesNarrowingTests
 
         (await Offer(db, "mixed")).Should().Contain("mini_cex_paed", "the legacy ladder is pinned by an item in force");
 
-        (await db.Epas.SingleAsync(epa => epa.Id == 2)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == 2)).Deactivate(DateTime.MinValue);
         await db.SaveChangesAsync();
 
         var offered = await Offer(db, "mixed");
@@ -184,7 +184,7 @@ public sealed class ListActivityTypesNarrowingTests
         offered.Should().NotContain("msf_paed");
         offered.Should().Contain("mini_cex_cpsa", "the item in force still pins the six-rung ladder");
 
-        (await db.Epas.SingleAsync(epa => epa.Id == 2)).IsActive = true;
+        (await db.Epas.SingleAsync(epa => epa.Id == 2)).Reactivate();
         await db.SaveChangesAsync();
 
         (await Offer(db, "mixed")).Should().Contain("mini_cex_paed");

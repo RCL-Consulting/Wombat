@@ -377,7 +377,7 @@ public sealed class GetMsfCoverageForTraineeTests
                 Item(4, "PAED-004"),
                 Item(5, "PAED-005", curriculumId: OtherCurriculumId)
             ]);
-        (await db.Epas.SingleAsync(epa => epa.Id == 4)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == 4)).Deactivate(DateTime.MinValue);
         await db.SaveChangesAsync();
 
         // An Administrator signed in at the other institution: the trainee's institution decides the local items.

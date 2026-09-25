@@ -616,7 +616,7 @@ public sealed class CommitteeAgendaHandlerTests
         var staged = await StageAsync(db, review.Id, EpaIdOf("PAED-001"));
         await DeferAllOutstandingAsync(db, review.Id);
         await RecordDecisionAsync(db, review.Id);
-        (await db.Epas.SingleAsync(epa => epa.Id == EpaIdOf("PAED-001"))).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == EpaIdOf("PAED-001"))).Deactivate(DateTime.MinValue);
         await SaveAndClearAsync(db);
         await RemoveAsync(db, review.Id, staged.Id);
 

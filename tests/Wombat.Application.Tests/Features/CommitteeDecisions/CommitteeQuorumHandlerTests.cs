@@ -372,7 +372,7 @@ public sealed class CommitteeQuorumHandlerTests
         var stale = await StageThroughTheHandlerAsync(db, SecondEpaId);
         var fitting = await StageThroughTheHandlerAsync(db, EpaId);
         await RecordAsync(db, Chair(), "chair-1", "member-1");
-        (await db.Epas.SingleAsync(epa => epa.Id == SecondEpaId)).IsActive = false;
+        (await db.Epas.SingleAsync(epa => epa.Id == SecondEpaId)).Deactivate(DateTime.MinValue);
         await SaveAndClearAsAuditPipelineWouldAsync(db);
 
         var listed = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(db).Handle(

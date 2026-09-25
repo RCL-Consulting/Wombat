@@ -5,6 +5,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.Institutions;
@@ -19,12 +20,14 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// T158: what the EPA page says about deactivating, and that the Deactivate button asks first.
+/// T158, T196: what the EPA page says about deactivating, and that both ways of deactivating ask first.
 /// </summary>
 /// <remarks>
-/// Since T158 deactivating an EPA takes its items off every progress page and stops their credit, in every institution
+/// Since T158 deactivating an EPA takes its items off every progress page and pauses their credit, in every institution
 /// that uses the curriculum. The Status field must say what that means, where a screen reader on the checkbox hears it,
-/// and the Deactivate button must go through a ConfirmDialog, as DESIGN.md asks of every destructive action.
+/// and deactivating must go through a ConfirmDialog, as DESIGN.md asks of every destructive action. Until T196 only the
+/// Deactivate button did: unticking Active and pressing Save deactivated without a word, and Deactivate was still offered
+/// on an EPA that was already inactive.
 /// </remarks>
 public sealed class EpaEditDeactivationTests : TestContext
 {
@@ -51,7 +54,9 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         var help = Text(cut.Find($"#{describedBy}"));
         help.Should().Contain("cannot be chosen for a new activity and is not a target on any progress page or dashboard")
-            .And.Contain("still does after the EPA is reactivated unless an administrator rebuilds curriculum progress");
+            .And.Contain("and so is the progress it earned while it was active")
+            .And.Contain("counts towards nothing until the EPA is reactivated, and reactivating it credits those activities");
+        help.Should().NotContain("rebuild", "since T196 reactivating credits the paused activities; no rebuild is needed");
         help.Should().NotContain("every progress page.",
             "the rating trajectory still shows evidence recorded against an inactive EPA; only its targets go");
     }
@@ -69,22 +74,149 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         JSInterop.VerifyInvoke("wombatDialog.showModal");
         sender.Commands.Should().BeEmpty("opening the dialog must not deactivate the EPA");
-        Text(cut.Find("dialog")).Should().Contain("stops being a target on every progress page and dashboard");
+        Text(cut.Find("dialog")).Should().Contain("stops being a target on every progress page and dashboard")
+            .And.Contain("The progress it has earned is kept.")
+            .And.Contain("counts towards nothing until it is reactivated");
     }
 
     [Fact]
-    public void ConfirmingTheDialog_DeactivatesTheEpa()
+    public void ConfirmingTheDialog_DeactivatesTheEpa_AndDeactivateIsNoLongerOffered()
     {
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
         PageButton(cut, "Deactivate").Click();
-        cut.FindAll("dialog button").Single(button => Text(button) == "Deactivate").Click();
+        ConfirmButton(cut).Click();
 
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<DeactivateEpaCommand>()
             .Which.Id.Should().Be(EpaId);
         Text(cut.Find(".alert.alert-success")).Should().Be("EPA deactivated.");
+        PageButtons(cut, "Deactivate").Should().BeEmpty("the EPA is inactive now");
     }
+
+    /// <summary>
+    /// T196 review. The Deactivate button had the focus when the dialog opened, and a deactivation removes it, so closing
+    /// the dialog dropped the focus to the page. The result takes it instead, once the dialog has closed.
+    /// </summary>
+    [Fact]
+    public void ConfirmingDeactivate_MovesTheFocusToTheResult_OnceTheDialogHasClosed()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        PageButton(cut, "Deactivate").Click();
+        ConfirmButton(cut).Click();
+
+        cut.Find(".action-result").GetAttribute("tabindex").Should().Be("-1");
+        cut.Find(".action-result .alert.alert-success").GetAttribute("role").Should().Be("status");
+
+        // bUnit on .NET 10 leaves an element's blazor:elementReference empty in the markup, so the focused reference is
+        // matched to the page's own result region, as on the MSF campaign list.
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+
+        var calls = JSInterop.Invocations.Select(invocation => invocation.Identifier).ToList();
+        calls.IndexOf("wombatDialog.close").Should().BeGreaterThan(-1)
+            .And.BeLessThan(calls.IndexOf(FocusIdentifier), "while the modal is open nothing outside it can take the focus");
+    }
+
+    [Fact]
+    public void ARefusedDeactivate_LeavesTheButton_AndTheFocusWithIt()
+    {
+        var cut = RenderPage(new FakeSender { Refusal = new UnauthorizedAccessException("You do not have permission to deactivate this EPA.") });
+
+        PageButton(cut, "Deactivate").Click();
+        ConfirmButton(cut).Click();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-danger"))
+            .Should().Be("You do not have permission to deactivate this EPA."));
+        PageButtons(cut, "Deactivate").Should().ContainSingle("the EPA is still active, and the dialog hands the focus back to it");
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == FocusIdentifier);
+    }
+
+    [Fact]
+    public void AnInactiveEpa_IsNotOfferedDeactivate()
+    {
+        var cut = RenderPage(new FakeSender(isActive: false));
+
+        cut.Find("#epa-active").HasAttribute("checked").Should().BeFalse();
+        PageButtons(cut, "Deactivate").Should().BeEmpty("an inactive EPA has nothing to deactivate");
+        PageButtons(cut, "Save").Should().ContainSingle("it is reactivated by ticking Active and saving");
+    }
+
+    [Fact]
+    public void UntickingActiveAndSaving_AsksFirst_AndSavesOnlyOnConfirm()
+    {
+        var sender = new FakeSender();
+        var cut = RenderPage(sender);
+
+        cut.Find("#epa-active").Change(false);
+        cut.Find("form").Submit();
+
+        JSInterop.VerifyInvoke("wombatDialog.showModal");
+        sender.Commands.Should().BeEmpty("unticking Active and saving deactivates the EPA, so it asks first");
+
+        ConfirmButton(cut).Click();
+
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateEpaCommand>()
+            .Which.IsActive.Should().BeFalse("confirming saves the form as it stands, Active unticked");
+        Text(cut.Find(".alert.alert-success")).Should().Be("EPA saved and deactivated.");
+        PageButtons(cut, "Deactivate").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void UntickingActiveAndSaving_ThenCancelling_SavesNothing_AndSavingAgainAsksAgain()
+    {
+        var sender = new FakeSender();
+        var cut = RenderPage(sender);
+
+        cut.Find("#epa-active").Change(false);
+        cut.Find("form").Submit();
+        cut.FindAll("dialog button").Single(button => Text(button) == "Cancel").Click();
+
+        sender.Commands.Should().BeEmpty();
+        cut.FindAll(".alert.alert-success").Should().BeEmpty();
+
+        cut.Find("form").Submit();
+
+        JSInterop.VerifyInvoke("wombatDialog.showModal", calledTimes: 2);
+        sender.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void SavingAnActiveEpaThatStaysActive_DoesNotAsk()
+    {
+        var sender = new FakeSender();
+        var cut = RenderPage(sender);
+
+        cut.Find("form").Submit();
+
+        JSInterop.VerifyNotInvoke("wombatDialog.showModal");
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateEpaCommand>()
+            .Which.IsActive.Should().BeTrue();
+        Text(cut.Find(".alert.alert-success")).Should().Be("EPA saved.");
+    }
+
+    [Theory]
+    [InlineData(0, "EPA reactivated. No activity was completed against it while it was inactive, so no progress changed.")]
+    [InlineData(1, "EPA reactivated. 1 activity completed against it while it was inactive now counts towards progress.")]
+    [InlineData(3, "EPA reactivated. 3 activities completed against it while it was inactive now count towards progress.")]
+    public void TickingActiveOnAnInactiveEpa_ReactivatesWithoutAsking_AndSaysWhatItCredited(int credited, string expected)
+    {
+        var sender = new FakeSender(isActive: false, completionsCredited: credited);
+        var cut = RenderPage(sender);
+
+        cut.Find("#epa-active").Change(true);
+        cut.Find("form").Submit();
+
+        JSInterop.VerifyNotInvoke("wombatDialog.showModal");
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateEpaCommand>()
+            .Which.IsActive.Should().BeTrue();
+        Text(cut.Find(".alert.alert-success")).Should().Be(expected);
+        PageButtons(cut, "Deactivate").Should().ContainSingle("the EPA is active again");
+    }
+
+    /// <summary>What <see cref="ElementReference" />.FocusAsync calls.</summary>
+    private const string FocusIdentifier = "Blazor._internal.domWrapper.focus";
 
     private IRenderedComponent<EpaEdit> RenderPage(FakeSender sender)
     {
@@ -96,18 +228,27 @@ public sealed class EpaEditDeactivationTests : TestContext
         return cut;
     }
 
-    private static IElement PageButton(IRenderedFragment cut, string label)
-        => cut.FindAll("button").Single(button => button.Closest("dialog") is null && Text(button) == label);
+    private static IElement PageButton(IRenderedFragment cut, string label) => PageButtons(cut, label).Single();
+
+    private static IReadOnlyList<IElement> PageButtons(IRenderedFragment cut, string label)
+        => cut.FindAll("button").Where(button => button.Closest("dialog") is null && Text(button) == label).ToList();
+
+    private static IElement ConfirmButton(IRenderedFragment cut)
+        => cut.FindAll("dialog button").Single(button => Text(button) == "Deactivate");
 
     private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 
-    private sealed class FakeSender : IScopedSender
+    private sealed class FakeSender(bool isActive = true, int completionsCredited = 0) : IScopedSender
     {
-        private static readonly EpaDto Epa = new(
+        private readonly EpaDto _epa = new(
             EpaId, 7, "General Paediatrics", "CMSA", "PAED-003", "Resuscitating a child", null, null, EpaCategory.Core,
-            IsActive: true, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            isActive, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
-        public List<IRequest> Commands { get; } = [];
+        /// <summary>Every command the page sent, in order. Queries are answered and not recorded.</summary>
+        public List<object> Commands { get; } = [];
+
+        /// <summary>When set, a deactivation is refused with it.</summary>
+        public Exception? Refusal { get; init; }
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
@@ -116,7 +257,10 @@ public sealed class EpaEditDeactivationTests : TestContext
                 GetInstitutionsListQuery => Array.Empty<InstitutionDto>(),
                 GetSpecialitiesListQuery => Array.Empty<SpecialityDto>(),
                 GetSubSpecialitiesListQuery => Array.Empty<SubSpecialityDto>(),
-                GetEpaByIdQuery query when query.Id == EpaId => Epa,
+                GetEpaByIdQuery query when query.Id == EpaId => _epa,
+                UpdateEpaCommand command => Record(command, new UpdateEpaResult(
+                    _epa with { IsActive = command.IsActive },
+                    !_epa.IsActive && command.IsActive ? completionsCredited : 0)),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 
@@ -125,8 +269,19 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
         {
+            if (Refusal is not null && request is DeactivateEpaCommand)
+            {
+                return Task.FromException(Refusal);
+            }
+
             Commands.Add(request);
             return Task.CompletedTask;
+        }
+
+        private object Record(object command, object response)
+        {
+            Commands.Add(command);
+            return response;
         }
     }
 }

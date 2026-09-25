@@ -79,10 +79,23 @@ public sealed class CreditApplier : ICreditApplier
         // fixed for the life of the activity and replays identically under RebuildCurriculumProgress (T109).
         var achievedScaleIds = await ResolveAchievedScaleIdsAsync(activityType.SchemaJson, rules, cancellationToken);
 
+        // Which items may be credited (T196, D48). Ordinarily those in force at the moment of credit: a completion while
+        // an EPA is inactive credits nothing, and a replay of one from before the deactivation credits it as it did live.
+        // A reactivation's plan (ResumedEpaId) is the one exception: it credits the reactivated EPA's items alone, as in
+        // force, because they are in force again from the moment its save commits. The completion's other items were
+        // judged when it completed, and credit never re-litigates them.
+        var resumedEpaId = subject.ResumedEpaId;
+        DateTime? inForceAt = resumedEpaId is null ? subject.CreditedAt : null;
+
         var credits = new List<PlannedCredit>();
         foreach (var directive in rules.CountsFor)
         {
-            var curriculumItems = await CreditTargetResolver.ResolveCurriculumItemsAsync(_dbContext, directive.CurriculumItemMatchRule, document.RootElement, trainee, cancellationToken);
+            var curriculumItems = await CreditTargetResolver.ResolveCurriculumItemsAsync(_dbContext, directive.CurriculumItemMatchRule, document.RootElement, trainee, inForceAt, cancellationToken);
+            if (resumedEpaId is { } epaId)
+            {
+                curriculumItems = curriculumItems.Where(item => item.EpaId == epaId).ToList();
+            }
+
             int? achievedScaleId = null;
             if (!string.IsNullOrWhiteSpace(directive.MinimumLevelField) &&
                 achievedScaleIds.TryGetValue(directive.MinimumLevelField, out var resolvedScaleId))
