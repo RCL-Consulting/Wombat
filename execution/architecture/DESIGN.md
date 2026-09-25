@@ -1111,6 +1111,34 @@ template commands refuse them in (`MsfCampaignRules.RunsCampaignsRoles`), and ne
 Campaigns nav link stays, as Committee Reviews and Decisions due stay for the same people (T185); the page it opens
 now says why nothing is there. (T224 review)
 
+**The invitations list** (T283, `/admin/invitations`). Each active invitation's row says what became of the email
+carrying its current link, in a `.col-wrap` "Delivery" column before the actions: "Sent"; "Being sent" (a `.muted`
+span: nothing is wrong yet); or "**Not delivered.**", when the mail worker gave up on it or nothing was heard of it for
+an hour (`Invitation.DeliveryOf`, the same hour as an MSF link's). From the second failed email of one invitation
+(`Invitation.FailuresBeforeAddressCheck`) the cell goes on to say that the mail server may be refusing the address, to
+check it, and to revoke and issue again if it is wrong: an address is never corrected in place, since the invitation
+names who may register (`InvitationText.CheckAddress`). A row not delivered then ends "Resend emails a new link in place
+of the current one, which then stops working." (`InvitationText.ResendRetiresTheLink`, T283 review): the link alert
+tells whoever issued it to share the link another way, and the row goes on offering Resend, so anyone about to press it
+is told first that it would stop a shared link working. The cell's text is a `span` with an id
+(`#invitation-delivery-{id}`), and it is the text, not a badge: the words are the state, and nothing on the row is a
+verdict to tint.
+- A row not delivered offers **Resend** (`.btn .btn-sm .btn-outline`) before Revoke, both in a `div.actions-cell`. It is
+  named by the row as Revoke is ("Resend the Coordinator invitation to a@example.test", T239), and its `aria-describedby`
+  names the row's Delivery text, so a screen reader hears why it is offered and what it will do. No other row offers it.
+- Resend emails a new link and retires the old one (`ResendInvitationCommand`). Its result is the issue's: a `success`
+  `Alert`, "A new invitation link is being emailed to …. The link it replaces no longer works. Copy the new link below —
+  it is shown only once.", and the `info` `Alert` holding the link, both in the page's `ActionResult`, which takes the
+  focus (the row now reads "Being sent" and offers no Resend). The link's alert says the link is also being emailed and
+  that the Delivery column says whether it arrived (`InvitationText.LinkIsBeingEmailed`); until T283 it said email
+  delivery was "configured separately".
+- The list is read again after every resend, refused or not: a refusal is likeliest because the invitation changed
+  elsewhere (resent, used, revoked, or delivered after all), and its refusal says so. A refused resend leaves the focus
+  on Resend while the row still offers it, for the retry, and moves it to the refusal once the row no longer does.
+- Resend is never disabled by its own resend (T234): it carries `aria-disabled` while it runs, and a second press sends
+  nothing. The issue form's submit and every other row's Resend and Revoke are disabled then, as they are while a
+  revoke runs. Every refusal on the page is shown through `RefusalText.Of`.
+
 **The MSF campaign list's row links** (T225, `/msf/campaigns`) are named by what their page lets the coordinator do in
 the row's state, in the campaign page's words (`MsfCampaignText.CampaignLinkLabel`, `ReportLinkLabel`), never "Edit" in
 every state:

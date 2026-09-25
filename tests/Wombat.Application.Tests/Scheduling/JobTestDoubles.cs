@@ -1,7 +1,9 @@
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Infrastructure.Scheduling;
 
 namespace Wombat.Application.Tests.Scheduling;
 
@@ -71,5 +73,41 @@ internal sealed record CapturedLogEntry(LogLevel Level, string Message, IReadOnl
     {
         Values.Should().ContainKey(key);
         return (int)Values[key]!;
+    }
+}
+
+/// <summary>
+/// What the mail worker would report of a job's mail, handed to the tally the job counted it on (T283).
+/// </summary>
+internal static class JobMailReports
+{
+    /// <summary>
+    /// Reports each of <paramref name="sent" /> to the provider's <see cref="ScheduledJobMailTally" />: those addressed to
+    /// one of <paramref name="droppedTo" /> as given up on, the rest as sent.
+    /// </summary>
+    public static async Task ReportAsync(IServiceProvider provider, IEnumerable<EmailMessage> sent, params string[] droppedTo)
+    {
+        var tally = provider.GetRequiredService<ScheduledJobMailTally>();
+        var at = new DateTime(2029, 3, 5, 7, 1, 0, DateTimeKind.Utc);
+        foreach (var message in sent.ToList())
+        {
+            await tally.RecordAsync(
+                message,
+                droppedTo.Contains(message.To) ? EmailDeliveryOutcome.Dropped(3, at) : EmailDeliveryOutcome.Delivered(1, at),
+                CancellationToken.None);
+        }
+    }
+
+    /// <summary>The run's line counting what became of its mail; fails unless there is exactly one.</summary>
+    public static CapturedLogEntry DeliveryLine(this CapturingLogger logger)
+        => logger.Entries.Should().ContainSingle(entry => entry.Values.ContainsKey("NotDeliveredCount")).Which;
+
+    /// <summary>Every mail the run handed over carries the one key of that run, and it is not a tag.</summary>
+    public static void ShouldAllCarryOneRunKey(this IReadOnlyCollection<EmailMessage> sent)
+    {
+        sent.Should().NotBeEmpty();
+        sent.Should().OnlyContain(message => message.DeliveryKey != null && message.DeliveryKey.StartsWith("job-mail:"));
+        sent.Select(message => message.DeliveryKey).Distinct().Should().ContainSingle("one run, one key");
+        sent.Should().OnlyContain(message => message.Tags == null || !message.Tags.Contains(message.DeliveryKey!));
     }
 }

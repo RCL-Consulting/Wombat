@@ -22,6 +22,10 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// one's subject (<see cref="Wombat.Infrastructure.DataRights.ErasureExecutor" />), and a pseudonym names no account, so
 /// those drafts are counted under "no such account", not "deactivated".
 /// </para>
+/// <para>
+/// Its line says whom it reminded, not whether they received it: the mail leaves after the run. A second line, once the
+/// mail worker has reported on every reminder, counts those not delivered (<see cref="ScheduledJobMailTally" />, T283).
+/// </para>
 /// </remarks>
 public sealed class ActivityDraftNudgeJob : IScheduledJob
 {
@@ -42,6 +46,25 @@ public sealed class ActivityDraftNudgeJob : IScheduledJob
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
+        // What became of each reminder is logged once the mail worker has reported on them all (T283).
+        var mail = scope.ServiceProvider.GetRequiredService<ScheduledJobMailTally>().Start(nameof(ActivityDraftNudgeJob), context);
+        try
+        {
+            await RemindAsync(context, dbContext, emailSender, mail, cancellationToken);
+        }
+        finally
+        {
+            mail.Close();
+        }
+    }
+
+    private static async Task RemindAsync(
+        ScheduledJobContext context,
+        IApplicationDbContext dbContext,
+        IEmailSender emailSender,
+        ScheduledJobMailRun mail,
+        CancellationToken cancellationToken)
+    {
         var cutoff = context.UtcNow.AddDays(-14);
 
         var staleActivities = await dbContext.Set<Activity>()
@@ -73,7 +96,8 @@ public sealed class ActivityDraftNudgeJob : IScheduledJob
 
             var items = drafts.Select(a => (a.ActivityTypeName, a.DaysOld)).ToList();
             var email = DraftNudgeEmail.Build(recipient!.Email!, recipient.FirstName, items);
-            await emailSender.SendAsync(email, cancellationToken);
+            await emailSender.SendAsync(mail.Keyed(email), cancellationToken);
+            mail.HandedOver();
             reminded++;
             remindedDrafts += items.Count;
         }

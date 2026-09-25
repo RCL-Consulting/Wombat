@@ -40,6 +40,7 @@ using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
 using Wombat.Application.Features.Institutions.Queries.GetSpecialityById;
 using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesForSpeciality;
 using Wombat.Application.Features.Invitations;
+using Wombat.Domain.Invitations;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
 using Wombat.Application.Features.Scheduling;
@@ -836,13 +837,35 @@ public sealed class ActionFocusTests : TestContext
                         ListActiveInvitationsQuery => new[]
                         {
                             new ActiveInvitationDto(11, "registrar@hospital.test", WombatRoles.Trainee, 4, "Groote Schuur Hospital",
-                                null, null, 5, "Paediatrics", 9, "Neonatology", Created, new DateOnly(2026, 12, 31))
+                                null, null, 5, "Paediatrics", 9, "Neonatology", Created, new DateOnly(2026, 12, 31),
+                                InvitationDelivery.Sent, 0, false)
                         },
                         _ => null
                     }));
             },
             cut => Named(cut, "Revoke"),
             cut => Named(cut, "Revoke").Click()),
+
+        // T283: a resend's result (the new link) takes the focus; a refusal that leaves the row its Resend keeps it there.
+        ["InvitationsList Resend"] = new(
+            (test, hold) =>
+            {
+                test.Services.AddSingleton(Options.Create(new WombatOptions { BaseUrl = "https://wombat.test" }));
+                return test.Page<InvitationsList>(
+                    new Sender(hold, request => request is ResendInvitationCommand, request => request switch
+                    {
+                        ListActiveInvitationsQuery => new[]
+                        {
+                            new ActiveInvitationDto(11, "registrar@hospital.test", WombatRoles.Trainee, 4, "Groote Schuur Hospital",
+                                null, null, 5, "Paediatrics", 9, "Neonatology", Created, new DateOnly(2026, 12, 31),
+                                InvitationDelivery.NotDelivered, 1, false)
+                        },
+                        ResendInvitationCommand => new IssuedInvitationResult(11, "token-2"),
+                        _ => null
+                    }));
+            },
+            cut => Named(cut, "Resend"),
+            cut => Named(cut, "Resend").Click()),
 
         ["GroupMappings Delete"] = new(
             (test, hold) =>

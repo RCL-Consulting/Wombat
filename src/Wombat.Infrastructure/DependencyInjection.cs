@@ -18,6 +18,7 @@ using Wombat.Application.Features.DataRights.Queries;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Email;
+using Wombat.Infrastructure.Invitations;
 using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Infrastructure.Identity;
@@ -101,8 +102,12 @@ public static class DependencyInjection
             services.AddHostedService<EmailWorker>();
         }
 
-        // What the mail worker reports about a mail that asks (T251): an MSF link's is recorded onto its invitation.
+        // What the mail worker reports about a mail that asks (T251): an MSF link's is recorded onto its invitation, and so
+        // is an account invitation's (T283); a nudge's or a digest's is counted for its job's run and logged (T283).
         services.AddScoped<IEmailDeliveryObserver, MsfLinkDeliveryRecorder>();
+        services.AddScoped<IEmailDeliveryObserver, AccountInvitationDeliveryRecorder>();
+        services.AddSingleton<ScheduledJobMailTally>();
+        services.AddSingleton<IEmailDeliveryObserver>(provider => provider.GetRequiredService<ScheduledJobMailTally>());
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<SsoGroupMapper>();
         services.AddScoped<ExternalLoginHandler>();

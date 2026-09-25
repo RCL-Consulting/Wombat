@@ -1,12 +1,14 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Scheduling;
 using Wombat.Infrastructure.Scheduling.Jobs;
 using Wombat.Tests.Shared;
 
@@ -236,6 +238,34 @@ public sealed class AssessorPendingNudgeJobTests
         Summary(logger).Should().Be(new NudgeSummary());
     }
 
+    // ---- T283: what became of the nudges -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task EachNudge_IsHandedOverKeyedForItsRun_AndTheRunCountsThoseNotDelivered()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedNomineesAsync(provider, [ActiveAssessorId, "assessor-unreachable"], db =>
+        {
+            NomineeSeed.AddUser(db, ActiveAssessorId, InstitutionId, WombatRoles.Assessor);
+            NomineeSeed.AddUser(db, "assessor-unreachable", InstitutionId, WombatRoles.Assessor);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Sent.ShouldAllCarryOneRunKey();
+        Summary(logger).Should().Be(new NudgeSummary(Nudged: 2, NudgedActivities: 2));
+
+        await JobMailReports.ReportAsync(provider, emailSender.Sent, EmailOf("assessor-unreachable"));
+
+        logger.Entries.Should().HaveCount(2);
+        logger.Entries[0].Values.Should().ContainKey("NudgedCount", "the job line comes first");
+        var line = logger.DeliveryLine();
+        line.Level.Should().Be(LogLevel.Warning);
+        line.Values["JobName"].Should().Be(nameof(AssessorPendingNudgeJob));
+        line.Count("SentCount").Should().Be(1);
+        line.Count("NotDeliveredCount").Should().Be(1);
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------
 
     private static (ServiceProvider Provider, RecordingEmailSender EmailSender) BuildServices()
@@ -247,6 +277,7 @@ public sealed class AssessorPendingNudgeJobTests
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(dbName));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IEmailSender>(_ => emailSender);
+        services.AddSingleton<ScheduledJobMailTally>();
 
         return (services.BuildServiceProvider(), emailSender);
     }

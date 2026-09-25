@@ -285,6 +285,30 @@ not answered. An exception about a mail is logged with the mail's addresses repl
 its domain in either form (an international domain goes to the server, and comes back quoted, as `xn--…`), and its local
 part where a server quotes that alone (`<[recipient]>... User unknown`).
 
+### After T283: what became of each account invitation's mail, and the jobs' mail
+
+Since T283 the mail worker reports each account invitation's mail onto the invitation (`Invitations.SentOn`,
+`DeliveryFailedOn`, and `DeliveryFailures`, how many of its mails the mail server was offered and the worker then gave
+up on, which leaves out a mail abandoned still queued as the app stopped; `CK_Invitations_DeliveryOutcome` keeps sent and
+dropped apart). `/admin/invitations` has a Delivery column, and a row not delivered offers Resend, which
+emails a new link and retires the old one. The rules are T251's: dropped after three attempts, still queued as the app
+stopped, or nothing heard for an hour.
+
+- **Nothing is backfilled.** Every invitation still open at the deploy that was issued more than an hour before it
+  reads as **not delivered**, and its row offers Resend. Only scenario data is affected (W-007). A resend retires the
+  old link: an invitee who did receive the first mail must use the new one.
+- **An address the mail server always refuses** stays not delivered however often it is resent. From the second failure
+  the row says to check the address; the remedy is to revoke the invitation and issue a new one to the right address.
+- **A host with no `Email:SmtpHost`** reports nothing, so every invitation there reads as being sent for an hour, then
+  as not delivered, as MSF links do (§ After T251).
+- **The nudges and the weekly digest** log a second line per run once the worker has reported on every mail the run
+  handed over: `ActivityDraftNudgeJob mail of the run started 2026-09-28 07:00:00Z: sent 38, not delivered 2.` (a
+  warning when any was not delivered). A run whose mail is not all reported (no mail worker, or a stop mid-send) is
+  logged with `not reported before the job ran again N` when the same job next runs (a "Run now" while the last run's
+  mail is still being retried says so too), or with `never reported N` as the app stops. Which recipients were not
+  delivered is in the worker's own lines, by mail reference, never by address (T282).
+- **Rolling back** (`Down`) drops the three columns and the two checks; nothing else reads them.
+
 ## Environment file
 
 `/opt/wombat/config/wombat.env` (mode 600, owner wombat:wombat):

@@ -4,8 +4,15 @@ namespace Wombat.Application.Common.Email.Templates;
 
 public static class InvitationEmail
 {
-    public static EmailMessage Build(string toEmail, string targetRole, string registrationUrl, DateOnly expiresOn)
+    /// <param name="deliveryKey">
+    /// What the mail worker hands back with the mail's outcome: the invitation and its link
+    /// (<c>Invitation.DeliveryKey</c>), so that the invitations list can say whether it arrived (T283).
+    /// </param>
+    public static EmailMessage Build(
+        string toEmail, string targetRole, string registrationUrl, DateOnly expiresOn, string deliveryKey)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(deliveryKey);
+
         const string subject = "Your Wombat invitation";
 
         var html = EmailTemplateBase.WrapHtml(subject, $"""
@@ -29,6 +36,7 @@ public static class InvitationEmail
             Subject: subject,
             HtmlBody: html,
             TextBody: text,
-            Tags: ["invitation", $"role:{targetRole}"]);
+            Tags: ["invitation", $"role:{targetRole}"],
+            DeliveryKey: deliveryKey);
     }
 }

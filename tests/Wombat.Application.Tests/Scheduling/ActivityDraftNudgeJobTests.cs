@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
@@ -8,6 +9,7 @@ using Wombat.Domain.Identity;
 using Wombat.Infrastructure.DataRights;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Scheduling;
 using Wombat.Infrastructure.Scheduling.Jobs;
 using Wombat.Tests.Shared;
 
@@ -232,6 +234,36 @@ public sealed class ActivityDraftNudgeJobTests
         Summary(logger).Should().Be(new DraftSummary());
     }
 
+    // ---- T283: what became of the reminders ----------------------------------------------------------------------
+
+    [Fact]
+    public async Task EachReminder_IsHandedOverKeyedForItsRun_AndTheRunCountsThoseNotDelivered()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddTrainee(db, ActiveTraineeId);
+            AddDraft(db, ActiveTraineeId, MiniCex, daysAgo: 20);
+            AddTrainee(db, "trainee-unreachable");
+            AddDraft(db, "trainee-unreachable", MiniCex, daysAgo: 20);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Sent.ShouldAllCarryOneRunKey();
+        Summary(logger).Should().Be(new DraftSummary(Reminded: 2, RemindedDrafts: 2));
+
+        await JobMailReports.ReportAsync(provider, emailSender.Sent, EmailOf("trainee-unreachable"));
+
+        logger.Entries.Should().HaveCount(2);
+        logger.Entries[0].Values.Should().ContainKey("RemindedCount", "the job line comes first");
+        var line = logger.DeliveryLine();
+        line.Level.Should().Be(LogLevel.Warning);
+        line.Values["JobName"].Should().Be(nameof(ActivityDraftNudgeJob));
+        line.Count("SentCount").Should().Be(1);
+        line.Count("NotDeliveredCount").Should().Be(1);
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------
 
     private const int MiniCex = 1;
@@ -246,6 +278,7 @@ public sealed class ActivityDraftNudgeJobTests
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(dbName));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IEmailSender>(_ => emailSender);
+        services.AddSingleton<ScheduledJobMailTally>();
 
         return (services.BuildServiceProvider(), emailSender);
     }

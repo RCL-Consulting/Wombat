@@ -66,6 +66,10 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// pages. An empty digest to either would say "no items requiring attention", which is not what the job knows.
 /// </para>
 /// <para>
+/// That line says whom it wrote to, not whether they received it: the mail leaves after the run. A second line, once the
+/// mail worker has reported on every digest, counts those not delivered (<see cref="ScheduledJobMailTally" />, T283).
+/// </para>
+/// <para>
 /// The activity table is read directly, outside <c>ActivityReadScope.WhereReadableBy</c> (an Application extension over
 /// a principal's stamps), and only to learn which trainees filed anything in 30 days. No activity reaches a mail; what a
 /// recipient is told is decided by the roster above, so the per-recipient boundary is the roster, not a per-activity gate.
@@ -96,52 +100,63 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
         var outcome = new DigestOutcome();
         var coordinators = await userManager.GetUsersInRoleAsync(WombatRoles.Coordinator);
 
-        if (coordinators.Count > 0)
+        // What became of each digest is logged once the mail worker has reported on them all (T283).
+        var mail = scope.ServiceProvider.GetRequiredService<ScheduledJobMailTally>().Start(nameof(WeeklyCoordinatorDigestJob), context);
+        try
         {
-            var facts = await ReadFactsAsync(dbContext, userManager, users, context.UtcNow, cancellationToken);
-
-            foreach (var coordinator in coordinators)
+            if (coordinators.Count > 0)
             {
-                // The account first, so a locked or opted-out coordinator's principal is never even built.
-                if (ReminderRecipientPolicy.SkipReasonFor(ReminderRecipientPolicy.From(coordinator)) is { } accountReason)
+                var facts = await ReadFactsAsync(dbContext, userManager, users, context.UtcNow, cancellationToken);
+
+                foreach (var coordinator in coordinators)
                 {
-                    outcome.SkippedAccounts.Add(accountReason);
-                    continue;
+                    // The account first, so a locked or opted-out coordinator's principal is never even built.
+                    if (ReminderRecipientPolicy.SkipReasonFor(ReminderRecipientPolicy.From(coordinator)) is { } accountReason)
+                    {
+                        outcome.SkippedAccounts.Add(accountReason);
+                        continue;
+                    }
+
+                    var recipient = await claimsFactory.CreateAsync(coordinator);
+                    if (SkipReasonFor(recipient) is { } reason)
+                    {
+                        outcome.SkippedRecipients.Add(reason);
+                        continue;
+                    }
+
+                    var institutionId = recipient.GetInstitutionId()!.Value;
+                    var digest = await DigestForAsync(dbContext, facts, recipient, institutionId, cancellationToken);
+
+                    var email = CoordinatorDigestEmail.Build(
+                        coordinator.Email!,
+                        coordinator.FirstName,
+                        digest.InactiveTrainees,
+                        digest.MsfCampaignsNeedingReview,
+                        digest.CommitteeReviewsThisWeek);
+
+                    await emailSender.SendAsync(mail.Keyed(email), cancellationToken);
+                    mail.HandedOver();
+                    outcome.Sent++;
                 }
-
-                var recipient = await claimsFactory.CreateAsync(coordinator);
-                if (SkipReasonFor(recipient) is { } reason)
-                {
-                    outcome.SkippedRecipients.Add(reason);
-                    continue;
-                }
-
-                var institutionId = recipient.GetInstitutionId()!.Value;
-                var digest = await DigestForAsync(dbContext, facts, recipient, institutionId, cancellationToken);
-
-                var email = CoordinatorDigestEmail.Build(
-                    coordinator.Email!,
-                    coordinator.FirstName,
-                    digest.InactiveTrainees,
-                    digest.MsfCampaignsNeedingReview,
-                    digest.CommitteeReviewsThisWeek);
-
-                await emailSender.SendAsync(email, cancellationToken);
-                outcome.Sent++;
             }
-        }
 
-        // One line per run, whatever happened, as the assessor nudge logs (T151). The reasons are in the order asked.
-        context.Logger.LogInformation(
-            "WeeklyCoordinatorDigestJob: digests sent {SentCount}; coordinators skipped: deactivated {DeactivatedCount}, " +
-            "opted out of digest emails {OptedOutCount}, no email address {NoEmailCount}, holds Trainee " +
-            "{HoldsTraineeCount}, no institution {NoInstitutionCount}.",
-            outcome.Sent,
-            outcome.SkippedAccounts[ReminderSkipReason.Deactivated],
-            outcome.SkippedAccounts[ReminderSkipReason.OptedOut],
-            outcome.SkippedAccounts[ReminderSkipReason.NoEmail],
-            outcome.SkippedRecipients[DigestSkipReason.HoldsTrainee],
-            outcome.SkippedRecipients[DigestSkipReason.NoInstitution]);
+            // One line per run, whatever happened, as the assessor nudge logs (T151). The reasons are in the order asked.
+            // Before the close, so that it comes before the line counting what became of the digests.
+            context.Logger.LogInformation(
+                "WeeklyCoordinatorDigestJob: digests sent {SentCount}; coordinators skipped: deactivated {DeactivatedCount}, " +
+                "opted out of digest emails {OptedOutCount}, no email address {NoEmailCount}, holds Trainee " +
+                "{HoldsTraineeCount}, no institution {NoInstitutionCount}.",
+                outcome.Sent,
+                outcome.SkippedAccounts[ReminderSkipReason.Deactivated],
+                outcome.SkippedAccounts[ReminderSkipReason.OptedOut],
+                outcome.SkippedAccounts[ReminderSkipReason.NoEmail],
+                outcome.SkippedRecipients[DigestSkipReason.HoldsTrainee],
+                outcome.SkippedRecipients[DigestSkipReason.NoInstitution]);
+        }
+        finally
+        {
+            mail.Close();
+        }
     }
 
     /// <summary>

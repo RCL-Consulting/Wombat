@@ -15,6 +15,7 @@ using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Scheduling;
 using Wombat.Infrastructure.Scheduling.Jobs;
 using Wombat.Tests.Shared;
 
@@ -62,6 +63,7 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 .AddInterceptors(commands));
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IEmailSender>(_ => emailSender);
+            services.AddSingleton<ScheduledJobMailTally>();
             services.AddIdentityCore<WombatIdentityUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

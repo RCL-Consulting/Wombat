@@ -13,15 +13,18 @@ public sealed record ListActiveInvitationsQuery(ClaimsPrincipal Principal) : IRe
 public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActiveInvitationsQuery, IReadOnlyList<ActiveInvitationDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly TimeProvider _timeProvider;
 
-    public ListActiveInvitationsQueryHandler(IApplicationDbContext dbContext)
+    public ListActiveInvitationsQueryHandler(IApplicationDbContext dbContext, TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<IReadOnlyList<ActiveInvitationDto>> Handle(ListActiveInvitationsQuery request, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+        var today = DateOnly.FromDateTime(utcNow);
 
         var institutions = _dbContext.Set<Institution>();
         var colleges = _dbContext.Set<College>();
@@ -40,7 +43,7 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
             invitations = invitations.Where(entity => entity.InstitutionId == scopedInstitutionId.Value);
         }
 
-        return await (
+        var rows = await (
             from invitation in invitations
             join institution in institutions on invitation.InstitutionId equals institution.Id into institutionGroup
             from institution in institutionGroup.DefaultIfEmpty()
@@ -54,20 +57,50 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
                   invitation.UsedOn == null &&
                   invitation.ExpiresOn >= today
             orderby invitation.IssuedOn descending
-            select new ActiveInvitationDto(
+            select new
+            {
                 invitation.Id,
                 invitation.Email,
                 invitation.TargetRole,
                 invitation.InstitutionId,
-                institution != null ? institution.Name : null,
+                InstitutionName = institution != null ? institution.Name : null,
                 invitation.CollegeId,
-                college != null ? college.Name : null,
+                CollegeName = college != null ? college.Name : null,
                 invitation.SpecialityId,
-                speciality != null ? speciality.Name : null,
+                SpecialityName = speciality != null ? speciality.Name : null,
                 invitation.SubSpecialityId,
-                subSpeciality != null ? subSpeciality.Name : null,
+                SubSpecialityName = subSpeciality != null ? subSpeciality.Name : null,
                 invitation.IssuedOn,
-                invitation.ExpiresOn))
+                invitation.ExpiresOn,
+                invitation.SentOn,
+                invitation.DeliveryFailedOn,
+                invitation.DeliveryFailures
+            })
             .ToListAsync(cancellationToken);
+
+        // What became of each link's mail is the Domain's one rule (T283), which the resend asks too.
+        return rows
+            .Select(row =>
+            {
+                var delivery = Invitation.DeliveryOf(row.SentOn, row.DeliveryFailedOn, row.IssuedOn, utcNow);
+                return new ActiveInvitationDto(
+                    row.Id,
+                    row.Email,
+                    row.TargetRole,
+                    row.InstitutionId,
+                    row.InstitutionName,
+                    row.CollegeId,
+                    row.CollegeName,
+                    row.SpecialityId,
+                    row.SpecialityName,
+                    row.SubSpecialityId,
+                    row.SubSpecialityName,
+                    row.IssuedOn,
+                    row.ExpiresOn,
+                    delivery,
+                    row.DeliveryFailures,
+                    Invitation.SuggestsCheckingAddress(delivery, row.DeliveryFailures));
+            })
+            .ToList();
     }
 }

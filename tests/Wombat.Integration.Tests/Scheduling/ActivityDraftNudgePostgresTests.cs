@@ -8,6 +8,7 @@ using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Scheduling;
 using Wombat.Infrastructure.Scheduling.Jobs;
 using Wombat.Tests.Shared;
 
@@ -50,6 +51,7 @@ public sealed class ActivityDraftNudgePostgresTests : IAsyncLifetime
             services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(TestDatabase.SchemaConnectionString(schema)));
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IEmailSender>(_ => emailSender);
+            services.AddSingleton<ScheduledJobMailTally>();
 
             await using var root = services.BuildServiceProvider();
 

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
@@ -13,6 +14,7 @@ using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Infrastructure.Scheduling;
 using Wombat.Infrastructure.Scheduling.Jobs;
 using Wombat.Tests.Shared;
 
@@ -477,6 +479,35 @@ public sealed class WeeklyCoordinatorDigestJobTests
         Summary(logger).Should().Be(new DigestSummary());
     }
 
+    // ---- T283: what became of the digests ------------------------------------------------------------------------
+
+    [Fact]
+    public async Task EachDigest_IsHandedOverKeyedForItsRun_AndTheRunCountsThoseNotDelivered()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            AddTrainee(db, "a-idle", "Aisha", "Idle", InstitutionA);
+            AddTrainee(db, "b-idle", "Bongani", "Idle", InstitutionB);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Sent.ShouldAllCarryOneRunKey();
+        Summary(logger).Should().Be(new DigestSummary(Sent: 2));
+
+        await JobMailReports.ReportAsync(provider, emailSender.Sent, EmailOf(CoordinatorB));
+
+        logger.Entries.Should().HaveCount(2);
+        logger.Entries[0].Values.Should().ContainKey("SentCount").And.NotContainKey("NotDeliveredCount");
+        var line = logger.DeliveryLine();
+        line.Level.Should().Be(LogLevel.Warning);
+        line.Values["JobName"].Should().Be(nameof(WeeklyCoordinatorDigestJob));
+        line.Count("SentCount").Should().Be(1);
+        line.Count("NotDeliveredCount").Should().Be(1);
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------
 
     /// <summary>
@@ -493,6 +524,7 @@ public sealed class WeeklyCoordinatorDigestJobTests
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(dbName));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IEmailSender>(_ => emailSender);
+        services.AddSingleton<ScheduledJobMailTally>();
         services.AddIdentityCore<WombatIdentityUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()

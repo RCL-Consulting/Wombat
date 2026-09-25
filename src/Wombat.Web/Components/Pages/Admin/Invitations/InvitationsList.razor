@@ -9,9 +9,10 @@
 
 <PageHeader Title="Invitations" Subtitle="Issue invitation-only onboarding links and review active invitations." />
 
-@* What an issue or a revoke did, and the link an issue made. It takes the focus once either is done (T234; DESIGN.md
-   § Button system): an issue rebuilds its form, and the button with it, and a revoked invitation's row is gone. A
-   refusal leaves the focus where it was: it is an alert, read at once. *@
+@* What an issue, a resend or a revoke did, and the link an issue or a resend made. It takes the focus once any is done
+   (T234; DESIGN.md § Button system): an issue rebuilds its form, and the button with it, a resent invitation's row is
+   being sent again and offers no Resend, and a revoked invitation's row is gone. A refusal leaves the focus where it
+   was: it is an alert, read at once. A refused resend whose row no longer offers Resend moves it here too (T283). *@
 <ActionResult @ref="_result">
   @if (!string.IsNullOrWhiteSpace(_statusMessage))
   {
@@ -29,8 +30,7 @@
       <p>
         <strong>Share this registration link with the invitee.</strong>
         It expires in 14 days. The link is shown here only on this page-load — copy it now;
-        it cannot be retrieved later. Email delivery is configured separately; if SMTP is not
-        set up, this link is the canonical onboarding handoff.
+        it cannot be retrieved later. @InvitationText.LinkIsBeingEmailed
       </p>
       <p>
         <code style="word-break:break-all">@_lastIssuedRegistrationUrl</code>
@@ -109,8 +109,8 @@
 
       <FormActions>
         @* Not disabled while its issue runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
-           so. Disabled while a revoke runs. *@
-        <button type="submit" class="btn btn-primary" disabled="@(_revokingId is not null)"
+           so. Disabled while a revoke or a resend runs. *@
+        <button type="submit" class="btn btn-primary" disabled="@RowActionRunning"
                 aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Issuing..." : "Issue invitation")</button>
       </FormActions>
     </EditForm>
@@ -138,6 +138,7 @@
             <th>Sub-speciality</th>
             <th>Issued</th>
             <th>Expires</th>
+            <th class="col-wrap">Delivery</th>
             <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
@@ -151,13 +152,39 @@
             <td>@invitation.SubSpecialityName</td>
             <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
             <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
+            @* What became of the current link's mail (T283): sent, still being sent, or not delivered, when the mail worker
+               gave up on it or nothing was heard of it for an hour. After a second failure it says to check the address.
+               A row not delivered ends by saying that Resend retires the current link, which may have been shared another
+               way (T283 review). Resend names it, so a screen reader hears why the row offers it and what it does. *@
+            <td class="col-wrap">
+              @if (InvitationText.OffersResend(invitation))
+              {
+                <span id="@DeliveryId(invitation.Id)"><strong>@InvitationText.Delivery(invitation.Delivery)</strong>
+                  @InvitationText.CheckAddress(invitation) @InvitationText.ResendRetiresTheLink</span>
+              }
+              else
+              {
+                <span id="@DeliveryId(invitation.Id)" class="@(InvitationText.IsBeingSent(invitation) ? "muted" : null)">@InvitationText.Delivery(invitation.Delivery)</span>
+              }
+            </td>
             <td>
-              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              @* T239: named by the invitation, "Revoke the Assessor invitation to a@example.test". *@
-              <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Revoke {rowNames[invitation.Id]}")"
-                      disabled="@(_saving || (_revokingId is not null && _revokingId != invitation.Id))"
-                      aria-disabled="@InFlight.AriaDisabled(_revokingId == invitation.Id)"
-                      @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>
+              <div class="actions-cell">
+                @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
+                @* T283: only on an invitation whose mail was not delivered. It emails a new link and retires the old one. *@
+                @if (InvitationText.OffersResend(invitation))
+                {
+                  <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Resend {rowNames[invitation.Id]}")"
+                          aria-describedby="@DeliveryId(invitation.Id)"
+                          disabled="@(_saving || _revokingId is not null || (_resendingId is not null && _resendingId != invitation.Id))"
+                          aria-disabled="@InFlight.AriaDisabled(_resendingId == invitation.Id)"
+                          @onclick="() => ResendAsync(invitation.Id)">Resend</button>
+                }
+                @* T239: named by the invitation, "Revoke the Assessor invitation to a@example.test". *@
+                <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Revoke {rowNames[invitation.Id]}")"
+                        disabled="@(_saving || _resendingId is not null || (_revokingId is not null && _revokingId != invitation.Id))"
+                        aria-disabled="@InFlight.AriaDisabled(_revokingId == invitation.Id)"
+                        @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>
+              </div>
             </td>
           </tr>
         </Row>
@@ -194,6 +221,15 @@
 
   /// <summary>The invitation whose revoke has been sent and has not answered, or null. (T234 review)</summary>
   private int? _revokingId;
+
+  /// <summary>The invitation whose resend has been sent and has not answered, or null. (T283)</summary>
+  private int? _resendingId;
+
+  /// <summary>A row's revoke or resend is in flight, so nothing else may be sent.</summary>
+  private bool RowActionRunning => _revokingId is not null || _resendingId is not null;
+
+  /// <summary>The id of a row's Delivery text, which its Resend names with <c>aria-describedby</c>. (T283)</summary>
+  private static string DeliveryId(int invitationId) => $"invitation-delivery-{invitationId}";
 
   private ActionResult? _result;
 
@@ -238,7 +274,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {
@@ -248,7 +284,7 @@
 
   private async Task IssueAsync()
   {
-    if (_saving || _revokingId is not null)
+    if (_saving || RowActionRunning)
     {
       return;
     }
@@ -294,16 +330,15 @@
         issuedByUserId,
         authState.User));
 
-      var baseUrl = (WombatOptionsAccessor.Value.BaseUrl ?? string.Empty).TrimEnd('/');
-      _lastIssuedRegistrationUrl = $"{baseUrl}/account/register?token={Uri.EscapeDataString(issued.Token)}";
-      _statusMessage = $"Invitation issued for {_model.Email}. Copy the link below — it is shown only once.";
+      _lastIssuedRegistrationUrl = InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token);
+      _statusMessage = InvitationText.Issued(_model.Email);
       _model = new InvitationFormModel();
       _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
       _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {
@@ -311,9 +346,62 @@
     }
   }
 
+  /// <summary>
+  /// Emails a new link for an invitation whose mail was not delivered, and shows it, as an issue does: the old link no
+  /// longer works (T283). The list is read again whatever the answer, since a refusal is likeliest because the invitation
+  /// changed elsewhere (resent, used, revoked, or delivered after all). The result takes the focus once the resend is done,
+  /// and after a refusal that leaves the row no Resend; a refusal that leaves it keeps the focus on it, for the retry.
+  /// </summary>
+  private async Task ResendAsync(int invitationId)
+  {
+    if (_saving || RowActionRunning)
+    {
+      return;
+    }
+
+    _resendingId = invitationId;
+    _errorMessage = null;
+    _statusMessage = null;
+    _lastIssuedRegistrationUrl = null;
+    var resent = false;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var email = _invitations.FirstOrDefault(row => row.Id == invitationId)?.Email;
+
+      try
+      {
+        var issued = await Sender.Send(new ResendInvitationCommand(invitationId, authState.User));
+        _lastIssuedRegistrationUrl = InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token);
+        _statusMessage = InvitationText.Resent(email);
+        resent = true;
+      }
+      catch (Exception exception)
+      {
+        _errorMessage = RefusalText.Of(exception);
+      }
+
+      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+    }
+    catch (Exception exception)
+    {
+      _errorMessage ??= RefusalText.Of(exception);
+    }
+    finally
+    {
+      _resendingId = null;
+    }
+
+    if (resent || !_invitations.Any(row => row.Id == invitationId && InvitationText.OffersResend(row)))
+    {
+      _result?.FocusAfterRender();
+    }
+  }
+
   private async Task RevokeAsync(int invitationId)
   {
-    if (_saving || _revokingId is not null)
+    if (_saving || RowActionRunning)
     {
       return;
     }
@@ -332,7 +420,7 @@
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {

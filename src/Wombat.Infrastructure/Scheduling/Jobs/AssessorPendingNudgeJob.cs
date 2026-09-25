@@ -25,6 +25,10 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// judges eligibility when the activity is handed to them, and lets them complete it afterwards; so this job
 /// deliberately does not re-read <c>NomineeDirectory</c>, which would silence the one person able to act.
 /// </para>
+/// <para>
+/// Its line says whom it nudged, not whether they received it. A second line, once the mail worker has reported on every
+/// nudge, counts those not delivered (<see cref="ScheduledJobMailTally" />, T283).
+/// </para>
 /// </remarks>
 public sealed class AssessorPendingNudgeJob : IScheduledJob
 {
@@ -99,25 +103,36 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
             pendingItems.Add((assessorUserId, activity.ActivityType.Name, activity.SubjectUserId, daysWaiting));
         }
 
-        var outcome = await NudgeAsync(dbContext, emailSender, pendingItems, cancellationToken);
+        // What became of each nudge is logged once the mail worker has reported on them all (T283).
+        var mail = scope.ServiceProvider.GetRequiredService<ScheduledJobMailTally>().Start(nameof(AssessorPendingNudgeJob), context);
+        try
+        {
+            var outcome = await NudgeAsync(dbContext, emailSender, mail, pendingItems, cancellationToken);
 
-        // One line per run, whatever happened, so a quiet day and a day where every nominee was skipped read apart. Each
-        // count follows its label, so the line reads right at 1 as well as at 0 or 2.
-        context.Logger.LogInformation(
-            "AssessorPendingNudgeJob: assessors nudged {NudgedCount} (activities {NudgedActivityCount}); nominees " +
-            "skipped: no such account {UnknownUserCount}, deactivated {DeactivatedCount}, opted out of digest emails " +
-            "{OptedOutCount}, no email address {NoEmailCount}.",
-            outcome.Nudged,
-            outcome.NudgedActivities,
-            outcome.Skipped[ReminderSkipReason.UnknownUser],
-            outcome.Skipped[ReminderSkipReason.Deactivated],
-            outcome.Skipped[ReminderSkipReason.OptedOut],
-            outcome.Skipped[ReminderSkipReason.NoEmail]);
+            // One line per run, whatever happened, so a quiet day and a day where every nominee was skipped read apart.
+            // Each count follows its label, so the line reads right at 1 as well as at 0 or 2. Before the close, so that
+            // it comes before the line counting what became of the nudges.
+            context.Logger.LogInformation(
+                "AssessorPendingNudgeJob: assessors nudged {NudgedCount} (activities {NudgedActivityCount}); nominees " +
+                "skipped: no such account {UnknownUserCount}, deactivated {DeactivatedCount}, opted out of digest emails " +
+                "{OptedOutCount}, no email address {NoEmailCount}.",
+                outcome.Nudged,
+                outcome.NudgedActivities,
+                outcome.Skipped[ReminderSkipReason.UnknownUser],
+                outcome.Skipped[ReminderSkipReason.Deactivated],
+                outcome.Skipped[ReminderSkipReason.OptedOut],
+                outcome.Skipped[ReminderSkipReason.NoEmail]);
+        }
+        finally
+        {
+            mail.Close();
+        }
     }
 
     private static async Task<NudgeOutcome> NudgeAsync(
         IApplicationDbContext dbContext,
         IEmailSender emailSender,
+        ScheduledJobMailRun mail,
         List<(string AssessorUserId, string ActivityTypeName, string TraineeUserId, int DaysWaiting)> pendingItems,
         CancellationToken cancellationToken)
     {
@@ -152,7 +167,8 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
             }).ToList();
 
             var email = AssessorPendingNudgeEmail.Build(nominee!.Email!, nominee.FirstName, items);
-            await emailSender.SendAsync(email, cancellationToken);
+            await emailSender.SendAsync(mail.Keyed(email), cancellationToken);
+            mail.HandedOver();
             outcome.Nudged++;
             outcome.NudgedActivities += items.Count;
         }

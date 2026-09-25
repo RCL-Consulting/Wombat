@@ -97,7 +97,17 @@ Port the good parts of the current Wombat email setup:
   An MSF link's key names its invitation and link (`MsfInvitation.DeliveryKey`), and
   `MsfLinkDeliveryRecorder` writes the outcome onto the invitation in one conditioned `UPDATE`, which may land before the
   request that sent the mail has stored the link, so it names the link it is about and touches no column the request
-  writes. Account invitations, nudges and digests ask for nothing yet.
+  writes.
+- **Account invitations and the jobs' mail report too** (T283). An account invitation's key names the invitation and
+  its link's hash (`Invitation.DeliveryKey`); the issue and the resend store the link before handing its mail over, so
+  `AccountInvitationDeliveryRecorder` writes one `UPDATE` conditioned on that hash, and a report about a link a resend
+  has replaced changes nothing. The two nudges and the weekly coordinator digest key each mail by their run
+  (`ScheduledJobMailRun.Keyed`), and the singleton `ScheduledJobMailTally` logs one line per run, on the job's own
+  logger, once every mail has been reported: "… mail of the run started …: sent N, not delivered M". Nothing is kept
+  per recipient: a reminder is sent again on the next run. A run some of whose mail is not all reported is logged with
+  the count that had not come when the job next runs ("not reported before the job ran again N": a mail may still be
+  being retried), or as the host stops ("never reported N"). The STAR expiry notices and the trainee
+  profile's mail still ask for nothing.
 - Templates stored as Razor files under `Wombat.Infrastructure/Email/Templates/` and rendered with `Microsoft.Extensions.RazorTemplating` or a hand-rolled renderer — whichever ClinicAssist uses.
 - SMTP settings come from `appsettings.json` / environment variables, never from the database (simpler to audit, simpler to rotate).
 
