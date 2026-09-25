@@ -21,12 +21,12 @@
       "title": "Assessment",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "history", "type": "scale", "label": "History taking", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "exam", "type": "scale", "label": "Examination", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "communication", "type": "scale", "label": "Communication", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "professionalism", "type": "scale", "label": "Professionalism", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
+        { "key": "history", "type": "scale", "label": "History taking", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "exam", "type": "scale", "label": "Examination", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "communication", "type": "scale", "label": "Communication", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "professionalism", "type": "scale", "label": "Professionalism", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" }
       ]
     },
     {

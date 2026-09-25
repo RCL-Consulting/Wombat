@@ -106,9 +106,9 @@ Form schemas are JSON documents with a stable shape. An admin edits them through
       "key": "rating",
       "title": "Assessment",
       "fields": [
-        { "key": "history", "type": "scale", "label": "History taking", "scale_key": "or_scale", "required": true },
-        { "key": "exam", "type": "scale", "label": "Physical examination", "scale_key": "or_scale", "required": true },
-        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "scale_key": "or_scale", "required": true }
+        { "key": "history", "type": "scale", "label": "History taking", "scale_key": "seed:demo:scale:o-r", "required": true },
+        { "key": "exam", "type": "scale", "label": "Physical examination", "scale_key": "seed:demo:scale:o-r", "required": true },
+        { "key": "reasoning", "type": "scale", "label": "Clinical reasoning", "scale_key": "seed:demo:scale:o-r", "required": true }
       ]
     },
     {
@@ -170,6 +170,37 @@ So the list and credit can never name different EPAs, publish enforces exactly o
 
 Every pointer needs both a Parse half and a Serialize half, plus a `SeedRoundTripTests` fixture (CLAUDE.md § Editing a
 seed folder).
+
+**`scale_key`** binds a `scale` field to the entrustment ladder it is rated on (T109, T253). It is one string in one of
+three forms, told apart by the string alone (`ScaleBinding`, Domain):
+
+- `seed:` and the scale's `SeedKey`: what every seed writes (`seed:cpsa:scale:v11.1`, `seed:demo:scale:o-r`). No
+  command writes a seed key, so an administrator's rename of the ladder unbinds nothing. `SeedScaleKeyTests` holds
+  every seed to this form and to a key a seeder stamps.
+- digits alone: the scale's id, what the activity-type builder writes.
+- anything else: the scale's exact name. No seed and no builder writes one, and the T253 migration rewrote every stored
+  one (in published versions, each type's current copy and its draft) to the same scale's seed key, or its id when it
+  has none. A name that bound no scale was left as it was. So only a hand-made schema can still bind by name.
+
+A scale's name may be neither of the first two forms: the create and update validators refuse digits alone and a
+`seed:` prefix, so a key binds at most one scale. Every reader goes through one resolver,
+`EntrustmentScaleBindings.ResolveAsync`: `CreditApplier`, the rung picker, the rung labels on every page and the PDF,
+and the type picker's ladder filter. A key that binds nothing is read as "no ladder": credit compares bare ordinals, and
+the form offers the field's own options, or asks for a bare number. Three rules keep a published version from binding
+nothing:
+
+- The scale's **delete** is refused while any published version, current or not, binds it in any form, naming each type
+  and its versions: a published version never changes and an activity stays on its version, so no later publish can
+  take a binding back. The refusal says to leave the scale in place, not to rename it, because a rename unbinds a form
+  that binds by name.
+- The activity-type **publish** is refused while a field of the draft has a `scale_key` that binds no scale, naming each
+  field (`EntrustmentScaleBindings.ThrowIfAFieldBindsNoScaleAsync`). A draft may bind a scale deleted since it was
+  saved, because the delete asks only about published versions. A field with no `scale_key` is not asked about. The
+  seeders publish without it; `SeedScaleKeyTests` holds the seeds to keys a seeder stamps.
+- The scale's **rename** refuses nothing, and warns, naming each type, when a published version binds the old name.
+  The save asks every check before it assigns anything (the audit trap), so a refused save commits no rename.
+
+A delete and a publish that race are not serialised: each checks, then writes, with no lock between them.
 
 New field types are new tasks, not T019 drive-bys. Every field type is a renderer, a builder editor, a validator, a JSON serialization, and a PDF renderer in T023 — the marginal cost is real.
 

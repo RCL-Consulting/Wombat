@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Activities.Schema;
@@ -267,9 +268,9 @@ public sealed class CreditApplier : ICreditApplier
     /// Every failure to resolve is silent and returns nothing for that key, which lands the comparison in
     /// <see cref="LevelComparisonBasis.Unpinned" /> — the pre-T109 behaviour. That covers an empty schema
     /// (the synthetic <c>ActivityType</c> the older call sites passed), a schema that no longer parses, a
-    /// field with no <c>scale_key</c>, and a <c>scale_key</c> naming no scale in the database. The last of
-    /// those is not hypothetical: the four generic WBA seeds declare <c>or_scale</c> while the seeded scale
-    /// is named <c>O-R Scale</c>, so they resolve to nothing and must go on comparing exactly as they do now.
+    /// field with no <c>scale_key</c>, and a <c>scale_key</c> binding no scale in the database. The last of
+    /// those is not hypothetical: until T110 the four generic WBA seeds declared <c>or_scale</c>, which bound
+    /// nothing, and a scale deleted before T253 leaves its id-bound keys binding nothing.
     /// </remarks>
     private async Task<IReadOnlyDictionary<string, int>> ResolveAchievedScaleIdsAsync(
         string? schemaJson,
@@ -308,39 +309,21 @@ public sealed class CreditApplier : ICreditApplier
             return EmptyScaleIds;
         }
 
+        // The shared resolver (T253): seed key, id or exact name, read exactly as the rung picker
+        // (ActivityReferenceDataService) and every label reads it, so the rung the assessor picked and the ladder
+        // the engine scores it on cannot come from different scales.
+        var scaleIdByKey = await EntrustmentScaleBindings.ResolveAsync(_dbContext, scaleKeysByField.Values, cancellationToken);
+
         var resolved = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var (fieldKey, scaleKey) in scaleKeysByField)
         {
-            var scaleId = await ResolveScaleIdAsync(scaleKey, cancellationToken);
-            if (scaleId.HasValue)
+            if (scaleIdByKey.TryGetValue(scaleKey.Trim(), out var scaleId))
             {
-                resolved[fieldKey] = scaleId.Value;
+                resolved[fieldKey] = scaleId;
             }
         }
 
         return resolved;
-    }
-
-    /// <summary>
-    /// Resolves a schema <c>scale_key</c> to a scale id by numeric id or exact name — the same match
-    /// <c>ActivityReferenceDataService</c> uses to render the rung options, so the engine and the picker
-    /// cannot disagree about which ladder a field is on.
-    /// </summary>
-    private async Task<int?> ResolveScaleIdAsync(string scaleKey, CancellationToken cancellationToken)
-    {
-        // Deliberately character-for-character the query in
-        // ActivityReferenceDataService.GetEntrustmentScaleLevelOptionsAsync, including the trim, the
-        // discarded TryParse result (a non-numeric key leaves scaleId at 0, which matches no row) and the
-        // single OR. Two subtly different resolutions would mean the rung the assessor picked and the
-        // ladder the engine scored it on could come from different scales.
-        var key = scaleKey.Trim();
-        _ = int.TryParse(key, out var scaleId);
-
-        return await _dbContext.Set<EntrustmentScale>()
-            .AsNoTracking()
-            .Where(scale => scale.Id == scaleId || scale.Name == key)
-            .Select(scale => (int?)scale.Id)
-            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static readonly IReadOnlyDictionary<string, int> EmptyScaleIds =

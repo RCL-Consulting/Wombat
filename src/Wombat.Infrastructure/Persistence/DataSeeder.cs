@@ -29,13 +29,11 @@ public sealed class DataSeeder
     /// The name of the generic observation-to-entrustment scale this seeder creates.
     /// </summary>
     /// <remarks>
-    /// A constant rather than a literal because a schema's <c>scale_key</c> binds to a scale by its
-    /// EXACT NAME, which an administrator can edit, and not by the scale's <c>SeedKey</c> column (T221), so this string
-    /// is a contract with the seed corpus, not an implementation detail. The four generic WBA seeds declared
-    /// <c>or_scale</c> against it for months and bound to nothing at all, because nothing compared the two.
-    /// `SeedScaleKeyTests` now does, and references this. (T110) The seeder itself finds the scale by
-    /// <see cref="OrScaleSeedKey" /> (T229), so a renamed O-R Scale is not created again; the name is what it is called on
-    /// create, and what a <c>scale_key</c> still has to match.
+    /// What the scale is called when this seeder creates it, and nothing more. The seeder finds the scale by
+    /// <see cref="OrScaleSeedKey" /> (T229), and the four generic WBA seeds bind it by that key too
+    /// (<c>"scale_key": "seed:demo:scale:o-r"</c>, T253), so an administrator's rename unbinds nothing.
+    /// <c>SeedScaleKeyTests</c> holds every seed's <c>scale_key</c> to a seeded scale's key. Until T253 the seeds bound
+    /// this name, and until T110 they declared <c>or_scale</c>, which bound nothing at all.
     /// </remarks>
     public const string OrScaleName = "O-R Scale";
 

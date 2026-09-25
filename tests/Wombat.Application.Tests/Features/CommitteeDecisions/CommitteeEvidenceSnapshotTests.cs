@@ -31,6 +31,9 @@ public sealed class CommitteeEvidenceSnapshotTests
     private const int Paed002 = 8;
     private const string V11Ladder = "CPSA Paediatric Entrustment Scale v11.1";
 
+    // What the seeds bind the ladder by (T253): its seed key, not its name.
+    private const string V11LadderSeedKey = "cpsa:scale:v11.1";
+
     private static readonly DateOnly EncounterDay = new(2026, 2, 10);
 
     [Fact]
@@ -428,7 +431,7 @@ public sealed class CommitteeEvidenceSnapshotTests
             db,
             "cca_cpsa",
             "cca",
-            schema => schema.Replace(V11Ladder, "A ladder nobody seeded", StringComparison.Ordinal));
+            schema => schema.Replace("seed:" + V11LadderSeedKey, "A ladder nobody seeded", StringComparison.Ordinal));
         var activity = AddActivity(db, cca, "completed", Rated(3), Paed001);
         await db.SaveChangesAsync();
 
@@ -572,7 +575,7 @@ public sealed class CommitteeEvidenceSnapshotTests
 
     private static async Task SeedAsync(ApplicationDbContext db)
     {
-        db.EntrustmentScales.Add(new EntrustmentScale { Id = 1, Name = V11Ladder });
+        db.EntrustmentScales.Add(new EntrustmentScale { Id = 1, Name = V11Ladder, SeedKey = V11LadderSeedKey });
         db.EntrustmentLevels.AddRange(
             new[] { "1", "2", "3a", "3b", "4", "5" }.Select((label, index) => new EntrustmentLevel
             {

@@ -303,6 +303,58 @@ public sealed class ActivityTypeSeedRefresherTests
         cpsa.DisplayFieldsJson.Should().Be("[]", "PaediatricCatalogueSeeder has always passed an empty array");
     }
 
+    /// <summary>
+    /// T253: what the first boot after it republishes, on a database the seeders filled before it. The seeds bound their
+    /// scales by name then and by seed key now, so exactly the twelve types with a scale field get a new version, and
+    /// the new version binds by seed key. Every other seeded type is unchanged.
+    /// </summary>
+    [Fact]
+    public async Task Refresh_AfterT253_RepublishesExactlyTheTypesThatBoundAScaleByName_BindingItBySeedKey()
+    {
+        await using var dbContext = CreateDbContext();
+        foreach (var entry in ActivityTypeSeedCatalogue.Entries)
+        {
+            var now = await ActivityTypeSeedCatalogue.ReadCanonicalAsync(entry, CancellationToken.None);
+            var beforeT253 = now.SchemaJson
+                .Replace("\"seed:cpsa:scale:v11.1\"", "\"CPSA Paediatric Entrustment Scale v11.1\"", StringComparison.Ordinal)
+                .Replace("\"seed:demo:scale:o-r\"", "\"O-R Scale\"", StringComparison.Ordinal);
+
+            var activityType = new ActivityType
+            {
+                Key = entry.Key,
+                Name = entry.Key,
+                Scope = ActivityScope.Speciality,
+                ScopeId = 1,
+                OwnerUserId = SeedActor,
+                CreatedOn = DateTime.UtcNow,
+                IsActive = true
+            };
+            activityType.SaveDraft(beforeT253, now.WorkflowJson, now.CreditRulesJson, now.DisplayFieldsJson, SeedActor);
+            activityType.PublishDraft(SeedActor);
+            dbContext.ActivityTypes.Add(activityType);
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        var results = await CreateRefresher(dbContext).RefreshAsync();
+
+        results.Where(result => result.Outcome == ActivityTypeSeedRefreshOutcome.Republished)
+            .Select(result => result.Key)
+            .Order(StringComparer.Ordinal)
+            .Should().Equal(
+                "acat", "cbd", "cbd_cpsa", "cca_cpsa", "chart_stimulated_recall_cpsa", "direct_observation_cpsa",
+                "dops", "dops_cpsa", "mini_cex", "mini_cex_cpsa", "msf_cpsa", "rca_cpsa");
+        results.Where(result => result.Outcome != ActivityTypeSeedRefreshOutcome.Republished)
+            .Should().OnlyContain(result => result.Outcome == ActivityTypeSeedRefreshOutcome.Unchanged);
+
+        var miniCexCpsa = await LoadAsync(dbContext, "mini_cex_cpsa");
+        miniCexCpsa.Version.Should().Be(2);
+        miniCexCpsa.Versions.Single(version => version.Version == 2).SchemaJson
+            .Should().Contain("\"seed:cpsa:scale:v11.1\"").And.NotContain("CPSA Paediatric Entrustment Scale v11.1");
+        miniCexCpsa.Versions.Single(version => version.Version == 1).SchemaJson
+            .Should().Contain("\"CPSA Paediatric Entrustment Scale v11.1\"", "v1 is pinned and never changes");
+    }
+
     [Fact]
     public async Task Refresh_DoesNotThrowWhenTheStoredJsonCannotBeParsed()
     {

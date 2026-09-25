@@ -2,19 +2,19 @@ using System.Text.Json;
 using FluentAssertions;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Epas;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Infrastructure.Tests.Activities;
 
 /// <summary>
-/// Every <c>scale_key</c> in the seed corpus must name a scale the product actually seeds. (T110)
+/// Every <c>scale_key</c> in the seed corpus must bind, by seed key, a scale the product actually seeds. (T110, T253)
 /// </summary>
 /// <remarks>
 /// <para>
-/// A schema binds a rating field to an entrustment ladder by the scale's <b>exact name</b> — there is
-/// no key column to bind to. Nothing compared the two, and for months <c>mini_cex</c>, <c>cbd</c>,
-/// <c>dops</c> and <c>acat</c> all declared <c>"scale_key": "or_scale"</c> while the only seeded scale
-/// was named <c>"O-R Scale"</c>. Twenty-three fields across four tools bound to nothing at all.
+/// Nothing else compares the two. For months <c>mini_cex</c>, <c>cbd</c>, <c>dops</c> and <c>acat</c> all
+/// declared <c>"scale_key": "or_scale"</c> while the only seeded scale was named <c>"O-R Scale"</c>.
+/// Twenty-three fields across four tools bound to nothing at all.
 /// </para>
 /// <para>
 /// It was invisible because those same fields declare inline <c>options</c>, and the form renders the
@@ -24,39 +24,32 @@ namespace Wombat.Infrastructure.Tests.Activities;
 /// <b>that absence is the defect this file exists to close</b>, not the typo it found.
 /// </para>
 /// <para>
-/// Names only, never a raw numeric id. The resolver accepts an id, but an id is a fact about one
-/// database — a seed that shipped <c>"2"</c> would bind to whatever scale happened to be second
-/// wherever it was restored. Four operator-built <c>*_paed</c> types did exactly that until the dev
-/// database was rebuilt on 2026-09-20; they were never seeds, and nothing outside a seed folder is
-/// covered here.
+/// By seed key only (T253): <c>seed:</c> and the key the seeder stamps on the scale it creates. Never a name, which
+/// an administrator can edit, so a rename of the scale unbound every seed that named it. Never a raw numeric id,
+/// which is a fact about one database — a seed that shipped <c>"2"</c> would bind to whatever scale happened to be
+/// second wherever it was restored. Four operator-built <c>*_paed</c> types did exactly that until the dev
+/// database was rebuilt on 2026-09-20; they were never seeds, and nothing outside a seed folder is covered here.
 /// </para>
 /// </remarks>
 public sealed class SeedScaleKeyTests
 {
     /// <summary>
-    /// Every scale the product seeds, from the two places that seed one: <see cref="DataSeeder" /> in
-    /// code, and the paediatric catalogue in JSON. Adding a third means adding it here — which is the
-    /// point, since the failure this guards is a name that binds to nothing.
+    /// The <c>scale_key</c> of every scale the product seeds, from the two places that seed one: <see cref="DataSeeder" />
+    /// in code, and the paediatric catalogue, whose ladder's key carries the catalogue's version. Adding a third means
+    /// adding it here — which is the point, since the failure this guards is a key that binds to nothing.
     /// </summary>
-    private static IReadOnlyCollection<string> SeededScaleNames()
+    private static IReadOnlyCollection<string> SeededScaleKeys()
     {
-        var names = new List<string> { DataSeeder.OrScaleName };
-
         var cataloguePath = Path.Combine(
             AppContext.BaseDirectory, "Persistence", "Seeds", "paediatric-epa-v11.1.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(cataloguePath));
+        var catalogueVersion = document.RootElement.GetProperty("catalogueVersion").GetString()!;
 
-        if (File.Exists(cataloguePath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(cataloguePath));
-            if (document.RootElement.TryGetProperty("scale", out var scale) &&
-                scale.TryGetProperty("name", out var name) &&
-                name.GetString() is { Length: > 0 } catalogueScale)
-            {
-                names.Add(catalogueScale);
-            }
-        }
-
-        return names;
+        return
+        [
+            ScaleBinding.ForSeedKey(DataSeeder.OrScaleSeedKey),
+            ScaleBinding.ForSeedKey(PaediatricCatalogueSeeder.ScaleSeedKey(catalogueVersion))
+        ];
     }
 
     public static TheoryData<string> SeedDirectories
@@ -76,11 +69,11 @@ public sealed class SeedScaleKeyTests
 
     [Theory]
     [MemberData(nameof(SeedDirectories))]
-    public void EveryScaleKeyNamesASeededScale(string seedKey)
+    public void EveryScaleKeyBindsASeededScaleBySeedKey(string seedKey)
     {
         var schemaPath = Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", seedKey, "schema.json");
         var schema = FormSchemaParser.Parse(File.ReadAllText(schemaPath));
-        var seeded = SeededScaleNames();
+        var seeded = SeededScaleKeys();
 
         var declared = schema.Sections
             .SelectMany(section => section.Fields)
@@ -90,10 +83,13 @@ public sealed class SeedScaleKeyTests
 
         foreach (var (fieldKey, scaleKey) in declared)
         {
+            ScaleBinding.Parse(scaleKey)!.Kind.Should().Be(ScaleBindingKind.SeedKey,
+                "'{0}' field '{1}' declares scale_key '{2}'. A seed binds its scale by seed key: a name moves with an " +
+                "administrator's rename, and an id is a fact about one database", seedKey, fieldKey, scaleKey);
             seeded.Should().Contain(scaleKey,
-                "'{0}' field '{1}' declares scale_key '{2}', which is not the exact name of any seeded " +
-                "scale. A scale_key binds by name; one that matches nothing resolves to nothing, and the " +
-                "inline options keep the picker looking healthy while it does. Seeded scales: {3}",
+                "'{0}' field '{1}' declares scale_key '{2}', which is not the seed key of any seeded scale. One that " +
+                "matches nothing resolves to nothing, and the inline options keep the picker looking healthy while it " +
+                "does. Seeded scales: {3}",
                 seedKey, fieldKey, scaleKey, string.Join(", ", seeded));
         }
     }
@@ -123,8 +119,8 @@ public sealed class SeedScaleKeyTests
             "'{0}' declares '{1}' as its entrustment rating, so that field must say which ladder it is " +
             "rated against", seedKey, schema.RatedLevelField);
 
-        SeededScaleNames().Should().Contain(rated.ScaleKey!,
-            "'{0}' rates on '{1}', which names no seeded scale", seedKey, rated.ScaleKey);
+        SeededScaleKeys().Should().Contain(rated.ScaleKey!,
+            "'{0}' rates on '{1}', which binds no seeded scale by its seed key", seedKey, rated.ScaleKey);
     }
 
     /// <summary>
@@ -280,10 +276,13 @@ public sealed class SeedScaleKeyTests
     /// The guard is only worth having if it fails on the shape it was written for.
     /// </summary>
     [Fact]
-    public void TheGuardRejectsAKeyThatNamesNoSeededScale()
+    public void TheGuardRejectsAKeyThatBindsNoSeededScaleBySeedKey()
     {
-        SeededScaleNames().Should().NotContain("or_scale",
+        SeededScaleKeys().Should().NotContain("or_scale",
             "that is the exact value four seeds carried for months while binding to nothing");
-        SeededScaleNames().Should().Contain(DataSeeder.OrScaleName);
+        SeededScaleKeys().Should().NotContain(DataSeeder.OrScaleName,
+            "that is what the same four seeds bound until T253, and a rename of the scale unbound them");
+        SeededScaleKeys().Should().Contain("seed:demo:scale:o-r").And.Contain("seed:cpsa:scale:v11.1",
+            "the two seeded ladders' keys, typed here so a key changed in a seeder alone fails");
     }
 }

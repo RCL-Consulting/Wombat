@@ -61,11 +61,10 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
         // this handler never asked about: the delete reached the database and came back as that same raw exception.
         await EntrustmentScaleReferences.ThrowIfDefaultOfASubSpecialityAsync(_dbContext, request.Id, cancellationToken);
 
-        // Deleting a scale a schema binds to by name does exactly what renaming one does — the key stops
-        // resolving and the cross-scale refusal can never fire for that type again — so the same guard has
-        // to stand on this door too (T109).
-        await EntrustmentScaleReferences.ThrowIfNamedByAPublishedSchemaAsync(
-            _dbContext, scale.Name, "Deleting it", cancellationToken);
+        // A published schema that binds this scale, by the id the builder writes, the seed key the seeds write or a
+        // name, would lose its ladder for good: the key stops resolving and the cross-scale refusal can never fire for
+        // that type again (T109). Until T253 only a binding by name was asked about.
+        await EntrustmentScaleReferences.ThrowIfBoundByAPublishedSchemaAsync(_dbContext, scale, cancellationToken);
 
         var levelIds = scale.Levels.Select(level => level.Id).ToList();
         if (levelIds.Count > 0)

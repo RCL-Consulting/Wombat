@@ -24,6 +24,7 @@ public sealed class CreditApplierScalePinningTests
     private const int SixRungScaleId = 901;
     private const string FiveRungScaleName = "Paed General Entrustment Scale";
     private const string SixRungScaleName = "CPSA Paediatric Entrustment Scale v11.1";
+    private const string SixRungScaleSeedKey = "cpsa:scale:v11.1";
 
     [Fact]
     public async Task WhenTheAssessmentAndTheCurriculumAreOnDifferentScales_CountsVolumeButRefusesTheMinimum()
@@ -99,6 +100,27 @@ public sealed class CreditApplierScalePinningTests
         (await dbContext.CurriculumItemProgresses.SingleAsync()).MinimumLevelReachedCount.Should().Be(0);
     }
 
+    [Theory]
+    [InlineData(FiveRungScaleId, 1, 0)]
+    [InlineData(SixRungScaleId, 0, 1)]
+    public async Task WhenTheScaleIsBoundBySeedKey_ItComparesTheSameWay_AfterTheScaleIsRenamed(
+        int pinnedTo, int expectedMismatches, int expectedReached)
+    {
+        // T253. The seeds bind their ladder by seed key, which a rename does not touch: the rating is still known to be
+        // on the six-rung ladder, so the engine refuses it against a five-rung minimum and credits it against a
+        // six-rung one, as it does for a name or an id.
+        await using var dbContext = CreateDbContext();
+        await SeedAsync(dbContext, pinCurriculumItemToScaleId: pinnedTo);
+        (await dbContext.EntrustmentScales.SingleAsync(scale => scale.Id == SixRungScaleId)).Name = "Paediatric ladder";
+        await dbContext.SaveChangesAsync();
+
+        var result = await ApplyAsync(dbContext, achievedOrder: 4, schemaJson: SchemaBindingScoreTo("seed:" + SixRungScaleSeedKey));
+
+        result.ScaleMismatchCount.Should().Be(expectedMismatches);
+        result.UnverifiedLevelCount.Should().Be(0, "the ladder is known, so the comparison is verified or refused");
+        (await dbContext.CurriculumItemProgresses.SingleAsync()).MinimumLevelReachedCount.Should().Be(expectedReached);
+    }
+
     [Fact]
     public async Task WhenTheCurriculumItemIsUnpinned_ComparesExactlyAsBeforeT109()
     {
@@ -119,8 +141,8 @@ public sealed class CreditApplierScalePinningTests
     [Fact]
     public async Task WhenTheScaleKeyResolvesToNothing_ComparesExactlyAsBeforeT109()
     {
-        // mini_cex, cbd, dops and acat declare scale_key "or_scale" while the seeded scale is named
-        // "O-R Scale", so they resolve to nothing today. They must go on crediting precisely as they do.
+        // Until T110, mini_cex, cbd, dops and acat declared scale_key "or_scale" while the seeded scale was named
+        // "O-R Scale", so they resolved to nothing. A key that binds nothing must go on crediting precisely so.
         await using var dbContext = CreateDbContext();
         await SeedAsync(dbContext, pinCurriculumItemToScaleId: FiveRungScaleId);
 
@@ -350,7 +372,7 @@ public sealed class CreditApplierScalePinningTests
     {
         dbContext.EntrustmentScales.AddRange(
             new EntrustmentScale { Id = FiveRungScaleId, Name = FiveRungScaleName },
-            new EntrustmentScale { Id = SixRungScaleId, Name = SixRungScaleName });
+            new EntrustmentScale { Id = SixRungScaleId, Name = SixRungScaleName, SeedKey = SixRungScaleSeedKey });
 
         dbContext.Epas.Add(new Epa { Id = 5000, Code = "EPA-1", Title = "Take a history" });
 

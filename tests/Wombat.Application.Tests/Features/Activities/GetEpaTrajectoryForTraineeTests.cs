@@ -834,7 +834,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
 
     private static void SeedOrScale(ApplicationDbContext dbContext)
     {
-        dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale { Id = 43, Name = "O-R Scale" });
+        dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale { Id = 43, Name = "O-R Scale", SeedKey = "demo:scale:o-r" });
         var labels = new[] { "Observe only", "Direct supervision", "Indirect supervision", "Independent", "Supervises others" };
         for (var order = 1; order <= labels.Length; order++)
         {
@@ -891,7 +891,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
     {
         dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale
         {
-            Id = 42, Name = "CPSA Paediatric Entrustment Scale v11.1"
+            Id = 42, Name = "CPSA Paediatric Entrustment Scale v11.1", SeedKey = "cpsa:scale:v11.1"
         });
         var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
         for (var order = 1; order <= labels.Length; order++)

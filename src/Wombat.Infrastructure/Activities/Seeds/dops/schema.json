@@ -21,12 +21,12 @@
       "title": "Assessment",
       "editable_by": "field:assessor_user_id",
       "fields": [
-        { "key": "preparation", "type": "scale", "label": "Preparation", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "consent", "type": "scale", "label": "Consent and explanation", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "technique", "type": "scale", "label": "Technical performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" },
-        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "O-R Scale" }
+        { "key": "preparation", "type": "scale", "label": "Preparation", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "consent", "type": "scale", "label": "Consent and explanation", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "technique", "type": "scale", "label": "Technical performance", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "asepsis", "type": "scale", "label": "Aseptic practice", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "post_procedure", "type": "scale", "label": "Post-procedure management", "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" },
+        { "key": "overall", "type": "scale", "label": "Overall performance", "required": true, "options": ["1", "2", "3", "4", "5"], "scale_key": "seed:demo:scale:o-r" }
       ]
     },
     {

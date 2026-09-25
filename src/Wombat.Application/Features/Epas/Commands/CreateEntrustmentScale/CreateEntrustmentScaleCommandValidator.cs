@@ -1,4 +1,5 @@
 using FluentValidation;
+using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale;
 
@@ -6,7 +7,8 @@ public sealed class CreateEntrustmentScaleCommandValidator : AbstractValidator<C
 {
     public CreateEntrustmentScaleCommandValidator()
     {
-        RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
+        RuleFor(command => command.Name).NotEmpty().MaximumLength(200)
+            .Must(name => !ScaleBinding.IsReservedName(name)).WithMessage(EntrustmentScaleBindings.ReservedNameRefusal);
         RuleFor(command => command.Description).MaximumLength(2000);
 
         RuleFor(command => command.Levels)

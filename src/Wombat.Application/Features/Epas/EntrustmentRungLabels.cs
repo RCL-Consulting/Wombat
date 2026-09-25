@@ -69,62 +69,24 @@ public static class EntrustmentRungLabels
     }
 
     /// <summary>
-    /// Loads rung labels for the scales named by a set of schema <c>scale_key</c> values, each of which
-    /// holds either a scale id or an exact scale name.
+    /// Loads rung labels for the scales bound by a set of schema <c>scale_key</c> values, each of which binds a
+    /// scale by seed key, id or exact name (<see cref="ScaleBinding" />).
     /// </summary>
     /// <remarks>
-    /// The id-or-exact-name rule is the one <c>CreditApplier.ResolveScaleIdAsync</c> applies when it
-    /// decides whether an achieved rating and a curriculum minimum are on the same ladder (T109). Display
-    /// sites must agree with it, or a chart will label a rung the credit engine refused to compare.
-    /// <c>CreditApplier</c> keeps its own copy because it resolves a set of achieved scales inside a
-    /// larger query; this is the copy every read-side caller should use.
+    /// The keys are resolved by <see cref="EntrustmentScaleBindings.ResolveAsync" />, the same resolver
+    /// <c>CreditApplier</c> uses when it decides whether an achieved rating and a curriculum minimum are on the same
+    /// ladder (T109, T253). Display sites must agree with it, or a chart will label a rung the credit engine refused to
+    /// compare, and sharing the resolver is what makes them agree.
     /// </remarks>
     public static async Task<EntrustmentRungLookup> LoadForScaleKeysAsync(
         IApplicationDbContext dbContext,
         IEnumerable<string?> scaleKeys,
         CancellationToken cancellationToken = default)
     {
-        var keys = scaleKeys
-            .Where(key => !string.IsNullOrWhiteSpace(key))
-            .Select(key => key!.Trim())
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        if (keys.Length == 0)
+        var scaleIdByKey = await EntrustmentScaleBindings.ResolveAsync(dbContext, scaleKeys, cancellationToken);
+        if (scaleIdByKey.Count == 0)
         {
             return EntrustmentRungLookup.Empty;
-        }
-
-        var numericKeys = new List<int>();
-        foreach (var key in keys)
-        {
-            if (int.TryParse(key, out var id))
-            {
-                numericKeys.Add(id);
-            }
-        }
-
-        var scales = await dbContext.Set<EntrustmentScale>()
-            .AsNoTracking()
-            .Where(scale => numericKeys.Contains(scale.Id) || keys.Contains(scale.Name))
-            .Select(scale => new { scale.Id, scale.Name })
-            .ToListAsync(cancellationToken);
-
-        if (scales.Count == 0)
-        {
-            return EntrustmentRungLookup.Empty;
-        }
-
-        var scaleIdByKey = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var key in keys)
-        {
-            // Id first, then exact name — the order CreditApplier uses.
-            var match = (int.TryParse(key, out var id) ? scales.FirstOrDefault(s => s.Id == id) : null)
-                        ?? scales.FirstOrDefault(s => string.Equals(s.Name, key, StringComparison.Ordinal));
-            if (match is not null)
-            {
-                scaleIdByKey[key] = match.Id;
-            }
         }
 
         var lookup = await LoadAsync(
@@ -157,9 +119,9 @@ public sealed class EntrustmentRungLookup
         new(_byScaleAndOrder, scaleIdByKey);
 
     /// <summary>
-    /// The scale a schema <c>scale_key</c> resolves to, or null when it names nothing. A key that
-    /// resolves to nothing is a real and common state — the four generic WBA seeds declare
-    /// <c>or_scale</c> and the only seeded scale is named "O-R Scale" (T110).
+    /// The scale a schema <c>scale_key</c> resolves to, or null when it binds nothing. A key that
+    /// resolves to nothing is a real state, not an error: a scale deleted before its delete asked about
+    /// schemas (T253), or a hand-written key, and every caller then falls back to the bare ordinal.
     /// </summary>
     public int? ResolveScaleKey(string? scaleKey) =>
         !string.IsNullOrWhiteSpace(scaleKey) && _scaleIdByKey.TryGetValue(scaleKey.Trim(), out var id)

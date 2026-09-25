@@ -15,7 +15,7 @@ namespace Wombat.Infrastructure.Tests.Activities;
 /// </summary>
 public sealed class CpsaWbaSeedTests
 {
-    private const string ScaleName = "CPSA Paediatric Entrustment Scale v11.1";
+    private const string ScaleKey = "seed:cpsa:scale:v11.1";
 
     /// <summary>
     /// The four assessor-completed v11.1 WBA tools. <b>Do not add <c>msf_cpsa</c> here.</b>
@@ -63,11 +63,12 @@ public sealed class CpsaWbaSeedTests
 
     [Theory]
     [MemberData(nameof(SeedKeys))]
-    public void RatingFieldBindsToTheCollegeScaleByExactName(string key)
+    public void RatingFieldBindsToTheCollegeScaleBySeedKey(string key)
     {
-        // scale_key has no key column to bind to — it must be the scale's exact Name (or its numeric
-        // Id). A wrong string raises no error; the field silently degrades to a plain number box.
-        RatingField(key).ScaleKey.Should().Be(ScaleName);
+        // By the seed key the catalogue seeder stamps on the v11.1 ladder (T253), never by its name, which an
+        // administrator can rename and so unbind every CPSA field at once. A wrong string raises no error; the
+        // field silently degrades to a plain number box.
+        RatingField(key).ScaleKey.Should().Be(ScaleKey);
     }
 
     [Theory]

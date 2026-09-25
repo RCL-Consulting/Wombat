@@ -7,7 +7,7 @@ using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
 
-public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<UpdateEntrustmentScaleCommand, EntrustmentScaleDto>
+public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<UpdateEntrustmentScaleCommand, UpdateEntrustmentScaleResult>
 {
     private readonly IApplicationDbContext _dbContext;
 
@@ -16,7 +16,13 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
         _dbContext = dbContext;
     }
 
-    public async Task<EntrustmentScaleDto> Handle(UpdateEntrustmentScaleCommand request, CancellationToken cancellationToken)
+    /// <remarks>
+    /// Every check runs before the first assignment, and the order is load-bearing (T253 review). The audit pipeline's
+    /// catch saves this request's DbContext, so a name or level assigned before a later check throws is COMMITTED under
+    /// the refused save. Before T253 that was a stray rename; since a rename refuses nothing and its warning rides only
+    /// on a successful result, it was a rename that unbound a form's ladder with only the refusal on the page.
+    /// </remarks>
+    public async Task<UpdateEntrustmentScaleResult> Handle(UpdateEntrustmentScaleCommand request, CancellationToken cancellationToken)
     {
         if (!request.Principal.IsAdministrator())
         {
@@ -29,8 +35,9 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
             ?? throw new InvalidOperationException($"Entrustment scale {request.Id} was not found.");
 
         var trimmedName = request.Name.Trim();
+        var renamed = !string.Equals(scale.Name, trimmedName, StringComparison.Ordinal);
 
-        if (!string.Equals(scale.Name, trimmedName, StringComparison.Ordinal))
+        if (renamed)
         {
             var nameInUse = await _dbContext.Set<EntrustmentScale>()
                 .AnyAsync(entity => entity.Id != request.Id && entity.Name == trimmedName, cancellationToken);
@@ -38,18 +45,19 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
             {
                 throw new InvalidOperationException($"An entrustment scale named '{trimmedName}' already exists.");
             }
-
-            await EntrustmentScaleReferences.ThrowIfNamedByAPublishedSchemaAsync(
-                _dbContext, scale.Name, "Renaming it", cancellationToken);
         }
 
-        scale.Name = trimmedName;
-        scale.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
-
+        var existingIds = scale.Levels.Select(level => level.Id).ToHashSet();
         var incomingIds = request.Levels
             .Where(level => level.Id.HasValue && level.Id.Value > 0)
             .Select(level => level.Id!.Value)
             .ToHashSet();
+
+        var unknownIds = incomingIds.Where(id => !existingIds.Contains(id)).Order().ToList();
+        if (unknownIds.Count > 0)
+        {
+            throw new InvalidOperationException($"Level {unknownIds[0]} was not found on scale {scale.Id}.");
+        }
 
         var removedLevels = scale.Levels.Where(existing => !incomingIds.Contains(existing.Id)).ToList();
         if (removedLevels.Count > 0)
@@ -74,12 +82,23 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
                 scale.Id,
                 request.Levels.Select(level => level.Order).ToHashSet(),
                 cancellationToken);
+        }
 
-            foreach (var removed in removedLevels)
-            {
-                scale.Levels.Remove(removed);
-                _dbContext.Set<EntrustmentLevel>().Remove(removed);
-            }
+        // A rename refuses nothing (T253): the seeds bind by seed key and the builder by id, and neither moves with the
+        // name. A schema still bound by the old name loses its ladder, so the save says which, read before anything is
+        // changed.
+        var renameWarning = renamed
+            ? await EntrustmentScaleReferences.DescribeWhatARenameUnbindsAsync(_dbContext, scale.Name, trimmedName, cancellationToken)
+            : null;
+
+        // Nothing below this line throws.
+        scale.Name = trimmedName;
+        scale.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+
+        foreach (var removed in removedLevels)
+        {
+            scale.Levels.Remove(removed);
+            _dbContext.Set<EntrustmentLevel>().Remove(removed);
         }
 
         foreach (var incoming in request.Levels)
@@ -89,8 +108,7 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
 
             if (incoming.Id is { } existingId && existingId > 0)
             {
-                var existing = scale.Levels.SingleOrDefault(level => level.Id == existingId)
-                    ?? throw new InvalidOperationException($"Level {existingId} was not found on scale {scale.Id}.");
+                var existing = scale.Levels.First(level => level.Id == existingId);
                 existing.Order = incoming.Order;
                 existing.Label = trimmedLabel;
                 existing.Description = trimmedDescription;
@@ -108,14 +126,16 @@ public sealed class UpdateEntrustmentScaleCommandHandler : IRequestHandler<Updat
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return new EntrustmentScaleDto(
-            scale.Id,
-            scale.Name,
-            scale.Description,
-            scale.Levels
-                .OrderBy(level => level.Order)
-                .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
-                .ToList());
+        return new UpdateEntrustmentScaleResult(
+            new EntrustmentScaleDto(
+                scale.Id,
+                scale.Name,
+                scale.Description,
+                scale.Levels
+                    .OrderBy(level => level.Order)
+                    .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
+                    .ToList()),
+            renameWarning);
     }
 
 }

@@ -31,6 +31,7 @@ public sealed class RemainingWbaToolsTests
 
     private const int CpsaScaleId = 901;
     private const string CpsaScaleName = "CPSA Paediatric Entrustment Scale v11.1";
+    private const string CpsaScaleSeedKey = "cpsa:scale:v11.1";
 
     private const int CurriculumId = 3000;
     private const int PermittingEpaId = 5000;
@@ -65,13 +66,16 @@ public sealed class RemainingWbaToolsTests
         completed.CurrentState.Should().Be("completed");
         var record = completed.Transitions.Single(transition => transition.TransitionKey == "complete");
         record.CreditedItemCount.Should().Be(1);
-        record.CreditScaleMismatchCount.Should().Be(0, "the seed binds the CPSA ladder by its exact name");
+        record.CreditScaleMismatchCount.Should().Be(0, "the seed binds the CPSA ladder, by its seed key since T253");
 
         await using var db = new ApplicationDbContext(options);
         var progress = await db.CurriculumItemProgresses.SingleAsync();
         progress.CurriculumItemId.Should().Be(PermittingItemId);
         progress.CountsSoFar.Should().Be(1);
         progress.MinimumLevelReachedCount.Should().Be(1, "3a meets a 3a minimum on the same ladder");
+        // The seed's binding resolved: a key that bound nothing would still pass, unverified, as bare ordinals.
+        progress.UnverifiedLevelCount.Should().Be(0);
+        progress.MinimumLevelScaleId.Should().Be(CpsaScaleId, "the rating was scored on the ladder the seed binds");
 
         // The guard for the unrated instruments' empty trajectories below: on this fixture a rated tool does chart.
         var trajectory = (await TrajectoryAsync(options)).Should().ContainSingle().Subject;
@@ -479,7 +483,7 @@ public sealed class RemainingWbaToolsTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName });
+            db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName, SeedKey = CpsaScaleSeedKey });
             var rungs = new[] { "1", "2", "3a", "3b", "4", "5" };
             for (var order = 1; order <= rungs.Length; order++)
             {
@@ -714,7 +718,7 @@ public sealed class RemainingWbaToolsTests
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
 
-        db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName });
+        db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName, SeedKey = CpsaScaleSeedKey });
         db.Epas.AddRange(
             new Epa { Id = PermittingEpaId, Code = "PAED-001", Title = "Permits this tool" },
             new Epa { Id = ForbiddingEpaId, Code = "PAED-010", Title = "Does not permit this tool" });

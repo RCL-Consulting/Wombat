@@ -24,6 +24,13 @@
     <Alert Kind="success">@_statusMessage</Alert>
   }
 
+  @* A rename that left a published form's fields with no ladder (T253). The save went through, so it is a warning, not a
+     refusal, and it reports what the save just did: a status, the kind's own role. *@
+  @if (!string.IsNullOrWhiteSpace(_renameWarning))
+  {
+    <Alert Kind="warning">@_renameWarning</Alert>
+  }
+
   @if (!string.IsNullOrWhiteSpace(_errorMessage))
   {
     <Alert Kind="danger">@_errorMessage</Alert>
@@ -118,6 +125,7 @@
   private ActionResult? _result;
   private string? _loadError;
   private string? _statusMessage;
+  private string? _renameWarning;
   private string? _errorMessage;
 
   private bool IsNew => !Id.HasValue;
@@ -126,6 +134,7 @@
   {
     _errorMessage = null;
     _statusMessage = null;
+    _renameWarning = null;
     _loadError = null;
     _loading = true;
 
@@ -210,6 +219,7 @@
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
+    _renameWarning = null;
 
     try
     {
@@ -229,7 +239,9 @@
         .OrderBy(level => level.Order)
         .Select(level => new EntrustmentLevelUpdate(level.Id, level.Order, level.Label, level.Description))
         .ToList();
-      var updated = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates, authState.User));
+      var saved = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates, authState.User));
+      var updated = saved.Scale;
+      _name = updated.Name;
       _levels.Clear();
       foreach (var level in updated.Levels)
       {
@@ -242,11 +254,12 @@
         });
       }
       _statusMessage = "Entrustment scale saved.";
+      _renameWarning = saved.RenameWarning;
       _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {

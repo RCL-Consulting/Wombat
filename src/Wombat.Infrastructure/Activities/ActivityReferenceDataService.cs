@@ -447,8 +447,9 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             return [];
         }
 
-        // The id-or-exact-name rule lives in EntrustmentRungLabels so the picker, the portfolio PDF and
-        // the trajectory chart cannot drift apart about which ladder a scale_key names.
+        // The seed-key, id or exact-name rule is EntrustmentScaleBindings (T253), which EntrustmentRungLabels and
+        // CreditApplier both use, so the picker, the credit engine, the portfolio PDF and the trajectory chart cannot
+        // drift apart about which ladder a scale_key binds.
         var rungs = await EntrustmentRungLabels.LoadForScaleKeysAsync(
             _dbContext, [scaleKey], cancellationToken);
 

@@ -138,11 +138,10 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
     /// already exists. Both are right; do not make one into the other.
     /// </para>
     /// <para>
-    /// ⚠ Sequencing with [T110]: the four generic seeds declare <c>scale_key: "or_scale"</c>, which
-    /// resolves to nothing, so they fall through permissively today. T110 proposes renaming those keys to
-    /// the exact scale name — at which point they acquire a five-rung ladder and this predicate begins
-    /// hiding them from every six-rung trainee. That is arguably correct (T109 would refuse their minimum
-    /// anyway) but it is a visible change, and whichever lands second owns re-checking it.
+    /// The keys resolve through <c>EntrustmentScaleBindings</c>, the resolver <c>CreditApplier</c> uses (T253). The
+    /// four generic seeds bind the five-rung O-R Scale (by seed key since T253; until T110 they declared
+    /// <c>or_scale</c>, which bound nothing and fell through permissively), so this predicate hides them from a
+    /// trainee whose items are on the six-rung ladder, whose minimum T109 would refuse to compare anyway.
     /// </para>
     /// <para>
     /// This is a MENU filter, not an authorization gate. <c>GetActivityTypeEditorQuery.CanReadAsync</c>

@@ -753,7 +753,7 @@ public sealed class PortfolioEpaProgressTests
             EffectiveFrom = new DateOnly(2025, 1, 1), IsActive = true
         });
 
-        db.EntrustmentScales.Add(new EntrustmentScale { Id = PinnedScaleId, Name = "CPSA Paediatric Entrustment Scale v11.1" });
+        db.EntrustmentScales.Add(new EntrustmentScale { Id = PinnedScaleId, Name = "CPSA Paediatric Entrustment Scale v11.1", SeedKey = "cpsa:scale:v11.1" });
         var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
         for (var order = 1; order <= labels.Length; order++)
         {

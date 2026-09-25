@@ -29,6 +29,7 @@ public sealed class EvidenceEpaStampTests
 
     private const int CpsaScaleId = 901;
     private const string CpsaScaleName = "CPSA Paediatric Entrustment Scale v11.1";
+    private const string CpsaScaleSeedKey = "cpsa:scale:v11.1";
 
     private const int CurriculumId = 3000;
     private const int CurriculumEpaId = 5000;
@@ -203,7 +204,7 @@ public sealed class EvidenceEpaStampTests
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
 
-        db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName });
+        db.EntrustmentScales.Add(new EntrustmentScale { Id = CpsaScaleId, Name = CpsaScaleName, SeedKey = CpsaScaleSeedKey });
         db.Epas.AddRange(
             new Epa { Id = CurriculumEpaId, Code = "PAED-001", Title = "On the curriculum" },
             new Epa { Id = UncataloguedEpaId, Code = "PAED-099", Title = "On no curriculum item" });
