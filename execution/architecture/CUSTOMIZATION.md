@@ -202,6 +202,17 @@ nothing:
 
 A delete and a publish that race are not serialised: each checks, then writes, with no lock between them.
 
+The references the database does hold, a sub-speciality's default, a curriculum item's pin, a scored progress row and a
+decision on one of the scale's levels, are ON DELETE RESTRICT, so a delete that races one of them is refused by the
+foreign key rather than committed. The delete then asks its checks again on a fresh read and throws the first that now
+applies, in the words it would have used before the save; a scale another delete removed first is "not found". The
+checks ask about the levels stored now, so a level another save added after the load is asked about too. A level
+another save removed after the load makes EF refuse the whole save as a concurrency conflict; with no check applying,
+that is reported as the scale having changed, and a second attempt reads it afresh. The database's refusal stays
+underneath, so the audit pipeline discards the refused removal (T201). Any other refusal no check explains, and any
+refusal whose read-back itself fails, is rethrown as the database gave it, never replaced by the read-back's exception,
+which would not carry it (T254).
+
 New field types are new tasks, not T019 drive-bys. Every field type is a renderer, a builder editor, a validator, a JSON serialization, and a PDF renderer in T023 — the marginal cost is real.
 
 Conditional visibility (`show_if`) is supported on sections and fields as a **single** condition per element in v1: one field, one operator (`equals` / `not_equals` / `is_set` / `is_not_set` / `greater_than` / `less_than`), one value. Multi-condition visibility with ANDs/ORs is T019-f. Covers roughly 90% of the real cases — "show site when procedure = central line", "show escalation note when complication = yes".

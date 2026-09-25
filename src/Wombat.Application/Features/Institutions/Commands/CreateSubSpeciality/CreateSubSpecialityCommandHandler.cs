@@ -43,7 +43,18 @@ public sealed class CreateSubSpecialityCommandHandler : IRequestHandler<CreateSu
         }
         catch (DbUpdateException exception)
         {
-            throw new InvalidOperationException("A sub-speciality with the same name already exists for this speciality.", exception);
+            // T254. Before this every refused save was reported as a duplicate name, including a speciality deleted after
+            // the check above. The database's refusal stays underneath, so the audit pipeline discards the refused insert
+            // (T201); a refusal none of these explains is left as the database gave it.
+            var refusal = await SubSpecialitySaveRefusal.ReadBackAsync(
+                _dbContext, exception, subSpecialityId: null, subSpeciality.SpecialityId, subSpeciality.Name,
+                defaultEntrustmentScaleId: null, cancellationToken);
+            if (refusal is null)
+            {
+                throw;
+            }
+
+            throw new InvalidOperationException(refusal, exception);
         }
 
         return new SubSpecialityDto(subSpeciality.Id, subSpeciality.SpecialityId, subSpeciality.Name, subSpeciality.Description, subSpeciality.IsActive);

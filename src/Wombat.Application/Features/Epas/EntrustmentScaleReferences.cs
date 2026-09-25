@@ -24,14 +24,18 @@ namespace Wombat.Application.Features.Epas;
 /// about them — a guard on one door and not the other is the same hole with an extra step.
 /// <para>
 /// A third, a sub-speciality's default scale, the database does protect, but only with a refusal the administrator
-/// cannot read; see <see cref="ThrowIfDefaultOfASubSpecialityAsync" />.
+/// cannot read; see <see cref="DescribeDefaultOfASubSpecialityAsync" />.
+/// </para>
+/// <para>
+/// The delete's two refusals are returned as text rather than thrown, because the delete asks them twice: before it
+/// removes anything, and again after the database refuses a removal that raced a new reference (T254).
 /// </para>
 /// </remarks>
 internal static class EntrustmentScaleReferences
 {
     /// <summary>
-    /// Throws when a published activity-type schema binds a field to this scale, by id, seed key or name, naming each
-    /// such type (T253).
+    /// Why the scale may not be deleted when a published activity-type schema binds a field to it, by id, seed key or
+    /// name, naming each such type; or null when none does (T253).
     /// </summary>
     /// <remarks>
     /// <para>
@@ -52,7 +56,7 @@ internal static class EntrustmentScaleReferences
     /// id, which is how the builder binds, did not stop the delete.
     /// </para>
     /// </remarks>
-    public static async Task ThrowIfBoundByAPublishedSchemaAsync(
+    public static async Task<string?> DescribeBindingByAPublishedSchemaAsync(
         IApplicationDbContext dbContext,
         EntrustmentScale scale,
         CancellationToken cancellationToken)
@@ -60,15 +64,14 @@ internal static class EntrustmentScaleReferences
         var bound = await FindPublishedBindingsAsync(dbContext, binding => binding.Binds(scale), cancellationToken);
         if (bound.Count == 0)
         {
-            return;
+            return null;
         }
 
-        throw new InvalidOperationException(
-            (bound.Count == 1
-                ? $"The form of the activity type {NameEach(bound)} uses this entrustment scale, so it cannot be deleted. "
-                : $"The forms of the activity types {NameEach(bound)} use this entrustment scale, so it cannot be deleted. ") +
-            "A published version never changes, and activities stay on the version they were filed on, so no later " +
-            "version can take that back. Leave the scale in place instead.");
+        return (bound.Count == 1
+                   ? $"The form of the activity type {NameEach(bound)} uses this entrustment scale, so it cannot be deleted. "
+                   : $"The forms of the activity types {NameEach(bound)} use this entrustment scale, so it cannot be deleted. ") +
+               "A published version never changes, and activities stay on the version they were filed on, so no later " +
+               "version can take that back. Leave the scale in place instead.";
     }
 
     /// <summary>
@@ -223,7 +226,8 @@ internal static class EntrustmentScaleReferences
     }
 
     /// <summary>
-    /// Throws when this scale is a sub-speciality's default entrustment scale, naming every such sub-speciality (T232).
+    /// Why the scale may not be deleted when it is a sub-speciality's default entrustment scale, naming every such
+    /// sub-speciality; or null when it is none's (T232).
     /// </summary>
     /// <remarks>
     /// <c>SubSpecialities.DefaultEntrustmentScaleId</c> is ON DELETE RESTRICT, so a delete that reaches the database is
@@ -232,7 +236,7 @@ internal static class EntrustmentScaleReferences
     /// default has to change first. Each is named with its speciality, because a sub-speciality's name is unique only
     /// within its speciality.
     /// </remarks>
-    public static async Task ThrowIfDefaultOfASubSpecialityAsync(
+    public static async Task<string?> DescribeDefaultOfASubSpecialityAsync(
         IApplicationDbContext dbContext,
         int scaleId,
         CancellationToken cancellationToken)
@@ -247,16 +251,16 @@ internal static class EntrustmentScaleReferences
 
         if (defaults.Count == 0)
         {
-            return;
+            return null;
         }
 
         var named = defaults.Select(subSpeciality => $"\"{subSpeciality.Name}\" ({subSpeciality.Speciality})").ToList();
         var list = named.Count == 1 ? named[0] : $"{string.Join(", ", named.Take(named.Count - 1))} and {named[^1]}";
 
-        throw new InvalidOperationException(named.Count == 1
+        return named.Count == 1
             ? $"This entrustment scale is the default scale of the sub-speciality {list}, so it cannot be deleted. " +
               "Change that sub-speciality's default entrustment scale to another scale, or to no default, first."
             : $"This entrustment scale is the default scale of the sub-specialities {list}, so it cannot be deleted. " +
-              "Change each one's default entrustment scale to another scale, or to no default, first.");
+              "Change each one's default entrustment scale to another scale, or to no default, first.";
     }
 }

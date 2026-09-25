@@ -8,9 +8,11 @@ using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Epas;
 
@@ -194,6 +196,46 @@ public sealed class EntrustmentScaleAdminHandlerTests
 
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*progress*");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Delete_RejectsScaleALevelOfWhichADecisionAuthorises_AndCommitsNothing(bool pending)
+    {
+        // Both decision tables hold their level ON DELETE RESTRICT. The question is asked of the levels stored now, through
+        // the decision's level (T254), not of the ids this command loaded, so it reads the same after a refused save.
+        await using var db = CreateDb();
+        var seeded = await SeedTwoLevelScaleAsync(db, "Decided");
+        var topLevelId = seeded.Levels.Single(level => level.Order == 2).Id;
+        if (pending)
+        {
+            db.Set<PendingEntrustmentDecision>().Add(PendingEntrustmentDecision.Stage(
+                reviewId: 7, epaId: 8, topLevelId, new DateOnly(2026, 7, 1), expiresOn: null, "Ready.", [1], "chair-1",
+                new DateTime(2026, 7, 1, 9, 0, 0, DateTimeKind.Utc)));
+        }
+        else
+        {
+            db.Set<EntrustmentDecision>().Add(EntrustmentDecision.Issue(
+                "trainee-1", epaId: 8, topLevelId, new DateOnly(2026, 7, 1), expiresOn: null, committeeReviewId: 7,
+                "chair-1", "Ready.", StarEvidence.One()));
+        }
+
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var action = async () => await new DeleteEntrustmentScaleCommandHandler(db).Handle(
+            new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
+
+        var refusal = (await action.Should().ThrowAsync<InvalidOperationException>()).Which;
+        refusal.Message.Should().Be(
+            "Levels of this entrustment scale are referenced by entrustment decisions and cannot be deleted.");
+        refusal.InnerException.Should().BeNull("the refusal is the handler's own, made before any save");
+
+        // The audit trap: the failure row is saved through this same context.
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        (await db.Set<EntrustmentLevel>().CountAsync(level => level.ScaleId == seeded.Id)).Should().Be(2);
     }
 
     [Fact]
