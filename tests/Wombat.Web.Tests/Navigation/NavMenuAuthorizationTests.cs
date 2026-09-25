@@ -119,6 +119,31 @@ public sealed class NavMenuAuthorizationTests : TestContext
         RefusalOf(PageFor("/committee/decisions-due")!, role).Should().NotBeNull();
     }
 
+    // T145: the legacy assessment-forms screen let an administrator link a form to EPAs and said "EPA linked", but
+    // nothing read the link. Which instrument may assess an EPA is the curriculum item's permitted-tools list (T122), so
+    // the screen is retired: no role is offered it, and no page answers its routes.
+    public static TheoryData<string> EveryRole() => new(WombatRoles.All);
+
+    [Theory]
+    [MemberData(nameof(EveryRole))]
+    public void NoRole_IsOfferedTheRetiredAssessmentFormsScreen(string role)
+    {
+        var cut = RenderFor(role);
+
+        cut.FindAll("a.nav-link").Should().NotContain(
+            a => (a.GetAttribute("href") ?? string.Empty).StartsWith("/admin/forms", StringComparison.OrdinalIgnoreCase));
+        cut.FindAll("a.nav-link").Should().NotContain(a => a.TextContent.Trim() == "Forms");
+    }
+
+    [Theory]
+    [InlineData("/admin/forms")]
+    [InlineData("/admin/forms/new")]
+    [InlineData("/admin/forms/1")]
+    public void NoPage_AnswersARetiredAssessmentFormsRoute(string href)
+    {
+        PageFor(href).Should().BeNull($"{href} was the retired assessment-forms screen, so it answers 404");
+    }
+
     private IRenderedComponent<NavMenu> RenderFor(string role)
     {
         var auth = this.AddTestAuthorization();

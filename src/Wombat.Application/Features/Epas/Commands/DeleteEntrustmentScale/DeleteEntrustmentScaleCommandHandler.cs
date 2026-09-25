@@ -5,7 +5,6 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
-using Wombat.Domain.Forms;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
@@ -30,14 +29,6 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
             .Include(entity => entity.Levels)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Entrustment scale {request.Id} was not found.");
-
-        var formRefs = await _dbContext.Set<AssessmentForm>()
-            .AnyAsync(form => form.ScaleId == request.Id, cancellationToken);
-        if (formRefs)
-        {
-            throw new InvalidOperationException(
-                "This entrustment scale is referenced by one or more assessment forms and cannot be deleted.");
-        }
 
         var msfRefs = await _dbContext.Set<MsfQuestion>()
             .AnyAsync(question => question.ScaleId == request.Id, cancellationToken);

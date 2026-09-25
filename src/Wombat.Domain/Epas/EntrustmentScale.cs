@@ -7,5 +7,4 @@ public sealed class EntrustmentScale
     public string? Description { get; set; }
 
     public ICollection<EntrustmentLevel> Levels { get; set; } = [];
-    public ICollection<Wombat.Domain.Forms.AssessmentForm> Forms { get; set; } = [];
 }

@@ -36,5 +36,4 @@ public sealed class Epa
 
     public Wombat.Domain.Institutions.SubSpeciality SubSpeciality { get; set; } = null!;
     public ICollection<Wombat.Domain.Curricula.CurriculumItem> CurriculumItems { get; set; } = [];
-    public ICollection<Wombat.Domain.Forms.FormEpaLink> FormLinks { get; set; } = [];
 }

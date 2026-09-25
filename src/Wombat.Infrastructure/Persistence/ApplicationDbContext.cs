@@ -8,7 +8,6 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
-using Wombat.Domain.Forms;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
@@ -52,9 +51,6 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<EntrustmentDecision> EntrustmentDecisions => Set<EntrustmentDecision>();
     public DbSet<EntrustmentEvidenceLink> EntrustmentEvidenceLinks => Set<EntrustmentEvidenceLink>();
     public DbSet<PendingEntrustmentDecision> PendingEntrustmentDecisions => Set<PendingEntrustmentDecision>();
-    public DbSet<AssessmentForm> AssessmentForms => Set<AssessmentForm>();
-    public DbSet<FormCriterion> FormCriteria => Set<FormCriterion>();
-    public DbSet<FormEpaLink> FormEpaLinks => Set<FormEpaLink>();
     public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
     public DbSet<ActivityTypeVersion> ActivityTypeVersions => Set<ActivityTypeVersion>();
     public DbSet<ProcedureCatalogueEntry> ProcedureCatalogueEntries => Set<ProcedureCatalogueEntry>();

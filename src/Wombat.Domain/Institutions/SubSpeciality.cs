@@ -19,5 +19,4 @@ public sealed class SubSpeciality
     public Wombat.Domain.Epas.EntrustmentScale? DefaultEntrustmentScale { get; set; }
     public ICollection<Wombat.Domain.Epas.Epa> Epas { get; set; } = [];
     public ICollection<Wombat.Domain.Curricula.Curriculum> Curricula { get; set; } = [];
-    public ICollection<Wombat.Domain.Forms.AssessmentForm> AssessmentForms { get; set; } = [];
 }

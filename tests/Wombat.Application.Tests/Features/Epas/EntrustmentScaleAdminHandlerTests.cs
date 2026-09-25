@@ -8,7 +8,6 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
-using Wombat.Domain.Forms;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Epas;
@@ -140,38 +139,6 @@ public sealed class EntrustmentScaleAdminHandlerTests
 
         (await db.Set<EntrustmentScale>().AnyAsync()).Should().BeFalse();
         (await db.Set<EntrustmentLevel>().AnyAsync()).Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task Delete_RejectsScaleReferencedByAssessmentForm()
-    {
-        await using var db = CreateDb();
-        var create = new CreateEntrustmentScaleCommandHandler(db);
-        var seeded = await create.Handle(
-            new CreateEntrustmentScaleCommand(
-                "Bound",
-                null,
-                [
-                    new EntrustmentLevelInput(1, "Low", null),
-                    new EntrustmentLevelInput(2, "High", null)
-                ],
-                TestPrincipals.Administrator()),
-            CancellationToken.None);
-
-        db.Set<AssessmentForm>().Add(new AssessmentForm
-        {
-            Id = 1,
-            Name = "Form 1",
-            ScaleId = seeded.Id,
-            IsActive = true
-        });
-        await db.SaveChangesAsync();
-
-        var delete = new DeleteEntrustmentScaleCommandHandler(db);
-        var action = async () => await delete.Handle(new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
-
-        await action.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*assessment forms*");
     }
 
     [Fact]

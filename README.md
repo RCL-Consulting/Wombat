@@ -17,9 +17,9 @@ Features
     *   **Institution Coordinator**: Oversees institution-specific configurations and reviews trainee portfolios.
     *   **Assessor**: Responds to assessment requests from trainees.
     *   **Trainee**: Sends assessment requests and manages their ePortfolio.
-*   **Customizable Assessment Forms**:
-    *   Configurable questions with either text-based responses or multiple-choice options.
-    *   Assessment forms can be tied to specific EPAs.
+*   **Customizable Activity Types**:
+    *   Each activity type carries its own form, workflow and credit rules, built in the activity-type builder.
+    *   Which instruments may assess an EPA is set on the curriculum item (its permitted tools) and enforced when an activity is created or handed on.
 *   **Assessment Workflow**:
     *   Trainees submit assessment requests to a specific assessor.
     *   Assessors complete the assessment, which is added to the trainee’s ePortfolio.
