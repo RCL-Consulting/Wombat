@@ -8,7 +8,7 @@
       "fields": [
         { "key": "session_date", "type": "date", "label": "Date", "required": true },
         { "key": "article_reference", "type": "longtext", "label": "Article reference", "required": true },
-        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": ["presenter", "attendee"] },
+        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": [{ "value": "presenter", "label": "Presenter" }, { "value": "attendee", "label": "Attendee" }] },
         { "key": "key_learning_points", "type": "longtext", "label": "Key learning points", "required": true }
       ]
     }

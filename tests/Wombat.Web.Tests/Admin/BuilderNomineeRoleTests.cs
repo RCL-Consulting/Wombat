@@ -208,7 +208,8 @@ public sealed class BuilderNomineeRoleTests
         field.Type = FieldType.User;
         field.Type = FieldType.Choice;
 
-        ParsedField(FormSchemaParser.Parse(model.ToJson()), "setting").Options.Should().Equal("ward", "clinic");
+        ParsedField(FormSchemaParser.Parse(model.ToJson()), "setting").Options.Select(option => option.Value)
+            .Should().Equal("ward", "clinic");
     }
 
     [Fact]

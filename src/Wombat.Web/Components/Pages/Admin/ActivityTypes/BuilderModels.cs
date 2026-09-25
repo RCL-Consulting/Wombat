@@ -63,7 +63,7 @@ internal sealed class BuilderSchemaModel
                     Label = field.Label,
                     HelpText = field.HelpText,
                     Required = field.Required,
-                    OptionsText = string.Join(Environment.NewLine, field.Options),
+                    OptionsText = FormatOptions(field.Options),
                     CatalogueKey = field.CatalogueKey,
                     ScaleKey = field.ScaleKey,
                     NomineeRole = field.NomineeRole,
@@ -273,7 +273,37 @@ internal sealed class BuilderSchemaModel
             ParseInt(field.MaxLength));
     }
 
-    private static IReadOnlyList<string> ParseOptions(string? optionsText)
+    /// <summary>
+    /// The Options box's text for <paramref name="options" />: one per line, a labelled option as <c>value | Label</c>.
+    /// </summary>
+    /// <remarks>
+    /// The inverse of <see cref="ParseOptions" />, so opening a type and saving it keeps every value and every label.
+    /// Joining only the values would publish a labelled seed unlabelled on its first operator save, and the form would
+    /// show keys again. It is exact because <see cref="FormSchemaParser" /> refuses the only two things a line could
+    /// not carry: a line break anywhere, and a <see cref="FieldOption.LabelSeparator" /> in a value.
+    /// </remarks>
+    internal static string FormatOptions(IReadOnlyList<FieldOption> options)
+        => string.Join(
+            Environment.NewLine,
+            options.Select(option => option.IsLabelled
+                ? $"{option.Value} {FieldOption.LabelSeparator} {option.Label}"
+                : option.Value));
+
+    /// <summary>
+    /// The options the Options box declares, one per line. A line holding <c>|</c> is its value before the first bar
+    /// and its label after; any other line is a bare value, its own label.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A comma is text, never a separator, in a value as in a label (T191): "Notes, letters and charts" is one option.
+    /// Splitting on commas, as the box once did, would split a bare value that holds one on every save.
+    /// </para>
+    /// <para>
+    /// A value given twice is passed on, not dropped: <see cref="FormSchemaParser" /> refuses it by name, in the live
+    /// preview and at save. Keeping the first line and saying nothing would lose what the operator typed.
+    /// </para>
+    /// </remarks>
+    internal static IReadOnlyList<FieldOption> ParseOptions(string? optionsText)
     {
         if (string.IsNullOrWhiteSpace(optionsText))
         {
@@ -281,9 +311,27 @@ internal sealed class BuilderSchemaModel
         }
 
         return optionsText
-            .Split(['\r', '\n', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.Ordinal)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .SelectMany(ParseOptionLine)
             .ToArray();
+    }
+
+    private static IEnumerable<FieldOption> ParseOptionLine(string line)
+    {
+        var separator = line.IndexOf(FieldOption.LabelSeparator);
+        if (separator < 0)
+        {
+            return [FieldOption.Unlabelled(line)];
+        }
+
+        var value = line[..separator].Trim();
+        var label = line[(separator + 1)..].Trim();
+        if (value.Length == 0)
+        {
+            return [];
+        }
+
+        return [label.Length == 0 ? FieldOption.Unlabelled(value) : new FieldOption(value, label)];
     }
 
     internal static string BuildDisplayFieldsJson(BuilderSchemaModel schema)

@@ -40,12 +40,12 @@
           "label": "Clinical setting",
           "required": true,
           "options": [
-            "ward",
-            "emergency_unit",
-            "neonatal_unit",
-            "picu",
-            "theatre",
-            "outpatient_clinic"
+            { "value": "ward", "label": "Ward" },
+            { "value": "emergency_unit", "label": "Emergency unit" },
+            { "value": "neonatal_unit", "label": "Neonatal unit" },
+            { "value": "picu", "label": "PICU" },
+            { "value": "theatre", "label": "Theatre" },
+            { "value": "outpatient_clinic", "label": "Outpatient clinic" }
           ]
         },
         {
@@ -54,9 +54,9 @@
           "label": "Procedure complexity",
           "required": true,
           "options": [
-            "low",
-            "moderate",
-            "high"
+            { "value": "low", "label": "Low" },
+            { "value": "moderate", "label": "Moderate" },
+            { "value": "high", "label": "High" }
           ]
         }
       ]

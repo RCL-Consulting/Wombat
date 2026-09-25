@@ -13,7 +13,7 @@
         { "key": "observed_on", "type": "date", "label": "Date observed", "help_text": "When the encounter happened, not when this form is completed.", "required": true },
         { "key": "procedure_key", "type": "choice", "label": "Procedure", "required": true, "catalogue": "procedure_catalogue" },
         { "key": "indications", "type": "longtext", "label": "Indications", "required": true },
-        { "key": "complexity", "type": "choice", "label": "Procedure complexity", "required": true, "options": ["low", "moderate", "high"] }
+        { "key": "complexity", "type": "choice", "label": "Procedure complexity", "required": true, "options": [{ "value": "low", "label": "Low" }, { "value": "moderate", "label": "Moderate" }, { "value": "high", "label": "High" }] }
       ]
     },
     {

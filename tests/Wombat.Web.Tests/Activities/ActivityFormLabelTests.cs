@@ -241,7 +241,9 @@ public sealed class ActivityFormLabelTests : TestContext
 
     private static SchemaField OneField(FieldType type)
     {
-        IReadOnlyList<string> options = type is FieldType.Choice or FieldType.MultiChoice ? ["a", "b"] : [];
+        IReadOnlyList<FieldOption> options = type is FieldType.Choice or FieldType.MultiChoice
+            ? [FieldOption.Unlabelled("a"), FieldOption.Unlabelled("b")]
+            : [];
         return new SchemaField("f", type, "The field", "Help for the field", true, options, null, null, null, null, null, null);
     }
 

@@ -161,7 +161,7 @@ public sealed class SchemaValidator : ISchemaValidator
             errors.Add(new ActivityValidationErrorDto(field.Key, $"Value must be at most {field.Validation.Max.Value}.", "max"));
         }
 
-        if (field.Options.Count > 0 && !field.Options.Contains(numberValue.ToString(CultureInfo.InvariantCulture), StringComparer.Ordinal))
+        if (field.Options.Count > 0 && !field.Offers(numberValue.ToString(CultureInfo.InvariantCulture)))
         {
             errors.Add(new ActivityValidationErrorDto(field.Key, "Value is outside the declared scale.", "scale"));
         }
@@ -192,7 +192,7 @@ public sealed class SchemaValidator : ISchemaValidator
         }
 
         var selected = value.GetString() ?? string.Empty;
-        if (field.Options.Count > 0 && !field.Options.Contains(selected, StringComparer.Ordinal))
+        if (field.Options.Count > 0 && !field.Offers(selected))
         {
             errors.Add(new ActivityValidationErrorDto(field.Key, "Value must be one of the declared options.", "options"));
         }
@@ -215,7 +215,7 @@ public sealed class SchemaValidator : ISchemaValidator
             }
 
             var selected = item.GetString() ?? string.Empty;
-            if (field.Options.Count > 0 && !field.Options.Contains(selected, StringComparer.Ordinal))
+            if (field.Options.Count > 0 && !field.Offers(selected))
             {
                 errors.Add(new ActivityValidationErrorDto(field.Key, "Value must be one of the declared options.", "options"));
             }

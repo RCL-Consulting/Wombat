@@ -95,7 +95,21 @@ public static class FormSchemaParser
                     writer.WriteStartArray();
                     foreach (var option in field.Options)
                     {
-                        writer.WriteStringValue(option);
+                        // Same rule, same trap: the label MUST be emitted, or every publish would drop it and the
+                        // form would go back to showing the stored key (T191). An option whose label is its value is
+                        // written as the bare string it was before labels existed, so a schema that labels nothing
+                        // canonicalises byte for byte as it always did and the refresher republishes nothing for it.
+                        if (option.IsLabelled)
+                        {
+                            writer.WriteStartObject();
+                            writer.WriteString("value", option.Value);
+                            writer.WriteString("label", option.Label);
+                            writer.WriteEndObject();
+                        }
+                        else
+                        {
+                            writer.WriteStringValue(option.Value);
+                        }
                     }
 
                     writer.WriteEndArray();
@@ -299,7 +313,7 @@ public static class FormSchemaParser
             GetRequiredString(element, "label"),
             GetOptionalTrimmedString(element, "help_text"),
             GetBooleanOrDefault(element, "required"),
-            ParseOptionalStringArray(element, "options"),
+            ParseOptions(element, key),
             GetOptionalTrimmedString(element, "catalogue"),
             GetOptionalTrimmedString(element, "scale_key"),
             ParseOptionalNomineeRole(element, key, type),
@@ -406,33 +420,104 @@ public static class FormSchemaParser
             GetOptionalInt(validationElement, "max_length"));
     }
 
-    private static IReadOnlyList<string> ParseOptionalStringArray(JsonElement element, string propertyName)
+    /// <summary>
+    /// Parses a field's optional <c>options</c>: each a bare string, whose value is its label, or a
+    /// <c>{ "value", "label" }</c> object naming the words the form shows for a stored key (T191).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A value offered twice is refused. An activity stores the value, so two options sharing one are two choices a
+    /// reader cannot tell apart once made, read back under whichever label comes first.
+    /// </para>
+    /// <para>
+    /// The builder's Options box is how an operator edits a schema, one option per line and <c>value | Label</c>, so
+    /// three more refusals keep it an exact round trip of every schema that parses: a line break in a value or a label,
+    /// which the box would read as a second option, and a <see cref="FieldOption.LabelSeparator" /> in a value, which it
+    /// would read as the start of a label. Without them, opening such a schema and saving it would change what its
+    /// activities store, with nothing said. No builder save could ever write one, so no stored version loses its parse.
+    /// </para>
+    /// </remarks>
+    private static IReadOnlyList<FieldOption> ParseOptions(JsonElement element, string fieldKey)
     {
-        if (!element.TryGetProperty(propertyName, out var arrayElement))
+        if (!element.TryGetProperty("options", out var arrayElement))
         {
             return [];
         }
 
-        EnsureArray(arrayElement, $"'{propertyName}' must be an array.");
+        EnsureArray(arrayElement, $"Field '{fieldKey}' options must be an array.");
 
-        return arrayElement
-            .EnumerateArray()
-            .Select(item =>
+        var options = new List<FieldOption>();
+        foreach (var item in arrayElement.EnumerateArray())
+        {
+            var option = item.ValueKind switch
             {
-                if (item.ValueKind != JsonValueKind.String)
-                {
-                    throw new SchemaParseException($"'{propertyName}' entries must be strings.");
-                }
+                JsonValueKind.String => FieldOption.Unlabelled(OptionText(item, fieldKey, "value")),
+                JsonValueKind.Object => ParseLabelledOption(item, fieldKey),
+                _ => throw new SchemaParseException(
+                    $"Field '{fieldKey}' options must be strings or {{ \"value\", \"label\" }} objects.")
+            };
 
-                var value = item.GetString()?.Trim();
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new SchemaParseException($"'{propertyName}' entries must not be empty.");
-                }
+            if (option.Value.IndexOf(FieldOption.LabelSeparator) >= 0)
+            {
+                throw new SchemaParseException(
+                    $"Field '{fieldKey}' option '{option.Value}' holds a '{FieldOption.LabelSeparator}', which the builder " +
+                    "reads as the start of a label. Leave it out of the value; a label may hold one.");
+            }
 
-                return value;
-            })
-            .ToList();
+            if (options.Any(existing => string.Equals(existing.Value, option.Value, StringComparison.Ordinal)))
+            {
+                throw new SchemaParseException(
+                    $"Field '{fieldKey}' offers the value '{option.Value}' twice. Each option must store a value of its own.");
+            }
+
+            options.Add(option);
+        }
+
+        return options;
+    }
+
+    private static FieldOption ParseLabelledOption(JsonElement item, string fieldKey)
+    {
+        EnsureAllowedProperties(item, ["value", "label"], $"an option of field '{fieldKey}'");
+        return new FieldOption(OptionText(item, fieldKey, "value"), OptionText(item, fieldKey, "label"));
+    }
+
+    /// <summary>
+    /// An option's value or label, trimmed: a bare string when <paramref name="item" /> is one, otherwise its
+    /// <paramref name="part" /> property. Every refusal names the field, since an option has no key of its own.
+    /// </summary>
+    private static string OptionText(JsonElement item, string fieldKey, string part)
+    {
+        JsonElement text;
+        if (item.ValueKind == JsonValueKind.String)
+        {
+            text = item;
+        }
+        else if (!item.TryGetProperty(part, out text))
+        {
+            throw new SchemaParseException($"Field '{fieldKey}' has an option with no '{part}'.");
+        }
+
+        if (text.ValueKind != JsonValueKind.String)
+        {
+            throw new SchemaParseException($"Field '{fieldKey}' has an option whose '{part}' is not a string.");
+        }
+
+        var value = text.GetString()?.Trim();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new SchemaParseException(item.ValueKind == JsonValueKind.String
+                ? $"Field '{fieldKey}' options must not be empty."
+                : $"Field '{fieldKey}' has an option whose '{part}' is empty.");
+        }
+
+        if (value.IndexOfAny(['\r', '\n']) >= 0)
+        {
+            throw new SchemaParseException(
+                $"Field '{fieldKey}' has an option whose {part} runs over more than one line. Write it on one line.");
+        }
+
+        return value;
     }
 
     private static FieldType ParseFieldType(string value)

@@ -6,12 +6,12 @@
       "key": "output",
       "title": "Research output",
       "fields": [
-        { "key": "output_type", "type": "choice", "label": "Type", "required": true, "options": ["journal_article", "conference_poster", "oral_presentation", "book_chapter"] },
+        { "key": "output_type", "type": "choice", "label": "Type", "required": true, "options": [{ "value": "journal_article", "label": "Journal article" }, { "value": "conference_poster", "label": "Conference poster" }, { "value": "oral_presentation", "label": "Oral presentation" }, { "value": "book_chapter", "label": "Book chapter" }] },
         { "key": "title", "type": "text", "label": "Title", "required": true },
         { "key": "authors", "type": "longtext", "label": "Authors", "required": true },
         { "key": "venue", "type": "text", "label": "Venue", "required": true },
         { "key": "activity_date", "type": "date", "label": "Date", "required": true },
-        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": ["first_author", "co_author", "senior_author", "presenter"] },
+        { "key": "trainee_role", "type": "choice", "label": "Trainee role", "required": true, "options": [{ "value": "first_author", "label": "First author" }, { "value": "co_author", "label": "Co-author" }, { "value": "senior_author", "label": "Senior author" }, { "value": "presenter", "label": "Presenter" }] },
         { "key": "abstract", "type": "longtext", "label": "Abstract", "required": true },
         { "key": "url_or_doi", "type": "text", "label": "URL or DOI" },
         { "key": "supporting_file", "type": "file", "label": "PDF upload" }

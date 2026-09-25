@@ -41,11 +41,11 @@
           "label": "Documentation reviewed",
           "required": true,
           "options": [
-            "admission_notes",
-            "progress_notes",
-            "referral_letters",
-            "discharge_summary",
-            "prescriptions"
+            { "value": "admission_notes", "label": "Admission notes" },
+            { "value": "progress_notes", "label": "Progress notes" },
+            { "value": "referral_letters", "label": "Referral letters" },
+            { "value": "discharge_summary", "label": "Discharge summary" },
+            { "value": "prescriptions", "label": "Prescriptions" }
           ]
         },
         {
@@ -54,12 +54,12 @@
           "label": "Setting",
           "required": true,
           "options": [
-            "ward",
-            "outpatient_clinic",
-            "emergency_unit",
-            "neonatal_unit",
-            "picu",
-            "community"
+            { "value": "ward", "label": "Ward" },
+            { "value": "outpatient_clinic", "label": "Outpatient clinic" },
+            { "value": "emergency_unit", "label": "Emergency unit" },
+            { "value": "neonatal_unit", "label": "Neonatal unit" },
+            { "value": "picu", "label": "PICU" },
+            { "value": "community", "label": "Community" }
           ]
         },
         {

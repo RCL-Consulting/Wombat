@@ -8,11 +8,11 @@
       "fields": [
         { "key": "procedure_key", "type": "choice", "label": "Procedure", "required": true, "catalogue": "procedure_catalogue" },
         { "key": "performed_on", "type": "date", "label": "Date", "required": true },
-        { "key": "patient_age_band", "type": "choice", "label": "Patient age band", "required": true, "options": ["neonate", "child", "adult", "older_adult"] },
+        { "key": "patient_age_band", "type": "choice", "label": "Patient age band", "required": true, "options": [{ "value": "neonate", "label": "Neonate" }, { "value": "child", "label": "Child" }, { "value": "adult", "label": "Adult" }, { "value": "older_adult", "label": "Older adult" }] },
         { "key": "indication", "type": "longtext", "label": "Indication", "required": true },
-        { "key": "role", "type": "choice", "label": "Role", "required": true, "options": ["primary", "assistant", "observer"] },
-        { "key": "supervision", "type": "choice", "label": "Supervision", "required": true, "options": ["independent", "indirect", "direct"] },
-        { "key": "complication", "type": "choice", "label": "Complication", "required": true, "options": ["none", "minor", "major"] },
+        { "key": "role", "type": "choice", "label": "Role", "required": true, "options": [{ "value": "primary", "label": "Primary operator" }, { "value": "assistant", "label": "Assistant" }, { "value": "observer", "label": "Observer" }] },
+        { "key": "supervision", "type": "choice", "label": "Supervision", "required": true, "options": [{ "value": "independent", "label": "Independent" }, { "value": "indirect", "label": "Indirect" }, { "value": "direct", "label": "Direct" }] },
+        { "key": "complication", "type": "choice", "label": "Complication", "required": true, "options": [{ "value": "none", "label": "None" }, { "value": "minor", "label": "Minor" }, { "value": "major", "label": "Major" }] },
         { "key": "complication_details", "type": "longtext", "label": "Complication details", "show_if": { "field": "complication", "operator": "not_equals", "value": "none" } },
         { "key": "reflection", "type": "longtext", "label": "Reflection" }
       ]

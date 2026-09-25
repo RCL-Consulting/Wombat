@@ -32,8 +32,8 @@
           "label": "Reflecting on",
           "required": true,
           "options": [
-            "challenging_case",
-            "critical_incident"
+            { "value": "challenging_case", "label": "A challenging case" },
+            { "value": "critical_incident", "label": "A critical incident" }
           ]
         },
         {

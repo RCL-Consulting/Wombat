@@ -40,11 +40,11 @@
           "label": "Focus of discussion",
           "required": true,
           "options": [
-            "clinical_reasoning",
-            "investigation_choice",
-            "management_plan",
-            "ethics_and_consent",
-            "escalation_and_safety"
+            { "value": "clinical_reasoning", "label": "Clinical reasoning" },
+            { "value": "investigation_choice", "label": "Choice of investigations" },
+            { "value": "management_plan", "label": "Management plan" },
+            { "value": "ethics_and_consent", "label": "Ethics and consent" },
+            { "value": "escalation_and_safety", "label": "Escalation and safety" }
           ]
         }
       ]

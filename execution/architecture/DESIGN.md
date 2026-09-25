@@ -318,6 +318,13 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   `.form-group` makes its legend read as that field's label, not as the section title. Help text goes inside the
   fieldset, which names it with `aria-describedby`. The checkbox groups on the MSF campaign form (T147) and the
   curriculum item forms (T122) are plain fieldsets with a section-size legend.
+- An option is shown by its label, never by the key it stores (T191): `<option value="picu">PICU</option>`, and a
+  checkbox's id is built from the key, checking it stores the key, and its `<label>` shows the words. A schema option
+  is a bare string only when the string reads as words ("1"); a key is written
+  `{ "value": "admission_notes", "label": "Admission notes" }`, and the builder's Options box takes it as
+  `admission_notes | Admission notes`. The box holds one option per line, and a comma is part of the option, never a
+  separator. The portfolio export prints the label too, except on a scale, where the rung the College prints comes
+  first (T100).
 - A rating scale answered by choosing one point is a `fieldset.form-group` whose `<legend>` is the question (with the
   required `*`), holding a `.scale-choices` list of `.form-check` rows: one radio each, lowest point first, each with its
   own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not

@@ -41,9 +41,9 @@
           "label": "How the case was selected",
           "required": true,
           "options": [
-            "chosen_at_random_by_assessor",
-            "drawn_at_random_from_a_list",
-            "other"
+            { "value": "chosen_at_random_by_assessor", "label": "Chosen at random by the assessor" },
+            { "value": "drawn_at_random_from_a_list", "label": "Drawn at random from a list" },
+            { "value": "other", "label": "Other" }
           ],
           "help_text": "A random case analysis only works if you did not pick the case."
         },
@@ -53,12 +53,12 @@
           "label": "Setting",
           "required": true,
           "options": [
-            "ward",
-            "outpatient_clinic",
-            "emergency_unit",
-            "neonatal_unit",
-            "picu",
-            "community"
+            { "value": "ward", "label": "Ward" },
+            { "value": "outpatient_clinic", "label": "Outpatient clinic" },
+            { "value": "emergency_unit", "label": "Emergency unit" },
+            { "value": "neonatal_unit", "label": "Neonatal unit" },
+            { "value": "picu", "label": "PICU" },
+            { "value": "community", "label": "Community" }
           ]
         }
       ]

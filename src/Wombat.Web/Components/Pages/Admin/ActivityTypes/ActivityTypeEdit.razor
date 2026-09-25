@@ -277,8 +277,11 @@
                   }
                   else
                   {
-                    <FormField Label="Options" InputId="field-options" FullWidth="true">
-                      <textarea id="field-options" class="form-control" rows="4" @bind="selectedField.OptionsText"></textarea>
+                    @* One option per line, a comma part of it. "value | Label" shows the label and stores the value
+                       (T191); a bare line is its own label. The help text says so, since nothing else on the page does. *@
+                    <FormField Label="Options" InputId="field-options" FullWidth="true"
+                               HelpText="One option per line; a comma is part of the option. Write value | Label to show a label: the form shows the label, and the activity stores the value.">
+                      <textarea id="field-options" class="form-control" rows="4" aria-describedby="@Wombat.Web.Components.Shared.FormField.HelpTextId("field-options")" @bind="selectedField.OptionsText"></textarea>
                     </FormField>
                     <FormField Label="Catalogue key" InputId="field-catalogue">
                       <input id="field-catalogue" class="form-control" @bind="selectedField.CatalogueKey" />

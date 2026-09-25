@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -129,18 +130,10 @@ internal static class ActivitiesSectionComponent
 
             foreach (var field in section.Fields)
             {
-                var value = GetFieldValue(data, field.Key);
+                var value = FieldValueText(field, data, rungLabels);
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     continue;
-                }
-
-                // T100: a Scale field holds the ordinal, which is the comparison key and not the rung.
-                // Print the rung the College prints. Falls back to the stored number when the ladder
-                // does not resolve — which is the pre-T100 rendering, not a blank.
-                if (field.Type == FieldType.Scale && int.TryParse(value, out var order))
-                {
-                    value = rungLabels.FormatByScaleKey(field.ScaleKey, order);
                 }
 
                 column.Item().PaddingLeft(8).Text(text =>
@@ -183,14 +176,52 @@ internal static class ActivitiesSectionComponent
         }
     }
 
-    private static string? GetFieldValue(JsonElement data, string fieldKey)
+    /// <summary>
+    /// A field's stored value as the page prints it: a scale's ordinal as its rung, a chosen option by its label,
+    /// several by theirs, anything else as stored (T100, T191).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A Scale field holds the ordinal, which is the comparison key and not the rung, so the rung the College prints comes
+    /// first (T100). It is read from the stored value, whatever JSON kind carries it: the form stores <c>"3"</c>, other
+    /// writers <c>3</c>, and the two must print alike. Only when no rung resolves does the option's label, and then the
+    /// ordinal itself, stand in, which is the pre-T100 rendering, not a blank.
+    /// </para>
+    /// <para>
+    /// The form shows an option's label and the stored key never; printing the key here would make the export the one
+    /// place a committee reads <c>admission_notes</c>. A value no option of the pinned version declares prints as stored.
+    /// </para>
+    /// </remarks>
+    internal static string? FieldValueText(FormField field, JsonElement data, EntrustmentRungLookup rungLabels)
     {
-        if (!data.TryGetProperty(fieldKey, out var element))
+        if (!data.TryGetProperty(field.Key, out var element))
         {
             return null;
         }
 
-        return FormatJsonValue(element);
+        if (field.Type == FieldType.Scale &&
+            element.ValueKind is JsonValueKind.Number or JsonValueKind.String &&
+            int.TryParse(FormatJsonValue(element), NumberStyles.Integer, CultureInfo.InvariantCulture, out var order))
+        {
+            var ordinal = order.ToString(CultureInfo.InvariantCulture);
+            return rungLabels.Find(rungLabels.ResolveScaleKey(field.ScaleKey), order) ?? field.LabelFor(ordinal);
+        }
+
+        if (field.Options.Count == 0)
+        {
+            return FormatJsonValue(element);
+        }
+
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => field.LabelFor(element.GetString() ?? string.Empty),
+            JsonValueKind.Array => string.Join(
+                ", ",
+                element.EnumerateArray().Select(item => item.ValueKind == JsonValueKind.String
+                    ? field.LabelFor(item.GetString() ?? string.Empty)
+                    : item.GetRawText())),
+            _ => FormatJsonValue(element)
+        };
     }
 
     private static string? FormatJsonValue(JsonElement element) => element.ValueKind switch

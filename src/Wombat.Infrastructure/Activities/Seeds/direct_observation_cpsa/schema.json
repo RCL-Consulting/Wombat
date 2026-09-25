@@ -34,12 +34,12 @@
           "label": "Activity observed",
           "required": true,
           "options": [
-            "ward_round",
-            "handover",
-            "family_meeting",
-            "resuscitation",
-            "teaching_session",
-            "multidisciplinary_meeting"
+            { "value": "ward_round", "label": "Ward round" },
+            { "value": "handover", "label": "Handover" },
+            { "value": "family_meeting", "label": "Family meeting" },
+            { "value": "resuscitation", "label": "Resuscitation" },
+            { "value": "teaching_session", "label": "Teaching session" },
+            { "value": "multidisciplinary_meeting", "label": "Multidisciplinary meeting" }
           ]
         },
         {

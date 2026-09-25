@@ -370,6 +370,39 @@ public sealed class SeedRoundTripTests
         };
 
     /// <summary>
+    /// T191 gave an option a <c>label</c>. Named for the same reason as the properties above: a Serialize that wrote only
+    /// the value would publish every seed's options as bare keys, and the form would show <c>admission_notes</c> again.
+    /// </summary>
+    [Fact]
+    public void OptionLabel_SurvivesParseSerializeParse()
+    {
+        const string schemaJson = """
+            {
+              "version": 1,
+              "sections": [
+                {
+                  "key": "case",
+                  "title": "Case",
+                  "fields": [
+                    {
+                      "key": "setting", "type": "choice", "label": "Setting",
+                      "options": [ { "value": "picu", "label": "PICU" }, "ward" ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var canonical = FormSchemaParser.Serialize(FormSchemaParser.Parse(schemaJson));
+
+        FormSchemaParser.Parse(canonical).Sections[0].Fields[0].Options
+            .Should().Equal(new FieldOption("picu", "PICU"), FieldOption.Unlabelled("ward"));
+        FormSchemaParser.Serialize(FormSchemaParser.Parse(canonical)).Should().Be(canonical, "a label must canonicalise to a fixed point");
+        AssertNothingLost(schemaJson, canonical, "option label fixture");
+    }
+
+    /// <summary>
     /// The no-loss assertion is only worth having if it actually fails when a property is dropped.
     /// </summary>
     [Fact]

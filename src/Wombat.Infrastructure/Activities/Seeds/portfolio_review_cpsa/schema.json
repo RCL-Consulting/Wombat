@@ -72,11 +72,11 @@
           "required": true,
           "help_text": "What you read. Feedback and reflective entries are in the portfolio export; the logbook, teaching sessions and journal club presentations come from the records the trainee brings.",
           "options": [
-            "teaching_sessions",
-            "journal_club_presentations",
-            "feedback_received",
-            "reflective_entries",
-            "logbook"
+            { "value": "teaching_sessions", "label": "Teaching sessions" },
+            { "value": "journal_club_presentations", "label": "Journal club presentations" },
+            { "value": "feedback_received", "label": "Feedback received" },
+            { "value": "reflective_entries", "label": "Reflective entries" },
+            { "value": "logbook", "label": "Logbook" }
           ]
         },
         {

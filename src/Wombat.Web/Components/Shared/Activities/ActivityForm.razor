@@ -429,10 +429,12 @@ else if (_schema is not null)
       return listed;
     }
 
+    // The value is what the control posts and the activity stores; the label is what the reader sees. A schema's key
+    // (`admission_notes`) is never shown as though it were words (T191).
     if (field.Options.Count > 0)
     {
       return field.Options
-        .Select(option => new ActivityCatalogueOption(option, option))
+        .Select(option => new ActivityCatalogueOption(option.Value, option.Label))
         .ToArray();
     }
 
