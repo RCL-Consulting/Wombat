@@ -56,7 +56,7 @@ A WBA is an observation of a trainee doing an EPA (or part of one), scored again
 
 In the rewrite, this cleans up to:
 
-- `AssessmentForm` — unchanged conceptually; belongs to Institution/Speciality/SubSpeciality; defines option criteria; references which EPAs are valid for this form.
+- ~~`AssessmentForm`~~ — superseded by the activity platform: an activity type carries its own form (`SchemaJson`), and which instrument may assess which EPA is the curriculum item's tool list (T122). The legacy entity and its EPA links were retired in T145 (2026-09-25).
 - `Assessment` (was `LoggedAssessment`) — the aggregate. Exists in one of: `Requested`, `Accepted`, `Declined`, `Cancelled`, `Completed`. Has a collection of `CriterionResponse`. State transitions are methods on the aggregate, not service methods.
 - The workflow aggregate absorbs `AssessmentRequest` and `AssessmentEvent`. The state machine lives in `Assessment` itself; events are produced as a by-product of state transitions and stored for audit.
 
@@ -91,7 +91,7 @@ Wombat currently declares nine roles. In the rewrite, keep all nine but document
 |---|---|---|
 | **Administrator** | Global | Everything. Single superuser, seeded on first run. |
 | **InstitutionalAdmin** | One institution | Manage users within their institution; approve Specialities and SubSpecialities for that institution. |
-| **SpecialityAdmin** | One speciality within an institution | Define curricula, approve assessment forms, approve STAR reflections for the speciality. |
+| **SpecialityAdmin** | One speciality within an institution | Define curricula, approve STAR reflections for the speciality. |
 | **SubSpecialityAdmin** | One sub-speciality | Like SpecialityAdmin, scoped one level down. |
 | **Coordinator** | An institution or speciality | Operational role: invite users, reassign assessments, nudge stalled requests. No curriculum editing. |
 | **CommitteeMember** | A speciality | Read-only oversight plus final sign-off on trainee progression. Cannot edit forms or curricula. |
@@ -162,5 +162,5 @@ This is a deliberate split. The platform is code; the content is data. Trying to
 - **CurriculumItem** — One requirement row within a curriculum.
 - **STAR** — Situation-Task-Action-Result. A structured reflection framework.
 - **Entrustment level** — How much supervision is needed; 1 (observe only) to 5 (can supervise others).
-- **Form** — Assessment form / rubric.
+- **Form** — An activity type's form: its schema (`SchemaJson`), rendered at runtime. The legacy `AssessmentForm` was retired in T145.
 - **CriterionResponse** — One answer on a filled-in form.

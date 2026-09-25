@@ -103,7 +103,7 @@ Grouped in the order § 4 recommends. A `+` joins tasks that land in one change;
 | [T141] · P3 | A trainee cannot reach My progress from the navigation | READY | S | — |
 | [T142] · P3 | Activity pages print raw user ids where people's names belong | READY | S | — |
 | [T144] · P3 | Classify rated evidence by `WbaToolKey` and retire the hard-coded family list | READY | S | — |
-| [T145] · P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restricts nothing | READY | S | — |
+| [T145] · P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restricts nothing | **DONE 2026-09-25** (`aa2b569`): the forms feature is retired | S | — |
 | [T147] · P3 | CampaignEdit's "Evidence for these EPAs" label points at no element | READY | S (inferred) | — |
 | [T151] · P3 | The assessor nudge job emails deactivated and opted-out nominees | READY | S (inferred) | — |
 | [T158] · P3 | Deactivating an EPA takes it out of the picker but not off the progress page, and credit still applies ([T104]'s step 2) | READY | S (inferred) | — |
