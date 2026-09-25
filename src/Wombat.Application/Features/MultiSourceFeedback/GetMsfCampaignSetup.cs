@@ -14,7 +14,9 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// </summary>
 /// <remarks>
 /// Null for both, as <see cref="GetCampaignAggregateReportQuery" /> answers (T113): the page is reached by a campaign id
-/// in the address bar. Nothing that names a respondent is read: no address, and no row per invitee (see
+/// in the address bar. Who runs it is <see cref="MsfCampaignRules.IsSubjectInScopeAsync" />, so never the trainee it is
+/// about, whose own role would otherwise show them each group's responses coming in before release, and never anyone
+/// who holds Trainee (T224). Nothing that names a respondent is read: no address, and no row per invitee (see
 /// <see cref="MsfCampaignSetupDto.Invitees" />).
 /// </remarks>
 public sealed record GetMsfCampaignSetupQuery(int CampaignId, ClaimsPrincipal Principal) : IRequest<MsfCampaignSetupDto?>;

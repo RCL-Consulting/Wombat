@@ -9,7 +9,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 /// <summary>
 /// The campaigns this caller runs: every campaign for an Administrator, the campaigns about trainees at their own
-/// institution for a Coordinator, and none for anyone else. (T113)
+/// institution for a Coordinator, and none for anyone else; never a campaign about the caller, and none for anyone who
+/// holds Trainee (<see cref="MsfCampaignRules.WhereRunBy" />). (T113, T224)
 /// </summary>
 /// <remarks>
 /// This took no parameters at all until T113, and every coordinator in the country saw every campaign in every

@@ -103,6 +103,12 @@ public sealed class MsfCampaignScopePostgresTests : IAsyncLifetime
                 (await ListAsync(db, Coordinator(elsewhere))).Should().BeEquivalentTo([other, twoProfiles]);
                 (await ListAsync(db, Administrator())).Should().BeEquivalentTo([single, other, twoProfiles, unadmitted]);
 
+                // T224, in SQL too: never a campaign about the caller, and none for anyone who holds Trainee.
+                (await ListAsync(db, Coordinator(elsewhere, userId: "trainee-two"))).Should().BeEquivalentTo([other]);
+                (await ListAsync(db, Administrator(userId: "trainee-else")))
+                    .Should().BeEquivalentTo([single, twoProfiles, unadmitted]);
+                (await ListAsync(db, Coordinator(host, userId: "coordinator-registrar", alsoTrainee: true))).Should().BeEmpty();
+
                 // The single-campaign check reads the same definition, so it agrees with the list row for row.
                 (await TraineeScopeResolver.ResolveAsync(db, "trainee-two", CancellationToken.None))!
                     .InstitutionId.Should().Be(elsewhere);
@@ -239,21 +245,22 @@ public sealed class MsfCampaignScopePostgresTests : IAsyncLifetime
         return campaign.Id;
     }
 
-    private static ClaimsPrincipal Coordinator(int institutionId)
+    private static ClaimsPrincipal Coordinator(int institutionId, string? userId = null, bool alsoTrainee = false)
         => new(new ClaimsIdentity(
             [
-                new Claim(ClaimTypes.NameIdentifier, $"coordinator-{institutionId}"),
+                new Claim(ClaimTypes.NameIdentifier, userId ?? $"coordinator-{institutionId}"),
                 new Claim(ClaimTypes.Role, WombatRoles.Coordinator),
+                .. alsoTrainee ? [new Claim(ClaimTypes.Role, WombatRoles.Trainee)] : Array.Empty<Claim>(),
                 new Claim(WombatClaimTypes.InstitutionId, institutionId.ToString(System.Globalization.CultureInfo.InvariantCulture))
             ],
             "IntegrationTest",
             ClaimTypes.Name,
             ClaimTypes.Role));
 
-    private static ClaimsPrincipal Administrator()
+    private static ClaimsPrincipal Administrator(string userId = "admin-1")
         => new(new ClaimsIdentity(
             [
-                new Claim(ClaimTypes.NameIdentifier, "admin-1"),
+                new Claim(ClaimTypes.NameIdentifier, userId),
                 new Claim(ClaimTypes.Role, WombatRoles.Administrator)
             ],
             "IntegrationTest",

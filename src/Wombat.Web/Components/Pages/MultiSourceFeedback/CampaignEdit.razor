@@ -13,6 +13,14 @@
 
 <PageHeader Title="MSF campaign" Subtitle="Create a campaign, add respondents, then open the anonymous response window." />
 
+@* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224).
+   Standing content, in the words a create refusal gives: the create form is not shown to them, and a campaign's page
+   answers them with its "Campaign unavailable" card, which alone would not say why. *@
+@if (_runsNoCampaigns is true)
+{
+  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@MsfCampaignRules.TraineeRunsNoCampaigns</Alert>
+}
+
 @* What an action did. Given the focus whenever the button that acted is gone (T217): after an open or a withdraw, and
    after an invitee add refused because the campaign left its draft elsewhere. The focus would otherwise fall to the
    page, as on the campaign list (T206 review). *@
@@ -60,231 +68,234 @@
     </EditForm>
   </section>
 
-  <section class="detail-card">
-    <h3>@(CampaignId.HasValue ? "Campaign details" : "Create campaign")</h3>
-    @if (!CampaignId.HasValue)
-    {
-      <EditForm Model="_campaign" OnValidSubmit="CreateCampaignAsync" FormName="msf-campaign">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-        <div class="form-grid">
-          <FormField Label="Trainee" InputId="msf-subject" Required="true">
-            <InputSelect id="msf-subject" class="form-select" @bind-Value="_campaign.SubjectUserId" @bind-Value:after="LoadEpaOptionsAsync">
-              <option value="">Select trainee</option>
-              @foreach (var trainee in _trainees)
-              {
-                <option value="@trainee.UserId">@TraineeLabel(trainee)</option>
-              }
-            </InputSelect>
-          </FormField>
-          <FormField Label="Template" InputId="msf-template-id" Required="true">
-            <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId" @bind-Value:after="OnCampaignTemplateChangedAsync">
-              <option value="">Select template</option>
-              @foreach (var template in _templates)
-              {
-                <option value="@template.Id">@TemplateLabel(template)</option>
-              }
-            </InputSelect>
-          </FormField>
-          <FormField Label="Opens on" InputId="msf-opens" Required="true">
-            <InputDate id="msf-opens" class="form-control" @bind-Value="_campaign.OpensOn" />
-          </FormField>
-          <FormField Label="Closes on" InputId="msf-closes" Required="true">
-            <InputDate id="msf-closes" class="form-control" @bind-Value="_campaign.ClosesOn" />
-          </FormField>
-          <FormField Label="Minimum responses" InputId="msf-min-responses" Required="true">
-            <InputNumber id="msf-min-responses" class="form-control" @bind-Value="_campaign.MinimumResponses" />
-          </FormField>
-          <FormField Label="Minimum category responses" InputId="msf-min-category" Required="true">
-            <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
-          </FormField>
-          <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
-                     HelpText="@MinimumCategoriesHelp">
-            <InputNumber id="msf-min-category-count" class="form-control" aria-describedby="@FieldHelp.Id("msf-min-category-count")" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
-          </FormField>
-          @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
-             names the group (DESIGN.md § Form system, T147). *@
-          <fieldset class="full-width" aria-describedby="msf-epas-help">
-            <legend>
-              Evidence for these EPAs
-              <span aria-hidden="true">*</span>
-              <span class="visually-hidden">required</span>
-            </legend>
-            <p id="msf-epas-help" class="muted">@EpasHelp</p>
-            @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
-            {
-              <p class="page-subtitle">Select a trainee first.</p>
-            }
-            else if (_epaOptions.Count == 0)
-            {
-              <p class="page-subtitle">@NoEpasText</p>
-            }
-            else
-            {
-              <div class="check-grid">
-                @foreach (var epa in _epaOptions)
+  @if (CampaignId.HasValue || _runsNoCampaigns is false)
+  {
+    <section class="detail-card">
+      <h3>@(CampaignId.HasValue ? "Campaign details" : "Create campaign")</h3>
+      @if (!CampaignId.HasValue)
+      {
+        <EditForm Model="_campaign" OnValidSubmit="CreateCampaignAsync" FormName="msf-campaign">
+          <DataAnnotationsValidator />
+          <ValidationSummary class="validation-summary-errors" />
+          <div class="form-grid">
+            <FormField Label="Trainee" InputId="msf-subject" Required="true">
+              <InputSelect id="msf-subject" class="form-select" @bind-Value="_campaign.SubjectUserId" @bind-Value:after="LoadEpaOptionsAsync">
+                <option value="">Select trainee</option>
+                @foreach (var trainee in _trainees)
                 {
-                  <div class="form-check">
-                    <input
-                      id="@($"msf-epa-{epa.Value}")"
-                      class="form-check-input"
-                      type="checkbox"
-                      checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
-                      @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
-                    <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
-                  </div>
+                  <option value="@trainee.UserId">@TraineeLabel(trainee)</option>
                 }
-              </div>
-            }
-          </fieldset>
-        </div>
-        <FormActions>
-          <button type="submit" class="btn btn-primary">Create campaign</button>
-        </FormActions>
-      </EditForm>
-    }
-    else
-    {
-      @* The campaign as it is now, and only what its state allows (T217). Until T217 this card showed the draft's invitee
-         form and its Open button in every state, so a campaign just opened still offered Open, and no state showed who
-         had been invited. *@
-      <StatePanel IsLoading="_setupLoading" IsEmpty="@(_setup is null)" SkeletonCount="3"
-                  EmptyTitle="Campaign unavailable" EmptyBody="The selected campaign could not be loaded.">
-        @if (_setup is { } setup)
-        {
-          <dl class="details-list">
-            <div><dt>Trainee</dt><dd>@(setup.SubjectName ?? "Not recorded")</dd></div>
-            <div><dt>Template</dt><dd>@setup.TemplateName (@MsfEvidenceKinds.Describe(setup.Kind))</dd></div>
-            <div>
-              <dt>State</dt>
-              <dd><span id="msf-campaign-state" class="badge @MsfCampaignText.StateBadge(setup.State)">@MsfCampaignText.State(setup.State)</span></dd>
-            </div>
-            <div><dt>Response window</dt><dd>@setup.OpensOn.ToString("yyyy-MM-dd") to @setup.ClosesOn.ToString("yyyy-MM-dd")</dd></div>
-          </dl>
-          <p id="msf-campaign-state-note">@StateNote(setup)</p>
-
-          @* Counted by respondent group, never a row per invitee (MsfCampaignSetupDto.Invitees, T217): the coordinator
-             knows which row is whom, so a "responded" mark on one row would name the author of the comment that has
-             just appeared on the report. A draft has no responses, so it has no Responded column. *@
-          <h4 id="msf-invitees-heading">Invitees</h4>
-          @if (setup.Invitees.Count == 0)
-          {
-            <p id="msf-invitees-none" class="muted">@(setup.State == MsfCampaignState.Draft ? "Nobody has been invited yet." : "Nobody was invited.")</p>
-          }
-          else
-          {
-            @* Says what the page does, and no more (T217 review): it cannot promise that no answer is traceable, since a
-               campaign may set its category threshold at one, and then its report shows a one-person group's answers. *@
-            <p id="msf-invitees-note" class="muted">Counted by respondent group. This page never lists who was invited or which of them responded.</p>
-            <div class="table-container shadow">
-              <table class="clinic-table" aria-labelledby="msf-invitees-heading" aria-describedby="msf-invitees-note">
-                <thead>
-                  <tr>
-                    <th scope="col">Respondent group</th>
-                    <th scope="col">Invited</th>
-                    @if (ShowsResponses(setup))
-                    {
-                      <th scope="col">Responded</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach (var group in setup.Invitees)
-                  {
-                    <tr>
-                      <th scope="row">@MsfRespondentCategories.Describe(group.Category)</th>
-                      <td>@group.Invited</td>
-                      @if (ShowsResponses(setup))
-                      {
-                        <td>@group.Responded</td>
-                      }
-                    </tr>
-                  }
-                </tbody>
-                @if (setup.Invitees.Count > 1)
+              </InputSelect>
+            </FormField>
+            <FormField Label="Template" InputId="msf-template-id" Required="true">
+              <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId" @bind-Value:after="OnCampaignTemplateChangedAsync">
+                <option value="">Select template</option>
+                @foreach (var template in _templates)
                 {
-                  <tfoot>
-                    <tr>
-                      <th scope="row">All groups</th>
-                      <td>@setup.Invitees.Sum(group => group.Invited)</td>
-                      @if (ShowsResponses(setup))
-                      {
-                        <td>@setup.Invitees.Sum(group => group.Responded)</td>
-                      }
-                    </tr>
-                  </tfoot>
+                  <option value="@template.Id">@TemplateLabel(template)</option>
                 }
-              </table>
-            </div>
-          }
-
-          @if (setup.State == MsfCampaignState.Draft)
-          {
-            <h4>Add an invitee</h4>
-            <EditForm Model="_invitee" OnValidSubmit="AddInviteeAsync" FormName="msf-invitee">
-              <DataAnnotationsValidator />
-              <ValidationSummary class="validation-summary-errors" />
-              <div class="form-grid">
-                <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
-                  <InputText @ref="_emailInput" id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
-                </FormField>
-                @* Only the categories this campaign's questionnaire accepts, which the invite command holds it to (T164),
-                   each by its label (T191, T217). *@
-                <FormField Label="Category" InputId="msf-respondent-category" Required="true">
-                  <InputSelect id="msf-respondent-category" class="form-select" @bind-Value="_invitee.Category">
-                    @foreach (var category in AcceptedCategories)
-                    {
-                      <option value="@category">@MsfRespondentCategories.Describe(category)</option>
-                    }
-                  </InputSelect>
-                </FormField>
-                @if (_invitee.Category == MsfRespondentCategory.Learner)
-                {
-                  <FormField Label="Teaching context" InputId="msf-teaching-context" Required="true"
-                             HelpText="Where this learner was taught, for example a ward round or a student tutorial. Describe the session, never a person. Type it the same way for each learner of one group: the report counts how many distinct contexts responded. Only this campaign's report names them; the trainee and the committee see the count.">
-                    <InputText id="msf-teaching-context" class="form-control" maxlength="200" aria-describedby="@FieldHelp.Id("msf-teaching-context")" @bind-Value="_invitee.TeachingContext" />
-                  </FormField>
-                }
-              </div>
-              @* Disabled while an open or a withdraw is in flight (T202, T217). An invitee added mid-open would be left out
-                 of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
-                 another tab is refused, or refuses the open, at the save (T206). Not disabled by its own add: it may hold
-                 the focus, which a refusal on a draft leaves where it was (T217); a second press while the add runs sends
-                 nothing (AddInviteeAsync, T228 review). *@
-              <FormActions>
-                <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing)">Add invitee</button>
-              </FormActions>
-            </EditForm>
-          }
-
-          @* What the state allows, and nothing else (T217): a draft opens or is withdrawn; an open campaign is withdrawn
-             here or closed on its report, where its responses are; one under review is released on its report; a
-             released campaign's report is there to read; a withdrawn campaign offers nothing. Withdraw is offered where
-             the campaign list offers it (T206). *@
-          @if (setup.State != MsfCampaignState.Withdrawn)
-          {
-            <FormActions>
-              @if (CanWithdraw(setup))
+              </InputSelect>
+            </FormField>
+            <FormField Label="Opens on" InputId="msf-opens" Required="true">
+              <InputDate id="msf-opens" class="form-control" @bind-Value="_campaign.OpensOn" />
+            </FormField>
+            <FormField Label="Closes on" InputId="msf-closes" Required="true">
+              <InputDate id="msf-closes" class="form-control" @bind-Value="_campaign.ClosesOn" />
+            </FormField>
+            <FormField Label="Minimum responses" InputId="msf-min-responses" Required="true">
+              <InputNumber id="msf-min-responses" class="form-control" @bind-Value="_campaign.MinimumResponses" />
+            </FormField>
+            <FormField Label="Minimum category responses" InputId="msf-min-category" Required="true">
+              <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
+            </FormField>
+            <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
+                       HelpText="@MinimumCategoriesHelp">
+              <InputNumber id="msf-min-category-count" class="form-control" aria-describedby="@FieldHelp.Id("msf-min-category-count")" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
+            </FormField>
+            @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
+               names the group (DESIGN.md § Form system, T147). *@
+            <fieldset class="full-width" aria-describedby="msf-epas-help">
+              <legend>
+                Evidence for these EPAs
+                <span aria-hidden="true">*</span>
+                <span class="visually-hidden">required</span>
+              </legend>
+              <p id="msf-epas-help" class="muted">@EpasHelp</p>
+              @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
               {
-                <button id="msf-withdraw-campaign" type="button" class="btn btn-outline" disabled="@Busy" @onclick="AskWithdrawAsync">Withdraw campaign</button>
+                <p class="page-subtitle">Select a trainee first.</p>
               }
-              @if (setup.State == MsfCampaignState.Draft)
+              else if (_epaOptions.Count == 0)
               {
-                @* Disabled while an open is in flight (T202): a second open would mail every respondent a second link. *@
-                <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@Busy" @onclick="OpenCampaignAsync">
-                  @(_opening ? "Opening campaign…" : "Open campaign")
-                </button>
+                <p class="page-subtitle">@NoEpasText</p>
               }
               else
               {
-                <a id="msf-campaign-report" class="btn btn-primary" href="@($"/msf/reports/{setup.CampaignId}")">@ReportLinkLabel(setup.State)</a>
+                <div class="check-grid">
+                  @foreach (var epa in _epaOptions)
+                  {
+                    <div class="form-check">
+                      <input
+                        id="@($"msf-epa-{epa.Value}")"
+                        class="form-check-input"
+                        type="checkbox"
+                        checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
+                        @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
+                      <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
+                    </div>
+                  }
+                </div>
               }
-            </FormActions>
+            </fieldset>
+          </div>
+          <FormActions>
+            <button type="submit" class="btn btn-primary">Create campaign</button>
+          </FormActions>
+        </EditForm>
+      }
+      else
+      {
+        @* The campaign as it is now, and only what its state allows (T217). Until T217 this card showed the draft's invitee
+           form and its Open button in every state, so a campaign just opened still offered Open, and no state showed who
+           had been invited. *@
+        <StatePanel IsLoading="_setupLoading" IsEmpty="@(_setup is null)" SkeletonCount="3"
+                    EmptyTitle="Campaign unavailable" EmptyBody="The selected campaign could not be loaded.">
+          @if (_setup is { } setup)
+          {
+            <dl class="details-list">
+              <div><dt>Trainee</dt><dd>@(setup.SubjectName ?? "Not recorded")</dd></div>
+              <div><dt>Template</dt><dd>@setup.TemplateName (@MsfEvidenceKinds.Describe(setup.Kind))</dd></div>
+              <div>
+                <dt>State</dt>
+                <dd><span id="msf-campaign-state" class="badge @MsfCampaignText.StateBadge(setup.State)">@MsfCampaignText.State(setup.State)</span></dd>
+              </div>
+              <div><dt>Response window</dt><dd>@setup.OpensOn.ToString("yyyy-MM-dd") to @setup.ClosesOn.ToString("yyyy-MM-dd")</dd></div>
+            </dl>
+            <p id="msf-campaign-state-note">@StateNote(setup)</p>
+
+            @* Counted by respondent group, never a row per invitee (MsfCampaignSetupDto.Invitees, T217): the coordinator
+               knows which row is whom, so a "responded" mark on one row would name the author of the comment that has
+               just appeared on the report. A draft has no responses, so it has no Responded column. *@
+            <h4 id="msf-invitees-heading">Invitees</h4>
+            @if (setup.Invitees.Count == 0)
+            {
+              <p id="msf-invitees-none" class="muted">@(setup.State == MsfCampaignState.Draft ? "Nobody has been invited yet." : "Nobody was invited.")</p>
+            }
+            else
+            {
+              @* Says what the page does, and no more (T217 review): it cannot promise that no answer is traceable, since a
+                 campaign may set its category threshold at one, and then its report shows a one-person group's answers. *@
+              <p id="msf-invitees-note" class="muted">Counted by respondent group. This page never lists who was invited or which of them responded.</p>
+              <div class="table-container shadow">
+                <table class="clinic-table" aria-labelledby="msf-invitees-heading" aria-describedby="msf-invitees-note">
+                  <thead>
+                    <tr>
+                      <th scope="col">Respondent group</th>
+                      <th scope="col">Invited</th>
+                      @if (ShowsResponses(setup))
+                      {
+                        <th scope="col">Responded</th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach (var group in setup.Invitees)
+                    {
+                      <tr>
+                        <th scope="row">@MsfRespondentCategories.Describe(group.Category)</th>
+                        <td>@group.Invited</td>
+                        @if (ShowsResponses(setup))
+                        {
+                          <td>@group.Responded</td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                  @if (setup.Invitees.Count > 1)
+                  {
+                    <tfoot>
+                      <tr>
+                        <th scope="row">All groups</th>
+                        <td>@setup.Invitees.Sum(group => group.Invited)</td>
+                        @if (ShowsResponses(setup))
+                        {
+                          <td>@setup.Invitees.Sum(group => group.Responded)</td>
+                        }
+                      </tr>
+                    </tfoot>
+                  }
+                </table>
+              </div>
+            }
+
+            @if (setup.State == MsfCampaignState.Draft)
+            {
+              <h4>Add an invitee</h4>
+              <EditForm Model="_invitee" OnValidSubmit="AddInviteeAsync" FormName="msf-invitee">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="validation-summary-errors" />
+                <div class="form-grid">
+                  <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
+                    <InputText @ref="_emailInput" id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
+                  </FormField>
+                  @* Only the categories this campaign's questionnaire accepts, which the invite command holds it to (T164),
+                     each by its label (T191, T217). *@
+                  <FormField Label="Category" InputId="msf-respondent-category" Required="true">
+                    <InputSelect id="msf-respondent-category" class="form-select" @bind-Value="_invitee.Category">
+                      @foreach (var category in AcceptedCategories)
+                      {
+                        <option value="@category">@MsfRespondentCategories.Describe(category)</option>
+                      }
+                    </InputSelect>
+                  </FormField>
+                  @if (_invitee.Category == MsfRespondentCategory.Learner)
+                  {
+                    <FormField Label="Teaching context" InputId="msf-teaching-context" Required="true"
+                               HelpText="Where this learner was taught, for example a ward round or a student tutorial. Describe the session, never a person. Type it the same way for each learner of one group: the report counts how many distinct contexts responded. Only this campaign's report names them; the trainee and the committee see the count.">
+                      <InputText id="msf-teaching-context" class="form-control" maxlength="200" aria-describedby="@FieldHelp.Id("msf-teaching-context")" @bind-Value="_invitee.TeachingContext" />
+                    </FormField>
+                  }
+                </div>
+                @* Disabled while an open or a withdraw is in flight (T202, T217). An invitee added mid-open would be left out
+                   of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
+                   another tab is refused, or refuses the open, at the save (T206). Not disabled by its own add: it may hold
+                   the focus, which a refusal on a draft leaves where it was (T217); a second press while the add runs sends
+                   nothing (AddInviteeAsync, T228 review). *@
+                <FormActions>
+                  <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing)">Add invitee</button>
+                </FormActions>
+              </EditForm>
+            }
+
+            @* What the state allows, and nothing else (T217): a draft opens or is withdrawn; an open campaign is withdrawn
+               here or closed on its report, where its responses are; one under review is released on its report; a
+               released campaign's report is there to read; a withdrawn campaign offers nothing. Withdraw is offered where
+               the campaign list offers it (T206). *@
+            @if (setup.State != MsfCampaignState.Withdrawn)
+            {
+              <FormActions>
+                @if (CanWithdraw(setup))
+                {
+                  <button id="msf-withdraw-campaign" type="button" class="btn btn-outline" disabled="@Busy" @onclick="AskWithdrawAsync">Withdraw campaign</button>
+                }
+                @if (setup.State == MsfCampaignState.Draft)
+                {
+                  @* Disabled while an open is in flight (T202): a second open would mail every respondent a second link. *@
+                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@Busy" @onclick="OpenCampaignAsync">
+                    @(_opening ? "Opening campaign…" : "Open campaign")
+                  </button>
+                }
+                else
+                {
+                  <a id="msf-campaign-report" class="btn btn-primary" href="@($"/msf/reports/{setup.CampaignId}")">@ReportLinkLabel(setup.State)</a>
+                }
+              </FormActions>
+            }
           }
-        }
-      </StatePanel>
-    }
-  </section>
+        </StatePanel>
+      }
+    </section>
+  }
 </div>
 
 @if (CampaignId.HasValue)
@@ -350,8 +361,15 @@
   private CampaignFormModel _campaign = new();
   private InviteeFormModel _invitee = new();
 
+  /// <summary>
+  /// Whether the caller runs no campaign at all (<see cref="MsfCampaignRules.RunsNoCampaigns" />, T224); null until the
+  /// caller is known, so the create form is not shown to someone who is about to be told they cannot use it.
+  /// </summary>
+  private bool? _runsNoCampaigns;
+
   protected override async Task OnInitializedAsync()
   {
+    _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(await GetPrincipalAsync());
     await LoadTemplatesAsync();
     await LoadTraineesAsync();
   }
@@ -539,10 +557,26 @@
     _templates.AddRange(await Sender.Send(new ListMsfTemplatesQuery()));
   }
 
+  /// <summary>
+  /// The trainee profiles at the caller's institution, less the ones <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" />
+  /// keeps the caller from, whoever else they are (T224): never the caller themselves. A caller who holds Trainee is
+  /// shown no create form and nobody is read for them. The EPA picker reads only a trainee offered here.
+  /// </summary>
+  /// <remarks>
+  /// Only those two exclusions are the create's. The list is every profile at the caller's institution, and the create
+  /// asks where the trainee trains now, so a trainee whose current profile is elsewhere is still offered, and refused.
+  /// </remarks>
   private async Task LoadTraineesAsync()
   {
     _trainees.Clear();
-    _trainees.AddRange(await Sender.Send(new ListTraineesForSpecialityQuery(await GetPrincipalAsync())));
+    if (_runsNoCampaigns is not false)
+    {
+      return;
+    }
+
+    var principal = await GetPrincipalAsync();
+    _trainees.AddRange((await Sender.Send(new ListTraineesForSpecialityQuery(principal)))
+      .Where(trainee => !MsfCampaignRules.IsKeptFromCampaignsAbout(principal, trainee.UserId)));
   }
 
   /// <summary>

@@ -65,8 +65,9 @@ public sealed class GetCampaignAggregateReportQueryHandler
             cancellationToken);
 
         // Only the trainee reads the report about themselves; anyone else CanReadReportAsync admitted runs the campaign.
-        var callerIsSubject = string.Equals(
-            request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, campaign.SubjectUserId, StringComparison.Ordinal);
+        // Asked as CanReadReportAsync asks it (MsfCampaignRules.IsCaller), so the two cannot disagree about who the
+        // subject is. (T224 review)
+        var callerIsSubject = MsfCampaignRules.IsCaller(request.Principal, campaign.SubjectUserId);
 
         return _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject);
     }

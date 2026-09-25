@@ -64,7 +64,10 @@ public static class MsfCampaignRules
     /// The two refusals are one because the campaign editor prints the refusal: "could not be found" for a missing id
     /// beside a scope refusal for a real one would let a Coordinator walk the ids and learn which campaigns other
     /// institutions run, which is the census <see cref="GetCampaignAggregateReportQuery" /> already denies by
-    /// returning null for both. An Administrator runs every campaign, so for them "not found" means only that.
+    /// returning null for both. An Administrator runs every campaign but those about themselves, so for them "not found"
+    /// means only that; one about them is refused as a Coordinator's out-of-scope campaign is, which tells them only that
+    /// a campaign about them exists. An Administrator who also holds Trainee runs none
+    /// (<see cref="IsKeptFromCampaignsAbout" />), so they are told what anyone else is told. (T224)
     /// </para>
     /// </remarks>
     public static async Task EnsureCampaignIsInScopeAsync(
@@ -81,7 +84,7 @@ public static class MsfCampaignRules
             .Select(campaign => campaign.SubjectUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (subjectUserId is null && principal.IsAdministrator())
+        if (subjectUserId is null && principal.IsAdministrator() && !RunsNoCampaigns(principal))
         {
             throw new InvalidOperationException("The MSF campaign could not be found.");
         }
@@ -111,7 +114,10 @@ public static class MsfCampaignRules
     /// somewhere in the handler.
     /// </para>
     /// <para>
-    /// The rule is <see cref="IsSubjectInScopeAsync" />.
+    /// The rule is <see cref="IsSubjectInScopeAsync" />. A caller it keeps out whoever the subject is
+    /// (<see cref="IsKeptFromCampaignsAbout" />) is told why, before anything is read: the reason is their own id or their
+    /// own role, so it says nothing about the id they gave. Create runs this before it reads the template too, so an
+    /// out-of-scope caller learns nothing from any id they send. (T224)
     /// </para>
     /// </remarks>
     public static async Task EnsureSubjectIsInScopeAsync(
@@ -120,6 +126,19 @@ public static class MsfCampaignRules
         string subjectUserId,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(subjectUserId);
+
+        if (IsCaller(principal, subjectUserId))
+        {
+            throw new UnauthorizedAccessException(OwnCampaignRefused);
+        }
+
+        if (RunsNoCampaigns(principal))
+        {
+            throw new UnauthorizedAccessException(TraineeRunsNoCampaigns);
+        }
+
         if (!await IsSubjectInScopeAsync(dbContext, principal, subjectUserId, cancellationToken))
         {
             throw new UnauthorizedAccessException(
@@ -127,11 +146,31 @@ public static class MsfCampaignRules
         }
     }
 
+    /// <summary>The refusal, at create, of a campaign about the caller themselves. (T224)</summary>
+    internal const string OwnCampaignRefused =
+        "A multi-source feedback campaign cannot be run by the trainee it is about. Another coordinator at your " +
+        "institution can run yours.";
+
+    /// <summary>
+    /// The refusal, at create, of any campaign to a caller who holds the Trainee role; also what the campaign pages say to
+    /// such a caller as standing content, so the page and the refusal give one reason. (T224, T185)
+    /// </summary>
+    public const string TraineeRunsNoCampaigns =
+        "You hold the Trainee role, so you cannot run multi-source feedback campaigns, whatever other role you hold.";
+
     /// <summary>
     /// Whether this caller runs multi-source feedback for this trainee: a global Administrator, or a Coordinator whose
-    /// institution is the one the trainee trains at. (T121, T113)
+    /// institution is the one the trainee trains at; never the trainee themselves, and never anyone who holds Trainee.
+    /// (T121, T113, T224)
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// The exclusions come first (<see cref="IsKeptFromCampaignsAbout" />), before the Administrator arm, as the subject
+    /// arm comes first in <see cref="CanReadReportAsync" />. Whoever runs a campaign adds its invitees, opens it, watches
+    /// its per-group counts come in before release, closes it, and writes the narrative the trainee is released, so the
+    /// trainee running their own would defeat the review step. Until T224 only the report refused them; the campaign
+    /// page's counts, the list's totals and every command admitted a subject who also coordinates.
+    /// </para>
     /// <para>
     /// Deliberately NOT <c>ClaimsPrincipalExtensions.CanAccessInstitution</c>. That helper answers a narrower
     /// question - global Administrator, or InstitutionalAdmin whose claim matches - and returns false for a
@@ -160,6 +199,12 @@ public static class MsfCampaignRules
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(subjectUserId);
+
+        if (IsKeptFromCampaignsAbout(principal, subjectUserId))
+        {
+            return false;
+        }
 
         if (principal.IsAdministrator())
         {
@@ -177,15 +222,22 @@ public static class MsfCampaignRules
 
     /// <summary>
     /// Confines a set of campaigns to the ones this caller runs: every campaign for an Administrator, the campaigns
-    /// about trainees at their own institution for a Coordinator, and none for anyone else. The list-shaped half of
-    /// <see cref="IsSubjectInScopeAsync" />, as a SQL-translatable predicate. (T113)
+    /// about trainees at their own institution for a Coordinator, and none for anyone else; never one about the caller,
+    /// and none at all for a caller who holds Trainee. The list-shaped half of <see cref="IsSubjectInScopeAsync" />, as a
+    /// SQL-translatable predicate. (T113, T224)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A campaign carries no institution of its own; its subject's preferred profile does. Resolving each campaign's
     /// subject one by one would mean materialising every campaign in the country to decide which few a coordinator
     /// may see, so the resolver's preferred-profile set is joined here instead. It is the same definition
     /// <see cref="TraineeScopeResolver.ResolveAsync" /> reads, which is what keeps this list and the single-campaign
     /// check from disagreeing about a trainee who holds more than one profile.
+    /// </para>
+    /// <para>
+    /// The exclusions are <see cref="IsKeptFromCampaignsAbout" />'s, applied first here as they are there: the list shows
+    /// each campaign's invitee and response totals before release, which the subject may not watch. (T224)
+    /// </para>
     /// </remarks>
     public static IQueryable<MsfCampaign> WhereRunBy(
         this IQueryable<MsfCampaign> campaigns,
@@ -194,6 +246,16 @@ public static class MsfCampaignRules
     {
         ArgumentNullException.ThrowIfNull(campaigns);
         ArgumentNullException.ThrowIfNull(principal);
+
+        if (RunsNoCampaigns(principal))
+        {
+            return campaigns.Where(_ => false);
+        }
+
+        if (CallerUserIdOf(principal) is { } callerUserId)
+        {
+            campaigns = campaigns.Where(campaign => campaign.SubjectUserId != callerUserId);
+        }
 
         if (principal.IsAdministrator())
         {
@@ -223,7 +285,9 @@ public static class MsfCampaignRules
     /// <c>CommitteeDecisionAuthorization.DemandReviewAccess</c> puts its trainee arm first.
     /// </para>
     /// <para>
-    /// Everyone else reads it only if they run campaigns for the trainee (<see cref="IsSubjectInScopeAsync" />).
+    /// Everyone else reads it only if they run campaigns for the trainee (<see cref="IsSubjectInScopeAsync" />), which
+    /// nobody who holds Trainee does (T224): a registrar who also coordinates reads their own released report here and no
+    /// peer's, as <see cref="TraineeScopeResolver.MayReadAsync" /> answers for the rest of a trainee's record (T185).
     /// Before T113 the trainee's page authorised the read itself, after the handler had already handed the whole
     /// report back, and the coordinator's page did not authorise it at all.
     /// </para>
@@ -237,15 +301,68 @@ public static class MsfCampaignRules
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(callerUserId) &&
-            string.Equals(callerUserId, subjectUserId, StringComparison.Ordinal))
+        if (IsCaller(principal, subjectUserId))
         {
             return state == MsfCampaignState.Released;
         }
 
         return await IsSubjectInScopeAsync(dbContext, principal, subjectUserId, cancellationToken);
     }
+
+    /// <summary>
+    /// Whether this caller is kept from running any campaign about this trainee, whatever role and scope would admit
+    /// them: the trainee themselves, and anyone who holds Trainee (<see cref="TraineeScopeResolver.ActsAsTrainee" />).
+    /// Answered from the caller's own id and roles, so it reads nothing. (T224)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="IsSubjectInScopeAsync" /> and <see cref="WhereRunBy" /> apply it first, and through them every campaign
+    /// command, the campaign page and the campaign list. The campaign form's trainee picker applies it too, so it never
+    /// offers the caller, and offers nobody to a caller who holds Trainee. That is all the picker shares with the create:
+    /// the picker lists every trainee profile at the caller's institution, and the create asks where each trainee trains
+    /// now (<see cref="TraineeScopeResolver" />), so a trainee whose current profile is elsewhere is offered and refused.
+    /// </para>
+    /// <para>
+    /// The trainee is kept out whatever other roles they hold, the Administrator role included, for the reason
+    /// <see cref="CanReadReportAsync" /> keeps them from the report before release. Holding Trainee keeps a caller out of
+    /// every campaign (<see cref="RunsNoCampaigns" />), T185's rung: a registrar who also coordinates runs no peer's
+    /// feedback, as they read no peer's progress, committee review or entrustment standing.
+    /// </para>
+    /// </remarks>
+    public static bool IsKeptFromCampaignsAbout(ClaimsPrincipal principal, string subjectUserId)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(subjectUserId);
+
+        return RunsNoCampaigns(principal) || IsCaller(principal, subjectUserId);
+    }
+
+    /// <summary>
+    /// Whether this caller runs no campaign at all, whoever it is about: anyone who holds Trainee
+    /// (<see cref="TraineeScopeResolver.ActsAsTrainee" />), whatever other role brought them to the campaign pages.
+    /// Answered from the caller's roles, so it reads nothing. (T224, T185)
+    /// </summary>
+    /// <remarks>
+    /// The one half of <see cref="IsKeptFromCampaignsAbout" /> that does not depend on the subject, so the campaign pages
+    /// ask it too: the list offers no "New campaign", the create form is not shown, and both pages say why in
+    /// <see cref="TraineeRunsNoCampaigns" />'s words, the ones a create refusal gives.
+    /// </remarks>
+    public static bool RunsNoCampaigns(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        return TraineeScopeResolver.ActsAsTrainee(principal);
+    }
+
+    /// <summary>
+    /// Whether the caller is this user; never for a caller with no id. The one answer to "is this the campaign's subject",
+    /// for the scope rules here and for the report, which names teaching contexts to anyone else. (T224)
+    /// </summary>
+    internal static bool IsCaller(ClaimsPrincipal principal, string userId)
+        => CallerUserIdOf(principal) is { } callerUserId &&
+           string.Equals(callerUserId, userId.Trim(), StringComparison.Ordinal);
+
+    private static string? CallerUserIdOf(ClaimsPrincipal principal)
+        => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value is { Length: > 0 } callerUserId ? callerUserId : null;
 
     /// <summary>
     /// The institution this caller runs campaigns at, or null when they run none: a Coordinator's own institution.

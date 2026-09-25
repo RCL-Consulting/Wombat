@@ -291,7 +291,10 @@ public static class TraineeScopeResolver
     /// and outcome: such a caller is listed none, their own included, which are on My committee reviews;</item>
     /// <item>conducting a committee review (<c>CommitteeDecisionAuthorization.WorksOnPanel</c> and <c>HoldsSeat</c>, the
     /// T194 review): starting one, every chair's action, and resolving an appeal, which such a caller is refused, and not
-    /// offered, on every review, their own included, whatever seat they hold on its panel.</item>
+    /// offered, on every review, their own included, whatever seat they hold on its panel;</item>
+    /// <item>running MSF campaigns (<c>MsfCampaignRules.RunsNoCampaigns</c> and <c>IsKeptFromCampaignsAbout</c>, T224):
+    /// every campaign command, the campaign page and list, which say so and offer no create, and the report of any
+    /// campaign but the caller's own released one.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,

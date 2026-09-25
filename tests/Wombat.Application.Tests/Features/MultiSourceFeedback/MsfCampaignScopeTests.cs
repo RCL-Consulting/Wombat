@@ -19,7 +19,8 @@ namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
 /// <summary>
 /// The MSF commands, the aggregate report and the coordinator's list answer only the people who run campaigns for the
-/// campaign's subject: a Coordinator at the institution the subject trains at, or an Administrator. (T113)
+/// campaign's subject: a Coordinator at the institution the subject trains at, or an Administrator; never the subject
+/// themselves, and nobody who holds Trainee. (T113, T224)
 /// </summary>
 /// <remarks>
 /// <para>
@@ -249,6 +250,248 @@ public sealed class MsfCampaignScopeTests
 
         (await ListAsync(db, TestPrincipals.Coordinator(HostInstitution))).Should().BeEmpty();
         (await ReportAsync(db, campaignId, TestPrincipals.Coordinator(HostInstitution))).Should().BeNull();
+    }
+
+    // ─── The subject, and anyone who holds Trainee (T224) ────────────────────
+    //
+    // Whoever runs a campaign adds its invitees, opens it, watches each group's responses come in before release, closes
+    // it and writes the narrative its trainee is released. Until T224 only the report refused the trainee it is about;
+    // a subject who also coordinated, or administered, ran their own campaign, and a registrar who coordinated ran their
+    // peers'. Each role is given alone first, so that each exclusion is shown to hold by itself.
+
+    /// <summary>The trainee the campaign is about, holding a role that would otherwise run it.</summary>
+    public static TheoryData<string> SubjectCallers => new() { "Coordinator", "Administrator", "Coordinator+Trainee" };
+
+    private static ClaimsPrincipal SubjectAs(string roles) => roles switch
+    {
+        "Coordinator" => TestPrincipals.Coordinator(HostInstitution, userId: SubjectUserId),
+        "Administrator" => TestPrincipals.Administrator(userId: SubjectUserId),
+        "Coordinator+Trainee" => TestPrincipals.InRoles([WombatRoles.Coordinator, WombatRoles.Trainee], SubjectUserId, HostInstitution),
+        _ => throw new ArgumentOutOfRangeException(nameof(roles), roles, null)
+    };
+
+    /// <summary>A classmate of the subject who also holds a role that would otherwise run the campaign.</summary>
+    private static ClaimsPrincipal PeerWhoAlsoHolds(string role)
+        => TestPrincipals.InRoles([role, WombatRoles.Trainee], "trainee-2", role == WombatRoles.Administrator ? null : HostInstitution);
+
+    public static TheoryData<string, string> CampaignIdCommandsBySubjectCaller()
+    {
+        var data = new TheoryData<string, string>();
+        foreach (var command in new[] { "Open", "Close", "Withdraw", "AddInvitation", "Release" })
+        {
+            foreach (var roles in new[] { "Coordinator", "Administrator", "Coordinator+Trainee" })
+            {
+                data.Add(command, roles);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(CampaignIdCommandsBySubjectCaller))]
+    public async Task TheSubject_IsRefusedEveryCommandOnTheirOwnCampaign_WhateverRoleTheyHold_AndNothingChanges(
+        string command, string roles)
+    {
+        await using var db = CreateDb();
+        var campaignId = await SeedCampaignAsync(db, StateFor(command));
+        var before = await SnapshotAsync(campaignId);
+        var outsiders = await RefusalAsync(() => RunAsync(command, db, campaignId, TestPrincipals.Coordinator(OtherInstitution)));
+
+        var refusal = await RefusalAsync(() => RunAsync(command, db, campaignId, SubjectAs(roles)));
+
+        // The refusal of a campaign the caller does not run, word for word: it says nothing the subject did not know.
+        refusal.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(outsiders.Message);
+        await db.SaveChangesAsync();
+        (await SnapshotAsync(campaignId)).Should().BeEquivalentTo(before);
+        _emailSender.Sent.Should().BeEmpty();
+    }
+
+    [Theory]
+    [MemberData(nameof(CampaignIdCommands))]
+    public async Task ACoordinatorWhoHoldsTrainee_IsRefusedEveryCommandOnAPeersCampaign_AndNothingChanges(string command)
+    {
+        await using var db = CreateDb();
+        var campaignId = await SeedCampaignAsync(db, StateFor(command));
+        var before = await SnapshotAsync(campaignId);
+
+        var act = () => RunAsync(command, db, campaignId, PeerWhoAlsoHolds(WombatRoles.Coordinator));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await db.SaveChangesAsync();
+        (await SnapshotAsync(campaignId)).Should().BeEquivalentTo(before);
+        _emailSender.Sent.Should().BeEmpty();
+    }
+
+    [Theory]
+    [MemberData(nameof(CampaignIdCommands))]
+    public async Task AnAdministratorWhoHoldsTrainee_IsRefusedEveryCommand_AndAMissingIdTheSame(string command)
+    {
+        // They run no campaign, so, like a Coordinator, they are not told which ids name one.
+        await using var db = CreateDb();
+        var campaignId = await SeedCampaignAsync(db, StateFor(command));
+        var before = await SnapshotAsync(campaignId);
+        var caller = PeerWhoAlsoHolds(WombatRoles.Administrator);
+
+        var existing = await RefusalAsync(() => RunAsync(command, db, campaignId, caller));
+        var missing = await RefusalAsync(() => RunAsync(command, db, campaignId + 1000, caller));
+
+        existing.Should().BeOfType<UnauthorizedAccessException>();
+        missing.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(existing.Message);
+        await db.SaveChangesAsync();
+        (await SnapshotAsync(campaignId)).Should().BeEquivalentTo(before);
+    }
+
+    [Theory]
+    [MemberData(nameof(SubjectCallers))]
+    public async Task TheSubject_CannotCreateACampaignAboutThemselves_AndNothingIsStored(string roles)
+    {
+        await using var db = CreateDb();
+        var seeded = await SeedCampaignAsync(db, MsfCampaignState.Released);
+        var templateId = await TemplateOfAsync(seeded);
+
+        var act = () => CreateAsync(db, templateId, SubjectUserId, SubjectAs(roles));
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().StartWith("A multi-source feedback campaign cannot be run by the trainee it is about.");
+        await db.SaveChangesAsync();
+        (await CampaignIdsAsync()).Should().Equal(seeded);
+    }
+
+    [Theory]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.Administrator)]
+    public async Task SomeoneWhoHoldsTrainee_CannotCreateACampaignAboutAPeer_AndNothingIsStored(string role)
+    {
+        await using var db = CreateDb();
+        var seeded = await SeedCampaignAsync(db, MsfCampaignState.Released);
+        var templateId = await TemplateOfAsync(seeded);
+
+        var act = () => CreateAsync(db, templateId, SubjectUserId, PeerWhoAlsoHolds(role));
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().StartWith("You hold the Trainee role");
+        await db.SaveChangesAsync();
+        (await CampaignIdsAsync()).Should().Equal(seeded);
+
+        // The subject's own coordinator, who holds no Trainee, creates it.
+        var created = await CreateAsync(db, templateId, SubjectUserId, TestPrincipals.Coordinator(HostInstitution));
+        (await CampaignIdsAsync()).Should().BeEquivalentTo([seeded, created.Id]);
+    }
+
+    /// <summary>
+    /// Create asks who may run the campaign before it reads the template (T224 review), so a caller who may not is told
+    /// that whatever template id they send, and learns nothing from the id. Only someone who runs the trainee's campaigns
+    /// is told the template is missing.
+    /// </summary>
+    [Fact]
+    public async Task ACallerWhoMayNotCreateTheCampaign_IsToldSo_WhateverTemplateIdTheySend()
+    {
+        await using var db = CreateDb();
+        var seeded = await SeedCampaignAsync(db, MsfCampaignState.Released);
+        const int noSuchTemplate = 999_999;
+
+        (await RefusalAsync(() => CreateAsync(db, noSuchTemplate, SubjectUserId, SubjectAs("Coordinator"))))
+            .Should().BeOfType<UnauthorizedAccessException>()
+            .Which.Message.Should().StartWith("A multi-source feedback campaign cannot be run by the trainee it is about.");
+        (await RefusalAsync(() => CreateAsync(db, noSuchTemplate, SubjectUserId, PeerWhoAlsoHolds(WombatRoles.Coordinator))))
+            .Should().BeOfType<UnauthorizedAccessException>()
+            .Which.Message.Should().Be(MsfCampaignRules.TraineeRunsNoCampaigns);
+        (await RefusalAsync(() => CreateAsync(db, noSuchTemplate, SubjectUserId, TestPrincipals.Coordinator(OtherInstitution))))
+            .Should().BeOfType<UnauthorizedAccessException>();
+
+        (await RefusalAsync(() => CreateAsync(db, noSuchTemplate, SubjectUserId, TestPrincipals.Coordinator(HostInstitution))))
+            .Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Be("The selected MSF template could not be found.");
+
+        await db.SaveChangesAsync();
+        (await CampaignIdsAsync()).Should().Equal(seeded);
+    }
+
+    [Fact]
+    public async Task TheCampaignPage_IsNullForTheSubject_WhateverRoleTheyHold_AndForAnyoneWhoHoldsTrainee()
+    {
+        await using var db = CreateDb();
+        var campaignId = await SeedCampaignAsync(db, MsfCampaignState.Open);
+
+        foreach (var roles in new[] { "Coordinator", "Administrator", "Coordinator+Trainee" })
+        {
+            (await SetupAsync(db, campaignId, SubjectAs(roles))).Should().BeNull(
+                $"the subject as {roles} would otherwise watch each group's responses come in");
+        }
+
+        (await SetupAsync(db, campaignId, PeerWhoAlsoHolds(WombatRoles.Coordinator))).Should().BeNull();
+        (await SetupAsync(db, campaignId, PeerWhoAlsoHolds(WombatRoles.Administrator))).Should().BeNull();
+
+        (await SetupAsync(db, campaignId, TestPrincipals.Coordinator(HostInstitution)))!.CampaignId.Should().Be(campaignId);
+        (await SetupAsync(db, campaignId, TestPrincipals.Administrator())).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task TheCoordinatorList_NeverHoldsACampaignAboutTheCaller_AndNothingForAnyoneWhoHoldsTrainee()
+    {
+        await using var db = CreateDb();
+        var own = await SeedCampaignAsync(db, MsfCampaignState.Open);
+        var peers = await SeedCampaignAsync(db, MsfCampaignState.Open, subjectUserId: "trainee-3");
+
+        (await ListAsync(db, SubjectAs("Coordinator"))).Should().Equal(peers);
+        (await ListAsync(db, SubjectAs("Administrator"))).Should().Equal(peers);
+        (await ListAsync(db, SubjectAs("Coordinator+Trainee"))).Should().BeEmpty();
+        (await ListAsync(db, PeerWhoAlsoHolds(WombatRoles.Coordinator))).Should().BeEmpty();
+        (await ListAsync(db, PeerWhoAlsoHolds(WombatRoles.Administrator))).Should().BeEmpty();
+
+        (await ListAsync(db, TestPrincipals.Coordinator(HostInstitution))).Should().BeEquivalentTo([own, peers]);
+    }
+
+    [Fact]
+    public async Task SomeoneWhoHoldsTrainee_NeverReadsAPeersReport_EvenReleased_ButReadsTheirOwnOnceReleased()
+    {
+        await using var db = CreateDb();
+        var underReview = await SeedCampaignAsync(db, MsfCampaignState.UnderReview);
+        var released = await SeedCampaignAsync(db, MsfCampaignState.Released);
+
+        foreach (var role in new[] { WombatRoles.Coordinator, WombatRoles.Administrator })
+        {
+            (await ReportAsync(db, underReview, PeerWhoAlsoHolds(role))).Should().BeNull();
+            (await ReportAsync(db, released, PeerWhoAlsoHolds(role))).Should().BeNull();
+        }
+
+        (await ReportAsync(db, underReview, SubjectAs("Coordinator+Trainee"))).Should().BeNull();
+        (await ReportAsync(db, released, SubjectAs("Coordinator+Trainee")))!.State.Should().Be(MsfCampaignState.Released);
+        (await ReportAsync(db, underReview, SubjectAs("Administrator"))).Should().BeNull();
+    }
+
+    private static Task<MsfCampaignSetupDto?> SetupAsync(ApplicationDbContext db, int campaignId, ClaimsPrincipal principal)
+        => new GetMsfCampaignSetupQueryHandler(db, FakeUserDirectory.Empty)
+            .Handle(new GetMsfCampaignSetupQuery(campaignId, principal), CancellationToken.None);
+
+    private static Task<MsfCampaignSummaryDto> CreateAsync(
+        ApplicationDbContext db, int templateId, string subjectUserId, ClaimsPrincipal principal)
+        => new CreateMsfCampaignCommandHandler(db, new ActivityReferenceDataService(db)).Handle(
+            new CreateMsfCampaignCommand(
+                subjectUserId,
+                templateId,
+                DateOnly.FromDateTime(DateTime.UtcNow),
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(14),
+                MinimumResponses: 1,
+                MinimumCategoryResponses: 1,
+                MinimumRespondentCategories: 1,
+                EpaIds: [],
+                CreatedByUserId: principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,
+                principal),
+            CancellationToken.None);
+
+    private async Task<int> TemplateOfAsync(int campaignId)
+    {
+        await using var db = CreateDb();
+        return await db.MsfCampaigns.Where(entity => entity.Id == campaignId).Select(entity => entity.TemplateId).SingleAsync();
+    }
+
+    /// <summary>Every campaign stored, read through a second context so nothing tracked can mask a refused create.</summary>
+    private async Task<int[]> CampaignIdsAsync()
+    {
+        await using var db = CreateDb();
+        return await db.MsfCampaigns.AsNoTracking().OrderBy(entity => entity.Id).Select(entity => entity.Id).ToArrayAsync();
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

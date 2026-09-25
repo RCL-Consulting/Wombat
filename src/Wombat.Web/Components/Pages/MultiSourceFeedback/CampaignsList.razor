@@ -5,11 +5,22 @@
 
 <PageTitle>MSF Campaigns</PageTitle>
 
+@* "New campaign" only for a caller who can create one (DESIGN.md § A row the caller cannot change, T211). Someone who
+   holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224), and is told
+   so in the words a create refusal gives, as standing content. *@
 <PageHeader Title="MSF campaigns" Subtitle="Create and review multi-source feedback campaigns.">
   <Actions>
-    <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
+    @if (_runsNoCampaigns is false)
+    {
+      <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
+    }
   </Actions>
 </PageHeader>
+
+@if (_runsNoCampaigns is true)
+{
+  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@MsfCampaignRules.TraineeRunsNoCampaigns</Alert>
+}
 
 @* What a withdraw did. Announced as it appears, and given the focus once the dialog has closed: after a withdraw the
    row's button that opened the dialog is gone, and the focus would otherwise fall to the page (T206 review). *@
@@ -25,42 +36,45 @@
   }
 </div>
 
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No MSF campaigns" EmptyBody="Create the first MSF campaign to start respondent outreach.">
-  <DataTable Items="_items" Caption="MSF campaigns">
-    <HeaderRow>
-      <tr>
-        <th>Subject</th>
-        <th>Template</th>
-        <th>State</th>
-        <th>Invitations</th>
-        <th>Responses</th>
-        <th>Closes</th>
-        <th></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.SubjectName</td>
-        <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
-        <td>@MsfCampaignText.State(item.State)</td>
-        <td>@item.InvitationCount</td>
-        <td>@item.ResponseCount</td>
-        <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
-        <td class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")">Edit</a>
-          <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")">Report</a>
-          @if (CanWithdraw(item))
-          {
-            @* The accessible name starts with the visible label and says which row it acts on (T206). *@
-            <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
-                    aria-label="@($"Withdraw the campaign for {Describe(item)}")"
-                    @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
-          }
-        </td>
-      </tr>
-    </Row>
-  </DataTable>
-</StatePanel>
+@if (_runsNoCampaigns is not true)
+{
+  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No MSF campaigns" EmptyBody="Create the first MSF campaign to start respondent outreach.">
+    <DataTable Items="_items" Caption="MSF campaigns">
+      <HeaderRow>
+        <tr>
+          <th>Subject</th>
+          <th>Template</th>
+          <th>State</th>
+          <th>Invitations</th>
+          <th>Responses</th>
+          <th>Closes</th>
+          <th></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="item">
+        <tr>
+          <td>@item.SubjectName</td>
+          <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
+          <td>@MsfCampaignText.State(item.State)</td>
+          <td>@item.InvitationCount</td>
+          <td>@item.ResponseCount</td>
+          <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
+          <td class="actions-cell">
+            <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")">Edit</a>
+            <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")">Report</a>
+            @if (CanWithdraw(item))
+            {
+              @* The accessible name starts with the visible label and says which row it acts on (T206). *@
+              <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
+                      aria-label="@($"Withdraw the campaign for {Describe(item)}")"
+                      @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
+            }
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  </StatePanel>
+}
 
 @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
    respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202). *@
@@ -93,11 +107,24 @@
   /// <summary>A withdraw has been sent and has not yet answered. (T206)</summary>
   private bool _withdrawing;
 
+  /// <summary>
+  /// Whether the caller runs no campaign at all (<see cref="MsfCampaignRules.RunsNoCampaigns" />, T224); null until the
+  /// caller is known, so "New campaign" is not shown to someone who is about to be told they cannot use it.
+  /// </summary>
+  private bool? _runsNoCampaigns;
+
   protected override async Task OnInitializedAsync()
   {
     try
     {
-      await LoadAsync();
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(authState.User);
+
+      // Nothing is asked for a caller who runs none: the list would be empty whatever it held.
+      if (_runsNoCampaigns is false)
+      {
+        await LoadAsync();
+      }
     }
     catch (Exception exception)
     {

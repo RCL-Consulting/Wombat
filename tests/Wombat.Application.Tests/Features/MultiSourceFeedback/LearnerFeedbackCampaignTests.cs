@@ -213,6 +213,35 @@ public sealed class LearnerFeedbackCampaignTests
     }
 
     /// <summary>
+    /// T224 review: whether the reader is the trainee is asked once (<c>MsfCampaignRules.IsCaller</c>), for who
+    /// may read the report and for whether it names the teaching contexts. Until then the second was asked separately
+    /// and did not trim the stored id, so a subject id stored with a space around it let the trainee through the first
+    /// question as the trainee and through the second as a coordinator, and named the contexts to them. Create trims the
+    /// id, so this is stored directly.
+    /// </summary>
+    [Fact]
+    public async Task TheTraineesReport_NamesNoTeachingContext_HoweverTheirIdWasStored()
+    {
+        await using var db = CreateDb();
+        Seed(db);
+        var campaign = AddUnderReviewCampaign(db, LearnerFeedbackTemplateId, [Paed015],
+            (MsfRespondentCategory.Learner, "Ward round"),
+            (MsfRespondentCategory.Learner, "Ward round"),
+            (MsfRespondentCategory.Learner, "Neonatal night teaching"));
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: null, narrative: null);
+
+        var stored = await db.MsfCampaigns.SingleAsync(entity => entity.Id == campaign.Id);
+        stored.SubjectUserId = $" {TraineeUserId} ";
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var trainees = await ReportAsync(db, campaign.Id, Trainee());
+
+        trainees!.TeachingContextCount.Should().Be(2);
+        trainees.TeachingContextsResponded.Should().BeNull("the trainee is told how many contexts answered, never which");
+    }
+
+    /// <summary>
     /// T164 review, after T186: which declared EPAs a released campaign recorded is read from its evidence rows, and a
     /// learner-feedback campaign's are <c>learner_feedback_cpsa</c> rows. Read as MSF's, PAED-015 would be "not recorded"
     /// beside the record the release had just written. Released through the handler, so the writer and the reader are

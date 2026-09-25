@@ -678,6 +678,21 @@ because the campaign changed elsewhere. The card holds:
   when the campaign cannot then be read again: the card says it could not be loaded, and the refusal says why the action
   was not taken.
 
+Nobody runs a campaign about themselves, and nobody who holds Trainee runs one at all (T224, T185's trainee rung;
+`MsfCampaignRules.IsKeptFromCampaignsAbout`). The create form's Trainee picker never offers the caller. Otherwise it is
+every trainee profile at the caller's institution, so it can still offer a trainee the create refuses because they now
+train elsewhere. The campaign page answers a campaign about the caller as it answers an id that names nothing (its
+"Campaign unavailable" card), the campaign list leaves those campaigns out, and the report is theirs only as the
+released trainee's copy.
+
+Someone who holds Trainee is told so, whatever role brought them there (`MsfCampaignRules.RunsNoCampaigns`; § A row
+the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
+`Role=""`, `#msf-runs-no-campaigns`) in the words a create refusal gives (`MsfCampaignRules.TraineeRunsNoCampaigns`).
+The list then offers no "New campaign" and no empty card, and asks for nothing. The campaign page shows no create card
+and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The Quick template
+card stays, because a template is about no trainee. The MSF Campaigns nav link stays too, as Committee Reviews and
+Decisions due stay for the same people (T185); the page it opens now says why nothing is there. (T224 review)
+
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `MsfCampaignText.StateBadge`:
 

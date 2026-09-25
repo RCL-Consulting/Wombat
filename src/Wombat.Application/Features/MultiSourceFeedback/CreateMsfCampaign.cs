@@ -57,13 +57,15 @@ public sealed class CreateMsfCampaignCommandHandler : IRequestHandler<CreateMsfC
 
     public async Task<MsfCampaignSummaryDto> Handle(CreateMsfCampaignCommand request, CancellationToken cancellationToken)
     {
-        var template = await _dbContext.Set<MsfTemplate>()
-            .SingleOrDefaultAsync(candidate => candidate.Id == request.TemplateId && candidate.IsActive, cancellationToken)
-            ?? throw new InvalidOperationException("The selected MSF template could not be found.");
-
+        // Scope first, before the template is read (T224 review): a caller who may not run this campaign is told that,
+        // whatever template id they sent.
         var subjectUserId = request.SubjectUserId.Trim();
         await MsfCampaignRules.EnsureSubjectIsInScopeAsync(
             _dbContext, request.Principal, subjectUserId, cancellationToken);
+
+        var template = await _dbContext.Set<MsfTemplate>()
+            .SingleOrDefaultAsync(candidate => candidate.Id == request.TemplateId && candidate.IsActive, cancellationToken)
+            ?? throw new InvalidOperationException("The selected MSF template could not be found.");
 
         // A learner-feedback campaign invites learners only (MsfTemplate.Accepts), so one respondent group is all it can
         // ever have. Asking for two would leave it unreleasable whatever came back. (T164)
