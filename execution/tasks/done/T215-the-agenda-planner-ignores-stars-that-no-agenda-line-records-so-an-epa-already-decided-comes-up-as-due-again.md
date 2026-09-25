@@ -1,11 +1,12 @@
 ---
 id: T215
 title: The agenda planner ignores STARs that no agenda line records, so an EPA already decided comes up as due again
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T215 — The agenda planner ignores STARs that no agenda line records, so an EPA already decided comes up as due again
@@ -36,11 +37,30 @@ path, a restored backup) would repeat the defect.
 
 ## Verification
 
-- [ ] A trainee with an Active STAR issued in the window has no Due line for that EPA, and the preview names it
+- [x] A trainee with an Active STAR issued in the window has no Due line for that EPA, and the preview names it
       "Already decided in this window". Handler test.
-- [ ] The decisions-due page shows it as decided. Test.
-- [ ] Browser: a new 2026 S2 review for the dev trainee skips PAED-001, 002 and 006.
+- [x] The decisions-due page shows it as decided. Test.
+- [x] Browser: a new 2026 S2 review for the dev trainee skips PAED-001, 002 and 006.
 
 ## Related
 
 T131 (slices 4 and 6), T166.
+
+---
+
+## As built — 2026-09-25 (`69da24d`)
+
+The agenda planner, its preview and Start count an EPA as decided in its window by the decisions-due page's rule (an
+Active or Superseded STAR issued in the window, from any review), which is one predicate in `DecisionWindowRecords`. An EPA
+decided that way is not planned. The preview and the agenda card say "Already decided in this window, so not on the
+agenda: …". An agenda whose due EPAs are all decided says so. Handler tests cover a pre-agenda STAR, a Superseded one,
+a Revoked one, an annual EPA decided in S1, and a STAR from a previous institution. bUnit covers the wording.
+
+Browser on dev (scripted Chrome, master `225763e`):
+- **The coordinator's preview** for panel 1, 2026 S2: "10 EPAs will be on the agenda", and "Already decided in this
+  window, so not on the agenda: PAED-001, PAED-002 and PAED-006."
+- **Review 6** has 10 lines, none for those three, and after Start they are still absent.
+- **Decisions-due** shows the three Decided (STARs #3, #4 and #2).
+- **Review 7's preview** also named PAED-007, decided by review 6's STAR #6.
+
+**Filed from the review:** [T235] (P2): an agenda line is never reconciled after Start.

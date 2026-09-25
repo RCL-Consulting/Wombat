@@ -38,3 +38,8 @@ refuse. It is the same rule, and a seat that cannot act is a trap.
 ## Related
 
 T194, T185, T216, D46.
+
+Note, 2026-09-25 (the committee chain's browser check): a trainee already seated as External is still named in the
+appeal-body note ("…and its external member, Demo Trainee"), including to the trainee on their own appeal, although the
+seat cannot act since T194. The remit's Present list leaves them out. Whatever T237 decides for new seats, the note
+should name only members who can act.

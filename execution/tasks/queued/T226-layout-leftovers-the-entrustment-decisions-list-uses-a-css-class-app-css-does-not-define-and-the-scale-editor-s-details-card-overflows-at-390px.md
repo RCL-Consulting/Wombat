@@ -37,3 +37,6 @@ created: 2026-09-25
 T198, T188.
 
 Note, 2026-09-25 (the F2 browser check): at 390px on `/msf/campaigns/{id}` the page header and the cards touch the screen edges (a card from x=0 to 390, the h1 at x=0). Check whether the whole layout lacks a side gutter at phone width.
+
+Note, 2026-09-25 (the committee chain's browser check): the chair's agenda keeps an "Action" column with blank cells
+on decided and ratified reviews (4, 6 and 7 on dev). Drop the column when no line has an action.

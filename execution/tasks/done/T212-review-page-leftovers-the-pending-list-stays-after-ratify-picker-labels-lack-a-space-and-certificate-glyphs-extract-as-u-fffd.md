@@ -1,11 +1,12 @@
 ---
 id: T212
 title: Review page leftovers: the pending list stays after ratify, picker labels lack a space, and certificate glyphs extract as U+FFFD
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T212 — Review page leftovers: the pending list stays after ratify, picker labels lack a space, and certificate glyphs extract as U+FFFD
@@ -36,8 +37,28 @@ created: 2026-09-24
 
 ## Verification
 
-- [ ] Each item fixed: a bUnit test for 1 and 2, a text-extraction test for 3.
+- [x] Each item fixed: a bUnit test for 1 and 2, a text-extraction test for 3.
 
 ## Related
 
 T131, T166, T200.
+
+---
+
+## As built — 2026-09-25 (`be87422`)
+
+The pending list refreshes after Ratify, Stage, Remove, Start, Record, Close and Resolve. A review ratified with nothing
+staged says it issued no STAR. The picker labels have their space before "·". The deferral form shows "Say why the
+committee is deferring the decision." and states its 2,000-character limit in the domain's words. My reviews names the
+period ("2026 S2 · window"). The certificate's "•" and "—" extract as text. bUnit tests and a text-extraction test.
+
+Browser on dev (scripted Chrome, master `225763e`):
+- The picker read "Clinical Case Analysis (Paediatrics) #19 · 3a · 2026-09-23 · completed".
+- An empty deferral showed the message, with `aria-invalid` and the focus returned. A 2,050-character reason was refused
+  in the domain's words.
+- Ratifying review 6 read "Nothing is pending: ratifying the review issued what was staged as STARs…" and issued STAR #6.
+  Review 7, ratified with nothing staged, read "…issued no STAR."
+- My reviews read "2026 S2 · 2026-01-01 to 2026-12-31".
+- STAR #6's certificate: 0 U+FFFD, and "•" and "—" intact.
+
+**Filed from the review:** [T236] (no field shows an invalid state), [T239] (My reviews' View buttons).

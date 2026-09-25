@@ -325,7 +325,8 @@ dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj
 ```
 
 Always run architecture tests after adding any project reference — they guard layer
-boundaries. Integration tests require Docker for Testcontainers.
+boundaries. Integration tests need a running PostgreSQL, not Docker: they read `WOMBAT_TEST_CONNECTION`, else
+Wombat.Web's user secrets, and each test works in its own throwaway `it_<guid>` schema (ARCHITECTURE.md § Testing).
 
 **Do not pass `--no-build` to `dotnet test` or `dotnet ef` in this repo.** `dotnet build Wombat.sln` and
 the per-project tools resolve **different output paths**, so `--no-build` will happily load a stale

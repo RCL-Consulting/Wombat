@@ -1,11 +1,12 @@
 ---
 id: T216
 title: A user who is both Trainee and Coordinator can schedule and preview a peer's committee review
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T216 — A user who is both Trainee and Coordinator can schedule and preview a peer's committee review
@@ -32,9 +33,25 @@ decision that a trainee-coordinator may schedule, with the reason.
 
 ## Verification
 
-- [ ] A Trainee+Coordinator is refused scheduling and preview for a peer, and the picker offers them no one. Handler and
+- [x] A Trainee+Coordinator is refused scheduling and preview for a peer, and the picker offers them no one. Handler and
       bUnit tests.
 
 ## Related
 
 T185, T182, T131.
+
+---
+
+## As built — 2026-09-25 (`3595589`)
+
+A user who holds Trainee is a trainee first (T185) on committee scheduling, the agenda preview, the schedulable-trainee
+picker and the review list. A Trainee with any role that schedules gets "You hold the Trainee role…", and a plain Trainee
+the ordinary refusal. `GetCommitteeReviewsAccessQuery` tells the page whether to offer scheduling, so a plain
+CommitteeMember is no longer offered it either. Handler tests cover each role pair; bUnit covers the page.
+
+Browser on dev (scripted Chrome, master `225763e`): trainee was given Coordinator, then InstitutionalAdmin, then CommitteeMember, each through instadmin's Users page and
+each removed afterwards.
+- Each time, `/committee/reviews` had no Schedule button, and its empty card read "You hold the Trainee role, so you
+  cannot schedule a committee review or preview its agenda, and this page lists no one's reviews…".
+- A crafted `?panel=1&trainee=…&period=2026-2` opened no form.
+- Decisions-due read "Nothing to show".

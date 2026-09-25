@@ -1,11 +1,12 @@
 ---
 id: T194
 title: Committee commands reveal which reviews and panels exist, and a panel's speciality is never checked against the trainee
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T194 — Committee commands reveal which reviews and panels exist, and a panel's speciality is never checked against the trainee
@@ -39,10 +40,36 @@ member's panel off the scheduling list unless they may schedule on it.
 
 ## Verification
 
-- [ ] Unknown and out-of-scope review and panel ids get the same refusal, before any state check. Handler tests.
-- [ ] A Speciality panel refuses a trainee of another speciality. Handler test.
-- [ ] A SpecialityAdmin is not offered the Institution scope. bUnit.
+- [x] Unknown and out-of-scope review and panel ids get the same refusal, before any state check. Handler tests.
+- [x] A Speciality panel refuses a trainee of another speciality. Handler test.
+- [x] A SpecialityAdmin is not offered the Institution scope. bUnit.
 
 ## Related
 
 T182, T183, T113, T131.
+
+---
+
+## As built — 2026-09-25 (`225763e`)
+
+- **Authorisation first.** Every committee command authorises before anything else, with one refusal for an unknown
+  and an out-of-scope id.
+- **No trainee on a panel.** `WorksOnPanel` and `HoldsSeat` refuse anyone who holds Trainee, before any other check.
+  This closes a trainee resolving their own appeal from an External seat.
+- **The panel form** offers each admin only the scopes they may create.
+- **One filter** now drives the scheduling panel list and the trainee picker (`OfferableNamesAsync`), so an erased
+  trainee's panel is not offered.
+- **An InstitutionalAdmin seated on another institution's panel** may read what they may start.
+
+Handler tests cover each command. bUnit covers the panel form.
+
+Browser on dev (scripted Chrome, master `225763e`):
+- **Unknown and out-of-scope ids.** Review 99999, and review 1 as an assessor made CommitteeMember, got the same
+  sentence: "The committee review could not be found among the reviews you can view."
+- **The Speciality scope.** The coordinator made SpecialityAdmin was offered only the Speciality scope, and created panel 3.
+- **A trainee seated as External** lodged appeal #1 and got no resolve form; the chair did.
+- **Not run:** the steps that need `coordinator.t113b`, which has no seeded credential. They are covered by handler
+  tests.
+
+**Filed:** [T237] (a trainee can still be seated), [T238] (erased profiles), and [T245] (a speciality admin's panel
+form offers unadopted specialities).

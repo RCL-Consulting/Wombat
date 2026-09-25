@@ -38,3 +38,12 @@ render a decided review's decision read-only.
 ## Related
 
 T131, T182, T212.
+
+## Progress, 2026-09-25
+
+- **Item 2 is done by T213** (`2c6c3a8`): the decision form is offered only to the chair while the review is in
+  progress. Browser: ratified reviews 1–5 and 7 show no decision inputs to the chair.
+- **Item 1 is still open.** As coordinator, `/committee/reviews` reads "No reviews yet – Schedule the first committee
+  review…" with eight reviews at institution 1. `ListReviewsForPanel` lists only panels the caller sits on unless they
+  are an Administrator or InstitutionalAdmin. It must also stop telling a coordinator to schedule the first review
+  when reviews exist.
