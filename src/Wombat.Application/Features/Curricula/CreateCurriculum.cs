@@ -83,6 +83,9 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
             throw new InvalidOperationException("A curriculum with the same name and version already exists for this sub-speciality.", exception);
         }
 
-        return new CurriculumDto(curriculum.Id, subSpeciality.SpecialityId, curriculum.SubSpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, subSpeciality.CollegeName, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, true, [], subSpeciality.DefaultEntrustmentScaleId);
+        return CurriculumAdminScope.ForCaller(
+            new CurriculumDto(curriculum.Id, subSpeciality.SpecialityId, curriculum.SubSpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, subSpeciality.CollegeName, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, true, [], subSpeciality.DefaultEntrustmentScaleId),
+            subSpeciality.CollegeId,
+            request.Principal);
     }
 }

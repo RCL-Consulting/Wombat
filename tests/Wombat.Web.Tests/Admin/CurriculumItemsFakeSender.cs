@@ -63,6 +63,14 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     public int? SubSpecialityDefaultScaleId { get; init; }
 
+    /// <summary>
+    /// Whether the caller may change the curriculum itself, as <c>CurriculumAdminScope.ForCaller</c> answers it: true for
+    /// the College or an Administrator, false for an institution reading a curriculum it adopted (T211).
+    /// </summary>
+    public bool CanEditCurriculum { get; init; } = true;
+
+    public List<RemoveCurriculumItemCommand> Removes { get; } = [];
+
     public List<UpdateCurriculumItemCommand> Updates { get; } = [];
 
     public List<AddCurriculumItemCommand> Adds { get; } = [];
@@ -83,12 +91,18 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         bool epaIsActive = true,
         QuotaPeriod? decisionCadence = null,
         string? decisionBodyKey = null,
-        bool decisionIsOpportunistic = false)
+        bool decisionIsOpportunistic = false,
+        int? owningInstitutionId = null,
+        bool canEdit = true)
     {
         var epa = Epas.Single(candidate => candidate.Id == epaId);
         return new CurriculumItemDto(id, epaId, epa.Code, epa.Title, requiredCount, period, minimumLevelOrder, 12, null,
-            stageMinimaJson, permittedToolsJson, epaIsActive, decisionCadence, decisionBodyKey, BodyName(decisionBodyKey),
-            decisionIsOpportunistic, scale?.Id, scale?.Name);
+            stageMinimaJson, permittedToolsJson, epaIsActive, owningInstitutionId, decisionCadence, decisionBodyKey,
+            BodyName(decisionBodyKey), decisionIsOpportunistic, scale?.Id, scale?.Name)
+        {
+            // What CurriculumAdminScope.ForCaller answers for the caller (T211); an editable item unless a test says not.
+            CanEdit = canEdit
+        };
     }
 
     private static string? BodyName(string? key)
@@ -127,6 +141,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
             GetDecisionBodiesQuery => DecisionBodies,
             UpdateCurriculumItemCommand update => Update(update),
             AddCurriculumItemCommand add => Add(add),
+            RemoveCurriculumItemCommand remove => Remove(remove),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };
 
@@ -149,7 +164,17 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     private CurriculumDto Curriculum()
         => new(CurriculumId, 2, SubSpecialityId, "Paediatrics", "General Paediatrics", "CMSA", "Paediatrics v11.1", "11.1",
-            new DateOnly(2026, 1, 1), null, true, true, _items, SubSpecialityDefaultScaleId);
+            new DateOnly(2026, 1, 1), null, true, true, _items, SubSpecialityDefaultScaleId)
+        {
+            CanEditCurriculum = CanEditCurriculum
+        };
+
+    private CurriculumDto Remove(RemoveCurriculumItemCommand command)
+    {
+        Removes.Add(command);
+        _items = _items.Where(item => item.Id != command.ItemId).ToList();
+        return Curriculum();
+    }
 
     // What the handler would store: the command's values, normalised as the handler normalises them.
     private CurriculumDto Update(UpdateCurriculumItemCommand command)

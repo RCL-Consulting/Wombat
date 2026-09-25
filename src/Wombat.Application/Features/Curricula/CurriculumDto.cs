@@ -19,7 +19,16 @@ public sealed record CurriculumDto(
     /// a new item when the existing items do not already agree on one (T125); it never pins anything by itself, which
     /// is why <c>CurriculumItem.ScaleId</c> is not inferred from it.
     /// </summary>
-    int? SubSpecialityDefaultScaleId);
+    int? SubSpecialityDefaultScaleId)
+{
+    /// <summary>
+    /// Whether the caller may change the curriculum itself: its details, a clone of it, and its national items. That is
+    /// <c>CanAccessCollege</c>, the rule <c>UpdateCurriculumCommand</c>, <c>CloneCurriculumAsNewVersionCommand</c> and the
+    /// national items' commands enforce (T211). Set only by <see cref="CurriculumAdminScope.ForCaller" />; left at false,
+    /// a projection that forgot it offers nothing, which the handlers would refuse anyway.
+    /// </summary>
+    public bool CanEditCurriculum { get; init; }
+}
 
 public sealed record CurriculumItemDto(
     int Id,
@@ -47,6 +56,12 @@ public sealed record CurriculumItemDto(
     /// </summary>
     bool EpaIsActive,
     /// <summary>
+    /// The institution whose own item this is, or null for a national item of the College's (T091). Positional and not
+    /// defaulted, and placed before a parameter of another type, so a projection that forgot it fails to compile: read
+    /// as null, another institution's local item would pass for a national one, and be shown to every adopter (T211).
+    /// </summary>
+    int? OwningInstitutionId,
+    /// <summary>
     /// How often a committee decides this EPA, or null for no published cadence (T131). Nullable and not defaulted:
     /// <c>AcademicYear</c> is the enum's zero value, so a projection that filled it in by default would make the EPA due
     /// every year, and an editor that re-saved the DTO would store it.
@@ -64,4 +79,14 @@ public sealed record CurriculumItemDto(
 {
     /// <summary>The tool keys in <see cref="PermittedToolsJson" />, normalised and sorted. Empty means any instrument.</summary>
     public IReadOnlyList<string> PermittedToolKeys => Wombat.Domain.Curricula.CurriculumItem.ParsePermittedTools(PermittedToolsJson);
+
+    /// <summary>Whether this is an institution's own item rather than one of the College's (T091).</summary>
+    public bool IsLocal => OwningInstitutionId is not null;
+
+    /// <summary>
+    /// Whether the caller may edit and remove this item: <see cref="CurriculumItemEpas.MayWrite" />, the rule the Update and
+    /// Remove commands enforce (T211). The editor offers Edit and Remove only where it is true. Set only by
+    /// <see cref="CurriculumAdminScope.ForCaller" />; left at false, a projection that forgot it offers nothing.
+    /// </summary>
+    public bool CanEdit { get; init; }
 }

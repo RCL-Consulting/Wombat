@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
@@ -22,8 +23,13 @@ internal static class CurriculumMappings
             .SingleOrDefaultAsync(entity => entity.Id == curriculumId, cancellationToken)
             ?? throw new InvalidOperationException("The requested curriculum was not found.");
 
-    public static CurriculumDto ToDto(Curriculum curriculum, int specialityId, string specialityName, string subSpecialityName, string collegeName, bool canEditInPlace)
-        => new(
+    /// <summary>
+    /// A loaded curriculum as the caller sees it (<see cref="CurriculumAdminScope.ForCaller" />). The commands return it and
+    /// the item editor redraws from it, so it is cut to the caller as the read is (T211).
+    /// </summary>
+    /// <param name="curriculum">Loaded with its sub-speciality, speciality and College.</param>
+    public static CurriculumDto ToDto(Curriculum curriculum, int specialityId, string specialityName, string subSpecialityName, string collegeName, bool canEditInPlace, ClaimsPrincipal principal)
+        => CurriculumAdminScope.ForCaller(new(
             curriculum.Id,
             specialityId,
             curriculum.SubSpecialityId,
@@ -38,9 +44,11 @@ internal static class CurriculumMappings
             canEditInPlace,
             curriculum.Items
                 .OrderBy(entity => entity.Epa.Code)
-                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.Epa.IsActive, entity.DecisionCadence, entity.DecisionBodyKey, entity.DecisionBody == null ? null : entity.DecisionBody.Name, entity.DecisionIsOpportunistic, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
+                .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.Epa.IsActive, entity.OwningInstitutionId, entity.DecisionCadence, entity.DecisionBodyKey, entity.DecisionBody == null ? null : entity.DecisionBody.Name, entity.DecisionIsOpportunistic, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
                 .ToList(),
-            curriculum.SubSpeciality.DefaultEntrustmentScaleId);
+            curriculum.SubSpeciality.DefaultEntrustmentScaleId),
+            curriculum.SubSpeciality.Speciality.CollegeId,
+            principal);
 
     /// <summary>
     /// Refuses a decision body the vocabulary does not hold (T131). A no-op for none.

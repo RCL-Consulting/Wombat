@@ -176,9 +176,10 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
-        // A CollegeAdmin/Administrator edits the national core; an InstitutionalAdmin adds an
-        // institution-local item to the (adopted) national curriculum (T091 phase 3).
-        var owningInstitutionId = CurriculumItemEpas.OwnerOfNewItem(request.Principal);
+        // The curriculum's CollegeAdmin or an Administrator edits the national core; an InstitutionalAdmin adds an
+        // institution-local item to the (adopted) national curriculum (T091 phase 3). Decided for this curriculum's
+        // College, so a CollegeAdmin of another College who is also an InstitutionalAdmin adds their institution's item.
+        var owningInstitutionId = CurriculumItemEpas.OwnerOfNewItem(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId);
 
         if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId, owningInstitutionId))
         {
@@ -189,10 +190,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         // institution's own local EPAs. The Add picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, owningInstitutionId, request.EpaId, cancellationToken);
 
-        if (curriculum.Items.Any(entity => entity.EpaId == request.EpaId))
-        {
-            throw new InvalidOperationException("This curriculum already contains the selected EPA.");
-        }
+        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, exceptItemId: null, request.Principal);
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, currentScaleId: null, cancellationToken);
@@ -219,7 +217,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true);
+        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
     }
 }
 
@@ -261,10 +259,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         // row's picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, item.OwningInstitutionId, request.EpaId, cancellationToken);
 
-        if (curriculum.Items.Any(entity => entity.Id != request.ItemId && entity.EpaId == request.EpaId))
-        {
-            throw new InvalidOperationException("This curriculum already contains the selected EPA.");
-        }
+        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, request.ItemId, request.Principal);
 
         // Before the first mutation (the audit pipeline commits a half-finished one), and judged on the REQUESTED
         // values: a save that changes the scale, the flat minimum and the stage minima together is re-pinning the
@@ -291,7 +286,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true);
+        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
     }
 }
 
@@ -334,6 +329,6 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true);
+        return CurriculumMappings.ToDto(curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal);
     }
 }

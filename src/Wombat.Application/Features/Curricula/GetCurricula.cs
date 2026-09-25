@@ -1,14 +1,18 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
-using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Curricula;
 
+/// <summary>The curricula the caller may open (<see cref="CurriculumAdminScope.Openable" />), each cut to what they read.</summary>
 public sealed record GetCurriculaListQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<CurriculumDto>>;
+
+/// <summary>
+/// One curriculum, cut to what the caller reads, or null when they may not open it (T056: not found, not forbidden).
+/// </summary>
 public sealed record GetCurriculumByIdQuery(int Id, ClaimsPrincipal Principal) : IRequest<CurriculumDto?>;
 
 public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaListQuery, IReadOnlyList<CurriculumDto>>
@@ -22,60 +26,17 @@ public sealed class GetCurriculaListQueryHandler : IRequestHandler<GetCurriculaL
 
     public async Task<IReadOnlyList<CurriculumDto>> Handle(GetCurriculaListQuery request, CancellationToken cancellationToken)
     {
-        var query = _dbContext.Set<Curriculum>().AsQueryable();
-
-        if (!request.Principal.IsAdministrator())
-        {
-            var scopedCollegeId = request.Principal.GetCollegeId();
-            var scopedInstitutionId = request.Principal.GetInstitutionId();
-
-            if (scopedCollegeId.HasValue)
-            {
-                // CollegeAdmin: the national catalogue they govern.
-                query = query.Where(entity => entity.SubSpeciality.Speciality.CollegeId == scopedCollegeId.Value);
-            }
-            else if (scopedInstitutionId.HasValue)
-            {
-                // InstitutionalAdmin: only the national versions their institution has actively adopted —
-                // the versions they may admit trainees into (T091 phase 4).
-                var adoptedCurriculumIds = await _dbContext.Set<InstitutionCurriculumAdoption>()
-                    .Where(adoption => adoption.IsActive && adoption.InstitutionId == scopedInstitutionId.Value)
-                    .Select(adoption => adoption.CurriculumId)
-                    .ToListAsync(cancellationToken);
-
-                query = query.Where(entity => adoptedCurriculumIds.Contains(entity.Id));
-            }
-            else
-            {
-                return Array.Empty<CurriculumDto>();
-            }
-        }
-
-        return await query
+        // The same rule as GetCurriculumByIdQuery, so every row the list shows is one the caller can open (T211).
+        var rows = await CurriculumAdminScope.Openable(_dbContext, request.Principal)
             .OrderBy(entity => entity.SubSpeciality.Speciality.College.Name)
             .ThenBy(entity => entity.SubSpeciality.Speciality.Name)
             .ThenBy(entity => entity.SubSpeciality.Name)
             .ThenBy(entity => entity.Name)
             .ThenByDescending(entity => entity.EffectiveFrom)
-            .Select(entity => new CurriculumDto(
-                entity.Id,
-                entity.SubSpeciality.SpecialityId,
-                entity.SubSpecialityId,
-                entity.SubSpeciality.Speciality.Name,
-                entity.SubSpeciality.Name,
-                entity.SubSpeciality.Speciality.College.Name,
-                entity.Name,
-                entity.Version,
-                entity.EffectiveFrom,
-                entity.EffectiveTo,
-                entity.IsActive,
-                true,
-                entity.Items
-                    .OrderBy(item => item.Epa.Code)
-                    .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.Epa.IsActive, item.DecisionCadence, item.DecisionBodyKey, item.DecisionBody == null ? null : item.DecisionBody.Name, item.DecisionIsOpportunistic, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
-                    .ToList(),
-                entity.SubSpeciality.DefaultEntrustmentScaleId))
+            .Select(CurriculumRow.Projection)
             .ToListAsync(cancellationToken);
+
+        return rows.Select(row => CurriculumAdminScope.ForCaller(row.Curriculum, row.CollegeId, request.Principal)).ToList();
     }
 }
 
@@ -90,42 +51,39 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
 
     public async Task<CurriculumDto?> Handle(GetCurriculumByIdQuery request, CancellationToken cancellationToken)
     {
-        var projection = await _dbContext.Set<Curriculum>()
+        var row = await CurriculumAdminScope.Openable(_dbContext, request.Principal)
             .Where(entity => entity.Id == request.Id)
-            .Select(entity => new
-            {
-                Dto = new CurriculumDto(
-                    entity.Id,
-                    entity.SubSpeciality.SpecialityId,
-                    entity.SubSpecialityId,
-                    entity.SubSpeciality.Speciality.Name,
-                    entity.SubSpeciality.Name,
-                    entity.SubSpeciality.Speciality.College.Name,
-                    entity.Name,
-                    entity.Version,
-                    entity.EffectiveFrom,
-                    entity.EffectiveTo,
-                    entity.IsActive,
-                    true,
-                    entity.Items
-                        .OrderBy(item => item.Epa.Code)
-                        .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.Epa.IsActive, item.DecisionCadence, item.DecisionBodyKey, item.DecisionBody == null ? null : item.DecisionBody.Name, item.DecisionIsOpportunistic, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
-                        .ToList(),
-                    entity.SubSpeciality.DefaultEntrustmentScaleId),
-                CollegeId = entity.SubSpeciality.Speciality.CollegeId
-            })
+            .Select(CurriculumRow.Projection)
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (projection is null)
-        {
-            return null;
-        }
-
-        if (!request.Principal.CanAccessCollege(projection.CollegeId))
-        {
-            return null;
-        }
-
-        return projection.Dto;
+        return row is null ? null : CurriculumAdminScope.ForCaller(row.Curriculum, row.CollegeId, request.Principal);
     }
+}
+
+/// <summary>
+/// A curriculum as read for the admin pages, with every item and the College it belongs to, before
+/// <see cref="CurriculumAdminScope.ForCaller" /> cuts it to the caller. The list and the one-curriculum read share it.
+/// </summary>
+internal sealed record CurriculumRow(CurriculumDto Curriculum, int CollegeId)
+{
+    public static readonly Expression<Func<Curriculum, CurriculumRow>> Projection = entity => new CurriculumRow(
+        new CurriculumDto(
+            entity.Id,
+            entity.SubSpeciality.SpecialityId,
+            entity.SubSpecialityId,
+            entity.SubSpeciality.Speciality.Name,
+            entity.SubSpeciality.Name,
+            entity.SubSpeciality.Speciality.College.Name,
+            entity.Name,
+            entity.Version,
+            entity.EffectiveFrom,
+            entity.EffectiveTo,
+            entity.IsActive,
+            true,
+            entity.Items
+                .OrderBy(item => item.Epa.Code)
+                .Select(item => new CurriculumItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.RequiredCount, item.QuotaPeriod, item.MinimumLevelOrder, item.WindowMonths, item.Weight, item.MinimumLevelByStageJson, item.PermittedToolsJson, item.Epa.IsActive, item.OwningInstitutionId, item.DecisionCadence, item.DecisionBodyKey, item.DecisionBody == null ? null : item.DecisionBody.Name, item.DecisionIsOpportunistic, item.ScaleId, item.Scale == null ? null : item.Scale.Name))
+                .ToList(),
+            entity.SubSpeciality.DefaultEntrustmentScaleId),
+        entity.SubSpeciality.Speciality.CollegeId);
 }

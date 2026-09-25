@@ -21,7 +21,8 @@ namespace Wombat.Application.Features.Curricula;
 /// </para>
 /// <para>
 /// <b>Whose local EPAs.</b> A new item's owner is the caller's institution when the caller adds as an InstitutionalAdmin
-/// (<see cref="OwnerOfNewItem" />), so for an Add it is the caller's own institution. On an edit it is the stored item's
+/// to a curriculum whose College's items they do not write (<see cref="OwnerOfNewItem" />), so for an Add it is the
+/// caller's own institution. On an edit it is the stored item's
 /// owner, which the Update handler has already required the caller to be able to act for. An Administrator editing
 /// institution A's item may therefore name A's local EPAs, and not those of the institution the Administrator happens
 /// to hold a claim for.
@@ -50,13 +51,23 @@ public static class CurriculumItemEpas
                 || (itemOwningInstitutionId != null && epa.OwningInstitutionId == itemOwningInstitutionId));
 
     /// <summary>
-    /// Who owns an item the caller adds: null (the national core) for an Administrator or a CollegeAdmin, the caller's
-    /// institution for an InstitutionalAdmin adding a local extra to an adopted curriculum (T091 phase 3).
+    /// Who owns an item the caller adds to a curriculum of <paramref name="collegeId" />: null (the national core) where
+    /// the caller writes that College's items (<c>CanAccessCollege</c>: an Administrator, or that College's CollegeAdmin),
+    /// else the caller's institution for an InstitutionalAdmin adding a local extra (T091 phase 3), else null, which
+    /// <see cref="MayWrite" /> then refuses.
     /// </summary>
-    public static int? OwnerOfNewItem(ClaimsPrincipal principal)
-        => !principal.IsAdministrator() && !principal.IsCollegeAdmin() && principal.IsInstitutionalAdmin()
-            ? principal.GetInstitutionId()
-            : null;
+    /// <remarks>
+    /// Decided per curriculum, not per caller (T211 review). A user who is CollegeAdmin of one College and InstitutionalAdmin
+    /// of an institution that adopted another College's curriculum opens that curriculum through the adoption, and adds
+    /// their institution's items to it; decided by role alone, as before, the CollegeAdmin role made every new item
+    /// national, which that curriculum's College alone may write, so the Add form and its picker were refused on a page
+    /// the list had offered. Since the owner is null exactly where <c>CanAccessCollege</c> holds, the item editor's
+    /// <c>CurriculumDto.CanEditCurriculum</c> says which kind of item its Add form makes.
+    /// </remarks>
+    public static int? OwnerOfNewItem(ClaimsPrincipal principal, int collegeId)
+        => principal.CanAccessCollege(collegeId)
+            ? null
+            : principal.IsInstitutionalAdmin() ? principal.GetInstitutionId() : null;
 
     /// <summary>
     /// Whether the caller may write an item with this owner on a curriculum of <paramref name="collegeId" />: a national

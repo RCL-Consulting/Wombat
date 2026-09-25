@@ -71,7 +71,7 @@ public sealed class ListCurriculumItemEpaOptionsQueryHandler
         }
         else
         {
-            owningInstitutionId = CurriculumItemEpas.OwnerOfNewItem(request.Principal);
+            owningInstitutionId = CurriculumItemEpas.OwnerOfNewItem(request.Principal, curriculum.CollegeId);
         }
 
         if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.CollegeId, owningInstitutionId))

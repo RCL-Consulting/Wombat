@@ -1,6 +1,8 @@
 @page "/admin/curricula/new"
 @page "/admin/curricula/{Id:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@* T211. Every command this page sends (create, update, clone) is the College's: CanAccessCollege. An InstitutionalAdmin
+   was admitted to a form whose every Save was refused, and the CollegeAdmin who can save it was turned away. *@
+@attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider

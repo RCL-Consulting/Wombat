@@ -218,21 +218,31 @@ public sealed class CurriculumItemDecisionTests
     }
 
     /// <summary>
-    /// What keeps national items read-only to institutions on the item editor, not only at its Save: the page loads the
-    /// curriculum through this query, and an InstitutionalAdmin gets nothing back, so the page sends them to not-found
-    /// before it draws an Edit button. Widening this read would put Edit and Remove on every national row for someone the
-    /// update and remove handlers then refuse; the page would first have to offer them per item.
+    /// The item editor loads the curriculum through this query. Since T211 an InstitutionalAdmin opens a curriculum their
+    /// institution has adopted or keeps items of its own on, with every national item marked as one they may not change,
+    /// so the page offers them Edit and Remove, and so a decision, only on their own (<see cref="CurriculumAdminScopeTests" />).
+    /// This seed records no adoption: the institution with the local item opens the curriculum for it, and another
+    /// institution, with neither, reads it as not found.
     /// </summary>
     [Fact]
-    public async Task TheItemEditorsRead_GivesAnInstitutionalAdminNothing()
+    public async Task TheItemEditorsRead_OffersAnInstitutionalAdminOnlyTheirOwnItem_AndAnotherInstitutionNothing()
     {
+        const int otherInstitutionId = InstitutionId + 1;
         await using var dbContext = CreateDbContext(Guid.NewGuid().ToString());
         await SeedAsync(dbContext);
 
-        var result = await new GetCurriculumByIdQueryHandler(dbContext).Handle(
+        var own = await new GetCurriculumByIdQueryHandler(dbContext).Handle(
             new GetCurriculumByIdQuery(CurriculumId, TestPrincipals.InstitutionalAdmin(InstitutionId)), CancellationToken.None);
 
-        result.Should().BeNull();
+        own.Should().NotBeNull();
+        own!.Items.ToDictionary(item => item.Id, item => item.CanEdit).Should().BeEquivalentTo(
+            new Dictionary<int, bool> { [NationalItemId] = false, [LocalItemId] = true },
+            "the national item's decision is the College's to set");
+
+        var other = await new GetCurriculumByIdQueryHandler(dbContext).Handle(
+            new GetCurriculumByIdQuery(CurriculumId, TestPrincipals.InstitutionalAdmin(otherInstitutionId)), CancellationToken.None);
+
+        other.Should().BeNull();
     }
 
     [Fact]

@@ -260,6 +260,16 @@ Instead:
 - The form row is as wide as the table, so Save sits at the table's right edge. **The read-only table must fit its
   container**, or Save is off-screen however the form is laid out.
 
+**A row the caller cannot change** (T211). A list offers a row action only where the command behind it would accept it,
+and a link only to a page that admits the caller and lets them act there. The page reads that from the query, never
+from the caller's roles: each row carries the flag the command's own rule sets (`CurriculumItemDto.CanEdit`,
+`CurriculumDto.CanEditCurriculum`, both from `CurriculumAdminScope`), and a page-level link is shown to those the target
+page's policy admits (`IAuthorizationService` with that policy's name). A row with no action is not left blank: its
+actions cell says why in a `.muted` span ("Set by the College"). Where whole groups of rows are read-only to the
+caller, a standing `Alert` (`Role=""`) at the top says what they may and may not change there. An institution's own
+item on a shared national list is marked under its title, `.muted .text-sm` ("The institution's own item"), as the
+entrustment standing panel marks an institution's own EPA.
+
 A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
 give one. Name each by its column and its row, in the words the page uses: `aria-label="Label, level 3"`, and a row's

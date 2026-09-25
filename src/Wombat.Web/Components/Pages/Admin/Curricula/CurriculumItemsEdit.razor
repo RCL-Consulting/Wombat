@@ -12,7 +12,11 @@
 <PageHeader Title="Curriculum items" Subtitle="@(_curriculum is null ? "Manage EPA requirements for the selected curriculum." : $"{_curriculum.Name} ({_curriculum.Version})")">
   <Actions>
     <a class="btn btn-outline btn-sm" href="/admin/curricula">Back to curricula</a>
-    <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{Id}")">Back to curriculum</a>
+    @* T211. The curriculum's own page edits its details and clones it, which only its College can do. *@
+    @if (_curriculum is { CanEditCurriculum: true })
+    {
+      <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{Id}")">Back to curriculum</a>
+    }
   </Actions>
 </PageHeader>
 
@@ -29,11 +33,26 @@
 <StatePanel IsLoading="_loading" IsEmpty="@(_curriculum is null)" EmptyTitle="Curriculum not found" EmptyBody="The selected curriculum could not be loaded." LoadError="@_loadError">
   @if (_curriculum is not null)
   {
-    <Alert Kind="warning" Role="">
-      A target and its period are read live. Changing one changes what every trainee on this curriculum is measured
-      against, in every institution that has adopted it, including periods that have already closed. A tool list is
-      checked when an activity is filed and submitted, and never takes back credit already earned.
-    </Alert>
+    @if (_curriculum.CanEditCurriculum)
+    {
+      <Alert Kind="warning" Role="">
+        A target and its period are read live. Changing one changes what every trainee on this curriculum is measured
+        against, in every institution that has adopted it, including periods that have already closed. A tool list is
+        checked when an activity is filed and submitted, and never takes back credit already earned.
+      </Alert>
+    }
+    else
+    {
+      @* T211. An institution opens a curriculum it has adopted, or one holding items of its own: the College's items are
+         here to read, and its own to keep. The missing buttons alone would not say which is which, or why. *@
+      <Alert Kind="warning" Role="">
+        The College sets this curriculum's national items, so they are read only here. Your institution's own items apply
+        only to its trainees, and you can add, edit and remove them. A target and its period are read live: changing one
+        changes what every trainee of your institution on this curriculum is measured against, including periods that
+        have already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit
+        already earned.
+      </Alert>
+    }
 
     @* T158. The editor lists every item as a record, so an item whose EPA is inactive is still here. It must say that
        the item is not in force, or an admin sees a target that no trainee sees and nothing tells them why. *@
@@ -86,6 +105,10 @@
                   {
                     <span class="muted">(inactive: not in force)</span>
                   }
+                  @if (item.IsLocal)
+                  {
+                    <div class="muted text-sm">The institution's own item</div>
+                  }
                 </td>
                 <td>
                   @TargetText(item)
@@ -123,6 +146,13 @@
                   @if (editing)
                   {
                     <span class="muted">Editing below</span>
+                  }
+                  else if (!item.CanEdit)
+                  {
+                    @* T211. Edit and Remove are offered only where the Update and Remove commands would accept them
+                       (CurriculumItemDto.CanEdit). The one item a caller reads and cannot change is a national item read
+                       by an institution. *@
+                    <span class="muted">@(item.IsLocal ? "Another institution's item" : "Set by the College")</span>
                   }
                   else
                   {
@@ -275,7 +305,10 @@
     </div>
 
     <div class="form-container mt-3">
-      <h3>Add item</h3>
+      @* T211. An institution adds an item of its own; the College, or an Administrator, a national one. The Add command
+         makes a national item exactly where the caller writes the College's (CurriculumItemEpas.OwnerOfNewItem), which
+         is what CanEditCurriculum says, so the heading names the kind of item the form will make. *@
+      <h3>@(_curriculum.CanEditCurriculum ? "Add item" : "Add your institution's own item")</h3>
       <EditForm Model="_addModel" OnValidSubmit="AddItemAsync" FormName="curriculum-item">
         <DataAnnotationsValidator />
         <ValidationSummary class="validation-summary-errors" />
