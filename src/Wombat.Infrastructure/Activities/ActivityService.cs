@@ -1485,7 +1485,8 @@ public sealed class ActivityService : IActivityService
                 ? error.Message
                 : $"{schema.FieldLabel(error.FieldKey)}: {error.Message}")));
 
-        throw new InvalidOperationException(message);
+        // The keys ride with the message, so the page can mark the controls it names (T263).
+        throw new ActivityFieldsRefusedException(message, validationErrors.Select(error => error.FieldKey));
     }
 
     /// <summary>The text, trimmed, ending as a sentence does.</summary>
@@ -1529,8 +1530,9 @@ public sealed class ActivityService : IActivityService
             var value = ActorRuleMatcher.ReadUserFieldValue(dataJson, fieldName);
             if (string.Equals(value, subjectUserId, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException(
-                    $"{schema.FieldLabel(fieldName)}: this decides who may act on the activity, so it cannot name the person the activity is about.");
+                throw new ActivityFieldsRefusedException(
+                    $"{schema.FieldLabel(fieldName)}: this decides who may act on the activity, so it cannot name the person the activity is about.",
+                    [fieldName]);
             }
         }
     }
@@ -1592,9 +1594,10 @@ public sealed class ActivityService : IActivityService
 
             if (!isUnchanged)
             {
-                throw new InvalidOperationException(
+                throw new ActivityFieldsRefusedException(
                     $"{schema.FieldLabel(property.Name)}: you cannot change this while the activity is " +
-                    $"{workflow.StateLabel(currentState)}.");
+                    $"{workflow.StateLabel(currentState)}.",
+                    [property.Name]);
             }
         }
 

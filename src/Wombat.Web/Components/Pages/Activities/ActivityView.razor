@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @using Wombat.Application.Features.Activities.Commands.TransitionActivity
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
+@using Wombat.Application.Features.Activities.Services
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ActivityNotices Notices
@@ -22,12 +23,15 @@
      with the page, already filled, and a status region that arrives filled is often not read; an alert is. A warning here
      is the submit's refusal, so it is an alert (T193). A success keeps the kind's polite status: the header says the new
      state as well. *@
-  <Alert Kind="@_notice.Kind" Role="@(_notice.Kind == "warning" ? "alert" : null)">@_notice.Message</Alert>
+  @* It arrives with the page, where an alert is not reliably announced, so a field a refused submit named points at it
+     as well as being marked (T263; DESIGN.md § Alerts). *@
+  <Alert Kind="@_notice.Kind" Role="@(_notice.Kind == "warning" ? "alert" : null)" Id="@NoticeAlertId">@_notice.Message</Alert>
 }
 
 @if (!string.IsNullOrWhiteSpace(_actionError))
 {
-  <Alert Kind="danger">@_actionError</Alert>
+  @* The fields a refused move names are marked in the form below, and each names this alert (T263). *@
+  <Alert Kind="danger" Id="@ActionRefusalAlertId">@_actionError</Alert>
 }
 
 @if (CreditedNothing)
@@ -89,7 +93,9 @@
                           SubjectUserId="@_activity.SubjectUserId"
                           CreditRulesJson="@_activity.CreditRulesJson"
                           WbaToolKey="@_activity.WbaToolKey"
-                          ActivityInstitutionId="@_activity.InstitutionId" />
+                          ActivityInstitutionId="@_activity.InstitutionId"
+                          RefusedFieldKeys="_refusedFieldKeys"
+                          RefusalId="@_refusalAlertId" />
         }
         else
         {
@@ -114,6 +120,8 @@
                         StoredDataJson="@_activity.DataJson"
                         FiledOn="@_filedOn"
                         ProgrammeStartsOn="@_programmeStartsOn"
+                        RefusedFieldKeys="_refusedFieldKeys"
+                        RefusalId="@_refusalAlertId"
                         DataJsonChanged="OnDataChanged" />
 
           <FormActions>
@@ -199,6 +207,18 @@
   public const string UnavailableActionMessage =
     "That action is not available here. Reload the page to see what you can do now.";
 
+  /// <summary>The id of a refused move's alert, which each field the refusal names points at (T263).</summary>
+  public const string ActionRefusalAlertId = "activity-action-refusal";
+
+  /// <summary>The id of the notice handed over from <c>/activities/new</c>, which the fields a refused submit named point at.</summary>
+  public const string NoticeAlertId = "activity-notice";
+
+  // The fields the refusal on show named, and the id of the alert that shows it (T263): a refused move's, or the notice of
+  // a submit refused straight after the create. Set with that alert and cleared with it, so the form marks a field only
+  // while the alert naming it is on the page.
+  private IReadOnlyList<string> _refusedFieldKeys = [];
+  private string? _refusalAlertId;
+
   /// <summary>
   /// True when a transition on this activity was evaluated for credit and credited nothing (T108).
   /// </summary>
@@ -230,6 +250,7 @@
     _loadError = null;
     _actionError = null;
     _notice = null;
+    ShowRefusedFields([], null);
 
     try
     {
@@ -248,6 +269,17 @@
     // Taken whatever the load's outcome, so it cannot wait for a later visit; shown only above an activity that loaded.
     var notice = Notices.Take(ActivityId);
     _notice = _loadError is null && _activity is not null ? notice : null;
+
+    if (_notice?.RefusedFieldKeys is { Count: > 0 } refused)
+    {
+      ShowRefusedFields(refused, NoticeAlertId);
+    }
+  }
+
+  private void ShowRefusedFields(IReadOnlyList<string> fieldKeys, string? alertId)
+  {
+    _refusedFieldKeys = fieldKeys;
+    _refusalAlertId = alertId;
   }
 
   /// <summary>
@@ -331,6 +363,14 @@
                                 string.Equals(action.TransitionKey, request.TransitionKey, StringComparison.Ordinal)))
     {
       _actionError = UnavailableActionMessage;
+
+      // That alert no longer says what the refused move did, so the fields it named are not left pointing at it. A
+      // notice's stay marked: the notice is still shown.
+      if (_refusalAlertId == ActionRefusalAlertId)
+      {
+        ShowRefusedFields([], null);
+      }
+
       return;
     }
 
@@ -338,6 +378,7 @@
     _actionError = null;
     // The notice described the activity as it arrived. It must not sit above the outcome of this move.
     _notice = null;
+    ShowRefusedFields([], null);
 
     try
     {
@@ -368,8 +409,9 @@
     catch (Exception exception)
     {
       // The working copy is deliberately left alone: a rejected transition (a missing required
-      // field, say) must not discard what the actor typed.
-      _actionError = exception.Message;
+      // field, say) must not discard what the actor typed. The remounted form marks the fields the refusal names (T263).
+      _actionError = RefusalText.Of(exception);
+      ShowRefusedFields(ActivityFieldsRefusedException.FieldKeysOf(exception), ActionRefusalAlertId);
       _formGeneration++;
     }
     finally

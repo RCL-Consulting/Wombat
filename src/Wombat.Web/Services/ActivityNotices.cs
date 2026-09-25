@@ -22,8 +22,9 @@ public sealed class ActivityNotices
     private readonly Dictionary<int, ActivityNotice> _notices = [];
 
     /// <summary>Leaves a notice for the activity, replacing any it had not yet shown.</summary>
-    public void Post(int activityId, string kind, string message)
-        => _notices[activityId] = new ActivityNotice(kind, message);
+    /// <param name="refusedFieldKeys">The fields a refusal the notice reports named, so the activity's page marks them (T263).</param>
+    public void Post(int activityId, string kind, string message, IReadOnlyList<string>? refusedFieldKeys = null)
+        => _notices[activityId] = new ActivityNotice(kind, message, refusedFieldKeys);
 
     /// <summary>Returns the activity's notice and removes it, so it is shown once; null when there is none.</summary>
     public ActivityNotice? Take(int activityId)
@@ -31,4 +32,9 @@ public sealed class ActivityNotices
 }
 
 /// <summary>A notice's <see cref="Kind" /> is an <c>Alert</c> kind: info, success, warning or danger.</summary>
-public sealed record ActivityNotice(string Kind, string Message);
+/// <param name="RefusedFieldKeys">
+/// The fields named by the refusal the notice reports, by schema key: the submit refused straight after the create (T127),
+/// whose notice asks the author to fix the fields below. The activity's page marks them (T263). Null for any other notice,
+/// and for a refusal that names no field.
+/// </param>
+public sealed record ActivityNotice(string Kind, string Message, IReadOnlyList<string>? RefusedFieldKeys = null);

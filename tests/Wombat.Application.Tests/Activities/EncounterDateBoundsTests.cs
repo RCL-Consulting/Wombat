@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
@@ -82,6 +83,21 @@ public sealed class EncounterDateBoundsTests
 
         message.Should().Be($"Date observed: The date cannot be after today ({Iso(Today)}).");
         await AssertNoActivitiesAsync(options);
+    }
+
+    [Fact]
+    public async Task ARefusedDate_CarriesTheDateFieldsKey_SoThePageCanMarkIt()
+    {
+        // T263: the programme-start bound too, which the page predicts only while the date is typed.
+        var options = await SeededAsync();
+
+        var future = await RefusalAsync(options, service => service.CreateDraftAsync(
+            CreateInput(CpsaTypeId, TraineeId, CpsaRequest(Today.AddDays(1)))));
+        var early = await RefusalAsync(options, service => service.CreateDraftAsync(
+            CreateInput(CpsaTypeId, TraineeId, CpsaRequest(ProgrammeStart.AddDays(-1)))));
+
+        future.Should().BeOfType<ActivityFieldsRefusedException>().Which.FieldKeys.Should().Equal("observed_on");
+        early.Should().BeOfType<ActivityFieldsRefusedException>().Which.FieldKeys.Should().Equal("observed_on");
     }
 
     [Fact]
@@ -647,6 +663,13 @@ public sealed class EncounterDateBoundsTests
         DbContextOptions<ApplicationDbContext> options,
         Func<ActivityService, Task> act,
         TimeProvider? clock = null)
+        => (await RefusalAsync(options, act, clock)).Message;
+
+    /// <summary><see cref="ShouldBeRefusedAsync" />, returning the refusal itself.</summary>
+    private static async Task<InvalidOperationException> RefusalAsync(
+        DbContextOptions<ApplicationDbContext> options,
+        Func<ActivityService, Task> act,
+        TimeProvider? clock = null)
     {
         await using var db = new ApplicationDbContext(options);
 
@@ -661,7 +684,7 @@ public sealed class EncounterDateBoundsTests
         (await db.SaveChangesAsync()).Should().Be(0);
         db.ChangeTracker.Clear();
 
-        return thrown.Which.Message;
+        return thrown.Which;
     }
 
     private static async Task AssertNoActivitiesAsync(DbContextOptions<ApplicationDbContext> options)

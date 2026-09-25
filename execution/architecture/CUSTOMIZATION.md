@@ -258,6 +258,18 @@ version cannot name it: a state or move it does not declare, or a type with no w
 a page otherwise, except as a badge's colour class. The subject-access report's JSON keeps the stored key, as it keeps
 `DataJson` raw.
 
+A field is the same (T172, T263). A refusal of an activity's data names each field by its label ("Presenting problem: A
+value is required."), and carries the fields' schema keys beside the message: `ActivityFieldsRefusedException`
+(Application, `Features/Activities/Services`), an `InvalidOperationException`, so every catch and the audit row are
+unchanged. `FieldKeys` lists each field the refusal is about once, in the order the message names it. It is thrown by
+`ActivityService`'s validation refusal (the schema validator and `EncounterDateGate`), by the self-nomination guard, by
+the refusal of a patched field the actor may not change, by `NomineeGate`, and by `ToolPermissionGate` (the field each
+refused match came from; a literal `curriculum_item_id` names none). The tool gate's message names at most three refused
+items and counts the rest, but its keys carry the field of every one, the uncounted ones last, so every field that
+stopped the write is marked. A refusal about no field (a move the state does not offer, a missing
+note) stays a plain `InvalidOperationException`. The key is never shown: the page uses it to mark the control whose id it
+is (DESIGN.md § Form system).
+
 ### `validation` — how much of the form a move insists on (T105)
 
 Every transition checks formats. Which `required` fields count is the transition's `validation`:

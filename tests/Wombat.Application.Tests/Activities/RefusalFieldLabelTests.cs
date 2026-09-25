@@ -116,6 +116,55 @@ public sealed class RefusalFieldLabelTests
                 "Presenting problem: Say what brought the child in. The data could not be read. Case complexity: Is this right?");
     }
 
+    // ---- T263: the refusal carries the keys of the fields it names ------------------------------------------------
+
+    [Fact]
+    public async Task ARefusedSubmit_CarriesTheKeysOfTheFieldsItNames_InTheOrderItNamesThem()
+    {
+        // The page marks the controls whose ids are these keys, so they are the schema's keys, never the labels.
+        var options = await SeededAsync();
+        var draft = await CreateAsync(options, CpsaRequest(without: ["complexity", "presenting_problem"]));
+
+        var attempt = async () =>
+        {
+            await using var db = new ApplicationDbContext(options);
+            return await Service(db).TransitionAsync(new TransitionActivityInput(
+                draft.Id, "submit", TraineeId, Principal(TraineeId), null, null));
+        };
+
+        var refusal = (await attempt.Should().ThrowAsync<ActivityFieldsRefusedException>()).Which;
+        refusal.Message.Should().Be("Presenting problem: A value is required. Case complexity: A value is required.");
+        refusal.FieldKeys.Should().Equal("presenting_problem", "complexity");
+    }
+
+    [Fact]
+    public async Task ARefusedCreate_CarriesTheKeyOfTheFieldItNames()
+    {
+        var options = await SeededAsync();
+
+        var attempt = () => CreateAsync(options, CpsaRequest(without: [], observedOn: "last Tuesday"));
+
+        (await attempt.Should().ThrowAsync<ActivityFieldsRefusedException>())
+            .Which.FieldKeys.Should().Equal("observed_on");
+    }
+
+    [Fact]
+    public async Task AnErrorOfNoField_CarriesNoKey_AndAKeyNamedTwice_IsCarriedOnce()
+    {
+        var options = await SeededAsync();
+        await using var db = new ApplicationDbContext(options);
+        var service = Service(db, new FixedErrorsValidator(
+            new ActivityValidationErrorDto("presenting_problem", "Say what brought the child in.", "required"),
+            new ActivityValidationErrorDto(null, "The data could not be read.", "invalid_object"),
+            new ActivityValidationErrorDto("presenting_problem", "Value must be at most 5 characters long.", "max_length")));
+
+        var attempt = () => service.CreateDraftAsync(
+            new CreateActivityInput(CpsaMiniCexTypeId, TraineeId, TraineeId, CpsaRequest(without: []), Principal(TraineeId)));
+
+        (await attempt.Should().ThrowAsync<ActivityFieldsRefusedException>())
+            .Which.FieldKeys.Should().Equal("presenting_problem");
+    }
+
     // ---- helpers -------------------------------------------------------------------------------------------------
 
     /// <summary>A validator whose one field error names a key the schema does not declare, and whose other names none.</summary>

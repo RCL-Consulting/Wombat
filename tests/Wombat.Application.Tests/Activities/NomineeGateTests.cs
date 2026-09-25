@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
@@ -233,6 +234,22 @@ public sealed class NomineeGateTests
         var message = await RefusedAtCreateAsync(options, HiddenFieldTypeId, Data(("second_opinion_user_id", Raw(rawJson))));
 
         message.Should().StartWith("Second opinion: ").And.Contain(NotAPersonRefusal);
+    }
+
+    [Fact]
+    public async Task ANonStringValue_CarriesTheFieldsKey()
+    {
+        // T263. Hidden by show_if, the field is not on the form to mark, and the page marks nothing it cannot find; the key
+        // is still the field the refusal names.
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        await using var db = new ApplicationDbContext(options);
+        var attempt = () => Service(db).CreateDraftAsync(new CreateActivityInput(
+            HiddenFieldTypeId, TraineeId, TraineeId, Data(("second_opinion_user_id", Raw("42"))), Principal(TraineeId)));
+
+        (await attempt.Should().ThrowAsync<ActivityFieldsRefusedException>())
+            .Which.FieldKeys.Should().Equal("second_opinion_user_id");
     }
 
     [Theory]

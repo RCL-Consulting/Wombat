@@ -36,10 +36,11 @@ else if (_schema is not null)
             {
               // A multi-choice field is several controls, and a file field (not wired: a seed holds a document as a link, D34) or an unsupported type
               // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
-              // instead (DESIGN.md § Form system, T177), its help text announced with the group.
+              // instead (DESIGN.md § Form system, T177), its help text announced with the group, and the refusal that named
+              // it (T263). Its checkboxes are not marked: a native one takes no border, and the refusal says it.
               var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : FieldHelp.Id(field.Key);
 
-              <fieldset class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@helpId">
+              <fieldset class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@FieldHelp.DescribedBy(field.Key, field.HelpText, RefusalIdFor(field.Key))">
                 <legend>
                   @field.Label
                   @if (field.Required)
@@ -96,23 +97,23 @@ else if (_schema is not null)
                 case FieldType.Text:
                 case FieldType.Signature:
                 case FieldType.ProcedureRef:
-                  <input id="@field.Key" class="form-control" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.LongText:
-                  <textarea id="@field.Key" class="form-control" rows="4" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
+                  <textarea id="@field.Key" class="@ControlClass("form-control", field.Key)" rows="4" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
                   break;
                 case FieldType.Number:
                 case FieldType.Likert:
                 case FieldType.Rating:
-                  <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Date:
-                  <input id="@field.Key" class="@(PredictsRefusal(field.Key) ? "form-control input-validation-error" : "form-control")" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@(PredictsRefusal(field.Key) ? "true" : null)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   break;
                 case FieldType.Choice:
                 case FieldType.Epa:
                 case FieldType.User:
-                  <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                  <select id="@field.Key" class="@ControlClass("form-select", field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                     <option value="">Select…</option>
                     @foreach (var option in GetOptions(field))
                     {
@@ -124,7 +125,7 @@ else if (_schema is not null)
                   var scaleOptions = GetOptions(field);
                   if (scaleOptions.Count > 0)
                   {
-                    <select id="@field.Key" class="form-select" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                    <select id="@field.Key" class="@ControlClass("form-select", field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                       <option value="">Select…</option>
                       @foreach (var option in scaleOptions)
                       {
@@ -134,7 +135,7 @@ else if (_schema is not null)
                   }
                   else
                   {
-                    <input id="@field.Key" class="form-control" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
                   }
                   break;
               }
@@ -147,7 +148,9 @@ else if (_schema is not null)
                      present, so a screen reader hears what appears in it as the date is typed.
                      T192: a date before the programme started is not late but refused, so it says that instead, as a hint
                      the server's refusal will confirm. Telling the author it "can still be filed" beside that refusal is
-                     the contradiction this replaces. *@
+                     the contradiction this replaces. T263: a date the server has refused is not called fileable either, even
+                     where the page could not predict it (no programme start read, or one changed since): the alert names
+                     it and the input is marked, so the warning stays away until the page's next action clears the mark. *@
                   <div id="@FilingDateNoticeId(field.Key)" role="status">
                     @if (BeforeProgrammeStart(field.Key) is DateOnly startedOn)
                     {
@@ -155,7 +158,7 @@ else if (_schema is not null)
                         This date is before the trainee's programme started (@IsoDate(startedOn)), and will not be accepted.
                       </div>
                     }
-                    else if (LateFilingDaysAfter(field.Key) is int daysLate)
+                    else if (!IsRefused(field.Key) && LateFilingDaysAfter(field.Key) is int daysLate)
                     {
                       <p class="field-warning">
                         This encounter was @daysLate days ago. It can still be filed, but a filing more than
@@ -271,6 +274,27 @@ else if (_schema is not null)
   /// was.
   /// </remarks>
   [Parameter] public DateOnly? ProgrammeStartsOn { get; set; }
+
+  /// <summary>
+  /// The fields the server's last refusal of this form named, by schema key (T263): <c>ActivityFieldsRefusedException</c>'s
+  /// <c>FieldKeys</c>. Null or empty when nothing was refused.
+  /// </summary>
+  /// <remarks>
+  /// Each is marked as <see cref="PredictsRefusal" /> marks the encounter date, with <c>.input-validation-error</c> and
+  /// <c>aria-invalid="true"</c>, and names <see cref="RefusalId" /> after its help and its notice. The page holds the set
+  /// until its next action, as it holds the refusal's alert, so a field stays marked while the alert that names it is on
+  /// the page. A locked field the refusal names is marked too: which field stopped the move is worth showing to someone
+  /// who cannot fill it in. A key this form does not render (hidden by <c>show_if</c>, or not in the schema) marks nothing.
+  /// A refused encounter date shows no lateness warning while it is marked: "It can still be filed" beside the refusal
+  /// would contradict it (DESIGN.md § Alerts).
+  /// </remarks>
+  [Parameter] public IReadOnlyCollection<string>? RefusedFieldKeys { get; set; }
+
+  /// <summary>
+  /// The id of the alert that shows the refusal <see cref="RefusedFieldKeys" /> came from. Each refused control names it
+  /// with <c>aria-describedby</c>, so the refusal is read with the field and not only announced once (DESIGN.md § Alerts).
+  /// </summary>
+  [Parameter] public string? RefusalId { get; set; }
 
   [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
 
@@ -403,16 +427,41 @@ else if (_schema is not null)
   /// </summary>
   private bool PredictsRefusal(string key) => NoticesFilingDate(key) && BeforeProgrammeStart(key) is not null;
 
+  /// <summary>Whether the server's last refusal of this form named the field (T263).</summary>
+  private bool IsRefused(string key) => RefusedFieldKeys?.Contains(key) == true;
+
+  /// <summary>
+  /// Whether the control is marked invalid: the page predicts the server will refuse what is typed (T192), or the server
+  /// has refused it (T263). One marking for both, so a date that is both is marked once.
+  /// </summary>
+  private bool IsMarkedInvalid(string key) => PredictsRefusal(key) || IsRefused(key);
+
+  /// <summary>The control's class, with <c>.input-validation-error</c> while it is marked invalid (DESIGN.md § Form system).</summary>
+  private string ControlClass(string baseClass, string key)
+    => IsMarkedInvalid(key) ? $"{baseClass} input-validation-error" : baseClass;
+
+  /// <summary><c>aria-invalid</c> while the control is marked invalid; left off otherwise, never "false".</summary>
+  private string? AriaInvalid(string key) => IsMarkedInvalid(key) ? "true" : null;
+
+  /// <summary>The refusal's alert id, for a field it named; null for any other field, or when the page gave no id.</summary>
+  private string? RefusalIdFor(string key)
+    => IsRefused(key) && !string.IsNullOrWhiteSpace(RefusalId) ? RefusalId : null;
+
   // The server's refusal prints the start as an ISO date, so the hint does too: the two read as the same fact.
   private static string IsoDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
   /// <summary>
   /// What a field's control names with <c>aria-describedby</c> (T193): its help text, which <c>FormField</c> renders with
-  /// an id but cannot link itself, then the filing-date notice's live region while the field has one (T160, T192). Null
-  /// when neither is there, so no control names an element that does not exist.
+  /// an id but cannot link itself, then the filing-date notice's live region while the field has one (T160, T192), then
+  /// the alert of a refusal that named the field (T263). Null when none is there, so no control names an element that
+  /// does not exist.
   /// </summary>
   private string? DescribedBy(Wombat.Domain.Activities.Schema.FormField field)
-    => FieldHelp.DescribedBy(field.Key, field.HelpText, NoticesFilingDate(field.Key) ? FilingDateNoticeId(field.Key) : null);
+    => FieldHelp.DescribedBy(
+      field.Key,
+      field.HelpText,
+      NoticesFilingDate(field.Key) ? FilingDateNoticeId(field.Key) : null,
+      RefusalIdFor(field.Key));
 
   /// <summary>
   /// How many days before <see cref="FiledOn" /> the typed encounter date is, when that makes the filing late (T160, D15);

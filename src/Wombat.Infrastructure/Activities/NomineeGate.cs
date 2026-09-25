@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
@@ -89,7 +90,7 @@ internal static class NomineeGate
             if (element.ValueKind != JsonValueKind.String)
             {
                 // Hidden by show_if, a field skips the schema validator's type check, but the actor grammar still reads it.
-                throw new InvalidOperationException($"{label}: this must name a person, by choosing them from the list.");
+                throw new ActivityFieldsRefusedException($"{label}: this must name a person, by choosing them from the list.", [field]);
             }
 
             var userId = element.GetString()!;
@@ -99,9 +100,10 @@ internal static class NomineeGate
             }
 
             var name = await NameWithinInstitutionAsync(dbContext, userId, institutionId, cancellationToken);
-            throw new InvalidOperationException(
+            throw new ActivityFieldsRefusedException(
                 $"{label}: {name ?? "that person"} cannot be named here. Only an active {DescribeRoles(roles)} at the " +
-                "trainee's institution can be; choose someone else.");
+                "trainee's institution can be; choose someone else.",
+                [field]);
         }
     }
 

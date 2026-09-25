@@ -6,6 +6,8 @@
               IsExistingActivity="true"
               ActivityInstitutionId="@ActivityInstitutionId"
               StoredDataJson="@DataJson"
+              RefusedFieldKeys="@RefusedFieldKeys"
+              RefusalId="@RefusalId"
               ReadOnly="true" />
 
 @code {
@@ -19,4 +21,9 @@
   [Parameter] public string? CreditRulesJson { get; set; }
   [Parameter] public string? WbaToolKey { get; set; }
   [Parameter] public int? ActivityInstitutionId { get; set; }
+
+  // Forwarded so a move refused on a form this actor cannot write still marks the field that stopped it (T263): an
+  // assessor whose `complete` is refused for a field someone else owns sees which one, read-only as it is.
+  [Parameter] public IReadOnlyCollection<string>? RefusedFieldKeys { get; set; }
+  [Parameter] public string? RefusalId { get; set; }
 }

@@ -21,10 +21,10 @@
 <PageHeader Title="New activity" Subtitle="Create a draft or submit an activity from the published catalogue." />
 
 @* Only a refused create is reported here. Once the activity exists the page leaves for it, and whatever happened next is
-   said there (T127). *@
+   said there (T127). The fields the refusal names are marked in the form below, and each names this alert (T263). *@
 @if (!string.IsNullOrWhiteSpace(_error))
 {
-  <Alert Kind="danger">@_error</Alert>
+  <Alert Kind="danger" Id="@RefusalAlertId">@_error</Alert>
 }
 
 <div class="form-container">
@@ -60,6 +60,8 @@
                 EditableFieldKeys="_editableFieldKeys"
                 FiledOn="@FilingLateness.Today()"
                 ProgrammeStartsOn="@_programmeStartsOn"
+                RefusedFieldKeys="_refusedFieldKeys"
+                RefusalId="@RefusalAlertId"
                 DataJsonChanged="OnDataChanged" />
 
   <FormActions>
@@ -78,6 +80,9 @@
 }
 
 @code {
+  /// <summary>The id of the refused create's alert, which each field the refusal names points at (T263).</summary>
+  public const string RefusalAlertId = "activity-refusal";
+
   private readonly List<ActivityTypeListItemDto> _activityTypes = [];
   private ActivityTypeEditorDto? _selectedEditor;
   private int _selectedActivityTypeId;
@@ -112,6 +117,10 @@
   // resolved — the server filters the submitted data either way.
   private IReadOnlySet<string>? _editableFieldKeys;
   private string? _error;
+
+  // The fields the refused create named (T263), held with _error and cleared with it, so the form marks them while the
+  // alert that names them is shown.
+  private IReadOnlyList<string> _refusedFieldKeys = [];
 
   /// <summary>
   /// Optional deep link: <c>/activities/new?type=mini_cex</c> preselects that activity type.
@@ -169,6 +178,7 @@
   private async Task LoadSelectedTypeAsync()
   {
     _error = null;
+    _refusedFieldKeys = [];
 
     if (_selectedActivityTypeId <= 0)
     {
@@ -217,6 +227,7 @@
     _busy = true;
     _submitPressed = submit;
     _error = null;
+    _refusedFieldKeys = [];
 
     ClaimsPrincipal user;
     string userId;
@@ -239,8 +250,10 @@
     catch (Exception exception)
     {
       // Nothing was created, so the page stays, keeps what was typed, and says that nothing was saved (T127). The remount
-      // refreshes the form's option lists, since the person just refused may have fallen off them (T102).
-      _error = $"Nothing was saved. {AsSentence(exception.Message)}";
+      // refreshes the form's option lists, since the person just refused may have fallen off them (T102), and marks the
+      // fields the refusal names (T263).
+      _error = $"Nothing was saved. {AsSentence(RefusalText.Of(exception))}";
+      _refusedFieldKeys = ActivityFieldsRefusedException.FieldKeysOf(exception);
       _formGeneration++;
       _busy = false;
       return;
@@ -259,7 +272,7 @@
       return;
     }
 
-    Notices.Post(created.Id, notice.Kind, notice.Message);
+    Notices.Post(created.Id, notice.Kind, notice.Message, notice.RefusedFieldKeys);
 
     // In the circuit (no forceLoad), or the notice is lost with the scope that holds it. Replacing this page's history
     // entry means Back from the activity does not return to an empty form, where typing the encounter again would file
@@ -325,10 +338,12 @@
     {
       // The submit's refusal. The usual one is a required field the author owns that is still empty. A move out of the
       // initial state that leads on was theirs to take, so the activity is waiting on them: a draft, whatever its state
-      // is called.
+      // is called. The fields it names go with it, so the draft's page marks the ones "below" means (T263); none, when it
+      // names none, as for every other notice.
       return new ActivityNotice(
         "warning",
-        $"Saved as a draft, but not submitted: {AsSentence(exception.Message)} Fix the fields below and submit again.");
+        $"Saved as a draft, but not submitted: {AsSentence(RefusalText.Of(exception))} Fix the fields below and submit again.",
+        ActivityFieldsRefusedException.FieldKeysOf(exception) is { Count: > 0 } refused ? refused : null);
     }
 
     return new ActivityNotice("success", $"Submitted. It is now {moved.CurrentStateLabel}.");

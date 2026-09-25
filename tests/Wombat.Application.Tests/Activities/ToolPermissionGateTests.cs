@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -76,6 +77,7 @@ public sealed class ToolPermissionGateTests
     private const int TwoEpaMiniCexTypeId = 117;
     private const int LoopBackMiniCexTypeId = 118;
     private const int LockedCancelMiniCexTypeId = 119;
+    private const int FourEpaMiniCexTypeId = 120;
 
     /// <summary>The fragment every gate refusal carries, so a test can tell the gate apart from any other refusal.</summary>
     private const string GateRefusal = "cannot be used as evidence";
@@ -926,6 +928,71 @@ public sealed class ToolPermissionGateTests
         message.Should().Contain(GateRefusal);
     }
 
+    // ---- T263: the refusal carries the key of the field each refused match came from -----------------------------
+
+    [Fact]
+    public async Task ARefusalAtCreate_CarriesTheEpaFieldsKey()
+    {
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var refusal = await RefusalAsync(options, service => service.CreateDraftAsync(
+            new CreateActivityInput(MiniCexTypeId, TraineeId, TraineeId, RequestData(ForbiddingEpaId), Principal(TraineeId))));
+
+        refusal.Message.Should().Contain(GateRefusal);
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>().Which.FieldKeys.Should().Equal("epa_id");
+    }
+
+    [Fact]
+    public async Task ATwoDirectiveRefusal_CarriesOnlyTheKeyOfTheFieldThatChanged()
+    {
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var request = await CreateAsync(options, TwoEpaMiniCexTypeId, PermittingEpaId);
+        await TransitionAsync(options, request.Id, "submit", TraineeId);
+        await SetPermittedToolsAsync(options, PermittingItemId, "cbd");
+
+        var refusal = await RefusalAsync(options, service => service.TransitionAsync(new TransitionActivityInput(
+            request.Id, "complete", AssessorId, Principal(AssessorId),
+            $$"""{ "overall_level": 4, "additional_epa_id": {{ForbiddingEpaId}} }""", null)));
+
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>().Which.FieldKeys.Should().Equal("additional_epa_id");
+    }
+
+    [Fact]
+    public async Task ARefusalOfMoreItemsThanItNames_CarriesTheFieldOfEveryOne()
+    {
+        // The message names three refused items and counts the rest, so the audit row stays short (15). The keys are for
+        // marking, not reading: the field behind "1 more EPA" stopped the write as much as the three named, so it is
+        // marked too, after them.
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var refusal = await RefusalAsync(options, service => service.CreateDraftAsync(new CreateActivityInput(
+            FourEpaMiniCexTypeId, TraineeId, TraineeId, FourEpaRequestData, Principal(TraineeId))));
+
+        System.Text.RegularExpressions.Regex.Matches(refusal.Message, GateRefusal).Count.Should().Be(3);
+        refusal.Message.Should().Contain("Mini-CEX cannot be used for 1 more EPA this activity would credit either.")
+            .And.NotContain("Fourth EPA observed", "the fourth item is counted, not named");
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>()
+            .Which.FieldKeys.Should().Equal("epa_id", "second_epa_id", "third_epa_id", "fourth_epa_id");
+    }
+
+    [Fact]
+    public async Task ARefusalOfLiteralItems_CarriesNoKey()
+    {
+        // A literal curriculum_item_id came from no field, so the refusal marks none.
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var refusal = await RefusalAsync(options, service => service.CreateDraftAsync(
+            new CreateActivityInput(ManyItemsMiniCexTypeId, TraineeId, TraineeId, RequestData(PermittingEpaId), Principal(TraineeId))));
+
+        refusal.Message.Should().Contain(GateRefusal);
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>().Which.FieldKeys.Should().BeEmpty();
+    }
+
     // ---- 15: the refusal stays short enough for the audit row -----------------------------------------------------
 
     [Fact]
@@ -953,6 +1020,12 @@ public sealed class ToolPermissionGateTests
     private static async Task<string> ShouldBeRefusedAsync(
         DbContextOptions<ApplicationDbContext> options,
         Func<ActivityService, Task> act)
+        => (await RefusalAsync(options, act)).Message;
+
+    /// <summary><see cref="ShouldBeRefusedAsync" />, returning the refusal itself.</summary>
+    private static async Task<InvalidOperationException> RefusalAsync(
+        DbContextOptions<ApplicationDbContext> options,
+        Func<ActivityService, Task> act)
     {
         await using var db = new ApplicationDbContext(options);
         var service = Service(db);
@@ -968,7 +1041,7 @@ public sealed class ToolPermissionGateTests
         // What the audit pipeline's catch does next: save the same context.
         (await db.SaveChangesAsync()).Should().Be(0);
 
-        return thrown.Which.Message;
+        return thrown.Which;
     }
 
     /// <summary>
@@ -1154,6 +1227,36 @@ public sealed class ToolPermissionGateTests
         """{ "key": "overall_level", "type": "number", "label": "Supervision required for this encounter" }""",
         """{ "key": "overall_level", "type": "number", "label": "Supervision required for this encounter" }, { "key": "additional_epa_id", "type": "epa", "label": "Additional EPA observed" }""",
         StringComparison.Ordinal);
+
+    /// <summary>The request form with three more EPA fields beside the first, each one the author sets.</summary>
+    private static readonly string FourEpaSchemaJson = SchemaJson.Replace(
+        """{ "key": "epa_id", "type": "epa", "label": "EPA observed", "required": true },""",
+        """{ "key": "epa_id", "type": "epa", "label": "EPA observed", "required": true }, { "key": "second_epa_id", "type": "epa", "label": "Second EPA observed" }, { "key": "third_epa_id", "type": "epa", "label": "Third EPA observed" }, { "key": "fourth_epa_id", "type": "epa", "label": "Fourth EPA observed" },""",
+        StringComparison.Ordinal);
+
+    private const string CreditsFourEpaFields = """
+        {
+          "counts_for": [
+            { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1 },
+            { "curriculum_item_match": { "epa_field": "second_epa_id" }, "amount": 1 },
+            { "curriculum_item_match": { "epa_field": "third_epa_id" }, "amount": 1 },
+            { "curriculum_item_match": { "epa_field": "fourth_epa_id" }, "amount": 1 }
+          ]
+        }
+        """;
+
+    /// <summary>A request naming four EPAs whose items all forbid Mini-CEX (the fixed items' EPAs, 11 to 14).</summary>
+    private static readonly string FourEpaRequestData = $$"""
+        {
+          "epa_id": 11,
+          "second_epa_id": 12,
+          "third_epa_id": 13,
+          "fourth_epa_id": 14,
+          "assessor_user_id": "{{AssessorId}}",
+          "observed_on": "2026-03-10",
+          "presenting_problem": "Fever for three days"
+        }
+        """;
 
     private const string CreditsBothEpaFields = """
         {
@@ -1515,7 +1618,8 @@ public sealed class ToolPermissionGateTests
             Type(AssessorEditableEpaMiniCexTypeId, "assessor_editable_mini_cex_under_test", "mini_cex", CpsaWorkflowJson, CreditsTheEpaField, AssessorEditableEpaSchemaJson),
             Type(TwoEpaMiniCexTypeId, "two_epa_mini_cex_under_test", "mini_cex", CpsaWorkflowJson, CreditsBothEpaFields, TwoEpaSchemaJson),
             Type(LoopBackMiniCexTypeId, "loop_back_mini_cex_under_test", "mini_cex", LoopBackWorkflowJson, CreditsTheEpaField),
-            Type(LockedCancelMiniCexTypeId, "locked_cancel_mini_cex_under_test", "mini_cex", LockedCancelWorkflowJson, CreditsTheEpaField));
+            Type(LockedCancelMiniCexTypeId, "locked_cancel_mini_cex_under_test", "mini_cex", LockedCancelWorkflowJson, CreditsTheEpaField),
+            Type(FourEpaMiniCexTypeId, "four_epa_mini_cex_under_test", "mini_cex", CpsaWorkflowJson, CreditsFourEpaFields, FourEpaSchemaJson));
 
         await db.SaveChangesAsync();
     }

@@ -140,7 +140,11 @@ internal static class ToolPermissionGate
             return;
         }
 
-        throw new InvalidOperationException(await DescribeAsync(dbContext, toolKey, schema, refusals, cancellationToken));
+        // Led by the label of the field each match came from, and carrying its key, so the page can mark it (T263). A
+        // literal curriculum_item_id came from no field, and marks none.
+        throw new ActivityFieldsRefusedException(
+            await DescribeAsync(dbContext, toolKey, schema, refusals, cancellationToken),
+            refusals.Select(refusal => refusal.MatchedFieldKey));
     }
 
     /// <summary>

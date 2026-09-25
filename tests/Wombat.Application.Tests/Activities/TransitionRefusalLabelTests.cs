@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
@@ -114,6 +115,37 @@ public sealed class TransitionRefusalLabelTests
             "clinical_audit_cpsa", TraineeId, CoordinatorId, "sign_off", [AuditRequest], Principal(CoordinatorId))));
 
         message.Should().Be("Sign Off is not available while the activity is Draft.");
+    }
+
+    // ---- T263 ----------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task APatchChangingAFieldTheActorCannotWrite_CarriesItsKey()
+    {
+        var options = await SeededAsync();
+        await AddActivityAsync(options, 905, CpsaMiniCexTypeId, "requested", MiniCexRequest);
+
+        await using var db = new ApplicationDbContext(options);
+        var attempt = () => Service(db).TransitionAsync(
+            new TransitionActivityInput(905, "complete", AssessorId, Principal(AssessorId), """{ "epa_id": 3 }""", null));
+
+        (await attempt.Should().ThrowAsync<ActivityFieldsRefusedException>()).Which.FieldKeys.Should().Equal("epa_id");
+    }
+
+    [Fact]
+    public async Task ARefusalAboutNoField_NamesNoField()
+    {
+        // A missing note is the move's, not a field's: nothing on the form is to blame, so nothing is marked.
+        var options = await SeededAsync();
+        await AddActivityAsync(options, 906, CpsaMiniCexTypeId, "requested", MiniCexRequest);
+
+        await using var db = new ApplicationDbContext(options);
+        var attempt = () => Service(db).TransitionAsync(
+            new TransitionActivityInput(906, "decline", AssessorId, Principal(AssessorId), null, Note: "   "));
+
+        var refusal = (await attempt.Should().ThrowAsync<InvalidOperationException>()).Which;
+        refusal.Should().NotBeOfType<ActivityFieldsRefusedException>();
+        ActivityFieldsRefusedException.FieldKeysOf(refusal).Should().BeEmpty();
     }
 
     // ---- helpers -------------------------------------------------------------------------------------------------

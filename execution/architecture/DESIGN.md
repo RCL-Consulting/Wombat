@@ -597,6 +597,17 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   the two markers above, never by a style of its own. `Design/InvalidFieldStyleTests` pins the rule, and its
   `ShowsInvalid(element)` matches a rendered control against the rule's own selectors, which a page test uses to show a
   refused field is one the rule styles (the agenda deferral reason, the activity form's encounter date).
+- **A field the server refused is marked, not only named** (T263). An activity form's refusal names each field by its
+  label in words, and carries the fields' schema keys beside the message (`ActivityFieldsRefusedException.FieldKeys`;
+  CUSTOMIZATION.md § Keys are for logic). The page hands them to `ActivityForm` as `RefusedFieldKeys`, with the id of the
+  `Alert` that shows the refusal as `RefusalId`. Each control named takes the two markers above and names the alert in
+  its `aria-describedby`, after its help text and any notice (`FieldHelp.DescribedBy`). A multi-choice group's fieldset
+  names the alert, and its checkboxes are not marked. A locked field the refusal names is marked too, so the actor sees
+  which field stopped the move. The page holds the keys with the alert and clears both on its next action, so a field
+  is marked exactly while the alert that names it is shown. The three places are `/activities/new`'s refused create
+  (`NewActivity.RefusalAlertId`), a refused move on the activity's page (`ActivityView.ActionRefusalAlertId`) and the
+  notice of a submit refused straight after the create (`ActivityView.NoticeAlertId`, the keys riding on
+  `ActivityNotice.RefusedFieldKeys`). `Activities/RefusedFieldMarkingTests` holds all three.
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
 - Checkbox: `<div class="form-check">` wrapping a `.form-check-input` + `<label>`.
 - A group of checkboxes is a `<fieldset>` with a `<legend>`, the checkboxes inside a `.check-grid` (columns of
@@ -761,7 +772,8 @@ T019 introduces a small builder-specific extension to the shared system:
   `exception.Message` and move to it when next touched.
 - **An alert already on the page when it loads is not reliably announced**, whatever its role. When a page reloads with
   a refusal and puts focus in a field (sign-in, link account), give the `Alert` an `Id` and have the field name it with
-  `aria-describedby`, so the refusal is read with the field.
+  `aria-describedby`, so the refusal is read with the field. A refusal that names fields gives its `Alert` an `Id` the
+  same way, and every field it names points at it (the activity pages, T263, § Form system).
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
 - Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead.
 - A field's warning and its predicted refusal never show together. When the page can tell the server will refuse what is
@@ -770,7 +782,9 @@ T019 introduces a small builder-specific extension to the shared system:
   region under the field, present before anything is typed, which the input names with `aria-describedby`, after its
   help text (`FieldHelp.DescribedBy`, § Form system). While the refusal is predicted the input also carries
   `aria-invalid="true"` and `.input-validation-error`; a warning alone marks nothing, since what it warns of is
-  accepted. It is a hint: the server's refusal stays the rule.
+  accepted. It is a hint: the server's refusal stays the rule. A refusal the page did not predict counts the same
+  (T263): while a refusal on show names the field, the `.field-warning` is left out, since the page's start date was
+  missing or out of date and the alert says why the date was not accepted.
 
 ## Skeleton loaders
 

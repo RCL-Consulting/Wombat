@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
@@ -121,6 +122,35 @@ public sealed class NomineeGateWritePathTests
 
         message.Should().Be($"Assessor: {SelfNominationRefusal}");
         await AssertNoActivitiesAsync(options);
+    }
+
+    [Fact]
+    public async Task ARefusedNominee_CarriesTheFieldsKey_SoThePageCanMarkIt()
+    {
+        // T263: the page marks the control whose id is the key.
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var refusal = await RefusalAsync(options, service => service.CreateDraftAsync(
+            new CreateActivityInput(RequestTypeId, TraineeId, TraineeId, RequestData(NonAssessorId), Principal(TraineeId))));
+
+        refusal.Message.Should().Contain(GateRefusal);
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>()
+            .Which.FieldKeys.Should().Equal("assessor_user_id");
+    }
+
+    [Fact]
+    public async Task ASelfNomination_CarriesTheFieldsKey()
+    {
+        var options = NewDatabase();
+        await SeedAsync(options);
+
+        var refusal = await RefusalAsync(options, service => service.CreateDraftAsync(
+            new CreateActivityInput(RequestTypeId, TraineeId, TraineeId, RequestData(TraineeId), Principal(TraineeId))));
+
+        refusal.Message.Should().Be($"Assessor: {SelfNominationRefusal}");
+        refusal.Should().BeOfType<ActivityFieldsRefusedException>()
+            .Which.FieldKeys.Should().Equal("assessor_user_id");
     }
 
     // ---- transition -----------------------------------------------------------------------------------------------
@@ -390,6 +420,12 @@ public sealed class NomineeGateWritePathTests
     private static async Task<string> ShouldBeRefusedAsync(
         DbContextOptions<ApplicationDbContext> options,
         Func<ActivityService, Task> act)
+        => (await RefusalAsync(options, act)).Message;
+
+    /// <summary><see cref="ShouldBeRefusedAsync" />, returning the refusal itself.</summary>
+    private static async Task<InvalidOperationException> RefusalAsync(
+        DbContextOptions<ApplicationDbContext> options,
+        Func<ActivityService, Task> act)
     {
         await using var db = new ApplicationDbContext(options);
         var service = Service(db);
@@ -405,7 +441,7 @@ public sealed class NomineeGateWritePathTests
         // What the audit pipeline's catch does next: save the same context.
         (await db.SaveChangesAsync()).Should().Be(0);
 
-        return thrown.Which.Message;
+        return thrown.Which;
     }
 
     /// <summary>
