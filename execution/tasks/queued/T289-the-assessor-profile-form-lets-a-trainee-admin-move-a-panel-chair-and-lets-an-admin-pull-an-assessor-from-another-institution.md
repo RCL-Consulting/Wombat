@@ -38,3 +38,8 @@ explicitly. Handler tests and the audit trap.
 ## Related
 
 T278, T256, T237.
+
+Note, 2026-09-25 (the T159 replay, step 2.4): the `Assessor user` picker never narrows. A user who already has a profile is
+still offered, and the page stays on `/admin/assessors/edit` after a save. `ListAssessorUsersQuery` has no exclusion, and
+`CreateOrUpdateAssessorProfile` looks a profile up by user, so creating one for someone already profiled would overwrite
+theirs (inferred, not tried). T064 is marked done; this is its gap.

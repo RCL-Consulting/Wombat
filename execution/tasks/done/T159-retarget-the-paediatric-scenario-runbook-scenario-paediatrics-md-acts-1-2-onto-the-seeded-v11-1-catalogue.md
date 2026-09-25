@@ -1,11 +1,12 @@
 ---
 id: T159
 title: Retarget the paediatric scenario runbook (scenario-paediatrics.md Acts 1-2) onto the seeded v11.1 catalogue
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T159 — The paediatric scenario runbook still builds the FCPaed world that W-006 removed
@@ -67,13 +68,13 @@ legacy types.
 
 ## Verification
 
-- [ ] A grep of Acts 1-2 for `FCPaed`, `Paed General Entrustment` and `_paed` matches only history lines and the
+- [x] A grep of Acts 1-2 for `FCPaed`, `Paed General Entrustment` and `_paed` matches only history lines and the
       banner. Command output recorded here.
-- [ ] Acts 1-2 replayed on a fresh dev database. The Act 1 and Act 2 outcome-state blocks match a query of that
+- [x] Acts 1-2 replayed on a fresh dev database. The Act 1 and Act 2 outcome-state blocks match a query of that
       database, recorded as `Actual:` lines in the runbook.
-- [ ] After the replay, `/activities/new` for a KGK registrar offers no two types with the same display name, and only
+- [x] After the replay, `/activities/new` for a KGK registrar offers no two types with the same display name, and only
       types on the CPSA ladder. Browser check.
-- [ ] The post-Act-2 snapshot is named in the runbook.
+- [x] The post-Act-2 snapshot is named in the runbook.
 
 ## Related
 
@@ -93,3 +94,32 @@ Reorder Act 4 when the runbook is retargeted.
 
 Note, 2026-09-25 (the T178 review): `scenario-paediatrics.md` (about line 736) still lists the Coordinator's nav as
 "Invitations / Data Rights / …". A Coordinator cannot invite; restate it from DESIGN.md's nav table during the replay.
+
+---
+
+## As built — 2026-09-25 (`6ea395d`, `b2b3eca`)
+
+**The runbook.** Acts 1–2 of `scenario-paediatrics.md` now build on the seeded v11.1 catalogue.
+- Phases 1.A–1.C are checks: CPSA, Paediatrics, the six-rung ladder, 15 EPAs, and the 11.1 curriculum with its item
+  table.
+- KGK adopts the seeded curriculum. One KGK-scoped type (`kgk_teaching_log`) still exercises the builder, and Act 2
+  admits the registrars to v11.1.
+- Acts 3–5 carry notes for what shipped since (T122, T131, T165, T209, T250, T251).
+- A dated banner says what changed. Every recorded `Actual:` and `Gap:` line is kept word for word.
+
+**Grep of Acts 1–2** for `FCPaed`, `Paed General Entrustment` and `_paed`: one match, line 897. It is a history line
+(the "Replay 2 (2026-05-29)" summary), and the banner matches too. Nothing else.
+
+Replayed on a fresh, separate database, `wombat_t159` (operator-approved; the dev database untouched):
+- **Every step** has `Actual (2026-09-25, T159 replay, wombat_t159):` and `Gap:` lines.
+- **Stand-ins for the Administrator:** collegeadmin at 1.1–1.3. KGK inserted by SQL at 1.11. instadmin moved to KGK issued
+  Mbatha's invitation at 1.12, and Mbatha registered from the mailed link.
+- **Outcome queries.** Act 1 matched every comment. Act 2 matched except for one extra KGK user (instadmin, the
+  stand-in).
+- **The browser check (2.10).** Molefe's `/activities/new` offers exactly the 11 expected types, with no display name
+  twice. Seven rate on `1 2 3a 3b 4 5` and four rate nothing. No other-ladder or Demo type is offered.
+- **The snapshot after Act 2:** `recovery/t159-post-act2.dump`, named in the runbook.
+
+**Found:** six small admin-page gaps, filed as [T291], and the assessor picker, noted on [T289]. The runbook's
+expected status text at 1.12 and 2.1 now includes T283's "Its email is being sent.".
+
